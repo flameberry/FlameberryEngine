@@ -17,7 +17,7 @@ target_include_directories(Flameberry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/vendor
 add_subdirectory(vendor/GLFW)
 add_subdirectory(vendor/Glad)
 
-target_compile_definitions(Flameberry PRIVATE "GLFW_INCLUDE_NONE")
+target_compile_definitions(Flameberry PRIVATE GLFW_INCLUDE_NONE FL_PROJECT_DIR="${FL_SOURCE_DIR}")
 
 # "FL_GRAPHICS_LIBS" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
 target_link_libraries(Flameberry PRIVATE ${FL_GRAPHICS_LIBS})

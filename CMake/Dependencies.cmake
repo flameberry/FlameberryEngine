@@ -15,8 +15,10 @@ endif()
 
 # All Include Dirs needed for the project
 set(FL_GRAPHICS_INCLUDE_DIRS
+    ${FL_SOURCE_DIR}/Flameberry/vendor
     ${FL_SOURCE_DIR}/Flameberry/vendor/GLFW/include
     ${FL_SOURCE_DIR}/Flameberry/vendor/Glad/include
+    ${FL_SOURCE_DIR}/Flameberry/vendor/glm
 )
 
 # # Vulkan Required

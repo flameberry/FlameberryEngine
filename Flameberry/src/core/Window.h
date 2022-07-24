@@ -11,6 +11,7 @@ namespace Flameberry {
         Window(int width = 1280, int height = 720, const char* title = "Flameberry Engine");
         ~Window();
 
+        GLFWwindow* GetGLFWwindow() const { return M_Window; }
         bool IsRunning();
         void OnUpdate();
     private:
