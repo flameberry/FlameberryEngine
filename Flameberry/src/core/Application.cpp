@@ -4,7 +4,6 @@
 #include "../renderer/Renderer2D.h"
 
 namespace Flameberry {
-    std::shared_ptr<ClientApp> Application::M_ClientApp;
     Application::Application()
     {
         M_Window = Window::Create();
@@ -14,8 +13,6 @@ namespace Flameberry {
         rendererInitInfo.userWindow = M_Window->GetGLFWwindow();
 
         Renderer2D::Init(rendererInitInfo);
-
-        M_ClientApp->OnAttach();
     }
 
     void Application::Run()
@@ -29,11 +26,7 @@ namespace Flameberry {
             Renderer2D::AddQuad({ 0, 0, 0 }, { 100, 100 }, FL_PINK);
             Renderer2D::AddQuad({ 100, 0, 0 }, { 100, 100 }, FL_PINK, "/Users/flameberry/Developer/FlameUI/Sandbox/resources/textures/Checkerboard.png");
             Renderer2D::AddQuad({ 0, 100, 0 }, { 100, 100 }, FL_BLUE);
-
-            M_ClientApp->OnRender();
             Renderer2D::End();
-
-            M_ClientApp->OnImGuiRender();
 
             M_Window->OnUpdate();
         }
@@ -41,7 +34,6 @@ namespace Flameberry {
 
     Application::~Application()
     {
-        M_ClientApp->OnDetach();
         Renderer2D::CleanUp();
         glfwTerminate();
         FL_INFO("Ended Application!");
