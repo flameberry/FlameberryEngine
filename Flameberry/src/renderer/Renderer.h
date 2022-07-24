@@ -8,16 +8,11 @@
 #include "../core/Core.h"
 #include <glm/glm.hpp>
 
-#define FL_ELEMENT_TYPE_GENERAL_INDEX 0.0f
-#define FL_ELEMENT_TYPE_PANEL_INDEX 1.0f
-#define FL_ELEMENT_TYPE_BUTTON_INDEX 2.0f
-
 /// This Macro contains the max number of texture slots that the GPU supports, varies for each computer.
 #define MAX_TEXTURE_SLOTS 16
 #define MAX_QUADS 1000
 #define MAX_VERTICES 4 * MAX_QUADS
 #define MAX_INDICES 6 * MAX_QUADS
-#define TITLE_BAR_HEIGHT 15
 
 namespace Flameberry {
     enum class UnitType
@@ -32,7 +27,6 @@ namespace Flameberry {
         std::string fontFilePath{ FL_PROJECT_DIR"Flameberry/resources/fonts/OpenSans-Regular.ttf" };
     };
 
-
     // The [Vertex] struct represents an OpenGL Vertex.
     struct Vertex
     {
@@ -46,14 +40,10 @@ namespace Flameberry {
         float     texture_index;
         /// Quad Dimensions which will be used by the shader to customize the quad
         glm::vec2 quad_dimensions;
-        /// This will tell the shader what kind of UI Element is being rendered
-        float     element_type_index;
-        /// This will be used by the shader to determine the title bar color of the panel
-        float     is_panel_active;
 
         /// Default Constructor
         Vertex()
-            : position(0.0f), color(1.0f), texture_uv(0.0f), texture_index(-1.0f), quad_dimensions(0.0f), element_type_index(FL_ELEMENT_TYPE_GENERAL_INDEX)
+            : position(0.0f), color(1.0f), texture_uv(0.0f), texture_index(-1.0f), quad_dimensions(0.0f)
         {
         }
     };
@@ -74,8 +64,8 @@ namespace Flameberry {
         static glm::vec2   ConvertOpenGLValuesToPixels(const glm::vec2& opengl_coords);
         static float       ConvertXAxisPixelValueToOpenGLValue(int X);
         static float       ConvertYAxisPixelValueToOpenGLValue(int Y);
-        static void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, const float elementTypeIndex, const char* textureFilePath, UnitType unitType = UnitType::PIXEL_UNITS, bool isPanelActive = false);
-        static void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, const float elementTypeIndex, UnitType unitType = UnitType::PIXEL_UNITS, bool isPanelActive = false);
+        static void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, const char* textureFilePath, UnitType unitType = UnitType::PIXEL_UNITS);
+        static void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, UnitType unitType = UnitType::PIXEL_UNITS);
         static void        AddText(const std::string& text, const glm::vec2& position_in_pixels, float scale, const glm::vec4& color);
         static uint32_t    CreateTexture(const std::string& filePath);
         static void        CleanUp();

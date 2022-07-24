@@ -124,19 +124,15 @@ namespace Flameberry {
         glBindVertexArray(S_Batch.VertexArrayId);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)offsetof(Vertex, position));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)offsetof(Vertex, color));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex, color));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)offsetof(Vertex, texture_uv));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex, texture_uv));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)offsetof(Vertex, texture_index));
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex, texture_index));
         glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)offsetof(Vertex, quad_dimensions));
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)offsetof(Vertex, element_type_index));
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)offsetof(Vertex, is_panel_active));
+        glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex, quad_dimensions));
 
         glGenBuffers(1, &S_Batch.IndexBufferId);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, S_Batch.IndexBufferId);
@@ -270,7 +266,7 @@ namespace Flameberry {
         S_Batch.TextureIds.clear();
     }
 
-    void Renderer::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, const float elementTypeIndex, UnitType unitType, bool isPanelActive)
+    void Renderer::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, UnitType unitType)
     {
         Vertex vertices[4];
 
@@ -298,17 +294,15 @@ namespace Flameberry {
         for (uint8_t i = 0; i < 4; i++)
         {
             vertices[i].position = transformation * S_TemplateVertexPositions[i];
-            vertices[i].element_type_index = elementTypeIndex;
             vertices[i].color = color;
             vertices[i].quad_dimensions = ConvertPixelsToOpenGLValues(dimensions);
-            vertices[i].is_panel_active = isPanelActive ? 1.0f : 0.0f;
         }
 
         for (uint8_t i = 0; i < 4; i++)
             S_Batch.Vertices.push_back(vertices[i]);
     }
 
-    void Renderer::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, const float elementTypeIndex, const char* textureFilePath, UnitType unitType, bool isPanelActive)
+    void Renderer::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, const char* textureFilePath, UnitType unitType)
     {
         Vertex vertices[4];
         vertices[0].texture_uv = { 0.0f, 0.0f };
@@ -335,11 +329,9 @@ namespace Flameberry {
         for (uint8_t i = 0; i < 4; i++)
         {
             vertices[i].position = transformation * S_TemplateVertexPositions[i];
-            vertices[i].element_type_index = elementTypeIndex;
             vertices[i].color = color;
             vertices[i].quad_dimensions = ConvertPixelsToOpenGLValues(dimensions);
             vertices[i].texture_index = S_CurrentTextureSlot;
-            vertices[i].is_panel_active = isPanelActive ? 1.0f : 0.0f;
         }
 
         for (uint8_t i = 0; i < 4; i++)

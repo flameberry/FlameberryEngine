@@ -23,7 +23,8 @@ namespace Flameberry {
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
             Renderer::Begin();
-            Renderer::AddQuad({ 0, 0, 0 }, { 100, 100 }, FL_PINK, FL_ELEMENT_TYPE_GENERAL_INDEX);
+            Renderer::AddQuad({ 0, 0, 0 }, { 100, 100 }, FL_PINK);
+            Renderer::AddQuad({ 100, 0, 0 }, { 100, 100 }, FL_PINK, "/Users/flameberry/Developer/FlameUI/Sandbox/resources/textures/Checkerboard.png");
             Renderer::End();
 
             M_Window->OnUpdate();
