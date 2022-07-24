@@ -2,6 +2,7 @@
 
 int main(int argc, char const* argv[])
 {
-    Flameberry::Application app;
-    app.Run();
+    Flameberry::Application* app = new Flameberry::Application();
+    app->Run();
+    delete app;
 }
