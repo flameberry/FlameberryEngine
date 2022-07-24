@@ -1,10 +1,12 @@
 #include "Application.h"
 #include <glad/glad.h>
+#include "Core.h"
 
 namespace Flameberry {
     Application::Application()
     {
         M_Window = Window::Create();
+        FL_INFO("Initialized Window!");
     }
 
     void Application::Run()
@@ -21,5 +23,6 @@ namespace Flameberry {
     Application::~Application()
     {
         glfwTerminate();
+        FL_INFO("Ended Application!");
     }
 }
