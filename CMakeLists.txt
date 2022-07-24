@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(FlameberryEngine VERSION 1.0)
 
-# include(CMake/Dependencies.cmake)
-# include(CMake/CMakeUtils.cmake)
+include(CMake/Dependencies.cmake)
+include(CMake/CMakeUtils.cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)

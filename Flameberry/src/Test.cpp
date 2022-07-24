@@ -3,6 +3,10 @@
 namespace Flameberry {
     void PrintWelcome()
     {
-        std::cout << "Welcome to the Flameberry Engine!" << std::endl;
+#ifdef FL_DEBUG
+        std::cout << "Welcome to the Flameberry Engine!- Debug" << std::endl;
+#else
+        std::cout << "Welcome to the Flameberry Engine!- Release" << std::endl;
+#endif
     }
 }
