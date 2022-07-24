@@ -1,6 +1,7 @@
 #include "Window.h"
 #include <iostream>
 #include <glad/glad.h>
+#include "Core.h"
 
 namespace Flameberry {
     std::shared_ptr<Window> Window::Create(int width, int height, const char* title)
@@ -11,8 +12,7 @@ namespace Flameberry {
     Window::Window(int width, int height, const char* title)
         : M_Width(width), M_Height(height), M_Title(title)
     {
-        if (!glfwInit())
-            std::cout << "Failed to Initialize GLFW!" << std::endl;
+        FL_ASSERT(glfwInit(), "Failed to Initialize GLFW!");
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -24,16 +24,12 @@ namespace Flameberry {
 
         M_Window = glfwCreateWindow(width, height, title, NULL, NULL);
 
-        if (!M_Window)
-            std::cout << "Window is null!" << std::endl;
+        FL_ASSERT(M_Window, "GLFW Window is Null!");
 
         glfwMakeContextCurrent(M_Window);
         glfwSwapInterval(1);
 
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        {
-            std::cout << "Failed to initialize GLAD" << std::endl;
-        }
+        FL_ASSERT(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "Failed to Initialize Glad!");
 
         int actualWidth, actualHeight;
         glfwGetFramebufferSize(M_Window, &actualWidth, &actualHeight);
