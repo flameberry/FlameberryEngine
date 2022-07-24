@@ -5,8 +5,8 @@
 #include <glad/glad.h>
 #include <unordered_map>
 #include <GLFW/glfw3.h>
-#include "../core/Core.h"
 #include <glm/glm.hpp>
+#include "../core/Core.h"
 
 /// This Macro contains the max number of texture slots that the GPU supports, varies for each computer.
 #define MAX_TEXTURE_SLOTS 16
@@ -20,7 +20,7 @@ namespace Flameberry {
         NONE = 0, PIXEL_UNITS, OPENGL_UNITS
     };
 
-    struct RendererInitInfo
+    struct Renderer2DInitInfo
     {
         GLFWwindow* userWindow;
         bool enableFontRendering{ true };
@@ -48,16 +48,14 @@ namespace Flameberry {
         }
     };
 
-    class Renderer
+    class Renderer2D
     {
     public:
         // The Init function should be called after the GLFW window creation and before the main loop
-        static void        Init(const RendererInitInfo& rendererInitInfo);
-        static void        OnResize();
+        static void        Init(const Renderer2DInitInfo& rendererInitInfo);
         static glm::vec2   GetWindowContentScale() { return S_WindowContentScale; }
         static GLFWwindow* GetUserGLFWwindow();
         static glm::vec2   GetViewportSize();
-        static glm::vec2   GetTextDimensions(const std::string& text, float scale);
         static GLint       GetUniformLocation(const std::string& name, uint32_t shaderId);
         static float       GetAspectRatio() { return S_AspectRatio; }
         static glm::vec2   ConvertPixelsToOpenGLValues(const glm::vec2& value_in_pixels);
@@ -69,9 +67,8 @@ namespace Flameberry {
         static void        AddText(const std::string& text, const glm::vec2& position_in_pixels, float scale, const glm::vec4& color);
         static uint32_t    CreateTexture(const std::string& filePath);
         static void        CleanUp();
-
-        static void Begin();
-        static void End();
+        static void        Begin();
+        static void        End();
 
         static glm::vec2& GetCursorPosition();
         static std::tuple<std::string, std::string> ReadShaderSource(const std::string& filePath);
@@ -81,6 +78,7 @@ namespace Flameberry {
         static void FlushBatch();
 
         /// Private Functions which will be used by the Renderer as Utilites
+        static void     OnResize();
         static void     OnUpdate();
         static uint32_t GetTextureIdIfAvailable(const char* textureFilePath);
     private:
