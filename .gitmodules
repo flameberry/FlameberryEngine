@@ -1,0 +1,3 @@
+[submodule "Flameberry/vendor/GLFW"]
+	path = Flameberry/vendor/GLFW
+	url = https://github.com/glfw/glfw

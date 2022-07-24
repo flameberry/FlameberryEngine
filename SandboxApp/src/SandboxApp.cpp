@@ -2,5 +2,6 @@
 
 int main(int argc, char const* argv[])
 {
-    Flameberry::PrintWelcome();
+    Flameberry::Application app;
+    app.Run();
 }

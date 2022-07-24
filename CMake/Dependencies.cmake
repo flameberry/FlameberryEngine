@@ -1,3 +1,24 @@
+# OpenGL Helper Libs
+set(FL_GRAPHICS_LIBS glfw Glad)
+
+if(APPLE)
+    # Inbuilt mac frameworks required for GLFW
+    list(APPEND FL_GRAPHICS_LIBS 
+        "-framework Cocoa"
+        "-framework OpenGL"
+        "-framework IOKit"
+        "-framework CoreFoundation"
+    )
+elseif(WIN32)
+    list(APPEND FL_GRAPHICS_LIBS opengl32.lib)
+endif()
+
+# All Include Dirs needed for the project
+set(FL_GRAPHICS_INCLUDE_DIRS
+    ${FL_SOURCE_DIR}/Flameberry/vendor/GLFW/include
+    ${FL_SOURCE_DIR}/Flameberry/vendor/Glad/include
+)
+
 # # Vulkan Required
 # find_package(Vulkan REQUIRED)
 

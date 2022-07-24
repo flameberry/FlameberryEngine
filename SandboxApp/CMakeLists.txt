@@ -3,5 +3,5 @@ add_executable(SandboxApp ${SRC_FILES})
 
 set_custom_build_properties(SandboxApp)
 
-target_include_directories(SandboxApp PRIVATE ${FL_SOURCE_DIR}/Flameberry/src/)
-target_link_libraries(SandboxApp PRIVATE Flameberry)
+target_include_directories(SandboxApp PRIVATE ${FL_GRAPHICS_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src/)
+target_link_libraries(SandboxApp PRIVATE Flameberry ${FL_GRAPHICS_LIBS})
