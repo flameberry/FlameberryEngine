@@ -25,6 +25,8 @@ namespace Flameberry {
         GLFWwindow* userWindow;
         bool enableFontRendering{ true };
         std::string fontFilePath{ FL_PROJECT_DIR"Flameberry/resources/fonts/OpenSans-Regular.ttf" };
+        bool enableCustomViewport{ false };
+        glm::vec2 customViewportSize;
     };
 
     // The [Vertex] struct represents an OpenGL Vertex.
@@ -69,6 +71,7 @@ namespace Flameberry {
         static void        CleanUp();
         static void        Begin();
         static void        End();
+        static void        SetCustomViewportSize(const glm::vec2& customViewportSize) { S_RendererInitInfo.customViewportSize = customViewportSize; }
 
         static glm::vec2& GetCursorPosition();
         static std::tuple<std::string, std::string> ReadShaderSource(const std::string& filePath);
@@ -81,6 +84,9 @@ namespace Flameberry {
         static void     OnResize();
         static void     OnUpdate();
         static uint32_t GetTextureIdIfAvailable(const char* textureFilePath);
+
+        static void UpdateViewportSize();
+        static void UpdateWindowContentScale();
     private:
         /// Struct that contains all the matrices needed by the shader, which will be stored in a Uniform Buffer
         struct UniformBufferData { glm::mat4 ProjectionMatrix; };
@@ -111,6 +117,7 @@ namespace Flameberry {
     public:
         static FontProps& GetFontProps() { return S_FontProps; }
     private:
+        static Renderer2DInitInfo                        S_RendererInitInfo;
         /// Stores the window content scale, useful for correct scaling on retina displays
         static glm::vec2                                 S_WindowContentScale;
         /// AspectRatio used for converting pixel coordinates to opengl coordinates

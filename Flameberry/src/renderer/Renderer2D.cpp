@@ -9,26 +9,50 @@
 #include <stb_image/stb_image.h>
 
 namespace Flameberry {
-    std::unordered_map<std::string, GLint>     Renderer2D::S_UniformLocationCache;
-    std::unordered_map<std::string, uint32_t>  Renderer2D::S_TextureIdCache;
     std::unordered_map<char, Renderer2D::Character> Renderer2D::S_Characters;
-    Renderer2D::Batch                            Renderer2D::S_Batch;
-    uint32_t                                   Renderer2D::S_UniformBufferId;
-    glm::vec2                                  Renderer2D::S_WindowContentScale;
-    float                                      Renderer2D::S_AspectRatio = (float)(1280.0f / 720.0f);
-    std::string                                Renderer2D::S_UserFontFilePath = "";
-    Renderer2D::UniformBufferData                Renderer2D::S_UniformBufferData;
-    Renderer2D::FontProps                        Renderer2D::S_FontProps = { .Scale = 1.0f, .Strength = 0.5f, .PixelRange = 8.0f };
-    glm::vec2                                  Renderer2D::S_ViewportSize = { 1280.0f, 720.0f };
-    glm::vec2                                  Renderer2D::S_CursorPosition = { 0.0f, 0.0f };
-    float                                      Renderer2D::S_CurrentTextureSlot = 0;
+    Renderer2DInitInfo                        Renderer2D::S_RendererInitInfo;
+    std::unordered_map<std::string, GLint>    Renderer2D::S_UniformLocationCache;
+    std::unordered_map<std::string, uint32_t> Renderer2D::S_TextureIdCache;
+    Renderer2D::Batch                         Renderer2D::S_Batch;
+    uint32_t                                  Renderer2D::S_UniformBufferId;
+    glm::vec2                                 Renderer2D::S_WindowContentScale;
+    float                                     Renderer2D::S_AspectRatio = (float)(1280.0f / 720.0f);
+    std::string                               Renderer2D::S_UserFontFilePath = "";
+    Renderer2D::UniformBufferData             Renderer2D::S_UniformBufferData;
+    Renderer2D::FontProps                     Renderer2D::S_FontProps = { .Scale = 1.0f, .Strength = 0.5f, .PixelRange = 8.0f };
+    glm::vec2                                 Renderer2D::S_ViewportSize = { 1280.0f, 720.0f };
+    glm::vec2                                 Renderer2D::S_CursorPosition = { 0.0f, 0.0f };
+    float                                     Renderer2D::S_CurrentTextureSlot = 0;
     GLFWwindow* Renderer2D::S_UserWindow;
+
+    void Renderer2D::UpdateViewportSize()
+    {
+        if (S_RendererInitInfo.enableCustomViewport)
+            S_ViewportSize = S_RendererInitInfo.customViewportSize;
+        else
+        {
+            int width, height;
+            glfwGetFramebufferSize(S_UserWindow, &width, &height);
+            S_ViewportSize = { width, height };
+        }
+    }
+
+    void Renderer2D::UpdateWindowContentScale()
+    {
+        if (S_RendererInitInfo.enableCustomViewport)
+            S_WindowContentScale = { 1.0f, 1.0f };
+        else
+        {
+            glm::vec2 scale;
+            glfwGetWindowContentScale(S_UserWindow, &scale.x, &scale.y);
+            S_WindowContentScale = scale;
+        }
+    }
 
     void Renderer2D::OnResize()
     {
-        int width, height;
-        glfwGetFramebufferSize(S_UserWindow, &width, &height);
-        S_ViewportSize = { width, height };
+        UpdateViewportSize();
+
         S_AspectRatio = S_ViewportSize.x / S_ViewportSize.y;
         S_UniformBufferData.ProjectionMatrix = glm::ortho(-S_AspectRatio, S_AspectRatio, -1.0f, 1.0f, -1.0f, 1.0f);
 
@@ -43,15 +67,13 @@ namespace Flameberry {
     {
         glClear(GL_DEPTH_BUFFER_BIT);
 
-        glm::vec2 scale;
-        glfwGetWindowContentScale(S_UserWindow, &scale.x, &scale.y);
-        S_WindowContentScale = scale;
+        UpdateWindowContentScale();
+        OnResize();
 
         double x, y;
         glfwGetCursorPos(S_UserWindow, &x, &y);
         S_CursorPosition.x = x - S_ViewportSize.x / S_WindowContentScale.x / 2.0f;
         S_CursorPosition.y = -y + S_ViewportSize.y / S_WindowContentScale.y / 2.0f;
-        OnResize();
     }
 
     void Renderer2D::Init(const Renderer2DInitInfo& rendererInitInfo)
@@ -59,19 +81,15 @@ namespace Flameberry {
         FL_LOGGER_INIT();
         FL_INFO("Initialized Logger!");
 
+        S_RendererInitInfo = rendererInitInfo;
         S_UserWindow = rendererInitInfo.userWindow;
 
         GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
         const char* monitorName = glfwGetMonitorName(primaryMonitor);
         FL_INFO("Primary Monitor: {0}", monitorName);
 
-        glm::vec2 scale;
-        glfwGetWindowContentScale(S_UserWindow, &scale.x, &scale.y);
-        S_WindowContentScale = scale;
-
-        int width, height;
-        glfwGetFramebufferSize(S_UserWindow, &width, &height);
-        S_ViewportSize = { (float)width, (float)height };
+        UpdateWindowContentScale();
+        UpdateViewportSize();
 
         if (rendererInitInfo.enableFontRendering)
         {

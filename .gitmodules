@@ -4,3 +4,6 @@
 [submodule "Flameberry/vendor/glm"]
 	path = Flameberry/vendor/glm
 	url = https://github.com/g-truc/glm
+[submodule "Flameberry/vendor/imgui"]
+	path = Flameberry/vendor/imgui
+	url = https://github.com/ocornut/imgui

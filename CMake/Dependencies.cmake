@@ -19,6 +19,16 @@ set(FL_GRAPHICS_INCLUDE_DIRS
     ${FL_SOURCE_DIR}/Flameberry/vendor/GLFW/include
     ${FL_SOURCE_DIR}/Flameberry/vendor/Glad/include
     ${FL_SOURCE_DIR}/Flameberry/vendor/glm
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui
+)
+
+file(GLOB IMGUI_SRC ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.cpp ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.h)
+list(APPEND IMGUI_SRC
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.cpp
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3_loader.h
 )
 
 # # Vulkan Required

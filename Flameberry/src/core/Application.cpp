@@ -4,29 +4,32 @@
 #include "../renderer/Renderer2D.h"
 
 namespace Flameberry {
+    Application* Application::S_Instance;
     Application::Application()
     {
+        S_Instance = this;
         M_Window = Window::Create();
 
         Renderer2DInitInfo rendererInitInfo{};
         rendererInitInfo.enableFontRendering = false;
         rendererInitInfo.userWindow = M_Window->GetGLFWwindow();
+        rendererInitInfo.enableCustomViewport = true;
+        rendererInitInfo.customViewportSize = { 1280.0f, 720.0f };
 
         Renderer2D::Init(rendererInitInfo);
+
+        M_FlameEditor.OnAttach();
     }
 
     void Application::Run()
     {
         while (M_Window->IsRunning())
         {
-            glClear(GL_COLOR_BUFFER_BIT);
-            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            M_FlameEditor.OnRender();
 
-            Renderer2D::Begin();
-            Renderer2D::AddQuad({ 0, 0, 0 }, { 100, 100 }, FL_PINK);
-            Renderer2D::AddQuad({ 100, 0, 0 }, { 100, 100 }, FL_PINK, "/Users/flameberry/Developer/FlameUI/Sandbox/resources/textures/Checkerboard.png");
-            Renderer2D::AddQuad({ 0, 100, 0 }, { 100, 100 }, FL_BLUE);
-            Renderer2D::End();
+            M_FlameEditor.OnImGuiBegin();
+            M_FlameEditor.OnImGuiRender();
+            M_FlameEditor.OnImGuiEnd();
 
             M_Window->OnUpdate();
         }
@@ -34,6 +37,7 @@ namespace Flameberry {
 
     Application::~Application()
     {
+        M_FlameEditor.OnDetach();
         Renderer2D::CleanUp();
         glfwTerminate();
         FL_INFO("Ended Application!");

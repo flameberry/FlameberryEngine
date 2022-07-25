@@ -12,6 +12,9 @@ namespace Flameberry {
         ~Window();
 
         GLFWwindow* GetGLFWwindow() const { return M_Window; }
+        int GetWidth() const { return M_Width; }
+        int GetHeight() const { return M_Height; }
+
         bool IsRunning();
         void OnUpdate();
     private:
