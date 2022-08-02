@@ -89,7 +89,7 @@ namespace Flameberry {
         static void UpdateWindowContentScale();
     private:
         /// Struct that contains all the matrices needed by the shader, which will be stored in a Uniform Buffer
-        struct UniformBufferData { glm::mat4 ProjectionMatrix; };
+        struct UniformBufferData { glm::mat4 ProjectionMatrix; glm::mat4 ViewMatrix; };
         struct TextureUniformBufferData { int Samplers[MAX_TEXTURE_SLOTS]; };
         struct FontProps
         {

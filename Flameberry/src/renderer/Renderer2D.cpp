@@ -422,9 +422,17 @@ namespace Flameberry {
     {
         OnUpdate();
 
+        /* Update s_UniformBufferData.ProjectionMatrix */
+        glm::vec3 cameraPosition{ 0.0f, 0.0f, 0.0f };
+        float cameraRotation = 0.0f;
+
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), cameraPosition) * glm::rotate(glm::mat4(1.0f), glm::radians(cameraRotation), glm::vec3(0, 0, 1));
+        S_UniformBufferData.ViewMatrix = glm::inverse(transform);
+
         /* Set Projection Matrix in GPU memory, for all shader programs to access it */
         glBindBuffer(GL_UNIFORM_BUFFER, S_UniformBufferId);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(S_UniformBufferData.ProjectionMatrix));
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(S_UniformBufferData.ViewMatrix));
     }
 
     void Renderer2D::End()
