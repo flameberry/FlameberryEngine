@@ -25,7 +25,7 @@ namespace Flameberry {
 
     void FlameEditor::OnRender()
     {
-        // Resize
+        // Framebuffer Resize
         if (glm::vec2 framebufferSize = M_Framebuffer->GetFramebufferSize();
             M_ViewportSize.x > 0.0f && M_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
             (framebufferSize.x != M_ViewportSize.x || framebufferSize.y != M_ViewportSize.y))

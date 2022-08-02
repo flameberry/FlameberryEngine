@@ -1,6 +1,6 @@
 #pragma once
 
-// Platform Dependent Code
+// Platform Specific Code
 #ifdef FL_DEBUG
 #ifdef __APPLE__
 #define FL_DEBUGBREAK() abort()
@@ -53,26 +53,6 @@ GL_ERROR()
 #else
 #define GL_CHECK_ERROR(x) x
 #endif
-
-namespace Flameberry {
-    enum class QuadPosType { None = 0, QuadPosBottomLeftVertex, QuadPosCenter };
-    struct Rect2D
-    {
-        float l, r, b, t;
-        Rect2D() = default;
-        Rect2D(float val)
-            : l(val), r(val), b(val), t(val)
-        {
-        }
-        Rect2D(float l, float r, float b, float t)
-            : l(l), r(r), b(b), t(t)
-        {
-        }
-    };
-}
-
-#define FL_QUAD_POS_BOTTOM_LEFT_VERTEX Flameberry::QuadPosType::QuadPosBottomLeftVertex
-#define FL_QUAD_POS_CENTER Flameberry::QuadPosType::QuadPosCenter
 
 // Easy access to some important colors
 #define FL_WHITE glm::vec4{ 1.0f }
