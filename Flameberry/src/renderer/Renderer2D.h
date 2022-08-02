@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include "../core/Core.h"
+#include "OrthographicCamera.h"
 
 /// This Macro contains the max number of texture slots that the GPU supports, varies for each computer.
 #define MAX_TEXTURE_SLOTS 16
@@ -69,7 +70,7 @@ namespace Flameberry {
         static void        AddText(const std::string& text, const glm::vec2& position_in_pixels, float scale, const glm::vec4& color);
         static uint32_t    CreateTexture(const std::string& filePath);
         static void        CleanUp();
-        static void        Begin();
+        static void        Begin(OrthographicCamera& camera);
         static void        End();
         static void        SetCustomViewportSize(const glm::vec2& customViewportSize) { S_RendererInitInfo.customViewportSize = customViewportSize; }
 
@@ -89,7 +90,7 @@ namespace Flameberry {
         static void UpdateWindowContentScale();
     private:
         /// Struct that contains all the matrices needed by the shader, which will be stored in a Uniform Buffer
-        struct UniformBufferData { glm::mat4 ProjectionMatrix; glm::mat4 ViewMatrix; };
+        struct UniformBufferData { glm::mat4 ViewProjectionMatrix; };
         struct TextureUniformBufferData { int Samplers[MAX_TEXTURE_SLOTS]; };
         struct FontProps
         {

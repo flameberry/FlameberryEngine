@@ -40,13 +40,24 @@ namespace Flameberry {
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        Renderer2D::Begin();
+        M_Camera.SetAspectRatio(M_ViewportSize.x / M_ViewportSize.y);
+
+        Renderer2D::Begin(M_Camera);
         Renderer2D::AddQuad({ 0, 0, 0 }, { 100, 100 }, FL_PINK);
         Renderer2D::AddQuad({ 100, 0, 0 }, { 100, 100 }, FL_PINK, "/Users/flameberry/Developer/FlameUI/Sandbox/resources/textures/Checkerboard.png");
         Renderer2D::AddQuad({ 0, 100, 0 }, { 100, 100 }, FL_BLUE);
         Renderer2D::End();
 
         M_Framebuffer->Unbind();
+    }
+
+    FlameEditor::FlameEditor()
+        : M_Camera(M_ViewportSize.x / M_ViewportSize.y, 1.0f)
+    {
+    }
+
+    FlameEditor::~FlameEditor()
+    {
     }
 
     void FlameEditor::OnAttach()

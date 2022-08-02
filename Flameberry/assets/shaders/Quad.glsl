@@ -14,8 +14,7 @@ out vec2 v_QuadDimensions;
 
 layout (std140) uniform Camera
 {
-    mat4 ProjectionMatrix;
-    mat4 ViewMatrix;
+    mat4 ViewProjectionMatrix;
 } u_Camera;
 
 void main()
@@ -25,7 +24,7 @@ void main()
     v_Texture_UV = a_Texture_UV;
     v_QuadDimensions = a_QuadDimensions;
 
-    gl_Position = u_Camera.ProjectionMatrix * u_Camera.ViewMatrix * vec4(a_Position, 1.0);
+    gl_Position = u_Camera.ViewProjectionMatrix * vec4(a_Position, 1.0);
 }
 
 #shader fragment
