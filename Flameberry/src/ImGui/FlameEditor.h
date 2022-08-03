@@ -1,6 +1,6 @@
 #pragma once
-#include "../renderer/Framebuffer.h"
-#include "../renderer/OrthographicCamera.h"
+#include "../Renderer/Framebuffer.h"
+#include "../Renderer/OrthographicCamera.h"
 
 namespace Flameberry {
     class FlameEditor

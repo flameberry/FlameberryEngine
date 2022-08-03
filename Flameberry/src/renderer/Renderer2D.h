@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include "../core/Core.h"
+#include "../Core/Core.h"
 #include "OrthographicCamera.h"
 
 /// This Macro contains the max number of texture slots that the GPU supports, varies for each computer.

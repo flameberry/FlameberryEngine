@@ -1,7 +1,7 @@
 #include "Application.h"
 #include <glad/glad.h>
 #include "Core.h"
-#include "../renderer/Renderer2D.h"
+#include "../Renderer/Renderer2D.h"
 
 namespace Flameberry {
     Application* Application::s_Instance;

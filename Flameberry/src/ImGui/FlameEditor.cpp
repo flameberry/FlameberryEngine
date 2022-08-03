@@ -2,8 +2,8 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
-#include "../core/Application.h"
-#include "../renderer/Renderer2D.h"
+#include "../Core/Application.h"
+#include "../Renderer/Renderer2D.h"
 
 namespace Flameberry {
     void FlameEditor::OnImGuiRender()
