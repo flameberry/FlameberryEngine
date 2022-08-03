@@ -5,7 +5,7 @@ namespace Flameberry {
     class Log
     {
     public:
-        static void Init();
+        static void Init(const char* name);
         static std::shared_ptr<flamelogger::FLInstance> GetCoreLoggerInstance() { return s_CoreLoggerInstance; }
     private:
         static std::shared_ptr<flamelogger::FLInstance> s_CoreLoggerInstance;
@@ -13,8 +13,6 @@ namespace Flameberry {
 }
 
 #ifdef FL_DEBUG
-
-static std::shared_ptr<flamelogger::FLInstance> G_CoreLoggerInstance;
 
 namespace flDebug {
     template<typename T, typename... Args>
@@ -32,7 +30,7 @@ namespace flDebug {
     }
 }
 
-#define FL_LOGGER_INIT() Flameberry::Log::Init()
+#define FL_LOGGER_INIT(name) Flameberry::Log::Init(name)
 
 #define FL_DO_ON_ASSERT(x, ...) if(!(x)) __VA_ARGS__;
 #define FL_ASSERT(x, ...) FL_DO_ON_ASSERT(x, flDebug::fl_print_msg_on_assert(__FILE__, __LINE__, __VA_ARGS__), FL_DEBUGBREAK())

@@ -11,12 +11,12 @@ namespace Flameberry {
         ~Application();
         void Run();
 
-        Window& GetWindow() { return *M_Window; }
-        static Application& Get() { return *S_Instance; }
+        Window& GetWindow() { return *m_Window; }
+        static Application& Get() { return *s_Instance; }
     private:
-        std::shared_ptr<Window> M_Window;
-        FlameEditor M_FlameEditor;
+        std::shared_ptr<Window> m_Window;
+        FlameEditor m_FlameEditor;
     private:
-        static Application* S_Instance;
+        static Application* s_Instance;
     };
 }

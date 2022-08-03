@@ -56,11 +56,11 @@ namespace Flameberry {
     public:
         // The Init function should be called after the GLFW window creation and before the main loop
         static void        Init(const Renderer2DInitInfo& rendererInitInfo);
-        static glm::vec2   GetWindowContentScale() { return S_WindowContentScale; }
+        static glm::vec2   GetWindowContentScale() { return s_WindowContentScale; }
         static GLFWwindow* GetUserGLFWwindow();
         static glm::vec2   GetViewportSize();
         static GLint       GetUniformLocation(const std::string& name, uint32_t shaderId);
-        static float       GetAspectRatio() { return S_AspectRatio; }
+        static float       GetAspectRatio() { return s_AspectRatio; }
         static glm::vec2   ConvertPixelsToOpenGLValues(const glm::vec2& value_in_pixels);
         static glm::vec2   ConvertOpenGLValuesToPixels(const glm::vec2& opengl_coords);
         static float       ConvertXAxisPixelValueToOpenGLValue(int X);
@@ -72,7 +72,7 @@ namespace Flameberry {
         static void        CleanUp();
         static void        Begin(OrthographicCamera& camera);
         static void        End();
-        static void        SetCustomViewportSize(const glm::vec2& customViewportSize) { S_RendererInitInfo.customViewportSize = customViewportSize; }
+        static void        SetCustomViewportSize(const glm::vec2& customViewportSize) { s_RendererInitInfo.customViewportSize = customViewportSize; }
 
         static glm::vec2& GetCursorPosition();
         static std::tuple<std::string, std::string> ReadShaderSource(const std::string& filePath);
@@ -116,39 +116,39 @@ namespace Flameberry {
             double     advance;    // Offset to advance to next glyph
         };
     public:
-        static FontProps& GetFontProps() { return S_FontProps; }
+        static FontProps& GetFontProps() { return s_FontProps; }
     private:
-        static Renderer2DInitInfo                        S_RendererInitInfo;
+        static Renderer2DInitInfo                        s_RendererInitInfo;
         /// Stores the window content scale, useful for correct scaling on retina displays
-        static glm::vec2                                 S_WindowContentScale;
+        static glm::vec2                                 s_WindowContentScale;
         /// AspectRatio used for converting pixel coordinates to opengl coordinates
-        static float                                     S_AspectRatio;
+        static float                                     s_AspectRatio;
         /// The RendererId needed for the Uniform Buffer
-        static uint32_t                                  S_UniformBufferId;
+        static uint32_t                                  s_UniformBufferId;
         /// Contains Font properties of the main UI font
-        static FontProps                                 S_FontProps;
+        static FontProps                                 s_FontProps;
         /// Stores all matrices needed by the shader, also stored in a Uniform Buffer
-        static UniformBufferData                         S_UniformBufferData;
+        static UniformBufferData                         s_UniformBufferData;
         /// Stores file path of the font provided by user and the default font file path
-        static std::string                               S_UserFontFilePath;
+        static std::string                               s_UserFontFilePath;
         /// The main vector of all the batches of quads to ever exist in the program
-        static Batch                                     S_Batch;
+        static Batch                                     s_Batch;
         /// Stores all the characters and their properties, which are extracted from the font provided by the user
-        static std::unordered_map<char, Character>       S_Characters;
+        static std::unordered_map<char, Character>       s_Characters;
         /// Stores the size of the vieport that Flameberry is being drawn on
-        static glm::vec2                                 S_ViewportSize;
+        static glm::vec2                                 s_ViewportSize;
         /// Stores the cursor position per frame on the User Window
-        static glm::vec2                                 S_CursorPosition;
+        static glm::vec2                                 s_CursorPosition;
         /// Stores the GLFWwindow where Flameberry is being drawn
-        static GLFWwindow* S_UserWindow;
+        static GLFWwindow* s_UserWindow;
         /// Stores the uniform location in a shader if the location needs to be reused
-        static std::unordered_map<std::string, GLint>    S_UniformLocationCache;
+        static std::unordered_map<std::string, GLint>    s_UniformLocationCache;
         /// Stores the texture IDs of the already loaded textures to be reused
-        static std::unordered_map<std::string, uint32_t> S_TextureIdCache;
+        static std::unordered_map<std::string, uint32_t> s_TextureIdCache;
 
-        static float S_CurrentTextureSlot;
+        static float s_CurrentTextureSlot;
 
-        constexpr static glm::vec4 S_TemplateVertexPositions[4] = {
+        constexpr static glm::vec4 s_TemplateVertexPositions[4] = {
              {-0.5f, -0.5f, 0.0f, 1.0f},
              {-0.5f,  0.5f, 0.0f, 1.0f},
              { 0.5f,  0.5f, 0.0f, 1.0f},

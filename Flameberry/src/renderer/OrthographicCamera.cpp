@@ -5,22 +5,22 @@
 
 namespace Flameberry {
     OrthographicCamera::OrthographicCamera(float aspectRatio, float zoom)
-        : M_ProjectionMatrix(glm::ortho(-aspectRatio * zoom, aspectRatio* zoom, -zoom, zoom, -1.0f, 1.0f)), M_ViewMatrix(1.0f)
+        : m_ProjectionMatrix(glm::ortho(-aspectRatio * zoom, aspectRatio* zoom, -zoom, zoom, -1.0f, 1.0f)), m_ViewMatrix(1.0f)
     {
-        M_ViewProjectionMatrix = M_ProjectionMatrix * M_ViewMatrix;
+        m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
     }
 
     void OrthographicCamera::AddControls()
     {
         // Camera Movement
         if (Input::IsKey(GLFW_KEY_W, GLFW_PRESS))
-            M_CameraPosition.y += Renderer2D::ConvertYAxisPixelValueToOpenGLValue(M_CameraSensitivity);
+            m_CameraPosition.y += Renderer2D::ConvertYAxisPixelValueToOpenGLValue(m_CameraSensitivity);
         else if (Input::IsKey(GLFW_KEY_S, GLFW_PRESS))
-            M_CameraPosition.y -= Renderer2D::ConvertYAxisPixelValueToOpenGLValue(M_CameraSensitivity);
+            m_CameraPosition.y -= Renderer2D::ConvertYAxisPixelValueToOpenGLValue(m_CameraSensitivity);
         else if (Input::IsKey(GLFW_KEY_D, GLFW_PRESS))
-            M_CameraPosition.x += Renderer2D::ConvertXAxisPixelValueToOpenGLValue(M_CameraSensitivity);
+            m_CameraPosition.x += Renderer2D::ConvertXAxisPixelValueToOpenGLValue(m_CameraSensitivity);
         else if (Input::IsKey(GLFW_KEY_A, GLFW_PRESS))
-            M_CameraPosition.x -= Renderer2D::ConvertXAxisPixelValueToOpenGLValue(M_CameraSensitivity);
+            m_CameraPosition.x -= Renderer2D::ConvertXAxisPixelValueToOpenGLValue(m_CameraSensitivity);
     }
 
     OrthographicCamera::~OrthographicCamera()
@@ -31,11 +31,11 @@ namespace Flameberry {
     {
         AddControls();
 
-        M_ProjectionMatrix = glm::ortho(-M_AspectRatio * M_Zoom, M_AspectRatio * M_Zoom, -M_Zoom, M_Zoom, -1.0f, 1.0f);
+        m_ProjectionMatrix = glm::ortho(-m_AspectRatio * m_Zoom, m_AspectRatio * m_Zoom, -m_Zoom, m_Zoom, -1.0f, 1.0f);
 
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), M_CameraPosition) * glm::rotate(glm::mat4(1.0f), glm::radians(M_CameraRotation), glm::vec3(0, 0, 1));
-        M_ViewMatrix = glm::inverse(transform);
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_CameraPosition) * glm::rotate(glm::mat4(1.0f), glm::radians(m_CameraRotation), glm::vec3(0, 0, 1));
+        m_ViewMatrix = glm::inverse(transform);
 
-        M_ViewProjectionMatrix = M_ProjectionMatrix * M_ViewMatrix;
+        m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
     }
 }

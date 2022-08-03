@@ -55,11 +55,11 @@ GL_ERROR()
 #endif
 
 // Easy access to some important colors
-#define FL_WHITE glm::vec4{ 1.0f }
-#define FL_YELLOW glm::vec4{ 1.0f, 1.0f, 0.0f, 1.0f }
-#define FL_PURPLE glm::vec4{ 1.0f, 0.0f, 1.0f, 1.0f }
-#define FL_BLUE glm::vec4{ 0.0f, 1.0f, 1.0f, 1.0f }
-#define FL_BLACK glm::vec4{ 0.0f, 0.0f, 0.0f, 1.0f }
+#define FL_WHITE     glm::vec4{ 1.0f }
+#define FL_YELLOW    glm::vec4{ 1.0f, 1.0f, 0.0f, 1.0f }
+#define FL_PURPLE    glm::vec4{ 1.0f, 0.0f, 1.0f, 1.0f }
+#define FL_BLUE      glm::vec4{ 0.0f, 1.0f, 1.0f, 1.0f }
+#define FL_BLACK     glm::vec4{ 0.0f, 0.0f, 0.0f, 1.0f }
 #define FL_DARK_BLUE glm::vec4{ 0.0f, 0.0f, 1.0f, 1.0f }
-#define FL_RED glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f }
-#define FL_PINK glm::vec4{ 1.0f, 157.0f / 255.0f, 207.0f / 255.0f, 1.0f }
+#define FL_RED       glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f }
+#define FL_PINK      glm::vec4{ 1.0f, 157.0f / 255.0f, 207.0f / 255.0f, 1.0f }

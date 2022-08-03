@@ -11,15 +11,15 @@ namespace Flameberry {
         Window(int width = 1280, int height = 720, const char* title = "Flameberry Engine");
         ~Window();
 
-        GLFWwindow* GetGLFWwindow() const { return M_Window; }
-        int GetWidth() const { return M_Width; }
-        int GetHeight() const { return M_Height; }
+        GLFWwindow* GetGLFWwindow() const { return m_Window; }
+        int GetWidth() const { return m_Width; }
+        int GetHeight() const { return m_Height; }
 
         bool IsRunning();
         void OnUpdate();
     private:
-        GLFWwindow* M_Window;
-        int M_Width, M_Height;
-        const char* M_Title;
+        GLFWwindow* m_Window;
+        int m_Width, m_Height;
+        const char* m_Title;
     };
 }

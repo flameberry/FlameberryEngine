@@ -10,7 +10,7 @@ namespace Flameberry {
     }
 
     Window::Window(int width, int height, const char* title)
-        : M_Width(width), M_Height(height), M_Title(title)
+        : m_Width(width), m_Height(height), m_Title(title)
     {
         FL_ASSERT(glfwInit(), "Failed to Initialize GLFW!");
 
@@ -22,33 +22,33 @@ namespace Flameberry {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 #endif
 
-        M_Window = glfwCreateWindow(width, height, title, NULL, NULL);
+        m_Window = glfwCreateWindow(width, height, title, NULL, NULL);
 
-        FL_ASSERT(M_Window, "GLFW Window is Null!");
+        FL_ASSERT(m_Window, "GLFW Window is Null!");
 
-        glfwMakeContextCurrent(M_Window);
+        glfwMakeContextCurrent(m_Window);
         glfwSwapInterval(1);
 
         FL_ASSERT(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "Failed to Initialize Glad!");
 
         int actualWidth, actualHeight;
-        glfwGetFramebufferSize(M_Window, &actualWidth, &actualHeight);
+        glfwGetFramebufferSize(m_Window, &actualWidth, &actualHeight);
         glViewport(0, 0, actualWidth, actualHeight);
     }
 
     Window::~Window()
     {
-        glfwDestroyWindow(M_Window);
+        glfwDestroyWindow(m_Window);
     }
 
     bool Window::IsRunning()
     {
-        return !glfwWindowShouldClose(M_Window);
+        return !glfwWindowShouldClose(m_Window);
     }
 
     void Window::OnUpdate()
     {
-        glfwSwapBuffers(M_Window);
+        glfwSwapBuffers(m_Window);
         glfwPollEvents();
     }
 }

@@ -17,8 +17,8 @@ namespace Flameberry {
     private:
         void SetupImGuiStyle();
     private:
-        std::shared_ptr<Framebuffer> M_Framebuffer;
-        glm::vec2 M_ViewportSize;
-        OrthographicCamera M_Camera;
+        std::shared_ptr<Framebuffer> m_Framebuffer;
+        glm::vec2 m_ViewportSize;
+        OrthographicCamera m_Camera;
     };
 }

@@ -11,10 +11,10 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-        M_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
+        m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-        uint64_t textureID = M_Framebuffer->GetColorAttachmentId();
-        ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ M_ViewportSize.x, M_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+        uint64_t textureID = m_Framebuffer->GetColorAttachmentId();
+        ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
         ImGui::End();
         ImGui::PopStyleVar();
 
@@ -26,33 +26,33 @@ namespace Flameberry {
     void FlameEditor::OnRender()
     {
         // Framebuffer Resize
-        if (glm::vec2 framebufferSize = M_Framebuffer->GetFramebufferSize();
-            M_ViewportSize.x > 0.0f && M_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
-            (framebufferSize.x != M_ViewportSize.x || framebufferSize.y != M_ViewportSize.y))
+        if (glm::vec2 framebufferSize = m_Framebuffer->GetFramebufferSize();
+            m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+            (framebufferSize.x != m_ViewportSize.x || framebufferSize.y != m_ViewportSize.y))
         {
-            M_Framebuffer->SetFramebufferSize((uint32_t)M_ViewportSize.x, (uint32_t)M_ViewportSize.y);
-            M_Framebuffer->OnUpdate();
+            m_Framebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_Framebuffer->OnUpdate();
         }
 
-        M_Framebuffer->Bind();
-        Renderer2D::SetCustomViewportSize(M_ViewportSize);
+        m_Framebuffer->Bind();
+        Renderer2D::SetCustomViewportSize(m_ViewportSize);
 
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        M_Camera.SetAspectRatio(M_ViewportSize.x / M_ViewportSize.y);
+        m_Camera.SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
 
-        Renderer2D::Begin(M_Camera);
+        Renderer2D::Begin(m_Camera);
         Renderer2D::AddQuad({ 0, 0, 0 }, { 100, 100 }, FL_PINK);
         Renderer2D::AddQuad({ 100, 0, 0 }, { 100, 100 }, FL_PINK, "/Users/flameberry/Developer/FlameUI/Sandbox/resources/textures/Checkerboard.png");
         Renderer2D::AddQuad({ 0, 100, 0 }, { 100, 100 }, FL_BLUE);
         Renderer2D::End();
 
-        M_Framebuffer->Unbind();
+        m_Framebuffer->Unbind();
     }
 
     FlameEditor::FlameEditor()
-        : M_Camera(M_ViewportSize.x / M_ViewportSize.y, 1.0f)
+        : m_Camera(m_ViewportSize.x / m_ViewportSize.y, 1.0f)
     {
     }
 
@@ -62,7 +62,7 @@ namespace Flameberry {
 
     void FlameEditor::OnAttach()
     {
-        M_ViewportSize = { 1280.0f, 720.0f };
+        m_ViewportSize = { 1280.0f, 720.0f };
 
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -96,7 +96,7 @@ namespace Flameberry {
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init("#version 410");
 
-        M_Framebuffer = Framebuffer::Create();
+        m_Framebuffer = Framebuffer::Create();
     }
 
     void FlameEditor::OnDetach()
