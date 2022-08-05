@@ -79,6 +79,9 @@ namespace Flameberry {
         io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Regular.ttf", fontSize);
         // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Regular.ttf", fontSize);
 
+        io.IniFilename = NULL;
+        ImGui::LoadIniSettingsFromDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
+
         // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
         ImGuiStyle& style = ImGui::GetStyle();
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -101,6 +104,9 @@ namespace Flameberry {
 
     void FlameEditor::OnDetach()
     {
+        // Just in case changed layout should be saved
+        // ImGui::SaveIniSettingsToDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
+
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
