@@ -1,5 +1,5 @@
 #include "Input.h"
-#include "../renderer/Renderer2D.h"
+#include "../Renderer/Renderer2D.h"
 
 namespace Flameberry {
     GLFWwindow* Input::m_GLFWwindowCache = NULL;
