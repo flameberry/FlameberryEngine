@@ -1,9 +1,9 @@
 @echo off
 
 pushd %~dp0\..\
-call vendor\cmake\cmake.exe -Wno-dev -DCMAKE_BUILD_TYPE=Release -S . -B build\make\
-cd build\make
-make -j4
+call vendor\cmake\cmake.exe -Wno-dev -DCMAKE_BUILD_TYPE=Release -S . -B build\make\ -G "MinGW Makefiles"
+cd build\MinGW-Makefiles
+call vendor\cmake\cmake.exe --build .
 popd
 echo "[FLAMEBERRY]: The executable is generated in the 'bin' directory in the main project folder"
 
