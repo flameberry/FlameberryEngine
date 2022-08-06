@@ -52,7 +52,7 @@ namespace Flameberry {
     }
 
     FlameEditor::FlameEditor()
-        : m_Camera(m_ViewportSize.x / m_ViewportSize.y, 1.0f)
+        : m_ViewportSize(1280, 720), m_Camera(1280.0f / 720.0f, 1.0f)
     {
     }
 
@@ -62,8 +62,6 @@ namespace Flameberry {
 
     void FlameEditor::OnAttach()
     {
-        m_ViewportSize = { 1280.0f, 720.0f };
-
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
