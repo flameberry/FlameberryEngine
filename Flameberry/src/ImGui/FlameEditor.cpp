@@ -102,8 +102,8 @@ namespace Flameberry {
 
     void FlameEditor::OnDetach()
     {
-        // Just in case changed layout should be saved
-        // ImGui::SaveIniSettingsToDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
+        // Saving ImGui Layout
+        ImGui::SaveIniSettingsToDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
 
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
@@ -140,7 +140,6 @@ namespace Flameberry {
 
     void FlameEditor::SetupImGuiStyle()
     {
-        auto& style = ImGui::GetStyle();
         auto& colors = ImGui::GetStyle().Colors;
         colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
 
