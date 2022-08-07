@@ -44,7 +44,7 @@ namespace Flameberry {
 
         Renderer2D::Begin(m_Camera);
         Renderer2D::AddQuad({ 0, 0, 0 }, { 100, 100 }, FL_PINK);
-        Renderer2D::AddQuad({ 100, 0, 0 }, { 100, 100 }, FL_PINK, "/Users/flameberry/Developer/FlameUI/Sandbox/resources/textures/Checkerboard.png");
+        Renderer2D::AddQuad({ 100, 0, 0 }, { 100, 100 }, FL_PINK, FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
         Renderer2D::AddQuad({ 0, 100, 0 }, { 100, 100 }, FL_BLUE);
         Renderer2D::End();
 
