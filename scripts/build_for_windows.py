@@ -29,10 +29,10 @@ def build_project():
 
     # Generating project files using CMake
     subprocess.run(
-        [f"{cmake_path}", f"-DCMAKE_BUILD_TYPE={cmake_build_type}", "-Wno-dev", "-S.", "-Bbuild/make"])
+        [f"{cmake_path}", f"-DCMAKE_BUILD_TYPE={cmake_build_type}", "-Wno-dev", "-S.", "-Bbuild/mingw", '-G"MinGW Makefiles"'])
 
     # Building the project using make
-    os.chdir(fl_project_dir / 'build/make')
+    os.chdir(fl_project_dir / 'build/mingw')
 
     print("[FLAMEBERRY]: Building Flameberry Engine project.")
     subprocess.run([f"{cmake_path}", '--build', '.'])

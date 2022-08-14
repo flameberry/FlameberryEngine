@@ -46,6 +46,7 @@ namespace Flameberry {
         Renderer2D::AddQuad({ 0, 0, 0 }, { 100, 100 }, FL_PINK);
         Renderer2D::AddQuad({ 100, 0, 0 }, { 100, 100 }, FL_PINK, FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
         Renderer2D::AddQuad({ 0, 100, 0 }, { 100, 100 }, FL_BLUE);
+        Renderer2D::AddQuad({ 0, -100, 0 }, { 100, 100 }, { 1.0f, 0.0f, 0.0f, 1.0f });
         Renderer2D::End();
 
         m_Framebuffer->Unbind();

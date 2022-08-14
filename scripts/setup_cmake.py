@@ -20,6 +20,7 @@ def setup_cmake() -> bool:
     # Setting CMake executable name based on platform
     cmake_exe_name = 'cmake.exe' if platform.system() == 'Windows' else 'cmake'
 
+    print("[FLAMEBERRY]: Searching for CMake...")
     # Searching for CMake locally in vendor/cmake
     for search_dir in cmake_search_dirs:
         # This is the search pattern required by the glob.glob function to search for cmake file
@@ -74,19 +75,26 @@ def download_cmake() -> str:
     cmake_version = '3.24.0'
 
     systemOS = 'macos' if platform.system() == 'Darwin' else platform.system().lower()
-    mach = 'universal' if systemOS == 'macos' else platform.machine()
+    mach = ''
+    if systemOS == 'macos':
+        mach = 'universal'
+    elif platform.machine() == 'AMD64':
+        mach = 'x86_64'
+    elif platform.machine() == 'i386':
+        mach = 'i386'
+    elif platform.machine().lower() == 'arm64':
+        mach = 'arm64'
+
     file_extension = 'zip' if systemOS == 'windows' else 'tar.gz'
 
     url = f'https://github.com/Kitware/CMake/releases/download/v{cmake_version}/cmake-{cmake_version}-{systemOS}-{mach}.{file_extension}'
     print(f'[FLAMEBERRY]: CMake will be downloaded from the URL: {url}')
 
-    # download_path = f'{fl_project_dir}/vendor/cmake'
     download_path = pathlib.Path(fl_project_dir / 'vendor/cmake')
     file_name = str(url.split('/')[-1])
 
     download_file(url, str(download_path.resolve()))
 
-    # src = f'{download_path}/{file_name}'
     src = pathlib.Path(download_path / f'{file_name}')
     pure_filename = file_name.replace(f'.{file_extension}', '')
     dest = download_path
