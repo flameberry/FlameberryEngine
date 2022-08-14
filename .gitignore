@@ -7,6 +7,9 @@ build_makefiles/
 build_xcode/
 build/
 
+# Ignore CMake Instance downloaded by python scripts
+vendor/cmake/
+
 # Log files
 logs/
 *.log

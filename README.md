@@ -1,3 +1,5 @@
 # Flameberry Engine
 
-### To build Flameberry Engine, run any script in the 'scripts' folder according to your system.
+### <u><i>Build Requirements</i></u>:
+1. CMake must be installed on your system
+<hr>
