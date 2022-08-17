@@ -4,9 +4,7 @@
 #include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image/stb_image.h>
+#include "RenderCommand.h"
 
 namespace Flameberry {
     std::unordered_map<char, Renderer2D::Character> Renderer2D::s_Characters;
@@ -134,20 +132,20 @@ namespace Flameberry {
 
         glGenBuffers(1, &s_Batch.VertexBufferId);
         glBindBuffer(GL_ARRAY_BUFFER, s_Batch.VertexBufferId);
-        glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(Vertex2D), nullptr, GL_DYNAMIC_DRAW);
 
         glBindVertexArray(s_Batch.VertexArrayId);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex, position));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex2D, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex, color));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex2D, color));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex, texture_uv));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex2D, texture_uv));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex, texture_index));
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex2D, texture_index));
         glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex, quad_dimensions));
+        glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(Vertex2D, quad_dimensions));
 
         glGenBuffers(1, &s_Batch.IndexBufferId);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s_Batch.IndexBufferId);
@@ -155,101 +153,7 @@ namespace Flameberry {
 
         glBindVertexArray(s_Batch.VertexArrayId);
 
-        auto [vertexSource, fragmentSource] = Renderer2D::ReadShaderSource(FL_PROJECT_DIR + std::string("Flameberry/assets/shaders/Quad.glsl"));
-        // Create an empty vertex shader handle
-        GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-
-        // Send the vertex shader source code to GL
-        // Note that std::string's .c_str is NULL character terminated.
-        const GLchar* source = (const GLchar*)vertexSource.c_str();
-        glShaderSource(vertex_shader, 1, &source, 0);
-
-        // Compile the vertex shader
-        glCompileShader(vertex_shader);
-
-        GLint isCompiled = 0;
-        glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &isCompiled);
-        if (isCompiled == GL_FALSE)
-        {
-            GLint maxLength = 0;
-            glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &maxLength);
-
-            // The maxLength includes the NULL character
-            std::vector<GLchar> infoLog(maxLength);
-            glGetShaderInfoLog(vertex_shader, maxLength, &maxLength, &infoLog[0]);
-
-            // We don't need the shader anymore.
-            glDeleteShader(vertex_shader);
-
-            FL_ERROR("Error compiling VERTEX shader:\n{0}", infoLog.data());
-        }
-
-        // Create an empty fragment shader handle
-        GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-
-        // Send the fragment shader source code to GL
-        // Note that std::string's .c_str is NULL character terminated.
-        source = (const GLchar*)fragmentSource.c_str();
-        glShaderSource(fragment_shader, 1, &source, 0);
-
-        // Compile the fragment shader
-        glCompileShader(fragment_shader);
-
-        glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &isCompiled);
-        if (isCompiled == GL_FALSE)
-        {
-            GLint maxLength = 0;
-            glGetShaderiv(fragment_shader, GL_INFO_LOG_LENGTH, &maxLength);
-
-            // The maxLength includes the NULL character
-            std::vector<GLchar> infoLog(maxLength);
-            glGetShaderInfoLog(fragment_shader, maxLength, &maxLength, &infoLog[0]);
-
-            // We don't need the shader anymore.
-            glDeleteShader(fragment_shader);
-            // Either of them. Don't leak shaders.
-            glDeleteShader(vertex_shader);
-
-            FL_ERROR("Error compiling FRAGMENT shader:\n{0}", infoLog.data());
-        }
-
-        // Vertex and fragment shaders are successfully compiled.
-        // Now time to link them together into a program.
-        // Get a program object.
-        s_Batch.ShaderProgramId = glCreateProgram();
-
-        // Attach our shaders to our program
-        glAttachShader(s_Batch.ShaderProgramId, vertex_shader);
-        glAttachShader(s_Batch.ShaderProgramId, fragment_shader);
-
-        // Link our program
-        glLinkProgram(s_Batch.ShaderProgramId);
-
-        // Note the different functions here: glGetProgram* instead of glGetShader*.
-        GLint isLinked = 0;
-        glGetProgramiv(s_Batch.ShaderProgramId, GL_LINK_STATUS, (int*)&isLinked);
-        if (isLinked == GL_FALSE)
-        {
-            GLint maxLength = 0;
-            glGetProgramiv(s_Batch.ShaderProgramId, GL_INFO_LOG_LENGTH, &maxLength);
-
-            // The maxLength includes the NULL character
-            std::vector<GLchar> infoLog(maxLength);
-            glGetProgramInfoLog(s_Batch.ShaderProgramId, maxLength, &maxLength, &infoLog[0]);
-
-            // We don't need the program anymore.
-            glDeleteProgram(s_Batch.ShaderProgramId);
-            // Don't leak shaders either.
-            glDeleteShader(vertex_shader);
-            glDeleteShader(fragment_shader);
-
-            FL_ERROR("Error linking shader program:\n{0}", infoLog.data());
-        }
-
-        // Always detach shaders after a successful link.
-        glDetachShader(s_Batch.ShaderProgramId, vertex_shader);
-        glDetachShader(s_Batch.ShaderProgramId, fragment_shader);
-
+        s_Batch.ShaderProgramId = RenderCommand::CreateShader(FL_PROJECT_DIR"Flameberry/assets/shaders/Quad.glsl");
         glUseProgram(s_Batch.ShaderProgramId);
 
         int samplers[MAX_TEXTURE_SLOTS];
@@ -265,7 +169,7 @@ namespace Flameberry {
             return;
 
         glBindBuffer(GL_ARRAY_BUFFER, s_Batch.VertexBufferId);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, s_Batch.Vertices.size() * sizeof(Vertex), s_Batch.Vertices.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, s_Batch.Vertices.size() * sizeof(Vertex2D), s_Batch.Vertices.data());
 
         for (uint8_t i = 0; i < s_Batch.TextureIds.size(); i++)
         {
@@ -283,7 +187,7 @@ namespace Flameberry {
 
     void Renderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, UnitType unitType)
     {
-        Vertex vertices[4];
+        Vertex2D vertices[4];
 
         vertices[0].texture_uv = { 0.0f, 0.0f };
         vertices[1].texture_uv = { 0.0f, 1.0f };
@@ -295,8 +199,8 @@ namespace Flameberry {
         switch (unitType)
         {
         case UnitType::PIXEL_UNITS:
-            transformation = glm::translate(glm::mat4(1.0f), { ConvertPixelsToOpenGLValues({ position.x, position.y }), position.z });
-            transformation = glm::scale(transformation, { ConvertPixelsToOpenGLValues(dimensions), 0.0f });
+            transformation = glm::translate(glm::mat4(1.0f), { RenderCommand::PixelToOpenGL({ position.x, position.y }, s_ViewportSize), position.z });
+            transformation = glm::scale(transformation, { RenderCommand::PixelToOpenGL(dimensions, s_ViewportSize), 0.0f });
             break;
         case UnitType::OPENGL_UNITS:
             transformation = glm::translate(glm::mat4(1.0f), position);
@@ -310,7 +214,7 @@ namespace Flameberry {
         {
             vertices[i].position = transformation * s_TemplateVertexPositions[i];
             vertices[i].color = color;
-            vertices[i].quad_dimensions = ConvertPixelsToOpenGLValues(dimensions);
+            vertices[i].quad_dimensions = RenderCommand::PixelToOpenGL(dimensions, s_ViewportSize);
         }
 
         for (uint8_t i = 0; i < 4; i++)
@@ -319,7 +223,7 @@ namespace Flameberry {
 
     void Renderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, const char* textureFilePath, UnitType unitType)
     {
-        Vertex vertices[4];
+        Vertex2D vertices[4];
         vertices[0].texture_uv = { 0.0f, 0.0f };
         vertices[1].texture_uv = { 0.0f, 1.0f };
         vertices[2].texture_uv = { 1.0f, 1.0f };
@@ -330,8 +234,8 @@ namespace Flameberry {
         switch (unitType)
         {
         case UnitType::PIXEL_UNITS:
-            transformation = glm::translate(glm::mat4(1.0f), { ConvertPixelsToOpenGLValues({ position.x, position.y }), position.z });
-            transformation = glm::scale(transformation, { ConvertPixelsToOpenGLValues(dimensions), 0.0f });
+            transformation = glm::translate(glm::mat4(1.0f), { RenderCommand::PixelToOpenGL({ position.x, position.y }, s_ViewportSize), position.z });
+            transformation = glm::scale(transformation, { RenderCommand::PixelToOpenGL(dimensions, s_ViewportSize), 0.0f });
             break;
         case UnitType::OPENGL_UNITS:
             transformation = glm::translate(glm::mat4(1.0f), position);
@@ -345,7 +249,7 @@ namespace Flameberry {
         {
             vertices[i].position = transformation * s_TemplateVertexPositions[i];
             vertices[i].color = color;
-            vertices[i].quad_dimensions = ConvertPixelsToOpenGLValues(dimensions);
+            vertices[i].quad_dimensions = RenderCommand::PixelToOpenGL(dimensions, s_ViewportSize);
             vertices[i].texture_index = s_CurrentTextureSlot;
         }
 
@@ -355,7 +259,7 @@ namespace Flameberry {
         uint32_t textureId = GetTextureIdIfAvailable(textureFilePath);
         if (!textureId)
         {
-            textureId = CreateTexture(textureFilePath);
+            textureId = RenderCommand::CreateTexture(textureFilePath);
             s_TextureIdCache[textureFilePath] = textureId;
         }
         s_Batch.TextureIds.push_back(textureId);
@@ -384,7 +288,7 @@ namespace Flameberry {
             float w = character.size.x * scale;
             float h = character.size.y * scale;
 
-            std::array<Flameberry::Vertex, 4> vertices;
+            std::array<Flameberry::Vertex2D, 4> vertices;
             vertices[0].position = { xpos,     ypos,     0.0f };
             vertices[1].position = { xpos,     ypos + h, 0.0f };
             vertices[2].position = { xpos + w, ypos + h, 0.0f };
@@ -459,72 +363,6 @@ namespace Flameberry {
     float Renderer2D::ConvertYAxisPixelValueToOpenGLValue(int Y)
     {
         return static_cast<float>(Y) * (2.0f / s_ViewportSize.y) * s_WindowContentScale.y;
-    }
-
-    uint32_t Renderer2D::CreateTexture(const std::string& filePath)
-    {
-        stbi_set_flip_vertically_on_load(true);
-
-        int width, height, channels;
-        unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &channels, 0);
-
-        FL_ASSERT(data, "Failed to load texture from \"{0}\"", filePath);
-
-        GLenum internalFormat = 0, dataFormat = 0;
-        if (channels == 4)
-        {
-            internalFormat = GL_RGBA8;
-            dataFormat = GL_RGBA;
-        }
-        else if (channels == 3)
-        {
-            internalFormat = GL_RGB8;
-            dataFormat = GL_RGB;
-        }
-
-        uint32_t textureId;
-        glGenTextures(1, &textureId);
-        glBindTexture(GL_TEXTURE_2D, textureId);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        stbi_image_free(data);
-        return textureId;
-    }
-
-    std::tuple<std::string, std::string> Renderer2D::ReadShaderSource(const std::string& filePath)
-    {
-        std::ifstream stream(filePath);
-
-        FL_ASSERT(stream.is_open(), "The given shader file {0} cannot be opened", filePath);
-
-        std::stringstream ss[2];
-        std::string line;
-
-        uint32_t shader_type = 2;
-
-        while (getline(stream, line))
-        {
-            if (line.find("#shader") != std::string::npos)
-            {
-                if (line.find("vertex") != std::string::npos)
-                    shader_type = 0;
-                else if (line.find("fragment") != std::string::npos)
-                    shader_type = 1;
-            }
-            else
-            {
-                ss[shader_type] << line << "\n";
-            }
-        }
-        stream.close();
-        return std::make_tuple(ss[0].str(), ss[1].str());
     }
 
     GLint Renderer2D::GetUniformLocation(const std::string& name, uint32_t shaderId)

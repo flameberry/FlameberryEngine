@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include "../Core/Core.h"
+#include "Core/Core.h"
 #include "OrthographicCamera.h"
 
 /// This Macro contains the max number of texture slots that the GPU supports, varies for each computer.
@@ -31,7 +31,7 @@ namespace Flameberry {
     };
 
     // The [Vertex] struct represents an OpenGL Vertex.
-    struct Vertex
+    struct Vertex2D
     {
         /// Position from -1.0f to 1.0f on both x-axis and y-axis
         glm::vec3 position;
@@ -45,7 +45,7 @@ namespace Flameberry {
         glm::vec2 quad_dimensions;
 
         /// Default Constructor
-        Vertex()
+        Vertex2D()
             : position(0.0f), color(1.0f), texture_uv(0.0f), texture_index(-1.0f), quad_dimensions(0.0f)
         {
         }
@@ -68,14 +68,12 @@ namespace Flameberry {
         static void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, const char* textureFilePath, UnitType unitType = UnitType::PIXEL_UNITS);
         static void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, UnitType unitType = UnitType::PIXEL_UNITS);
         static void        AddText(const std::string& text, const glm::vec2& position_in_pixels, float scale, const glm::vec4& color);
-        static uint32_t    CreateTexture(const std::string& filePath);
         static void        CleanUp();
         static void        Begin(OrthographicCamera& camera);
         static void        End();
         static void        SetCustomViewportSize(const glm::vec2& customViewportSize) { s_RendererInitInfo.customViewportSize = customViewportSize; }
 
         static glm::vec2& GetCursorPosition();
-        static std::tuple<std::string, std::string> ReadShaderSource(const std::string& filePath);
     private:
         /// Batch Handling functions
         static void InitBatch();
@@ -106,7 +104,7 @@ namespace Flameberry {
             uint32_t VertexBufferId, IndexBufferId, VertexArrayId, ShaderProgramId;
             std::vector<uint32_t> TextureIds;
             /// All the vertices stored by a Batch.
-            std::vector<Vertex> Vertices;
+            std::vector<Vertex2D> Vertices;
         };
         struct Character
         {

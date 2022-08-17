@@ -1,5 +1,5 @@
 #pragma once
-#include "../flamelogger/flamelogger.h"
+#include "flamelogger/flamelogger.h"
 
 namespace Flameberry {
     class Log

@@ -2,12 +2,14 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
-#include "../Core/Application.h"
-#include "../Renderer/Renderer2D.h"
+#include "Core/Application.h"
+#include "Renderer/Renderer2D.h"
+#include "Core/Timer.h"
 
 namespace Flameberry {
     void FlameEditor::OnImGuiRender()
     {
+        OnImGuiBegin();
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
@@ -20,11 +22,15 @@ namespace Flameberry {
 
         ImGui::Begin("Settings");
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::Text("Last Render Time: %.3fms", m_LastRenderTime * 0.001f * 0.001f);
         ImGui::End();
+        OnImGuiEnd();
     }
 
     void FlameEditor::OnRender()
     {
+        ScopedTimer timer(&m_LastRenderTime);
+
         // Framebuffer Resize
         if (glm::vec2 framebufferSize = m_Framebuffer->GetFramebufferSize();
             m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid

@@ -1,6 +1,6 @@
 #include "OrthographicCamera.h"
 #include <glm/gtc/matrix_transform.hpp>
-#include "../Core/Input.h"
+#include "Core/Input.h"
 #include "Renderer2D.h"
 
 namespace Flameberry {

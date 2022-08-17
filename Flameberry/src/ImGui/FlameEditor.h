@@ -1,6 +1,6 @@
 #pragma once
-#include "../Renderer/Framebuffer.h"
-#include "../Renderer/OrthographicCamera.h"
+#include "Renderer/Framebuffer.h"
+#include "Renderer/OrthographicCamera.h"
 
 namespace Flameberry {
     class FlameEditor
@@ -12,13 +12,14 @@ namespace Flameberry {
         void OnDetach();
         void OnRender();
         void OnImGuiRender();
+    private:
         void OnImGuiBegin();
         void OnImGuiEnd();
-    private:
         void SetupImGuiStyle();
     private:
         std::shared_ptr<Framebuffer> m_Framebuffer;
         glm::vec2 m_ViewportSize;
         OrthographicCamera m_Camera;
+        float m_LastRenderTime = 0.0f;
     };
 }

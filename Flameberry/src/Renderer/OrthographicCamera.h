@@ -13,10 +13,8 @@ namespace Flameberry {
         void SetRotation(float rotationAngle) { m_CameraRotation = rotationAngle; }
 
         void AddControls();
-
-        void SetSensitivity(int value) { m_CameraSensitivity = value; }
-
         void OnUpdate();
+        void SetSensitivity(int value) { m_CameraSensitivity = value; }
         const glm::mat4& GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
     private:
         float m_AspectRatio, m_Zoom = 1.0f;
