@@ -3,6 +3,7 @@
 #include "Core.h"
 #include "Renderer/Renderer2D.h"
 #include "Timer.h"
+#include "ImGui/ImGuiLayer.h"
 
 namespace Flameberry {
     Application* Application::s_Instance;
@@ -30,7 +31,7 @@ namespace Flameberry {
 
         Renderer2D::Init(rendererInitInfo);
 
-        m_FlameEditor.OnAttach();
+        ImGuiLayer::OnAttach();
     }
 
     void Application::Run()
@@ -50,8 +51,11 @@ namespace Flameberry {
             // m_Renderer3D->OnDraw();
             // m_Renderer3D->End();
 
-            m_FlameEditor.OnRender();
-            m_FlameEditor.OnImGuiRender();
+            OnRender();
+
+            ImGuiLayer::Begin();
+            OnUIRender();
+            ImGuiLayer::End();
 
             m_Window->OnUpdate();
         }
@@ -59,7 +63,7 @@ namespace Flameberry {
 
     Application::~Application()
     {
-        m_FlameEditor.OnDetach();
+        ImGuiLayer::OnDetach();
         Renderer2D::CleanUp();
         // m_Renderer3D->CleanUp();
         glfwTerminate();

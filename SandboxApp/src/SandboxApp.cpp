@@ -1,8 +1,21 @@
 #include "Flameberry.h"
 
-int main(int argc, char const* argv[])
+class SandboxApp : public Flameberry::Application
 {
-    Flameberry::Application* app = new Flameberry::Application();
-    app->Run();
-    delete app;
+public:
+    SandboxApp() {}
+    virtual ~SandboxApp() {}
+    void OnRender() override
+    {
+        FL_LOG("Rendering [SANDBOXAPP]");
+    }
+    void OnUIRender() override
+    {
+        FL_LOG("Rendering UI [SANDBOXAPP]");
+    }
+};
+
+std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClient()
+{
+    return std::make_shared<SandboxApp>();
 }

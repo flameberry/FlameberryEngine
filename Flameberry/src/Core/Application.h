@@ -1,7 +1,6 @@
 #pragma once
 #include <memory>
 #include "Window.h"
-#include "ImGui/FlameEditor.h"
 #include "Renderer/Renderer3D.h"
 
 namespace Flameberry {
@@ -14,9 +13,12 @@ namespace Flameberry {
 
         Window& GetWindow() { return *m_Window; }
         static Application& Get() { return *s_Instance; }
+        static std::shared_ptr<Application> CreateClient();
+
+        virtual void OnRender() = 0;
+        virtual void OnUIRender() = 0;
     private:
         std::shared_ptr<Window> m_Window;
-        FlameEditor m_FlameEditor;
         std::shared_ptr<Renderer3D> m_Renderer3D;
         PerspectiveCamera m_Camera;
     private:

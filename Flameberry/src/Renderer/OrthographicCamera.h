@@ -5,6 +5,7 @@ namespace Flameberry {
     class OrthographicCamera
     {
     public:
+        OrthographicCamera() = default;
         OrthographicCamera(float aspectRatio, float zoom);
         ~OrthographicCamera();
 

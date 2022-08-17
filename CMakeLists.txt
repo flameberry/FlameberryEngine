@@ -22,4 +22,9 @@ include(CMake/CMakeUtils.cmake)
 
 # Add the actual library directory and the Sandbox project
 add_subdirectory(Flameberry)
-add_subdirectory(SandboxApp)
+
+# The Game Editor App
+add_subdirectory(FlameEditor)
+
+# SandboxApp
+# add_subdirectory(SandboxApp)
