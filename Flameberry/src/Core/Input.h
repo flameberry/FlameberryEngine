@@ -9,9 +9,5 @@ namespace Flameberry {
     public:
         static bool IsKey(uint16_t key, uint16_t action);
         static bool IsMouseButton(uint16_t button, uint16_t action);
-    private:
-        static GLFWwindow* GetCachedWindow();
-    private:
-        static GLFWwindow* m_GLFWwindowCache;
     };
 }

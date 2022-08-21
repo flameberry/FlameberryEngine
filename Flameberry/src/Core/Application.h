@@ -13,7 +13,7 @@ namespace Flameberry {
 
         Window& GetWindow() { return *m_Window; }
         static Application& Get() { return *s_Instance; }
-        static std::shared_ptr<Application> CreateClient();
+        static std::shared_ptr<Application> CreateClientApp();
 
         virtual void OnRender() = 0;
         virtual void OnUIRender() = 0;

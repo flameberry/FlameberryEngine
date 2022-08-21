@@ -15,7 +15,7 @@ public:
     }
 };
 
-std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClient()
+std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()
 {
     return std::make_shared<SandboxApp>();
 }

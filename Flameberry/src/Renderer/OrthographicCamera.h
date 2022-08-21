@@ -6,10 +6,11 @@ namespace Flameberry {
     {
     public:
         OrthographicCamera() = default;
-        OrthographicCamera(float aspectRatio, float zoom);
+        OrthographicCamera(const glm::vec2& viewportSize, float zoom);
         ~OrthographicCamera();
 
-        void SetAspectRatio(float aspectRatio) { m_AspectRatio = aspectRatio; }
+        // void SetAspectRatio(float aspectRatio) { m_AspectRatio = aspectRatio; }
+        void SetViewportSize(const glm::vec2& viewportSize) { m_ViewportSize = viewportSize; m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y; }
         void SetPosition(const glm::vec3& position) { m_CameraPosition = position; }
         void SetRotation(float rotationAngle) { m_CameraRotation = rotationAngle; }
 
@@ -20,6 +21,7 @@ namespace Flameberry {
     private:
         float m_AspectRatio, m_Zoom = 1.0f;
         glm::mat4 m_ProjectionMatrix, m_ViewMatrix, m_ViewProjectionMatrix;
+        glm::vec2 m_ViewportSize;
         glm::vec3 m_CameraPosition{ 0.0f, 0.0f, 0.0f };
         float m_CameraRotation = 0.0f;
         int m_CameraSensitivity = 25;

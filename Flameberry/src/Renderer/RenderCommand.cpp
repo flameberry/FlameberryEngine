@@ -31,6 +31,17 @@ namespace Flameberry {
         return glm::vec2(x, y);
     }
 
+    float RenderCommand::PixelToOpenGLX(float pixels, const glm::vec2& viewportSize)
+    {
+        float aspectRatio = viewportSize.x / viewportSize.y;
+        return utils::map(pixels, { -viewportSize.x / 2.0f, viewportSize.x / 2.0f }, { -aspectRatio, aspectRatio });
+    }
+
+    float RenderCommand::PixelToOpenGLY(float pixels, float viewportHeight)
+    {
+        return utils::map(pixels, { -viewportHeight / 2.0f, viewportHeight / 2.0f }, { -1.0f, 1.0f });
+    }
+
     std::tuple<std::string, std::string> RenderCommand::ReadShaderSource(const std::string& filePath)
     {
         std::ifstream stream(filePath);
