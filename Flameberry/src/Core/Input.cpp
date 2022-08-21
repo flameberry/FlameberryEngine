@@ -17,4 +17,12 @@ namespace Flameberry {
             return true;
         return false;
     }
+
+    glm::vec2 Input::GetCursorPosition()
+    {
+        GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+        return glm::vec2((float)x, (float)y);
+    }
 }

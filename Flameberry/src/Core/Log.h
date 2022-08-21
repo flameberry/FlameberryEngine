@@ -1,4 +1,5 @@
 #pragma once
+
 #include "flamelogger/flamelogger.h"
 
 namespace Flameberry {

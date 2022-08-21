@@ -1,11 +1,13 @@
 #pragma once
-#include <array>
+
+#include <unordered_map>
 #include <vector>
 #include <string>
+
 #include <glad/glad.h>
-#include <unordered_map>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+
 #include "Core/Core.h"
 #include "OrthographicCamera.h"
 
@@ -19,8 +21,6 @@ namespace Flameberry {
     struct Renderer2DInitInfo
     {
         GLFWwindow* userWindow;
-        bool enableFontRendering{ true };
-        std::string fontFilePath{ FL_PROJECT_DIR"Flameberry/resources/fonts/OpenSans-Regular.ttf" };
         bool enableCustomViewport{ false };
         glm::vec2 customViewportSize;
     };
@@ -52,7 +52,7 @@ namespace Flameberry {
         glm::vec2   GetViewportSize();
         GLint       GetUniformLocation(const std::string& name, uint32_t shaderId);
         float       GetAspectRatio() { return m_AspectRatio; }
-        void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, const char* textureFilePath);
+        void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath);
         void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color);
         void        CleanUp();
         void        Begin(OrthographicCamera& camera);
@@ -60,7 +60,7 @@ namespace Flameberry {
         void        SetCustomViewportSize(const glm::vec2& customViewportSize) { m_RendererInitInfo.customViewportSize = customViewportSize; }
 
         glm::vec2& GetCursorPosition();
-        static std::shared_ptr<Renderer2D> Create();
+        static std::shared_ptr<Renderer2D> Create() { return std::make_shared<Renderer2D>(); }
     private:
         /// Batch Handling functions
         void InitBatch();
@@ -95,8 +95,6 @@ namespace Flameberry {
         uint32_t                                  m_UniformBufferId;
         /// Stores all matrices needed by the shader, also stored in a Uniform Buffer
         UniformBufferData                         m_UniformBufferData;
-        /// Stores file path of the font provided by user and the default font file path
-        std::string                               m_UserFontFilePath;
         /// The main vector of all the batches of quads to ever exist in the program
         Batch                                     m_Batch;
         /// Stores the size of the vieport that Flameberry is being drawn on
@@ -109,7 +107,6 @@ namespace Flameberry {
         std::unordered_map<std::string, GLint>    m_UniformLocationCache;
         /// Stores the texture IDs of the already loaded textures to be reused
         std::unordered_map<std::string, uint32_t> m_TextureIdCache;
-
         float m_CurrentTextureSlot;
 
         const glm::vec4 m_TemplateVertexPositions[4] = {
@@ -118,5 +115,7 @@ namespace Flameberry {
              { 0.5f,  0.5f, 0.0f, 1.0f},
              { 0.5f, -0.5f, 0.0f, 1.0f}
         };
+
+        const glm::vec4 m_DefaultColor = glm::vec4(1);
     };
 }

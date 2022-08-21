@@ -7,7 +7,6 @@ FlameEditorApp::FlameEditorApp()
     m_Renderer3D(Flameberry::Renderer3D::Create())
 {
     Flameberry::Renderer2DInitInfo rendererInitInfo{};
-    rendererInitInfo.enableFontRendering = false;
     rendererInitInfo.userWindow = Flameberry::Application::Get().GetWindow().GetGLFWwindow();
     rendererInitInfo.enableCustomViewport = true;
     rendererInitInfo.customViewportSize = { 1280.0f, 720.0f };
@@ -33,7 +32,7 @@ FlameEditorApp::~FlameEditorApp()
     m_Renderer2D->CleanUp();
 }
 
-void FlameEditorApp::OnRender()
+void FlameEditorApp::OnUpdate(float delta)
 {
     Flameberry::ScopedTimer timer(&m_LastRenderTime);
 
@@ -66,7 +65,7 @@ void FlameEditorApp::OnRender()
 
     m_Renderer2D->Begin(m_Camera);
     m_Renderer2D->AddQuad({ 0.0f,  0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PINK);
-    m_Renderer2D->AddQuad({ 0.2f,  0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PINK, FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
+    m_Renderer2D->AddQuad({ 0.2f,  0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
     m_Renderer2D->AddQuad({ 0.0f,  0.2f, 0.0f }, { 0.2f, 0.2f }, FL_BLUE);
     m_Renderer2D->AddQuad({ 0.0f, -0.2f, 0.0f }, { 0.2f, 0.2f }, FL_YELLOW);
     m_Renderer2D->AddQuad({ -0.2f, 0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PURPLE);

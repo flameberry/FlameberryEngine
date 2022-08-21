@@ -1,6 +1,7 @@
 #include "RenderCommand.h"
-#include "Core/Core.h"
+
 #include <fstream>
+#include "Core/Core.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
@@ -179,7 +180,7 @@ namespace Flameberry {
         int width, height, channels;
         unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &channels, 0);
 
-        FL_ASSERT(data, "Failed to load texture from \"{0}\"", filePath);
+        FL_DO_ON_ASSERT(data, FL_ERROR("Failed to load texture from \"{0}\"", filePath));
 
         GLenum internalFormat = 0, dataFormat = 0;
         if (channels == 4)

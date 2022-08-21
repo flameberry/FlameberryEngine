@@ -1,25 +1,22 @@
 #include "Renderer2D.h"
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 #include "RenderCommand.h"
+#include "Core/Input.h"
 
 namespace Flameberry {
     Renderer2D::Renderer2D()
-        : m_AspectRatio(1280.0f / 720.0f), m_UserFontFilePath(""), m_ViewportSize(1280.0f, 720.0f), m_CursorPosition(0.0f, 0.0f), m_CurrentTextureSlot(0)
-    {
-    }
+        : m_AspectRatio(1280.0f / 720.0f), m_ViewportSize(1280.0f, 720.0f), m_CursorPosition(0.0f, 0.0f), m_CurrentTextureSlot(0)
+    {}
 
     Renderer2D::~Renderer2D()
-    {
-    }
-
-    std::shared_ptr<Renderer2D> Renderer2D::Create()
-    {
-        return std::make_shared<Renderer2D>();
-    }
+    {}
 
     void Renderer2D::UpdateViewportSize()
     {
@@ -83,13 +80,6 @@ namespace Flameberry {
 
         UpdateWindowContentScale();
         UpdateViewportSize();
-
-        if (rendererInitInfo.enableFontRendering)
-        {
-            m_UserFontFilePath = rendererInitInfo.fontFilePath;
-            // Load Font Here
-            FL_INFO("Loaded Font from path \"{0}\"", m_UserFontFilePath);
-        }
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -179,6 +169,7 @@ namespace Flameberry {
 
         m_Batch.Vertices.clear();
         m_Batch.TextureIds.clear();
+        m_CurrentTextureSlot = 0;
     }
 
     void Renderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color)
@@ -203,7 +194,7 @@ namespace Flameberry {
             m_Batch.Vertices.push_back(vertices[i]);
     }
 
-    void Renderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color, const char* textureFilePath)
+    void Renderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath)
     {
         Vertex2D vertices[4];
         vertices[0].texture_uv = { 0.0f, 0.0f };
@@ -217,7 +208,7 @@ namespace Flameberry {
         for (uint8_t i = 0; i < 4; i++)
         {
             vertices[i].position = transformation * m_TemplateVertexPositions[i];
-            vertices[i].color = color;
+            vertices[i].color = m_DefaultColor;
             vertices[i].texture_index = m_CurrentTextureSlot;
         }
 
@@ -244,6 +235,7 @@ namespace Flameberry {
     void Renderer2D::Begin(OrthographicCamera& camera)
     {
         OnUpdate();
+
         camera.OnUpdate();
         m_UniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 
@@ -255,7 +247,6 @@ namespace Flameberry {
     void Renderer2D::End()
     {
         FlushBatch();
-        m_CurrentTextureSlot = 0;
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 

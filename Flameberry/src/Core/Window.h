@@ -1,4 +1,5 @@
 #pragma once
+
 #include <memory>
 #include <GLFW/glfw3.h>
 
@@ -12,14 +13,14 @@ namespace Flameberry {
         ~Window();
 
         GLFWwindow* GetGLFWwindow() const { return m_Window; }
-        int GetWidth() const { return m_Width; }
-        int GetHeight() const { return m_Height; }
+        uint32_t GetWidth() const { return m_Width; }
+        uint32_t GetHeight() const { return m_Height; }
 
         bool IsRunning();
         void OnUpdate();
     private:
         GLFWwindow* m_Window;
-        int m_Width, m_Height;
+        uint32_t m_Width, m_Height;
         const char* m_Title;
     };
 }

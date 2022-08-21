@@ -1,5 +1,7 @@
 #pragma once
+
 #include <memory>
+
 #include "Window.h"
 #include "Renderer/Renderer3D.h"
 
@@ -15,7 +17,7 @@ namespace Flameberry {
         static Application& Get() { return *s_Instance; }
         static std::shared_ptr<Application> CreateClientApp();
 
-        virtual void OnRender() = 0;
+        virtual void OnUpdate(float delta) = 0;
         virtual void OnUIRender() = 0;
     private:
         std::shared_ptr<Window> m_Window;

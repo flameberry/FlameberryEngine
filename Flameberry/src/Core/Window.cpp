@@ -1,6 +1,8 @@
 #include "Window.h"
+
 #include <iostream>
 #include <glad/glad.h>
+
 #include "Core.h"
 
 namespace Flameberry {
@@ -34,6 +36,14 @@ namespace Flameberry {
         int actualWidth, actualHeight;
         glfwGetFramebufferSize(m_Window, &actualWidth, &actualHeight);
         glViewport(0, 0, actualWidth, actualHeight);
+
+        void* pointer;
+        glfwSetWindowUserPointer(m_Window, pointer);
+
+        // Setting events
+        glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset) {
+            }
+        );
     }
 
     Window::~Window()

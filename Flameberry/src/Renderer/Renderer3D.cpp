@@ -1,10 +1,12 @@
 #include "Renderer3D.h"
-#include <glad/glad.h>
-#include "RenderCommand.h"
 #include <vector>
-#include "Core/Core.h"
+
+#include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "RenderCommand.h"
+#include "Core/Core.h"
 
 namespace Flameberry {
     void Renderer3D::UpdateViewportSize()

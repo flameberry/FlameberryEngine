@@ -1,5 +1,6 @@
 #include "Application.h"
 #include <glad/glad.h>
+
 #include "Core.h"
 #include "Renderer/Renderer2D.h"
 #include "Timer.h"
@@ -16,12 +17,17 @@ namespace Flameberry {
 
     void Application::Run()
     {
+        float last = 0.0f;
         while (m_Window->IsRunning())
         {
-            OnRender();
+            float now = glfwGetTime();
+            float delta = now - last;
+            last = now;
+
+            this->OnUpdate(delta);
 
             ImGuiLayer::Begin();
-            OnUIRender();
+            this->OnUIRender();
             ImGuiLayer::End();
 
             m_Window->OnUpdate();

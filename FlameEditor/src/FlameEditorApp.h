@@ -6,7 +6,7 @@ class FlameEditorApp : public Flameberry::Application
 public:
     FlameEditorApp();
     virtual ~FlameEditorApp();
-    void OnRender() override;
+    void OnUpdate(float delta) override;
     void OnUIRender() override;
 private:
     std::shared_ptr<Flameberry::Framebuffer> m_Framebuffer;

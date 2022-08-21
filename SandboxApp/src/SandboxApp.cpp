@@ -5,7 +5,7 @@ class SandboxApp : public Flameberry::Application
 public:
     SandboxApp() {}
     virtual ~SandboxApp() {}
-    void OnRender() override
+    void OnUpdate() override
     {
         FL_LOG("Rendering [SANDBOXAPP]");
     }

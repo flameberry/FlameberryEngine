@@ -1,6 +1,7 @@
 #include "Framebuffer.h"
-#include "Core/Core.h"
+
 #include <glad/glad.h>
+#include "Core/Core.h"
 
 namespace Flameberry {
     std::shared_ptr<Framebuffer> Framebuffer::Create(float width, float height)
