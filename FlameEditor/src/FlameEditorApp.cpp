@@ -3,8 +3,8 @@
 FlameEditorApp::FlameEditorApp()
     : m_Framebuffer(Flameberry::Framebuffer::Create()),
     m_ViewportSize(1280, 720),
-    m_Camera({ 1280.0f, 720.0f }, 1.0f),
-    m_Renderer3D(Flameberry::Renderer3D::Create())
+    m_Camera({ 1280.0f, 720.0f }, 1.0f)
+    // m_Renderer3D(Flameberry::Renderer3D::Create())
 {
     Flameberry::Renderer2DInitInfo rendererInitInfo{};
     rendererInitInfo.userWindow = Flameberry::Application::Get().GetWindow().GetGLFWwindow();
@@ -28,7 +28,7 @@ FlameEditorApp::FlameEditorApp()
 
 FlameEditorApp::~FlameEditorApp()
 {
-    m_Renderer3D->CleanUp();
+    // m_Renderer3D->CleanUp();
     m_Renderer2D->CleanUp();
 }
 

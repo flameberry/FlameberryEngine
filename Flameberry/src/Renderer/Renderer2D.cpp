@@ -68,9 +68,6 @@ namespace Flameberry {
 
     void Renderer2D::Init(const Renderer2DInitInfo& rendererInitInfo)
     {
-        FL_LOGGER_INIT("FLAMEBERRY");
-        FL_INFO("Initialized Logger!");
-
         m_RendererInitInfo = rendererInitInfo;
         m_UserWindow = rendererInitInfo.userWindow;
 

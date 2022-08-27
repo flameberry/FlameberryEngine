@@ -9,4 +9,6 @@
 #include "Renderer/Framebuffer.h"
 #include "Core/Timer.h"
 
+#include "ECS/Scene.h"
+
 #include "Core/EntryPoint.h"
