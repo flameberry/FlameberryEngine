@@ -16,16 +16,6 @@ namespace Flameberry {
         m_Window = Window::Create();
         ImGuiLayer::OnAttach();
 
-        FL_LOG(GetComponentTypeId<TransformComponent>());
-        FL_LOG(GetComponentTypeId<TransformComponent>());
-        FL_LOG(GetComponentTypeId<TransformComponent>());
-        FL_LOG(GetComponentTypeId<int>());
-        FL_LOG(GetComponentTypeId<float>());
-        FL_LOG(GetComponentTypeId<TransformComponent>());
-        FL_LOG(GetComponentTypeId<float>());
-        FL_LOG(GetComponentTypeId<double>());
-        FL_LOG(GetComponentTypeId<int>());
-
         Scene scene;
         Entity entity = scene.CreateEntity();
         scene.AddComponent<TransformComponent>(entity);
@@ -73,6 +63,7 @@ namespace Flameberry {
         );
         scene.RemoveComponent<TransformComponent>(entityNew);
         scene.RemoveComponent<TransformComponent>(entityNew);
+        scene.RemoveComponent<TransformComponent>(entity);
         scene.GetComponent<TransformComponent>(entityNew);
         scene.DestroyEntity(entityNew);
     }

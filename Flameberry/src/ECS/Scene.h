@@ -89,12 +89,18 @@ namespace Flameberry {
     template<typename T>
     void Scene::RemoveComponent(const Entity& entity)
     {
+        if (!entity.GetValidity())
+        {
+            FL_WARN("Attempted to remove component from an invalid entity");
+            return;
+        }
+
         uint32_t componentTypeId = GetComponentTypeId<T>();
         if (m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId))
         {
             m_ComponentPools[componentTypeId]->RemoveEntityId(entity.entityId);
             return;
         }
-        FL_WARN("Attempted to remove component of type id: {0} of the entity with id: {1} that doesn't exist", componentTypeId, entity.entityId);
+        FL_WARN("Attempted to remove non-existing component of type id: {0} of the entity with id: {1}", componentTypeId, entity.entityId);
     }
 }
