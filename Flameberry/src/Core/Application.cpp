@@ -71,6 +71,9 @@ namespace Flameberry {
             newTransformComponent->scale.y,
             newTransformComponent->scale.z
         );
+        scene.RemoveComponent<TransformComponent>(entityNew);
+        scene.RemoveComponent<TransformComponent>(entityNew);
+        scene.GetComponent<TransformComponent>(entityNew);
         scene.DestroyEntity(entityNew);
     }
 

@@ -22,6 +22,8 @@ namespace Flameberry {
         T* AddComponent(const Entity& entity);
         template<typename T>
         T* GetComponent(const Entity& entity);
+        template<typename T>
+        void RemoveComponent(const Entity& entity);
     private:
         std::vector<std::shared_ptr<ComponentPool>> m_ComponentPools;
         std::vector<Entity> m_Entities;
@@ -75,12 +77,24 @@ namespace Flameberry {
         }
 
         uint32_t componentTypeId = GetComponentTypeId<T>();
-        if (componentTypeId >= m_ComponentPools.size() && m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId) == NULL)
+        if (componentTypeId >= m_ComponentPools.size() || m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId) == NULL)
         {
             // Component of T type doesn't exist
             FL_WARN("Attempted to access non-existing component with type id: {0} of the entity with id: {1}", componentTypeId, entity.entityId);
             return NULL;
         }
         return (T*)m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId);
+    }
+
+    template<typename T>
+    void Scene::RemoveComponent(const Entity& entity)
+    {
+        uint32_t componentTypeId = GetComponentTypeId<T>();
+        if (m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId))
+        {
+            m_ComponentPools[componentTypeId]->RemoveEntityId(entity.entityId);
+            return;
+        }
+        FL_WARN("Attempted to remove component of type id: {0} of the entity with id: {1} that doesn't exist", componentTypeId, entity.entityId);
     }
 }
