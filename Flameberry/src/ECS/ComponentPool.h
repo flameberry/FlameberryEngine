@@ -16,6 +16,6 @@ namespace Flameberry {
     private:
         char* m_ComponentData = nullptr;
         size_t m_ComponentSize = 0;
-        utils::sparse_set m_ComponentSet;
+        utils::sparse_set m_EntityIdSet;
     };
 }

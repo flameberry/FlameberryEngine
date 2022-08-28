@@ -7,6 +7,7 @@
 namespace Flameberry {
     struct Entity {
         uint64_t entityId;
+        Entity() = default;
         Entity(uint64_t entityId) : entityId(entityId), m_Validity(true) {}
         inline bool GetValidity() const { return m_Validity; }
         inline void SetValidity(bool validity) { m_Validity = validity; }

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Flameberry.h"
 
 class FlameEditorApp : public Flameberry::Application
@@ -16,4 +17,8 @@ private:
     float m_LastRenderTime = 0.0f;
     // std::shared_ptr<Flameberry::Renderer3D> m_Renderer3D;
     std::shared_ptr<Flameberry::Renderer2D> m_Renderer2D;
+private:
+    // ECS system objects
+    // Flameberry::Scene m_Scene;
+    // Flameberry::Entity m_SquareEntity;
 };

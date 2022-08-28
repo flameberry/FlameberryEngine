@@ -1,11 +1,14 @@
 #include "Flameberry.h"
 
+// Includes the Entrypoint of the main application
+#include "Core/EntryPoint.h"
+
 class SandboxApp : public Flameberry::Application
 {
 public:
     SandboxApp() {}
     virtual ~SandboxApp() {}
-    void OnUpdate() override
+    void OnUpdate(float delta) override
     {
         FL_LOG("Rendering [SANDBOXAPP]");
     }

@@ -13,4 +13,10 @@ namespace Flameberry {
     }
 
     struct TransformComponent { glm::vec3 position, rotation, scale; TransformComponent() = default; };
+
+    struct SpriteRendererComponent
+    {
+        std::string TextureFilePath;
+        glm::vec4 Color{ 1.0f };
+    };
 }

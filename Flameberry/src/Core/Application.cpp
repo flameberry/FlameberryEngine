@@ -5,7 +5,7 @@
 #include "Renderer/Renderer2D.h"
 #include "Timer.h"
 #include "ImGui/ImGuiLayer.h"
-#include "ECS/Scene.h"
+#include "ECS/Registry.h"
 #include "ECS/Component.h"
 
 namespace Flameberry {
@@ -16,56 +16,35 @@ namespace Flameberry {
         m_Window = Window::Create();
         ImGuiLayer::OnAttach();
 
-        Scene scene;
-        Entity entity = scene.CreateEntity();
-        scene.AddComponent<TransformComponent>(entity);
-        TransformComponent* transformComponent = scene.GetComponent<TransformComponent>(entity);
-        transformComponent->position = glm::vec3(0, 0.1f, 0);
-        transformComponent->rotation = glm::vec3(45, 0, 90);
-        transformComponent->scale = glm::vec3(1, 1, 2);
+        Registry registry;
+        Entity entity = registry.CreateEntity();
+        registry.AddComponent<TransformComponent>(entity);
+        registry.AddComponent<SpriteRendererComponent>(entity);
+        Entity entity1 = registry.CreateEntity();
+        registry.AddComponent<TransformComponent>(entity1);
+        registry.AddComponent<SpriteRendererComponent>(entity1);
+        Entity entity2 = registry.CreateEntity();
+        registry.AddComponent<TransformComponent>(entity2);
+        registry.AddComponent<SpriteRendererComponent>(entity2);
+        Entity entity3 = registry.CreateEntity();
+        registry.AddComponent<TransformComponent>(entity3);
+        registry.AddComponent<SpriteRendererComponent>(entity3);
 
-        FL_LOG("Transform component of the entity with id: {0}, is\nposition: {1}, {2}, {3}\nrotation: {4}, {5}, {6}\nscale: {7}, {8}, {9}",
-            entity.entityId,
-            transformComponent->position.x,
-            transformComponent->position.y,
-            transformComponent->position.z,
-            transformComponent->rotation.x,
-            transformComponent->rotation.y,
-            transformComponent->rotation.z,
-            transformComponent->scale.x,
-            transformComponent->scale.y,
-            transformComponent->scale.z
-        );
+        // for (auto [transform, sprite] : registry.View<TransformComponent, SpriteRendererComponent>())
+        //     FL_LOG(sprite->TextureFilePath);
 
-        FL_LOG("Entity is: {0}", entity.GetValidity() ? "valid" : "not valid");
-        scene.DestroyEntity(entity);
-        FL_LOG("Entity is: {0}", entity.GetValidity() ? "valid" : "not valid");
-        Entity entityNew = scene.CreateEntity();
-        scene.AddComponent<TransformComponent>(entity);
-        TransformComponent* someTransformComponent = scene.GetComponent<TransformComponent>(entity);
-        scene.AddComponent<TransformComponent>(entityNew);
-        TransformComponent* newTransformComponent = scene.GetComponent<TransformComponent>(entityNew);
-        newTransformComponent->position = glm::vec3(0, 0.1f, 0);
-        newTransformComponent->rotation = glm::vec3(45, 0, 90);
-        newTransformComponent->scale = glm::vec3(1, 1, 2);
+        utils::sparse_set _set(5, 100);
+        _set.insert(10);
+        _set.insert(40);
+        _set.insert(20);
+        _set.insert(50);
+        _set.insert(30);
 
-        FL_LOG("Transform component of the new entity with id: {0}, is\nposition: {1}, {2}, {3}\nrotation: {4}, {5}, {6}\nscale: {7}, {8}, {9}",
-            entityNew.entityId,
-            newTransformComponent->position.x,
-            newTransformComponent->position.y,
-            newTransformComponent->position.z,
-            newTransformComponent->rotation.x,
-            newTransformComponent->rotation.y,
-            newTransformComponent->rotation.z,
-            newTransformComponent->scale.x,
-            newTransformComponent->scale.y,
-            newTransformComponent->scale.z
-        );
-        scene.RemoveComponent<TransformComponent>(entityNew);
-        scene.RemoveComponent<TransformComponent>(entityNew);
-        scene.RemoveComponent<TransformComponent>(entity);
-        scene.GetComponent<TransformComponent>(entityNew);
-        scene.DestroyEntity(entityNew);
+        for (auto& element : _set)
+            FL_LOG(element);
+
+        for (utils::sparse_set::iterator it = _set.begin(); it != _set.end(); it++)
+            FL_LOG(*it);
     }
 
     void Application::Run()

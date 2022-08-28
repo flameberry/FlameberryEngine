@@ -1,5 +1,8 @@
 #include "FlameEditorApp.h"
 
+// Includes the Entrypoint of the main application
+#include "Core/EntryPoint.h"
+
 FlameEditorApp::FlameEditorApp()
     : m_Framebuffer(Flameberry::Framebuffer::Create()),
     m_ViewportSize(1280, 720),
@@ -24,6 +27,8 @@ FlameEditorApp::FlameEditorApp()
     cameraInfo.cameraDirection = glm::vec3(0, 0, -1);
 
     m_PerspectiveCamera = Flameberry::PerspectiveCamera(cameraInfo);
+
+    // ECS
 }
 
 FlameEditorApp::~FlameEditorApp()
