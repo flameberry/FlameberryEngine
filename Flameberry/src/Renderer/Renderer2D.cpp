@@ -169,6 +169,25 @@ namespace Flameberry {
         m_CurrentTextureSlot = 0;
     }
 
+    void Renderer2D::AddQuad(const glm::mat4& transform, const glm::vec4& color)
+    {
+        Vertex2D vertices[4];
+
+        vertices[0].texture_uv = { 0.0f, 0.0f };
+        vertices[1].texture_uv = { 0.0f, 1.0f };
+        vertices[2].texture_uv = { 1.0f, 1.0f };
+        vertices[3].texture_uv = { 1.0f, 0.0f };
+
+        for (uint8_t i = 0; i < 4; i++)
+        {
+            vertices[i].position = transform * m_TemplateVertexPositions[i];
+            vertices[i].color = color;
+        }
+
+        for (uint8_t i = 0; i < 4; i++)
+            m_Batch.Vertices.push_back(vertices[i]);
+    }
+
     void Renderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color)
     {
         Vertex2D vertices[4];
@@ -189,6 +208,41 @@ namespace Flameberry {
 
         for (uint8_t i = 0; i < 4; i++)
             m_Batch.Vertices.push_back(vertices[i]);
+    }
+
+    void Renderer2D::AddQuad(const glm::mat4& transform, const char* textureFilePath)
+    {
+        Vertex2D vertices[4];
+        vertices[0].texture_uv = { 0.0f, 0.0f };
+        vertices[1].texture_uv = { 0.0f, 1.0f };
+        vertices[2].texture_uv = { 1.0f, 1.0f };
+        vertices[3].texture_uv = { 1.0f, 0.0f };
+
+        for (uint8_t i = 0; i < 4; i++)
+        {
+            vertices[i].position = transform * m_TemplateVertexPositions[i];
+            vertices[i].color = m_DefaultColor;
+            vertices[i].texture_index = m_CurrentTextureSlot;
+        }
+
+        for (uint8_t i = 0; i < 4; i++)
+            m_Batch.Vertices.push_back(vertices[i]);
+
+        uint32_t textureId = GetTextureIdIfAvailable(textureFilePath);
+        if (!textureId)
+        {
+            textureId = RenderCommand::CreateTexture(textureFilePath);
+            m_TextureIdCache[textureFilePath] = textureId;
+        }
+        m_Batch.TextureIds.push_back(textureId);
+
+        // Increment the texture slot every time a textured quad is added
+        m_CurrentTextureSlot++;
+        if (m_CurrentTextureSlot == MAX_TEXTURE_SLOTS)
+        {
+            FlushBatch();
+            m_CurrentTextureSlot = 0;
+        }
     }
 
     void Renderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath)

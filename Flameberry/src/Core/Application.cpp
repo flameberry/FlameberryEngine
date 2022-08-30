@@ -6,9 +6,25 @@
 #include "Timer.h"
 #include "ImGui/ImGuiLayer.h"
 #include "ECS/Registry.h"
+#include "ECS/SceneView.h"
 #include "ECS/Component.h"
 
 namespace Flameberry {
+    void PrintTransform(TransformComponent& comp)
+    {
+        FL_LOG("Transform component is\nposition: {0}, {1}, {2}\nrotation: {3}, {4}, {5}\nscale: {6}, {7}, {8}",
+            comp.translation.x,
+            comp.translation.y,
+            comp.translation.z,
+            comp.rotation.x,
+            comp.rotation.y,
+            comp.rotation.z,
+            comp.scale.x,
+            comp.scale.y,
+            comp.scale.z
+        );
+    }
+
     Application* Application::s_Instance;
     Application::Application()
     {
@@ -18,33 +34,44 @@ namespace Flameberry {
 
         Registry registry;
         Entity entity = registry.CreateEntity();
-        registry.AddComponent<TransformComponent>(entity);
-        registry.AddComponent<SpriteRendererComponent>(entity);
+        TransformComponent* comp = registry.AddComponent<TransformComponent>(entity);
+        comp->translation = glm::vec3(0.1f, 0, 0);
+        comp->rotation = glm::vec3(45, 45, 90);
+        comp->scale = glm::vec3(2, 1, 1);
+        registry.AddComponent<SpriteRendererComponent>(entity)->TextureFilePath = "Hello";
+
         Entity entity1 = registry.CreateEntity();
-        registry.AddComponent<TransformComponent>(entity1);
-        registry.AddComponent<SpriteRendererComponent>(entity1);
+        TransformComponent* comp1 = registry.AddComponent<TransformComponent>(entity1);
+        comp1->translation = glm::vec3(0.2f, 0.3f, 0);
+        comp1->rotation = glm::vec3(25, 25, 60);
+        comp1->scale = glm::vec3(2, 2, 3);
+        registry.AddComponent<SpriteRendererComponent>(entity1)->TextureFilePath = "Hi";
+
         Entity entity2 = registry.CreateEntity();
-        registry.AddComponent<TransformComponent>(entity2);
-        registry.AddComponent<SpriteRendererComponent>(entity2);
+        TransformComponent* comp2 = registry.AddComponent<TransformComponent>(entity2);
+        comp2->translation = glm::vec3(0.34f, 0.56f, 0);
+        comp2->rotation = glm::vec3(65, 65, 20);
+        comp2->scale = glm::vec3(3, 2, 1);
+        registry.AddComponent<SpriteRendererComponent>(entity2)->TextureFilePath = "Comeon";
+
         Entity entity3 = registry.CreateEntity();
-        registry.AddComponent<TransformComponent>(entity3);
-        registry.AddComponent<SpriteRendererComponent>(entity3);
+        TransformComponent* comp3 = registry.AddComponent<TransformComponent>(entity3);
+        comp3->translation = glm::vec3(1, 2, 0);
+        comp3->rotation = glm::vec3(100, 100, 600);
+        comp3->scale = glm::vec3(8, 9, 10);
+        registry.AddComponent<SpriteRendererComponent>(entity3)->TextureFilePath = "wow";
 
-        // for (auto [transform, sprite] : registry.View<TransformComponent, SpriteRendererComponent>())
-        //     FL_LOG(sprite->TextureFilePath);
+        for (auto [transform, sprite] : registry.View<TransformComponent, SpriteRendererComponent>())
+        {
+            PrintTransform(transform);
+            FL_LOG(sprite.TextureFilePath);
+        }
 
-        utils::sparse_set _set(5, 100);
-        _set.insert(10);
-        _set.insert(40);
-        _set.insert(20);
-        _set.insert(50);
-        _set.insert(30);
-
-        for (auto& element : _set)
-            FL_LOG(element);
-
-        for (utils::sparse_set::iterator it = _set.begin(); it != _set.end(); it++)
-            FL_LOG(*it);
+        // auto sceneView = registry.View<TransformComponent, SpriteRendererComponent>();
+        // for (SceneView<TransformComponent, SpriteRendererComponent>::iterator it = sceneView.begin(); it != sceneView.end(); it++)
+        // {
+        //     FL_LOG(std::get<1>(*it).TextureFilePath);
+        // }
     }
 
     void Application::Run()

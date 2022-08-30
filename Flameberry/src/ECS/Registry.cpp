@@ -20,7 +20,7 @@ namespace Flameberry {
         for (auto& commandPool : m_ComponentPools)
         {
             if (commandPool->GetComponentAddress(entity.entityId))
-                commandPool->RemoveEntityId(entity.entityId);
+                commandPool->Remove(entity.entityId);
         }
         m_Entities[entity.entityId].SetValidity(false);
         entity.SetValidity(false);

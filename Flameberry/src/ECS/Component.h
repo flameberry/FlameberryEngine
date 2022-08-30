@@ -1,6 +1,10 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 
 namespace Flameberry {
     extern uint32_t typeCounter;
@@ -12,11 +16,19 @@ namespace Flameberry {
         return componentCounter;
     }
 
-    struct TransformComponent { glm::vec3 position, rotation, scale; TransformComponent() = default; };
+    struct TransformComponent
+    {
+        glm::vec3 translation, rotation, scale;
+        TransformComponent() = default;
+        glm::mat4 GetTransform() const
+        {
+            return glm::translate(glm::mat4(1.0f), translation) * glm::scale(glm::mat4(1.0f), scale);
+        }
+    };
 
     struct SpriteRendererComponent
     {
-        std::string TextureFilePath;
+        std::string TextureFilePath = "";
         glm::vec4 Color{ 1.0f };
     };
 }

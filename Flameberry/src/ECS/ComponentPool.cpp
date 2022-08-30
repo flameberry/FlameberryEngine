@@ -4,26 +4,26 @@
 namespace Flameberry {
     uint32_t typeCounter = 0;
 
-    ComponentPool::ComponentPool(size_t componentSize)
-        : m_ComponentSize(componentSize), m_EntityIdSet(MAX_ENTITIES, MAX_ENTITIES)
+    ComponentPool::ComponentPool(size_t component_size)
+        : _ComponentSize(component_size), _EntityIdSet(MAX_ENTITIES, MAX_ENTITIES)
     {
-        m_ComponentData = new char[m_ComponentSize * MAX_ENTITIES];
+        _Data = new char[component_size * MAX_ENTITIES];
     }
 
-    void* ComponentPool::GetComponentAddress(uint32_t entityId)
+    void* ComponentPool::GetComponentAddress(uint32_t entityId) const
     {
-        if (entityId <= MAX_ENTITIES && m_EntityIdSet.search(entityId) != -1)
-            return m_ComponentData + m_EntityIdSet.search(entityId) * m_ComponentSize;
+        if (entityId <= MAX_ENTITIES && _EntityIdSet.search(entityId) != -1)
+            return _Data + _EntityIdSet.search(entityId) * _ComponentSize;
         if (entityId > MAX_ENTITIES)
             FL_WARN("Component Pool out of memory", entityId);
         return NULL;
     }
 
-    void ComponentPool::AddEntityId(uint32_t entityId) { m_EntityIdSet.insert(entityId); }
-    void ComponentPool::RemoveEntityId(uint32_t entityId) { m_EntityIdSet.remove(entityId); }
+    void ComponentPool::Add(uint32_t entityId) { _EntityIdSet.insert(entityId); }
+    void ComponentPool::Remove(uint32_t entityId) { _EntityIdSet.remove(entityId); }
 
     ComponentPool::~ComponentPool()
     {
-        delete[] m_ComponentData;
+        delete[] _Data;
     }
 }

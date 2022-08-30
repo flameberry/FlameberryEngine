@@ -53,6 +53,8 @@ namespace Flameberry {
         GLint       GetUniformLocation(const std::string& name, uint32_t shaderId);
         float       GetAspectRatio() { return m_AspectRatio; }
         void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath);
+        void        AddQuad(const glm::mat4& transform, const glm::vec4& color);
+        void        AddQuad(const glm::mat4& transform, const char* textureFilePath);
         void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color);
         void        CleanUp();
         void        Begin(OrthographicCamera& camera);

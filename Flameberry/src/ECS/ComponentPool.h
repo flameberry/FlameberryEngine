@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Core/Core.h"
 #include "Core/sparse_set.h"
+
 #include "Entity.h"
 
 namespace Flameberry {
@@ -10,12 +12,15 @@ namespace Flameberry {
         ComponentPool(size_t componentSize);
         ~ComponentPool();
 
-        void AddEntityId(uint32_t entityId);
-        void RemoveEntityId(uint32_t entityId);
-        void* GetComponentAddress(uint32_t entityId);
+        void Add(uint32_t entityId);
+        void Remove(uint32_t entityId);
+
+        void* GetComponentAddress(uint32_t entityId) const;
+        utils::sparse_set& GetEntityIdSet() { return _EntityIdSet; }
+        size_t size() const { return _EntityIdSet.size(); }
     private:
-        char* m_ComponentData = nullptr;
-        size_t m_ComponentSize = 0;
-        utils::sparse_set m_EntityIdSet;
+        char* _Data = nullptr;
+        utils::sparse_set _EntityIdSet;
+        size_t _ComponentSize = 0;
     };
 }

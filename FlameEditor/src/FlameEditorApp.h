@@ -19,6 +19,7 @@ private:
     std::shared_ptr<Flameberry::Renderer2D> m_Renderer2D;
 private:
     // ECS system objects
-    // Flameberry::Scene m_Scene;
-    // Flameberry::Entity m_SquareEntity;
+    std::shared_ptr<Flameberry::Scene> m_Scene;
+    std::shared_ptr<Flameberry::Registry> m_Registry;
+    Flameberry::Entity m_SquareEntity, m_TexturedEntity;
 };

@@ -18,7 +18,7 @@ namespace utils {
         _size++;
     }
 
-    int32_t sparse_set::search(int32_t value)
+    int32_t sparse_set::search(int32_t value) const
     {
         if (value <= max_value && sparse_data[value] < _size && packed_data[sparse_data[value]] == value)
             return sparse_data[value];

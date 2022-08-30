@@ -29,6 +29,28 @@ FlameEditorApp::FlameEditorApp()
     m_PerspectiveCamera = Flameberry::PerspectiveCamera(cameraInfo);
 
     // ECS
+    m_Registry = std::make_shared<Flameberry::Registry>();
+    m_SquareEntity = m_Registry->CreateEntity();
+    auto transformComp = m_Registry->AddComponent<Flameberry::TransformComponent>(m_SquareEntity);
+    transformComp->translation = { 0.0f, 0.0f, 0.0f };
+    transformComp->rotation = { 0.0f, 0.0f, 0.0f };
+    transformComp->scale = { 0.2f, 0.2f, 1.0f };
+
+    auto spriteRendererComp = m_Registry->AddComponent<Flameberry::SpriteRendererComponent>(m_SquareEntity);
+    spriteRendererComp->Color = FL_PINK;
+    spriteRendererComp->TextureFilePath = "";
+
+    m_TexturedEntity = m_Registry->CreateEntity();
+    auto transformComp1 = m_Registry->AddComponent<Flameberry::TransformComponent>(m_TexturedEntity);
+    transformComp1->translation = { 0.2f, 0.0f, 0.0f };
+    transformComp1->rotation = { 0.0f, 0.0f, 0.0f };
+    transformComp1->scale = { 0.2f, 0.2f, 1.0f };
+
+    auto spriteRendererComp1 = m_Registry->AddComponent<Flameberry::SpriteRendererComponent>(m_TexturedEntity);
+    spriteRendererComp1->Color = FL_PINK;
+    spriteRendererComp1->TextureFilePath = FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png";
+
+    m_Scene = std::make_shared<Flameberry::Scene>(m_Registry.get());
 }
 
 FlameEditorApp::~FlameEditorApp()
@@ -68,13 +90,17 @@ void FlameEditorApp::OnUpdate(float delta)
     // 2D
     m_Camera.SetViewportSize(m_ViewportSize);
 
-    m_Renderer2D->Begin(m_Camera);
-    m_Renderer2D->AddQuad({ 0.0f,  0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PINK);
-    m_Renderer2D->AddQuad({ 0.2f,  0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
-    m_Renderer2D->AddQuad({ 0.0f,  0.2f, 0.0f }, { 0.2f, 0.2f }, FL_BLUE);
-    m_Renderer2D->AddQuad({ 0.0f, -0.2f, 0.0f }, { 0.2f, 0.2f }, FL_YELLOW);
-    m_Renderer2D->AddQuad({ -0.2f, 0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PURPLE);
-    m_Renderer2D->End();
+    // Using ECS
+    m_Scene->RenderScene(m_Renderer2D.get(), m_Camera);
+    // ---------
+
+    // m_Renderer2D->Begin(m_Camera);
+    // m_Renderer2D->AddQuad({ 0.0f,  0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PINK);
+    // m_Renderer2D->AddQuad({ 0.2f,  0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
+    // m_Renderer2D->AddQuad({ 0.0f,  0.2f, 0.0f }, { 0.2f, 0.2f }, FL_BLUE);
+    // m_Renderer2D->AddQuad({ 0.0f, -0.2f, 0.0f }, { 0.2f, 0.2f }, FL_YELLOW);
+    // m_Renderer2D->AddQuad({ -0.2f, 0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PURPLE);
+    // m_Renderer2D->End();
 
     m_Framebuffer->Unbind();
 }

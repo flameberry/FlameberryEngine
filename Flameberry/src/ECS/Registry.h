@@ -4,16 +4,13 @@
 #include <memory>
 
 #include "Core/Core.h"
+
 #include "ComponentPool.h"
 
-struct registry_iterator
-{
-public:
-    registry_iterator() {}
-private:
-};
-
 namespace Flameberry {
+    template<typename... ComponentTypes>
+    class SceneView;
+
     class Registry
     {
     public:
@@ -27,18 +24,19 @@ namespace Flameberry {
         T* AddComponent(const Entity& entity);
 
         template<typename T>
-        T* GetComponent(const Entity& entity);
+        T* GetComponent(const Entity& entity) const;
 
         template<typename T>
-        bool HasComponent(const Entity& entity);
+        bool HasComponent(const Entity& entity) const;
+
+        template<typename... ComponentTypes>
+        bool HasAllComponents(const Entity& entity) const;
 
         template<typename T>
         void RemoveComponent(const Entity& entity);
 
-        registry_iterator begin()
-        {
-        }
-        registry_iterator end() {}
+        template<typename... ComponentTypes>
+        SceneView<ComponentTypes...> View();
     private:
         std::vector<std::shared_ptr<ComponentPool>> m_ComponentPools;
         std::vector<Entity> m_Entities;
@@ -71,7 +69,7 @@ namespace Flameberry {
             return NULL;
         }
 
-        m_ComponentPools[componentTypeId]->AddEntityId(entity.entityId);
+        m_ComponentPools[componentTypeId]->Add(entity.entityId);
         void* componentAddress = m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId);
         if (componentAddress == NULL)
         {
@@ -83,7 +81,7 @@ namespace Flameberry {
     }
 
     template<typename T>
-    T* Registry::GetComponent(const Entity& entity)
+    T* Registry::GetComponent(const Entity& entity) const
     {
         if (!entity.GetValidity())
         {
@@ -113,14 +111,14 @@ namespace Flameberry {
         uint32_t componentTypeId = GetComponentTypeId<T>();
         if (m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId))
         {
-            m_ComponentPools[componentTypeId]->RemoveEntityId(entity.entityId);
+            m_ComponentPools[componentTypeId]->Remove(entity.entityId);
             return;
         }
         FL_WARN("Attempted to remove non-existing component of type id: {0} of the entity with id: {1}", componentTypeId, entity.entityId);
     }
 
     template<typename T>
-    bool Registry::HasComponent(const Entity& entity)
+    bool Registry::HasComponent(const Entity& entity) const
     {
         if (!entity.GetValidity())
         {
@@ -132,5 +130,45 @@ namespace Flameberry {
         if (componentTypeId >= m_ComponentPools.size() || m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId) == NULL)
             return false;
         return true;
+    }
+
+    template<typename... ComponentTypes>
+    bool Registry::HasAllComponents(const Entity& entity) const
+    {
+        if (!entity.GetValidity())
+        {
+            FL_WARN("Attempted to check component existence from an invalid entity");
+            return false;
+        }
+
+        uint32_t componentTypeIds[] = { GetComponentTypeId<ComponentTypes>() ... };
+        bool hasComponents = true;
+        for (const auto& id : componentTypeIds)
+            hasComponents = hasComponents && !(id >= m_ComponentPools.size() || m_ComponentPools[id]->GetComponentAddress(entity.entityId) == NULL);
+        return hasComponents;
+    }
+}
+
+#include "SceneView.h"
+
+namespace Flameberry {
+    template<typename... ComponentTypes>
+    SceneView<ComponentTypes...> Registry::View()
+    {
+        if (!m_ComponentPools.size())
+        {
+            FL_WARN("Attempted to view registry with no component pools!");
+            return SceneView<ComponentTypes...>(*this, NULL);
+        }
+
+        uint32_t componentIds[] = { GetComponentTypeId<ComponentTypes>() ... };
+        int smallestPool = 0;
+        for (const auto& id : componentIds)
+        {
+            if (m_ComponentPools[smallestPool]->size() > m_ComponentPools[id]->size())
+                smallestPool = id;
+        }
+
+        return SceneView<ComponentTypes...>(*this, m_ComponentPools[smallestPool]);
     }
 }
