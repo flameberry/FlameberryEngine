@@ -287,7 +287,11 @@ namespace utils {
         inline bool full() const { return _size == capacity; }
         inline bool empty() const { return _size == 0; }
 
-        iterator begin()const { return iterator(packed_data); }
+        value_type operator[](size_t index) {
+            return packed_data[index];
+        }
+
+        iterator begin() const { return iterator(packed_data); }
         iterator end() const { return iterator(packed_data + _size); }
         const_iterator cbegin() const { return const_iterator(packed_data); }
         const_iterator cend() const { return const_iterator(packed_data + _size); }

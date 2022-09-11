@@ -1,6 +1,8 @@
 #include "RenderCommand.h"
 
 #include <fstream>
+#include <glad/glad.h>
+
 #include "Core/Core.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -71,7 +73,7 @@ namespace Flameberry {
         stream.close();
         return std::make_tuple(ss[0].str(), ss[1].str());
     }
-
+    
     uint32_t RenderCommand::CreateShader(const std::string& filePath)
     {
         uint32_t shaderProgramId = 0;

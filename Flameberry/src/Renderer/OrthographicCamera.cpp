@@ -15,26 +15,22 @@ namespace Flameberry {
         m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
     }
 
-    void OrthographicCamera::AddControls()
-    {
-        // Camera Movement
-        if (Input::IsKey(GLFW_KEY_W, GLFW_PRESS))
-            m_CameraPosition.y += RenderCommand::PixelToOpenGLY(m_CameraSensitivity, m_ViewportSize.y);
-        else if (Input::IsKey(GLFW_KEY_S, GLFW_PRESS))
-            m_CameraPosition.y -= RenderCommand::PixelToOpenGLY(m_CameraSensitivity, m_ViewportSize.y);
-        else if (Input::IsKey(GLFW_KEY_D, GLFW_PRESS))
-            m_CameraPosition.x += RenderCommand::PixelToOpenGLX(m_CameraSensitivity, m_ViewportSize);
-        else if (Input::IsKey(GLFW_KEY_A, GLFW_PRESS))
-            m_CameraPosition.x -= RenderCommand::PixelToOpenGLX(m_CameraSensitivity, m_ViewportSize);
-    }
-
     OrthographicCamera::~OrthographicCamera()
     {
     }
 
-    void OrthographicCamera::OnUpdate()
+    void OrthographicCamera::OnUpdate(float delta)
     {
-        AddControls();
+        // Camera Movement
+        if (Input::IsKey(GLFW_KEY_W, GLFW_PRESS))
+            m_CameraPosition.y += m_CameraSpeed * delta;
+        else if (Input::IsKey(GLFW_KEY_S, GLFW_PRESS))
+            m_CameraPosition.y -= m_CameraSpeed * delta;
+        else if (Input::IsKey(GLFW_KEY_D, GLFW_PRESS))
+            m_CameraPosition.x += m_CameraSpeed * delta;
+        else if (Input::IsKey(GLFW_KEY_A, GLFW_PRESS))
+            m_CameraPosition.x -= m_CameraSpeed * delta;
+
         m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y;
         m_ProjectionMatrix = glm::ortho(-m_AspectRatio * m_Zoom, m_AspectRatio * m_Zoom, -m_Zoom, m_Zoom, -1.0f, 1.0f);
 

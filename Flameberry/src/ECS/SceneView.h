@@ -19,12 +19,12 @@ namespace Flameberry {
         scene_view_iterator operator++(int);
         bool operator==(const scene_view_iterator& other);
         bool operator!=(const scene_view_iterator& other);
-        reference_type operator*() { return *_ComponentTuple; }
+        reference_type operator*() { return _ComponentTuple; }
     private:
         const Registry& _Registry;
         utils::sparse_set::const_iterator _EntityIdIterator;
         utils::sparse_set::const_iterator _End;
-        std::shared_ptr<value_type> _ComponentTuple;
+        value_type _ComponentTuple;
     };
 
     template<typename... ComponentTypes>
@@ -68,7 +68,7 @@ namespace Flameberry {
         : _Registry(registry), _EntityIdIterator(entityIdIterator), _End(cend)
     {
         if (_EntityIdIterator != _End)
-            _ComponentTuple = std::make_shared<value_type>(_Registry.GetComponent<ComponentTypes>(entity_handle{ *_EntityIdIterator }) ...);
+            _ComponentTuple = _Registry.Get<ComponentTypes...>(entity_handle{ *_EntityIdIterator });
     }
 
     template<typename T, typename... ComponentTypes>
@@ -76,7 +76,7 @@ namespace Flameberry {
     {
         while ((++_EntityIdIterator) != _End && !_Registry.Has<ComponentTypes...>(entity_handle{ *_EntityIdIterator }));
         if (_EntityIdIterator != _End)
-            (*_ComponentTuple) = std::make_tuple<ComponentTypes*...>(_Registry.GetComponent<ComponentTypes>(entity_handle{ *_EntityIdIterator }) ...);
+            _ComponentTuple = _Registry.Get<ComponentTypes...>(entity_handle{ *_EntityIdIterator });
         return *this;
     }
 

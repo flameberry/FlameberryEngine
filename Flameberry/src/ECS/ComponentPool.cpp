@@ -7,7 +7,7 @@ namespace Flameberry {
     ComponentPool::ComponentPool(size_t component_size)
         : _ComponentSize(component_size), _EntityIdSet(MAX_ENTITIES, MAX_ENTITIES)
     {
-        _Data = new char[component_size * MAX_ENTITIES];
+        _Data = new char[_ComponentSize * MAX_ENTITIES];
     }
 
     void* ComponentPool::GetComponentAddress(const entity_handle& entity) const
@@ -20,7 +20,17 @@ namespace Flameberry {
     }
 
     void ComponentPool::Add(const entity_handle& entity) { _EntityIdSet.insert(entity.get()); }
-    void ComponentPool::Remove(const entity_handle& entity) { _EntityIdSet.remove(entity.get()); }
+
+    void ComponentPool::Remove(const entity_handle& entity)
+    {
+        auto value = _EntityIdSet[_EntityIdSet.size() - 1];
+        void* _src = GetComponentAddress(entity_handle{ value });
+        void* _dest = GetComponentAddress(entity);
+
+        _EntityIdSet.remove(entity.get());
+
+        memcpy(_dest, _src, _ComponentSize);
+    }
 
     ComponentPool::~ComponentPool()
     {

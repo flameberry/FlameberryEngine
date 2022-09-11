@@ -17,14 +17,6 @@ namespace Flameberry {
             else
                 renderer->AddQuad(std::get<0>(*it)->GetTransform(), std::get<1>(*it)->TextureFilePath.c_str());
         }
-
-        // for (const auto& [transform, sprite] : m_Registry->View<TransformComponent, SpriteRendererComponent>())
-        // {
-        //     if (sprite.TextureFilePath == "")
-        //         renderer->AddQuad(transform.GetTransform(), sprite.Color);
-        //     else
-        //         renderer->AddQuad(transform.GetTransform(), sprite.TextureFilePath.c_str());
-        // }
         renderer->End();
     }
 }

@@ -14,7 +14,7 @@ FlameEditorApp::FlameEditorApp()
     rendererInitInfo.enableCustomViewport = true;
     rendererInitInfo.customViewportSize = { 1280.0f, 720.0f };
 
-    m_Renderer2D = m_Renderer2D->Create();
+    m_Renderer2D = Flameberry::Renderer2D::Create();
     m_Renderer2D->Init(rendererInitInfo);
 
     // Dealing with 3D Renderer
@@ -32,8 +32,8 @@ FlameEditorApp::FlameEditorApp()
     m_Registry = std::make_shared<Flameberry::Registry>();
     m_SquareEntity = m_Registry->CreateEntity();
     auto transformComp = m_Registry->AddComponent<Flameberry::TransformComponent>(m_SquareEntity);
-    transformComp->translation = { 0.0f, 0.0f, 0.0f };
-    transformComp->rotation = { 0.0f, 0.0f, 0.0f };
+    transformComp->translation = { -0.1f, 0.0f, 0.0f };
+    transformComp->rotation = { 0.0f, 0.0f, -45.0f };
     transformComp->scale = { 0.2f, 0.2f, 1.0f };
 
     auto spriteRendererComp = m_Registry->AddComponent<Flameberry::SpriteRendererComponent>(m_SquareEntity);
@@ -53,7 +53,7 @@ FlameEditorApp::FlameEditorApp()
     m_BlueSquareEntity = m_Registry->CreateEntity();
     auto transformComp2 = m_Registry->AddComponent<Flameberry::TransformComponent>(m_BlueSquareEntity);
     transformComp2->translation = { 1.0f, 0.2f, 0.0f };
-    transformComp2->rotation = { 0.0f, 0.0f, 0.0f };
+    transformComp2->rotation = { 0.0f, 0.0f, 40.0f };
     transformComp2->scale = { 0.5f, 0.5f, 1.0f };
 
     auto spriteRendererComp2 = m_Registry->AddComponent<Flameberry::SpriteRendererComponent>(m_BlueSquareEntity);
@@ -102,6 +102,7 @@ void FlameEditorApp::OnUpdate(float delta)
 
     // 2D
     m_Camera.SetViewportSize(m_ViewportSize);
+    m_Camera.OnUpdate(delta);
 
     // Using ECS
     m_Scene->RenderScene(m_Renderer2D.get(), m_Camera);

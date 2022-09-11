@@ -286,8 +286,6 @@ namespace Flameberry {
     void Renderer2D::Begin(OrthographicCamera& camera)
     {
         OnUpdate();
-
-        camera.OnUpdate();
         m_UniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 
         /* Set Projection Matrix in GPU memory, for all shader programs to access it */
