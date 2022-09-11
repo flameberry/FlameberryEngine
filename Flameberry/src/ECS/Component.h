@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -22,7 +23,9 @@ namespace Flameberry {
         TransformComponent() = default;
         glm::mat4 GetTransform() const
         {
-            return glm::translate(glm::mat4(1.0f), translation) * glm::scale(glm::mat4(1.0f), scale);
+            return glm::translate(glm::mat4(1.0f), translation)
+                * glm::toMat4(glm::quat(rotation))
+                * glm::scale(glm::mat4(1.0f), scale);
         }
     };
 

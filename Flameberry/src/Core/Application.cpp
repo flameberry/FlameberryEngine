@@ -11,7 +11,6 @@
 #include "ECS/Registry.h"
 #include "ECS/SceneView.h"
 #include "ECS/Component.h"
-#include "ECS/basic_group.h"
 
 namespace Flameberry {
     Application* Application::s_Instance;
