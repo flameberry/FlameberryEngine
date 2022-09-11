@@ -129,7 +129,7 @@ namespace utils {
 
         bool operator!=(const sparse_set_const_iterator& other)
         {
-            return _ptr != other._ptr;
+            return !((*this) == other);
         }
     private:
         pointer_type _ptr;
@@ -270,35 +270,35 @@ namespace utils {
     class sparse_set
     {
     public:
-        using value_type = int32_t;
+        using value_type = uint64_t;
         using iterator = sparse_set_iterator<sparse_set>;
         using const_iterator = sparse_set_const_iterator<sparse_set>;
         using reverse_iterator = sparse_set_reverse_iterator<sparse_set>;
         using reverse_const_iterator = sparse_set_reverse_const_iterator<sparse_set>;
     public:
-        sparse_set(size_t capacity, int32_t max_val);
+        sparse_set(size_t capacity, value_type max_val);
         ~sparse_set();
-        void insert(int32_t value);
-        void remove(int32_t value);
-        int32_t search(int32_t value) const;
+        void insert(value_type value);
+        void remove(value_type value);
+        value_type search(value_type value) const;
         void print();
         inline void clear() { _size = 0; }
         inline size_t size() const { return _size; }
         inline bool full() const { return _size == capacity; }
         inline bool empty() const { return _size == 0; }
 
-        iterator begin() { return iterator(packed_data); }
-        iterator end() { return iterator(packed_data + _size); }
-        const_iterator cbegin() { return const_iterator(packed_data); }
-        const_iterator cend() { return const_iterator(packed_data + _size); }
-        reverse_iterator rbegin() { return reverse_iterator(packed_data + _size - 1); }
-        reverse_iterator rend() { return reverse_iterator(packed_data - 1); }
-        reverse_const_iterator crbegin() { return reverse_const_iterator(packed_data + _size - 1); }
-        reverse_const_iterator crend() { return reverse_const_iterator(packed_data - 1); }
+        iterator begin()const { return iterator(packed_data); }
+        iterator end() const { return iterator(packed_data + _size); }
+        const_iterator cbegin() const { return const_iterator(packed_data); }
+        const_iterator cend() const { return const_iterator(packed_data + _size); }
+        reverse_iterator rbegin() const { return reverse_iterator(packed_data + _size - 1); }
+        reverse_iterator rend()const { return reverse_iterator(packed_data - 1); }
+        reverse_const_iterator crbegin() const { return reverse_const_iterator(packed_data + _size - 1); }
+        reverse_const_iterator crend() const { return reverse_const_iterator(packed_data - 1); }
     private:
-        int32_t* sparse_data;
-        int32_t* packed_data;
-        int32_t max_value;
+        value_type* sparse_data;
+        value_type* packed_data;
+        value_type max_value;
         size_t capacity, _size;
     };
 }

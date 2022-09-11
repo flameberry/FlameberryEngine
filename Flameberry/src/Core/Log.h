@@ -33,7 +33,7 @@ namespace flDebug {
 
 #define FL_LOGGER_INIT(name) Flameberry::Log::Init(name)
 
-#define FL_DO_ON_ASSERT(x, ...) if(!(x)) __VA_ARGS__;
+#define FL_DO_ON_ASSERT(x, ...) {if(!(x)) {__VA_ARGS__;}}
 #define FL_ASSERT(x, ...) FL_DO_ON_ASSERT(x, flDebug::fl_print_msg_on_assert(__FILE__, __LINE__, __VA_ARGS__), FL_DEBUGBREAK())
 #define FL_BASIC_ASSERT(x) FL_DO_ON_ASSERT(x, flDebug::fl_print_msg_on_assert(__FILE__, __LINE__), FL_DEBUGBREAK())
 

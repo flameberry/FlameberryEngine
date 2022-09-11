@@ -101,9 +101,6 @@ namespace Flameberry {
 
     void Renderer3D::Init(GLFWwindow* window)
     {
-        FL_LOGGER_INIT("FLAMEBERRY");
-        FL_INFO("Initialized Logger!");
-
         m_TextureId = RenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
 
         glEnable(GL_BLEND);

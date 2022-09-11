@@ -14,12 +14,12 @@ private:
     glm::vec2 m_ViewportSize;
     Flameberry::OrthographicCamera m_Camera;
     Flameberry::PerspectiveCamera m_PerspectiveCamera;
-    float m_LastRenderTime = 0.0f;
+    double m_LastRenderTime = 0.0;
     // std::shared_ptr<Flameberry::Renderer3D> m_Renderer3D;
     std::shared_ptr<Flameberry::Renderer2D> m_Renderer2D;
 private:
     // ECS system objects
     std::shared_ptr<Flameberry::Scene> m_Scene;
     std::shared_ptr<Flameberry::Registry> m_Registry;
-    Flameberry::Entity m_SquareEntity, m_TexturedEntity;
+    Flameberry::entity_handle m_SquareEntity, m_TexturedEntity, m_BlueSquareEntity;
 };

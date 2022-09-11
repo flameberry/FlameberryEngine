@@ -12,10 +12,10 @@ namespace Flameberry {
         auto sceneView = m_Registry->View<TransformComponent, SpriteRendererComponent>();
         for (SceneView<TransformComponent, SpriteRendererComponent>::iterator it = sceneView.begin(); it != sceneView.end(); it++)
         {
-            if (std::get<1>(*it).TextureFilePath == "")
-                renderer->AddQuad(std::get<0>(*it).GetTransform(), std::get<1>(*it).Color);
+            if (std::get<1>(*it)->TextureFilePath == "")
+                renderer->AddQuad(std::get<0>(*it)->GetTransform(), std::get<1>(*it)->Color);
             else
-                renderer->AddQuad(std::get<0>(*it).GetTransform(), std::get<1>(*it).TextureFilePath.c_str());
+                renderer->AddQuad(std::get<0>(*it)->GetTransform(), std::get<1>(*it)->TextureFilePath.c_str());
         }
 
         // for (const auto& [transform, sprite] : m_Registry->View<TransformComponent, SpriteRendererComponent>())

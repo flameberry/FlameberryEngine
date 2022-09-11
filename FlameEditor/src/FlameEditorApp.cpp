@@ -50,6 +50,16 @@ FlameEditorApp::FlameEditorApp()
     spriteRendererComp1->Color = FL_PINK;
     spriteRendererComp1->TextureFilePath = FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png";
 
+    m_BlueSquareEntity = m_Registry->CreateEntity();
+    auto transformComp2 = m_Registry->AddComponent<Flameberry::TransformComponent>(m_BlueSquareEntity);
+    transformComp2->translation = { 1.0f, 0.2f, 0.0f };
+    transformComp2->rotation = { 0.0f, 0.0f, 0.0f };
+    transformComp2->scale = { 0.5f, 0.5f, 1.0f };
+
+    auto spriteRendererComp2 = m_Registry->AddComponent<Flameberry::SpriteRendererComponent>(m_BlueSquareEntity);
+    spriteRendererComp2->Color = FL_BLUE;
+    spriteRendererComp2->TextureFilePath = FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png";
+
     m_Scene = std::make_shared<Flameberry::Scene>(m_Registry.get());
 }
 
@@ -77,7 +87,10 @@ void FlameEditorApp::OnUpdate(float delta)
 
     // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    // #1a1a1a
+    constexpr glm::vec3 clearColor(20.0f / 255.0f, 20.0f / 255.0f, 20.0f / 255.0f);
+    glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
 
     // 3D
     // m_PerspectiveCamera.SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);

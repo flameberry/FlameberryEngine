@@ -10,17 +10,17 @@ namespace Flameberry {
         _Data = new char[component_size * MAX_ENTITIES];
     }
 
-    void* ComponentPool::GetComponentAddress(uint32_t entityId) const
+    void* ComponentPool::GetComponentAddress(const entity_handle& entity) const
     {
-        if (entityId <= MAX_ENTITIES && _EntityIdSet.search(entityId) != -1)
-            return _Data + _EntityIdSet.search(entityId) * _ComponentSize;
-        if (entityId > MAX_ENTITIES)
-            FL_WARN("Component Pool out of memory", entityId);
+        if (entity.get() <= MAX_ENTITIES && _EntityIdSet.search(entity.get()) != -1)
+            return _Data + _EntityIdSet.search(entity.get()) * _ComponentSize;
+        if (entity.get() > MAX_ENTITIES)
+            FL_ERROR("Component Pool out of memory", entity.get());
         return NULL;
     }
 
-    void ComponentPool::Add(uint32_t entityId) { _EntityIdSet.insert(entityId); }
-    void ComponentPool::Remove(uint32_t entityId) { _EntityIdSet.remove(entityId); }
+    void ComponentPool::Add(const entity_handle& entity) { _EntityIdSet.insert(entity.get()); }
+    void ComponentPool::Remove(const entity_handle& entity) { _EntityIdSet.remove(entity.get()); }
 
     ComponentPool::~ComponentPool()
     {

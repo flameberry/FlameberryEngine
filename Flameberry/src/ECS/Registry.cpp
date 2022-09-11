@@ -2,28 +2,28 @@
 #include "Core/Core.h"
 
 namespace Flameberry {
-    Entity Registry::CreateEntity()
+    entity_handle Registry::CreateEntity()
     {
         if (m_FreeEntities.size())
         {
             uint64_t id = m_FreeEntities.back();
-            m_Entities[id] = Entity{ id };
+            m_Entities[id] = entity_handle{ id };
             m_FreeEntities.pop_back();
-            return Entity{ id };
+            return entity_handle{ id };
         }
         m_Entities.emplace_back(m_Entities.size());
         return m_Entities.back();
     }
 
-    void Registry::DestroyEntity(Entity& entity)
+    void Registry::DestroyEntity(entity_handle& entity)
     {
         for (auto& commandPool : m_ComponentPools)
         {
-            if (commandPool->GetComponentAddress(entity.entityId))
-                commandPool->Remove(entity.entityId);
+            if (commandPool->GetComponentAddress(entity.get()))
+                commandPool->Remove(entity.get());
         }
-        m_Entities[entity.entityId].SetValidity(false);
-        entity.SetValidity(false);
-        m_FreeEntities.push_back(entity.entityId);
+        m_Entities[entity.get()].set_validity(false);
+        entity.set_validity(false);
+        m_FreeEntities.push_back(entity.get());
     }
 }

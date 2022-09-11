@@ -12,10 +12,10 @@ namespace Flameberry {
         ComponentPool(size_t componentSize);
         ~ComponentPool();
 
-        void Add(uint32_t entityId);
-        void Remove(uint32_t entityId);
+        void Add(const entity_handle& entity);
+        void Remove(const entity_handle& entity);
 
-        void* GetComponentAddress(uint32_t entityId) const;
+        void* GetComponentAddress(const entity_handle& entity) const;
         utils::sparse_set& GetEntityIdSet() { return _EntityIdSet; }
         size_t size() const { return _EntityIdSet.size(); }
     private:

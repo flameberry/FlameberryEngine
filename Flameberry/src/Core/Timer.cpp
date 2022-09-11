@@ -1,7 +1,7 @@
 #include "Timer.h"
 
 namespace Flameberry {
-    ScopedTimer::ScopedTimer(float* durationVar)
+    ScopedTimer::ScopedTimer(double* durationVar)
         : m_DurationVar(durationVar)
     {
         m_Start = std::chrono::high_resolution_clock::now();

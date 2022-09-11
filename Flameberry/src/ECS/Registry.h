@@ -17,41 +17,39 @@ namespace Flameberry {
         Registry() = default;
         ~Registry() = default;
 
-        Entity CreateEntity();
-        void DestroyEntity(Entity& entity);
+        entity_handle CreateEntity();
+        void DestroyEntity(entity_handle& entity);
 
         template<typename T>
-        T* AddComponent(const Entity& entity);
+        T* AddComponent(const entity_handle& entity);
 
         template<typename T>
-        T* GetComponent(const Entity& entity) const;
-
-        template<typename T>
-        bool HasComponent(const Entity& entity) const;
+        T* GetComponent(const entity_handle& entity) const;
 
         template<typename... ComponentTypes>
-        bool HasAllComponents(const Entity& entity) const;
+        std::tuple<ComponentTypes*...> Get(const entity_handle& entity) const;
 
         template<typename T>
-        void RemoveComponent(const Entity& entity);
+        bool HasComponent(const entity_handle& entity) const;
+
+        template<typename... ComponentTypes>
+        bool Has(const entity_handle& entity) const;
+
+        template<typename T>
+        void RemoveComponent(const entity_handle& entity);
 
         template<typename... ComponentTypes>
         SceneView<ComponentTypes...> View();
     private:
         std::vector<std::shared_ptr<ComponentPool>> m_ComponentPools;
-        std::vector<Entity> m_Entities;
+        std::vector<entity_handle> m_Entities;
         std::vector<uint32_t> m_FreeEntities;
     };
 
     template<typename T>
-    T* Registry::AddComponent(const Entity& entity)
+    T* Registry::AddComponent(const entity_handle& entity)
     {
-        if (!entity.GetValidity())
-        {
-            FL_WARN("Cannot add component to invalid entity");
-            return NULL;
-        }
-
+        FL_ASSERT(entity.is_valid(), "Failed to add component to the entity: INVALID_ENTITY!");
         uint32_t componentTypeId = GetComponentTypeId<T>();
 
         // Check to see if component pool of type T exists
@@ -63,88 +61,50 @@ namespace Flameberry {
         }
 
         // Checking if the entity has the component of type T
-        if (m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId) != NULL)
-        {
-            FL_WARN("Attempted to assign the entity a component of type which already exists!");
-            return NULL;
-        }
+        FL_ASSERT(m_ComponentPools[componentTypeId]->GetComponentAddress(entity) == NULL, "Attempted to assign the entity a component of type which already exists!");
 
-        m_ComponentPools[componentTypeId]->Add(entity.entityId);
-        void* componentAddress = m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId);
-        if (componentAddress == NULL)
-        {
-            FL_ERROR("Couldn't assign component to the entity with id: {0}", entity.entityId);
-            return NULL;
-        }
-        componentAddress = (T*)(new(componentAddress) T());
-        return static_cast<T*>(componentAddress);
+        m_ComponentPools[componentTypeId]->Add(entity.get());
+        void* componentAddress = m_ComponentPools[componentTypeId]->GetComponentAddress(entity);
+        return (T*)(new(componentAddress) T());
     }
 
     template<typename T>
-    T* Registry::GetComponent(const Entity& entity) const
+    T* Registry::GetComponent(const entity_handle& entity) const
     {
-        if (!entity.GetValidity())
-        {
-            FL_WARN("Cannot access component of invalid entity");
-            return NULL;
-        }
-
-        uint32_t componentTypeId = GetComponentTypeId<T>();
-        if (componentTypeId >= m_ComponentPools.size() || m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId) == NULL)
-        {
-            // Component of T type doesn't exist
-            FL_WARN("Attempted to access non-existing component with type id: {0} of the entity with id: {1}", componentTypeId, entity.entityId);
-            return NULL;
-        }
-        return static_cast<T*>(m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId));
-    }
-
-    template<typename T>
-    void Registry::RemoveComponent(const Entity& entity)
-    {
-        if (!entity.GetValidity())
-        {
-            FL_WARN("Attempted to remove component from an invalid entity");
-            return;
-        }
-
-        uint32_t componentTypeId = GetComponentTypeId<T>();
-        if (m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId))
-        {
-            m_ComponentPools[componentTypeId]->Remove(entity.entityId);
-            return;
-        }
-        FL_WARN("Attempted to remove non-existing component of type id: {0} of the entity with id: {1}", componentTypeId, entity.entityId);
-    }
-
-    template<typename T>
-    bool Registry::HasComponent(const Entity& entity) const
-    {
-        if (!entity.GetValidity())
-        {
-            FL_WARN("Attempted to check component existence from an invalid entity");
-            return false;
-        }
-
-        uint32_t componentTypeId = GetComponentTypeId<T>();
-        if (componentTypeId >= m_ComponentPools.size() || m_ComponentPools[componentTypeId]->GetComponentAddress(entity.entityId) == NULL)
-            return false;
-        return true;
+        FL_ASSERT(HasComponent<T>(entity), "Entity does not have component!");
+        T* ptr = static_cast<T*>(m_ComponentPools[GetComponentTypeId<T>()]->GetComponentAddress(entity));
+        return ptr;
     }
 
     template<typename... ComponentTypes>
-    bool Registry::HasAllComponents(const Entity& entity) const
+    std::tuple<ComponentTypes*...> Registry::Get(const entity_handle& entity) const
     {
-        if (!entity.GetValidity())
-        {
-            FL_WARN("Attempted to check component existence from an invalid entity");
-            return false;
-        }
+        return std::make_tuple<ComponentTypes*...>(GetComponent<ComponentTypes>(entity)...);
+    }
 
+    template<typename T>
+    void Registry::RemoveComponent(const entity_handle& entity)
+    {
+        FL_ASSERT(HasComponent<T>(entity), "Entity does not have component!");
+        m_ComponentPools[GetComponentTypeId<T>()]->Remove(entity.get());
+    }
+
+    template<typename T>
+    bool Registry::HasComponent(const entity_handle& entity) const
+    {
+        FL_ASSERT(entity.is_valid(), "Attempted to check component existence from an invalid entity");
+        uint32_t componentTypeId = GetComponentTypeId<T>();
+        return !(componentTypeId >= m_ComponentPools.size() || m_ComponentPools[componentTypeId]->GetComponentAddress(entity) == NULL);
+    }
+
+    template<typename... ComponentTypes>
+    bool Registry::Has(const entity_handle& entity) const
+    {
+        FL_ASSERT(entity.is_valid(), "Attempted to check component existence from an invalid entity");
         uint32_t componentTypeIds[] = { GetComponentTypeId<ComponentTypes>() ... };
         bool hasComponents = true;
         for (const auto& id : componentTypeIds)
-            hasComponents = hasComponents && !(id >= m_ComponentPools.size() || m_ComponentPools[id]->GetComponentAddress(entity.entityId) == NULL);
+            hasComponents = hasComponents && !(id >= m_ComponentPools.size() || m_ComponentPools[id]->GetComponentAddress(entity) == NULL);
         return hasComponents;
     }
 }
@@ -157,7 +117,7 @@ namespace Flameberry {
     {
         if (!m_ComponentPools.size())
         {
-            FL_WARN("Attempted to view registry with no component pools!");
+            FL_ERROR("Attempted to view registry with no component pools!");
             return SceneView<ComponentTypes...>(*this, NULL);
         }
 
