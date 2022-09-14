@@ -5,7 +5,7 @@ namespace Flameberry {
         : m_Registry(registry)
     {}
 
-    void Scene::RenderScene(Renderer2D* renderer, OrthographicCamera& camera)
+    void Scene::RenderScene(Renderer2D* renderer, const OrthographicCamera& camera)
     {
         renderer->Begin(camera);
 

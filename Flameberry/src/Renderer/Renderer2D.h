@@ -57,7 +57,7 @@ namespace Flameberry {
         void        AddQuad(const glm::mat4& transform, const char* textureFilePath);
         void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color);
         void        CleanUp();
-        void        Begin(OrthographicCamera& camera);
+        void        Begin(const OrthographicCamera& camera);
         void        End();
         void        SetCustomViewportSize(const glm::vec2& customViewportSize) { m_RendererInitInfo.customViewportSize = customViewportSize; }
 

@@ -283,7 +283,7 @@ namespace Flameberry {
         }
     }
 
-    void Renderer2D::Begin(OrthographicCamera& camera)
+    void Renderer2D::Begin(const OrthographicCamera& camera)
     {
         OnUpdate();
         m_UniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();

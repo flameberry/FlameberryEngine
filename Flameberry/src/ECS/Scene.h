@@ -10,7 +10,8 @@ namespace Flameberry {
         Scene(Registry* registry);
         ~Scene() = default;
 
-        void RenderScene(Renderer2D* renderer, OrthographicCamera& camera);
+        Registry* GetRegistry() { return m_Registry; }
+        void RenderScene(Renderer2D* renderer, const OrthographicCamera& camera);
     private:
         Registry* m_Registry;
     };
