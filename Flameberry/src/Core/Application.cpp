@@ -21,6 +21,8 @@ namespace Flameberry {
         m_Window = Window::Create();
         ImGuiLayer::OnAttach();
 
+        FL_TRACE("This is a trace message!");
+
         // Example usage of ECS
         // Registry registry;
         // entity_handle entity = registry.CreateEntity();

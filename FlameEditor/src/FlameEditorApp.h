@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flameberry.h"
+#include "SceneHierarchyPanel.h"
 
 class FlameEditorApp : public Flameberry::Application
 {
@@ -18,6 +19,8 @@ private:
     // std::shared_ptr<Flameberry::Renderer3D> m_Renderer3D;
     std::shared_ptr<Flameberry::Renderer2D> m_Renderer2D;
 private:
+    SceneHierarchyPanel m_SceneHierarchyPanel;
+
     // ECS system objects
     std::shared_ptr<Flameberry::Scene> m_Scene;
     std::shared_ptr<Flameberry::Registry> m_Registry;

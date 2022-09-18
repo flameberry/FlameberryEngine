@@ -39,10 +39,12 @@ namespace flDebug {
 
 #define FL_DO_IN_ORDER(...) __VA_ARGS__;
 
+#define FL_TRACE(...) Flameberry::Log::GetCoreLoggerInstance()->trace(__VA_ARGS__)
 #define FL_LOG(...) Flameberry::Log::GetCoreLoggerInstance()->log(__VA_ARGS__)
 #define FL_INFO(...) Flameberry::Log::GetCoreLoggerInstance()->info(__VA_ARGS__)
 #define FL_WARN(...) Flameberry::Log::GetCoreLoggerInstance()->warn(__VA_ARGS__)
 #define FL_ERROR(...) Flameberry::Log::GetCoreLoggerInstance()->error(__VA_ARGS__)
+#define FL_CRITICAL(...) Flameberry::Log::GetCoreLoggerInstance()->critical(__VA_ARGS__)
 
 #elif defined(FL_RELEASE)
 

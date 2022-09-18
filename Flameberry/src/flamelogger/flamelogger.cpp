@@ -56,6 +56,9 @@ namespace flamelogger {
         case LogLevel::ERROR:
             prefix << "ERROR: ";
             break;
+        case LogLevel::CRITICAL:
+            prefix << "CRITICAL: ";
+            break;
         }
 
         return prefix.str();

@@ -17,6 +17,8 @@
 #define FL_COLOR_CYAN ""
 #define FL_COLOR_WHITE ""
 
+#define FL_BG_COLOR_RED
+
 #else
 
 #define FL_COLOR_DEFAULT "\e[0m"
@@ -26,6 +28,8 @@
 #define FL_COLOR_CYAN "\e[0;36m"
 #define FL_COLOR_PURPLE "\e[0;35m"
 #define FL_COLOR_WHITE "\e[0;37m"
+
+#define FL_BG_COLOR_RED "\e[0;41m"
 
 // #define FL_COLOR_DEFAULT "\033[0m"
 // #define FL_COLOR_RED "\033[31m"
@@ -38,7 +42,7 @@
 
 namespace flamelogger {
     /// This enum class is currently only used for adding log level prefix to all logger messages
-    enum class LogLevel { TRACE = 0, LOG, INFO, WARNING, ERROR };
+    enum class LogLevel { TRACE = 0, LOG, INFO, WARNING, ERROR, CRITICAL };
 
     std::string get_current_time_string();
 
@@ -153,7 +157,7 @@ namespace flamelogger {
             if (m_CurrentLogLevel <= LogLevel::TRACE)
             {
                 std::string output_message = format_string(message, args...);
-                std::cout << FL_COLOR_WHITE << get_prefix(LogLevel::TRACE) << output_message << FL_COLOR_DEFAULT << std::endl;
+                std::cout << get_prefix(LogLevel::TRACE) << output_message << std::endl;
             }
         }
 
@@ -187,6 +191,17 @@ namespace flamelogger {
             {
                 std::string output_message = format_string(message, args...);
                 std::cout << FL_COLOR_RED << get_prefix(LogLevel::ERROR) << output_message << FL_COLOR_DEFAULT << std::endl;
+            }
+        }
+
+        /// Logs the message in RED color in the terminal
+        template<typename T, typename... Args>
+        void critical(const T& message, const Args&... args)
+        {
+            if (m_CurrentLogLevel <= LogLevel::CRITICAL)
+            {
+                std::string output_message = format_string(message, args...);
+                std::cout << FL_BG_COLOR_RED << get_prefix(LogLevel::ERROR) << output_message << FL_COLOR_DEFAULT << std::endl;
             }
         }
     private:

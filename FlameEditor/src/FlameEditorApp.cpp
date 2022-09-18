@@ -61,6 +61,7 @@ FlameEditorApp::FlameEditorApp()
     spriteRendererComp2->TextureFilePath = FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png";
 
     m_Scene = std::make_shared<Flameberry::Scene>(m_Registry.get());
+    m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene.get());
 }
 
 FlameEditorApp::~FlameEditorApp()
@@ -108,19 +109,13 @@ void FlameEditorApp::OnUpdate(float delta)
     m_Scene->RenderScene(m_Renderer2D.get(), m_Camera);
     // ---------
 
-    // m_Renderer2D->Begin(m_Camera);
-    // m_Renderer2D->AddQuad({ 0.0f,  0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PINK);
-    // m_Renderer2D->AddQuad({ 0.2f,  0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
-    // m_Renderer2D->AddQuad({ 0.0f,  0.2f, 0.0f }, { 0.2f, 0.2f }, FL_BLUE);
-    // m_Renderer2D->AddQuad({ 0.0f, -0.2f, 0.0f }, { 0.2f, 0.2f }, FL_YELLOW);
-    // m_Renderer2D->AddQuad({ -0.2f, 0.0f, 0.0f }, { 0.2f, 0.2f }, FL_PURPLE);
-    // m_Renderer2D->End();
-
     m_Framebuffer->Unbind();
 }
 
 void FlameEditorApp::OnUIRender()
 {
+    m_SceneHierarchyPanel.OnUIRender();
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
     ImGui::Begin("Viewport");
     ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
