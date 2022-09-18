@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Application.h"
+#include "Core/Log.h"
 
 int main(int argc, char const* argv[])
 {

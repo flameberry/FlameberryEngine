@@ -6,6 +6,7 @@
 #include "Core/Core.h"
 
 #include "Renderer/Renderer2D.h"
+#include "Renderer/Renderer3D.h"
 #include "Renderer/Framebuffer.h"
 #include "Core/Timer.h"
 
