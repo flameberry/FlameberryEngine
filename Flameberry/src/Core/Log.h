@@ -54,6 +54,7 @@ namespace flDebug {
 #define FL_ASSERT(x, ...) if (!(x));
 #define FL_BASIC_ASSERT(x) if (!(x));
 
+#define FL_TRACE(...)
 #define FL_LOG(...)
 #define FL_INFO(...)
 #define FL_ERROR(...)
