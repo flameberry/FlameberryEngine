@@ -694,37 +694,15 @@ namespace Flameberry {
 
         VkPipelineShaderStageCreateInfo vk_shader_stages_create_infos[2] = { vk_pipeline_vertex_shader_stage_create_info , vk_pipeline_fragment_shader_stage_create_info };
 
-        VkVertexInputBindingDescription vk_vertex_input_binding_description{};
-        vk_vertex_input_binding_description.binding = 0;
-        vk_vertex_input_binding_description.stride = sizeof(VulkanVertex);
-        vk_vertex_input_binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        VkVertexInputAttributeDescription vk_vertex_input_position_attribute_description{};
-        vk_vertex_input_position_attribute_description.binding = 0;
-        vk_vertex_input_position_attribute_description.location = 0;
-        vk_vertex_input_position_attribute_description.format = VK_FORMAT_R32G32B32_SFLOAT;
-        vk_vertex_input_position_attribute_description.offset = offsetof(VulkanVertex, position);
-
-        VkVertexInputAttributeDescription vk_vertex_input_color_attribute_description{};
-        vk_vertex_input_color_attribute_description.binding = 0;
-        vk_vertex_input_color_attribute_description.location = 1;
-        vk_vertex_input_color_attribute_description.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-        vk_vertex_input_color_attribute_description.offset = offsetof(VulkanVertex, color);
-
-        VkVertexInputAttributeDescription vk_vertex_input_texture_coords_attribute_desciption{};
-        vk_vertex_input_texture_coords_attribute_desciption.binding = 0;
-        vk_vertex_input_texture_coords_attribute_desciption.location = 2;
-        vk_vertex_input_texture_coords_attribute_desciption.format = VK_FORMAT_R32G32_SFLOAT;
-        vk_vertex_input_texture_coords_attribute_desciption.offset = offsetof(VulkanVertex, textureUV);
-
-        VkVertexInputAttributeDescription vk_attribute_descriptions[] = { vk_vertex_input_position_attribute_description, vk_vertex_input_color_attribute_description, vk_vertex_input_texture_coords_attribute_desciption };
+        VkVertexInputBindingDescription vk_vertex_input_binding_description = VulkanVertex::GetBindingDescription();
+        auto vk_attribute_descriptions = VulkanVertex::GetAttributeDescriptions();
 
         VkPipelineVertexInputStateCreateInfo vk_pipeline_vertex_input_state_create_info{};
         vk_pipeline_vertex_input_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vk_pipeline_vertex_input_state_create_info.vertexBindingDescriptionCount = 1;
         vk_pipeline_vertex_input_state_create_info.pVertexBindingDescriptions = &vk_vertex_input_binding_description;
-        vk_pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = 3;
-        vk_pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = vk_attribute_descriptions;
+        vk_pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(vk_attribute_descriptions.size());
+        vk_pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = vk_attribute_descriptions.data();
 
         VkPipelineInputAssemblyStateCreateInfo vk_pipeline_input_assembly_state_create_info{};
         vk_pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
