@@ -17,7 +17,7 @@
 #define FL_COLOR_CYAN ""
 #define FL_COLOR_WHITE ""
 
-#define FL_BG_COLOR_RED
+#define FL_BG_COLOR_RED ""
 
 #else
 

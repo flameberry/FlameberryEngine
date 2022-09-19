@@ -1,7 +1,5 @@
 #include "Application.h"
 
-#include <glad/glad.h>
-
 #include "Timer.h"
 #include "Core.h"
 

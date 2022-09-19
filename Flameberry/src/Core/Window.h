@@ -19,6 +19,9 @@ namespace Flameberry {
         bool IsRunning();
         void OnUpdate();
     private:
+        void InitForOpenGL();
+        void InitForVulkan();
+    private:
         GLFWwindow* m_Window;
         uint32_t m_Width, m_Height;
         const char* m_Title;

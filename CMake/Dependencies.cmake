@@ -1,8 +1,8 @@
 # Set Global Variables
 
 # Configure the API used  to build the app [Uses OpenGL if not specified in CMake Generation process
-set(GRAPHICS_API "OpenGL")
-# set(GRAPHICS_API "Vulkan")
+# set(FL_GRAPHICS_API "OpenGL")
+set(FL_GRAPHICS_API "Vulkan")
 
 # Vulkan path remains empty if Opengl is selected as the Graphics API
 set(VULKAN_PATH "")
@@ -19,8 +19,12 @@ set(FL_GRAPHICS_INCLUDE_DIRS
     ${FL_SOURCE_DIR}/Flameberry/vendor/imgui
 )
 
+set(FL_COMPILE_DEFINITIONS FL_PROJECT_DIR="${FL_SOURCE_DIR}" GLFW_INCLUDE_NONE)
+
 # Graphics API dependent changes begin here
-if (GRAPHICS_API STREQUAL "Vulkan")
+if (FL_GRAPHICS_API STREQUAL "Vulkan")
+    message("-- Using Vulkan Graphics API")
+
     # Vulkan Helper Libs
     find_package(Vulkan REQUIRED)
 
@@ -46,40 +50,45 @@ if (GRAPHICS_API STREQUAL "Vulkan")
         string(REGEX REPLACE "/Include" "" FL_VULKAN_PATH ${FL_VULKAN_PATH})
     endif()
 
+    list(APPEND FL_COMPILE_DEFINITIONS FL_USE_VULKAN_API GLFW_INCLUDE_VULKAN)
+    
     list(APPEND IMGUI_SRC
-        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp
-        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.h
-        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
-        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.h
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
     )
-elseif(GRAPHICS_API STREQUAL "OpenGL")
+    elseif(FL_GRAPHICS_API STREQUAL "OpenGL")
     # OpenGL Helper Libs
+    message("-- Using OpenGL Graphics API")
     list(APPEND FL_GRAPHICS_LIBS Glad)
-
+    
     if(APPLE)
-        # Inbuilt mac frameworks required for GLFW
-        list(APPEND FL_GRAPHICS_LIBS 
-            "-framework Cocoa"
-            "-framework OpenGL"
-            "-framework IOKit"
-            "-framework CoreFoundation"
-        )
+    # Inbuilt mac frameworks required for GLFW
+    list(APPEND FL_GRAPHICS_LIBS 
+    "-framework Cocoa"
+    "-framework OpenGL"
+    "-framework IOKit"
+    "-framework CoreFoundation"
+    )
     elseif(WIN32)
-        list(APPEND FL_GRAPHICS_LIBS opengl32.lib)
+    list(APPEND FL_GRAPHICS_LIBS opengl32.lib)
     endif()
-
+    
     list(APPEND FL_GRAPHICS_INCLUDE_DIRS ${FL_SOURCE_DIR}/Flameberry/vendor/Glad/include)
+    
+    list(APPEND FL_COMPILE_DEFINITIONS FL_USE_OPENGL_API GLFW_INCLUDE_NONE IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
     list(APPEND IMGUI_SRC
-        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
-        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
-        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.cpp
-        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.h
-        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3_loader.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.cpp
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3_loader.h
     )
-endif()
-
-# # Vulkan Required
+    endif()
+    
+    # # Vulkan Required
 # find_package(Vulkan REQUIRED)
 
 # if(NOT Vulkan_FOUND)

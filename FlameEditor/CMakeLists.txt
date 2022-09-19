@@ -10,7 +10,7 @@ if(${FL_PROJ_GENERATOR} STREQUAL "Xcode")
     target_compile_definitions(Flameberry PRIVATE FL_XCODE_PROJ)
 endif()
 
-target_compile_definitions(FlameEditor PRIVATE GLFW_INCLUDE_NONE FL_PROJECT_DIR="${FL_SOURCE_DIR}")
+target_compile_definitions(FlameEditor PRIVATE ${FL_COMPILE_DEFINITIONS})
 
 target_include_directories(FlameEditor PRIVATE ${FL_GRAPHICS_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src/)
 target_link_libraries(FlameEditor PRIVATE Flameberry ${FL_GRAPHICS_LIBS})
