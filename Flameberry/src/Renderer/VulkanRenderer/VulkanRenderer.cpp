@@ -100,7 +100,7 @@ namespace Flameberry {
         if (s_EnableValidationLayers)
             FL_ASSERT(CheckValidationLayerSupport(), "Validation Layers are requested but not available!");
 
-        /// Creating Vulkan Instance
+        // Creating Vulkan Instance
         VkApplicationInfo vk_app_info{};
         vk_app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         vk_app_info.pApplicationName = "Flameberry";
@@ -149,7 +149,7 @@ namespace Flameberry {
 
         if (s_EnableValidationLayers)
         {
-            /// Creating Vulkan Debug Messenger
+            // Creating Vulkan Debug Messenger
             VkDebugUtilsMessengerCreateInfoEXT vk_debug_messenger_create_info{};
             vk_debug_messenger_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
             vk_debug_messenger_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
@@ -161,10 +161,10 @@ namespace Flameberry {
             FL_INFO("Created Vulkan Debug Messenger!");
         }
 
-        /// Creating Vulkan Window Surface
+        // Creating Vulkan Window Surface
         FL_ASSERT(glfwCreateWindowSurface(s_VkInstance, s_UserGLFWwindow, nullptr, &s_VkSurface) == VK_SUCCESS, "Failed to create window surface!");
 
-        /// Setting up Valid Vulkan Physical Device
+        // Setting up Valid Vulkan Physical Device
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(s_VkInstance, &deviceCount, nullptr);
 
@@ -186,7 +186,7 @@ namespace Flameberry {
 
         FL_INFO("{0} Physical devices found: {1}", deviceCount, physical_device_list);
 
-        /// Accessing the actual physical device
+        // Accessing the actual physical device
         s_VkPhysicalDevice = GetValidVkPhysicalDevice(vk_physical_devices);
         FL_ASSERT(s_VkPhysicalDevice != VK_NULL_HANDLE, "Vulkan physical device is null!");
 
@@ -194,7 +194,7 @@ namespace Flameberry {
         vkGetPhysicalDeviceProperties(s_VkPhysicalDevice, &vk_physical_device_props);
         FL_INFO("Selected Vulkan Physical Device: {0}", vk_physical_device_props.deviceName);
 
-        /// Getting Queue Family Indices
+        // Getting Queue Family Indices
         s_QueueFamilyIndices = GetQueueFamilyIndices(s_VkPhysicalDevice);
 
         std::vector<VkDeviceQueueCreateInfo> vk_device_queue_create_infos = CreateDeviceQueueInfos(
@@ -207,7 +207,7 @@ namespace Flameberry {
         VkPhysicalDeviceFeatures vk_physical_device_features{};
         vk_physical_device_features.samplerAnisotropy = VK_TRUE;
 
-        /// Creating Vulkan Logical Device
+        // Creating Vulkan Logical Device
         VkDeviceCreateInfo vk_device_create_info{};
         vk_device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         vk_device_create_info.queueCreateInfoCount = static_cast<uint32_t>(vk_device_queue_create_infos.size());
@@ -234,7 +234,7 @@ namespace Flameberry {
         vkGetDeviceQueue(s_VkDevice, s_QueueFamilyIndices.GraphicsSupportedQueueFamilyIndex, 0, &s_VkGraphicsQueue);
         vkGetDeviceQueue(s_VkDevice, s_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex, 0, &s_VkPresentationQueue);
 
-        /// Swap Chain Creation
+        // Swap Chain Creation
         CreateSwapChain();
 
         // Image Views creation
@@ -261,7 +261,7 @@ namespace Flameberry {
         }
         FL_INFO("Created {0} Vulkan Image Views!", s_VkSwapChainImageViews.size());
 
-        /// Creating Render Passes
+        // Creating Render Passes
         VkSubpassDependency vk_subpass_dependency{};
         vk_subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
         vk_subpass_dependency.dstSubpass = 0;
@@ -329,7 +329,7 @@ namespace Flameberry {
         CreateGraphicsPipeline();
         CreateFramebuffers();
 
-        /// Creating Command Pools
+        // Creating Command Pools
         VkCommandPoolCreateInfo vk_command_pool_create_info{};
         vk_command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         vk_command_pool_create_info.queueFamilyIndex = s_QueueFamilyIndices.GraphicsSupportedQueueFamilyIndex;
@@ -342,7 +342,7 @@ namespace Flameberry {
         CreateTextureImageView();
         CreateTextureSampler();
 
-        /// Creating Vertex Buffers
+        // Creating Vertex Buffers
         std::vector<VulkanVertex> vk_vertices;
 
         VulkanVertex v0;
@@ -422,7 +422,7 @@ namespace Flameberry {
         CreateDescriptorSets();
         CreateCommandBuffers();
 
-        /// Creating Semaphores and Fences
+        // Creating Semaphores and Fences
         s_ImageAvailableSemaphores.resize(s_MAX_FRAMES_IN_FLIGHT);
         s_RenderFinishedSemaphores.resize(s_MAX_FRAMES_IN_FLIGHT);
         s_InFlightFences.resize(s_MAX_FRAMES_IN_FLIGHT);
@@ -780,7 +780,7 @@ namespace Flameberry {
 
         FL_ASSERT(vkCreatePipelineLayout(s_VkDevice, &vk_pipeline_layout_create_info, nullptr, &s_VkPipelineLayout) == VK_SUCCESS, "Failed to create Vulkan pipeline layout!");
 
-        /// Creating Actual Vulkan Graphics Pipeline
+        // Creating Actual Vulkan Graphics Pipeline
         VkGraphicsPipelineCreateInfo vk_graphics_pipeline_create_info{};
         vk_graphics_pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         vk_graphics_pipeline_create_info.stageCount = 2;
@@ -801,7 +801,7 @@ namespace Flameberry {
 
         FL_ASSERT(vkCreateGraphicsPipelines(s_VkDevice, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &s_VkGraphicsPipeline) == VK_SUCCESS, "Failed to create Vulkan Graphics Pipeline!");
 
-        /// Destroying Shader Modules
+        // Destroying Shader Modules
         vkDestroyShaderModule(s_VkDevice, vk_vertex_shader_module, nullptr);
         vkDestroyShaderModule(s_VkDevice, vk_fragment_shader_module, nullptr);
     }
@@ -945,7 +945,7 @@ namespace Flameberry {
 
             vkCmdBindPipeline(s_VkCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, s_VkGraphicsPipeline);
 
-            /// Binding Vertex Buffers
+            // Binding Vertex Buffers
             VkBuffer vk_vertex_buffers[] = { s_VkVertexBuffer };
             VkDeviceSize offsets[] = { 0 };
             vkCmdBindVertexBuffers(s_VkCommandBuffers[i], 0, 1, vk_vertex_buffers, offsets);
@@ -1314,7 +1314,7 @@ namespace Flameberry {
             if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
                 return format;
         }
-        /// Implement choosing of the next best format after sRGB B8G8A8 format
+        // Implement choosing of the next best format after sRGB B8G8A8 format
         return available_formats[0];
     }
 
@@ -1417,7 +1417,7 @@ namespace Flameberry {
             }
         }
 
-        /// Prints the names of the validation layers available
+        // Prints the names of the validation layers available
         std::string layer_list = "";
         for (uint16_t i = 0; i < layerCount; i++)
         {
