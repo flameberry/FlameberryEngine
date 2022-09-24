@@ -103,9 +103,11 @@ namespace Flameberry {
         static void               BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
         static void               EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
         static void               CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+        static VkImageView        CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
         static void               CreateTextureImage();
         static void               CreateTextureImageView();
         static void               CreateTextureSampler();
+        static void               CreateDepthResources();
         static void               CreateSwapChain();
         static void               InvalidateSwapChain();
         static void               CreateGraphicsPipeline();
@@ -128,10 +130,11 @@ namespace Flameberry {
         static VkShaderModule     CreateShaderModule(const std::vector<char>& compiledShaderCode);
         static uint32_t           GetValidMemoryTypeIndex(uint32_t typeFilter, VkMemoryPropertyFlags vk_memory_property_flags);
         static void               GetQuadVertices(std::array<VulkanVertex, 4>* vertices, const QuadCreateInfo& quadCreateInfo);
+        static VkFormat           GetSupportedFormat(const std::vector<VkFormat>& candidateFormats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags);
+        static VkFormat           GetDepthFormat();
+        static bool               HasStencilComponent(VkFormat format);
 
         static std::vector<VkDeviceQueueCreateInfo> CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices);
-    private:
-        static std::vector<char>  LoadCompiledShaderCode(const std::string& filePath);
     private:
         static VkInstance                   s_VkInstance;
         static VkDebugUtilsMessengerEXT     s_VkDebugMessenger;
@@ -175,6 +178,10 @@ namespace Flameberry {
         static VkDeviceMemory s_VkTextureImageDeviceMemory;
         static VkImageView s_VkTextureImageView;
         static VkSampler s_VkTextureSampler;
+
+        static VkImage s_VkDepthImage;
+        static VkDeviceMemory s_VkDepthImageMemory;
+        static VkImageView s_VkDepthImageView;
     private:
         static GLFWwindow* s_UserGLFWwindow;
         static uint32_t s_Indices[MAX_INDICES];

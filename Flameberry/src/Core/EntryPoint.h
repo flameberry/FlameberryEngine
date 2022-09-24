@@ -7,7 +7,7 @@
 #include "Core/Log.h"
 
 #ifdef FL_USE_VULKAN_API
-#include "Renderer/VulkanRenderer/VulkanRenderer.h"
+#include "Renderer/Vulkan/VulkanRenderer.h"
 #elif defined(FL_USE_OPENGL_API
 #include "Application.h"
 #endif

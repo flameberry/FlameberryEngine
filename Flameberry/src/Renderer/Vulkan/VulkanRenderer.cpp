@@ -2,12 +2,15 @@
 
 #include <cstdint>
 #include <algorithm>
-#include <fstream>
 #include <chrono>
 #include <thread>
+
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "Core/Core.h"
 #include "Core/Timer.h"
-#include <glm/gtc/matrix_transform.hpp>
+#include "VulkanRenderCommand.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
@@ -54,6 +57,10 @@ namespace Flameberry {
     VkDeviceMemory VulkanRenderer::s_VkTextureImageDeviceMemory;
     VkImageView VulkanRenderer::s_VkTextureImageView;
     VkSampler VulkanRenderer::s_VkTextureSampler;
+
+    VkImage VulkanRenderer::s_VkDepthImage;
+    VkDeviceMemory VulkanRenderer::s_VkDepthImageMemory;
+    VkImageView VulkanRenderer::s_VkDepthImageView;
 
     GLFWwindow* VulkanRenderer::s_UserGLFWwindow;
     uint32_t VulkanRenderer::s_Indices[MAX_INDICES];
@@ -265,10 +272,10 @@ namespace Flameberry {
         VkSubpassDependency vk_subpass_dependency{};
         vk_subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
         vk_subpass_dependency.dstSubpass = 0;
-        vk_subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        vk_subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
         vk_subpass_dependency.srcAccessMask = 0;
-        vk_subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        vk_subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        vk_subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        vk_subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
         VkAttachmentDescription vk_color_attachment_description{};
         vk_color_attachment_description.format = s_VkSwapChainImageFormat;
@@ -284,15 +291,32 @@ namespace Flameberry {
         vk_color_attachment_reference.attachment = 0;
         vk_color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+        VkAttachmentDescription vk_depth_attachment_desc{};
+        vk_depth_attachment_desc.format = GetDepthFormat();
+        vk_depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+        vk_depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        vk_depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        vk_depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        vk_depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        vk_depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        vk_depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference vk_depth_attachment_ref{};
+        vk_depth_attachment_ref.attachment = 1;
+        vk_depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
         VkSubpassDescription vk_subpass_description{};
         vk_subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         vk_subpass_description.colorAttachmentCount = 1;
         vk_subpass_description.pColorAttachments = &vk_color_attachment_reference;
+        vk_subpass_description.pDepthStencilAttachment = &vk_depth_attachment_ref;
+
+        std::array<VkAttachmentDescription, 2> attachments = { vk_color_attachment_description, vk_depth_attachment_desc };
 
         VkRenderPassCreateInfo vk_render_pass_create_info{};
         vk_render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        vk_render_pass_create_info.attachmentCount = 1;
-        vk_render_pass_create_info.pAttachments = &vk_color_attachment_description;
+        vk_render_pass_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+        vk_render_pass_create_info.pAttachments = attachments.data();
         vk_render_pass_create_info.subpassCount = 1;
         vk_render_pass_create_info.pSubpasses = &vk_subpass_description;
         vk_render_pass_create_info.dependencyCount = 1;
@@ -327,6 +351,10 @@ namespace Flameberry {
         FL_INFO("Created Vulkan Descriptor Set Layout");
 
         CreateGraphicsPipeline();
+
+        // Creating Depth Buffer Resources
+        CreateDepthResources();
+
         CreateFramebuffers();
 
         // Creating Command Pools
@@ -338,6 +366,7 @@ namespace Flameberry {
         FL_ASSERT(vkCreateCommandPool(s_VkDevice, &vk_command_pool_create_info, nullptr, &s_VkCommandPool) == VK_SUCCESS, "Failed to create Vulkan Command Pool!");
         FL_INFO("Created Vulkan Command Pool!");
 
+        // Creating Texture Resources
         CreateTextureImage();
         CreateTextureImageView();
         CreateTextureSampler();
@@ -345,30 +374,33 @@ namespace Flameberry {
         // Creating Vertex Buffers
         std::vector<VulkanVertex> vk_vertices;
 
-        VulkanVertex v0;
-        v0.position = { -0.5f, -0.5f, 0.0f };
-        v0.color = { 1.0f, 0.0f, 0.0f, 1.0f };
-        v0.textureUV = { 1.0f, 0.0f };
-        VulkanVertex v1;
-        v1.position = { 0.5f, -0.5f, 0.0f };
-        v1.color = { 0.0f, 1.0f, 0.0f, 1.0f };
-        v1.textureUV = { 0.0f, 0.0f };
-        VulkanVertex v2;
-        v2.position = { 0.5f, 0.5f, 0.0f };
-        v2.color = { 0.0f, 0.0f, 1.0f, 1.0f };
-        v2.textureUV = { 0.0f, 1.0f };
-        VulkanVertex v3;
-        v3.position = { -0.5f, 0.5f, 0.0f };
-        v3.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-        v3.textureUV = { 1.0f, 1.0f };
+        for (uint32_t i = 0; i < 2; i++)
+        {
+            VulkanVertex v0;
+            v0.position = { -0.5f, -0.5f, 0.0f - i * 0.5f };
+            v0.color = { 1.0f, 0.0f, 0.0f, 1.0f };
+            v0.textureUV = { 1.0f, 0.0f };
+            VulkanVertex v1;
+            v1.position = { 0.5f, -0.5f, 0.0f - i * 0.5f };
+            v1.color = { 0.0f, 1.0f, 0.0f, 1.0f };
+            v1.textureUV = { 0.0f, 0.0f };
+            VulkanVertex v2;
+            v2.position = { 0.5f, 0.5f, 0.0f - i * 0.5f };
+            v2.color = { 0.0f, 0.0f, 1.0f, 1.0f };
+            v2.textureUV = { 0.0f, 1.0f };
+            VulkanVertex v3;
+            v3.position = { -0.5f, 0.5f, 0.0f - i * 0.5f };
+            v3.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+            v3.textureUV = { 1.0f, 1.0f };
 
-        vk_vertices.push_back(v0);
-        vk_vertices.push_back(v1);
-        vk_vertices.push_back(v2);
-        vk_vertices.push_back(v3);
+            vk_vertices.push_back(v0);
+            vk_vertices.push_back(v1);
+            vk_vertices.push_back(v2);
+            vk_vertices.push_back(v3);
+        }
 
         size_t offset = 0;
-        for (size_t i = 0; i < 6; i += 6)
+        for (size_t i = 0; i < 12; i += 6)
         {
             s_Indices[0 + i] = 0 + offset;
             s_Indices[1 + i] = 1 + offset;
@@ -576,6 +608,12 @@ namespace Flameberry {
 
     void VulkanRenderer::InvalidateSwapChain()
     {
+        int width = 0, height = 0;
+        while (width == 0 || height == 0) {
+            glfwGetFramebufferSize(s_UserGLFWwindow, &width, &height);
+            glfwWaitEvents();
+        }
+
         vkDeviceWaitIdle(s_VkDevice);
 
         for (auto framebuffer : s_VkSwapChainFramebuffers)
@@ -674,8 +712,8 @@ namespace Flameberry {
 
     void VulkanRenderer::CreateGraphicsPipeline()
     {
-        std::vector<char> compiledVertexShader = LoadCompiledShaderCode(FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleVert.spv");
-        std::vector<char> compiledFragmentShader = LoadCompiledShaderCode(FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleFrag.spv");
+        std::vector<char> compiledVertexShader = VulkanRenderCommand::LoadCompiledShaderCode(FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleVert.spv");
+        std::vector<char> compiledFragmentShader = VulkanRenderCommand::LoadCompiledShaderCode(FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleFrag.spv");
 
         VkShaderModule vk_vertex_shader_module = CreateShaderModule(compiledVertexShader);
         VkShaderModule vk_fragment_shader_module = CreateShaderModule(compiledFragmentShader);
@@ -750,6 +788,18 @@ namespace Flameberry {
         vk_pipeline_multisample_state_create_info.alphaToCoverageEnable = VK_FALSE;
         vk_pipeline_multisample_state_create_info.alphaToOneEnable = VK_FALSE;
 
+        VkPipelineDepthStencilStateCreateInfo vk_pipeline_depth_stencil_state_create_info{};
+        vk_pipeline_depth_stencil_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        vk_pipeline_depth_stencil_state_create_info.depthTestEnable = VK_TRUE;
+        vk_pipeline_depth_stencil_state_create_info.depthWriteEnable = VK_TRUE;
+        vk_pipeline_depth_stencil_state_create_info.depthCompareOp = VK_COMPARE_OP_LESS;
+        vk_pipeline_depth_stencil_state_create_info.depthBoundsTestEnable = VK_FALSE;
+        vk_pipeline_depth_stencil_state_create_info.minDepthBounds = 0.0f; // Optional
+        vk_pipeline_depth_stencil_state_create_info.maxDepthBounds = 1.0f; // Optional
+        vk_pipeline_depth_stencil_state_create_info.stencilTestEnable = VK_FALSE;
+        vk_pipeline_depth_stencil_state_create_info.front = {}; // Optional
+        vk_pipeline_depth_stencil_state_create_info.back = {}; // Optional
+
         VkPipelineColorBlendAttachmentState vk_pipeline_color_blend_attachment_state{};
         vk_pipeline_color_blend_attachment_state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         vk_pipeline_color_blend_attachment_state.blendEnable = VK_FALSE;
@@ -798,6 +848,7 @@ namespace Flameberry {
         vk_graphics_pipeline_create_info.subpass = 0;
         vk_graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
         vk_graphics_pipeline_create_info.basePipelineIndex = -1;
+        vk_graphics_pipeline_create_info.pDepthStencilState = &vk_pipeline_depth_stencil_state_create_info;
 
         FL_ASSERT(vkCreateGraphicsPipelines(s_VkDevice, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &s_VkGraphicsPipeline) == VK_SUCCESS, "Failed to create Vulkan Graphics Pipeline!");
 
@@ -812,13 +863,13 @@ namespace Flameberry {
 
         for (size_t i = 0; i < s_VkSwapChainImageViews.size(); i++)
         {
-            VkImageView attachments[1] = { s_VkSwapChainImageViews[i] };
+            std::array<VkImageView, 2> attachments = { s_VkSwapChainImageViews[i], s_VkDepthImageView };
 
             VkFramebufferCreateInfo vk_framebuffer_create_info{};
             vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             vk_framebuffer_create_info.renderPass = s_VkRenderPass;
-            vk_framebuffer_create_info.attachmentCount = 1;
-            vk_framebuffer_create_info.pAttachments = attachments;
+            vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+            vk_framebuffer_create_info.pAttachments = attachments.data();
             vk_framebuffer_create_info.width = s_VkSwapChainExtent2D.width;
             vk_framebuffer_create_info.height = s_VkSwapChainExtent2D.height;
             vk_framebuffer_create_info.layers = 1;
@@ -935,11 +986,12 @@ namespace Flameberry {
             vk_render_pass_begin_info.renderArea.offset = { 0, 0 };
             vk_render_pass_begin_info.renderArea.extent = s_VkSwapChainExtent2D;
 
-            VkClearValue vk_clear_color{};
-            vk_clear_color.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+            std::array<VkClearValue, 2> vk_clear_values{};
+            vk_clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+            vk_clear_values[1].depthStencil = { 1.0f, 0 };
 
-            vk_render_pass_begin_info.clearValueCount = 1;
-            vk_render_pass_begin_info.pClearValues = &vk_clear_color;
+            vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(vk_clear_values.size());
+            vk_render_pass_begin_info.pClearValues = vk_clear_values.data();
 
             vkCmdBeginRenderPass(s_VkCommandBuffers[i], &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -958,6 +1010,42 @@ namespace Flameberry {
 
             FL_ASSERT(vkEndCommandBuffer(s_VkCommandBuffers[i]) == VK_SUCCESS, "Failed to record Vulkan Command Buffer!");
         }
+    }
+
+    bool VulkanRenderer::HasStencilComponent(VkFormat format)
+    {
+        return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+    }
+
+    void VulkanRenderer::CreateDepthResources()
+    {
+        VkFormat depthFormat = GetDepthFormat();
+        CreateImage(s_VkSwapChainExtent2D.width, s_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_VkDepthImage, s_VkDepthImageMemory);
+        s_VkDepthImageView = CreateImageView(s_VkDepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+    }
+
+    VkFormat VulkanRenderer::GetSupportedFormat(const std::vector<VkFormat>& candidateFormats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags)
+    {
+        for (const auto& format : candidateFormats)
+        {
+            VkFormatProperties properties;
+            vkGetPhysicalDeviceFormatProperties(s_VkPhysicalDevice, format, &properties);
+
+            if ((tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & featureFlags) == featureFlags)
+                ||
+                (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & featureFlags) == featureFlags))
+                return format;
+        }
+        FL_ERROR("Couldn't find supported format!");
+    }
+
+    VkFormat VulkanRenderer::GetDepthFormat()
+    {
+        return GetSupportedFormat(
+            { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+        );
     }
 
     void VulkanRenderer::CreateTextureImage()
@@ -1065,6 +1153,24 @@ namespace Flameberry {
         FL_ASSERT(vkAllocateMemory(s_VkDevice, &allocInfo, nullptr, &imageMemory) == VK_SUCCESS, "Failed to allocate memory!");
 
         vkBindImageMemory(s_VkDevice, image, imageMemory, 0);
+    }
+
+    VkImageView VulkanRenderer::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+    {
+        VkImageViewCreateInfo vk_image_view_create_info{};
+        vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        vk_image_view_create_info.image = image;
+        vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        vk_image_view_create_info.format = format;
+        vk_image_view_create_info.subresourceRange.aspectMask = aspectFlags;
+        vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
+        vk_image_view_create_info.subresourceRange.levelCount = 1;
+        vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
+        vk_image_view_create_info.subresourceRange.layerCount = 1;
+
+        VkImageView vk_image_view;
+        FL_ASSERT(vkCreateImageView(s_VkDevice, &vk_image_view_create_info, nullptr, &vk_image_view) == VK_SUCCESS, "Failed to create Vulkan Image View!");
+        return vk_image_view;
     }
 
     void VulkanRenderer::BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer)
@@ -1514,8 +1620,12 @@ namespace Flameberry {
 
         vkDestroyImage(s_VkDevice, s_VkTextureImage, nullptr);
         vkFreeMemory(s_VkDevice, s_VkTextureImageDeviceMemory, nullptr);
+        FL_INFO("Destroyed Vulkan Texture Image and Freed Vulkan Texture Image Device Memory!");
 
-
+        vkDestroyImageView(s_VkDevice, s_VkDepthImageView, nullptr);
+        vkDestroyImage(s_VkDevice, s_VkDepthImage, nullptr);
+        vkFreeMemory(s_VkDevice, s_VkDepthImageMemory, nullptr);
+        FL_INFO("Destroyed Vulkan Depth Image View and Image and freed Depth Image Device Memory!");
 
         vkDestroyDevice(s_VkDevice, nullptr);
         FL_INFO("Destroyed Vulkan Logical Device!");
@@ -1530,23 +1640,5 @@ namespace Flameberry {
         FL_INFO("Destroyed Vulkan Window Surface!");
         vkDestroyInstance(s_VkInstance, nullptr);
         FL_INFO("Destroyed Vulkan Instance!");
-    }
-
-    std::vector<char> VulkanRenderer::LoadCompiledShaderCode(const std::string& filePath)
-    {
-        std::ifstream stream(filePath, std::ios::ate | std::ios::binary);
-        FL_ASSERT(stream.is_open(), "Failed to open the file '{0}'", filePath);
-
-        size_t fileSize = (size_t)stream.tellg();
-
-        FL_INFO("File size of buffer taken from '{0}' is {1}", filePath, fileSize);
-
-        std::vector<char> buffer(fileSize);
-
-        stream.seekg(0);
-        stream.read(buffer.data(), fileSize);
-
-        stream.close();
-        return buffer;
     }
 }
