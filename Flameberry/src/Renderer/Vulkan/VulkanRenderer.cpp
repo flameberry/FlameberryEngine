@@ -372,46 +372,49 @@ namespace Flameberry {
         CreateTextureSampler();
 
         // Creating Vertex Buffers
-        std::vector<VulkanVertex> vk_vertices;
+        // std::vector<VulkanVertex> vk_vertices;
 
-        for (uint32_t i = 0; i < 2; i++)
-        {
-            VulkanVertex v0;
-            v0.position = { -0.5f, -0.5f, 0.0f - i * 0.5f };
-            v0.color = { 1.0f, 0.0f, 0.0f, 1.0f };
-            v0.textureUV = { 1.0f, 0.0f };
-            VulkanVertex v1;
-            v1.position = { 0.5f, -0.5f, 0.0f - i * 0.5f };
-            v1.color = { 0.0f, 1.0f, 0.0f, 1.0f };
-            v1.textureUV = { 0.0f, 0.0f };
-            VulkanVertex v2;
-            v2.position = { 0.5f, 0.5f, 0.0f - i * 0.5f };
-            v2.color = { 0.0f, 0.0f, 1.0f, 1.0f };
-            v2.textureUV = { 0.0f, 1.0f };
-            VulkanVertex v3;
-            v3.position = { -0.5f, 0.5f, 0.0f - i * 0.5f };
-            v3.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-            v3.textureUV = { 1.0f, 1.0f };
+        // for (uint32_t i = 0; i < 2; i++)
+        // {
+        //     VulkanVertex v0;
+        //     v0.position = { -0.5f, -0.5f, 0.0f - i * 0.5f };
+        //     v0.color = { 1.0f, 0.0f, 0.0f, 1.0f };
+        //     v0.textureUV = { 1.0f, 0.0f };
+        //     VulkanVertex v1;
+        //     v1.position = { 0.5f, -0.5f, 0.0f - i * 0.5f };
+        //     v1.color = { 0.0f, 1.0f, 0.0f, 1.0f };
+        //     v1.textureUV = { 0.0f, 0.0f };
+        //     VulkanVertex v2;
+        //     v2.position = { 0.5f, 0.5f, 0.0f - i * 0.5f };
+        //     v2.color = { 0.0f, 0.0f, 1.0f, 1.0f };
+        //     v2.textureUV = { 0.0f, 1.0f };
+        //     VulkanVertex v3;
+        //     v3.position = { -0.5f, 0.5f, 0.0f - i * 0.5f };
+        //     v3.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+        //     v3.textureUV = { 1.0f, 1.0f };
 
-            vk_vertices.push_back(v0);
-            vk_vertices.push_back(v1);
-            vk_vertices.push_back(v2);
-            vk_vertices.push_back(v3);
-        }
+        //     vk_vertices.push_back(v0);
+        //     vk_vertices.push_back(v1);
+        //     vk_vertices.push_back(v2);
+        //     vk_vertices.push_back(v3);
+        // }
 
-        size_t offset = 0;
-        for (size_t i = 0; i < 12; i += 6)
-        {
-            s_Indices[0 + i] = 0 + offset;
-            s_Indices[1 + i] = 1 + offset;
-            s_Indices[2 + i] = 2 + offset;
+        // size_t offset = 0;
+        // for (size_t i = 0; i < 12; i += 6)
+        // {
+        //     s_Indices[0 + i] = 0 + offset;
+        //     s_Indices[1 + i] = 1 + offset;
+        //     s_Indices[2 + i] = 2 + offset;
 
-            s_Indices[3 + i] = 2 + offset;
-            s_Indices[4 + i] = 3 + offset;
-            s_Indices[5 + i] = 0 + offset;
+        //     s_Indices[3 + i] = 2 + offset;
+        //     s_Indices[4 + i] = 3 + offset;
+        //     s_Indices[5 + i] = 0 + offset;
 
-            offset += 4;
-        }
+        //     offset += 4;
+        // }
+
+        auto [vk_vertices, indices] = VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/viking_room.obj");
+        memcpy(s_Indices, indices.data(), sizeof(uint32_t) * indices.size());
 
         // Creating Vertex Buffer
         VkDeviceSize bufferSize = sizeof(VulkanVertex) * vk_vertices.size();
@@ -502,9 +505,10 @@ namespace Flameberry {
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         UniformBufferObject uniformBufferObject{};
-        uniformBufferObject.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        // uniformBufferObject.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        uniformBufferObject.ModelMatrix = glm::mat4(1.0f);
         uniformBufferObject.ViewMatrix = glm::lookAt(glm::vec3(2.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        uniformBufferObject.ProjectionMatrix = glm::perspective(glm::radians(45.0f), s_VkSwapChainExtent2D.width / (float)s_VkSwapChainExtent2D.height, 0.1f, 10.0f);
+        uniformBufferObject.ProjectionMatrix = glm::perspective(glm::radians(45.0f), (float)s_VkSwapChainExtent2D.width / (float)s_VkSwapChainExtent2D.height, 0.1f, 10.0f);
         uniformBufferObject.ProjectionMatrix[1][1] *= -1;
 
         void* vk_uniform_buffer_data;
@@ -1051,7 +1055,7 @@ namespace Flameberry {
     void VulkanRenderer::CreateTextureImage()
     {
         int width, height, channels;
-        stbi_uc* pixels = stbi_load(FL_PROJECT_DIR"SandboxApp/assets/textures/StoneIdol.jpg", &width, &height, &channels, STBI_rgb_alpha);
+        stbi_uc* pixels = stbi_load(FL_PROJECT_DIR"SandboxApp/assets/textures/viking_room.png", &width, &height, &channels, STBI_rgb_alpha);
         FL_ASSERT(pixels, "Texture pixels are empty!");
         VkDeviceSize imageSize = 4 * width * height;
 
