@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 namespace Flameberry {
-    class RenderCommand
+    class OpenGLRenderCommand
     {
     public:
         static std::tuple<std::string, std::string> ReadShaderSource(const std::string& filePath);

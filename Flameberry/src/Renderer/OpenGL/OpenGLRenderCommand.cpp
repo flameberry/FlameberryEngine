@@ -1,4 +1,4 @@
-#include "RenderCommand.h"
+#include "OpenGLRenderCommand.h"
 
 #include <fstream>
 #include <glad/glad.h>
@@ -16,7 +16,7 @@ namespace utils {
 }
 
 namespace Flameberry {
-    glm::vec3 RenderCommand::PixelToOpenGL(const glm::vec3& coords, const glm::vec2& viewportSize, float zNear, float zFar)
+    glm::vec3 OpenGLRenderCommand::PixelToOpenGL(const glm::vec3& coords, const glm::vec2& viewportSize, float zNear, float zFar)
     {
         float aspectRatio = viewportSize.x / viewportSize.y;
         float x = utils::map(coords.x, { -viewportSize.x / 2.0f , viewportSize.x / 2.0f }, { -aspectRatio, aspectRatio });
@@ -26,7 +26,7 @@ namespace Flameberry {
         return glm::vec3(x, y, z);
     }
 
-    glm::vec2 RenderCommand::PixelToOpenGL(const glm::vec2& coords, const glm::vec2& viewportSize)
+    glm::vec2 OpenGLRenderCommand::PixelToOpenGL(const glm::vec2& coords, const glm::vec2& viewportSize)
     {
         float aspectRatio = viewportSize.x / viewportSize.y;
         float x = utils::map(coords.x, { -viewportSize.x / 2.0f , viewportSize.x / 2.0f }, { -aspectRatio, aspectRatio });
@@ -34,18 +34,18 @@ namespace Flameberry {
         return glm::vec2(x, y);
     }
 
-    float RenderCommand::PixelToOpenGLX(float pixels, const glm::vec2& viewportSize)
+    float OpenGLRenderCommand::PixelToOpenGLX(float pixels, const glm::vec2& viewportSize)
     {
         float aspectRatio = viewportSize.x / viewportSize.y;
         return utils::map(pixels, { -viewportSize.x / 2.0f, viewportSize.x / 2.0f }, { -aspectRatio, aspectRatio });
     }
 
-    float RenderCommand::PixelToOpenGLY(float pixels, float viewportHeight)
+    float OpenGLRenderCommand::PixelToOpenGLY(float pixels, float viewportHeight)
     {
         return utils::map(pixels, { -viewportHeight / 2.0f, viewportHeight / 2.0f }, { -1.0f, 1.0f });
     }
 
-    std::tuple<std::string, std::string> RenderCommand::ReadShaderSource(const std::string& filePath)
+    std::tuple<std::string, std::string> OpenGLRenderCommand::ReadShaderSource(const std::string& filePath)
     {
         std::ifstream stream(filePath);
 
@@ -73,11 +73,11 @@ namespace Flameberry {
         stream.close();
         return std::make_tuple(ss[0].str(), ss[1].str());
     }
-    
-    uint32_t RenderCommand::CreateShader(const std::string& filePath)
+
+    uint32_t OpenGLRenderCommand::CreateShader(const std::string& filePath)
     {
         uint32_t shaderProgramId = 0;
-        auto [vertexSource, fragmentSource] = RenderCommand::ReadShaderSource(filePath);
+        auto [vertexSource, fragmentSource] = OpenGLRenderCommand::ReadShaderSource(filePath);
         // Create an empty vertex shader handle
         GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 
@@ -175,7 +175,7 @@ namespace Flameberry {
         return shaderProgramId;
     }
 
-    uint32_t RenderCommand::CreateTexture(const std::string& filePath)
+    uint32_t OpenGLRenderCommand::CreateTexture(const std::string& filePath)
     {
         stbi_set_flip_vertically_on_load(true);
 

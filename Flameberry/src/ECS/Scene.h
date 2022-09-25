@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Registry.h"
-#include "Renderer/Renderer2D.h"
+#include "Renderer/OpenGL/OpenGLRenderer2D.h"
 
 namespace Flameberry {
     class Scene
@@ -11,7 +11,7 @@ namespace Flameberry {
         ~Scene() = default;
 
         Registry* GetRegistry() { return m_Registry; }
-        void RenderScene(Renderer2D* renderer, const OrthographicCamera& camera);
+        void RenderScene(OpenGLRenderer2D* renderer, const OrthographicCamera& camera);
     private:
         Registry* m_Registry;
     };

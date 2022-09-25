@@ -1,15 +1,15 @@
-#include "Framebuffer.h"
+#include "OpenGLFramebuffer.h"
 
 #include <glad/glad.h>
 #include "Core/Core.h"
 
 namespace Flameberry {
-    std::shared_ptr<Framebuffer> Framebuffer::Create(float width, float height)
+    std::shared_ptr<OpenGLFramebuffer> OpenGLFramebuffer::Create(float width, float height)
     {
-        return std::make_shared<Framebuffer>(width, height);
+        return std::make_shared<OpenGLFramebuffer>(width, height);
     }
 
-    Framebuffer::Framebuffer(float width, float height)
+    OpenGLFramebuffer::OpenGLFramebuffer(float width, float height)
         : m_FramebufferId(0), m_ColorAttachmentId(0), m_DepthAttachmentId(0), m_FramebufferSize(width, height)
     {
         glGenFramebuffers(1, &m_FramebufferId);
@@ -35,7 +35,7 @@ namespace Flameberry {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void Framebuffer::OnUpdate()
+    void OpenGLFramebuffer::OnUpdate()
     {
         if (m_FramebufferId)
         {
@@ -67,23 +67,23 @@ namespace Flameberry {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void Framebuffer::SetFramebufferSize(float width, float height)
+    void OpenGLFramebuffer::SetFramebufferSize(float width, float height)
     {
         m_FramebufferSize = { width, height };
     }
 
-    void Framebuffer::Bind() const
+    void OpenGLFramebuffer::Bind() const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
         glViewport(0, 0, m_FramebufferSize.x, m_FramebufferSize.y);
     }
 
-    void Framebuffer::Unbind() const
+    void OpenGLFramebuffer::Unbind() const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    Framebuffer::~Framebuffer()
+    OpenGLFramebuffer::~OpenGLFramebuffer()
     {
         glDeleteTextures(1, &m_ColorAttachmentId);
         glDeleteTextures(1, &m_DepthAttachmentId);

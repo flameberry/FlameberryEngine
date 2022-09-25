@@ -3,8 +3,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Core/Input.h"
-#include "Renderer2D.h"
-#include "RenderCommand.h"
 
 namespace Flameberry {
     OrthographicCamera::OrthographicCamera(const glm::vec2& viewportSize, float zoom)

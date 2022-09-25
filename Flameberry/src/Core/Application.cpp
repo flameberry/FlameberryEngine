@@ -4,11 +4,6 @@
 #include "Core.h"
 
 #include "ImGui/ImGuiLayer.h"
-#include "Renderer/Renderer2D.h"
-
-#include "ECS/Registry.h"
-#include "ECS/SceneView.h"
-#include "ECS/Component.h"
 
 namespace Flameberry {
     Application* Application::s_Instance;

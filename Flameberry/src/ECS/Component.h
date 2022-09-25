@@ -31,4 +31,10 @@ namespace Flameberry {
         std::string TextureFilePath = "";
         glm::vec4 Color{ 1.0f };
     };
+
+    struct TagComponent
+    {
+        std::string Tag;
+        TagComponent(const std::string& tag = "Default_Entity") : Tag(tag) {}
+    };
 }

@@ -8,7 +8,7 @@
 
 #ifdef FL_USE_VULKAN_API
 #include "Renderer/Vulkan/VulkanRenderer.h"
-#elif defined(FL_USE_OPENGL_API
+#elif defined(FL_USE_OPENGL_API)
 #include "Application.h"
 #endif
 
@@ -16,7 +16,7 @@ int main(int argc, char const* argv[])
 {
 #ifdef FL_DEBUG
     FL_LOGGER_INIT("FLAMEBERRY");
-    FL_SET_LOG_LEVEL(flamelogger::LogLevel::INFO);
+    // FL_SET_LOG_LEVEL(flamelogger::LogLevel::INFO);
     FL_INFO("Initialized Logger!");
 #endif
 
@@ -24,7 +24,6 @@ int main(int argc, char const* argv[])
     auto clientApp = Flameberry::Application::CreateClientApp();
     clientApp->Run();
 #elif defined(FL_USE_VULKAN_API)
-
     Flameberry::Window window;
 
     Flameberry::VulkanRenderer::Init(window.GetGLFWwindow());

@@ -5,10 +5,10 @@
 #include <memory>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "PerspectiveCamera.h"
+#include "Renderer/PerspectiveCamera.h"
 
 namespace Flameberry {
-    struct Vertex
+    struct OpenGLVertex
     {
         glm::vec3 position;
         glm::vec4 color;
@@ -16,16 +16,16 @@ namespace Flameberry {
         float texture_index;
 
         /// Default Constructor
-        Vertex()
+        OpenGLVertex()
             : position(0.0f), color(1.0f), texture_uv(0.0f), texture_index(-1.0f)
         {
         }
     };
 
-    class Renderer3D
+    class OpenGLRenderer3D
     {
     public:
-        static std::shared_ptr<Renderer3D> Create();
+        static std::shared_ptr<OpenGLRenderer3D> Create();
         void Init(GLFWwindow* window);
         void CleanUp();
         void Begin(const PerspectiveCamera& camera);

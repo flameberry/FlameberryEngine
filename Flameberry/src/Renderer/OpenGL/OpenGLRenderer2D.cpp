@@ -1,4 +1,4 @@
-#include "Renderer2D.h"
+#include "OpenGLRenderer2D.h"
 
 #include <iostream>
 #include <fstream>
@@ -7,18 +7,18 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "RenderCommand.h"
+#include "OpenGLRenderCommand.h"
 #include "Core/Input.h"
 
 namespace Flameberry {
-    Renderer2D::Renderer2D()
+    OpenGLRenderer2D::OpenGLRenderer2D()
         : m_AspectRatio(1280.0f / 720.0f), m_ViewportSize(1280.0f, 720.0f), m_CursorPosition(0.0f, 0.0f), m_CurrentTextureSlot(0)
     {}
 
-    Renderer2D::~Renderer2D()
+    OpenGLRenderer2D::~OpenGLRenderer2D()
     {}
 
-    void Renderer2D::UpdateViewportSize()
+    void OpenGLRenderer2D::UpdateViewportSize()
     {
         if (m_RendererInitInfo.enableCustomViewport)
             m_ViewportSize = m_RendererInitInfo.customViewportSize;
@@ -30,7 +30,7 @@ namespace Flameberry {
         }
     }
 
-    void Renderer2D::UpdateWindowContentScale()
+    void OpenGLRenderer2D::UpdateWindowContentScale()
     {
         if (m_RendererInitInfo.enableCustomViewport)
             m_WindowContentScale = { 1.0f, 1.0f };
@@ -42,18 +42,18 @@ namespace Flameberry {
         }
     }
 
-    void Renderer2D::OnResize()
+    void OpenGLRenderer2D::OnResize()
     {
         UpdateViewportSize();
         m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y;
         glViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
     }
 
-    glm::vec2  Renderer2D::GetViewportSize() { return m_ViewportSize; }
-    glm::vec2& Renderer2D::GetCursorPosition() { return m_CursorPosition; }
-    GLFWwindow* Renderer2D::GetUserGLFWwindow() { return m_UserWindow; }
+    glm::vec2  OpenGLRenderer2D::GetViewportSize() { return m_ViewportSize; }
+    glm::vec2& OpenGLRenderer2D::GetCursorPosition() { return m_CursorPosition; }
+    GLFWwindow* OpenGLRenderer2D::GetUserGLFWwindow() { return m_UserWindow; }
 
-    void Renderer2D::OnUpdate()
+    void OpenGLRenderer2D::OnUpdate()
     {
         glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -66,7 +66,7 @@ namespace Flameberry {
         m_CursorPosition.y = -y + m_ViewportSize.y / m_WindowContentScale.y / 2.0f;
     }
 
-    void Renderer2D::Init(const Renderer2DInitInfo& rendererInitInfo)
+    void OpenGLRenderer2D::Init(const OpenGLRenderer2DInitInfo& rendererInitInfo)
     {
         m_RendererInitInfo = rendererInitInfo;
         m_UserWindow = rendererInitInfo.userWindow;
@@ -90,10 +90,10 @@ namespace Flameberry {
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         InitBatch();
-        FL_INFO("Initialized Renderer2D!");
+        FL_INFO("Initialized OpenGLRenderer2D!");
     }
 
-    void Renderer2D::InitBatch()
+    void OpenGLRenderer2D::InitBatch()
     {
         m_Batch.TextureIds.reserve(MAX_TEXTURE_SLOTS);
 
@@ -117,18 +117,18 @@ namespace Flameberry {
 
         glGenBuffers(1, &m_Batch.VertexBufferId);
         glBindBuffer(GL_ARRAY_BUFFER, m_Batch.VertexBufferId);
-        glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(Vertex2D), nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(OpenGLVertex2D), nullptr, GL_DYNAMIC_DRAW);
 
         glBindVertexArray(m_Batch.VertexArrayId);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(Vertex2D, position));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex2D, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(Vertex2D, color));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex2D, color));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(Vertex2D, texture_uv));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex2D, texture_uv));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(Vertex2D, texture_index));
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex2D, texture_index));
 
         glGenBuffers(1, &m_Batch.IndexBufferId);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Batch.IndexBufferId);
@@ -136,23 +136,23 @@ namespace Flameberry {
 
         glBindVertexArray(m_Batch.VertexArrayId);
 
-        m_Batch.ShaderProgramId = RenderCommand::CreateShader(FL_PROJECT_DIR"Flameberry/assets/shaders/Quad.glsl");
+        m_Batch.ShaderProgramId = OpenGLRenderCommand::CreateShader(FL_PROJECT_DIR"Flameberry/assets/shaders/Quad.glsl");
         glUseProgram(m_Batch.ShaderProgramId);
 
         int samplers[MAX_TEXTURE_SLOTS];
         for (uint32_t i = 0; i < MAX_TEXTURE_SLOTS; i++)
             samplers[i] = i;
-        glUniform1iv(Renderer2D::GetUniformLocation("u_TextureSamplers", m_Batch.ShaderProgramId), MAX_TEXTURE_SLOTS, samplers);
+        glUniform1iv(OpenGLRenderer2D::GetUniformLocation("u_TextureSamplers", m_Batch.ShaderProgramId), MAX_TEXTURE_SLOTS, samplers);
         glUseProgram(0);
     }
 
-    void Renderer2D::FlushBatch()
+    void OpenGLRenderer2D::FlushBatch()
     {
         if (!m_Batch.Vertices.size())
             return;
 
         glBindBuffer(GL_ARRAY_BUFFER, m_Batch.VertexBufferId);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, m_Batch.Vertices.size() * sizeof(Vertex2D), m_Batch.Vertices.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, m_Batch.Vertices.size() * sizeof(OpenGLVertex2D), m_Batch.Vertices.data());
 
         for (uint8_t i = 0; i < m_Batch.TextureIds.size(); i++)
         {
@@ -169,9 +169,9 @@ namespace Flameberry {
         m_CurrentTextureSlot = 0;
     }
 
-    void Renderer2D::AddQuad(const glm::mat4& transform, const glm::vec4& color)
+    void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const glm::vec4& color)
     {
-        Vertex2D vertices[4];
+        OpenGLVertex2D vertices[4];
 
         vertices[0].texture_uv = { 0.0f, 0.0f };
         vertices[1].texture_uv = { 0.0f, 1.0f };
@@ -188,9 +188,9 @@ namespace Flameberry {
             m_Batch.Vertices.push_back(vertices[i]);
     }
 
-    void Renderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color)
+    void OpenGLRenderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color)
     {
-        Vertex2D vertices[4];
+        OpenGLVertex2D vertices[4];
 
         vertices[0].texture_uv = { 0.0f, 0.0f };
         vertices[1].texture_uv = { 0.0f, 1.0f };
@@ -210,9 +210,9 @@ namespace Flameberry {
             m_Batch.Vertices.push_back(vertices[i]);
     }
 
-    void Renderer2D::AddQuad(const glm::mat4& transform, const char* textureFilePath)
+    void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const char* textureFilePath)
     {
-        Vertex2D vertices[4];
+        OpenGLVertex2D vertices[4];
         vertices[0].texture_uv = { 0.0f, 0.0f };
         vertices[1].texture_uv = { 0.0f, 1.0f };
         vertices[2].texture_uv = { 1.0f, 1.0f };
@@ -231,7 +231,7 @@ namespace Flameberry {
         uint32_t textureId = GetTextureIdIfAvailable(textureFilePath);
         if (!textureId)
         {
-            textureId = RenderCommand::CreateTexture(textureFilePath);
+            textureId = OpenGLRenderCommand::CreateTexture(textureFilePath);
             m_TextureIdCache[textureFilePath] = textureId;
         }
         m_Batch.TextureIds.push_back(textureId);
@@ -245,9 +245,9 @@ namespace Flameberry {
         }
     }
 
-    void Renderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath)
+    void OpenGLRenderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath)
     {
-        Vertex2D vertices[4];
+        OpenGLVertex2D vertices[4];
         vertices[0].texture_uv = { 0.0f, 0.0f };
         vertices[1].texture_uv = { 0.0f, 1.0f };
         vertices[2].texture_uv = { 1.0f, 1.0f };
@@ -269,7 +269,7 @@ namespace Flameberry {
         uint32_t textureId = GetTextureIdIfAvailable(textureFilePath);
         if (!textureId)
         {
-            textureId = RenderCommand::CreateTexture(textureFilePath);
+            textureId = OpenGLRenderCommand::CreateTexture(textureFilePath);
             m_TextureIdCache[textureFilePath] = textureId;
         }
         m_Batch.TextureIds.push_back(textureId);
@@ -283,7 +283,7 @@ namespace Flameberry {
         }
     }
 
-    void Renderer2D::Begin(const OrthographicCamera& camera)
+    void OpenGLRenderer2D::Begin(const OrthographicCamera& camera)
     {
         OnUpdate();
         m_UniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
@@ -293,13 +293,13 @@ namespace Flameberry {
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(m_UniformBufferData.ViewProjectionMatrix));
     }
 
-    void Renderer2D::End()
+    void OpenGLRenderer2D::End()
     {
         FlushBatch();
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
-    GLint Renderer2D::GetUniformLocation(const std::string& name, uint32_t shaderId)
+    GLint OpenGLRenderer2D::GetUniformLocation(const std::string& name, uint32_t shaderId)
     {
         if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
             return m_UniformLocationCache[name];
@@ -311,7 +311,7 @@ namespace Flameberry {
         return location;
     }
 
-    uint32_t Renderer2D::GetTextureIdIfAvailable(const char* textureFilePath)
+    uint32_t OpenGLRenderer2D::GetTextureIdIfAvailable(const char* textureFilePath)
     {
         if (m_TextureIdCache.find(textureFilePath) != m_TextureIdCache.end())
             return m_TextureIdCache[textureFilePath];
@@ -319,7 +319,7 @@ namespace Flameberry {
             return 0;
     }
 
-    void Renderer2D::CleanUp()
+    void OpenGLRenderer2D::CleanUp()
     {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

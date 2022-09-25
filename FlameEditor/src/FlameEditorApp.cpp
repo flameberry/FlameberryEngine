@@ -3,18 +3,20 @@
 // Includes the Entrypoint of the main application
 #include "Core/EntryPoint.h"
 
+#include "Panels/SceneHierarchyPanel.h"
+
 FlameEditorApp::FlameEditorApp()
-    : m_Framebuffer(Flameberry::Framebuffer::Create()),
+    : m_Framebuffer(Flameberry::OpenGLFramebuffer::Create()),
     m_ViewportSize(1280, 720),
     m_Camera({ 1280.0f, 720.0f }, 1.0f)
     // m_Renderer3D(Flameberry::Renderer3D::Create())
 {
-    Flameberry::Renderer2DInitInfo rendererInitInfo{};
+    Flameberry::OpenGLRenderer2DInitInfo rendererInitInfo{};
     rendererInitInfo.userWindow = Flameberry::Application::Get().GetWindow().GetGLFWwindow();
     rendererInitInfo.enableCustomViewport = true;
     rendererInitInfo.customViewportSize = { 1280.0f, 720.0f };
 
-    m_Renderer2D = Flameberry::Renderer2D::Create();
+    m_Renderer2D = Flameberry::OpenGLRenderer2D::Create();
     m_Renderer2D->Init(rendererInitInfo);
 
     // Dealing with 3D Renderer
@@ -40,6 +42,8 @@ FlameEditorApp::FlameEditorApp()
     spriteRendererComp->Color = FL_PINK;
     spriteRendererComp->TextureFilePath = "";
 
+    m_Registry->AddComponent<Flameberry::TagComponent>(m_SquareEntity)->Tag = "Square_Entity";
+
     m_TexturedEntity = m_Registry->CreateEntity();
     auto transformComp1 = m_Registry->AddComponent<Flameberry::TransformComponent>(m_TexturedEntity);
     transformComp1->translation = { 0.2f, 0.0f, 0.0f };
@@ -49,6 +53,8 @@ FlameEditorApp::FlameEditorApp()
     auto spriteRendererComp1 = m_Registry->AddComponent<Flameberry::SpriteRendererComponent>(m_TexturedEntity);
     spriteRendererComp1->Color = FL_PINK;
     spriteRendererComp1->TextureFilePath = FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png";
+
+    m_Registry->AddComponent<Flameberry::TagComponent>(m_TexturedEntity)->Tag = "Textured_Entity";
 
     m_BlueSquareEntity = m_Registry->CreateEntity();
     auto transformComp2 = m_Registry->AddComponent<Flameberry::TransformComponent>(m_BlueSquareEntity);
@@ -60,8 +66,12 @@ FlameEditorApp::FlameEditorApp()
     spriteRendererComp2->Color = FL_BLUE;
     spriteRendererComp2->TextureFilePath = FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png";
 
+    m_Registry->AddComponent<Flameberry::TagComponent>(m_BlueSquareEntity)->Tag = "Blue_Squared_Entity";
+
     m_Scene = std::make_shared<Flameberry::Scene>(m_Registry.get());
-    m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene.get());
+
+    // Setting up all the panels
+    m_Panels.push_back(std::make_shared<SceneHierarchyPanel>(m_Scene.get()));
 }
 
 FlameEditorApp::~FlameEditorApp()
@@ -114,7 +124,8 @@ void FlameEditorApp::OnUpdate(float delta)
 
 void FlameEditorApp::OnUIRender()
 {
-    m_SceneHierarchyPanel.OnUIRender();
+    for (auto& panel : m_Panels)
+        panel->OnUIRender();
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
     ImGui::Begin("Viewport");

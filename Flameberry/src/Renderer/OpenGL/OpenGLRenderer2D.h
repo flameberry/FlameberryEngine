@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 
 #include "Core/Core.h"
-#include "OrthographicCamera.h"
+#include "Renderer/OrthographicCamera.h"
 
 /// This Macro contains the max number of texture slots that the GPU supports, varies for each computer.
 #define MAX_TEXTURE_SLOTS 16
@@ -18,7 +18,7 @@
 #define MAX_INDICES 6 * MAX_QUADS
 
 namespace Flameberry {
-    struct Renderer2DInitInfo
+    struct OpenGLRenderer2DInitInfo
     {
         GLFWwindow* userWindow;
         bool enableCustomViewport{ false };
@@ -26,7 +26,7 @@ namespace Flameberry {
     };
 
     // The [Vertex2D] struct represents an OpenGL Vertex.
-    struct Vertex2D
+    struct OpenGLVertex2D
     {
         glm::vec3 position;   // Position from -1.0f to 1.0f on both x-axis and y-axis
         glm::vec4 color;      // Color in rgba format, each channel ranging from 0.0f to 1.0f
@@ -34,19 +34,19 @@ namespace Flameberry {
         float texture_index;  // Texture index which will be used as opengl texture slot to which the texture will be bound
 
         // Default Constructor
-        Vertex2D()
+        OpenGLVertex2D()
             : position(0.0f), color(1.0f), texture_uv(0.0f), texture_index(-1.0f)
         {}
     };
 
-    class Renderer2D
+    class OpenGLRenderer2D
     {
     public:
-        Renderer2D();
-        ~Renderer2D();
+        OpenGLRenderer2D();
+        ~OpenGLRenderer2D();
 
         // The Init function should be called after the GLFW window creation and before the main loop
-        void        Init(const Renderer2DInitInfo& rendererInitInfo);
+        void        Init(const OpenGLRenderer2DInitInfo& rendererInitInfo);
         glm::vec2   GetWindowContentScale() { return m_WindowContentScale; }
         GLFWwindow* GetUserGLFWwindow();
         glm::vec2   GetViewportSize();
@@ -62,7 +62,7 @@ namespace Flameberry {
         void        SetCustomViewportSize(const glm::vec2& customViewportSize) { m_RendererInitInfo.customViewportSize = customViewportSize; }
 
         glm::vec2& GetCursorPosition();
-        static std::shared_ptr<Renderer2D> Create() { return std::make_shared<Renderer2D>(); }
+        static std::shared_ptr<OpenGLRenderer2D> Create() { return std::make_shared<OpenGLRenderer2D>(); }
     private:
         /// Batch Handling functions
         void InitBatch();
@@ -85,10 +85,10 @@ namespace Flameberry {
             uint32_t VertexBufferId, IndexBufferId, VertexArrayId, ShaderProgramId;
             std::vector<uint32_t> TextureIds;
             /// All the vertices stored by a Batch.
-            std::vector<Vertex2D> Vertices;
+            std::vector<OpenGLVertex2D> Vertices;
         };
     private:
-        Renderer2DInitInfo                        m_RendererInitInfo;
+        OpenGLRenderer2DInitInfo                  m_RendererInitInfo;
         // Stores the window content scale, useful for correct scaling on retina displays
         glm::vec2                                 m_WindowContentScale;
         /// AspectRatio used for converting pixel coordinates to opengl coordinates

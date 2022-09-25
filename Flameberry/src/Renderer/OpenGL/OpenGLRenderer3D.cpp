@@ -1,22 +1,22 @@
-#include "Renderer3D.h"
+#include "OpenGLRenderer3D.h"
 #include <vector>
 
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "RenderCommand.h"
+#include "OpenGLRenderCommand.h"
 #include "Core/Core.h"
 
 namespace Flameberry {
-    void Renderer3D::UpdateViewportSize()
+    void OpenGLRenderer3D::UpdateViewportSize()
     {
         int width, height;
         glfwGetFramebufferSize(m_UserGLFWwindow, &width, &height);
         m_ViewportSize = { (float)width, (float)height };
     }
 
-    void Renderer3D::Begin(const PerspectiveCamera& camera)
+    void OpenGLRenderer3D::Begin(const PerspectiveCamera& camera)
     {
         static float rotation = 0.0f;
         static double prevTime = glfwGetTime();
@@ -40,34 +40,34 @@ namespace Flameberry {
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(m_UniformBufferData.ModelViewProjectionMatrix));
     }
 
-    void Renderer3D::End()
+    void OpenGLRenderer3D::End()
     {
     }
 
-    void Renderer3D::OnDraw()
+    void OpenGLRenderer3D::OnDraw()
     {
-        std::vector<Vertex> vertices;
-        Vertex v0;
+        std::vector<OpenGLVertex> vertices;
+        OpenGLVertex v0;
         v0.position = { -0.5f, 0.0f,  0.5f };
         v0.color = { 0.83f, 0.70f, 0.44f, 1.0f };
         v0.texture_uv = { 0.0f, 0.0f };
         v0.texture_index = 0;
-        Vertex v1;
+        OpenGLVertex v1;
         v1.position = { -0.5f, 0.0f, -0.5f };
         v1.color = { 0.83f, 0.70f, 0.44f, 1.0f };
         v1.texture_uv = { 1.0f, 0.0f };
         v1.texture_index = 0;
-        Vertex v2;
+        OpenGLVertex v2;
         v2.position = { 0.5f, 0.0f, -0.5f };
         v2.color = { 0.83f, 0.70f, 0.44f, 1.0f };
         v2.texture_uv = { 0.0f, 0.0f };
         v2.texture_index = 0;
-        Vertex v3;
+        OpenGLVertex v3;
         v3.position = { 0.5f, 0.0f,  0.5f };
         v3.color = { 0.83f, 0.70f, 0.44f, 1.0f };
         v3.texture_uv = { 1.0f, 0.0f };
         v3.texture_index = 0;
-        Vertex v4;
+        OpenGLVertex v4;
         v4.position = { 0.0f, 0.8f,  0.0f };
         v4.color = { 0.92f, 0.86f, 0.76f, 1.0f };
         v4.texture_uv = { 0.5f, 1.0f };
@@ -80,7 +80,7 @@ namespace Flameberry {
         vertices.push_back(v4);
 
         glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferId);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(OpenGLVertex), vertices.data());
 
         // for (uint8_t i = 0; i < s_Batch.TextureIds.size(); i++)
         // {
@@ -99,9 +99,9 @@ namespace Flameberry {
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
-    void Renderer3D::Init(GLFWwindow* window)
+    void OpenGLRenderer3D::Init(GLFWwindow* window)
     {
-        m_TextureId = RenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
+        m_TextureId = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -122,18 +122,18 @@ namespace Flameberry {
 
         glGenBuffers(1, &m_VertexBufferId);
         glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferId);
-        glBufferData(GL_ARRAY_BUFFER, 1000 * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 1000 * sizeof(OpenGLVertex), nullptr, GL_DYNAMIC_DRAW);
 
         glBindVertexArray(m_VertexArrayId);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(Vertex, position));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(Vertex, color));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex, color));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(Vertex, texture_uv));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_uv));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(Vertex, texture_index));
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_index));
 
         uint32_t indices[] =
         {
@@ -151,7 +151,7 @@ namespace Flameberry {
 
         glBindVertexArray(m_VertexArrayId);
 
-        m_ShaderProgramId = RenderCommand::CreateShader(FL_PROJECT_DIR"Flameberry/assets/shaders/Default.glsl");
+        m_ShaderProgramId = OpenGLRenderCommand::CreateShader(FL_PROJECT_DIR"Flameberry/assets/shaders/Default.glsl");
         glUseProgram(m_ShaderProgramId);
         int samplers[16];
         for (uint32_t i = 0; i < 16; i++)
@@ -160,7 +160,7 @@ namespace Flameberry {
         glUseProgram(0);
     }
 
-    GLint Renderer3D::GetUniformLocation(const std::string& name, uint32_t shaderId)
+    GLint OpenGLRenderer3D::GetUniformLocation(const std::string& name, uint32_t shaderId)
     {
         if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
             return m_UniformLocationCache[name];
@@ -172,7 +172,7 @@ namespace Flameberry {
         return location;
     }
 
-    void Renderer3D::CleanUp()
+    void OpenGLRenderer3D::CleanUp()
     {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -181,8 +181,8 @@ namespace Flameberry {
         glBindVertexArray(0);
     }
 
-    std::shared_ptr<Renderer3D> Renderer3D::Create()
+    std::shared_ptr<OpenGLRenderer3D> OpenGLRenderer3D::Create()
     {
-        return std::make_shared<Renderer3D>();
+        return std::make_shared<OpenGLRenderer3D>();
     }
 }

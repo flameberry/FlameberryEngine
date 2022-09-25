@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Flameberry.h"
-#include "SceneHierarchyPanel.h"
+#include "Panels/Panel.h"
 
 class FlameEditorApp : public Flameberry::Application
 {
@@ -11,15 +11,15 @@ public:
     void OnUpdate(float delta) override;
     void OnUIRender() override;
 private:
-    std::shared_ptr<Flameberry::Framebuffer> m_Framebuffer;
+    std::shared_ptr<Flameberry::OpenGLFramebuffer> m_Framebuffer;
     glm::vec2 m_ViewportSize;
     Flameberry::OrthographicCamera m_Camera;
     Flameberry::PerspectiveCamera m_PerspectiveCamera;
     double m_LastRenderTime = 0.0;
-    // std::shared_ptr<Flameberry::Renderer3D> m_Renderer3D;
-    std::shared_ptr<Flameberry::Renderer2D> m_Renderer2D;
+    // std::shared_ptr<Flameberry::OpenGLRenderer3D> m_Renderer3D;
+    std::shared_ptr<Flameberry::OpenGLRenderer2D> m_Renderer2D;
 private:
-    SceneHierarchyPanel m_SceneHierarchyPanel;
+    std::vector<std::shared_ptr<Panel>> m_Panels;
 
     // ECS system objects
     std::shared_ptr<Flameberry::Scene> m_Scene;

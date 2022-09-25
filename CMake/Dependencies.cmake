@@ -1,8 +1,8 @@
 # Set Global Variables
 
 # Configure the API used  to build the app [Uses OpenGL if not specified in CMake Generation process
-# set(FL_GRAPHICS_API "OpenGL")
-set(FL_GRAPHICS_API "Vulkan")
+set(FL_GRAPHICS_API "OpenGL")
+# set(FL_GRAPHICS_API "Vulkan")
 
 # Vulkan path remains empty if Opengl is selected as the Graphics API
 set(VULKAN_PATH "")

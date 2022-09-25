@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Renderer/Framebuffer.h"
-#include "Renderer/OrthographicCamera.h"
-
 namespace Flameberry {
     class ImGuiLayer
     {

@@ -4,13 +4,13 @@
 
 namespace Flameberry {
     /// Class which deals with OpenGL Framebuffer
-    class Framebuffer
+    class OpenGLFramebuffer
     {
     public:
-        static std::shared_ptr<Framebuffer> Create(float width = 1280.0f, float height = 720.0f);
+        static std::shared_ptr<OpenGLFramebuffer> Create(float width = 1280.0f, float height = 720.0f);
 
-        Framebuffer(float width = 1280.0f, float height = 720.0f);
-        ~Framebuffer();
+        OpenGLFramebuffer(float width = 1280.0f, float height = 720.0f);
+        ~OpenGLFramebuffer();
 
         /// Recreates the Framebuffer object using the `m_FramebufferSize` variable
         void     OnUpdate();
