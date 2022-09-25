@@ -1,5 +1,7 @@
 #include "SceneHierarchyPanel.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 SceneHierarchyPanel::SceneHierarchyPanel(Flameberry::Scene* scene)
     : m_Scene(scene), m_SelectedEntity(UINT64_MAX, false)
 {
@@ -8,7 +10,6 @@ SceneHierarchyPanel::SceneHierarchyPanel(Flameberry::Scene* scene)
 void SceneHierarchyPanel::OnUIRender()
 {
     ImGui::Begin("Scene Hierarchy");
-
     for (const auto& entity : m_Scene->GetRegistry()->GetEntityVector())
     {
         if (entity.is_valid())
@@ -26,16 +27,16 @@ void SceneHierarchyPanel::OnUIRender()
             ImGui::PopID();
         }
     }
-
-    // if (m_SelectedEntity.is_valid())
-    //     FL_LOG("Selected Entity is {0}", m_SelectedEntity.get());
     ImGui::End();
 
-    ImGui::Begin("Transform Component");
+    ImGui::Begin("Inspector");
     if (m_SelectedEntity.is_valid())
     {
         auto& transform = *m_Scene->GetRegistry()->GetComponent<Flameberry::TransformComponent>(m_SelectedEntity);
         DrawComponent(transform);
+        ImGui::NewLine();
+        auto& sprite = *m_Scene->GetRegistry()->GetComponent<Flameberry::SpriteRendererComponent>(m_SelectedEntity);
+        DrawComponent(sprite);
     }
     ImGui::End();
 }
@@ -79,4 +80,12 @@ void SceneHierarchyPanel::DrawVec3Control(const std::string& label, glm::vec3& v
     ImGui::PopItemWidth();
     ImGui::PopStyleVar();
     ImGui::PopID();
+}
+
+void SceneHierarchyPanel::DrawComponent(Flameberry::SpriteRendererComponent& sprite)
+{
+    char hello[100] = "Hello";
+    ImGui::ColorEdit4("Albedo", glm::value_ptr(sprite.Color));
+    ImGui::Spacing();
+    ImGui::InputText("Texture Path", hello, sizeof(hello));
 }
