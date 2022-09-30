@@ -41,7 +41,8 @@ namespace Flameberry {
         template<typename... ComponentTypes>
         SceneView<ComponentTypes...> View();
 
-        const std::vector<entity_handle>& GetEntityVector() { return m_Entities; }
+        const std::vector<entity_handle>& GetImmutableEntityVector() { return m_Entities; }
+        std::vector<entity_handle>& GetMutableEntityVector() { return m_Entities; }
     private:
         std::vector<std::shared_ptr<ComponentPool>> m_ComponentPools;
         std::vector<entity_handle> m_Entities;

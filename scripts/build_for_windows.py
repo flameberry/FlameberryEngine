@@ -39,7 +39,7 @@ def build_project():
 
     os.chdir(fl_project_dir)
     print(
-        f'[FLAMEBERRY]: The Flameberry Engine project executable is generated at the path bin/{cmake_build_type}/SandboxApp-{platform.system()}-{platform.machine()}/SandboxApp_{cmake_build_type}')
+        f'[FLAMEBERRY]: The Flameberry Engine project executable is generated at the path bin/{cmake_build_type}/FlameEditor-{platform.system()}-{platform.machine()}/FlameEditor_{cmake_build_type}')
 
 
 if __name__ == '__main__':

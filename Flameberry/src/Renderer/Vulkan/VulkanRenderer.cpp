@@ -413,7 +413,7 @@ namespace Flameberry {
         //     offset += 4;
         // }
 
-        auto [vk_vertices, indices] = VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/viking_room.obj");
+        auto [vk_vertices, indices] = VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
         memcpy(s_Indices, indices.data(), sizeof(uint32_t) * indices.size());
 
         // Creating Vertex Buffer

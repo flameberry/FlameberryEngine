@@ -1,5 +1,7 @@
 file(GLOB_RECURSE SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+
 add_executable(SandboxApp ${SRC_FILES})
+target_compile_features(SandboxApp PUBLIC cxx_std_17)
 
 set_custom_build_properties(SandboxApp)
 
