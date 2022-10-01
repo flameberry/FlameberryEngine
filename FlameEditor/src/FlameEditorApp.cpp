@@ -4,6 +4,7 @@
 #include "Core/EntryPoint.h"
 
 #include "Panels/SceneHierarchyPanel.h"
+#include "Panels/ContentBrowserPanel.h"
 
 FlameEditorApp::FlameEditorApp()
     : m_Framebuffer(Flameberry::OpenGLFramebuffer::Create()),
@@ -72,6 +73,7 @@ FlameEditorApp::FlameEditorApp()
 
     // Setting up all the panels
     m_Panels.push_back(std::make_shared<SceneHierarchyPanel>(m_Scene.get()));
+    m_Panels.push_back(std::make_shared<ContentBrowserPanel>());
 }
 
 FlameEditorApp::~FlameEditorApp()
@@ -137,10 +139,10 @@ void FlameEditorApp::OnUIRender()
     ImGui::End();
     ImGui::PopStyleVar();
 
-    // ImGui::Begin("Stats");
-    // ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    // ImGui::Text("Last Render Time: %.3fms", m_LastRenderTime * 0.001f * 0.001f);
-    // ImGui::End();
+    ImGui::Begin("Stats");
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::Text("Last Render Time: %.3fms", m_LastRenderTime * 0.001f * 0.001f);
+    ImGui::End();
 }
 
 std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()

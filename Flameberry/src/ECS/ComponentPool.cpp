@@ -5,7 +5,7 @@ namespace Flameberry {
     uint32_t typeCounter = 0;
 
     ComponentPool::ComponentPool(size_t component_size)
-        : _ComponentSize(component_size), _EntityIdSet(MAX_ENTITIES, MAX_ENTITIES)
+        : _ComponentSize(component_size), _EntityIdSet(MAX_ENTITIES)
     {
         _Data = new char[_ComponentSize * MAX_ENTITIES];
     }

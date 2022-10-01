@@ -8,6 +8,7 @@
 
 #ifdef FL_USE_OPENGL_API
 #include "Renderer/OpenGL/OpenGLRenderer2D.h"
+#include "Renderer/OpenGL/OpenGLRenderCommand.h"
 #include "Renderer/OpenGL/OpenGLRenderer3D.h"
 #include "Renderer/OpenGL/OpenGLFramebuffer.h"
 

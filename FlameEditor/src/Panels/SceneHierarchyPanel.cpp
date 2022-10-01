@@ -1,29 +1,32 @@
 #include "SceneHierarchyPanel.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <filesystem>
 
 SceneHierarchyPanel::SceneHierarchyPanel(Flameberry::Scene* scene)
     : m_Scene(scene), m_SelectedEntity(UINT64_MAX, false)
 {
+    m_DefaultTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
 }
 
 void SceneHierarchyPanel::OnUIRender()
 {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 5 });
     ImGui::Begin("Scene Hierarchy");
+    ImGui::PopStyleVar();
 
     if (ImGui::BeginPopupContextWindow())
     {
-        if (ImGui::MenuItem("Create"))
+        if (ImGui::MenuItem("Create Empty"))
         {
             Flameberry::entity_handle entity = m_Scene->GetRegistry()->CreateEntity();
-            m_Scene->GetRegistry()->AddComponent<Flameberry::TagComponent>(entity)->Tag = "Empty_Entity";
+            m_Scene->GetRegistry()->AddComponent<Flameberry::TagComponent>(entity)->Tag = "Empty";
+            m_Scene->GetRegistry()->AddComponent<Flameberry::TransformComponent>(entity);
         }
         ImGui::EndPopup();
     }
 
-    for (auto& entity : m_Scene->GetRegistry()->GetMutableEntityVector())
-    {
-        if (entity.is_valid())
+    m_Scene->GetRegistry()->each([this](Flameberry::entity_handle& entity)
         {
             auto& tag = m_Scene->GetRegistry()->GetComponent<Flameberry::TagComponent>(entity)->Tag;
             int treeNodeFlags = (m_SelectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -48,8 +51,8 @@ void SceneHierarchyPanel::OnUIRender()
                 m_Scene->GetRegistry()->DestroyEntity(entity);
 
             ImGui::PopID();
-        }
-    }
+        });
+
     ImGui::End();
 
     ImGui::Begin("Inspector");
@@ -149,7 +152,23 @@ void SceneHierarchyPanel::DrawComponent(Flameberry::SpriteRendererComponent& spr
 {
     ImGui::ColorEdit4("Color", glm::value_ptr(sprite.Color));
 
-    // std::string path = sprite.TextureFilePath;
-    // if (ImGui::InputText("Texture File Path", path.data(), path.size(), ImGuiInputTextFlags_EnterReturnsTrue))
-    //     sprite.TextureFilePath = path;
+    ImGui::Button("Texture");
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_FILE_PATH"))
+        {
+            const char* path = (const char*)payload->Data;
+            std::filesystem::path texturePath{ path };
+            const std::string& ext = texturePath.extension().string();
+            if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
+                sprite.TextureFilePath = std::filesystem::absolute(texturePath).string();
+        }
+        ImGui::EndDragDropTarget();
+    }
+    uint32_t textureId;
+    if (sprite.TextureFilePath == "")
+        textureId = m_DefaultTextureId;
+    else
+        textureId = Flameberry::OpenGLRenderCommand::CreateTexture(sprite.TextureFilePath);
+    ImGui::Image(reinterpret_cast<ImTextureID>(textureId), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 }

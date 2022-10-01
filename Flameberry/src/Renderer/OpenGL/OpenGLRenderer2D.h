@@ -78,7 +78,6 @@ namespace Flameberry {
     private:
         /// Struct that contains all the matrices needed by the shader, which will be stored in a Uniform Buffer
         struct UniformBufferData { glm::mat4 ViewProjectionMatrix; };
-        struct TextureUniformBufferData { int Samplers[MAX_TEXTURE_SLOTS]; };
         struct Batch
         {
             /// Renderer IDs required for OpenGL 
@@ -107,8 +106,7 @@ namespace Flameberry {
         GLFWwindow* m_UserWindow;
         /// Stores the uniform location in a shader if the location needs to be reused
         std::unordered_map<std::string, GLint>    m_UniformLocationCache;
-        /// Stores the texture IDs of the already loaded textures to be reused
-        std::unordered_map<std::string, uint32_t> m_TextureIdCache;
+
         float m_CurrentTextureSlot;
 
         const glm::vec4 m_TemplateVertexPositions[4] = {

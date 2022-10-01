@@ -1,11 +1,11 @@
 #include "sparse_set.h"
 
 namespace utils {
-    sparse_set::sparse_set(size_t capacity, value_type max_val)
-        : capacity(capacity), max_value(max_val), _size(0)
+    sparse_set::sparse_set(size_t max_val)
+        : capacity(max_val + 1), max_value(max_val), _size(0)
     {
-        sparse_data = new value_type[max_val + 1];
-        packed_data = new value_type[capacity];
+        sparse_data = new value_type[max_value + 1];
+        packed_data = new value_type[max_value + 1];
     }
 
     void sparse_set::insert(value_type value)

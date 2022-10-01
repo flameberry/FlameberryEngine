@@ -276,7 +276,7 @@ namespace utils {
         using reverse_iterator = sparse_set_reverse_iterator<sparse_set>;
         using reverse_const_iterator = sparse_set_reverse_const_iterator<sparse_set>;
     public:
-        sparse_set(size_t capacity, value_type max_val);
+        sparse_set(size_t max_val);
         ~sparse_set();
         void insert(value_type value);
         void remove(value_type value);
@@ -296,7 +296,7 @@ namespace utils {
         const_iterator cbegin() const { return const_iterator(packed_data); }
         const_iterator cend() const { return const_iterator(packed_data + _size); }
         reverse_iterator rbegin() const { return reverse_iterator(packed_data + _size - 1); }
-        reverse_iterator rend()const { return reverse_iterator(packed_data - 1); }
+        reverse_iterator rend() const { return reverse_iterator(packed_data - 1); }
         reverse_const_iterator crbegin() const { return reverse_const_iterator(packed_data + _size - 1); }
         reverse_const_iterator crend() const { return reverse_const_iterator(packed_data - 1); }
     private:

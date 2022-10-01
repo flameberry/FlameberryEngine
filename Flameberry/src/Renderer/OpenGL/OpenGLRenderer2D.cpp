@@ -228,12 +228,7 @@ namespace Flameberry {
         for (uint8_t i = 0; i < 4; i++)
             m_Batch.Vertices.push_back(vertices[i]);
 
-        uint32_t textureId = GetTextureIdIfAvailable(textureFilePath);
-        if (!textureId)
-        {
-            textureId = OpenGLRenderCommand::CreateTexture(textureFilePath);
-            m_TextureIdCache[textureFilePath] = textureId;
-        }
+        uint32_t textureId = OpenGLRenderCommand::CreateTexture(textureFilePath);
         m_Batch.TextureIds.push_back(textureId);
 
         // Increment the texture slot every time a textured quad is added
@@ -266,12 +261,7 @@ namespace Flameberry {
         for (uint8_t i = 0; i < 4; i++)
             m_Batch.Vertices.push_back(vertices[i]);
 
-        uint32_t textureId = GetTextureIdIfAvailable(textureFilePath);
-        if (!textureId)
-        {
-            textureId = OpenGLRenderCommand::CreateTexture(textureFilePath);
-            m_TextureIdCache[textureFilePath] = textureId;
-        }
+        uint32_t textureId = OpenGLRenderCommand::CreateTexture(textureFilePath);
         m_Batch.TextureIds.push_back(textureId);
 
         // Increment the texture slot every time a textured quad is added
@@ -309,14 +299,6 @@ namespace Flameberry {
             FL_WARN("Uniform \"{0}\" not found!", name);
         m_UniformLocationCache[name] = location;
         return location;
-    }
-
-    uint32_t OpenGLRenderer2D::GetTextureIdIfAvailable(const char* textureFilePath)
-    {
-        if (m_TextureIdCache.find(textureFilePath) != m_TextureIdCache.end())
-            return m_TextureIdCache[textureFilePath];
-        else
-            return 0;
     }
 
     void OpenGLRenderer2D::CleanUp()

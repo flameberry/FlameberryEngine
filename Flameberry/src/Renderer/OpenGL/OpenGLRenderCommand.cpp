@@ -16,6 +16,8 @@ namespace utils {
 }
 
 namespace Flameberry {
+    std::unordered_map<std::string, uint32_t> OpenGLRenderCommand::s_TextureIdCache;
+
     glm::vec3 OpenGLRenderCommand::PixelToOpenGL(const glm::vec3& coords, const glm::vec2& viewportSize, float zNear, float zFar)
     {
         float aspectRatio = viewportSize.x / viewportSize.y;
@@ -175,8 +177,20 @@ namespace Flameberry {
         return shaderProgramId;
     }
 
+    uint32_t OpenGLRenderCommand::GetTextureIdIfAvailable(const char* textureFilePath)
+    {
+        if (s_TextureIdCache.find(textureFilePath) != s_TextureIdCache.end())
+            return s_TextureIdCache[textureFilePath];
+        else
+            return 0;
+    }
+
     uint32_t OpenGLRenderCommand::CreateTexture(const std::string& filePath)
     {
+        uint32_t textureId = GetTextureIdIfAvailable(filePath.c_str());
+        if (textureId)
+            return textureId;
+
         stbi_set_flip_vertically_on_load(true);
 
         int width, height, channels;
@@ -196,7 +210,6 @@ namespace Flameberry {
             dataFormat = GL_RGB;
         }
 
-        uint32_t textureId;
         glGenTextures(1, &textureId);
         glBindTexture(GL_TEXTURE_2D, textureId);
 
@@ -209,6 +222,8 @@ namespace Flameberry {
         glGenerateMipmap(GL_TEXTURE_2D);
 
         stbi_image_free(data);
+        s_TextureIdCache[filePath] = textureId;
+
         return textureId;
     }
 }

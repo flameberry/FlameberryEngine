@@ -8,14 +8,13 @@ namespace Flameberry {
     void Scene::RenderScene(OpenGLRenderer2D* renderer, const OrthographicCamera& camera)
     {
         renderer->Begin(camera);
-
-        auto sceneView = m_Registry->View<TransformComponent, SpriteRendererComponent>();
-        for (SceneView<TransformComponent, SpriteRendererComponent>::iterator it = sceneView.begin(); it != sceneView.end(); it++)
+        for (const auto& entity : m_Registry->View<TransformComponent, SpriteRendererComponent>())
         {
-            if (std::get<1>(*it)->TextureFilePath == "")
-                renderer->AddQuad(std::get<0>(*it)->GetTransform(), std::get<1>(*it)->Color);
+            auto [transform, sprite] = m_Registry->Get<TransformComponent, SpriteRendererComponent>(entity);
+            if (sprite->TextureFilePath == "")
+                renderer->AddQuad(transform->GetTransform(), sprite->Color);
             else
-                renderer->AddQuad(std::get<0>(*it)->GetTransform(), std::get<1>(*it)->TextureFilePath.c_str());
+                renderer->AddQuad(transform->GetTransform(), sprite->TextureFilePath.c_str());
         }
         renderer->End();
     }
