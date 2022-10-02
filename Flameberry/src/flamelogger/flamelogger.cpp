@@ -13,24 +13,24 @@ namespace flamelogger {
         return prefix.str();
     }
 
-    FLInstance::FLInstance(const char* instanceName)
+    FLLoggerInstance::FLLoggerInstance(const char* instanceName)
         : m_CurrentLogLevel(LogLevel::TRACE)
     {
         if (strcmp(instanceName, ""))
             m_InstanceName = instanceName;
     }
 
-    std::shared_ptr<FLInstance> FLInstance::Create(const char* instanceName)
+    std::shared_ptr<FLLoggerInstance> FLLoggerInstance::Create(const char* instanceName)
     {
-        return std::make_shared<FLInstance>(instanceName);
+        return std::make_shared<FLLoggerInstance>(instanceName);
     }
 
-    void FLInstance::SetLogLevel(const LogLevel& logLevel)
+    void FLLoggerInstance::SetLogLevel(const LogLevel& logLevel)
     {
         m_CurrentLogLevel = logLevel;
     }
 
-    std::string FLInstance::get_prefix(const LogLevel& level)
+    std::string FLLoggerInstance::get_prefix(const LogLevel& level)
     {
         std::stringstream prefix("");
         std::time_t now = std::time(0);

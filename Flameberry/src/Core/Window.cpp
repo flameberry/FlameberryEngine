@@ -35,7 +35,6 @@ namespace Flameberry {
 #ifdef FL_USE_OPENGL_API
         glfwSwapBuffers(m_Window);
 #endif
-
         glfwPollEvents();
     }
 

@@ -4,7 +4,7 @@
 #ifdef FL_DEBUG
 #ifdef __APPLE__
 #define FL_DEBUGBREAK() abort()
-#elif defined(WIN32)
+#elif defined(WIN32) && defined(_MSVC_LANG)
 #define FL_DEBUGBREAK() __debugbreak()
 #endif
 #else

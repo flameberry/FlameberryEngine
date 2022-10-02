@@ -130,13 +130,13 @@ namespace flamelogger {
         return msg;
     }
 
-    class FLInstance
+    class FLLoggerInstance
     {
     public:
         /// Instance Name should be set at the beginning of the program,
         /// which will be used as a prefix to all the log messages during runtime
-        FLInstance(const char* instanceName);
-        static std::shared_ptr<FLInstance> Create(const char* instanceName);
+        FLLoggerInstance(const char* instanceName);
+        static std::shared_ptr<FLLoggerInstance> Create(const char* instanceName);
         void SetLogLevel(const LogLevel& logLevel);
 
         /// Logs the message in CYAN color in the terminal
@@ -203,6 +203,20 @@ namespace flamelogger {
                 std::string output_message = format_string(message, args...);
                 std::cout << FL_BG_COLOR_RED << get_prefix(LogLevel::ERROR) << output_message << FL_COLOR_DEFAULT << std::endl;
             }
+        }
+
+        template<typename T, typename... Args>
+        void log_assert(const char* file, int line, const T& message, const Args&... args)
+        {
+            std::string msg = format_string(message, args...);
+            std::string assert_message = format_string("{0}[ASSERT] Assertion failed: {1} (file: {2}, line: {3})", get_current_time_string(), msg, file, line);
+            std::cout << FL_COLOR_RED << assert_message << FL_COLOR_DEFAULT << std::endl;
+        }
+
+        void log_assert(const char* file, int line)
+        {
+            std::string assert_message = format_string("{0}[ASSERT] Assertion failed, file: {1}, line: {2}", get_current_time_string(), file, line);
+            std::cout << FL_COLOR_RED << assert_message << FL_COLOR_DEFAULT << std::endl;
         }
     private:
         /// Gets the prefix of the log message
