@@ -12,6 +12,6 @@ namespace Flameberry {
         // Stores time in nanoseconds
         double* m_DurationVar;
         bool m_Started = false;
-        std::__1::chrono::steady_clock::time_point m_Start;
+        decltype(std::chrono::high_resolution_clock::now()) m_Start;
     };
 }

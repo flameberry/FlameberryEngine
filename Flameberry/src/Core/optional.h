@@ -2,6 +2,7 @@
 
 namespace flame
 {
+    /// @brief This `flame::optional` class will be soon removed as it's deprecated
     template<typename T>
     class optional
     {
