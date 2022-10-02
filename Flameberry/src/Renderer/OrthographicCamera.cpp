@@ -20,14 +20,17 @@ namespace Flameberry {
 
     void OrthographicCamera::OnUpdate(float delta)
     {
-        if (Input::IsKey(GLFW_KEY_UP, GLFW_PRESS))
-            m_CameraPosition.y += m_CameraSpeed * delta;
-        else if (Input::IsKey(GLFW_KEY_DOWN, GLFW_PRESS))
-            m_CameraPosition.y -= m_CameraSpeed * delta;
-        else if (Input::IsKey(GLFW_KEY_RIGHT, GLFW_PRESS))
-            m_CameraPosition.x += m_CameraSpeed * delta;
-        else if (Input::IsKey(GLFW_KEY_LEFT, GLFW_PRESS))
-            m_CameraPosition.x -= m_CameraSpeed * delta;
+        if (Input::IsKey(GLFW_KEY_LEFT_ALT, GLFW_PRESS))
+        {
+            if (Input::IsKey(GLFW_KEY_UP, GLFW_PRESS))
+                m_CameraPosition.y += m_CameraSpeed * delta;
+            else if (Input::IsKey(GLFW_KEY_DOWN, GLFW_PRESS))
+                m_CameraPosition.y -= m_CameraSpeed * delta;
+            else if (Input::IsKey(GLFW_KEY_RIGHT, GLFW_PRESS))
+                m_CameraPosition.x += m_CameraSpeed * delta;
+            else if (Input::IsKey(GLFW_KEY_LEFT, GLFW_PRESS))
+                m_CameraPosition.x -= m_CameraSpeed * delta;
+        }
 
         m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y;
         m_ProjectionMatrix = glm::ortho(-m_AspectRatio * m_Zoom, m_AspectRatio * m_Zoom, -m_Zoom, m_Zoom, -1.0f, 1.0f);

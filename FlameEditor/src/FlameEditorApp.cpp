@@ -126,9 +126,6 @@ void FlameEditorApp::OnUpdate(float delta)
 
 void FlameEditorApp::OnUIRender()
 {
-    for (auto& panel : m_Panels)
-        panel->OnUIRender();
-
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
     ImGui::Begin("Viewport");
     ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
@@ -138,6 +135,9 @@ void FlameEditorApp::OnUIRender()
     ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
     ImGui::End();
     ImGui::PopStyleVar();
+
+    for (auto& panel : m_Panels)
+        panel->OnUIRender();
 
     ImGui::Begin("Stats");
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);

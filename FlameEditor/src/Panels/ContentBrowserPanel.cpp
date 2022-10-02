@@ -26,8 +26,13 @@ void ContentBrowserPanel::OnUIRender()
 
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+
     if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_BackArrowIconTextureId), ImVec2{ 15, 15 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != s_SourceDirectory)
         m_CurrentDirectory = m_CurrentDirectory.parent_path();
+    ImGui::SameLine();
+
+    ImGui::Text("%s", std::filesystem::relative(m_CurrentDirectory, s_SourceDirectory).c_str());
+
     ImGui::Separator();
 
     ImGui::Columns(columns, (const char*)__null, false);
@@ -55,7 +60,7 @@ void ContentBrowserPanel::OnUIRender()
         if (ImGui::BeginDragDropSource())
         {
             ImGui::SetDragDropPayload(
-                "FL_FILE_PATH",
+                "FL_CONTENT_BROWSER_ITEM",
                 relativePath.c_str(),
                 (strlen(relativePath.c_str()) + 1) * sizeof(char),
                 ImGuiCond_Once

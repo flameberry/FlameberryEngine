@@ -23,6 +23,10 @@ namespace Flameberry {
         {
             return handle == entity.get() && validity;
         }
+        bool operator!=(const entity_handle& entity)
+        {
+            return !(*this == entity);
+        }
     private:
         uint64_t handle;
         bool validity;

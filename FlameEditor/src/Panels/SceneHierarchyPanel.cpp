@@ -30,8 +30,15 @@ void SceneHierarchyPanel::OnUIRender()
 
     m_Scene->GetRegistry()->each([this](Flameberry::entity_handle& entity)
         {
+            bool should_delete_entity = false;
+            static Flameberry::entity_handle* entity_to_be_renamed = nullptr;
+
             auto& tag = m_Scene->GetRegistry()->GetComponent<Flameberry::TagComponent>(entity)->Tag;
-            int treeNodeFlags = (m_SelectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+            int treeNodeFlags = (m_SelectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+            if (!entity_to_be_renamed || entity != *entity_to_be_renamed)
+                treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+
             ImGui::PushID(entity.get());
 
             if (ImGui::TreeNodeEx(tag.c_str(), treeNodeFlags))
@@ -40,13 +47,32 @@ void SceneHierarchyPanel::OnUIRender()
             if (ImGui::IsItemClicked())
                 m_SelectedEntity = entity;
 
-            bool should_delete_entity = false;
+
             if (ImGui::BeginPopupContextItem())
             {
-                if (ImGui::MenuItem("Rename"));
+                if (ImGui::MenuItem("Rename"))
+                    entity_to_be_renamed = &entity;
+
                 if (ImGui::MenuItem("Delete Entity"))
                     should_delete_entity = true;
                 ImGui::EndPopup();
+            }
+
+            if (entity_to_be_renamed && *entity_to_be_renamed == entity)
+            {
+                std::string buffer(tag);
+
+                ImGui::SameLine();
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0 ,0 });
+                ImGui::SetKeyboardFocusHere();
+                ImGui::PushItemWidth(-1.0f);
+
+                if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    tag = buffer;
+                    entity_to_be_renamed = nullptr;
+                }
+                ImGui::PopStyleVar();
             }
 
             if (should_delete_entity)
@@ -65,12 +91,16 @@ void SceneHierarchyPanel::OnUIRender()
             auto& transform = *m_Scene->GetRegistry()->GetComponent<Flameberry::TransformComponent>(m_SelectedEntity);
             DrawComponent(transform);
             ImGui::NewLine();
+            ImGui::Separator();
         }
 
         if (m_Scene->GetRegistry()->HasComponent<Flameberry::SpriteRendererComponent>(m_SelectedEntity))
         {
+            ImGui::Spacing();
             auto& sprite = *m_Scene->GetRegistry()->GetComponent<Flameberry::SpriteRendererComponent>(m_SelectedEntity);
             DrawComponent(sprite);
+            ImGui::Spacing();
+            ImGui::Separator();
         }
 
         if (ImGui::BeginPopupContextWindow((const char*)__null, ImGuiMouseButton_Right, false))
@@ -157,7 +187,7 @@ void SceneHierarchyPanel::DrawComponent(Flameberry::SpriteRendererComponent& spr
     ImGui::Button("Texture", ImVec2{ ImGui::GetContentRegionAvail().x, 30 });
     if (ImGui::BeginDragDropTarget())
     {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_FILE_PATH"))
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
         {
             std::string path = (const char*)payload->Data;
             std::filesystem::path texturePath{ path };
