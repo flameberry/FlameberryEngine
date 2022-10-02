@@ -30,7 +30,15 @@ namespace Flameberry {
                 m_CameraPosition.x += m_CameraSpeed * delta;
             else if (Input::IsKey(GLFW_KEY_LEFT, GLFW_PRESS))
                 m_CameraPosition.x -= m_CameraSpeed * delta;
+
+            if (Input::IsKey(GLFW_KEY_I, GLFW_PRESS))
+                m_Zoom -= 0.025f;
+            if (Input::IsKey(GLFW_KEY_O, GLFW_PRESS))
+                m_Zoom += 0.025f;
         }
+
+        m_Zoom = glm::max(m_Zoom, 0.2f);
+        m_CameraSpeed = m_Zoom * 2.5f;
 
         m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y;
         m_ProjectionMatrix = glm::ortho(-m_AspectRatio * m_Zoom, m_AspectRatio * m_Zoom, -m_Zoom, m_Zoom, -1.0f, 1.0f);
