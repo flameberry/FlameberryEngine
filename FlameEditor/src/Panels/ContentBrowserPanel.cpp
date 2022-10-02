@@ -2,8 +2,10 @@
 
 #include "Flameberry.h"
 
+std::filesystem::path ContentBrowserPanel::s_SourceDirectory{ FL_PROJECT_DIR"SandboxApp/assets" };
+
 ContentBrowserPanel::ContentBrowserPanel()
-    : m_SourceDirectory(FL_PROJECT_DIR"SandboxApp/assets"), m_CurrentDirectory(m_SourceDirectory)
+    : m_CurrentDirectory(s_SourceDirectory)
 {
     m_BackArrowIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/back_arrow_icon.png");
 }
@@ -24,7 +26,7 @@ void ContentBrowserPanel::OnUIRender()
 
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
-    if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_BackArrowIconTextureId), ImVec2{ 15, 15 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != m_SourceDirectory)
+    if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_BackArrowIconTextureId), ImVec2{ 15, 15 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != s_SourceDirectory)
         m_CurrentDirectory = m_CurrentDirectory.parent_path();
     ImGui::Separator();
 
@@ -33,6 +35,8 @@ void ContentBrowserPanel::OnUIRender()
     for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory })
     {
         const std::filesystem::path& filePath = directory.path();
+        std::filesystem::path relativePath = std::filesystem::relative(directory.path(), s_SourceDirectory);
+
         ImGui::PushID(filePath.filename().c_str());
         std::string ext = filePath.extension().string();
         uint32_t currentIconTextureId;
@@ -50,13 +54,13 @@ void ContentBrowserPanel::OnUIRender()
 
         if (ImGui::BeginDragDropSource())
         {
-            const char* path = std::filesystem::absolute(filePath).c_str();
             ImGui::SetDragDropPayload(
                 "FL_FILE_PATH",
-                path,
-                sizeof(char) * (strlen(path) + 1)
+                relativePath.c_str(),
+                (strlen(relativePath.c_str()) + 1) * sizeof(char),
+                ImGuiCond_Once
             );
-            ImGui::Text("%s", path);
+            ImGui::Text("%s", relativePath.c_str());
             ImGui::EndDragDropSource();
         }
 
