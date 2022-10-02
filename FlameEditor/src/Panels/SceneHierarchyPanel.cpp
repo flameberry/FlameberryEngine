@@ -160,9 +160,6 @@ void SceneHierarchyPanel::DrawComponent(Flameberry::SpriteRendererComponent& spr
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_FILE_PATH"))
         {
             std::string path = (const char*)payload->Data;
-            // memcpy(path, payload->Data, payload->DataSize);
-            // const char* path = (const char*)payload->Data;
-
             std::filesystem::path texturePath{ path };
             texturePath = ContentBrowserPanel::s_SourceDirectory / texturePath;
             const std::string& ext = texturePath.extension().string();
@@ -172,7 +169,7 @@ void SceneHierarchyPanel::DrawComponent(Flameberry::SpriteRendererComponent& spr
             if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
                 sprite.TextureFilePath = texturePath.string();
             else
-                FL_WARN("Bad File given as texture!");
+                FL_WARN("Bad File given as Texture!");
         }
         ImGui::EndDragDropTarget();
     }
