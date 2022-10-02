@@ -13,6 +13,8 @@
 #include "Renderer/OpenGL/OpenGLFramebuffer.h"
 
 #include "ECS/Scene.h"
+#elif defined(FL_USE_VULKAN_API)
+#include "Renderer/Vulkan/VulkanRenderer.h"
 #endif
 
 #include "Core/Timer.h"

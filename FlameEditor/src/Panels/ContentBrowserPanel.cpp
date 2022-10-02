@@ -56,7 +56,7 @@ void ContentBrowserPanel::OnUIRender()
                 path,
                 sizeof(char) * (strlen(path) + 1)
             );
-            ImGui::Text("%s", std::filesystem::relative(filePath, m_SourceDirectory).c_str());
+            ImGui::Text("%s", path);
             ImGui::EndDragDropSource();
         }
 

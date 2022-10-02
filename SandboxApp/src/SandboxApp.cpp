@@ -1,35 +1,28 @@
-// #include "Flameberry.h"
+#include "SandboxApp.h"
 
 // Includes the Entrypoint of the main application
 #include "Core/EntryPoint.h"
 
-// class SandboxApp : public Flameberry::Application
-// {
-// public:
-//     SandboxApp()
-//     {
-//         m_Window = Flameberry::Window::Create(1280, 720, "Sandbox App");
-//         Flameberry::VulkanRenderer::Init(m_Window->GetGLFWwindow());
-//     }
+SandboxApp::SandboxApp()
+{
+    Flameberry::VulkanRenderer::Init(Flameberry::Application::Get().GetWindow().GetGLFWwindow());
+}
 
-//     virtual ~SandboxApp()
-//     {
-//         Flameberry::VulkanRenderer::CleanUp();
-//     }
+SandboxApp::~SandboxApp()
+{
+    Flameberry::VulkanRenderer::CleanUp();
+}
 
-//     void OnUpdate(float delta) override
-//     {
-//         Flameberry::VulkanRenderer::RenderFrame();
-//     }
+void SandboxApp::OnUpdate(float delta)
+{
+    Flameberry::VulkanRenderer::RenderFrame();
+}
 
-//     void OnUIRender() override
-//     {
-//     }
-// private:
-//     std::shared_ptr<Flameberry::Window> m_Window;
-// };
+void SandboxApp::OnUIRender()
+{
+}
 
-// std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()
-// {
-//     return std::make_shared<SandboxApp>();
-// }
+std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()
+{
+    return std::make_shared<SandboxApp>();
+}
