@@ -3,19 +3,13 @@
 #include <string>
 #include <filesystem>
 
-#include "Panel.h"
-
-class ContentBrowserPanel : public Panel
+class ContentBrowserPanel
 {
 public:
     ContentBrowserPanel();
-    virtual ~ContentBrowserPanel();
-
-    void OnUIRender() override;
-public:
-    static std::filesystem::path s_SourceDirectory;
+    ~ContentBrowserPanel();
+    void OnUIRender();
 private:
     std::filesystem::path m_CurrentDirectory;
-private:
     uint32_t m_BackArrowIconTextureId = 0;
 };

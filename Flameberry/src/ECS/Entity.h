@@ -8,16 +8,18 @@ namespace Flameberry {
     class entity_handle
     {
     public:
+        using value_type = uint32_t;
+    public:
         entity_handle() = default;
-        entity_handle(uint64_t entityId) : handle(entityId), validity(true) {}
-        entity_handle(uint64_t entityId, bool validity) : handle(entityId), validity(validity) {}
+        entity_handle(value_type entityId) : handle(entityId), validity(true) {}
+        entity_handle(value_type entityId, bool validity) : handle(entityId), validity(validity) {}
 
         inline bool is_valid() const { return validity; }
         inline void set_validity(bool val) { validity = val; }
 
-        // Returns the entity handle i.e. a unique uint64_t value
-        inline uint64_t get() const { return handle; }
-        inline void set_handle(uint64_t entity_handle) { handle = entity_handle; }
+        // Returns the entity handle i.e. a unique `value_type` value
+        inline value_type get() const { return handle; }
+        inline void set_handle(value_type entity_handle) { handle = entity_handle; }
 
         bool operator==(const entity_handle& entity)
         {
@@ -28,7 +30,7 @@ namespace Flameberry {
             return !(*this == entity);
         }
     private:
-        uint64_t handle;
+        value_type handle;
         bool validity;
     };
 }

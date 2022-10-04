@@ -8,44 +8,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
-namespace utils {
-    float map(float value, const glm::vec2& initial_range, const glm::vec2& target_range)
-    {
-        return target_range.x + (value - initial_range.x) * (target_range.y - target_range.x) / (initial_range.y - initial_range.x);
-    }
-}
-
 namespace Flameberry {
     std::unordered_map<std::string, uint32_t> OpenGLRenderCommand::s_TextureIdCache;
-
-    glm::vec3 OpenGLRenderCommand::PixelToOpenGL(const glm::vec3& coords, const glm::vec2& viewportSize, float zNear, float zFar)
-    {
-        float aspectRatio = viewportSize.x / viewportSize.y;
-        float x = utils::map(coords.x, { -viewportSize.x / 2.0f , viewportSize.x / 2.0f }, { -aspectRatio, aspectRatio });
-        float y = utils::map(coords.y, { -viewportSize.y / 2.0f , viewportSize.y / 2.0f }, { -1.0f, 1.0f });
-        // Suspicious z
-        float z = utils::map(coords.z, { 0.0f, 1000.0f }, { zNear, zFar });
-        return glm::vec3(x, y, z);
-    }
-
-    glm::vec2 OpenGLRenderCommand::PixelToOpenGL(const glm::vec2& coords, const glm::vec2& viewportSize)
-    {
-        float aspectRatio = viewportSize.x / viewportSize.y;
-        float x = utils::map(coords.x, { -viewportSize.x / 2.0f , viewportSize.x / 2.0f }, { -aspectRatio, aspectRatio });
-        float y = utils::map(coords.y, { -viewportSize.y / 2.0f , viewportSize.y / 2.0f }, { -1.0f, 1.0f });
-        return glm::vec2(x, y);
-    }
-
-    float OpenGLRenderCommand::PixelToOpenGLX(float pixels, const glm::vec2& viewportSize)
-    {
-        float aspectRatio = viewportSize.x / viewportSize.y;
-        return utils::map(pixels, { -viewportSize.x / 2.0f, viewportSize.x / 2.0f }, { -aspectRatio, aspectRatio });
-    }
-
-    float OpenGLRenderCommand::PixelToOpenGLY(float pixels, float viewportHeight)
-    {
-        return utils::map(pixels, { -viewportHeight / 2.0f, viewportHeight / 2.0f }, { -1.0f, 1.0f });
-    }
 
     std::tuple<std::string, std::string> OpenGLRenderCommand::ReadShaderSource(const std::string& filePath)
     {

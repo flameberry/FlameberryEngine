@@ -38,7 +38,7 @@ namespace utils {
     void sparse_set::print()
     {
         for (size_t i = 0; i < _size; i++)
-            printf("%llu ", packed_data[i]);
+            printf("%d ", packed_data[i]);
         printf("\n");
     }
 

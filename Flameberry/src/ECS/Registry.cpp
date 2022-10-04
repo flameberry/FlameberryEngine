@@ -6,7 +6,7 @@ namespace Flameberry {
     {
         if (m_FreeEntities.size())
         {
-            uint64_t id = m_FreeEntities.back();
+            uint32_t id = m_FreeEntities.back();
             m_Entities[id] = entity_handle{ id };
             m_FreeEntities.pop_back();
             return entity_handle{ id };
@@ -15,7 +15,7 @@ namespace Flameberry {
         return m_Entities.back();
     }
 
-    void Registry::each(std::function<void(entity_handle& entity)> perform_op)
+    void Registry::each(const std::function<void(entity_handle& entity)>& perform_op)
     {
         for (auto& entity : m_Entities)
         {

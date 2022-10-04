@@ -270,7 +270,7 @@ namespace utils {
     class sparse_set
     {
     public:
-        using value_type = uint64_t;
+        using value_type = uint32_t;
         using iterator = sparse_set_iterator<sparse_set>;
         using const_iterator = sparse_set_const_iterator<sparse_set>;
         using reverse_iterator = sparse_set_reverse_iterator<sparse_set>;

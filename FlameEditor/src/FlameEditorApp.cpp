@@ -71,9 +71,8 @@ FlameEditorApp::FlameEditorApp()
 
     m_Scene = std::make_shared<Flameberry::Scene>(m_Registry.get());
 
-    // Setting up all the panels
-    m_Panels.push_back(std::make_shared<SceneHierarchyPanel>(m_Scene.get()));
-    m_Panels.push_back(std::make_shared<ContentBrowserPanel>());
+    m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene.get());
+    m_ContentBrowserPanel = ContentBrowserPanel();
 }
 
 FlameEditorApp::~FlameEditorApp()
@@ -92,7 +91,7 @@ void FlameEditorApp::OnUpdate(float delta)
         (framebufferSize.x != m_ViewportSize.x || framebufferSize.y != m_ViewportSize.y))
     {
         m_Framebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-        m_Framebuffer->OnUpdate();
+        m_Framebuffer->Invalidate();
     }
 
     m_Framebuffer->Bind();
@@ -104,6 +103,8 @@ void FlameEditorApp::OnUpdate(float delta)
     // #1a1a1a
     constexpr glm::vec3 clearColor(20.0f / 255.0f, 20.0f / 255.0f, 20.0f / 255.0f);
     glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
+
+    m_Framebuffer->ClearEntityIDAttachment();
 
     // 3D
     // m_PerspectiveCamera.SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
@@ -121,6 +122,24 @@ void FlameEditorApp::OnUpdate(float delta)
     m_Scene->RenderScene(m_Renderer2D.get(), m_Camera);
     // ---------
 
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+    {
+        auto [mx, my] = ImGui::GetMousePos();
+        mx -= m_ViewportBounds[0].x;
+        my -= m_ViewportBounds[0].y;
+        glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+        my = viewportSize.y - my;
+        int mouseX = (int)mx;
+        int mouseY = (int)my;
+
+        if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+        {
+            int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
+            if (entityID != -1)
+                m_SceneHierarchyPanel.SetSelectedEntity(m_Scene->GetRegistry()->GetEntityVector()[entityID]);
+        }
+    }
+
     m_Framebuffer->Unbind();
 }
 
@@ -128,21 +147,28 @@ void FlameEditorApp::OnUIRender()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
     ImGui::Begin("Viewport");
+
+    ImVec2 viewportMinRegion = ImGui::GetWindowContentRegionMin();
+    ImVec2 viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+    ImVec2 viewportOffset = ImGui::GetWindowPos();
+    m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+    m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+
     ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
     m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
     uint64_t textureID = m_Framebuffer->GetColorAttachmentId();
-    ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+    ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
     ImGui::End();
     ImGui::PopStyleVar();
-
-    for (auto& panel : m_Panels)
-        panel->OnUIRender();
 
     ImGui::Begin("Stats");
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::Text("Last Render Time: %.3fms", m_LastRenderTime * 0.001f * 0.001f);
     ImGui::End();
+
+    m_SceneHierarchyPanel.OnUIRender();
+    m_ContentBrowserPanel.OnUIRender();
 }
 
 std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()

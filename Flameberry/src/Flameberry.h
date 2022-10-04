@@ -6,6 +6,8 @@
 #include "Core/Application.h"
 #include "Core/Core.h"
 
+#include "Core/Input.h"
+
 #ifdef FL_USE_OPENGL_API
 #include "Renderer/OpenGL/OpenGLRenderer2D.h"
 #include "Renderer/OpenGL/OpenGLRenderCommand.h"

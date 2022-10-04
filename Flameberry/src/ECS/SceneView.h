@@ -10,18 +10,18 @@ namespace Flameberry {
     class scene_view_iterator
     {
     private:
-        using value_type = utils::sparse_set::value_type;
+        using value_type = entity_handle;
         using reference_type = value_type&;
     public:
-        scene_view_iterator(const Registry& registry, const utils::sparse_set::iterator& entityIdIterator, const utils::sparse_set::iterator& end);
+        scene_view_iterator(Registry& registry, const utils::sparse_set::iterator& entityIdIterator, const utils::sparse_set::iterator& end);
 
         scene_view_iterator& operator++();
         scene_view_iterator operator++(int);
         bool operator==(const scene_view_iterator& other);
         bool operator!=(const scene_view_iterator& other);
-        reference_type operator*() { return *_EntityIdIterator; }
+        reference_type operator*();
     private:
-        const Registry& _Registry;
+        Registry& _Registry;
         utils::sparse_set::iterator _EntityIdIterator;
         utils::sparse_set::iterator _End;
     };
@@ -32,13 +32,13 @@ namespace Flameberry {
     public:
         using iterator = scene_view_iterator<SceneView, ComponentTypes...>;
     public:
-        SceneView(const Registry& registry, const std::shared_ptr<ComponentPool>& componentPool);
+        SceneView(Registry& registry, const std::shared_ptr<ComponentPool>& componentPool);
 
         iterator begin();
         iterator end();
     private:
         bool m_Null = false;
-        const Registry& m_Registry;
+        Registry& m_Registry;
         std::shared_ptr<ComponentPool> m_ComponentPool;
     };
 }
@@ -63,7 +63,14 @@ namespace Flameberry {
     }
 
     template<typename T, typename... ComponentTypes>
-    scene_view_iterator<T, ComponentTypes...>::scene_view_iterator(const Registry& registry, const utils::sparse_set::iterator& entityIdIterator, const utils::sparse_set::iterator& end)
+    entity_handle& scene_view_iterator<T, ComponentTypes...>::operator* ()
+    {
+        auto& entities = _Registry.GetEntityVector();
+        return entities[(*_EntityIdIterator)];
+    }
+
+    template<typename T, typename... ComponentTypes>
+    scene_view_iterator<T, ComponentTypes...>::scene_view_iterator(Registry& registry, const utils::sparse_set::iterator& entityIdIterator, const utils::sparse_set::iterator& end)
         : _Registry(registry), _EntityIdIterator(entityIdIterator), _End(end)
     {
     }
@@ -99,7 +106,7 @@ namespace Flameberry {
     // ------------------------------------------------------------------------------------------------
 
     template<typename... ComponentTypes>
-    SceneView<ComponentTypes...>::SceneView(const Registry& registry, const std::shared_ptr<ComponentPool>& componentPool)
+    SceneView<ComponentTypes...>::SceneView(Registry& registry, const std::shared_ptr<ComponentPool>& componentPool)
         : m_Registry(registry), m_ComponentPool(componentPool)
     {
         if (!componentPool)

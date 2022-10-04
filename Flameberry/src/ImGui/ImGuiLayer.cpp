@@ -21,9 +21,9 @@ namespace Flameberry {
         //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoTaskBarIcons;
         //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
 
-        float fontSize = 15.0f;// *2.0f;
-        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Regular.ttf", fontSize);
-        // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Regular.ttf", fontSize);
+        float fontSize = 16.0f;// *2.0f;
+        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Bold.ttf", fontSize);
+        io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Regular.ttf", fontSize);
 
         io.IniFilename = NULL;
         ImGui::LoadIniSettingsFromDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");

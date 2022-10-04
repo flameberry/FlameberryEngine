@@ -28,7 +28,7 @@ namespace Flameberry {
         entity_handle CreateEntity();
         void DestroyEntity(entity_handle& entity);
 
-        void each(std::function<void(entity_handle& entity)> perform_op);
+        void each(const std::function<void(entity_handle& entity)>& perform_op);
 
         template<typename T>
         T* AddComponent(const entity_handle& entity);

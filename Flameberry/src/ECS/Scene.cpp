@@ -12,9 +12,9 @@ namespace Flameberry {
         {
             auto [transform, sprite] = m_Registry->Get<TransformComponent, SpriteRendererComponent>(entity);
             if (sprite->TextureFilePath == "")
-                renderer->AddQuad(transform->GetTransform(), sprite->Color);
+                renderer->AddQuad(transform->GetTransform(), sprite->Color, entity.get());
             else
-                renderer->AddQuad(transform->GetTransform(), sprite->TextureFilePath.c_str());
+                renderer->AddQuad(transform->GetTransform(), sprite->TextureFilePath.c_str(), entity.get());
         }
         renderer->End();
     }

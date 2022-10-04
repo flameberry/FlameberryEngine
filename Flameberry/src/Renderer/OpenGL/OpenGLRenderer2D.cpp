@@ -12,7 +12,7 @@
 
 namespace Flameberry {
     OpenGLRenderer2D::OpenGLRenderer2D()
-        : m_AspectRatio(1280.0f / 720.0f), m_ViewportSize(1280.0f, 720.0f), m_CursorPosition(0.0f, 0.0f), m_CurrentTextureSlot(0)
+        : m_ViewportSize(1280.0f, 720.0f), m_CurrentTextureSlot(0)
     {}
 
     OpenGLRenderer2D::~OpenGLRenderer2D()
@@ -30,40 +30,19 @@ namespace Flameberry {
         }
     }
 
-    void OpenGLRenderer2D::UpdateWindowContentScale()
-    {
-        if (m_RendererInitInfo.enableCustomViewport)
-            m_WindowContentScale = { 1.0f, 1.0f };
-        else
-        {
-            glm::vec2 scale;
-            glfwGetWindowContentScale(m_UserWindow, &scale.x, &scale.y);
-            m_WindowContentScale = scale;
-        }
-    }
-
     void OpenGLRenderer2D::OnResize()
     {
         UpdateViewportSize();
-        m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y;
         glViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
     }
 
     glm::vec2  OpenGLRenderer2D::GetViewportSize() { return m_ViewportSize; }
-    glm::vec2& OpenGLRenderer2D::GetCursorPosition() { return m_CursorPosition; }
     GLFWwindow* OpenGLRenderer2D::GetUserGLFWwindow() { return m_UserWindow; }
 
     void OpenGLRenderer2D::OnUpdate()
     {
         glClear(GL_DEPTH_BUFFER_BIT);
-
-        UpdateWindowContentScale();
         OnResize();
-
-        double x, y;
-        glfwGetCursorPos(m_UserWindow, &x, &y);
-        m_CursorPosition.x = x - m_ViewportSize.x / m_WindowContentScale.x / 2.0f;
-        m_CursorPosition.y = -y + m_ViewportSize.y / m_WindowContentScale.y / 2.0f;
     }
 
     void OpenGLRenderer2D::Init(const OpenGLRenderer2DInitInfo& rendererInitInfo)
@@ -75,7 +54,6 @@ namespace Flameberry {
         const char* monitorName = glfwGetMonitorName(primaryMonitor);
         FL_INFO("Primary Monitor: {0}", monitorName);
 
-        UpdateWindowContentScale();
         UpdateViewportSize();
 
         glEnable(GL_BLEND);
@@ -90,7 +68,7 @@ namespace Flameberry {
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         InitBatch();
-        FL_INFO("Initialized OpenGLRenderer2D!");
+        FL_INFO("Initialized OpenGL Renderer2D!");
     }
 
     void OpenGLRenderer2D::InitBatch()
@@ -122,13 +100,15 @@ namespace Flameberry {
         glBindVertexArray(m_Batch.VertexArrayId);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex2D, position));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex2D, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex2D, color));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex2D, color));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex2D, texture_uv));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex2D, texture_uv));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex2D, texture_index));
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex2D, texture_index));
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 1, GL_INT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex2D, entityID));
 
         glGenBuffers(1, &m_Batch.IndexBufferId);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Batch.IndexBufferId);
@@ -169,7 +149,7 @@ namespace Flameberry {
         m_CurrentTextureSlot = 0;
     }
 
-    void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const glm::vec4& color)
+    void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID)
     {
         OpenGLVertex2D vertices[4];
 
@@ -182,6 +162,7 @@ namespace Flameberry {
         {
             vertices[i].position = transform * m_TemplateVertexPositions[i];
             vertices[i].color = color;
+            vertices[i].entityID = (int)entityID;
         }
 
         for (uint8_t i = 0; i < 4; i++)
@@ -210,7 +191,7 @@ namespace Flameberry {
             m_Batch.Vertices.push_back(vertices[i]);
     }
 
-    void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const char* textureFilePath)
+    void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const char* textureFilePath, uint32_t entityID)
     {
         OpenGLVertex2D vertices[4];
         vertices[0].texture_uv = { 0.0f, 0.0f };
@@ -223,6 +204,7 @@ namespace Flameberry {
             vertices[i].position = transform * m_TemplateVertexPositions[i];
             vertices[i].color = m_DefaultColor;
             vertices[i].texture_index = m_CurrentTextureSlot;
+            vertices[i].entityID = (int)entityID;
         }
 
         for (uint8_t i = 0; i < 4; i++)

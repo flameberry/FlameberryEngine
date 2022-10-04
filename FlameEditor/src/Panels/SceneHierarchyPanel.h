@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Panel.h"
 #include "Flameberry.h"
 
-class SceneHierarchyPanel : public Panel
+class SceneHierarchyPanel
 {
 public:
     SceneHierarchyPanel(Flameberry::Scene* scene = nullptr);
-    virtual ~SceneHierarchyPanel() = default;
-    void OnUIRender() override;
+    ~SceneHierarchyPanel() = default;
+    void OnUIRender();
+    void SetSelectedEntity(const Flameberry::entity_handle& entity) { m_SelectedEntity = entity; }
 private:
     void DrawComponent(Flameberry::TransformComponent& transform);
     void DrawComponent(Flameberry::SpriteRendererComponent& sprite);
