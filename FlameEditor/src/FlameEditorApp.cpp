@@ -23,13 +23,13 @@ FlameEditorApp::FlameEditorApp()
     // Dealing with 3D Renderer
     // m_Renderer3D->Init(Flameberry::Application::Get().GetWindow().GetGLFWwindow());
 
-    Flameberry::PerspectiveCameraInfo cameraInfo{};
-    cameraInfo.aspectRatio = 1280.0f / 720.0f;
-    cameraInfo.FOV = 45.0f;
-    cameraInfo.cameraPostion = glm::vec3(0, 0, 2);
-    cameraInfo.cameraDirection = glm::vec3(0, 0, -1);
+    // Flameberry::PerspectiveCameraInfo cameraInfo{};
+    // cameraInfo.aspectRatio = 1280.0f / 720.0f;
+    // cameraInfo.FOV = 45.0f;
+    // cameraInfo.cameraPostion = glm::vec3(0, 0, 2);
+    // cameraInfo.cameraDirection = glm::vec3(0, 0, -1);
 
-    m_PerspectiveCamera = Flameberry::PerspectiveCamera(cameraInfo);
+    // m_PerspectiveCamera = Flameberry::PerspectiveCamera(cameraInfo);
 
     // ECS
     m_Registry = std::make_shared<Flameberry::Registry>();
@@ -137,6 +137,8 @@ void FlameEditorApp::OnUpdate(float delta)
             int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
             if (entityID != -1)
                 m_SceneHierarchyPanel.SetSelectedEntity(m_Scene->GetRegistry()->GetEntityVector()[entityID]);
+            else
+                m_SceneHierarchyPanel.SetSelectedEntity(Flameberry::entity_handle{ UINT32_MAX, false });
         }
     }
 

@@ -9,7 +9,6 @@ namespace Flameberry {
         OrthographicCamera(const glm::vec2& viewportSize, float zoom);
         ~OrthographicCamera();
 
-        // void SetAspectRatio(float aspectRatio) { m_AspectRatio = aspectRatio; }
         void SetViewportSize(const glm::vec2& viewportSize) { m_ViewportSize = viewportSize; m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y; }
         void SetPosition(const glm::vec3& position) { m_CameraPosition = position; }
         void SetRotation(float rotationAngle) { m_CameraRotation = rotationAngle; }

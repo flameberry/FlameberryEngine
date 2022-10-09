@@ -4,20 +4,11 @@
 #include <memory>
 
 #include "Core/Core.h"
-
 #include "ComponentPool.h"
 
 namespace Flameberry {
     template<typename... ComponentTypes>
     class SceneView;
-
-    template<typename registry>
-    class registry_iterator
-    {
-    public:
-    private:
-
-    };
 
     class Registry
     {
@@ -28,7 +19,17 @@ namespace Flameberry {
         entity_handle CreateEntity();
         void DestroyEntity(entity_handle& entity);
 
-        void each(const std::function<void(entity_handle& entity)>& perform_op);
+        template <typename Fn>
+        void each(Fn&& _Fn)
+        {
+            static_assert(std::is_invocable_v<Fn, entity_handle&>);
+            for (auto& entity : m_Entities)
+            {
+                if (entity.is_valid())
+                    _Fn(entity);
+            }
+        }
+        // void each(const std::function<void(entity_handle& entity)>& perform_op);
 
         template<typename T>
         T* AddComponent(const entity_handle& entity);
@@ -73,7 +74,7 @@ namespace Flameberry {
         }
 
         // Checking if the entity has the component of type T
-        FL_ASSERT(m_ComponentPools[componentTypeId]->GetComponentAddress(entity) == NULL, "Attempted to assign the entity a component of type which already exists!");
+        FL_ASSERT(!m_ComponentPools[componentTypeId]->ContainsEntity(entity), "Attempted to assign the entity a component of type which already exists!");
 
         m_ComponentPools[componentTypeId]->Add(entity.get());
         void* componentAddress = m_ComponentPools[componentTypeId]->GetComponentAddress(entity);
@@ -106,7 +107,7 @@ namespace Flameberry {
     {
         FL_ASSERT(entity.is_valid(), "Attempted to check component existence from an invalid entity");
         uint32_t componentTypeId = GetComponentTypeId<T>();
-        return !(componentTypeId >= m_ComponentPools.size() || m_ComponentPools[componentTypeId]->GetComponentAddress(entity) == NULL);
+        return componentTypeId < m_ComponentPools.size() && m_ComponentPools[componentTypeId]->ContainsEntity(entity);
     }
 
     template<typename... ComponentTypes>
@@ -116,7 +117,7 @@ namespace Flameberry {
         uint32_t componentTypeIds[] = { GetComponentTypeId<ComponentTypes>() ... };
         bool hasComponents = true;
         for (const auto& id : componentTypeIds)
-            hasComponents = hasComponents && !(id >= m_ComponentPools.size() || m_ComponentPools[id]->GetComponentAddress(entity) == NULL);
+            hasComponents = hasComponents && (id < m_ComponentPools.size() && m_ComponentPools[id]->ContainsEntity(entity));
         return hasComponents;
     }
 }

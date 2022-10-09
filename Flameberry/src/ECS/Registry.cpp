@@ -15,15 +15,6 @@ namespace Flameberry {
         return m_Entities.back();
     }
 
-    void Registry::each(const std::function<void(entity_handle& entity)>& perform_op)
-    {
-        for (auto& entity : m_Entities)
-        {
-            if (entity.is_valid())
-                perform_op(entity);
-        }
-    }
-
     void Registry::DestroyEntity(entity_handle& entity)
     {
         for (auto& commandPool : m_ComponentPools)

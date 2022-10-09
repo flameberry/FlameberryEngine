@@ -1,11 +1,15 @@
 #pragma once
+
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <string>
 #include <memory>
+#include <vector>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
 #include "Renderer/PerspectiveCamera.h"
+#include "OpenGLVertex.h"
 
 namespace Flameberry {
     struct OpenGLVertex
@@ -44,5 +48,8 @@ namespace Flameberry {
         UniformBufferData m_UniformBufferData;
         float m_AspectRatio = 1280.0f / 720.0f;
         glm::vec2 m_ViewportSize;
+
+        std::vector<OpenGLVertex2D> m_TempVertices;
+        std::vector<uint32_t> m_TempIndices;
     };
 }

@@ -78,6 +78,5 @@ void ContentBrowserPanel::OnUIRender()
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();
 
-
     ImGui::End();
 }

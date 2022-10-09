@@ -15,13 +15,13 @@ namespace Flameberry {
     }
 
     OrthographicCamera::~OrthographicCamera()
-    {
-    }
+    {}
 
     void OrthographicCamera::OnUpdate(float delta)
     {
         if (Input::IsKey(GLFW_KEY_LEFT_ALT, GLFW_PRESS))
         {
+            // Camera Movement
             if (Input::IsKey(GLFW_KEY_UP, GLFW_PRESS))
                 m_CameraPosition.y += m_CameraSpeed * delta;
             else if (Input::IsKey(GLFW_KEY_DOWN, GLFW_PRESS))
@@ -31,13 +31,14 @@ namespace Flameberry {
             else if (Input::IsKey(GLFW_KEY_LEFT, GLFW_PRESS))
                 m_CameraPosition.x -= m_CameraSpeed * delta;
 
+            // Zoom Controls
             if (Input::IsKey(GLFW_KEY_I, GLFW_PRESS))
                 m_Zoom -= 0.025f;
             if (Input::IsKey(GLFW_KEY_O, GLFW_PRESS))
                 m_Zoom += 0.025f;
         }
 
-        m_Zoom = glm::max(m_Zoom, 0.2f);
+        m_Zoom = glm::max(m_Zoom, 0.1f);
         m_CameraSpeed = m_Zoom * 2.5f;
 
         m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y;

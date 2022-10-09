@@ -38,6 +38,11 @@ namespace Flameberry {
         /* Set Projection Matrix in GPU memory, for all shader programs to access it */
         glBindBuffer(GL_UNIFORM_BUFFER, m_UniformBufferId);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(m_UniformBufferData.ModelViewProjectionMatrix));
+
+        auto [vertices, indices] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/viking_room.obj");
+        m_TempVertices = vertices;
+        m_TempIndices = indices;
+        FL_INFO("Loaded model containing {0} vertices and {1} indices", vertices.size(), indices.size());
     }
 
     void OpenGLRenderer3D::End()

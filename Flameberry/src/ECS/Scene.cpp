@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "Core/Timer.h"
 
 namespace Flameberry {
     Scene::Scene(Registry* registry)
@@ -10,7 +11,7 @@ namespace Flameberry {
         renderer->Begin(camera);
         for (const auto& entity : m_Registry->View<TransformComponent, SpriteRendererComponent>())
         {
-            auto [transform, sprite] = m_Registry->Get<TransformComponent, SpriteRendererComponent>(entity);
+            const auto& [transform, sprite] = m_Registry->Get<TransformComponent, SpriteRendererComponent>(entity);
             if (sprite->TextureFilePath == "")
                 renderer->AddQuad(transform->GetTransform(), sprite->Color, entity.get());
             else
