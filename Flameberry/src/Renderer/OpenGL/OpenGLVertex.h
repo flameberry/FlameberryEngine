@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-struct OpenGLVertex2D
+struct OpenGLVertex
 {
     glm::vec3 position;   // Position from -1.0f to 1.0f on both x-axis and y-axis
     glm::vec4 color;      // Color in rgba format, each channel ranging from 0.0f to 1.0f
@@ -10,7 +10,7 @@ struct OpenGLVertex2D
     float texture_index;  // Texture index which will be used as opengl texture slot to which the texture will be bound
     int entityID;
 
-    OpenGLVertex2D()
+    OpenGLVertex()
         : position(0.0f), color(1.0f), texture_uv(0.0f), texture_index(-1.0f), entityID(-1)
     {}
 };

@@ -95,20 +95,20 @@ namespace Flameberry {
 
         glGenBuffers(1, &m_Batch.VertexBufferId);
         glBindBuffer(GL_ARRAY_BUFFER, m_Batch.VertexBufferId);
-        glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(OpenGLVertex2D), nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(OpenGLVertex), nullptr, GL_DYNAMIC_DRAW);
 
         glBindVertexArray(m_Batch.VertexArrayId);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex2D, position));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex2D, color));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex, color));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex2D, texture_uv));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex, texture_uv));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex2D, texture_index));
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex, texture_index));
         glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 1, GL_INT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex2D, entityID));
+        glVertexAttribPointer(4, 1, GL_INT, GL_FALSE, 10 * sizeof(float) + sizeof(int), (void*)offsetof(OpenGLVertex, entityID));
 
         glGenBuffers(1, &m_Batch.IndexBufferId);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Batch.IndexBufferId);
@@ -132,7 +132,7 @@ namespace Flameberry {
             return;
 
         glBindBuffer(GL_ARRAY_BUFFER, m_Batch.VertexBufferId);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, m_Batch.Vertices.size() * sizeof(OpenGLVertex2D), m_Batch.Vertices.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, m_Batch.Vertices.size() * sizeof(OpenGLVertex), m_Batch.Vertices.data());
 
         for (uint8_t i = 0; i < m_Batch.TextureIds.size(); i++)
         {
@@ -151,7 +151,7 @@ namespace Flameberry {
 
     void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID)
     {
-        OpenGLVertex2D vertices[4];
+        OpenGLVertex vertices[4];
 
         vertices[0].texture_uv = { 0.0f, 0.0f };
         vertices[1].texture_uv = { 0.0f, 1.0f };
@@ -171,7 +171,7 @@ namespace Flameberry {
 
     void OpenGLRenderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color)
     {
-        OpenGLVertex2D vertices[4];
+        OpenGLVertex vertices[4];
 
         vertices[0].texture_uv = { 0.0f, 0.0f };
         vertices[1].texture_uv = { 0.0f, 1.0f };
@@ -193,7 +193,7 @@ namespace Flameberry {
 
     void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const char* textureFilePath, uint32_t entityID)
     {
-        OpenGLVertex2D vertices[4];
+        OpenGLVertex vertices[4];
         vertices[0].texture_uv = { 0.0f, 0.0f };
         vertices[1].texture_uv = { 0.0f, 1.0f };
         vertices[2].texture_uv = { 1.0f, 1.0f };
@@ -224,7 +224,7 @@ namespace Flameberry {
 
     void OpenGLRenderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath)
     {
-        OpenGLVertex2D vertices[4];
+        OpenGLVertex vertices[4];
         vertices[0].texture_uv = { 0.0f, 0.0f };
         vertices[1].texture_uv = { 0.0f, 1.0f };
         vertices[2].texture_uv = { 1.0f, 1.0f };

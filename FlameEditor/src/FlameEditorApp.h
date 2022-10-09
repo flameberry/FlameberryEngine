@@ -18,8 +18,7 @@ private:
     Flameberry::PerspectiveCamera m_PerspectiveCamera;
     double m_LastRenderTime = 0.0;
     glm::vec2 m_ViewportBounds[2];
-    // std::shared_ptr<Flameberry::OpenGLRenderer3D> m_Renderer3D;
-    std::shared_ptr<Flameberry::OpenGLRenderer2D> m_Renderer2D;
+    std::shared_ptr<Flameberry::OpenGLRenderer3D> m_Renderer3D;
 private:
     SceneHierarchyPanel m_SceneHierarchyPanel;
     ContentBrowserPanel m_ContentBrowserPanel;

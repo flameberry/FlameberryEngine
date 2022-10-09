@@ -49,7 +49,7 @@ namespace Flameberry {
         float m_AspectRatio = 1280.0f / 720.0f;
         glm::vec2 m_ViewportSize;
 
-        std::vector<OpenGLVertex2D> m_TempVertices;
+        std::vector<OpenGLVertex> m_TempVertices;
         std::vector<uint32_t> m_TempIndices;
     };
 }

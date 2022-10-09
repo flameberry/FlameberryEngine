@@ -14,14 +14,14 @@
 namespace Flameberry {
     std::unordered_map<std::string, uint32_t> OpenGLRenderCommand::s_TextureIdCache;
 
-    std::tuple<std::vector<OpenGLVertex2D>, std::vector<uint32_t>> OpenGLRenderCommand::LoadModel(const std::string& filePath)
+    std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> OpenGLRenderCommand::LoadModel(const std::string& filePath)
     {
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
 
-        std::vector<OpenGLVertex2D> vertices;
+        std::vector<OpenGLVertex> vertices;
         std::vector<uint32_t> indices;
 
         FL_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str()), err);
@@ -30,7 +30,7 @@ namespace Flameberry {
         {
             for (const auto& index : shape.mesh.indices)
             {
-                OpenGLVertex2D vertex{};
+                OpenGLVertex vertex{};
 
                 vertex.position = {
                     attrib.vertices[3 * index.vertex_index + 0],
@@ -49,7 +49,7 @@ namespace Flameberry {
                 indices.push_back(indices.size());
             }
         }
-        return std::tuple<std::vector<OpenGLVertex2D>, std::vector<uint32_t>>(vertices, indices);
+        return std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>>(vertices, indices);
     }
 
     std::tuple<std::string, std::string> OpenGLRenderCommand::ReadShaderSource(const std::string& filePath)

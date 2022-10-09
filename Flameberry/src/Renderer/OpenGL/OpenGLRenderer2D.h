@@ -58,7 +58,7 @@ namespace Flameberry {
         {
             uint32_t VertexBufferId, IndexBufferId, VertexArrayId, ShaderProgramId;
             std::vector<uint32_t> TextureIds;
-            std::vector<OpenGLVertex2D> Vertices;
+            std::vector<OpenGLVertex> Vertices;
         };
     private:
         OpenGLRenderer2DInitInfo m_RendererInitInfo;
