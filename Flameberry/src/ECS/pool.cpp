@@ -1,6 +1,11 @@
 #include "pool.h"
 
 namespace Flameberry {
+    component_pool::component_pool()
+        : m_ComponentSize(0), m_Capacity(0), m_EntitySet(MAX_ENTITIES - 1)
+    {
+    }
+
     component_pool::component_pool(size_t comp_size, size_t capacity)
         : m_ComponentSize(comp_size), m_Capacity(capacity), m_EntitySet(capacity - 1)
     {

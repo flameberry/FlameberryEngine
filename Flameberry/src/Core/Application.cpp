@@ -4,6 +4,7 @@
 #include "Core.h"
 
 #include "ImGui/ImGuiLayer.h"
+#include "ECS/pool.h"
 
 namespace Flameberry {
     Application* Application::s_Instance;
@@ -14,6 +15,15 @@ namespace Flameberry {
         m_Window = Window::Create();
         if (FL_RENDERER_API_CURRENT == FL_RENDERER_API_OPENGL)
             ImGuiLayer::OnAttach();
+
+        // Testing the new `component_pool` class
+#if 0
+        component_pool _pool;
+        _pool.allocate(sizeof(SpriteRendererComponent), MAX_ENTITIES);
+        for (uint32_t i = 0; i < 10; i++)
+            _pool.add(entity_handle{ i });
+        FL_LOG(_pool.size());
+#endif
     }
 
     void Application::Run()

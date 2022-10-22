@@ -9,7 +9,8 @@ namespace Flameberry {
     class component_pool
     {
     public:
-        component_pool(size_t comp_size = 0, size_t capacity = 0);
+        component_pool();
+        component_pool(size_t comp_size, size_t capacity);
         ~component_pool();
 
         void allocate(size_t comp_size = 0, size_t capacity = 0);
