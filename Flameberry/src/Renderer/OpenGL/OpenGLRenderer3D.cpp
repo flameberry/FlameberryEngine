@@ -80,8 +80,7 @@ namespace Flameberry {
         vertices.push_back(v4);
 
         glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferId);
-        // glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(OpenGLVertex), vertices.data());
-        glBufferSubData(GL_ARRAY_BUFFER, 0, m_TempVertices.size() * sizeof(OpenGLVertex), m_TempVertices.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(OpenGLVertex), vertices.data());
 
         // for (uint8_t i = 0; i < s_Batch.TextureIds.size(); i++)
         // {
@@ -94,8 +93,7 @@ namespace Flameberry {
 
         glUseProgram(m_ShaderProgramId);
         glBindVertexArray(m_VertexArrayId);
-        glDrawElements(GL_TRIANGLES, m_TempIndices.size(), GL_UNSIGNED_INT, 0);
-        // glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
 
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
@@ -104,9 +102,14 @@ namespace Flameberry {
     {
         m_TextureId = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
 
+        ModelData modelData = OpenGLRenderCommand::LoadModelData(FL_PROJECT_DIR"SandboxApp/assets/models/cube.obj");
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
+
+        FL_LOG(modelData.Vertices.size());
+        FL_LOG(modelData.Indices.size());
 
         /* Create Uniform Buffer */
         glGenBuffers(1, &m_UniformBufferId);
@@ -146,14 +149,9 @@ namespace Flameberry {
             3, 0, 4
         };
 
-        auto [vertices, alt_indices] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/cube.obj");
-        m_TempVertices = vertices;
-        m_TempIndices = alt_indices;
-        FL_INFO("Loaded model containing {0} vertices and {1} indices", vertices.size(), alt_indices.size());
-
         glGenBuffers(1, &m_IndexBufferId);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBufferId);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * m_TempIndices.size(), m_TempVertices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 18, indices, GL_STATIC_DRAW);
 
         glBindVertexArray(m_VertexArrayId);
 

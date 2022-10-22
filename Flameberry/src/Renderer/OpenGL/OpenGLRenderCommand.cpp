@@ -52,6 +52,45 @@ namespace Flameberry {
         return std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>>(vertices, indices);
     }
 
+    ModelData OpenGLRenderCommand::LoadModelData(const std::string& filePath)
+    {
+        tinyobj::attrib_t attrib;
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+        std::string warn, err;
+
+        std::vector<OpenGLVertex> vertices;
+        std::vector<uint32_t> indices;
+
+        FL_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str()), err);
+
+        for (const auto& shape : shapes)
+        {
+            for (const auto& index : shape.mesh.indices)
+            {
+                OpenGLVertex vertex{};
+
+                vertex.position = {
+                    attrib.vertices[3 * index.vertex_index + 0],
+                    attrib.vertices[3 * index.vertex_index + 1],
+                    attrib.vertices[3 * index.vertex_index + 2]
+                };
+
+                vertex.texture_uv = {
+                    attrib.texcoords[2 * index.texcoord_index + 0],
+                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                };
+
+                vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+                vertices.push_back(vertex);
+                indices.push_back(indices.size());
+            }
+        }
+        FL_LOG("INTERNAL: {0}, {1}", vertices.size(), indices.size());
+        return ModelData{ vertices, indices };
+    }
+
     std::tuple<std::string, std::string> OpenGLRenderCommand::ReadShaderSource(const std::string& filePath)
     {
         std::ifstream stream(filePath);
