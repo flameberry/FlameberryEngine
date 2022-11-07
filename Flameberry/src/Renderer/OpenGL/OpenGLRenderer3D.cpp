@@ -8,6 +8,12 @@
 #include "OpenGLRenderCommand.h"
 #include "Core/Core.h"
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader/tiny_obj_loader.h>
+
+#include "Renderer/ModelLoader.h"
+#include "Core/Timer.h"
+
 namespace Flameberry {
     void OpenGLRenderer3D::UpdateViewportSize()
     {
@@ -42,74 +48,76 @@ namespace Flameberry {
 
     void OpenGLRenderer3D::End()
     {
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
     void OpenGLRenderer3D::OnDraw()
     {
-        std::vector<OpenGLVertex> vertices;
-        OpenGLVertex v0;
-        v0.position = { -0.5f, 0.0f,  0.5f };
-        v0.color = { 0.83f, 0.70f, 0.44f, 1.0f };
-        v0.texture_uv = { 0.0f, 0.0f };
-        v0.texture_index = 0;
-        OpenGLVertex v1;
-        v1.position = { -0.5f, 0.0f, -0.5f };
-        v1.color = { 0.83f, 0.70f, 0.44f, 1.0f };
-        v1.texture_uv = { 1.0f, 0.0f };
-        v1.texture_index = 0;
-        OpenGLVertex v2;
-        v2.position = { 0.5f, 0.0f, -0.5f };
-        v2.color = { 0.83f, 0.70f, 0.44f, 1.0f };
-        v2.texture_uv = { 0.0f, 0.0f };
-        v2.texture_index = 0;
-        OpenGLVertex v3;
-        v3.position = { 0.5f, 0.0f,  0.5f };
-        v3.color = { 0.83f, 0.70f, 0.44f, 1.0f };
-        v3.texture_uv = { 1.0f, 0.0f };
-        v3.texture_index = 0;
-        OpenGLVertex v4;
-        v4.position = { 0.0f, 0.8f,  0.0f };
-        v4.color = { 0.92f, 0.86f, 0.76f, 1.0f };
-        v4.texture_uv = { 0.5f, 1.0f };
-        v4.texture_index = 0;
+        // std::vector<OpenGLVertex> vertices;
+        // OpenGLVertex v0;
+        // v0.position = { -0.5f, 0.0f,  0.5f };
+        // v0.color = { 0.83f, 0.70f, 0.44f, 1.0f };
+        // v0.texture_uv = { 0.0f, 0.0f };
+        // v0.texture_index = 0;
+        // OpenGLVertex v1;
+        // v1.position = { -0.5f, 0.0f, -0.5f };
+        // v1.color = { 0.83f, 0.70f, 0.44f, 1.0f };
+        // v1.texture_uv = { 1.0f, 0.0f };
+        // v1.texture_index = 0;
+        // OpenGLVertex v2;
+        // v2.position = { 0.5f, 0.0f, -0.5f };
+        // v2.color = { 0.83f, 0.70f, 0.44f, 1.0f };
+        // v2.texture_uv = { 0.0f, 0.0f };
+        // v2.texture_index = 0;
+        // OpenGLVertex v3;
+        // v3.position = { 0.5f, 0.0f,  0.5f };
+        // v3.color = { 0.83f, 0.70f, 0.44f, 1.0f };
+        // v3.texture_uv = { 1.0f, 0.0f };
+        // v3.texture_index = 0;
+        // OpenGLVertex v4;
+        // v4.position = { 0.0f, 0.8f,  0.0f };
+        // v4.color = { 0.92f, 0.86f, 0.76f, 1.0f };
+        // v4.texture_uv = { 0.5f, 1.0f };
+        // v4.texture_index = 0;
 
-        vertices.push_back(v0);
-        vertices.push_back(v1);
-        vertices.push_back(v2);
-        vertices.push_back(v3);
-        vertices.push_back(v4);
+        // vertices.push_back(v0);
+        // vertices.push_back(v1);
+        // vertices.push_back(v2);
+        // vertices.push_back(v3);
+        // vertices.push_back(v4);
 
-        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferId);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(OpenGLVertex), vertices.data());
+        DrawMesh(m_TempMesh, m_TextureId);
 
-        // for (uint8_t i = 0; i < s_Batch.TextureIds.size(); i++)
-        // {
-        //     glActiveTexture(GL_TEXTURE0 + i);
-        //     glBindTexture(GL_TEXTURE_2D, s_Batch.TextureIds[i]);
-        // }
+        // glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferId);
+        // glBufferSubData(GL_ARRAY_BUFFER, 0, m_TempMesh.Vertices.size() * sizeof(OpenGLVertex), m_TempMesh.Vertices.data());
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m_TextureId);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, m_TextureId);
 
-        glUseProgram(m_ShaderProgramId);
-        glBindVertexArray(m_VertexArrayId);
-        glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
+        // glUseProgram(m_ShaderProgramId);
+        // glBindVertexArray(m_VertexArrayId);
+        // glDrawElements(GL_TRIANGLES, m_TempMesh.Indices.size(), GL_UNSIGNED_INT, 0);
 
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        // glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
     void OpenGLRenderer3D::Init(GLFWwindow* window)
     {
-        m_TextureId = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
-
-        ModelData modelData = OpenGLRenderCommand::LoadModelData(FL_PROJECT_DIR"SandboxApp/assets/models/cube.obj");
+#if 1
+        // Loading models
+        auto [vertices, alt_indices] = ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
+        m_TempMesh = { vertices, alt_indices };
+        // FL_LOG("Parsed float: {0}", ModelLoader::ParseFloat("-234.567"));
+        FL_LOG("Parsed float: {0}", ModelLoader::ParseFloat("-3.56789"));
+#else
+        auto [vertices_1, indices_1] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
+        m_TempMesh = { vertices_1, indices_1 };
+#endif
+        m_TextureId = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/StoneIdol.jpg");
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
-
-        FL_LOG(modelData.Vertices.size());
-        FL_LOG(modelData.Indices.size());
 
         /* Create Uniform Buffer */
         glGenBuffers(1, &m_UniformBufferId);
@@ -126,21 +134,22 @@ namespace Flameberry {
 
         glGenBuffers(1, &m_VertexBufferId);
         glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferId);
-        glBufferData(GL_ARRAY_BUFFER, 1000 * sizeof(OpenGLVertex), nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 1000000 * sizeof(OpenGLVertex), nullptr, GL_DYNAMIC_DRAW);
 
         glBindVertexArray(m_VertexArrayId);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex, position));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 13 * sizeof(float), (void*)offsetof(OpenGLVertex, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex, color));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 13 * sizeof(float), (void*)offsetof(OpenGLVertex, color));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_uv));
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 13 * sizeof(float), (void*)offsetof(OpenGLVertex, normal));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_index));
+        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 13 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_uv));
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 13 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_index));
 
-        uint32_t indices[] =
-        {
+        uint32_t indices[] = {
             0, 1, 2,
             0, 2, 3,
             0, 1, 4,
@@ -151,7 +160,8 @@ namespace Flameberry {
 
         glGenBuffers(1, &m_IndexBufferId);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBufferId);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 18, indices, GL_STATIC_DRAW);
+        // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_TempMesh.Indices.size() * sizeof(uint32_t), m_TempMesh.Indices.data(), GL_STATIC_DRAW);
 
         glBindVertexArray(m_VertexArrayId);
 
@@ -162,6 +172,21 @@ namespace Flameberry {
             samplers[i] = i;
         glUniform1iv(GetUniformLocation("u_TextureSamplers", m_ShaderProgramId), 16, samplers);
         glUseProgram(0);
+    }
+
+    void OpenGLRenderer3D::DrawMesh(const Mesh& mesh, uint32_t textureID)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferId);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, mesh.Vertices.size() * sizeof(OpenGLVertex), mesh.Vertices.data());
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+
+        glUseProgram(m_ShaderProgramId);
+        glBindVertexArray(m_VertexArrayId);
+        glDrawElements(GL_TRIANGLES, (int)mesh.Indices.size(), GL_UNSIGNED_INT, 0);
+
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
     GLint OpenGLRenderer3D::GetUniformLocation(const std::string& name, uint32_t shaderId)

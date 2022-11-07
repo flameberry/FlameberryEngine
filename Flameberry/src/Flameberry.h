@@ -19,4 +19,6 @@
 #include "Renderer/Vulkan/VulkanRenderer.h"
 #endif
 
+#include "Renderer/ModelLoader.h"
+
 #include "Core/Timer.h"

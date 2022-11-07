@@ -3,13 +3,15 @@
 
 layout (location = 0) in vec3 a_Position;
 layout (location = 1) in vec4 a_Color;
-layout (location = 2) in vec2 a_Texture_UV;
-layout (location = 3) in float a_TextureIndex;
-layout (location = 4) in int a_EntityID;
+layout (location = 2) in vec3 a_Normal;
+layout (location = 3) in vec2 a_Texture_UV;
+layout (location = 4) in float a_TextureIndex;
+layout (location = 5) in int a_EntityID;
 
 out vec4 v_Color;
-out float v_TextureIndex;
+out vec3 v_Normal;
 out vec2 v_Texture_UV;
+out float v_TextureIndex;
 flat out int  v_EntityID;
 
 layout (std140) uniform Camera
@@ -20,8 +22,9 @@ layout (std140) uniform Camera
 void main()
 {
     v_Color = a_Color;
-    v_TextureIndex = a_TextureIndex;
+    v_Normal = a_Normal;
     v_Texture_UV = a_Texture_UV;
+    v_TextureIndex = a_TextureIndex;
     v_EntityID = a_EntityID;
 
     gl_Position = u_Camera.ModelViewProjectionMatrix * vec4(a_Position, 1.0);
@@ -34,8 +37,9 @@ layout (location = 0) out vec4 FragColor;
 layout (location = 1) out int o_EntityID;
 
 in vec4 v_Color;
-in float v_TextureIndex;
+in vec3 v_Normal;
 in vec2 v_Texture_UV;
+in float v_TextureIndex;
 flat in int v_EntityID;
 
 uniform sampler2D u_TextureSamplers[16];
@@ -48,4 +52,6 @@ void main()
         FragColor = v_Color;
     else 
         FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_Texture_UV);
+
+    // FragColor = vec4(v_Normal, 1.0);
 }

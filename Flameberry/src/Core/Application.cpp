@@ -5,6 +5,11 @@
 
 #include "ImGui/ImGuiLayer.h"
 
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/mman.h>
+
 namespace Flameberry {
     Application* Application::s_Instance;
 

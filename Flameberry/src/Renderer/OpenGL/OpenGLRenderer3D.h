@@ -9,23 +9,9 @@
 #include <GLFW/glfw3.h>
 
 #include "Renderer/PerspectiveCamera.h"
-#include "OpenGLVertex.h"
+#include "Renderer/Mesh.h"
 
 namespace Flameberry {
-    struct OpenGLVertex
-    {
-        glm::vec3 position;
-        glm::vec4 color;
-        glm::vec2 texture_uv;
-        float texture_index;
-
-        /// Default Constructor
-        OpenGLVertex()
-            : position(0.0f), color(1.0f), texture_uv(0.0f), texture_index(-1.0f)
-        {
-        }
-    };
-
     class OpenGLRenderer3D
     {
     public:
@@ -35,6 +21,7 @@ namespace Flameberry {
         void Begin(const PerspectiveCamera& camera);
         void End();
         void OnDraw();
+        void DrawMesh(const Mesh& mesh, uint32_t textureID);
         float GetAspectRatio() const { return m_AspectRatio; };
         GLint GetUniformLocation(const std::string& name, uint32_t shaderId);
     private:
@@ -49,7 +36,6 @@ namespace Flameberry {
         float m_AspectRatio = 1280.0f / 720.0f;
         glm::vec2 m_ViewportSize;
 
-        std::vector<OpenGLVertex> m_TempVertices;
-        std::vector<uint32_t> m_TempIndices;
+        Mesh m_TempMesh;
     };
 }

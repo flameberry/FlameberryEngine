@@ -228,10 +228,10 @@ void SceneHierarchyPanel::DrawComponent(Flameberry::SpriteRendererComponent& spr
         ImGui::EndDragDropTarget();
     }
 
-    uint32_t textureId;
+    uint32_t textureID;
     if (sprite.TextureFilePath == "")
-        textureId = m_DefaultTextureId;
+        textureID = m_DefaultTextureId;
     else
-        textureId = Flameberry::OpenGLRenderCommand::CreateTexture(sprite.TextureFilePath);
-    ImGui::Image(reinterpret_cast<ImTextureID>(textureId), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+        textureID = Flameberry::OpenGLRenderCommand::CreateTexture(sprite.TextureFilePath);
+    ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 }

@@ -9,7 +9,7 @@
 
 namespace Flameberry {
     struct ModelData {
-        std::vector<OpenGLVertex> Vertices;
+        std::vector<OpenGLVertex2D> Vertices;
         std::vector<uint32_t> Indices;
     };
 

@@ -4,11 +4,12 @@
 #include <glad/glad.h>
 
 #include "Core/Core.h"
+#include "Core/Timer.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
-#define TINYOBJLOADER_IMPLEMENTATION
+// #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
 namespace Flameberry {
@@ -16,6 +17,7 @@ namespace Flameberry {
 
     std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> OpenGLRenderCommand::LoadModel(const std::string& filePath)
     {
+        FL_SCOPED_TIMER("Load_Model_tiny");
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
@@ -43,13 +45,21 @@ namespace Flameberry {
                     1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
                 };
 
+                vertex.normal = {
+                    attrib.normals[3 * index.normal_index + 0],
+                    attrib.normals[3 * index.normal_index + 1],
+                    attrib.normals[3 * index.normal_index + 2]
+                };
+
                 vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+                vertex.texture_index = 0.0f;
 
                 vertices.push_back(vertex);
                 indices.push_back(indices.size());
             }
         }
-        return std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>>(vertices, indices);
+        return { vertices, indices };
     }
 
     ModelData OpenGLRenderCommand::LoadModelData(const std::string& filePath)
@@ -59,7 +69,7 @@ namespace Flameberry {
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
 
-        std::vector<OpenGLVertex> vertices;
+        std::vector<OpenGLVertex2D> vertices;
         std::vector<uint32_t> indices;
 
         FL_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str()), err);
@@ -68,7 +78,7 @@ namespace Flameberry {
         {
             for (const auto& index : shape.mesh.indices)
             {
-                OpenGLVertex vertex{};
+                OpenGLVertex2D vertex{};
 
                 vertex.position = {
                     attrib.vertices[3 * index.vertex_index + 0],
@@ -231,9 +241,9 @@ namespace Flameberry {
 
     uint32_t OpenGLRenderCommand::CreateTexture(const std::string& filePath)
     {
-        uint32_t textureId = GetTextureIdIfAvailable(filePath.c_str());
-        if (textureId)
-            return textureId;
+        uint32_t textureID = GetTextureIdIfAvailable(filePath.c_str());
+        if (textureID)
+            return textureID;
 
         stbi_set_flip_vertically_on_load(true);
 
@@ -254,8 +264,8 @@ namespace Flameberry {
             dataFormat = GL_RGB;
         }
 
-        glGenTextures(1, &textureId);
-        glBindTexture(GL_TEXTURE_2D, textureId);
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -266,8 +276,8 @@ namespace Flameberry {
         glGenerateMipmap(GL_TEXTURE_2D);
 
         stbi_image_free(data);
-        s_TextureIdCache[filePath] = textureId;
+        s_TextureIdCache[filePath] = textureID;
 
-        return textureId;
+        return textureID;
     }
 }
