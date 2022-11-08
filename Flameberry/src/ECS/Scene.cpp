@@ -19,4 +19,14 @@ namespace Flameberry {
         }
         renderer->End();
     }
+
+    void Scene::RenderScene(OpenGLRenderer3D* renderer, const PerspectiveCamera& camera)
+    {
+        renderer->Begin(camera);
+        for (const auto& entity : m_Registry->View<TransformComponent, MeshComponent>())
+        {
+            const auto& [transform, mesh] = m_Registry->Get<TransformComponent, MeshComponent>(entity);
+        }
+        renderer->End();
+    }
 }

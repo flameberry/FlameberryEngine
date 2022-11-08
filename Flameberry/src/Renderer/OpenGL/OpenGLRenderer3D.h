@@ -21,21 +21,20 @@ namespace Flameberry {
         void Begin(const PerspectiveCamera& camera);
         void End();
         void OnDraw();
-        void DrawMesh(const Mesh& mesh, uint32_t textureID);
         float GetAspectRatio() const { return m_AspectRatio; };
         GLint GetUniformLocation(const std::string& name, uint32_t shaderId);
     private:
         void UpdateViewportSize();
     private:
-        struct UniformBufferData { glm::mat4 ModelViewProjectionMatrix; };
+        struct UniformBufferData { glm::mat4 ViewProjectionMatrix; };
     private:
         GLFWwindow* m_UserGLFWwindow;
         uint32_t m_VertexArrayId, m_VertexBufferId, m_IndexBufferId, m_ShaderProgramId, m_UniformBufferId, m_TextureId;
-        std::unordered_map<std::string, GLint> m_UniformLocationCache;
         UniformBufferData m_UniformBufferData;
         float m_AspectRatio = 1280.0f / 720.0f;
         glm::vec2 m_ViewportSize;
 
         Mesh m_TempMesh;
+        Mesh m_SponzaMesh;
     };
 }

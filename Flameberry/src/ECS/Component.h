@@ -4,6 +4,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Renderer/OpenGL/OpenGLVertex.h"
+
 namespace Flameberry {
     extern uint32_t typeCounter;
 
@@ -36,5 +38,12 @@ namespace Flameberry {
     {
         std::string Tag;
         TagComponent(const std::string& tag = "Default_Entity") : Tag(tag) {}
+    };
+
+    struct MeshComponent
+    {
+        std::vector<OpenGLVertex> Vertices;
+        std::vector<uint32_t> Indices;
+        std::vector<uint32_t> TextureIDs;
     };
 }

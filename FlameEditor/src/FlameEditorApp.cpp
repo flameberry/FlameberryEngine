@@ -20,6 +20,8 @@ FlameEditorApp::FlameEditorApp()
     cameraInfo.FOV = 45.0f;
     cameraInfo.cameraPostion = glm::vec3(0, 0, 2);
     cameraInfo.cameraDirection = glm::vec3(0, 0, -1);
+    cameraInfo.zFar = 1000.0f;
+    cameraInfo.zNear = 0.1f;
 
     m_PerspectiveCamera = Flameberry::PerspectiveCamera(cameraInfo);
 }
@@ -51,32 +53,33 @@ void FlameEditorApp::OnUpdate(float delta)
 
     m_Framebuffer->ClearEntityIDAttachment();
 
-    m_PerspectiveCamera.SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
-    m_PerspectiveCamera.OnUpdate();
+    m_PerspectiveCamera.OnResize(m_ViewportSize.x / m_ViewportSize.y);
+    m_PerspectiveCamera.OnUpdate(delta);
 
     m_Renderer3D->Begin(m_PerspectiveCamera);
     m_Renderer3D->OnDraw();
     m_Renderer3D->End();
 
-    // if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-    // {
-    //     auto [mx, my] = ImGui::GetMousePos();
-    //     mx -= m_ViewportBounds[0].x;
-    //     my -= m_ViewportBounds[0].y;
-    //     glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-    //     my = viewportSize.y - my;
-    //     int mouseX = (int)mx;
-    //     int mouseY = (int)my;
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+    {
+        auto [mx, my] = ImGui::GetMousePos();
+        mx -= m_ViewportBounds[0].x;
+        my -= m_ViewportBounds[0].y;
+        glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+        my = viewportSize.y - my;
+        int mouseX = (int)mx;
+        int mouseY = (int)my;
 
-    //     if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
-    //     {
-    //         int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
-    //         if (entityID != -1)
-    //             m_SceneHierarchyPanel.SetSelectedEntity(m_Scene->GetRegistry()->GetEntityVector()[entityID]);
-    //         else
-    //             m_SceneHierarchyPanel.SetSelectedEntity(Flameberry::entity_handle{ UINT32_MAX, false });
-    //     }
-    // }
+        if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+        {
+            int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
+            // FL_LOG("EntityID: {0}", entityID);
+            // if (entityID != -1)
+            //     m_SceneHierarchyPanel.SetSelectedEntity(m_Scene->GetRegistry()->GetEntityVector()[entityID]);
+            // else
+            //     m_SceneHierarchyPanel.SetSelectedEntity(Flameberry::entity_handle{ UINT32_MAX, false });
+        }
+    }
 
     m_Framebuffer->Unbind();
 }

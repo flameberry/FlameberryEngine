@@ -14,6 +14,7 @@
 
 namespace Flameberry {
     std::unordered_map<std::string, uint32_t> OpenGLRenderCommand::s_TextureIdCache;
+    std::unordered_map<std::pair<std::string, uint32_t>, uint32_t, hash_pair> OpenGLRenderCommand::s_UniformLocationCache;
 
     std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> OpenGLRenderCommand::LoadModel(const std::string& filePath)
     {
@@ -128,6 +129,19 @@ namespace Flameberry {
         }
         stream.close();
         return std::make_tuple(ss[0].str(), ss[1].str());
+    }
+
+    uint32_t OpenGLRenderCommand::GetUniformLocation(uint32_t shaderProgramID, const std::string& uniformName)
+    {
+        std::pair<std::string, uint32_t> key = { uniformName, shaderProgramID };
+        if (s_UniformLocationCache.find(key) != s_UniformLocationCache.end())
+            return s_UniformLocationCache[key];
+
+        GLint location = glGetUniformLocation(shaderProgramID, uniformName.c_str());
+        if (location == -1)
+            FL_WARN("Uniform \"{0}\" not found!", uniformName);
+        s_UniformLocationCache[key] = location;
+        return location;
     }
 
     uint32_t OpenGLRenderCommand::CreateShader(const std::string& filePath)

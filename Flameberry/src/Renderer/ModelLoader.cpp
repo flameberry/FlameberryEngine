@@ -12,14 +12,10 @@
 #include <sys/mman.h>
 
 namespace Flameberry {
-    enum TagTypeOBJ
-    {
-        NONE = 0, VERTEX_POSITION, VERTEX_TEXTURE_UV, VERTEX_NORMAL, FACE
-    };
+    enum TagTypeOBJ { NONE = 0, VERTEX_POSITION, VERTEX_TEXTURE_UV, VERTEX_NORMAL, FACE };
 
     float ModelLoader::ParseFloat(const char* str, char delimiter)
     {
-        // FL_SCOPED_TIMER("Parse_Float");
         bool int_part_ended = false;
         float number = 0.0f;
         int i = 0;
@@ -42,7 +38,7 @@ namespace Flameberry {
         return number * (*str == '-' ? -1.0f : 1.0f);
     }
 
-    std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> ModelLoader::LoadOBJ(const std::string& modelPath)
+    std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> ModelLoader::LoadOBJ(const std::string& modelPath, int entityID)
     {
         FL_SCOPED_TIMER("Load_OBJ_v2");
         std::vector<OpenGLVertex> vertices;
@@ -52,12 +48,15 @@ namespace Flameberry {
         std::vector<float> textureUVs;
         std::vector<float> normals;
 
+        float textureIndex = 0.0f;
+
         std::vector<uint32_t> faceIndices;
         faceIndices.reserve(3);
 
         TagTypeOBJ currentTagType = TagTypeOBJ::NONE;
 
-        // Trying mmap
+        // (Use fopen with 'r') (cross platform solution)
+        // Try mmap
         int fd = open(modelPath.c_str(), O_RDONLY, S_IRUSR | S_IWUSR);
         struct stat sb;
 
@@ -135,7 +134,8 @@ namespace Flameberry {
                             vertex.position = { positions[(faceIndices[0] - 1) * 3], positions[(faceIndices[0] - 1) * 3 + 1], positions[(faceIndices[0] - 1) * 3 + 2] };
                             vertex.texture_uv = { textureUVs[(faceIndices[1] - 1) * 2], textureUVs[(faceIndices[1] - 1) * 2 + 1] };
                             vertex.normal = { normals[(faceIndices[2] - 1) * 3], normals[(faceIndices[2] - 1) * 3 + 1], normals[(faceIndices[2] - 1) * 3 + 2] };
-                            vertex.texture_index = 0.0f;
+                            vertex.texture_index = textureIndex;
+                            vertex.entityID = 0;
 
                             faceIndices.clear();
                             faceVertices++;
@@ -153,7 +153,8 @@ namespace Flameberry {
                     vertex.position = { positions[(faceIndices[0] - 1) * 3], positions[(faceIndices[0] - 1) * 3 + 1], positions[(faceIndices[0] - 1) * 3 + 2] };
                     vertex.texture_uv = { textureUVs[(faceIndices[1] - 1) * 2], textureUVs[(faceIndices[1] - 1) * 2 + 1] };
                     vertex.normal = { normals[(faceIndices[2] - 1) * 3], normals[(faceIndices[2] - 1) * 3 + 1], normals[(faceIndices[2] - 1) * 3 + 2] };
-                    vertex.texture_index = 0.0f;
+                    vertex.texture_index = textureIndex;
+                    vertex.entityID = 0;
                     faceVertices++;
 
                     faceIndices.clear();
