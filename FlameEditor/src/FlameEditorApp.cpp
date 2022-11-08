@@ -6,6 +6,8 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 
+#include "Core/UUID.h"
+
 FlameEditorApp::FlameEditorApp()
     : m_Framebuffer(Flameberry::OpenGLFramebuffer::Create()),
     m_ViewportSize(1280, 720),
@@ -24,6 +26,8 @@ FlameEditorApp::FlameEditorApp()
     cameraInfo.zNear = 0.1f;
 
     m_PerspectiveCamera = Flameberry::PerspectiveCamera(cameraInfo);
+
+    m_ContentBrowserPanel = ContentBrowserPanel();
 }
 
 FlameEditorApp::~FlameEditorApp()
@@ -107,6 +111,8 @@ void FlameEditorApp::OnUIRender()
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::Text("Last Render Time: %.3fms", m_LastRenderTime * 0.001f * 0.001f);
     ImGui::End();
+
+    m_ContentBrowserPanel.OnUIRender();
 }
 
 std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()

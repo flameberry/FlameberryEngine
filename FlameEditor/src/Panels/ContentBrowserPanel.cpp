@@ -41,6 +41,9 @@ void ContentBrowserPanel::OnUIRender()
         const std::filesystem::path& filePath = directory.path();
         std::filesystem::path relativePath = std::filesystem::relative(directory.path(), project_globals::g_AssetDirectory);
 
+        if (filePath.filename().string() == ".DS_Store")
+            continue;
+
         ImGui::PushID(filePath.filename().c_str());
         std::string ext = filePath.extension().string();
         uint32_t currentIconTextureId;
