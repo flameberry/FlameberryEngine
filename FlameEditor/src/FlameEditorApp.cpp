@@ -142,6 +142,16 @@ void FlameEditorApp::OnUpdate(float delta)
         }
     }
 
+    //     if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+    //     {
+    //         int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
+    //         FL_LOG("EntityID: {0}", entityID);
+    //         if (entityID != -1)
+    //             m_SceneHierarchyPanel.SetSelectedEntity(m_Scene->GetRegistry()->GetEntityVector()[entityID]);
+    //         else
+    //             m_SceneHierarchyPanel.SetSelectedEntity(Flameberry::entity_handle{ UINT32_MAX, false });
+    //     }
+    // }
     m_Framebuffer->Unbind();
 }
 
