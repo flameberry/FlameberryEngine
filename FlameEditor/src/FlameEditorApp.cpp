@@ -26,8 +26,6 @@ FlameEditorApp::FlameEditorApp()
     cameraInfo.zNear = 0.1f;
 
     m_PerspectiveCamera = Flameberry::PerspectiveCamera(cameraInfo);
-
-    m_ContentBrowserPanel = ContentBrowserPanel();
 }
 
 FlameEditorApp::~FlameEditorApp()
@@ -64,27 +62,26 @@ void FlameEditorApp::OnUpdate(float delta)
     m_Renderer3D->OnDraw();
     m_Renderer3D->End();
 
-    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-    {
-        auto [mx, my] = ImGui::GetMousePos();
-        mx -= m_ViewportBounds[0].x;
-        my -= m_ViewportBounds[0].y;
-        glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-        my = viewportSize.y - my;
-        int mouseX = (int)mx;
-        int mouseY = (int)my;
+    // if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+    // {
+    //     auto [mx, my] = ImGui::GetMousePos();
+    //     mx -= m_ViewportBounds[0].x;
+    //     my -= m_ViewportBounds[0].y;
+    //     glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+    //     my = viewportSize.y - my;
+    //     int mouseX = (int)mx;
+    //     int mouseY = (int)my;
 
-        if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
-        {
-            int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
-            // FL_LOG("EntityID: {0}", entityID);
-            // if (entityID != -1)
-            //     m_SceneHierarchyPanel.SetSelectedEntity(m_Scene->GetRegistry()->GetEntityVector()[entityID]);
-            // else
-            //     m_SceneHierarchyPanel.SetSelectedEntity(Flameberry::entity_handle{ UINT32_MAX, false });
-        }
-    }
-
+    //     if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+    //     {
+    //         int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
+    //         FL_LOG("EntityID: {0}", entityID);
+    //         if (entityID != -1)
+    //             m_SceneHierarchyPanel.SetSelectedEntity(m_Scene->GetRegistry()->GetEntityVector()[entityID]);
+    //         else
+    //             m_SceneHierarchyPanel.SetSelectedEntity(Flameberry::entity_handle{ UINT32_MAX, false });
+    //     }
+    // }
     m_Framebuffer->Unbind();
 }
 
@@ -111,8 +108,6 @@ void FlameEditorApp::OnUIRender()
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::Text("Last Render Time: %.3fms", m_LastRenderTime * 0.001f * 0.001f);
     ImGui::End();
-
-    m_ContentBrowserPanel.OnUIRender();
 }
 
 std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()
