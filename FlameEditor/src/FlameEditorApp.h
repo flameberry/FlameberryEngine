@@ -4,7 +4,9 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 
-class FlameEditorApp : public Flameberry::Application
+#include "Renderer/Light.h"
+
+class FlameEditorApp: public Flameberry::Application
 {
 public:
     FlameEditorApp();

@@ -3,10 +3,10 @@
 // Includes the Entrypoint of the main application
 #include "Core/EntryPoint.h"
 
+#include "Core/UUID.h"
+
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
-
-#include "Core/UUID.h"
 
 FlameEditorApp::FlameEditorApp()
     : m_Framebuffer(Flameberry::OpenGLFramebuffer::Create()),
@@ -50,7 +50,8 @@ void FlameEditorApp::OnUpdate(float delta)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    constexpr glm::vec3 clearColor(20.0f / 255.0f, 20.0f / 255.0f, 20.0f / 255.0f);
+    // constexpr glm::vec3 clearColor(20.0f / 255.0f, 20.0f / 255.0f, 20.0f / 255.0f);
+    glm::vec3 clearColor(0.0f);
     glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
 
     m_Framebuffer->ClearEntityIDAttachment();

@@ -81,6 +81,38 @@ namespace Flameberry {
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
+    void Mesh::Draw(const glm::mat4& transform, const std::vector<PointLight>& lights)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
+
+        for (uint16_t i = 0; i < TextureIDs.size(); i++)
+        {
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, TextureIDs[i]);
+        }
+
+        glUseProgram(m_ShaderProgramID);
+        glUniformMatrix4fv(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_ModelMatrix"), 1, GL_FALSE, glm::value_ptr(transform));
+        glUniform1i(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_LightCount"), (int)lights.size());
+
+        for (uint32_t i = 0; i < lights.size(); i++)
+        {
+            std::string uniformName = "u_PointLights[" + std::to_string(i) + "]";
+            const PointLight& light = lights[i];
+            glm::vec3 lightPosition = glm::mat3(glm::inverse(transform)) * light.Position;
+
+            glUniform3f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, uniformName + ".Position"), lightPosition.x, lightPosition.y, lightPosition.z);
+            glUniform4f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, uniformName + ".Color"), light.Color.x, light.Color.y, light.Color.z, light.Color.w);
+            glUniform1f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, uniformName + ".Intensity"), light.Intensity);
+        }
+
+        glBindVertexArray(m_VertexArrayID);
+        glDrawElements(GL_TRIANGLES, (int)Indices.size(), GL_UNSIGNED_INT, 0);
+
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+
     Mesh::~Mesh()
     {
     }

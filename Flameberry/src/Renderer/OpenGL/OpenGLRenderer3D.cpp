@@ -1,5 +1,4 @@
 #include "OpenGLRenderer3D.h"
-#include <vector>
 
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -51,11 +50,11 @@ namespace Flameberry {
             prevTime = crntTime;
         }
 
-        glm::mat4 model0 = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 model0 = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
         glm::mat4 model1 = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f));
 
-        m_TempMesh.Draw(model0);
-        m_SponzaMesh.Draw(model1);
+        m_TempMesh.Draw(model0, m_PointLights);
+        m_SponzaMesh.Draw(model1, m_PointLights);
     }
 
     void OpenGLRenderer3D::Init(GLFWwindow* window)
@@ -73,8 +72,36 @@ namespace Flameberry {
 #endif
         m_TextureId = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
 
-        m_TempMesh.TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/StoneIdol.jpg"));
+        m_TempMesh.TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
         m_SponzaMesh.TextureIDs.push_back(m_TextureId);
+
+        // m_PointLights.push_back(PointLight(glm::vec3(1.0f), glm::vec4(1.0f), 5.0f));
+
+        // Set point light data
+        // m_PointLights.emplace_back();
+        // m_PointLights.back().Position = glm::vec3(0.4, 1, 1);
+        // m_PointLights.back().Color = glm::vec4(0, 0, 1, 1);
+        // m_PointLights.back().Intensity = 2.0f;
+
+        // m_PointLights.emplace_back();
+        // m_PointLights.back().Position = glm::vec3(0, 0, 1.5);
+        // m_PointLights.back().Color = glm::vec4(1, 1, 0, 1);
+        // m_PointLights.back().Intensity = 2.0f;
+
+        // m_PointLights.emplace_back();
+        // m_PointLights.back().Position = glm::vec3(0, 1, 1);
+        // m_PointLights.back().Color = glm::vec4(1, 0.5, 0, 1);
+        // m_PointLights.back().Intensity = 2.0f;
+
+        m_PointLights.emplace_back();
+        m_PointLights.back().Position = glm::vec3(0, 10, 1);
+        m_PointLights.back().Color = glm::vec4(1, 0, 1, 1);
+        m_PointLights.back().Intensity = 30000.0f;
+
+        m_PointLights.emplace_back();
+        m_PointLights.back().Position = glm::vec3(10, 7.5, 1);
+        m_PointLights.back().Color = glm::vec4(1, 0.5, 0, 1);
+        m_PointLights.back().Intensity = 30000.0f;
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

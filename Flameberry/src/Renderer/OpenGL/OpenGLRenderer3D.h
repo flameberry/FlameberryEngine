@@ -29,12 +29,14 @@ namespace Flameberry {
         struct UniformBufferData { glm::mat4 ViewProjectionMatrix; };
     private:
         GLFWwindow* m_UserGLFWwindow;
-        uint32_t m_VertexArrayId, m_VertexBufferId, m_IndexBufferId, m_ShaderProgramId, m_UniformBufferId, m_TextureId;
+        uint32_t m_VertexArrayId, m_VertexBufferId, m_IndexBufferId, m_ShaderProgramId, m_UniformBufferId, m_UniformBufferId_2, m_TextureId;
         UniformBufferData m_UniformBufferData;
         float m_AspectRatio = 1280.0f / 720.0f;
         glm::vec2 m_ViewportSize;
 
         Mesh m_TempMesh;
         Mesh m_SponzaMesh;
+
+        std::vector<Flameberry::PointLight> m_PointLights;
     };
 }
