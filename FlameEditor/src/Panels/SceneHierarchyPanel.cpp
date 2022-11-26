@@ -51,6 +51,7 @@ void SceneHierarchyPanel::OnUIRender()
 
             if (ImGui::TreeNodeEx(tag.c_str(), treeNodeFlags))
                 ImGui::TreePop();
+            ImGui::Spacing();
 
             ImGui::PopStyleColor(is_selected ? 4 : 3);
 
