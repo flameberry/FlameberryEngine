@@ -20,12 +20,14 @@ namespace Flameberry {
         renderer->End();
     }
 
-    void Scene::RenderScene(OpenGLRenderer3D* renderer, const PerspectiveCamera& camera)
+    void Scene::RenderScene(OpenGLRenderer3D* renderer, const PerspectiveCamera& camera, std::vector<Mesh>* meshes, const std::vector<PointLight>& lights)
     {
         renderer->Begin(camera);
         for (const auto& entity : m_Registry->View<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = m_Registry->Get<TransformComponent, MeshComponent>(entity);
+            // (*meshes)[mesh->MeshIndex].Draw(transform->GetTransform(), camera.GetPosition(), lights);
+            (*meshes)[mesh->MeshIndex].Draw(*transform, camera.GetPosition(), lights, entity.get());
         }
         renderer->End();
     }

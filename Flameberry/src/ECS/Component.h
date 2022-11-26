@@ -4,7 +4,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Renderer/OpenGL/OpenGLVertex.h"
+#include <string>
 
 namespace Flameberry {
     extern uint32_t typeCounter;
@@ -14,8 +14,8 @@ namespace Flameberry {
     {
         static uint32_t componentCounter = typeCounter++;
         return componentCounter;
-    }
 
+    }
     struct TransformComponent
     {
         glm::vec3 translation, rotation, scale;
@@ -42,8 +42,9 @@ namespace Flameberry {
 
     struct MeshComponent
     {
-        std::vector<OpenGLVertex> Vertices;
-        std::vector<uint32_t> Indices;
-        std::vector<uint32_t> TextureIDs;
+        uint32_t MeshIndex;
+        std::string MeshPath = "";
+
+        MeshComponent() : MeshIndex(0) {}
     };
 }

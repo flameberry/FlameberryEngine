@@ -6,7 +6,7 @@
 
 #include "Renderer/Light.h"
 
-class FlameEditorApp: public Flameberry::Application
+class FlameEditorApp : public Flameberry::Application
 {
 public:
     FlameEditorApp();
@@ -21,6 +21,11 @@ private:
     double m_LastRenderTime = 0.0;
     glm::vec2 m_ViewportBounds[2];
     std::shared_ptr<Flameberry::OpenGLRenderer3D> m_Renderer3D;
+    bool m_IsCursorInsideViewport = false;
+
+    Flameberry::Mesh m_TempMesh, m_SponzaMesh, m_FloorMesh;
+    std::vector<Flameberry::Mesh> m_Meshes;
+    std::vector<Flameberry::PointLight> m_PointLights;
 private:
     SceneHierarchyPanel m_SceneHierarchyPanel;
     ContentBrowserPanel m_ContentBrowserPanel;

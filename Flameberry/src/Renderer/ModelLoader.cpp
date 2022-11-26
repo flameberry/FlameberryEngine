@@ -38,7 +38,7 @@ namespace Flameberry {
         return number * (*str == '-' ? -1.0f : 1.0f);
     }
 
-    std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> ModelLoader::LoadOBJ(const std::string& modelPath, int entityID)
+    std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> ModelLoader::LoadOBJ(const std::string& modelPath)
     {
         FL_SCOPED_TIMER("Load_OBJ_v2");
         std::vector<OpenGLVertex> vertices;
@@ -49,13 +49,14 @@ namespace Flameberry {
         std::vector<float> normals;
 
         float textureIndex = 0.0f;
+        int entityID = -1;
 
         std::vector<uint32_t> faceIndices;
         faceIndices.reserve(3);
 
         TagTypeOBJ currentTagType = TagTypeOBJ::NONE;
 
-        // (Use fopen with 'r') (cross platform solution)
+        // (Use fopen with 'r') (windows solution)
         // Try mmap
         int fd = open(modelPath.c_str(), O_RDONLY, S_IRUSR | S_IWUSR);
         struct stat sb;
@@ -120,12 +121,21 @@ namespace Flameberry {
                     uint32_t parsedInteger = 0;
                     while (*token != '\n')
                     {
+                        bool wordBreak = false;
                         if (*token == '/')
                         {
                             faceIndices.push_back(parsedInteger);
                             parsedInteger = 0;
                         }
                         else if (*token == ' ')
+                            wordBreak = true;
+                        else
+                            parsedInteger = parsedInteger * 10 + (*token) - '0';
+
+                        if (*(token + 1) == '\n')
+                            wordBreak = true;
+
+                        if (wordBreak)
                         {
                             faceIndices.push_back(parsedInteger);
                             parsedInteger = 0;
@@ -135,29 +145,13 @@ namespace Flameberry {
                             vertex.texture_uv = { textureUVs[(faceIndices[1] - 1) * 2], textureUVs[(faceIndices[1] - 1) * 2 + 1] };
                             vertex.normal = { normals[(faceIndices[2] - 1) * 3], normals[(faceIndices[2] - 1) * 3 + 1], normals[(faceIndices[2] - 1) * 3 + 2] };
                             vertex.texture_index = textureIndex;
-                            vertex.entityID = 0;
+                            vertex.entityID = entityID;
 
                             faceIndices.clear();
                             faceVertices++;
                         }
-                        else
-                        {
-                            parsedInteger = parsedInteger * 10 + (*token) - '0';
-                        }
                         token++;
                     }
-                    faceIndices.push_back(parsedInteger);
-                    parsedInteger = 0;
-
-                    auto& vertex = vertices.emplace_back();
-                    vertex.position = { positions[(faceIndices[0] - 1) * 3], positions[(faceIndices[0] - 1) * 3 + 1], positions[(faceIndices[0] - 1) * 3 + 2] };
-                    vertex.texture_uv = { textureUVs[(faceIndices[1] - 1) * 2], textureUVs[(faceIndices[1] - 1) * 2 + 1] };
-                    vertex.normal = { normals[(faceIndices[2] - 1) * 3], normals[(faceIndices[2] - 1) * 3 + 1], normals[(faceIndices[2] - 1) * 3 + 2] };
-                    vertex.texture_index = textureIndex;
-                    vertex.entityID = 0;
-                    faceVertices++;
-
-                    faceIndices.clear();
 
                     // Add indices
                     switch (faceVertices)

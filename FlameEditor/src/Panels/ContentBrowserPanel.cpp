@@ -1,10 +1,10 @@
 #include "ContentBrowserPanel.h"
 
 #include "Flameberry.h"
-#include "../project_globals.h"
+#include "../project.h"
 
 ContentBrowserPanel::ContentBrowserPanel()
-    : m_CurrentDirectory(project_globals::g_AssetDirectory)
+    : m_CurrentDirectory(project::g_AssetDirectory)
 {
     m_BackArrowIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/back_arrow_icon.png");
 }
@@ -26,11 +26,11 @@ void ContentBrowserPanel::OnUIRender()
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 
-    if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_BackArrowIconTextureId), ImVec2{ 15, 15 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project_globals::g_AssetDirectory)
+    if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_BackArrowIconTextureId), ImVec2{ 15, 15 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
         m_CurrentDirectory = m_CurrentDirectory.parent_path();
     ImGui::SameLine();
 
-    ImGui::Text("root://%s", std::filesystem::relative(m_CurrentDirectory, project_globals::g_AssetDirectory).c_str());
+    ImGui::Text("root://%s", std::filesystem::relative(m_CurrentDirectory, project::g_AssetDirectory).c_str());
 
     ImGui::Separator();
 
@@ -39,7 +39,7 @@ void ContentBrowserPanel::OnUIRender()
     for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory })
     {
         const std::filesystem::path& filePath = directory.path();
-        std::filesystem::path relativePath = std::filesystem::relative(directory.path(), project_globals::g_AssetDirectory);
+        std::filesystem::path relativePath = std::filesystem::relative(directory.path(), project::g_AssetDirectory);
 
         if (filePath.filename().string() == ".DS_Store")
             continue;

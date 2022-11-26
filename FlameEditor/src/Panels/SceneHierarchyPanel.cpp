@@ -3,10 +3,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
 
-#include "../project_globals.h"
+#include "../project.h"
+#include "../Utils.h"
 
-SceneHierarchyPanel::SceneHierarchyPanel(Flameberry::Scene* scene)
-    : m_Scene(scene), m_SelectedEntity(UINT32_MAX, false)
+SceneHierarchyPanel::SceneHierarchyPanel(Flameberry::Scene* scene, std::vector<Flameberry::Mesh>* meshes)
+    : m_Scene(scene), m_Meshes(meshes), m_SelectedEntity(UINT32_MAX, false)
 {
     m_DefaultTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
 }
@@ -28,69 +29,68 @@ void SceneHierarchyPanel::OnUIRender()
         ImGui::EndPopup();
     }
 
-    m_Scene->GetRegistry()->each([this](Flameberry::entity_handle& entity)
+    m_Scene->GetRegistry()->each([this](Flameberry::entity_handle& entity) {
+        bool should_delete_entity = false;
+        static Flameberry::entity_handle* entity_to_be_renamed = nullptr;
+
+        auto& tag = m_Scene->GetRegistry()->GetComponent<Flameberry::TagComponent>(entity)->Tag;
+
+        bool is_selected = m_SelectedEntity == entity;
+        int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+        if (!entity_to_be_renamed || entity != *entity_to_be_renamed)
+            treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+
+        ImGui::PushID(entity.get());
+
+        float textColor = is_selected ? 0.0f : 1.0f;
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        if (is_selected)
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
+
+        if (ImGui::TreeNodeEx(tag.c_str(), treeNodeFlags))
+            ImGui::TreePop();
+
+        ImGui::PopStyleColor(is_selected ? 4 : 3);
+
+        if (ImGui::IsItemClicked())
+            m_SelectedEntity = entity;
+
+        if (ImGui::BeginPopupContextItem())
         {
-            bool should_delete_entity = false;
-            static Flameberry::entity_handle* entity_to_be_renamed = nullptr;
+            if (ImGui::MenuItem("Rename"))
+                entity_to_be_renamed = &entity;
 
-            auto& tag = m_Scene->GetRegistry()->GetComponent<Flameberry::TagComponent>(entity)->Tag;
+            if (ImGui::MenuItem("Delete Entity"))
+                should_delete_entity = true;
+            ImGui::EndPopup();
+        }
 
-            bool is_selected = m_SelectedEntity == entity;
-            int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-            if (!entity_to_be_renamed || entity != *entity_to_be_renamed)
-                treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+        if (entity_to_be_renamed && *entity_to_be_renamed == entity)
+        {
+            std::string buffer(tag);
 
-            ImGui::PushID(entity.get());
+            ImGui::SameLine();
+            ImGui::SetKeyboardFocusHere();
+            ImGui::PushItemWidth(-1.0f);
 
-            float textColor = is_selected ? 0.0f : 1.0f;
-            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
-            ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-            if (is_selected)
-                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
-
-            if (ImGui::TreeNodeEx(tag.c_str(), treeNodeFlags))
-                ImGui::TreePop();
-
-            ImGui::PopStyleColor(is_selected ? 4 : 3);
-
-            if (ImGui::IsItemClicked())
-                m_SelectedEntity = entity;
-
-            if (ImGui::BeginPopupContextItem())
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
+            if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
             {
-                if (ImGui::MenuItem("Rename"))
-                    entity_to_be_renamed = &entity;
-
-                if (ImGui::MenuItem("Delete Entity"))
-                    should_delete_entity = true;
-                ImGui::EndPopup();
+                tag = buffer;
+                entity_to_be_renamed = nullptr;
             }
+            ImGui::PopStyleVar();
+        }
 
-            if (entity_to_be_renamed && *entity_to_be_renamed == entity)
-            {
-                std::string buffer(tag);
+        if (should_delete_entity)
+            m_Scene->GetRegistry()->DestroyEntity(entity);
 
-                ImGui::SameLine();
-                ImGui::SetKeyboardFocusHere();
-                ImGui::PushItemWidth(-1.0f);
+        if (m_SelectedEntity == entity)
+            m_Scene->SetSelectedEntity(&entity);
 
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
-                if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
-                {
-                    tag = buffer;
-                    entity_to_be_renamed = nullptr;
-                }
-                ImGui::PopStyleVar();
-            }
-
-            if (should_delete_entity)
-                m_Scene->GetRegistry()->DestroyEntity(entity);
-
-            if (m_SelectedEntity == entity)
-                m_Scene->SetSelectedEntity(&entity);
-
-            ImGui::PopID();
+        ImGui::PopID();
         });
 
     ImGui::End();
@@ -115,93 +115,36 @@ void SceneHierarchyPanel::OnUIRender()
             ImGui::Separator();
         }
 
+        if (m_Scene->GetRegistry()->HasComponent<Flameberry::MeshComponent>(m_SelectedEntity))
+        {
+            ImGui::Spacing();
+            auto& sprite = *m_Scene->GetRegistry()->GetComponent<Flameberry::MeshComponent>(m_SelectedEntity);
+            DrawComponent(sprite);
+            ImGui::Spacing();
+            ImGui::Separator();
+        }
+
         if (ImGui::BeginPopupContextWindow((const char*)__null, ImGuiMouseButton_Right, false))
         {
             if (ImGui::MenuItem("Transform Component"))
                 m_Scene->GetRegistry()->AddComponent<Flameberry::TransformComponent>(m_SelectedEntity);
             if (ImGui::MenuItem("Sprite Renderer Component"))
                 m_Scene->GetRegistry()->AddComponent<Flameberry::SpriteRendererComponent>(m_SelectedEntity);
+            if (ImGui::MenuItem("Mesh Component"))
+                m_Scene->GetRegistry()->AddComponent<Flameberry::MeshComponent>(m_SelectedEntity);
             ImGui::EndPopup();
         }
     }
     ImGui::End();
 }
 
-void SceneHierarchyPanel::DrawVec3Control(const std::string& label, glm::vec3& value, float defaultValue, float dragSpeed)
-{
-    float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-    ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
-
-    ImGuiIO& io = ImGui::GetIO();
-    auto boldFont = io.Fonts->Fonts[0];
-
-    ImGui::PushID(label.c_str());
-
-    ImGui::Columns(2);
-    ImGui::SetColumnWidth(0, 70.0f);
-    ImGui::Text("%s", label.c_str());
-    ImGui::NextColumn();
-
-    ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
-
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
-
-    ImGui::PushFont(boldFont);
-    if (ImGui::Button("X", buttonSize))
-        value.x = defaultValue;
-    ImGui::PopFont();
-    ImGui::PopStyleColor(3);
-
-    ImGui::SameLine();
-    ImGui::DragFloat("##X", &value.x, dragSpeed, 0.0f, 0.0f, "%.2f");
-    ImGui::PopItemWidth();
-    ImGui::SameLine();
-
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
-
-    ImGui::PushFont(boldFont);
-    if (ImGui::Button("Y", buttonSize))
-        value.y = defaultValue;
-    ImGui::PopFont();
-    ImGui::PopStyleColor(3);
-
-    ImGui::SameLine();
-    ImGui::DragFloat("##Y", &value.y, dragSpeed, 0.0f, 0.0f, "%.2f");
-    ImGui::PopItemWidth();
-    ImGui::SameLine();
-
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
-
-    ImGui::PushFont(boldFont);
-    if (ImGui::Button("Z", buttonSize))
-        value.z = defaultValue;
-    ImGui::PopFont();
-    ImGui::PopStyleColor(3);
-
-    ImGui::SameLine();
-    ImGui::DragFloat("##Z", &value.z, dragSpeed, 0.0f, 0.0f, "%.2f");
-    ImGui::PopItemWidth();
-    ImGui::PopStyleVar();
-
-    ImGui::Columns(1);
-
-    ImGui::PopID();
-}
-
 void SceneHierarchyPanel::DrawComponent(Flameberry::TransformComponent& transform)
 {
-    DrawVec3Control("Translation", transform.translation, 0.0f, 0.01f);
+    Utils::DrawVec3Control("Translation", transform.translation, 0.0f, 0.01f);
     ImGui::Spacing();
-    DrawVec3Control("Rotation", transform.rotation, 0.0f, 0.01f);
+    Utils::DrawVec3Control("Rotation", transform.rotation, 0.0f, 0.01f);
     ImGui::Spacing();
-    DrawVec3Control("Scale", transform.scale, 1.0f, 0.01f);
+    Utils::DrawVec3Control("Scale", transform.scale, 1.0f, 0.01f);
 }
 
 void SceneHierarchyPanel::DrawComponent(Flameberry::SpriteRendererComponent& sprite)
@@ -215,7 +158,7 @@ void SceneHierarchyPanel::DrawComponent(Flameberry::SpriteRendererComponent& spr
         {
             std::string path = (const char*)payload->Data;
             std::filesystem::path texturePath{ path };
-            texturePath = project_globals::g_AssetDirectory / texturePath;
+            texturePath = project::g_AssetDirectory / texturePath;
             const std::string& ext = texturePath.extension().string();
 
             FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
@@ -234,4 +177,49 @@ void SceneHierarchyPanel::DrawComponent(Flameberry::SpriteRendererComponent& spr
     else
         textureID = Flameberry::OpenGLRenderCommand::CreateTexture(sprite.TextureFilePath);
     ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+}
+
+void SceneHierarchyPanel::DrawComponent(Flameberry::MeshComponent& mesh)
+{
+    std::string modelPathAccepted = "";
+
+    ImGui::Button("Load Mesh");
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+        {
+            std::string path = (const char*)payload->Data;
+            std::filesystem::path modelPath{ path };
+            modelPath = project::g_AssetDirectory / modelPath;
+            const std::string& ext = modelPath.extension().string();
+
+            FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+
+            if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
+                modelPathAccepted = modelPath.string();
+            else
+                FL_WARN("Bad File given as Model!");
+        }
+        ImGui::EndDragDropTarget();
+    }
+
+    if (modelPathAccepted != "")
+    {
+        auto [vertices, indices] = Flameberry::ModelLoader::LoadOBJ(modelPathAccepted);
+        m_Meshes->emplace_back(vertices, indices);
+        mesh.MeshIndex = m_Meshes->size() - 1;
+    }
+
+    if (ImGui::BeginCombo("##combo", std::to_string(mesh.MeshIndex).c_str())) // The second parameter is the label previewed before opening the combo.
+    {
+        for (int n = 0; n < m_Meshes->size(); n++)
+        {
+            bool is_selected = (mesh.MeshIndex == n); // You can store your selection however you want, outside or inside your objects
+            if (ImGui::Selectable(std::to_string(n).c_str(), is_selected))
+                mesh.MeshIndex = n;
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+        }
+        ImGui::EndCombo();
+    }
 }

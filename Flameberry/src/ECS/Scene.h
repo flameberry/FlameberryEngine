@@ -13,7 +13,7 @@ namespace Flameberry {
 
         Registry* GetRegistry() { return m_Registry; }
         void RenderScene(OpenGLRenderer2D* renderer, const OrthographicCamera& camera);
-        void RenderScene(OpenGLRenderer3D* renderer, const PerspectiveCamera& camera);
+        void RenderScene(OpenGLRenderer3D* renderer, const PerspectiveCamera& camera, std::vector<Mesh>* meshes, const std::vector<PointLight>& lights);
         void SetSelectedEntity(entity_handle* entity) { m_SelectedEntity = entity; }
     private:
         entity_handle* m_SelectedEntity = nullptr;

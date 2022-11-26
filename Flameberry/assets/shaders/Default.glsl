@@ -37,9 +37,6 @@ void main()
     v_TextureIndex = a_TextureIndex;
     v_EntityID = a_EntityID;
 
-    // mat3 normalMatrix = inverse(mat3(u_ModelMatrix));
-    // v_Normal = normalize(v_Normal * normalMatrix);
-
     gl_Position = u_Camera.ViewProjectionMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
 }
 
@@ -70,6 +67,8 @@ uniform sampler2D u_TextureSamplers[16];
 uniform int u_LightCount;
 uniform PointLight u_PointLights[10];
 
+uniform vec3 u_CameraPosition;
+
 void main()
 {
     o_EntityID = v_EntityID;
@@ -78,38 +77,42 @@ void main()
     for (int i = 0; i < u_LightCount; i++)
     {
         PointLight pointLight = u_PointLights[i];
-        float ambient = 0.0;
-        vec3 lightColor = vec3(pointLight.Color.xyz);
+
+        float ambientIntensity = 0.2;
+        vec3 ambientColor = ambientIntensity * pointLight.Color.xyz;
+
         vec3 lightDir = v_Position - pointLight.Position;
         float distance = length(lightDir);
         lightDir = normalize(lightDir);
 
-        float constant = 1.0, linear = 1.0, exp = 1.0;
+        vec3 diffuseColor = vec3(0.0);
+        vec3 specularColor = vec3(0.0);
+        float diffuseFactor = dot(v_Normal, -lightDir);
+
+        if (diffuseFactor >= 0.0)
+            diffuseColor = pointLight.Color.xyz * diffuseFactor * pointLight.Intensity;
+
+        vec3 pixelToCamera = normalize(u_CameraPosition - v_Position);
+        vec3 reflectedLight = normalize(reflect(lightDir, v_Normal));
+        float specularFactor = dot(pixelToCamera, reflectedLight);
+
+        if (specularFactor >= 0.0)
+        {
+            float specularExponent = 16.0;
+            // float specularExponent = texture(u_TextureSamplers[1], v_Texture_UV).r * 255.0;
+            // specularFactor = pow(specularFactor, specularExponent) * texture(u_TextureSamplers[1], v_Texture_UV).r;
+            specularFactor = pow(specularFactor, specularExponent);
+
+            float specularIntensity = 5.0;
+            specularColor = pointLight.Color.xyz * specularFactor * specularIntensity;
+        }
+
+        float constant = 1.0, linear = 1.0, exp = 0.2;
         float attenuation = constant + linear * distance + exp * distance * distance;
 
-        float lightIntensity = clamp(dot(v_Normal, -lightDir), 0.0, 1.0);
-        vec3 lightMultiplier = lightColor * lightIntensity;
-
-        color += (lightMultiplier * pointLight.Intensity + ambient) / attenuation;
+        color += (ambientColor + diffuseColor + specularColor) / attenuation;
+        // color += (ambientColor + diffuseColor) / attenuation;
     }
-
-    // Do the light calculations
-    // float ambient = 0.5;
-    // vec3 lightColor = vec3(u_PointLight.Color.xyz);
-    // vec3 lightDir = v_Position - u_PointLight.Position;
-    // float distance = length(lightDir);
-    // lightDir = normalize(lightDir);
-
-    // float constant = 1.0, linear = 1.0, exp = 1.0;
-    // float attenuation = constant + linear * distance + exp * distance * distance;
-
-    // float lightIntensity = clamp(dot(v_Normal, -lightDir), 0.0, 1.0);
-    // vec3 lightMultiplier = lightColor * lightIntensity;
-
-    // if (v_TextureIndex == -1)
-    //     FragColor = v_Color * vec4(lightMultiplier + ambient, 1.0);
-    // else 
-    //     FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_Texture_UV) * vec4((lightMultiplier * u_PointLight.Intensity + ambient) / attenuation, 1.0);
 
     if (v_TextureIndex == -1)
         FragColor = v_Color * vec4(color, 1.0);
@@ -117,6 +120,7 @@ void main()
         FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_Texture_UV) * vec4(color, 1.0);
 
     // FragColor = v_Color * vec4(color, 1.0);
-    // FragColor = vec4(color, 1.0);
+    // FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_Texture_UV);
+
     FragColor = clamp(FragColor, 0.0, 1.0);
 }

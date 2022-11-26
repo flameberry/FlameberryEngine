@@ -33,10 +33,5 @@ namespace Flameberry {
         UniformBufferData m_UniformBufferData;
         float m_AspectRatio = 1280.0f / 720.0f;
         glm::vec2 m_ViewportSize;
-
-        Mesh m_TempMesh;
-        Mesh m_SponzaMesh;
-
-        std::vector<Flameberry::PointLight> m_PointLights;
     };
 }

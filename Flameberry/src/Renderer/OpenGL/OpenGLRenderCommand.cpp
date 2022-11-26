@@ -267,15 +267,26 @@ namespace Flameberry {
         FL_DO_ON_ASSERT(data, FL_ERROR("Failed to load texture from \"{0}\"", filePath));
 
         GLenum internalFormat = 0, dataFormat = 0;
-        if (channels == 4)
+        switch (channels)
+        {
+        case 4:
         {
             internalFormat = GL_RGBA8;
             dataFormat = GL_RGBA;
+            break;
         }
-        else if (channels == 3)
+        case 3:
         {
             internalFormat = GL_RGB8;
             dataFormat = GL_RGB;
+            break;
+        }
+        case 1:
+        {
+            internalFormat = GL_RGBA;
+            dataFormat = GL_RED;
+            break;
+        }
         }
 
         glGenTextures(1, &textureID);
