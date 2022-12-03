@@ -10,8 +10,7 @@ namespace Flameberry {
 
         PerspectiveCameraInfo()
             : cameraPostion(0, 0, 0), cameraDirection(0, 0, -1), aspectRatio(1280.0f / 720.0f), FOV(45.0f), zNear(0.1f), zFar(1000.0f)
-        {
-        }
+        {}
     };
 
     class PerspectiveCamera

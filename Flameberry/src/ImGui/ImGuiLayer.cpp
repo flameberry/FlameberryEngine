@@ -88,7 +88,11 @@ namespace Flameberry {
 
     void ImGuiLayer::SetupImGuiStyle()
     {
-        auto& colors = ImGui::GetStyle().Colors;
+        auto& style = ImGui::GetStyle();
+        style.FrameRounding = 4;
+        style.PopupRounding = 9;
+
+        auto& colors = style.Colors;
         colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
 
         // Headers
