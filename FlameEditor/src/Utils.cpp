@@ -5,6 +5,8 @@
 
 void Utils::DrawVec3Control(const std::string& label, glm::vec3& value, float defaultValue, float dragSpeed)
 {
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
+
     float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
     ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
 
@@ -69,4 +71,6 @@ void Utils::DrawVec3Control(const std::string& label, glm::vec3& value, float de
     ImGui::Columns(1);
 
     ImGui::PopID();
+
+    ImGui::PopStyleVar();
 }

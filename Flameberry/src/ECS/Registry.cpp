@@ -2,14 +2,14 @@
 #include "Core/Core.h"
 
 namespace Flameberry {
-    entity_handle Registry::CreateEntity()
+    entity_handle& Registry::CreateEntity()
     {
         if (m_FreeEntities.size())
         {
             uint32_t id = m_FreeEntities.back();
             m_Entities[id] = entity_handle{ id };
             m_FreeEntities.pop_back();
-            return entity_handle{ id };
+            return m_Entities[id];
         }
         m_Entities.emplace_back(m_Entities.size());
         return m_Entities.back();

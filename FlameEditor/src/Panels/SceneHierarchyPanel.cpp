@@ -96,24 +96,26 @@ namespace Flameberry {
 
         ImGui::End();
 
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5, 5 });
         ImGui::Begin("Inspector");
-        // ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen;
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen;
         if (m_SelectedEntity.is_valid())
         {
             if (m_ActiveScene->m_Registry->HasComponent<Flameberry::TransformComponent>(m_SelectedEntity))
             {
-                if (ImGui::CollapsingHeader("Transform Component"))
+                if (ImGui::CollapsingHeader("Transform Component", flags))
                 {
                     auto& transform = *m_ActiveScene->m_Registry->GetComponent<Flameberry::TransformComponent>(m_SelectedEntity);
+                    ImGui::Spacing();
                     DrawComponent(transform);
+                    ImGui::Spacing();
                     ImGui::Spacing();
                 }
             }
 
-
             if (m_ActiveScene->m_Registry->HasComponent<Flameberry::SpriteRendererComponent>(m_SelectedEntity))
             {
-                if (ImGui::CollapsingHeader("Sprite Renderer Component"))
+                if (ImGui::CollapsingHeader("Sprite Renderer Component", flags))
                 {
                     auto& sprite = *m_ActiveScene->m_Registry->GetComponent<Flameberry::SpriteRendererComponent>(m_SelectedEntity);
                     DrawComponent(sprite);
@@ -121,12 +123,12 @@ namespace Flameberry {
                 }
             }
 
-
             if (m_ActiveScene->m_Registry->HasComponent<Flameberry::MeshComponent>(m_SelectedEntity))
             {
-                if (ImGui::CollapsingHeader("Mesh Component"))
+                if (ImGui::CollapsingHeader("Mesh Component", flags))
                 {
                     auto& mesh = *m_ActiveScene->m_Registry->GetComponent<Flameberry::MeshComponent>(m_SelectedEntity);
+                    ImGui::Spacing();
                     DrawComponent(mesh);
                 }
             }
@@ -143,6 +145,7 @@ namespace Flameberry {
             }
         }
         ImGui::End();
+        ImGui::PopStyleVar();
     }
 
     void SceneHierarchyPanel::DrawComponent(Flameberry::TransformComponent& transform)
@@ -212,7 +215,6 @@ namespace Flameberry {
 
         ImGui::SameLine();
 
-
         if (modelPathAccepted != "")
         {
             auto [vertices, indices] = Flameberry::ModelLoader::LoadOBJ(modelPathAccepted);
@@ -221,20 +223,53 @@ namespace Flameberry {
         }
 
         // Mesh Menu
-        if (ImGui::BeginCombo("##combo", std::to_string(mesh.MeshIndex).c_str())) // The second parameter is the label previewed before opening the combo.
+        if (ImGui::BeginCombo("##combo", m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex].Name.c_str())) // The second parameter is the label previewed before opening the combo.
         {
             for (int n = 0; n < m_ActiveScene->m_SceneData.Meshes.size(); n++)
             {
                 bool is_selected = (mesh.MeshIndex == n); // You can store your selection however you want, outside or inside your objects
-                if (ImGui::Selectable(std::to_string(n).c_str(), is_selected))
+                if (ImGui::Selectable(m_ActiveScene->m_SceneData.Meshes[n].Name.c_str(), is_selected))
                     mesh.MeshIndex = n;
                 if (is_selected)
                     ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
             }
             ImGui::EndCombo();
         }
-
         ImGui::Spacing();
+
+        // Mesh Texture Options
+        auto& currentMesh = m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex];
+        bool isMeshTextured = currentMesh.TextureIDs.size() ? 1 : 0;
+        uint32_t currentTextureID = isMeshTextured ? currentMesh.TextureIDs[0] : m_DefaultTextureId;
+        std::string textureFilePath = "";
+
+        ImGui::Image(reinterpret_cast<ImTextureID>(currentTextureID), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+            {
+                std::string path = (const char*)payload->Data;
+                std::filesystem::path texturePath{ path };
+                texturePath = project::g_AssetDirectory / texturePath;
+                const std::string& ext = texturePath.extension().string();
+
+                FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+
+                if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
+                    textureFilePath = texturePath.string();
+                else
+                    FL_WARN("Bad File given as Texture!");
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        if (textureFilePath != "")
+        {
+            if (isMeshTextured)
+                currentMesh.TextureIDs[0] = Flameberry::OpenGLRenderCommand::CreateTexture(textureFilePath);
+            else
+                currentMesh.TextureIDs.emplace_back() = Flameberry::OpenGLRenderCommand::CreateTexture(textureFilePath);
+        }
 
         // Material Menu
         ImGui::Text("Material");
@@ -253,10 +288,10 @@ namespace Flameberry {
 
         ImGui::SameLine();
 
-        uint32_t plus_icon_textureID = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/plus_icon.png");
-        uint32_t minus_icon_textureID = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/minus_icon.png");
+        uint32_t plusIconTextureID = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/plus_icon.png");
+        uint32_t minusIconTextureID = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/minus_icon.png");
 
-        if (ImGui::ImageButton(reinterpret_cast<void*>(plus_icon_textureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
+        if (ImGui::ImageButton(reinterpret_cast<void*>(plusIconTextureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
         {
             mesh.MaterialName = "Material_" + std::to_string(m_ActiveScene->m_SceneData.Materials.size());
             m_ActiveScene->m_SceneData.Materials[mesh.MaterialName] = Material();
@@ -264,7 +299,7 @@ namespace Flameberry {
 
         ImGui::SameLine();
 
-        if (ImGui::ImageButton(reinterpret_cast<void*>(minus_icon_textureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
+        if (ImGui::ImageButton(reinterpret_cast<void*>(minusIconTextureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
         {
             m_ActiveScene->m_SceneData.Materials.erase(mesh.MaterialName);
             mesh.MaterialName = "Default";

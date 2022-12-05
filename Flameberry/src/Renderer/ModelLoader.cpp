@@ -12,7 +12,8 @@
 #include <sys/mman.h>
 
 namespace Flameberry {
-    enum TagTypeOBJ { NONE = 0, OBJECT, VERTEX_POSITION, VERTEX_TEXTURE_UV, VERTEX_NORMAL, FACE };
+    enum class TagTypeOBJ { NONE = 0, OBJECT, MTLLIB, VERTEX_POSITION, VERTEX_TEXTURE_UV, VERTEX_NORMAL, FACE };
+    enum class TagTypeMTL { NONE = 0, NEWMTL };
 
     float ModelLoader::ParseFloat(const char* str, char delimiter)
     {
@@ -50,7 +51,7 @@ namespace Flameberry {
         std::vector<float> normals;
         std::vector<std::string> objectNames;
 
-        float textureIndex = 0.0f;
+        float textureIndex = -1.0f;
         int entityID = -1;
 
         std::vector<uint32_t> faceIndices;
@@ -210,7 +211,7 @@ namespace Flameberry {
         return { vertices, indices };
     }
 
-    void ModelLoader::LoadOBJ(const std::string& modelPath, std::vector<Mesh>* targetMeshes)
+    void ModelLoader::LoadOBJ(const std::string& modelPath, std::vector<Mesh>* outMeshes/*, std::vector<Material>* outMaterials*/)
     {
         FL_ASSERT(modelPath.find(".obj", modelPath.size() - 5) != std::string::npos, "ModelLoader: Given file is not an OBJ file!");
         FL_SCOPED_TIMER("Load_OBJ_v2");
@@ -221,6 +222,8 @@ namespace Flameberry {
         std::vector<float> textureUVs;
         std::vector<float> normals;
         std::vector<std::string> objectNames;
+
+        std::string materialPath;
 
         float textureIndex = 0.0f;
         int entityID = -1;
@@ -268,13 +271,26 @@ namespace Flameberry {
 
                 if (objectNames.size())
                 {
-                    auto& mesh = targetMeshes->emplace_back(vertices, indices, objectNames.back());
+                    auto& mesh = outMeshes->emplace_back(vertices, indices, objectNames.back());
                     vertices.clear();
                     indices.clear();
                 }
 
                 objectNames.emplace_back();
                 objectNames.back().reserve(strcspn(token, "\n"));
+            }
+            else if (!strncmp(token, "mtllib", 6))
+            {
+                currentTagType = TagTypeOBJ::MTLLIB;
+                token += 7;
+
+                uint32_t span = strcspn(token, "\n");
+                materialPath.reserve(span);
+                for (uint32_t i = 0; i < span; i++)
+                    materialPath += token[i];
+
+                token++;
+                continue;
             }
             else
             {
@@ -383,7 +399,7 @@ namespace Flameberry {
         }
         if (vertices.size() && indices.size())
         {
-            auto& mesh = targetMeshes->emplace_back(vertices, indices, objectNames.back());
+            auto& mesh = outMeshes->emplace_back(vertices, indices, objectNames.back());
             vertices.clear();
             indices.clear();
         }
@@ -391,5 +407,40 @@ namespace Flameberry {
         if (munmap((void*)file_in_memory, sb.st_size) == -1)
             FL_ERROR("Failed to unmap contents of file: {0}", modelPath);
         close(fd);
+
+        // ReadMTLFile(materialPath, *outMaterials);
     }
+
+    // void ModelLoader::ReadMTLFile(const std::string& mtlPath, std::vector<Material>& outMaterials)
+    // {
+    //     // Reading Material
+    //     int mtlfile = open(mtlPath.c_str(), O_RDONLY, S_IRUSR | S_IWUSR);
+    //     struct stat mtlsb;
+
+    //     if (fstat(mtlfile, &mtlsb) == -1)
+    //         FL_ERROR("Couldn't get the file size!");
+
+    //     char* file_in_memory = (char*)mmap(NULL, mtlsb.st_size, PROT_READ, MAP_FILE | MAP_PRIVATE, mtlfile, 0);
+    //     char* token = file_in_memory;
+
+    //     TagTypeMTL currentTagType = TagTypeMTL::NONE;
+    //     std::vector<std::string> mtlNames;
+
+    //     while (*token != '\0')
+    //     {
+    //         // Determining the current line tag
+    //         if (!strncmp(token, "newmtl", 6))
+    //         {
+    //             currentTagType = TagTypeMTL::NEWMTL;
+    //             token += 7;
+
+    //             mtlNames.emplace_back();
+    //             mtlNames.back().reserve(strcspn(token, "\n"));
+    //         }
+    //     }
+
+    //     if (munmap((void*)file_in_memory, mtlsb.st_size) == -1)
+    //         FL_ERROR("Failed to unmap contents of file: {0}", mtlPath);
+    //     close(mtlfile);
+    // }
 }

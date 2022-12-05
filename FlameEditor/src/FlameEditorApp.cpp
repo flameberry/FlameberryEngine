@@ -32,13 +32,17 @@ namespace Flameberry {
 
         auto [vertices, alt_indices] = Flameberry::ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
         m_TempMesh = Flameberry::Mesh{ vertices, alt_indices };
+        m_TempMesh.Name = "Sphere";
+
         auto [v, i] = Flameberry::ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
         m_SponzaMesh = Flameberry::Mesh{ v, i };
+        m_SponzaMesh.Name = "Sponza";
 
         auto [v1, i1] = Flameberry::ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/cylinder.obj");
         Flameberry::Mesh mesh{ v1, i1 };
+        mesh.Name = "Cylinder";
 
-        m_TempMesh.TextureIDs.push_back(Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
+        // m_TempMesh.TextureIDs.push_back(Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
         m_SponzaMesh.TextureIDs.push_back(Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
 
         m_FloorMesh.Vertices.emplace_back();
@@ -113,17 +117,17 @@ namespace Flameberry {
         m_SceneHierarchyPanel = SceneHierarchyPanel(m_ActiveScene.get());
         m_ContentBrowserPanel = ContentBrowserPanel();
 
-        // int i = 0;
+        // int inc = 0;
         // for (const auto& mesh : meshes)
         // {
         //     Flameberry::entity_handle entity = m_Registry->CreateEntity();
         //     m_Registry->AddComponent<Flameberry::TransformComponent>(entity);
         //     m_Registry->AddComponent<Flameberry::TagComponent>(entity)->Tag = mesh.Name;
         //     auto meshComponent = m_Registry->AddComponent<Flameberry::MeshComponent>(entity);
-        //     meshComponent->MeshIndex = i;
+        //     meshComponent->MeshIndex = inc;
 
         //     m_ActiveScene->LoadMesh(mesh);
-        //     i++;
+        //     inc++;
         // }
 
         m_ActiveScene->LoadMesh(m_TempMesh);
@@ -138,6 +142,10 @@ namespace Flameberry {
 
         m_DirectionalLight.Direction = { -1.0f, -1.0f, -1.0f };
         m_ActiveScene->SetDirectionalLight(m_DirectionalLight);
+
+        // Testing
+        // SceneSerializer serializer(m_ActiveScene.get());
+        // serializer.DeserializeScene(FL_PROJECT_DIR"FlameEditor/assets/scenes/scene.berry");
     }
 
     FlameEditorApp::~FlameEditorApp()
@@ -248,6 +256,8 @@ namespace Flameberry {
 
         m_SceneHierarchyPanel.OnUIRender();
         m_ContentBrowserPanel.OnUIRender();
+
+        // ImGui::ShowDemoWindow();
     }
 
     std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()

@@ -235,6 +235,18 @@ namespace Flameberry {
             for (auto& vertex : Vertices)
                 vertex.entityID = m_EntityID;
         }
+        if (m_TextureIndex == -1.0f && TextureIDs.size())
+        {
+            m_TextureIndex = 0.0f;
+            for (auto& vertex : Vertices)
+                vertex.texture_index = m_TextureIndex;
+        }
+        else if (m_TextureIndex == 0.0f && !TextureIDs.size())
+        {
+            m_TextureIndex = -1.0f;
+            for (auto& vertex : Vertices)
+                vertex.texture_index = m_TextureIndex;
+        }
 
         glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
         glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());

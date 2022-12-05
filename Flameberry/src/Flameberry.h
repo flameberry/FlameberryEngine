@@ -17,6 +17,7 @@
 #include "Renderer/OpenGL/OpenGLFramebuffer.h"
 
 #include "ECS/Scene.h"
+#include "ECS/SceneSerializer.h"
 #elif defined(FL_USE_VULKAN_API)
 #include "Renderer/Vulkan/VulkanRenderer.h"
 #endif

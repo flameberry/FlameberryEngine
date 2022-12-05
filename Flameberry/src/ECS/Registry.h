@@ -16,7 +16,7 @@ namespace Flameberry {
         Registry() = default;
         ~Registry() = default;
 
-        entity_handle CreateEntity();
+        entity_handle& CreateEntity();
         void DestroyEntity(entity_handle& entity);
 
         template <typename Fn>
@@ -138,7 +138,7 @@ namespace Flameberry {
         int smallestPool = 0;
         for (const auto& id : componentIds)
         {
-            if (m_ComponentPools[smallestPool]->size() > m_ComponentPools[id]->size())
+            if (m_ComponentPools.size() < id && m_ComponentPools[smallestPool]->size() > m_ComponentPools[id]->size() && m_ComponentPools[id]->size())
                 smallestPool = id;
         }
 

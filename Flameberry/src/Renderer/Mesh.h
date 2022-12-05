@@ -40,5 +40,6 @@ namespace Flameberry {
     private:
         uint32_t m_VertexArrayID, m_VertexBufferID, m_IndexBufferID, m_ShaderProgramID;
         int m_EntityID = -1;
+        float m_TextureIndex = -1.0f;
     };
 }

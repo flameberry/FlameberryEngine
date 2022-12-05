@@ -1,0 +1,17 @@
+{
+    "Scene": "Untitled",
+    "Entities": [
+        {
+            "entityID": 0,
+            "TagComponent": "Player",
+            "TransformComponent": [0.0, 0.0, 0.0, 3.0, 5.0, -2.0, 1.0, 1.0, 1.0],
+            "MeshComponent": { "MeshIndex": 0, "MaterialName": "YELLOW_NON_METAL"}
+        },
+        {
+            "entityID": 1,
+            "TagComponent": "Enemy",
+            "TransformComponent": [1.0, 1.0, -1.0, 1.0, 6.0, -0.5, 2.0, 2.0, 2.0],
+            "MeshComponent": { "MeshIndex": 1, "MaterialName": "METAL" }
+        }
+    ]
+}

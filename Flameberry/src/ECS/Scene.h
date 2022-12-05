@@ -11,6 +11,7 @@
 namespace Flameberry {
     struct SceneData
     {
+        std::string Name = "Untitled";
         std::vector<Mesh> Meshes;
         std::unordered_map<std::string, Material> Materials;
         DirectionalLight DirLight;
@@ -20,7 +21,7 @@ namespace Flameberry {
     class Scene
     {
     public:
-        Scene(Registry* registry);
+        Scene(Registry* registry = nullptr);
         ~Scene() = default;
 
         Registry* GetRegistry() { return m_Registry; }
@@ -36,5 +37,6 @@ namespace Flameberry {
         SceneData m_SceneData;
 
         friend class SceneHierarchyPanel;
+        friend class SceneSerializer;
     };
 }

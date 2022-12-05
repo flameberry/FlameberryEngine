@@ -86,10 +86,12 @@ struct Material
 //     int LightCount;
 // } u_Lighting;
 
-uniform vec3 u_CameraPosition;
-
 uniform sampler2D u_TextureSamplers[16];
 
+// uniform int u_NormalMapIndex;
+// uniform int u_SpecularMapIndex;
+
+uniform vec3 u_CameraPosition;
 uniform int u_LightCount;
 uniform PointLight u_PointLights[10];
 uniform DirectionalLight u_DirectionalLight;
@@ -97,13 +99,20 @@ uniform Material u_Material;
 
 #define PI 3.1415926535897932384626433832795
 
+vec3 GetPixelColor()
+{
+    if (v_TextureIndex == -1.0)
+        return u_Material.Albedo;
+    return texture(u_TextureSamplers[int(v_TextureIndex)], v_Texture_UV).xyz;
+}
+
 // PBR Lighting
 vec3 SchlickFresnel(float v_dot_h)
 {
     vec3 F0 = vec3(0.04);
 
     if (u_Material.IsMetal) {
-        F0 = u_Material.Albedo;
+        F0 = GetPixelColor();
     }
 
     vec3 ret = F0 + (1 - F0) * pow(clamp(1.0 - v_dot_h, 0.0, 1.0), 5);
@@ -153,9 +162,8 @@ vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
     
     vec3 fLambert = vec3(0.0);
     
-    if (!u_Material.IsMetal)
-    {
-        fLambert = u_Material.Albedo;
+    if (!u_Material.IsMetal) {
+        fLambert = GetPixelColor();
     }
     
     vec3 diffuseBRDF = kD * fLambert / PI;
@@ -194,9 +202,8 @@ vec3 CalculatePBRPointLight(PointLight light, vec3 normal)
     
     vec3 fLambert = vec3(0.0);
     
-    if (!u_Material.IsMetal)
-    {
-        fLambert = u_Material.Albedo;
+    if (!u_Material.IsMetal) {
+        fLambert = GetPixelColor();
     }
     
     vec3 diffuseBRDF = kD * fLambert / PI;
@@ -223,6 +230,7 @@ vec4 CalculatePBRLighting()
 void main()
 {
     o_EntityID = v_EntityID;
+    FragColor = CalculatePBRLighting();
 
 //    vec3 color = vec3(0.0);
 //    for (int i = 0; i < u_LightCount; i++)
@@ -274,6 +282,4 @@ void main()
     // FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_Texture_UV);
 
     // FragColor = clamp(FragColor, 0.0, 1.0);
-
-    FragColor = CalculatePBRLighting();
 }
