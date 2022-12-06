@@ -225,7 +225,7 @@ namespace Flameberry {
 
         std::string materialPath;
 
-        float textureIndex = 0.0f;
+        float textureIndex = -1.0f;
         int entityID = -1;
 
         std::vector<uint32_t> faceIndices;

@@ -23,6 +23,7 @@ namespace Flameberry {
     void Scene::RenderScene(OpenGLRenderer3D* renderer, const PerspectiveCamera& camera, const std::vector<PointLight>& lights)
     {
         renderer->Begin(camera);
+        m_SceneData.ActiveSkybox.OnDraw(camera);
         for (const auto& entity : m_Registry->View<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = m_Registry->Get<TransformComponent, MeshComponent>(entity);

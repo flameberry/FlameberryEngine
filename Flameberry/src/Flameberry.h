@@ -15,6 +15,7 @@
 #include "Renderer/OpenGL/OpenGLRenderCommand.h"
 #include "Renderer/OpenGL/OpenGLRenderer3D.h"
 #include "Renderer/OpenGL/OpenGLFramebuffer.h"
+#include "Renderer/Skybox.h"
 
 #include "ECS/Scene.h"
 #include "ECS/SceneSerializer.h"

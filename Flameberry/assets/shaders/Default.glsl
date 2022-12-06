@@ -4,14 +4,14 @@
 layout (location = 0) in vec3 a_Position;
 layout (location = 1) in vec4 a_Color;
 layout (location = 2) in vec3 a_Normal;
-layout (location = 3) in vec2 a_Texture_UV;
+layout (location = 3) in vec2 a_TextureUV;
 layout (location = 4) in float a_TextureIndex;
 layout (location = 5) in int a_EntityID;
 
 out vec3 v_Position;
 out vec4 v_Color;
 out vec3 v_Normal;
-out vec2 v_Texture_UV;
+out vec2 v_TextureUV;
 out float v_TextureIndex;
 flat out int v_EntityID;
 
@@ -33,7 +33,7 @@ void main()
     v_Position = a_Position;
     v_Color = a_Color;
     v_Normal = a_Normal;
-    v_Texture_UV = a_Texture_UV;
+    v_TextureUV = a_TextureUV;
     v_TextureIndex = a_TextureIndex;
     v_EntityID = a_EntityID;
 
@@ -52,7 +52,7 @@ layout (location = 1) out int o_EntityID;
 in vec3 v_Position;
 in vec4 v_Color;
 in vec3 v_Normal;
-in vec2 v_Texture_UV;
+in vec2 v_TextureUV;
 in float v_TextureIndex;
 flat in int v_EntityID;
 
@@ -103,7 +103,7 @@ vec3 GetPixelColor()
 {
     if (v_TextureIndex == -1.0)
         return u_Material.Albedo;
-    return texture(u_TextureSamplers[int(v_TextureIndex)], v_Texture_UV).xyz;
+    return texture(u_TextureSamplers[int(v_TextureIndex)], v_TextureUV).xyz;
 }
 
 // PBR Lighting
@@ -258,8 +258,8 @@ void main()
 //        if (specularFactor >= 0.0)
 //        {
 //            float specularExponent = 16.0;
-//            // float specularExponent = texture(u_TextureSamplers[1], v_Texture_UV).r * 255.0;
-//            // specularFactor = pow(specularFactor, specularExponent) * texture(u_TextureSamplers[1], v_Texture_UV).r;
+//            // float specularExponent = texture(u_TextureSamplers[1], v_TextureUV).r * 255.0;
+//            // specularFactor = pow(specularFactor, specularExponent) * texture(u_TextureSamplers[1], v_TextureUV).r;
 //            specularFactor = pow(specularFactor, specularExponent);
 //
 //            float specularIntensity = 5.0;
@@ -276,10 +276,10 @@ void main()
 //    if (v_TextureIndex == -1)
 //        FragColor = v_Color * vec4(color, 1.0);
 //    else
-//        FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_Texture_UV) * vec4(color, 1.0);
+//        FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_TextureUV) * vec4(color, 1.0);
 
     // FragColor = v_Color * vec4(color, 1.0);
-    // FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_Texture_UV);
+    // FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_TextureUV);
 
     // FragColor = clamp(FragColor, 0.0, 1.0);
 }

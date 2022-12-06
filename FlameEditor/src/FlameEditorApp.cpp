@@ -145,7 +145,7 @@ namespace Flameberry {
 
         // Testing
         // SceneSerializer serializer(m_ActiveScene.get());
-        // serializer.DeserializeScene(FL_PROJECT_DIR"FlameEditor/assets/scenes/scene.berry");
+        // serializer.DeserializeScene(FL_PROJECT_DIR"FlameEditor/assets/scenes/scene.json");
     }
 
     FlameEditorApp::~FlameEditorApp()

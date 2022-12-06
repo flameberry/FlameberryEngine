@@ -21,7 +21,9 @@ namespace Flameberry {
         ~PerspectiveCamera();
         void OnUpdate(float delta);
         void OnResize(float aspectRatio);
-        glm::mat4 GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
+        const glm::mat4& GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
+        const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
+        const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
         void SetAspectRatio(float aspectRatio) { m_AspectRatio = aspectRatio; }
         glm::vec3 GetPosition() const { return m_CameraPosition; }
     private:

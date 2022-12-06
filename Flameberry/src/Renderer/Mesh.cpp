@@ -241,7 +241,7 @@ namespace Flameberry {
             for (auto& vertex : Vertices)
                 vertex.texture_index = m_TextureIndex;
         }
-        else if (m_TextureIndex == 0.0f && !TextureIDs.size())
+        else if (m_TextureIndex == 0.0f && TextureIDs.size() == 0)
         {
             m_TextureIndex = -1.0f;
             for (auto& vertex : Vertices)

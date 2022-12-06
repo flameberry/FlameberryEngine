@@ -36,6 +36,7 @@ namespace Flameberry {
     public:
         static std::tuple<std::string, std::string> ReadShaderSource(const std::string& filePath);
         static uint32_t CreateTexture(const std::string& filePath);
+        static uint32_t CreateCubeMap(const char* folderPath);
         static uint32_t CreateShader(const std::string& filePath);
         static std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> LoadModel(const std::string& filePath);
         static ModelData LoadModelData(const std::string& filePath);

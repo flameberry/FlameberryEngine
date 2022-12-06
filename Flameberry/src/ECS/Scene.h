@@ -7,6 +7,7 @@
 #include "Renderer/OpenGL/OpenGLRenderer3D.h"
 #include "Renderer/Light.h"
 #include "Renderer/Material.h"
+#include "Renderer/Skybox.h"
 
 namespace Flameberry {
     struct SceneData
@@ -15,7 +16,8 @@ namespace Flameberry {
         std::vector<Mesh> Meshes;
         std::unordered_map<std::string, Material> Materials;
         DirectionalLight DirLight;
-        SceneData() {}
+        Skybox ActiveSkybox;
+        SceneData() : ActiveSkybox(FL_PROJECT_DIR"SandboxApp/assets/skybox") {}
     };
 
     class Scene

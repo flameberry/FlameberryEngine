@@ -305,4 +305,37 @@ namespace Flameberry {
 
         return textureID;
     }
+
+    uint32_t OpenGLRenderCommand::CreateCubeMap(const char* folderPath)
+    {
+        uint32_t textureID = 0;
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+        std::string paths[] = {
+             std::string(folderPath) + "/right.jpg",
+             std::string(folderPath) + "/left.png",
+             std::string(folderPath) + "/top.png",
+             std::string(folderPath) + "/bottom.png",
+             std::string(folderPath) + "/front.png",
+             std::string(folderPath) + "/back.png"
+        };
+
+        for (uint32_t i = 0; i < 6; i++)
+        {
+            int width, height, channels;
+            unsigned char* data = stbi_load(paths[i].c_str(), &width, &height, &channels, 0);
+            FL_ASSERT(data, "Failed to load cube map face: {0}", paths[i]);
+            stbi_set_flip_vertically_on_load(false);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        return textureID;
+    }
 }

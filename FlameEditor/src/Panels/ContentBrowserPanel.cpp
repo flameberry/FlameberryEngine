@@ -75,13 +75,17 @@ namespace Flameberry {
 
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && directory.is_directory())
                 m_CurrentDirectory /= directory.path().filename().c_str();
+
+            auto windowWidth = ImGui::GetColumnWidth();
+            auto textWidth = ImGui::CalcTextSize(directory.path().filename().c_str()).x;
+
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (windowWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);
             ImGui::TextWrapped("%s", directory.path().filename().c_str());
 
             ImGui::NextColumn();
             ImGui::PopID();
         }
-        ImGui::PopStyleColor();
-        ImGui::PopStyleColor();
+        ImGui::PopStyleColor(2);
 
         ImGui::End();
     }
