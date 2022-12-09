@@ -1,0 +1,124 @@
+{
+    "Scene": "Untitled",
+    "Entities": [
+        {
+            "UUID": 1274937932230,
+            "TagComponent": "Player",
+            "TransformComponent": [
+                0.0,
+                0.0,
+                0.0,
+                3.0,
+                5.0,
+                -2.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "MeshComponent": {
+                "MeshIndex": 0,
+                "MaterialName": "YELLOW_NON_METAL"
+            }
+        },
+        {
+            "UUID": 4343382371923,
+            "TagComponent": "Enemy",
+            "TransformComponent": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "MeshComponent": {
+                "MeshIndex": 1,
+                "MaterialName": "Material_4"
+            }
+        },
+        {
+            "UUID": 15883709984995453838,
+            "TagComponent": "Cylin",
+            "TransformComponent": [
+                0.0,
+                1.0299999713897705,
+                -2.619999885559082,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "MeshComponent": {
+                "MeshIndex": 2,
+                "MaterialName": "Material_3"
+            }
+        }
+    ],
+    "Materials": [
+        {
+            "Name": "Material_3",
+            "Albedo": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "Roughness": 0.28999999165534973,
+            "IsMetal": true
+        },
+        {
+            "Name": "YELLOW_NON_METAL",
+            "Albedo": [
+                0.0,
+                1.0,
+                0.20588231086730957
+            ],
+            "Roughness": 0.4830000102519989,
+            "IsMetal": false
+        },
+        {
+            "Name": "Material_4",
+            "Albedo": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "Roughness": 0.5199999809265137,
+            "IsMetal": false
+        },
+        {
+            "Name": "Default",
+            "Albedo": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "Roughness": 1.0,
+            "IsMetal": false
+        },
+        {
+            "Name": "PINK_ROUGH_NON_METAL",
+            "Albedo": [
+                1.0,
+                0.0,
+                1.0
+            ],
+            "Roughness": 0.9879999756813049,
+            "IsMetal": false
+        },
+        {
+            "Name": "METAL",
+            "Albedo": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "Roughness": 0.28299999237060547,
+            "IsMetal": true
+        }
+    ]
+}

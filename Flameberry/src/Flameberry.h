@@ -7,8 +7,9 @@
 
 #include "Core/Application.h"
 #include "Core/Core.h"
-
 #include "Core/Input.h"
+#include "Platform/FileDialog.h"
+#include "Platform/CustomTitleBar.h"
 
 #ifdef FL_USE_OPENGL_API
 #include "Renderer/OpenGL/OpenGLRenderer2D.h"

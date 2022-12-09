@@ -10,6 +10,7 @@ namespace Flameberry {
         ~SceneHierarchyPanel() = default;
         void OnUIRender();
         void SetSelectedEntity(const Flameberry::entity_handle& entity) { m_SelectedEntity = entity; }
+        std::string RenameNode(const char* name);
     private:
         void DrawComponent(Flameberry::TransformComponent& transform);
         void DrawComponent(Flameberry::SpriteRendererComponent& sprite);

@@ -5,6 +5,7 @@
 
 #include "Core/Core.h"
 #include "ComponentPool.h"
+#include "Component.h"
 
 namespace Flameberry {
     template<typename... ComponentTypes>
@@ -31,8 +32,10 @@ namespace Flameberry {
         }
         // void each(const std::function<void(entity_handle& entity)>& perform_op);
 
-        template<typename T>
-        T* AddComponent(const entity_handle& entity);
+        void Clear();
+
+        template<typename T, typename... Args>
+        T* AddComponent(const entity_handle& entity, Args... args);
 
         template<typename T>
         T* GetComponent(const entity_handle& entity) const;
@@ -59,8 +62,8 @@ namespace Flameberry {
         std::vector<uint32_t> m_FreeEntities;
     };
 
-    template<typename T>
-    T* Registry::AddComponent(const entity_handle& entity)
+    template<typename T, typename... Args>
+    T* Registry::AddComponent(const entity_handle& entity, Args... args)
     {
         FL_ASSERT(entity.is_valid(), "Failed to add component to the entity: INVALID_ENTITY!");
         uint32_t componentTypeId = GetComponentTypeId<T>();
@@ -78,7 +81,7 @@ namespace Flameberry {
 
         m_ComponentPools[componentTypeId]->Add(entity.get());
         void* componentAddress = m_ComponentPools[componentTypeId]->GetComponentAddress(entity);
-        return (T*)(new(componentAddress) T());
+        return (T*)(new(componentAddress) T(std::forward<Args>(args)...));
     }
 
     template<typename T>

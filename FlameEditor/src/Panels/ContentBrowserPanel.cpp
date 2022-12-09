@@ -56,10 +56,16 @@ namespace Flameberry {
                 currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/file_png_icon.png");
             else if (ext == ".jpg")
                 currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/file_jpg_icon.png");
+            else if (ext == ".obj")
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/obj_file_icon.png");
+            else if (ext == ".mtl")
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/mtl_file_icon.png");
+            else if (ext == ".json")
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/json_file_icon.png");
             else
                 currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/file_icon_default.png");
 
-            ImGui::ImageButton(reinterpret_cast<ImTextureID>(currentIconTextureId), ImVec2{ 80, 80 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+            ImGui::ImageButton(reinterpret_cast<ImTextureID>(currentIconTextureId), ImVec2{ iconSize, iconSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
             if (ImGui::BeginDragDropSource())
             {
@@ -76,10 +82,10 @@ namespace Flameberry {
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && directory.is_directory())
                 m_CurrentDirectory /= directory.path().filename().c_str();
 
-            auto windowWidth = ImGui::GetColumnWidth();
-            auto textWidth = ImGui::CalcTextSize(directory.path().filename().c_str()).x;
+            // auto windowWidth = ImGui::GetColumnWidth();
+            // auto textWidth = ImGui::CalcTextSize(directory.path().filename().c_str()).x;
 
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (windowWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);
+            // ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (windowWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);
             ImGui::TextWrapped("%s", directory.path().filename().c_str());
 
             ImGui::NextColumn();

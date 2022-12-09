@@ -3,10 +3,9 @@
 // Includes the Entrypoint of the main application
 #include "Core/EntryPoint.h"
 
-#include "Core/UUID.h"
-
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
+#include "project.h"
 
 #include "Utils.h"
 
@@ -102,12 +101,14 @@ namespace Flameberry {
         m_Registry = std::make_shared<Flameberry::Registry>();
 
         m_SquareEntity = m_Registry->CreateEntity();
-        m_Registry->AddComponent<Flameberry::TransformComponent>(m_SquareEntity);
+        m_Registry->AddComponent<Flameberry::IDComponent>(m_SquareEntity);
         m_Registry->AddComponent<Flameberry::TagComponent>(m_SquareEntity)->Tag = "Sphere";
+        m_Registry->AddComponent<Flameberry::TransformComponent>(m_SquareEntity);
         auto meshComponent = m_Registry->AddComponent<Flameberry::MeshComponent>(m_SquareEntity);
         meshComponent->MeshIndex = 0;
 
         m_BlueSquareEntity = m_Registry->CreateEntity();
+        m_Registry->AddComponent<Flameberry::IDComponent>(m_BlueSquareEntity);
         m_Registry->AddComponent<Flameberry::TagComponent>(m_BlueSquareEntity)->Tag = "Sponza";
         m_Registry->AddComponent<Flameberry::TransformComponent>(m_BlueSquareEntity);
         auto meshComponent1 = m_Registry->AddComponent<Flameberry::MeshComponent>(m_BlueSquareEntity);
@@ -142,10 +143,6 @@ namespace Flameberry {
 
         m_DirectionalLight.Direction = { -1.0f, -1.0f, -1.0f };
         m_ActiveScene->SetDirectionalLight(m_DirectionalLight);
-
-        // Testing
-        // SceneSerializer serializer(m_ActiveScene.get());
-        // serializer.DeserializeScene(FL_PROJECT_DIR"FlameEditor/assets/scenes/scene.json");
     }
 
     FlameEditorApp::~FlameEditorApp()
@@ -206,6 +203,20 @@ namespace Flameberry {
 
     void FlameEditorApp::OnUIRender()
     {
+        // Main Menu
+        if (ImGui::BeginMainMenuBar())
+        {
+            if (ImGui::BeginMenu("File"))
+            {
+                if (ImGui::MenuItem("Save", "Cmd+S"))
+                    SaveScene();
+                if (ImGui::MenuItem("Open", "Cmd+O"))
+                    OpenScene();
+                ImGui::EndMenu();
+            }
+            ImGui::EndMainMenuBar();
+        }
+
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");
 
@@ -220,6 +231,27 @@ namespace Flameberry {
 
         uint64_t textureID = m_Framebuffer->GetColorAttachmentId();
         ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+        // Scene File Drop Target
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+            {
+                std::string path = (const char*)payload->Data;
+                std::filesystem::path scenePath{ path };
+                scenePath = project::g_AssetDirectory / scenePath;
+                const std::string& ext = scenePath.extension().string();
+
+                FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+
+                if (std::filesystem::exists(scenePath) && std::filesystem::is_regular_file(scenePath) && (ext == ".scene" || ext == ".json" || ext == ".berry"))
+                    OpenScene(scenePath.string());
+                else
+                    FL_WARN("Bad File given as Scene!");
+            }
+            ImGui::EndDragDropTarget();
+        }
+
         ImGui::End();
         ImGui::PopStyleVar();
 
@@ -258,6 +290,50 @@ namespace Flameberry {
         m_ContentBrowserPanel.OnUIRender();
 
         // ImGui::ShowDemoWindow();
+    }
+
+    void FlameEditorApp::SaveScene()
+    {
+        std::string savePath = Flameberry::FileDialog::SaveDialog();
+        if (savePath != "")
+        {
+            SceneSerializer serializer(m_ActiveScene);
+            serializer.SerializeScene(savePath.c_str());
+            FL_LOG("Scene saved to path: {0}", savePath);
+            return;
+        }
+        FL_ERROR("Failed to save scene!");
+    }
+
+    void FlameEditorApp::OpenScene()
+    {
+        std::string sceneToBeLoaded = Flameberry::FileDialog::OpenDialog();
+        if (sceneToBeLoaded != "")
+        {
+            SceneSerializer serializer(m_ActiveScene);
+            serializer.DeserializeScene(sceneToBeLoaded.c_str());
+            FL_INFO("Loaded Scene: {0}", sceneToBeLoaded);
+            return;
+        }
+        FL_ERROR("Failed to load scene!");
+    }
+
+    void FlameEditorApp::SaveScene(const std::string& path)
+    {
+        if (!path.empty())
+        {
+            SceneSerializer serializer(m_ActiveScene);
+            serializer.SerializeScene(path.c_str());
+        }
+    }
+
+    void FlameEditorApp::OpenScene(const std::string& path)
+    {
+        if (!path.empty())
+        {
+            SceneSerializer serializer(m_ActiveScene);
+            serializer.DeserializeScene(path.c_str());
+        }
     }
 
     std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()

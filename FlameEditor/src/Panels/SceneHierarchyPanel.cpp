@@ -23,75 +23,77 @@ namespace Flameberry {
         {
             if (ImGui::MenuItem("Create Empty"))
             {
-                Flameberry::entity_handle entity = m_ActiveScene->m_Registry->CreateEntity();
+                auto& entity = m_ActiveScene->m_Registry->CreateEntity();
+                m_ActiveScene->m_Registry->AddComponent<Flameberry::IDComponent>(entity);
                 m_ActiveScene->m_Registry->AddComponent<Flameberry::TagComponent>(entity)->Tag = "Empty";
                 m_ActiveScene->m_Registry->AddComponent<Flameberry::TransformComponent>(entity);
+                m_SelectedEntity = entity;
             }
             ImGui::EndPopup();
         }
 
         m_ActiveScene->m_Registry->each([this](Flameberry::entity_handle& entity) {
             bool should_delete_entity = false;
-            static Flameberry::entity_handle* entity_to_be_renamed = nullptr;
+        static Flameberry::entity_handle* entity_to_be_renamed = nullptr;
 
-            auto& tag = m_ActiveScene->m_Registry->GetComponent<Flameberry::TagComponent>(entity)->Tag;
+        auto& tag = m_ActiveScene->m_Registry->GetComponent<Flameberry::TagComponent>(entity)->Tag;
 
-            bool is_selected = m_SelectedEntity == entity;
-            int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-            if (!entity_to_be_renamed || entity != *entity_to_be_renamed)
-                treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+        bool is_selected = m_SelectedEntity == entity;
+        int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+        if (!entity_to_be_renamed || entity != *entity_to_be_renamed)
+            treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
-            ImGui::PushID(entity.get());
+        ImGui::PushID(entity.get());
 
-            float textColor = is_selected ? 0.0f : 1.0f;
-            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
-            ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-            if (is_selected)
-                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
+        float textColor = is_selected ? 0.0f : 1.0f;
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        if (is_selected)
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
 
-            if (ImGui::TreeNodeEx(tag.c_str(), treeNodeFlags))
-                ImGui::TreePop();
+        if (ImGui::TreeNodeEx(tag.c_str(), treeNodeFlags))
+            ImGui::TreePop();
 
-            ImGui::PopStyleColor(is_selected ? 4 : 3);
+        ImGui::PopStyleColor(is_selected ? 4 : 3);
 
-            if (ImGui::IsItemClicked())
-                m_SelectedEntity = entity;
+        if (ImGui::IsItemClicked())
+            m_SelectedEntity = entity;
 
-            if (ImGui::BeginPopupContextItem())
+        if (ImGui::BeginPopupContextItem())
+        {
+            if (ImGui::MenuItem("Rename"))
+                entity_to_be_renamed = &entity;
+
+            if (ImGui::MenuItem("Delete Entity"))
+                should_delete_entity = true;
+            ImGui::EndPopup();
+        }
+
+        if (entity_to_be_renamed && *entity_to_be_renamed == entity)
+        {
+            std::string buffer(tag);
+
+            ImGui::SameLine();
+            ImGui::SetKeyboardFocusHere();
+            ImGui::PushItemWidth(-1.0f);
+
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
+            if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
             {
-                if (ImGui::MenuItem("Rename"))
-                    entity_to_be_renamed = &entity;
-
-                if (ImGui::MenuItem("Delete Entity"))
-                    should_delete_entity = true;
-                ImGui::EndPopup();
+                tag = buffer;
+                entity_to_be_renamed = nullptr;
             }
+            ImGui::PopStyleVar();
+        }
 
-            if (entity_to_be_renamed && *entity_to_be_renamed == entity)
-            {
-                std::string buffer(tag);
+        if (should_delete_entity)
+            m_ActiveScene->m_Registry->DestroyEntity(entity);
 
-                ImGui::SameLine();
-                ImGui::SetKeyboardFocusHere();
-                ImGui::PushItemWidth(-1.0f);
+        if (m_SelectedEntity == entity)
+            m_ActiveScene->SetSelectedEntity(&entity);
 
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
-                if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
-                {
-                    tag = buffer;
-                    entity_to_be_renamed = nullptr;
-                }
-                ImGui::PopStyleVar();
-            }
-
-            if (should_delete_entity)
-                m_ActiveScene->m_Registry->DestroyEntity(entity);
-
-            if (m_SelectedEntity == entity)
-                m_ActiveScene->SetSelectedEntity(&entity);
-
-            ImGui::PopID();
+        ImGui::PopID();
             });
 
         ImGui::End();
@@ -101,6 +103,16 @@ namespace Flameberry {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen;
         if (m_SelectedEntity.is_valid())
         {
+            if (m_ActiveScene->m_Registry->HasComponent<Flameberry::IDComponent>(m_SelectedEntity))
+            {
+                if (ImGui::CollapsingHeader("IDComponent", flags))
+                {
+                    auto& ID = m_ActiveScene->m_Registry->GetComponent<Flameberry::IDComponent>(m_SelectedEntity)->ID;
+                    ImGui::Text("ID: %llu", (uint64_t)ID);
+                    ImGui::Spacing();
+                }
+            }
+
             if (m_ActiveScene->m_Registry->HasComponent<Flameberry::TransformComponent>(m_SelectedEntity))
             {
                 if (ImGui::CollapsingHeader("Transform Component", flags))
@@ -145,6 +157,24 @@ namespace Flameberry {
             }
         }
         ImGui::End();
+        ImGui::PopStyleVar();
+    }
+
+    std::string SceneHierarchyPanel::RenameNode(const char* name)
+    {
+        std::string tag(name);
+        std::string buffer(name);
+
+        ImGui::SameLine();
+        ImGui::SetKeyboardFocusHere();
+        ImGui::PushItemWidth(-1.0f);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
+        if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            tag = buffer;
+            // entity_to_be_renamed = nullptr;
+        }
         ImGui::PopStyleVar();
     }
 

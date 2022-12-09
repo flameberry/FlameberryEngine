@@ -229,6 +229,8 @@ namespace Flameberry {
 
     void Mesh::Draw(const TransformComponent& transform, const glm::vec3& cameraPosition, const std::vector<PointLight>& lights, const DirectionalLight& directionalLight, const Material& material, int entityID)
     {
+        if (!Vertices.size())
+            return;
         if (m_EntityID != entityID)
         {
             m_EntityID = entityID;

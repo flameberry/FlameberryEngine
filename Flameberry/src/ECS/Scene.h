@@ -17,7 +17,7 @@ namespace Flameberry {
         std::unordered_map<std::string, Material> Materials;
         DirectionalLight DirLight;
         Skybox ActiveSkybox;
-        SceneData() : ActiveSkybox(FL_PROJECT_DIR"SandboxApp/assets/skybox") {}
+        SceneData(): ActiveSkybox(FL_PROJECT_DIR"SandboxApp/assets/skybox") {}
     };
 
     class Scene

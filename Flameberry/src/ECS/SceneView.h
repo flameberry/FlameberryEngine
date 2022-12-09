@@ -46,22 +46,6 @@ namespace Flameberry {
 #include "Registry.h"
 
 namespace Flameberry {
-    static void print_transform(const TransformComponent& comp)
-    {
-        FL_LOG(
-            "Transform component is\nposition: {0}, {1}, {2}\nrotation: {3}, {4}, {5}\nscale: {6}, {7}, {8}",
-            comp.translation.x,
-            comp.translation.y,
-            comp.translation.z,
-            comp.rotation.x,
-            comp.rotation.y,
-            comp.rotation.z,
-            comp.scale.x,
-            comp.scale.y,
-            comp.scale.z
-        );
-    }
-
     template<typename T, typename... ComponentTypes>
     entity_handle& scene_view_iterator<T, ComponentTypes...>::operator* ()
     {

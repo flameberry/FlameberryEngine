@@ -7,13 +7,17 @@
 #include "Renderer/Light.h"
 
 namespace Flameberry {
-    class FlameEditorApp : public Flameberry::Application
+    class FlameEditorApp: public Flameberry::Application
     {
     public:
         FlameEditorApp();
         virtual ~FlameEditorApp();
         void OnUpdate(float delta) override;
         void OnUIRender() override;
+        void SaveScene();
+        void OpenScene();
+        void SaveScene(const std::string& path);
+        void OpenScene(const std::string& path);
     private:
         std::shared_ptr<Flameberry::OpenGLFramebuffer> m_Framebuffer;
         glm::vec2 m_ViewportSize;

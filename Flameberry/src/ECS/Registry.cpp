@@ -26,4 +26,11 @@ namespace Flameberry {
         entity.set_validity(false);
         m_FreeEntities.push_back(entity.get());
     }
+
+    void Registry::Clear()
+    {
+        m_ComponentPools.clear();
+        m_FreeEntities.clear();
+        m_Entities.clear();
+    }
 }
