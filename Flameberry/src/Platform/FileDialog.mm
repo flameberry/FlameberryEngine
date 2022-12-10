@@ -30,7 +30,7 @@ namespace Flameberry {
     std::string FileDialog::SaveDialog()
     {
         NSSavePanel *panel = [NSSavePanel savePanel];
-        NSString *fileName = @"untitled.json";
+        NSString *fileName = @"untitled.berry";
         
         [panel setMessage:@"Select a path to save the scene file"]; // Message inside modal window
         [panel setAllowsOtherFileTypes:YES];
@@ -42,6 +42,7 @@ namespace Flameberry {
         NSInteger result = [panel runModal];
         NSError *error = nil;
         
+        
         if (result == NSModalResponseOK)
         {
             NSString *path0 = [[panel URL] path];
@@ -51,7 +52,9 @@ namespace Flameberry {
             else
                 return std::string([path0 UTF8String]);
         }
-        
+        else
+            [panel close];
+            
         return "";
     }
 }

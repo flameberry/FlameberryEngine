@@ -16,7 +16,6 @@ namespace Flameberry {
     {
         static uint32_t componentCounter = typeCounter++;
         return componentCounter;
-
     }
 
     struct IDComponent

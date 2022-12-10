@@ -3,21 +3,14 @@
 #include <vector>
 
 #include "OpenGL/OpenGLVertex.h"
-#include "Light.h"
 #include "PerspectiveCamera.h"
+#include "Light.h"
 
 #include "ECS/Component.h"
 
 #include "Material.h"
 
 namespace Flameberry {
-    struct MeshData
-    {
-        std::vector<OpenGLVertex> Vertices;
-        std::vector<uint32_t> Indices;
-        std::vector<uint32_t> TextureIDs;
-    };
-
     class Mesh
     {
     public:

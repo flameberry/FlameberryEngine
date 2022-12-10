@@ -174,15 +174,13 @@ namespace Flameberry {
                     // Add indices
                     switch (faceVertices)
                     {
-                    case 3:
-                    {
+                    case 3: {
                         indices.push_back((uint32_t)vertices.size() - 3);
                         indices.push_back((uint32_t)vertices.size() - 2);
                         indices.push_back((uint32_t)vertices.size() - 1);
                         break;
                     }
-                    case 4:
-                    {
+                    case 4: {
                         uint32_t offset = (uint32_t)vertices.size() - 4;
                         indices.push_back(1 + offset);
                         indices.push_back(2 + offset);
