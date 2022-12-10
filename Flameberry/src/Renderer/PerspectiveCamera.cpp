@@ -106,6 +106,8 @@ namespace Flameberry {
         m_RightDirection = glm::cross(m_UpDirection, -m_CameraDirection);
         m_ViewMatrix = glm::lookAt(m_CameraPosition, m_CameraPosition + m_CameraDirection, m_UpDirection);
         m_ProjectionMatrix = glm::perspective(glm::radians(m_FOV), m_AspectRatio, m_ZNear, m_ZFar);
+        m_ProjectionMatrix[1][1] *= -1;
         m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+        // m_ViewProjectionMatrix = m_ViewMatrix * m_ProjectionMatrix;
     }
 }

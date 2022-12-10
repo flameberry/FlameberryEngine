@@ -5,6 +5,7 @@
 #include <set>
 
 #include "VulkanVertex.h"
+#include "Renderer/PerspectiveCamera.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -26,8 +27,9 @@ namespace Flameberry {
     struct UniformBufferObject
     {
         glm::mat4 ModelMatrix;
-        glm::mat4 ViewMatrix;
-        glm::mat4 ProjectionMatrix;
+        // glm::mat4 ViewMatrix;
+        // glm::mat4 ProjectionMatrix;
+        glm::mat4 ViewProjectionMatrix;
     };
 
     class VulkanRenderer
@@ -35,7 +37,7 @@ namespace Flameberry {
     public:
         /// It needs the main GLFWwindow* created using glfwCreateWindow() function
         static void Init(GLFWwindow* window);
-        static void RenderFrame();
+        static void RenderFrame(PerspectiveCamera& camera);
         static void CleanUp();
     private:
         struct QueueFamilyIndices

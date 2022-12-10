@@ -479,7 +479,7 @@ namespace Flameberry {
         FL_INFO("Created {0} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", s_MAX_FRAMES_IN_FLIGHT);
     }
 
-    void VulkanRenderer::RenderFrame()
+    void VulkanRenderer::RenderFrame(PerspectiveCamera& camera)
     {
         vkWaitForFences(s_VkDevice, 1, &s_InFlightFences[s_CurrentFrame], VK_TRUE, UINT64_MAX);
 
@@ -504,12 +504,12 @@ namespace Flameberry {
 
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
+        camera.OnResize((float)s_VkSwapChainExtent2D.width / (float)s_VkSwapChainExtent2D.height);
+
         UniformBufferObject uniformBufferObject{};
-        uniformBufferObject.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        // uniformBufferObject.ModelMatrix = glm::mat4(1.0f);
-        uniformBufferObject.ViewMatrix = glm::lookAt(glm::vec3(2.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        uniformBufferObject.ProjectionMatrix = glm::perspective(glm::radians(45.0f), (float)s_VkSwapChainExtent2D.width / (float)s_VkSwapChainExtent2D.height, 0.1f, 10.0f);
-        uniformBufferObject.ProjectionMatrix[1][1] *= -1;
+        // uniformBufferObject.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        uniformBufferObject.ModelMatrix = glm::mat4(1.0f);
+        uniformBufferObject.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 
         void* vk_uniform_buffer_data;
         vkMapMemory(s_VkDevice, s_VkUniformBuffersDeviceMemory[imageIndex], 0, sizeof(uniformBufferObject), 0, &vk_uniform_buffer_data);
