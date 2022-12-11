@@ -24,11 +24,9 @@ namespace Flameberry {
         glm::vec4* color;
     };
 
-    struct UniformBufferObject
+    struct CameraUniformBufferObject
     {
         glm::mat4 ModelMatrix;
-        // glm::mat4 ViewMatrix;
-        // glm::mat4 ProjectionMatrix;
         glm::mat4 ViewProjectionMatrix;
     };
 
@@ -51,7 +49,7 @@ namespace Flameberry {
             std::vector<VkSurfaceFormatKHR> SurfaceFormats;
             std::vector<VkPresentModeKHR>   PresentationModes;
         };
-    private:
+    public:
         static void               CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
         static void               TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
         static void               BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
@@ -67,9 +65,11 @@ namespace Flameberry {
         static void               CreateGraphicsPipeline();
         static void               CreateFramebuffers();
         static void               CreateUniformBuffers();
+        static void               UpdateUniformBuffers(uint32_t imageIndex, PerspectiveCamera& camera);
         static void               CreateDescriptorPool();
         static void               CreateDescriptorSets();
         static void               CreateCommandBuffers();
+        static void               RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
         static void               CreateBuffer(VkDeviceSize deviceSize, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkBuffer& buffer, VkDeviceMemory& deviceMemory);
         static void               CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);
         static VkPhysicalDevice   GetValidVkPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices);
@@ -116,6 +116,7 @@ namespace Flameberry {
         static VkDeviceMemory               s_VkIndexBufferDeviceMemory;
         static std::vector<VkBuffer>        s_VkUniformBuffers;
         static std::vector<VkDeviceMemory>  s_VkUniformBuffersDeviceMemory;
+        static std::vector<void*>           s_VkUniformBuffersMappedMemory;
         static std::vector<VkSemaphore>     s_ImageAvailableSemaphores;
         static std::vector<VkSemaphore>     s_RenderFinishedSemaphores;
         static std::vector<VkFence>         s_InFlightFences;
@@ -140,6 +141,6 @@ namespace Flameberry {
         static GLFWwindow* s_UserGLFWwindow;
         static uint32_t s_Indices[MAX_INDICES];
     private:
-        constexpr static uint32_t s_MAX_FRAMES_IN_FLIGHT = 2;
+        constexpr static uint32_t s_MAX_FRAMES_IN_FLIGHT = 3;
     };
 }
