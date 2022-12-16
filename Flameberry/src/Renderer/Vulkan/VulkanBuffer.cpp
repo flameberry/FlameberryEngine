@@ -1,38 +1,74 @@
 #include "VulkanBuffer.h"
 
-#include "Core/Log.h"
+#include "Core/Core.h"
 
 #include "VulkanRenderer.h"
 
 namespace Flameberry {
-    VulkanBuffer::VulkanBuffer(VkDevice& deviceInstance, VkDeviceSize deviceSize, const void* data)
-        : m_VkDevice(deviceInstance)
+    VulkanBuffer::VulkanBuffer(VkDevice& device, VkDeviceSize deviceSize, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags)
+        : m_VkDevice(device)
     {
-        VkDeviceSize bufferSize = deviceSize;
+        VkBufferCreateInfo vk_buffer_create_info{};
+        vk_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        vk_buffer_create_info.size = deviceSize;
+        vk_buffer_create_info.usage = bufferUsageFlags;
+        vk_buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
+        FL_ASSERT(vkCreateBuffer(m_VkDevice, &vk_buffer_create_info, nullptr, &m_VkBuffer) == VK_SUCCESS, "Failed to create Buffer!");
 
-        VulkanRenderer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        VkMemoryRequirements vk_memory_requirements{};
+        vkGetBufferMemoryRequirements(m_VkDevice, m_VkBuffer, &vk_memory_requirements);
 
-        void* vk_vertex_buffer_data;
-        vkMapMemory(m_VkDevice, stagingBufferMemory, 0, bufferSize, 0, &vk_vertex_buffer_data);
-        memcpy(vk_vertex_buffer_data, data, (size_t)bufferSize);
-        vkUnmapMemory(m_VkDevice, stagingBufferMemory);
+        VkMemoryAllocateInfo vk_memory_allocate_info{};
+        vk_memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        vk_memory_allocate_info.allocationSize = vk_memory_requirements.size;
+        vk_memory_allocate_info.memoryTypeIndex = VulkanRenderer::GetValidMemoryTypeIndex(vk_memory_requirements.memoryTypeBits, memoryPropertyFlags);
 
-        VulkanRenderer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_VkBuffer, m_VkBufferDeviceMemory);
-        VulkanRenderer::CopyBuffer(stagingBuffer, m_VkBuffer, bufferSize);
-
-        vkDestroyBuffer(m_VkDevice, stagingBuffer, nullptr);
-        vkFreeMemory(m_VkDevice, stagingBufferMemory, nullptr);
+        FL_ASSERT(vkAllocateMemory(m_VkDevice, &vk_memory_allocate_info, nullptr, &m_VkBufferDeviceMemory) == VK_SUCCESS, "Failed to allocate memory!");
+        vkBindBufferMemory(m_VkDevice, m_VkBuffer, m_VkBufferDeviceMemory, 0);
     }
 
     VulkanBuffer::~VulkanBuffer()
     {
-        vkDestroyBuffer(m_VkDevice, m_VkBuffer, nullptr);
-        FL_INFO("Destroyed Vulkan Vertex Buffer!");
+        DestroyBuffer();
+    }
 
-        vkFreeMemory(m_VkDevice, m_VkBufferDeviceMemory, nullptr);
-        FL_INFO("Freed Vulkan Vertex Buffer Device Memory!");
+    VkResult VulkanBuffer::MapMemory(VkDeviceSize size, VkDeviceSize offset)
+    {
+        FL_ASSERT(size && m_VkBufferDeviceMemory, "Cannot Map memory of size: 0!");
+        return vkMapMemory(m_VkDevice, m_VkBufferDeviceMemory, offset, size, 0, &m_VkBufferMappedMemory);
+    }
+
+    void VulkanBuffer::UnmapMemory()
+    {
+        if (m_VkBufferMappedMemory)
+        {
+            vkUnmapMemory(m_VkDevice, m_VkBufferDeviceMemory);
+            m_VkBufferMappedMemory = nullptr;
+        }
+    }
+
+    void VulkanBuffer::WriteToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset)
+    {
+        if (size == VK_WHOLE_SIZE)
+            memcpy(m_VkBufferMappedMemory, data, size);
+        else
+        {
+            char* memoryOffset = (char*)m_VkBufferMappedMemory;
+            memoryOffset += offset;
+            memcpy(memoryOffset, data, size);
+        }
+    }
+
+    void VulkanBuffer::DestroyBuffer()
+    {
+        if (m_VkBuffer != VK_NULL_HANDLE && m_VkBufferDeviceMemory != VK_NULL_HANDLE)
+        {
+            vkDestroyBuffer(m_VkDevice, m_VkBuffer, nullptr);
+            vkFreeMemory(m_VkDevice, m_VkBufferDeviceMemory, nullptr);
+
+            m_VkBuffer = VK_NULL_HANDLE;
+            m_VkBufferDeviceMemory = VK_NULL_HANDLE;
+        }
     }
 }

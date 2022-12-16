@@ -3,6 +3,9 @@
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "Core/Application.h"
 #include "Core/Core.h"
 
@@ -17,6 +20,9 @@
 #include "ECS/Scene.h"
 #elif defined(FL_USE_VULKAN_API)
 #include "Renderer/Vulkan/VulkanRenderer.h"
+#include "Renderer/Vulkan/VulkanRenderCommand.h"
+#include "Renderer/Vulkan/VulkanPipeline.h"
+#include "Renderer/Vulkan/VulkanDescriptor.h"
 #endif
 
 #include "Core/Timer.h"

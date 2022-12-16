@@ -6,11 +6,19 @@ namespace Flameberry {
     class VulkanBuffer
     {
     public:
-        VulkanBuffer(VkDevice& deviceInstance, VkDeviceSize deviceSize, const void* data);
+        VulkanBuffer(VkDevice& device, VkDeviceSize deviceSize, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags);
         ~VulkanBuffer();
+
+        const VkBuffer& GetBuffer() const { return m_VkBuffer; }
+        VkResult MapMemory(VkDeviceSize size, VkDeviceSize offset = 0);
+        void WriteToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset);
+        void UnmapMemory();
+
+        void DestroyBuffer();
     private:
-        VkBuffer m_VkBuffer;
-        VkDeviceMemory m_VkBufferDeviceMemory;
+        VkBuffer m_VkBuffer = VK_NULL_HANDLE;
+        VkDeviceMemory m_VkBufferDeviceMemory = VK_NULL_HANDLE;
+        void* m_VkBufferMappedMemory = nullptr;
 
         VkDevice& m_VkDevice;
     };

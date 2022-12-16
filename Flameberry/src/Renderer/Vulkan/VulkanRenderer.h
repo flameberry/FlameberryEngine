@@ -4,8 +4,9 @@
 #include <vector>
 #include <set>
 
-#include "VulkanVertex.h"
 #include "Renderer/PerspectiveCamera.h"
+#include "VulkanVertex.h"
+#include "VulkanBuffer.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -16,6 +17,8 @@
 #define MAX_VERTICES 4 * MAX_QUADS
 #define MAX_INDICES 6 * MAX_QUADS
 
+#define MAX_FRAMES_IN_FLIGHT 2
+
 namespace Flameberry {
     struct QuadCreateInfo
     {
@@ -24,17 +27,16 @@ namespace Flameberry {
         glm::vec4* color;
     };
 
-    struct CameraUniformBufferObject
-    {
-        glm::mat4 ModelMatrix;
-        glm::mat4 ViewProjectionMatrix;
-    };
+    struct CameraUniformBufferObject { glm::mat4 ViewProjectionMatrix; };
+    struct ModelMatrixPushConstantData { glm::mat4 ModelMatrix; };
 
     class VulkanRenderer
     {
     public:
         /// It needs the main GLFWwindow* created using glfwCreateWindow() function
         static void Init(GLFWwindow* window);
+        [[nodiscard]] static VkCommandBuffer BeginFrame();
+        static void EndFrame();
         static void RenderFrame(PerspectiveCamera& camera);
         static void CleanUp();
     private:
@@ -50,6 +52,16 @@ namespace Flameberry {
             std::vector<VkPresentModeKHR>   PresentationModes;
         };
     public:
+        static VkDevice& GetDevice() { return s_VkDevice; }
+        static VkRenderPass GetRenderPass() { return s_VkRenderPass; }
+        static VkDescriptorSet& GetCurrentFrameDescriptorSet() { return s_VkDescriptorSets[s_CurrentFrame]; }
+        static const VkDescriptorSetLayout& GetDescriptorSetLayout() { return s_VkDescriptorSetLayout; }
+        static const std::vector<VkBuffer>& GetUniformBuffers() { return s_VkUniformBuffers; }
+        static VkImageView GetTextureImageView() { return s_VkTextureImageView; }
+        static VkSampler GetTextureImageSampler() { return s_VkTextureSampler; }
+        static uint32_t GetCurrentFrameIndex() { return s_CurrentFrame; }
+
+        static VkExtent2D         GetSwapChainExtent2D() { return s_VkSwapChainExtent2D; };
         static void               CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
         static void               TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
         static void               BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
@@ -65,7 +77,7 @@ namespace Flameberry {
         static void               CreateGraphicsPipeline();
         static void               CreateFramebuffers();
         static void               CreateUniformBuffers();
-        static void               UpdateUniformBuffers(uint32_t imageIndex, PerspectiveCamera& camera);
+        static void               UpdateUniformBuffers(uint32_t currentFrame, PerspectiveCamera& camera);
         static void               CreateDescriptorPool();
         static void               CreateDescriptorSets();
         static void               CreateCommandBuffers();
@@ -127,7 +139,12 @@ namespace Flameberry {
         static bool                         s_EnableValidationLayers;
         static std::vector<const char*>     s_VkDeviceExtensions;
         static size_t                       s_CurrentFrame;
+        static uint32_t                     s_ImageIndex;
         static uint32_t                     s_MinImageCount;
+
+        // Test
+        static std::unique_ptr<VulkanBuffer> s_VertexBuffer;
+        static std::unique_ptr<VulkanBuffer> s_IndexBuffer;
     private:
         static VkImage s_VkTextureImage;
         static VkDeviceMemory s_VkTextureImageDeviceMemory;
@@ -140,7 +157,5 @@ namespace Flameberry {
     private:
         static GLFWwindow* s_UserGLFWwindow;
         static uint32_t s_Indices[MAX_INDICES];
-    private:
-        constexpr static uint32_t s_MAX_FRAMES_IN_FLIGHT = 3;
     };
 }

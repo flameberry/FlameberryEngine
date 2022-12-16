@@ -7,6 +7,7 @@
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Core/Core.h"
 #include "Core/Timer.h"
@@ -52,7 +53,12 @@ namespace Flameberry {
     std::vector<const char*>     VulkanRenderer::s_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
     bool                         VulkanRenderer::s_EnableValidationLayers = true;
     size_t                       VulkanRenderer::s_CurrentFrame = 0;
+    uint32_t                     VulkanRenderer::s_ImageIndex;
     uint32_t                     VulkanRenderer::s_MinImageCount;
+
+    // Test
+    std::unique_ptr<VulkanBuffer> VulkanRenderer::s_VertexBuffer;
+    std::unique_ptr<VulkanBuffer> VulkanRenderer::s_IndexBuffer;
 
     VkImage VulkanRenderer::s_VkTextureImage;
     VkDeviceMemory VulkanRenderer::s_VkTextureImageDeviceMemory;
@@ -330,31 +336,31 @@ namespace Flameberry {
         FL_INFO("Created Vulkan Render Pass!");
 
         // Creating Description Set Layout
-        VkDescriptorSetLayoutBinding vk_uniform_buffer_object_layout_binding{};
-        vk_uniform_buffer_object_layout_binding.binding = 0;
-        vk_uniform_buffer_object_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        vk_uniform_buffer_object_layout_binding.descriptorCount = 1;
-        vk_uniform_buffer_object_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        vk_uniform_buffer_object_layout_binding.pImmutableSamplers = nullptr;
+        // VkDescriptorSetLayoutBinding vk_uniform_buffer_object_layout_binding{};
+        // vk_uniform_buffer_object_layout_binding.binding = 0;
+        // vk_uniform_buffer_object_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        // vk_uniform_buffer_object_layout_binding.descriptorCount = 1;
+        // vk_uniform_buffer_object_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        // vk_uniform_buffer_object_layout_binding.pImmutableSamplers = nullptr;
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        // VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        // samplerLayoutBinding.binding = 1;
+        // samplerLayoutBinding.descriptorCount = 1;
+        // samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        // samplerLayoutBinding.pImmutableSamplers = nullptr;
+        // samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = { vk_uniform_buffer_object_layout_binding, samplerLayoutBinding };
+        // std::array<VkDescriptorSetLayoutBinding, 2> bindings = { vk_uniform_buffer_object_layout_binding, samplerLayoutBinding };
 
-        VkDescriptorSetLayoutCreateInfo vk_descriptor_set_layout_create_info{};
-        vk_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        vk_descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t>(bindings.size());
-        vk_descriptor_set_layout_create_info.pBindings = bindings.data();
+        // VkDescriptorSetLayoutCreateInfo vk_descriptor_set_layout_create_info{};
+        // vk_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        // vk_descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t>(bindings.size());
+        // vk_descriptor_set_layout_create_info.pBindings = bindings.data();
 
-        FL_ASSERT(vkCreateDescriptorSetLayout(s_VkDevice, &vk_descriptor_set_layout_create_info, nullptr, &s_VkDescriptorSetLayout) == VK_SUCCESS, "Failed to create Vulkan Descriptor Set Layout!");
-        FL_INFO("Created Vulkan Descriptor Set Layout");
+        // FL_ASSERT(vkCreateDescriptorSetLayout(s_VkDevice, &vk_descriptor_set_layout_create_info, nullptr, &s_VkDescriptorSetLayout) == VK_SUCCESS, "Failed to create Vulkan Descriptor Set Layout!");
+        // FL_INFO("Created Vulkan Descriptor Set Layout");
 
-        CreateGraphicsPipeline();
+        // CreateGraphicsPipeline();
 
         // Creating Depth Buffer Resources
         CreateDepthResources();
@@ -417,54 +423,78 @@ namespace Flameberry {
         //     offset += 4;
         // }
 
-        auto [vk_vertices, indices] = VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
-        memcpy(s_Indices, indices.data(), sizeof(uint32_t) * indices.size());
+//        auto [vk_vertices, indices] = VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
+//        memcpy(s_Indices, indices.data(), sizeof(uint32_t) * indices.size());
+//
+//        // Creating Vertex Buffer
+//        VkDeviceSize bufferSize = sizeof(VulkanVertex) * vk_vertices.size();
 
-        // Creating Vertex Buffer
-        VkDeviceSize bufferSize = sizeof(VulkanVertex) * vk_vertices.size();
+        // VkBuffer stagingBuffer;
+        // VkDeviceMemory stagingBufferMemory;
+        // CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        // void* vk_vertex_buffer_data;
+        // vkMapMemory(s_VkDevice, stagingBufferMemory, 0, bufferSize, 0, &vk_vertex_buffer_data);
+        // memcpy(vk_vertex_buffer_data, vk_vertices.data(), (size_t)bufferSize);
+        // vkUnmapMemory(s_VkDevice, stagingBufferMemory);
 
-        void* vk_vertex_buffer_data;
-        vkMapMemory(s_VkDevice, stagingBufferMemory, 0, bufferSize, 0, &vk_vertex_buffer_data);
-        memcpy(vk_vertex_buffer_data, vk_vertices.data(), (size_t)bufferSize);
-        vkUnmapMemory(s_VkDevice, stagingBufferMemory);
+        // CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_VkVertexBuffer, s_VkVertexBufferDeviceMemory);
+        // CopyBuffer(stagingBuffer, s_VkVertexBuffer, bufferSize);
 
-        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_VkVertexBuffer, s_VkVertexBufferDeviceMemory);
-        CopyBuffer(stagingBuffer, s_VkVertexBuffer, bufferSize);
+        // vkDestroyBuffer(s_VkDevice, stagingBuffer, nullptr);
+        // vkFreeMemory(s_VkDevice, stagingBufferMemory, nullptr);
 
-        vkDestroyBuffer(s_VkDevice, stagingBuffer, nullptr);
-        vkFreeMemory(s_VkDevice, stagingBufferMemory, nullptr);
+        // Test
+//        {
+//            VulkanBuffer stagingBuffer(s_VkDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+//
+//            stagingBuffer.MapMemory(bufferSize);
+//            stagingBuffer.WriteToBuffer(vk_vertices.data(), bufferSize, 0);
+//            stagingBuffer.UnmapMemory();
+//
+//            s_VertexBuffer = std::make_unique<VulkanBuffer>(s_VkDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+//            CopyBuffer(stagingBuffer.GetBuffer(), s_VertexBuffer->GetBuffer(), bufferSize);
+//        }
 
         // Creating Index Buffer
-        VkDeviceSize indexBufferSize = sizeof(s_Indices);
+//        VkDeviceSize indexBufferSize = sizeof(s_Indices);
 
-        VkBuffer stagingBufferForIndexBuffer;
-        VkDeviceMemory stagingBufferMemoryForIndexBuffer;
-        CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBufferForIndexBuffer, stagingBufferMemoryForIndexBuffer);
+        // VkBuffer stagingBufferForIndexBuffer;
+        // VkDeviceMemory stagingBufferMemoryForIndexBuffer;
+        // CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBufferForIndexBuffer, stagingBufferMemoryForIndexBuffer);
 
-        void* vk_index_buffer_data;
-        vkMapMemory(s_VkDevice, stagingBufferMemoryForIndexBuffer, 0, indexBufferSize, 0, &vk_index_buffer_data);
-        memcpy(vk_index_buffer_data, s_Indices, (size_t)indexBufferSize);
-        vkUnmapMemory(s_VkDevice, stagingBufferMemoryForIndexBuffer);
+        // void* vk_index_buffer_data;
+        // vkMapMemory(s_VkDevice, stagingBufferMemoryForIndexBuffer, 0, indexBufferSize, 0, &vk_index_buffer_data);
+        // memcpy(vk_index_buffer_data, s_Indices, (size_t)indexBufferSize);
+        // vkUnmapMemory(s_VkDevice, stagingBufferMemoryForIndexBuffer);
 
-        CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_VkIndexBuffer, s_VkIndexBufferDeviceMemory);
-        CopyBuffer(stagingBufferForIndexBuffer, s_VkIndexBuffer, indexBufferSize);
+        // CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_VkIndexBuffer, s_VkIndexBufferDeviceMemory);
+        // CopyBuffer(stagingBufferForIndexBuffer, s_VkIndexBuffer, indexBufferSize);
 
-        vkDestroyBuffer(s_VkDevice, stagingBufferForIndexBuffer, nullptr);
-        vkFreeMemory(s_VkDevice, stagingBufferMemoryForIndexBuffer, nullptr);
+        // vkDestroyBuffer(s_VkDevice, stagingBufferForIndexBuffer, nullptr);
+        // vkFreeMemory(s_VkDevice, stagingBufferMemoryForIndexBuffer, nullptr);
 
-        CreateUniformBuffers();
-        CreateDescriptorPool();
-        CreateDescriptorSets();
+        // Test
+//        {
+//            VulkanBuffer stagingBuffer(s_VkDevice, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+//
+//            stagingBuffer.MapMemory(indexBufferSize);
+//            stagingBuffer.WriteToBuffer(indices.data(), indexBufferSize, 0);
+//            stagingBuffer.UnmapMemory();
+//
+//            s_IndexBuffer = std::make_unique<VulkanBuffer>(s_VkDevice, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+//            CopyBuffer(stagingBuffer.GetBuffer(), s_IndexBuffer->GetBuffer(), indexBufferSize);
+//        }
+
+        // CreateUniformBuffers();
+        // CreateDescriptorPool();
+        // CreateDescriptorSets();
         CreateCommandBuffers();
 
         // Creating Semaphores and Fences
-        s_ImageAvailableSemaphores.resize(s_MAX_FRAMES_IN_FLIGHT);
-        s_RenderFinishedSemaphores.resize(s_MAX_FRAMES_IN_FLIGHT);
-        s_InFlightFences.resize(s_MAX_FRAMES_IN_FLIGHT);
+        s_ImageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        s_RenderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        s_InFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
         s_ImagesInFlight.resize(s_VkSwapChainImages.size(), VK_NULL_HANDLE);
 
         VkSemaphoreCreateInfo vk_semaphore_create_info{};
@@ -474,45 +504,73 @@ namespace Flameberry {
         vk_fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         vk_fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for (size_t i = 0; i < s_MAX_FRAMES_IN_FLIGHT; i++)
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             FL_ASSERT(vkCreateSemaphore(s_VkDevice, &vk_semaphore_create_info, nullptr, &s_ImageAvailableSemaphores[i]) == VK_SUCCESS, "Failed to create Image Available Semaphore!");
             FL_ASSERT(vkCreateSemaphore(s_VkDevice, &vk_semaphore_create_info, nullptr, &s_RenderFinishedSemaphores[i]) == VK_SUCCESS, "Failed to create Render Finished Semaphore!");
             FL_ASSERT(vkCreateFence(s_VkDevice, &vk_fence_create_info, nullptr, &s_InFlightFences[i]) == VK_SUCCESS, "Failed to create 'in flight Fence'!");
         }
-        FL_INFO("Created {0} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", s_MAX_FRAMES_IN_FLIGHT);
+        FL_INFO("Created {0} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
     }
 
-    void VulkanRenderer::RenderFrame(PerspectiveCamera& camera)
+    VkCommandBuffer VulkanRenderer::BeginFrame()
     {
         vkWaitForFences(s_VkDevice, 1, &s_InFlightFences[s_CurrentFrame], VK_TRUE, UINT64_MAX);
 
-        uint32_t imageIndex;
-        VkResult imageAcquireStatus = vkAcquireNextImageKHR(s_VkDevice, s_VkSwapChain, UINT64_MAX, s_ImageAvailableSemaphores[s_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+        VkResult imageAcquireStatus = vkAcquireNextImageKHR(s_VkDevice, s_VkSwapChain, UINT64_MAX, s_ImageAvailableSemaphores[s_CurrentFrame], VK_NULL_HANDLE, &s_ImageIndex);
         if (imageAcquireStatus == VK_ERROR_OUT_OF_DATE_KHR)
         {
             InvalidateSwapChain();
-            return;
+            return VK_NULL_HANDLE;
         }
 
         // Check if a previous frame is using this image (i.e. there is its fence to wait on)
-        if (s_ImagesInFlight[imageIndex] != VK_NULL_HANDLE)
-            vkWaitForFences(s_VkDevice, 1, &s_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+        if (s_ImagesInFlight[s_ImageIndex] != VK_NULL_HANDLE)
+            vkWaitForFences(s_VkDevice, 1, &s_ImagesInFlight[s_ImageIndex], VK_TRUE, UINT64_MAX);
 
         // Mark the image as now being in use by this frame
-        s_ImagesInFlight[imageIndex] = s_InFlightFences[s_CurrentFrame];
-
-        // Updating Uniform Buffer
-        camera.OnResize((float)s_VkSwapChainExtent2D.width / (float)s_VkSwapChainExtent2D.height);
-        UpdateUniformBuffers(s_CurrentFrame, camera);
-
-        FL_LOG("Image Index: {0}, Current Frame: {1}", imageIndex, s_CurrentFrame);
+        s_ImagesInFlight[s_ImageIndex] = s_InFlightFences[s_CurrentFrame];
 
         vkResetFences(s_VkDevice, 1, &s_InFlightFences[s_CurrentFrame]);
 
+        // Reset Current Command Buffer
         vkResetCommandBuffer(s_VkCommandBuffers[s_CurrentFrame], 0);
-        RecordCommandBuffer(s_VkCommandBuffers[s_CurrentFrame], imageIndex);
 
+        // Begin Recording Current Command Buffer
+        VkCommandBufferBeginInfo vk_command_buffer_begin_info{};
+        vk_command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        vk_command_buffer_begin_info.flags = 0;
+        vk_command_buffer_begin_info.pInheritanceInfo = nullptr;
+
+        FL_ASSERT(vkBeginCommandBuffer(s_VkCommandBuffers[s_CurrentFrame], &vk_command_buffer_begin_info) == VK_SUCCESS, "Failed to begin Vulkan Command Buffer recording!");
+
+        VkRenderPassBeginInfo vk_render_pass_begin_info{};
+        vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        vk_render_pass_begin_info.renderPass = s_VkRenderPass;
+        vk_render_pass_begin_info.framebuffer = s_VkSwapChainFramebuffers[s_ImageIndex];
+        vk_render_pass_begin_info.renderArea.offset = { 0, 0 };
+        vk_render_pass_begin_info.renderArea.extent = s_VkSwapChainExtent2D;
+
+        std::array<VkClearValue, 2> vk_clear_values{};
+        vk_clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+        vk_clear_values[1].depthStencil = { 1.0f, 0 };
+
+        vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(vk_clear_values.size());
+        vk_render_pass_begin_info.pClearValues = vk_clear_values.data();
+
+        vkCmdBeginRenderPass(s_VkCommandBuffers[s_CurrentFrame], &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+        // vkCmdBindPipeline(s_VkCommandBuffers[s_CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, s_VkGraphicsPipeline);
+        return s_VkCommandBuffers[s_CurrentFrame];
+    }
+
+    void VulkanRenderer::EndFrame()
+    {
+        // End Recording Command Buffer
+        vkCmdEndRenderPass(s_VkCommandBuffers[s_CurrentFrame]);
+        FL_ASSERT(vkEndCommandBuffer(s_VkCommandBuffers[s_CurrentFrame]) == VK_SUCCESS, "Failed to record Vulkan Command Buffer!");
+
+        // Submit Queue
         VkSubmitInfo vk_submit_info{};
         vk_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -538,7 +596,7 @@ namespace Flameberry {
         VkSwapchainKHR vk_swap_chains[] = { s_VkSwapChain };
         vk_present_info.swapchainCount = 1;
         vk_present_info.pSwapchains = vk_swap_chains;
-        vk_present_info.pImageIndices = &imageIndex;
+        vk_present_info.pImageIndices = &s_ImageIndex;
         vk_present_info.pResults = nullptr;
 
         VkResult queuePresentStatus = vkQueuePresentKHR(s_VkPresentationQueue, &vk_present_info);
@@ -546,7 +604,72 @@ namespace Flameberry {
             InvalidateSwapChain();
         vkQueueWaitIdle(s_VkPresentationQueue);
 
-        s_CurrentFrame = (s_CurrentFrame + 1) % s_MAX_FRAMES_IN_FLIGHT;
+        s_CurrentFrame = (s_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    void VulkanRenderer::RenderFrame(PerspectiveCamera& camera)
+    {
+        // vkWaitForFences(s_VkDevice, 1, &s_InFlightFences[s_CurrentFrame], VK_TRUE, UINT64_MAX);
+
+        // uint32_t imageIndex;
+        // VkResult imageAcquireStatus = vkAcquireNextImageKHR(s_VkDevice, s_VkSwapChain, UINT64_MAX, s_ImageAvailableSemaphores[s_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+        // if (imageAcquireStatus == VK_ERROR_OUT_OF_DATE_KHR)
+        // {
+        //     InvalidateSwapChain();
+        //     return;
+        // }
+
+        // // Check if a previous frame is using this image (i.e. there is its fence to wait on)
+        // if (s_ImagesInFlight[imageIndex] != VK_NULL_HANDLE)
+        //     vkWaitForFences(s_VkDevice, 1, &s_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+
+        // // Mark the image as now being in use by this frame
+        // s_ImagesInFlight[imageIndex] = s_InFlightFences[s_CurrentFrame];
+
+        // vkResetFences(s_VkDevice, 1, &s_InFlightFences[s_CurrentFrame]);
+
+        // Updating Uniform Buffer
+        camera.OnResize((float)s_VkSwapChainExtent2D.width / (float)s_VkSwapChainExtent2D.height);
+        UpdateUniformBuffers(s_CurrentFrame, camera);
+
+        // FL_LOG("Image Index: {0}, Current Frame: {1}", imageIndex, s_CurrentFrame);
+
+        RecordCommandBuffer(s_VkCommandBuffers[s_CurrentFrame], s_ImageIndex);
+
+        // VkSubmitInfo vk_submit_info{};
+        // vk_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        // VkSemaphore wait_semaphores[] = { s_ImageAvailableSemaphores[s_CurrentFrame] };
+        // VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        // vk_submit_info.waitSemaphoreCount = 1;
+        // vk_submit_info.pWaitSemaphores = wait_semaphores;
+        // vk_submit_info.pWaitDstStageMask = wait_stages;
+        // vk_submit_info.commandBufferCount = 1;
+        // vk_submit_info.pCommandBuffers = &s_VkCommandBuffers[s_CurrentFrame];
+
+        // VkSemaphore signal_semaphores[] = { s_RenderFinishedSemaphores[s_CurrentFrame] };
+        // vk_submit_info.signalSemaphoreCount = 1;
+        // vk_submit_info.pSignalSemaphores = signal_semaphores;
+
+        // FL_ASSERT(vkQueueSubmit(s_VkGraphicsQueue, 1, &vk_submit_info, s_InFlightFences[s_CurrentFrame]) == VK_SUCCESS, "Failed to submit Graphics Queue!");
+
+        // VkPresentInfoKHR vk_present_info{};
+        // vk_present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        // vk_present_info.waitSemaphoreCount = 1;
+        // vk_present_info.pWaitSemaphores = signal_semaphores;
+
+        // VkSwapchainKHR vk_swap_chains[] = { s_VkSwapChain };
+        // vk_present_info.swapchainCount = 1;
+        // vk_present_info.pSwapchains = vk_swap_chains;
+        // vk_present_info.pImageIndices = &s_ImageIndex;
+        // vk_present_info.pResults = nullptr;
+
+        // VkResult queuePresentStatus = vkQueuePresentKHR(s_VkPresentationQueue, &vk_present_info);
+        // if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR)
+        //     InvalidateSwapChain();
+        // vkQueueWaitIdle(s_VkPresentationQueue);
+
+        // s_CurrentFrame = (s_CurrentFrame + 1) % s_MAX_FRAMES_IN_FLIGHT;
     }
 
     void VulkanRenderer::CreateSwapChain()
@@ -616,27 +739,16 @@ namespace Flameberry {
 
         vkDeviceWaitIdle(s_VkDevice);
 
+        // CleanUp SwapChain
         for (auto framebuffer : s_VkSwapChainFramebuffers)
             vkDestroyFramebuffer(s_VkDevice, framebuffer, nullptr);
-
-        vkFreeCommandBuffers(s_VkDevice, s_VkCommandPool, static_cast<uint32_t>(s_VkCommandBuffers.size()), s_VkCommandBuffers.data());
-
-        vkDestroyPipeline(s_VkDevice, s_VkGraphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(s_VkDevice, s_VkPipelineLayout, nullptr);
-        vkDestroyRenderPass(s_VkDevice, s_VkRenderPass, nullptr);
 
         for (auto imageView : s_VkSwapChainImageViews)
             vkDestroyImageView(s_VkDevice, imageView, nullptr);
 
         vkDestroySwapchainKHR(s_VkDevice, s_VkSwapChain, nullptr);
 
-        for (size_t i = 0; i < s_VkSwapChainImages.size(); i++)
-        {
-            vkDestroyBuffer(s_VkDevice, s_VkUniformBuffers[i], nullptr);
-            vkFreeMemory(s_VkDevice, s_VkUniformBuffersDeviceMemory[i], nullptr);
-        }
-        vkDestroyDescriptorPool(s_VkDevice, s_VkDescriptorPool, nullptr);
-
+        // Create New SwapChain
         CreateSwapChain();
 
         // Creating Image Views
@@ -662,51 +774,7 @@ namespace Flameberry {
             FL_ASSERT(vkCreateImageView(s_VkDevice, &vk_image_view_create_info, nullptr, &s_VkSwapChainImageViews[i]) == VK_SUCCESS, "Failed to create Vulkan Image View!");
         }
 
-        // Creating Render Pass
-        VkSubpassDependency vk_subpass_dependency{};
-        vk_subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        vk_subpass_dependency.dstSubpass = 0;
-        vk_subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        vk_subpass_dependency.srcAccessMask = 0;
-        vk_subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        vk_subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-        VkAttachmentDescription vk_color_attachment_description{};
-        vk_color_attachment_description.format = s_VkSwapChainImageFormat;
-        vk_color_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
-        vk_color_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        vk_color_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        vk_color_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        vk_color_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        vk_color_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        VkAttachmentReference vk_color_attachment_reference{};
-        vk_color_attachment_reference.attachment = 0;
-        vk_color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription vk_subpass_description{};
-        vk_subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        vk_subpass_description.colorAttachmentCount = 1;
-        vk_subpass_description.pColorAttachments = &vk_color_attachment_reference;
-
-        VkRenderPassCreateInfo vk_render_pass_create_info{};
-        vk_render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        vk_render_pass_create_info.attachmentCount = 1;
-        vk_render_pass_create_info.pAttachments = &vk_color_attachment_description;
-        vk_render_pass_create_info.subpassCount = 1;
-        vk_render_pass_create_info.pSubpasses = &vk_subpass_description;
-        vk_render_pass_create_info.dependencyCount = 1;
-        vk_render_pass_create_info.pDependencies = &vk_subpass_dependency;
-
-        FL_ASSERT(vkCreateRenderPass(s_VkDevice, &vk_render_pass_create_info, nullptr, &s_VkRenderPass) == VK_SUCCESS, "Failed to create Vulkan Render Pass!");
-
-        CreateGraphicsPipeline();
         CreateFramebuffers();
-        CreateUniformBuffers();
-        CreateDescriptorPool();
-        CreateDescriptorSets();
-        CreateCommandBuffers();
         s_ImagesInFlight.resize(s_VkSwapChainImages.size(), VK_NULL_HANDLE);
     }
 
@@ -821,12 +889,17 @@ namespace Flameberry {
         vk_pipeline_color_blend_state_create_info.blendConstants[2] = 0.0f;
         vk_pipeline_color_blend_state_create_info.blendConstants[3] = 0.0f;
 
+        VkPushConstantRange vk_push_constant_range{};
+        vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vk_push_constant_range.size = sizeof(ModelMatrixPushConstantData);
+        vk_push_constant_range.offset = 0;
+
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
         vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         vk_pipeline_layout_create_info.setLayoutCount = 1;
         vk_pipeline_layout_create_info.pSetLayouts = &s_VkDescriptorSetLayout;
-        vk_pipeline_layout_create_info.pushConstantRangeCount = 0;
-        vk_pipeline_layout_create_info.pPushConstantRanges = nullptr;
+        vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
+        vk_pipeline_layout_create_info.pPushConstantRanges = &vk_push_constant_range;
 
         FL_ASSERT(vkCreatePipelineLayout(s_VkDevice, &vk_pipeline_layout_create_info, nullptr, &s_VkPipelineLayout) == VK_SUCCESS, "Failed to create Vulkan pipeline layout!");
 
@@ -893,53 +966,46 @@ namespace Flameberry {
         }
     }
 
-    void VulkanRenderer::UpdateUniformBuffers(uint32_t imageIndex, PerspectiveCamera& camera)
+    void VulkanRenderer::UpdateUniformBuffers(uint32_t currentFrame, PerspectiveCamera& camera)
     {
-        static auto startTime = std::chrono::high_resolution_clock::now();
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
         CameraUniformBufferObject uniformBufferObject{};
-        uniformBufferObject.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        // uniformBufferObject.ModelMatrix = glm::mat4(1.0f);
         uniformBufferObject.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 
-        memcpy(s_VkUniformBuffersMappedMemory[imageIndex], &uniformBufferObject, sizeof(uniformBufferObject));
+        memcpy(s_VkUniformBuffersMappedMemory[currentFrame], &uniformBufferObject, sizeof(uniformBufferObject));
     }
-
 
     void VulkanRenderer::CreateDescriptorPool()
     {
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(s_MAX_FRAMES_IN_FLIGHT);
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(s_MAX_FRAMES_IN_FLIGHT);
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
         VkDescriptorPoolCreateInfo vk_descriptor_pool_create_info{};
         vk_descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         vk_descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         vk_descriptor_pool_create_info.pPoolSizes = poolSizes.data();
-        vk_descriptor_pool_create_info.maxSets = static_cast<uint32_t>(s_MAX_FRAMES_IN_FLIGHT);
+        vk_descriptor_pool_create_info.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
         FL_ASSERT(vkCreateDescriptorPool(s_VkDevice, &vk_descriptor_pool_create_info, nullptr, &s_VkDescriptorPool) == VK_SUCCESS, "Failed to create Vulkan Descriptor Pool!");
     }
 
     void VulkanRenderer::CreateDescriptorSets()
     {
-        std::vector<VkDescriptorSetLayout> vk_descriptor_set_layouts(s_MAX_FRAMES_IN_FLIGHT, s_VkDescriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> vk_descriptor_set_layouts(MAX_FRAMES_IN_FLIGHT, s_VkDescriptorSetLayout);
 
         VkDescriptorSetAllocateInfo vk_descriptor_set_allocate_info{};
         vk_descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         vk_descriptor_set_allocate_info.descriptorPool = s_VkDescriptorPool;
-        vk_descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t>(s_MAX_FRAMES_IN_FLIGHT);
+        vk_descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         vk_descriptor_set_allocate_info.pSetLayouts = vk_descriptor_set_layouts.data();
 
-        s_VkDescriptorSets.resize(s_MAX_FRAMES_IN_FLIGHT);
+        s_VkDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
         FL_ASSERT(vkAllocateDescriptorSets(s_VkDevice, &vk_descriptor_set_allocate_info, s_VkDescriptorSets.data()) == VK_SUCCESS, "Failed to allocate Vulkan Descriptor Sets!");
         FL_INFO("Allocated Vulkan Descriptor Sets!");
 
-        for (uint16_t i = 0; i < s_MAX_FRAMES_IN_FLIGHT; i++)
+        for (uint16_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             VkDescriptorBufferInfo vk_descriptor_buffer_info{};
             vk_descriptor_buffer_info.buffer = s_VkUniformBuffers[i];
@@ -992,43 +1058,55 @@ namespace Flameberry {
 
     void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
     {
-        VkCommandBufferBeginInfo vk_command_buffer_begin_info{};
-        vk_command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        vk_command_buffer_begin_info.flags = 0;
-        vk_command_buffer_begin_info.pInheritanceInfo = nullptr;
+        // VkCommandBufferBeginInfo vk_command_buffer_begin_info{};
+        // vk_command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        // vk_command_buffer_begin_info.flags = 0;
+        // vk_command_buffer_begin_info.pInheritanceInfo = nullptr;
 
-        FL_ASSERT(vkBeginCommandBuffer(commandBuffer, &vk_command_buffer_begin_info) == VK_SUCCESS, "Failed to begin Vulkan Command Buffer recording!");
+        // FL_ASSERT(vkBeginCommandBuffer(commandBuffer, &vk_command_buffer_begin_info) == VK_SUCCESS, "Failed to begin Vulkan Command Buffer recording!");
 
-        VkRenderPassBeginInfo vk_render_pass_begin_info{};
-        vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        vk_render_pass_begin_info.renderPass = s_VkRenderPass;
-        vk_render_pass_begin_info.framebuffer = s_VkSwapChainFramebuffers[imageIndex];
-        vk_render_pass_begin_info.renderArea.offset = { 0, 0 };
-        vk_render_pass_begin_info.renderArea.extent = s_VkSwapChainExtent2D;
+        // VkRenderPassBeginInfo vk_render_pass_begin_info{};
+        // vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        // vk_render_pass_begin_info.renderPass = s_VkRenderPass;
+        // vk_render_pass_begin_info.framebuffer = s_VkSwapChainFramebuffers[imageIndex];
+        // vk_render_pass_begin_info.renderArea.offset = { 0, 0 };
+        // vk_render_pass_begin_info.renderArea.extent = s_VkSwapChainExtent2D;
 
-        std::array<VkClearValue, 2> vk_clear_values{};
-        vk_clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-        vk_clear_values[1].depthStencil = { 1.0f, 0 };
+        // std::array<VkClearValue, 2> vk_clear_values{};
+        // vk_clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+        // vk_clear_values[1].depthStencil = { 1.0f, 0 };
 
-        vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(vk_clear_values.size());
-        vk_render_pass_begin_info.pClearValues = vk_clear_values.data();
+        // vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(vk_clear_values.size());
+        // vk_render_pass_begin_info.pClearValues = vk_clear_values.data();
 
-        vkCmdBeginRenderPass(commandBuffer, &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+        // vkCmdBeginRenderPass(commandBuffer, &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_VkGraphicsPipeline);
+        // vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_VkGraphicsPipeline);
 
         // Binding Vertex Buffers
-        VkBuffer vk_vertex_buffers[] = { s_VkVertexBuffer };
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vk_vertex_buffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, s_VkIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        // VkBuffer vk_vertex_buffers[] = { s_VkVertexBuffer };
+//        VkBuffer vk_vertex_buffers[] = { s_VertexBuffer->GetBuffer() };
+//        VkDeviceSize offsets[] = { 0 };
+//        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vk_vertex_buffers, offsets);
+//        // vkCmdBindIndexBuffer(commandBuffer, s_VkIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+//        vkCmdBindIndexBuffer(commandBuffer, s_IndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+//
+//        static auto startTime = std::chrono::high_resolution_clock::now();
+//        auto currentTime = std::chrono::high_resolution_clock::now();
+//        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+//
+//        ModelMatrixPushConstantData pushConstantData;
+//        pushConstantData.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+//        // glm::mat4 modelMatrix(1.0f);
+//
+//        vkCmdPushConstants(commandBuffer, s_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushConstantData);
+//
+//        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_VkPipelineLayout, 0, 1, &s_VkDescriptorSets[s_CurrentFrame], 0, nullptr);
+//        vkCmdDrawIndexed(commandBuffer, sizeof(s_Indices) / sizeof(uint32_t), 1, 0, 0, 0);
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_VkPipelineLayout, 0, 1, &s_VkDescriptorSets[s_CurrentFrame], 0, nullptr);
-        vkCmdDrawIndexed(commandBuffer, sizeof(s_Indices) / sizeof(uint32_t), 1, 0, 0, 0);
+        // vkCmdEndRenderPass(commandBuffer);
 
-        vkCmdEndRenderPass(commandBuffer);
-
-        FL_ASSERT(vkEndCommandBuffer(commandBuffer) == VK_SUCCESS, "Failed to record Vulkan Command Buffer!");
+        // FL_ASSERT(vkEndCommandBuffer(commandBuffer) == VK_SUCCESS, "Failed to record Vulkan Command Buffer!");
     }
 
     bool VulkanRenderer::HasStencilComponent(VkFormat format)
@@ -1578,13 +1656,13 @@ namespace Flameberry {
     {
         vkDeviceWaitIdle(s_VkDevice);
 
-        for (size_t i = 0; i < s_MAX_FRAMES_IN_FLIGHT; i++)
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             vkDestroySemaphore(s_VkDevice, s_ImageAvailableSemaphores[i], nullptr);
             vkDestroySemaphore(s_VkDevice, s_RenderFinishedSemaphores[i], nullptr);
             vkDestroyFence(s_VkDevice, s_InFlightFences[i], nullptr);
         }
-        FL_INFO("Destroyed {0} Image Available Semaphores, Render Finished Semaphores and 'in flight fences'!", s_MAX_FRAMES_IN_FLIGHT);
+        FL_INFO("Destroyed {0} Image Available Semaphores, Render Finished Semaphores and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
 
         vkDestroyCommandPool(s_VkDevice, s_VkCommandPool, nullptr);
         FL_INFO("Destroyed Vulkan Command Pool!");
@@ -1594,11 +1672,11 @@ namespace Flameberry {
             vkDestroyFramebuffer(s_VkDevice, framebuffer, nullptr);
         FL_INFO("Destroyed {0} Vulkan Framebuffers!", frambufferCount);
 
-        vkDestroyPipeline(s_VkDevice, s_VkGraphicsPipeline, nullptr);
-        FL_INFO("Destroyed Vulkan Graphics Pipeline!");
-
-        vkDestroyPipelineLayout(s_VkDevice, s_VkPipelineLayout, nullptr);
-        FL_INFO("Destroyed Vulkan Pipeline Layout!");
+        //        vkDestroyPipeline(s_VkDevice, s_VkGraphicsPipeline, nullptr);
+        //        FL_INFO("Destroyed Vulkan Graphics Pipeline!");
+        //
+        //        vkDestroyPipelineLayout(s_VkDevice, s_VkPipelineLayout, nullptr);
+        //        FL_INFO("Destroyed Vulkan Pipeline Layout!");
 
         vkDestroyRenderPass(s_VkDevice, s_VkRenderPass, nullptr);
         FL_INFO("Destroyed Vulkan Render Pass!");
@@ -1611,17 +1689,17 @@ namespace Flameberry {
         vkDestroySwapchainKHR(s_VkDevice, s_VkSwapChain, nullptr);
         FL_INFO("Destroyed Vulkan Swap Chain!");
 
-        for (uint16_t i = 0; i < s_VkSwapChainImages.size(); i++)
-        {
-            vkDestroyBuffer(s_VkDevice, s_VkUniformBuffers[i], nullptr);
-            vkFreeMemory(s_VkDevice, s_VkUniformBuffersDeviceMemory[i], nullptr);
-        }
+//        for (uint16_t i = 0; i < s_VkSwapChainImages.size(); i++)
+//        {
+//            vkDestroyBuffer(s_VkDevice, s_VkUniformBuffers[i], nullptr);
+//            vkFreeMemory(s_VkDevice, s_VkUniformBuffersDeviceMemory[i], nullptr);
+//        }
 
-        vkDestroyDescriptorPool(s_VkDevice, s_VkDescriptorPool, nullptr);
-        FL_INFO("Destroyed Vulkan Descriptor Pool!");
+        // vkDestroyDescriptorPool(s_VkDevice, s_VkDescriptorPool, nullptr);
+        // FL_INFO("Destroyed Vulkan Descriptor Pool!");
 
-        vkDestroyDescriptorSetLayout(s_VkDevice, s_VkDescriptorSetLayout, nullptr);
-        FL_INFO("Destroyed Vulkan Descriptor Set Layout!");
+        // vkDestroyDescriptorSetLayout(s_VkDevice, s_VkDescriptorSetLayout, nullptr);
+        // FL_INFO("Destroyed Vulkan Descriptor Set Layout!");
 
         vkDestroyBuffer(s_VkDevice, s_VkIndexBuffer, nullptr);
         FL_INFO("Destroyed Vulkan Index Buffer!");
@@ -1634,6 +1712,10 @@ namespace Flameberry {
 
         vkFreeMemory(s_VkDevice, s_VkVertexBufferDeviceMemory, nullptr);
         FL_INFO("Freed Vulkan Vertex Buffer Device Memory!");
+
+        // Test
+//        s_VertexBuffer->DestroyBuffer();
+//        s_IndexBuffer->DestroyBuffer();
 
         vkDestroySampler(s_VkDevice, s_VkTextureSampler, nullptr);
         vkDestroyImageView(s_VkDevice, s_VkTextureImageView, nullptr);
