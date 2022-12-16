@@ -22,6 +22,7 @@ void ContentBrowserPanel::OnUIRender()
     float iconSize = 80.0f, padding = 10.0f;
     float cellSize = iconSize + padding;
     uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize;
+    columns = columns > 1 ? columns : 1;
 
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
