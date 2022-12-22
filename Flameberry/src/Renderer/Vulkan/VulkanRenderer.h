@@ -7,6 +7,7 @@
 #include "Renderer/PerspectiveCamera.h"
 #include "VulkanVertex.h"
 #include "VulkanBuffer.h"
+#include "VulkanImage.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -53,6 +54,7 @@ namespace Flameberry {
         };
     public:
         static VkDevice& GetDevice() { return s_VkDevice; }
+        static VkSurfaceKHR GetSurface() { return s_VkSurface; }
         static VkRenderPass GetRenderPass() { return s_VkRenderPass; }
         static VkDescriptorSet& GetCurrentFrameDescriptorSet() { return s_VkDescriptorSets[s_CurrentFrame]; }
         static const VkDescriptorSetLayout& GetDescriptorSetLayout() { return s_VkDescriptorSetLayout; }
@@ -60,6 +62,11 @@ namespace Flameberry {
         static VkImageView GetTextureImageView() { return s_VkTextureImageView; }
         static VkSampler GetTextureImageSampler() { return s_VkTextureSampler; }
         static uint32_t GetCurrentFrameIndex() { return s_CurrentFrame; }
+        static const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() {
+            VkPhysicalDeviceProperties properties{};
+            vkGetPhysicalDeviceProperties(s_VkPhysicalDevice, &properties);
+            return properties;
+        }
 
         static VkExtent2D         GetSwapChainExtent2D() { return s_VkSwapChainExtent2D; };
         static void               CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
@@ -68,7 +75,6 @@ namespace Flameberry {
         static void               EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
         static void               CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
         static VkImageView        CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
-        static void               CreateTextureImage();
         static void               CreateTextureImageView();
         static void               CreateTextureSampler();
         static void               CreateDepthResources();
@@ -143,8 +149,7 @@ namespace Flameberry {
         static uint32_t                     s_MinImageCount;
 
         // Test
-        static std::unique_ptr<VulkanBuffer> s_VertexBuffer;
-        static std::unique_ptr<VulkanBuffer> s_IndexBuffer;
+        // static std::shared_ptr<VulkanImage> s_TextureImage;
     private:
         static VkImage s_VkTextureImage;
         static VkDeviceMemory s_VkTextureImageDeviceMemory;

@@ -13,8 +13,8 @@
 #include "Core/Timer.h"
 #include "VulkanRenderCommand.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image/stb_image.h>
+// #define STB_IMAGE_IMPLEMENTATION
+// #include <stb_image/stb_image.h>
 
 namespace Flameberry {
     VkInstance                   VulkanRenderer::s_VkInstance;
@@ -55,10 +55,6 @@ namespace Flameberry {
     size_t                       VulkanRenderer::s_CurrentFrame = 0;
     uint32_t                     VulkanRenderer::s_ImageIndex;
     uint32_t                     VulkanRenderer::s_MinImageCount;
-
-    // Test
-    std::unique_ptr<VulkanBuffer> VulkanRenderer::s_VertexBuffer;
-    std::unique_ptr<VulkanBuffer> VulkanRenderer::s_IndexBuffer;
 
     VkImage VulkanRenderer::s_VkTextureImage;
     VkDeviceMemory VulkanRenderer::s_VkTextureImageDeviceMemory;
@@ -335,36 +331,7 @@ namespace Flameberry {
         FL_ASSERT(vkCreateRenderPass(s_VkDevice, &vk_render_pass_create_info, nullptr, &s_VkRenderPass) == VK_SUCCESS, "Failed to create Vulkan Render Pass!");
         FL_INFO("Created Vulkan Render Pass!");
 
-        // Creating Description Set Layout
-        // VkDescriptorSetLayoutBinding vk_uniform_buffer_object_layout_binding{};
-        // vk_uniform_buffer_object_layout_binding.binding = 0;
-        // vk_uniform_buffer_object_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        // vk_uniform_buffer_object_layout_binding.descriptorCount = 1;
-        // vk_uniform_buffer_object_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        // vk_uniform_buffer_object_layout_binding.pImmutableSamplers = nullptr;
-
-        // VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        // samplerLayoutBinding.binding = 1;
-        // samplerLayoutBinding.descriptorCount = 1;
-        // samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        // samplerLayoutBinding.pImmutableSamplers = nullptr;
-        // samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        // std::array<VkDescriptorSetLayoutBinding, 2> bindings = { vk_uniform_buffer_object_layout_binding, samplerLayoutBinding };
-
-        // VkDescriptorSetLayoutCreateInfo vk_descriptor_set_layout_create_info{};
-        // vk_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        // vk_descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t>(bindings.size());
-        // vk_descriptor_set_layout_create_info.pBindings = bindings.data();
-
-        // FL_ASSERT(vkCreateDescriptorSetLayout(s_VkDevice, &vk_descriptor_set_layout_create_info, nullptr, &s_VkDescriptorSetLayout) == VK_SUCCESS, "Failed to create Vulkan Descriptor Set Layout!");
-        // FL_INFO("Created Vulkan Descriptor Set Layout");
-
-        // CreateGraphicsPipeline();
-
-        // Creating Depth Buffer Resources
         CreateDepthResources();
-
         CreateFramebuffers();
 
         // Creating Command Pools
@@ -376,119 +343,6 @@ namespace Flameberry {
         FL_ASSERT(vkCreateCommandPool(s_VkDevice, &vk_command_pool_create_info, nullptr, &s_VkCommandPool) == VK_SUCCESS, "Failed to create Vulkan Command Pool!");
         FL_INFO("Created Vulkan Command Pool!");
 
-        // Creating Texture Resources
-        CreateTextureImage();
-        CreateTextureImageView();
-        CreateTextureSampler();
-
-        // Creating Vertex Buffers
-        // std::vector<VulkanVertex> vk_vertices;
-
-        // for (uint32_t i = 0; i < 2; i++)
-        // {
-        //     VulkanVertex v0;
-        //     v0.position = { -0.5f, -0.5f, 0.0f - i * 0.5f };
-        //     v0.color = { 1.0f, 0.0f, 0.0f, 1.0f };
-        //     v0.textureUV = { 1.0f, 0.0f };
-        //     VulkanVertex v1;
-        //     v1.position = { 0.5f, -0.5f, 0.0f - i * 0.5f };
-        //     v1.color = { 0.0f, 1.0f, 0.0f, 1.0f };
-        //     v1.textureUV = { 0.0f, 0.0f };
-        //     VulkanVertex v2;
-        //     v2.position = { 0.5f, 0.5f, 0.0f - i * 0.5f };
-        //     v2.color = { 0.0f, 0.0f, 1.0f, 1.0f };
-        //     v2.textureUV = { 0.0f, 1.0f };
-        //     VulkanVertex v3;
-        //     v3.position = { -0.5f, 0.5f, 0.0f - i * 0.5f };
-        //     v3.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-        //     v3.textureUV = { 1.0f, 1.0f };
-
-        //     vk_vertices.push_back(v0);
-        //     vk_vertices.push_back(v1);
-        //     vk_vertices.push_back(v2);
-        //     vk_vertices.push_back(v3);
-        // }
-
-        // size_t offset = 0;
-        // for (size_t i = 0; i < 12; i += 6)
-        // {
-        //     s_Indices[0 + i] = 0 + offset;
-        //     s_Indices[1 + i] = 1 + offset;
-        //     s_Indices[2 + i] = 2 + offset;
-
-        //     s_Indices[3 + i] = 2 + offset;
-        //     s_Indices[4 + i] = 3 + offset;
-        //     s_Indices[5 + i] = 0 + offset;
-
-        //     offset += 4;
-        // }
-
-//        auto [vk_vertices, indices] = VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
-//        memcpy(s_Indices, indices.data(), sizeof(uint32_t) * indices.size());
-//
-//        // Creating Vertex Buffer
-//        VkDeviceSize bufferSize = sizeof(VulkanVertex) * vk_vertices.size();
-
-        // VkBuffer stagingBuffer;
-        // VkDeviceMemory stagingBufferMemory;
-        // CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-        // void* vk_vertex_buffer_data;
-        // vkMapMemory(s_VkDevice, stagingBufferMemory, 0, bufferSize, 0, &vk_vertex_buffer_data);
-        // memcpy(vk_vertex_buffer_data, vk_vertices.data(), (size_t)bufferSize);
-        // vkUnmapMemory(s_VkDevice, stagingBufferMemory);
-
-        // CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_VkVertexBuffer, s_VkVertexBufferDeviceMemory);
-        // CopyBuffer(stagingBuffer, s_VkVertexBuffer, bufferSize);
-
-        // vkDestroyBuffer(s_VkDevice, stagingBuffer, nullptr);
-        // vkFreeMemory(s_VkDevice, stagingBufferMemory, nullptr);
-
-        // Test
-//        {
-//            VulkanBuffer stagingBuffer(s_VkDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-//
-//            stagingBuffer.MapMemory(bufferSize);
-//            stagingBuffer.WriteToBuffer(vk_vertices.data(), bufferSize, 0);
-//            stagingBuffer.UnmapMemory();
-//
-//            s_VertexBuffer = std::make_unique<VulkanBuffer>(s_VkDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-//            CopyBuffer(stagingBuffer.GetBuffer(), s_VertexBuffer->GetBuffer(), bufferSize);
-//        }
-
-        // Creating Index Buffer
-//        VkDeviceSize indexBufferSize = sizeof(s_Indices);
-
-        // VkBuffer stagingBufferForIndexBuffer;
-        // VkDeviceMemory stagingBufferMemoryForIndexBuffer;
-        // CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBufferForIndexBuffer, stagingBufferMemoryForIndexBuffer);
-
-        // void* vk_index_buffer_data;
-        // vkMapMemory(s_VkDevice, stagingBufferMemoryForIndexBuffer, 0, indexBufferSize, 0, &vk_index_buffer_data);
-        // memcpy(vk_index_buffer_data, s_Indices, (size_t)indexBufferSize);
-        // vkUnmapMemory(s_VkDevice, stagingBufferMemoryForIndexBuffer);
-
-        // CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_VkIndexBuffer, s_VkIndexBufferDeviceMemory);
-        // CopyBuffer(stagingBufferForIndexBuffer, s_VkIndexBuffer, indexBufferSize);
-
-        // vkDestroyBuffer(s_VkDevice, stagingBufferForIndexBuffer, nullptr);
-        // vkFreeMemory(s_VkDevice, stagingBufferMemoryForIndexBuffer, nullptr);
-
-        // Test
-//        {
-//            VulkanBuffer stagingBuffer(s_VkDevice, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-//
-//            stagingBuffer.MapMemory(indexBufferSize);
-//            stagingBuffer.WriteToBuffer(indices.data(), indexBufferSize, 0);
-//            stagingBuffer.UnmapMemory();
-//
-//            s_IndexBuffer = std::make_unique<VulkanBuffer>(s_VkDevice, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-//            CopyBuffer(stagingBuffer.GetBuffer(), s_IndexBuffer->GetBuffer(), indexBufferSize);
-//        }
-
-        // CreateUniformBuffers();
-        // CreateDescriptorPool();
-        // CreateDescriptorSets();
         CreateCommandBuffers();
 
         // Creating Semaphores and Fences
@@ -1085,24 +939,24 @@ namespace Flameberry {
 
         // Binding Vertex Buffers
         // VkBuffer vk_vertex_buffers[] = { s_VkVertexBuffer };
-//        VkBuffer vk_vertex_buffers[] = { s_VertexBuffer->GetBuffer() };
-//        VkDeviceSize offsets[] = { 0 };
-//        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vk_vertex_buffers, offsets);
-//        // vkCmdBindIndexBuffer(commandBuffer, s_VkIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
-//        vkCmdBindIndexBuffer(commandBuffer, s_IndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-//
-//        static auto startTime = std::chrono::high_resolution_clock::now();
-//        auto currentTime = std::chrono::high_resolution_clock::now();
-//        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-//
-//        ModelMatrixPushConstantData pushConstantData;
-//        pushConstantData.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-//        // glm::mat4 modelMatrix(1.0f);
-//
-//        vkCmdPushConstants(commandBuffer, s_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushConstantData);
-//
-//        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_VkPipelineLayout, 0, 1, &s_VkDescriptorSets[s_CurrentFrame], 0, nullptr);
-//        vkCmdDrawIndexed(commandBuffer, sizeof(s_Indices) / sizeof(uint32_t), 1, 0, 0, 0);
+    //        VkBuffer vk_vertex_buffers[] = { s_VertexBuffer->GetBuffer() };
+    //        VkDeviceSize offsets[] = { 0 };
+    //        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vk_vertex_buffers, offsets);
+    //        // vkCmdBindIndexBuffer(commandBuffer, s_VkIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    //        vkCmdBindIndexBuffer(commandBuffer, s_IndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+    //
+    //        static auto startTime = std::chrono::high_resolution_clock::now();
+    //        auto currentTime = std::chrono::high_resolution_clock::now();
+    //        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    //
+    //        ModelMatrixPushConstantData pushConstantData;
+    //        pushConstantData.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    //        // glm::mat4 modelMatrix(1.0f);
+    //
+    //        vkCmdPushConstants(commandBuffer, s_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushConstantData);
+    //
+    //        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_VkPipelineLayout, 0, 1, &s_VkDescriptorSets[s_CurrentFrame], 0, nullptr);
+    //        vkCmdDrawIndexed(commandBuffer, sizeof(s_Indices) / sizeof(uint32_t), 1, 0, 0, 0);
 
         // vkCmdEndRenderPass(commandBuffer);
 
@@ -1144,35 +998,6 @@ namespace Flameberry {
             VK_IMAGE_TILING_OPTIMAL,
             VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
         );
-    }
-
-    void VulkanRenderer::CreateTextureImage()
-    {
-        int width, height, channels;
-        stbi_uc* pixels = stbi_load(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png", &width, &height, &channels, STBI_rgb_alpha);
-        FL_ASSERT(pixels, "Texture pixels are empty!");
-        VkDeviceSize imageSize = 4 * width * height;
-
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-
-        CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-        void* data;
-        vkMapMemory(s_VkDevice, stagingBufferMemory, 0, imageSize, 0, &data);
-        memcpy(data, pixels, static_cast<size_t>(imageSize));
-        vkUnmapMemory(s_VkDevice, stagingBufferMemory);
-
-        stbi_image_free(pixels);
-
-        CreateImage(width, height, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_VkTextureImage, s_VkTextureImageDeviceMemory);
-
-        TransitionImageLayout(s_VkTextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        CopyBufferToImage(stagingBuffer, s_VkTextureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-        TransitionImageLayout(s_VkTextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-        vkDestroyBuffer(s_VkDevice, stagingBuffer, nullptr);
-        vkFreeMemory(s_VkDevice, stagingBufferMemory, nullptr);
     }
 
     void VulkanRenderer::CreateTextureImageView()
@@ -1689,17 +1514,17 @@ namespace Flameberry {
         vkDestroySwapchainKHR(s_VkDevice, s_VkSwapChain, nullptr);
         FL_INFO("Destroyed Vulkan Swap Chain!");
 
-//        for (uint16_t i = 0; i < s_VkSwapChainImages.size(); i++)
-//        {
-//            vkDestroyBuffer(s_VkDevice, s_VkUniformBuffers[i], nullptr);
-//            vkFreeMemory(s_VkDevice, s_VkUniformBuffersDeviceMemory[i], nullptr);
-//        }
+        //        for (uint16_t i = 0; i < s_VkSwapChainImages.size(); i++)
+        //        {
+        //            vkDestroyBuffer(s_VkDevice, s_VkUniformBuffers[i], nullptr);
+        //            vkFreeMemory(s_VkDevice, s_VkUniformBuffersDeviceMemory[i], nullptr);
+        //        }
 
-        // vkDestroyDescriptorPool(s_VkDevice, s_VkDescriptorPool, nullptr);
-        // FL_INFO("Destroyed Vulkan Descriptor Pool!");
+            // vkDestroyDescriptorPool(s_VkDevice, s_VkDescriptorPool, nullptr);
+            // FL_INFO("Destroyed Vulkan Descriptor Pool!");
 
-        // vkDestroyDescriptorSetLayout(s_VkDevice, s_VkDescriptorSetLayout, nullptr);
-        // FL_INFO("Destroyed Vulkan Descriptor Set Layout!");
+            // vkDestroyDescriptorSetLayout(s_VkDevice, s_VkDescriptorSetLayout, nullptr);
+            // FL_INFO("Destroyed Vulkan Descriptor Set Layout!");
 
         vkDestroyBuffer(s_VkDevice, s_VkIndexBuffer, nullptr);
         FL_INFO("Destroyed Vulkan Index Buffer!");
@@ -1714,14 +1539,14 @@ namespace Flameberry {
         FL_INFO("Freed Vulkan Vertex Buffer Device Memory!");
 
         // Test
-//        s_VertexBuffer->DestroyBuffer();
-//        s_IndexBuffer->DestroyBuffer();
+    //        s_VertexBuffer->DestroyBuffer();
+    //        s_IndexBuffer->DestroyBuffer();
 
-        vkDestroySampler(s_VkDevice, s_VkTextureSampler, nullptr);
-        vkDestroyImageView(s_VkDevice, s_VkTextureImageView, nullptr);
+        // vkDestroySampler(s_VkDevice, s_VkTextureSampler, nullptr);
+        // vkDestroyImageView(s_VkDevice, s_VkTextureImageView, nullptr);
 
-        vkDestroyImage(s_VkDevice, s_VkTextureImage, nullptr);
-        vkFreeMemory(s_VkDevice, s_VkTextureImageDeviceMemory, nullptr);
+        // vkDestroyImage(s_VkDevice, s_VkTextureImage, nullptr);
+        // vkFreeMemory(s_VkDevice, s_VkTextureImageDeviceMemory, nullptr);
         FL_INFO("Destroyed Vulkan Texture Image and Freed Vulkan Texture Image Device Memory!");
 
         vkDestroyImageView(s_VkDevice, s_VkDepthImageView, nullptr);

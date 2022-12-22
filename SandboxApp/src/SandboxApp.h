@@ -23,4 +23,6 @@ private:
     std::unique_ptr<Flameberry::VulkanBuffer> m_VertexBuffer, m_IndexBuffer;
     std::unique_ptr<Flameberry::VulkanBuffer> m_UniformBuffers[MAX_FRAMES_IN_FLIGHT];
     uint32_t m_Indices[MAX_INDICES];
+
+    std::unique_ptr<Flameberry::VulkanTexture> m_Texture;
 };

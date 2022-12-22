@@ -23,6 +23,7 @@
 #include "Renderer/Vulkan/VulkanRenderCommand.h"
 #include "Renderer/Vulkan/VulkanPipeline.h"
 #include "Renderer/Vulkan/VulkanDescriptor.h"
+#include "Renderer/Vulkan/VulkanTexture.h"
 #endif
 
 #include "Core/Timer.h"

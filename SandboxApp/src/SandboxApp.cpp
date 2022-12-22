@@ -17,6 +17,9 @@ SandboxApp::SandboxApp()
 
     Flameberry::VulkanRenderer::Init(Flameberry::Application::Get().GetWindow().GetGLFWwindow());
 
+    // Creating Texture
+    m_Texture = std::make_unique<Flameberry::VulkanTexture>(Flameberry::VulkanRenderer::GetDevice(), FL_PROJECT_DIR"SandboxApp/assets/textures/StoneIdol.jpg");
+
     // Creating Uniform Buffers
     VkDeviceSize uniformBufferSize = sizeof(Flameberry::CameraUniformBufferObject);
     for (auto& uniformBuffer : m_UniformBuffers)
@@ -57,8 +60,8 @@ SandboxApp::SandboxApp()
 
         VkDescriptorImageInfo vk_image_info{};
         vk_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        vk_image_info.imageView = Flameberry::VulkanRenderer::GetTextureImageView();
-        vk_image_info.sampler = Flameberry::VulkanRenderer::GetTextureImageSampler();
+        vk_image_info.imageView = m_Texture->GetImageView();
+        vk_image_info.sampler = m_Texture->GetSampler();
 
         m_VulkanDescriptorPool->AllocateDescriptorSet(&m_VkDescriptorSets[i], m_VulkanDescriptorLayout->GetLayout());
         m_VulkanDescriptorWriter->WriteBuffer(0, &vk_descriptor_buffer_info);
@@ -175,6 +178,8 @@ void SandboxApp::OnUpdate(float delta)
 
 SandboxApp::~SandboxApp()
 {
+    m_Texture->~VulkanTexture();
+
     m_VertexBuffer->DestroyBuffer();
     m_IndexBuffer->DestroyBuffer();
 

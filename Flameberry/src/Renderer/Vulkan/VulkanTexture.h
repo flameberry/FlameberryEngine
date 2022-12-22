@@ -1,18 +1,23 @@
-// #pragma once
-// #include <vulkan/vulkan.h>
+#pragma once
 
-// namespace Flameberry {
-//     class VulkanTexture
-//     {
-//     public:
-//         VulkanTexture();
-//         ~VulkanTexture();
+#include <vulkan/vulkan.h>
+#include "VulkanImage.h"
 
-//         void CreateTextureImage(VkDevice device);
-//     private:
-//         VkImage m_VkTextureImage;
-//         VkDeviceMemory m_VkTextureImageDeviceMemory;
-//         VkImageView m_VkTextureImageView;
-//         VkSampler m_VkTextureSampler;
-//     };
-// }
+#include <memory>
+
+namespace Flameberry {
+    class VulkanTexture
+    {
+    public:
+        VulkanTexture(VkDevice& device, const char* texturePath);
+        ~VulkanTexture();
+
+        VkImageView GetImageView() const { return m_TextureImage->GetImageView(); }
+        VkSampler GetSampler() const { return m_VkTextureSampler; }
+    private:
+        std::unique_ptr<VulkanImage> m_TextureImage;
+        VkSampler m_VkTextureSampler;
+
+        VkDevice& m_VkDevice;
+    };
+}
