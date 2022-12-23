@@ -62,6 +62,7 @@ namespace Flameberry {
         static VkSurfaceKHR GetSurface() { return s_VkSurface; }
         static VkRenderPass GetRenderPass() { return s_SwapChain->GetRenderPass(); }
         static uint32_t GetCurrentFrameIndex() { return s_CurrentFrame; }
+        static GLFWwindow* GetUserGLFWwindow() { return s_UserGLFWwindow; }
         static const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() {
             VkPhysicalDeviceProperties properties{};
             vkGetPhysicalDeviceProperties(s_VkPhysicalDevice, &properties);

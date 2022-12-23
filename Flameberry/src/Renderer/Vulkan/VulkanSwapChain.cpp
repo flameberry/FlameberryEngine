@@ -272,11 +272,12 @@ namespace Flameberry {
 
     void VulkanSwapChain::Invalidate()
     {
-        // int width = 0, height = 0;
-        // while (width == 0 || height == 0) {
-        //     glfwGetFramebufferSize(s_UserGLFWwindow, &width, &height);
-        //     glfwWaitEvents();
-        // }
+        FL_LOG("Invalidating SwapChain...");
+        int width = 0, height = 0;
+        while (width == 0 || height == 0) {
+            glfwGetFramebufferSize(VulkanRenderer::GetUserGLFWwindow(), &width, &height);
+            glfwWaitEvents();
+        }
 
         vkDeviceWaitIdle(m_VkDevice);
 
