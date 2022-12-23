@@ -24,6 +24,8 @@
 #include "Renderer/Vulkan/VulkanPipeline.h"
 #include "Renderer/Vulkan/VulkanDescriptor.h"
 #include "Renderer/Vulkan/VulkanTexture.h"
+#include "Renderer/Vulkan/VulkanMesh.h"
+#include "Renderer/Vulkan/MeshRenderer.h"
 #endif
 
 #include "Core/Timer.h"

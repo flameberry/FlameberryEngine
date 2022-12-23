@@ -18,7 +18,7 @@ SandboxApp::SandboxApp()
     Flameberry::VulkanRenderer::Init(Flameberry::Application::Get().GetWindow().GetGLFWwindow());
 
     // Creating Texture
-    m_Texture = std::make_unique<Flameberry::VulkanTexture>(Flameberry::VulkanRenderer::GetDevice(), FL_PROJECT_DIR"SandboxApp/assets/textures/StoneIdol.jpg");
+    m_Texture = std::make_unique<Flameberry::VulkanTexture>(Flameberry::VulkanRenderer::GetDevice(), FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
 
     // Creating Uniform Buffers
     VkDeviceSize uniformBufferSize = sizeof(Flameberry::CameraUniformBufferObject);
@@ -69,75 +69,15 @@ SandboxApp::SandboxApp()
         m_VulkanDescriptorWriter->Update(m_VkDescriptorSets[i]);
     }
 
-    // Create Pipeline Layout
-    VkPushConstantRange vk_push_constant_range{};
-    vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    vk_push_constant_range.size = sizeof(Flameberry::ModelMatrixPushConstantData);
-    vk_push_constant_range.offset = 0;
-
-    VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
-    vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    vk_pipeline_layout_create_info.setLayoutCount = 1;
-    auto layout = m_VulkanDescriptorLayout->GetLayout();
-    vk_pipeline_layout_create_info.pSetLayouts = &layout;
-    vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
-    vk_pipeline_layout_create_info.pPushConstantRanges = &vk_push_constant_range;
-
-    FL_ASSERT(vkCreatePipelineLayout(Flameberry::VulkanRenderer::GetDevice(), &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout) == VK_SUCCESS, "Failed to create Vulkan pipeline layout!");
-
-    // Create Pipeline
-    Flameberry::VulkanPipelineSpecification pipelineSpec{};
-    pipelineSpec.vertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleVert.spv";
-    pipelineSpec.fragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleFrag.spv";
-    pipelineSpec.renderPass = Flameberry::VulkanRenderer::GetRenderPass();
-    pipelineSpec.subPass = 0;
-
-    pipelineSpec.pipelineLayout = m_VkPipelineLayout;
-
-    VkVertexInputBindingDescription vk_vertex_input_binding_description = Flameberry::VulkanVertex::GetBindingDescription();
-    auto vk_attribute_descriptions = Flameberry::VulkanVertex::GetAttributeDescriptions();
-
-    VkPipelineVertexInputStateCreateInfo vk_pipeline_vertex_input_state_create_info{};
-    vk_pipeline_vertex_input_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vk_pipeline_vertex_input_state_create_info.vertexBindingDescriptionCount = 1;
-    vk_pipeline_vertex_input_state_create_info.pVertexBindingDescriptions = &vk_vertex_input_binding_description;
-    vk_pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(vk_attribute_descriptions.size());
-    vk_pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = vk_attribute_descriptions.data();
-
-    pipelineSpec.pipelineVertexInputStateCreateInfo = vk_pipeline_vertex_input_state_create_info;
-
-    Flameberry::VulkanPipeline::FillWithDefaultPipelineSpecification(pipelineSpec);
-
-    m_VulkanPipeline = std::make_unique<Flameberry::VulkanPipeline>(Flameberry::VulkanRenderer::GetDevice(), pipelineSpec);
-
-    // Vertex Buffer and Index Buffer
-    auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
-    memcpy(m_Indices, indices.data(), sizeof(uint32_t) * indices.size());
+    m_MeshRenderer = std::make_unique<Flameberry::MeshRenderer>(Flameberry::VulkanRenderer::GetDevice(), m_VulkanDescriptorLayout->GetLayout());
 
     {
-        // Creating Vertex Buffer
-        VkDeviceSize bufferSize = sizeof(Flameberry::VulkanVertex) * vk_vertices.size();
-        Flameberry::VulkanBuffer stagingBuffer(Flameberry::VulkanRenderer::GetDevice(), bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-        stagingBuffer.MapMemory(bufferSize);
-        stagingBuffer.WriteToBuffer(vk_vertices.data(), bufferSize, 0);
-        stagingBuffer.UnmapMemory();
-
-        m_VertexBuffer = std::make_unique<Flameberry::VulkanBuffer>(Flameberry::VulkanRenderer::GetDevice(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        Flameberry::VulkanRenderer::CopyBuffer(stagingBuffer.GetBuffer(), m_VertexBuffer->GetBuffer(), bufferSize);
+        auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
+        m_Meshes.emplace_back(std::make_shared<Flameberry::VulkanMesh>(vk_vertices, indices));
     }
-
     {
-        // Creating Index Buffer
-        VkDeviceSize bufferSize = sizeof(m_Indices);
-        Flameberry::VulkanBuffer stagingBuffer(Flameberry::VulkanRenderer::GetDevice(), bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-        stagingBuffer.MapMemory(bufferSize);
-        stagingBuffer.WriteToBuffer(indices.data(), bufferSize, 0);
-        stagingBuffer.UnmapMemory();
-
-        m_IndexBuffer = std::make_unique<Flameberry::VulkanBuffer>(Flameberry::VulkanRenderer::GetDevice(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        Flameberry::VulkanRenderer::CopyBuffer(stagingBuffer.GetBuffer(), m_IndexBuffer->GetBuffer(), bufferSize);
+        auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
+        m_Meshes.emplace_back(std::make_shared<Flameberry::VulkanMesh>(vk_vertices, indices));
     }
 }
 
@@ -147,7 +87,6 @@ void SandboxApp::OnUpdate(float delta)
     if (VkCommandBuffer commandBuffer = Flameberry::VulkanRenderer::BeginFrame())
     {
         Flameberry::VulkanRenderer::BeginRenderPass();
-        m_VulkanPipeline->Bind(commandBuffer);
 
         // Update Uniforms
         m_ActiveCamera.OnResize((float)Flameberry::VulkanRenderer::GetSwapChainExtent2D().width / (float)Flameberry::VulkanRenderer::GetSwapChainExtent2D().height);
@@ -155,23 +94,7 @@ void SandboxApp::OnUpdate(float delta)
         uniformBufferObject.ViewProjectionMatrix = m_ActiveCamera.GetViewProjectionMatrix();
         m_UniformBuffers[Flameberry::VulkanRenderer::GetCurrentFrameIndex()]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
-        VkBuffer vk_vertex_buffers[] = { m_VertexBuffer->GetBuffer() };
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vk_vertex_buffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
-        static auto startTime = std::chrono::high_resolution_clock::now();
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-        Flameberry::ModelMatrixPushConstantData pushConstantData;
-        pushConstantData.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        // glm::mat4 modelMatrix(1.0f);
-
-        vkCmdPushConstants(commandBuffer, m_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Flameberry::ModelMatrixPushConstantData), &pushConstantData);
-
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, 1, &m_VkDescriptorSets[Flameberry::VulkanRenderer::GetCurrentFrameIndex()], 0, nullptr);
-        vkCmdDrawIndexed(commandBuffer, sizeof(m_Indices) / sizeof(uint32_t), 1, 0, 0, 0);
+        m_MeshRenderer->OnDraw(commandBuffer, &m_VkDescriptorSets[Flameberry::VulkanRenderer::GetCurrentFrameIndex()], m_Meshes);
 
         Flameberry::VulkanRenderer::EndRenderPass();
         Flameberry::VulkanRenderer::EndFrame();
@@ -182,9 +105,6 @@ SandboxApp::~SandboxApp()
 {
     m_Texture->~VulkanTexture();
 
-    m_VertexBuffer->DestroyBuffer();
-    m_IndexBuffer->DestroyBuffer();
-
     for (auto& uniformBuffer : m_UniformBuffers)
         uniformBuffer->DestroyBuffer();
 
@@ -193,10 +113,6 @@ SandboxApp::~SandboxApp()
 
     m_VulkanDescriptorPool->~VulkanDescriptorPool();
     m_VulkanDescriptorPool.release();
-
-    vkDestroyPipelineLayout(Flameberry::VulkanRenderer::GetDevice(), m_VkPipelineLayout, nullptr);
-    m_VulkanPipeline->~VulkanPipeline();
-    m_VulkanPipeline.release();
     Flameberry::VulkanRenderer::CleanUp();
 }
 
