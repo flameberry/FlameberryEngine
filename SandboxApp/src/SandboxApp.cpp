@@ -146,6 +146,7 @@ void SandboxApp::OnUpdate(float delta)
     m_ActiveCamera.OnUpdate(delta);
     if (VkCommandBuffer commandBuffer = Flameberry::VulkanRenderer::BeginFrame())
     {
+        Flameberry::VulkanRenderer::BeginRenderPass();
         m_VulkanPipeline->Bind(commandBuffer);
 
         // Update Uniforms
@@ -172,6 +173,7 @@ void SandboxApp::OnUpdate(float delta)
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, 1, &m_VkDescriptorSets[Flameberry::VulkanRenderer::GetCurrentFrameIndex()], 0, nullptr);
         vkCmdDrawIndexed(commandBuffer, sizeof(m_Indices) / sizeof(uint32_t), 1, 0, 0, 0);
 
+        Flameberry::VulkanRenderer::EndRenderPass();
         Flameberry::VulkanRenderer::EndFrame();
     }
 }

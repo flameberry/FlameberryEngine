@@ -8,6 +8,7 @@
 #include "VulkanVertex.h"
 #include "VulkanBuffer.h"
 #include "VulkanImage.h"
+#include "VulkanSwapChain.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -31,6 +32,13 @@ namespace Flameberry {
     struct CameraUniformBufferObject { glm::mat4 ViewProjectionMatrix; };
     struct ModelMatrixPushConstantData { glm::mat4 ModelMatrix; };
 
+    struct SwapChainDetails
+    {
+        VkSurfaceCapabilitiesKHR        SurfaceCapabilities;
+        std::vector<VkSurfaceFormatKHR> SurfaceFormats;
+        std::vector<VkPresentModeKHR>   PresentationModes;
+    };
+
     class VulkanRenderer
     {
     public:
@@ -38,7 +46,8 @@ namespace Flameberry {
         static void Init(GLFWwindow* window);
         [[nodiscard]] static VkCommandBuffer BeginFrame();
         static void EndFrame();
-        static void RenderFrame(PerspectiveCamera& camera);
+        static void BeginRenderPass();
+        static void EndRenderPass();
         static void CleanUp();
     private:
         struct QueueFamilyIndices
@@ -46,16 +55,12 @@ namespace Flameberry {
             flame::optional<uint32_t> GraphicsSupportedQueueFamilyIndex;
             flame::optional<uint32_t> PresentationSupportedQueueFamilyIndex;
         };
-        struct SwapChainDetails
-        {
-            VkSurfaceCapabilitiesKHR        SurfaceCapabilities;
-            std::vector<VkSurfaceFormatKHR> SurfaceFormats;
-            std::vector<VkPresentModeKHR>   PresentationModes;
-        };
     public:
         static VkDevice& GetDevice() { return s_VkDevice; }
+        static VkQueue GetGraphicsQueue() { return s_VkGraphicsQueue; }
+        static VkQueue GetPresentationQueue() { return s_VkPresentationQueue; }
         static VkSurfaceKHR GetSurface() { return s_VkSurface; }
-        static VkRenderPass GetRenderPass() { return s_VkRenderPass; }
+        static VkRenderPass GetRenderPass() { return s_SwapChain->GetRenderPass(); }
         static uint32_t GetCurrentFrameIndex() { return s_CurrentFrame; }
         static const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() {
             VkPhysicalDeviceProperties properties{};
@@ -63,20 +68,10 @@ namespace Flameberry {
             return properties;
         }
 
-        static void               CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-        static VkImageView        CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
         static void               CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);
-        static VkExtent2D         GetSwapChainExtent2D() { return s_VkSwapChainExtent2D; };
-        static void               CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-        static void               TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+        static VkExtent2D         GetSwapChainExtent2D() { return s_SwapChain->GetExtent2D(); };
         static void               BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
         static void               EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
-        static void               CreateDepthResources();
-        static void               CreateSwapChain();
-        static void               InvalidateSwapChain();
-        static void               CreateGraphicsPipeline();
-        static void               CreateFramebuffers();
-        static void               UpdateUniformBuffers(uint32_t currentFrame, PerspectiveCamera& camera);
         static void               CreateCommandBuffers();
         static VkPhysicalDevice   GetValidVkPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices);
         static bool               CheckValidationLayerSupport();
@@ -103,29 +98,15 @@ namespace Flameberry {
         static VkQueue                      s_VkGraphicsQueue;
         static VkQueue                      s_VkPresentationQueue;
         static VkSurfaceKHR                 s_VkSurface;
-        static VkSwapchainKHR               s_VkSwapChain;
-        static std::vector<VkImage>         s_VkSwapChainImages;
-        static VkFormat                     s_VkSwapChainImageFormat;
-        static VkExtent2D                   s_VkSwapChainExtent2D;
-        static std::vector<VkImageView>     s_VkSwapChainImageViews;
-        static VkRenderPass                 s_VkRenderPass;
-        static std::vector<VkFramebuffer>   s_VkSwapChainFramebuffers;
         static VkCommandPool                s_VkCommandPool;
         static std::vector<VkCommandBuffer> s_VkCommandBuffers;
-        static std::vector<VkSemaphore>     s_ImageAvailableSemaphores;
-        static std::vector<VkSemaphore>     s_RenderFinishedSemaphores;
-        static std::vector<VkFence>         s_InFlightFences;
-        static std::vector<VkFence>         s_ImagesInFlight;
         static std::vector<const char*>     s_ValidationLayers;
         static bool                         s_EnableValidationLayers;
         static std::vector<const char*>     s_VkDeviceExtensions;
         static size_t                       s_CurrentFrame;
         static uint32_t                     s_ImageIndex;
-        static uint32_t                     s_MinImageCount;
-    private:
-        static VkImage s_VkDepthImage;
-        static VkDeviceMemory s_VkDepthImageMemory;
-        static VkImageView s_VkDepthImageView;
+
+        static std::unique_ptr<VulkanSwapChain> s_SwapChain;
     private:
         static GLFWwindow* s_UserGLFWwindow;
     };
