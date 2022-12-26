@@ -10,7 +10,7 @@ namespace Flameberry {
     class VulkanSwapChain
     {
     public:
-        VulkanSwapChain(VkPhysicalDevice& physicalDevice, VkDevice& device);
+        VulkanSwapChain(VkSurfaceKHR surface);
         ~VulkanSwapChain();
 
         VkRenderPass GetRenderPass() const { return m_VkRenderPass; }
@@ -20,15 +20,20 @@ namespace Flameberry {
         uint32_t GetSwapChainImageCount() const { return m_VkSwapChainImages.size(); }
 
         VkResult AcquireNextImage();
-        VkResult SubmitCommandBuffer(VkCommandBuffer* commandBuffer);
+        VkResult SubmitCommandBuffer(VkCommandBuffer commandBuffer);
         void Invalidate();
     private:
+        VkSurfaceFormatKHR SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats);
+        VkPresentModeKHR SelectSwapPresentationMode(const std::vector<VkPresentModeKHR>& available_presentation_modes);
+        VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR& surface_capabilities);
+        VkFormat GetDepthFormat();
         void CreateRenderPass();
         void CreateSyncObjects();
     private:
         VkSwapchainKHR m_VkSwapChain;
         VkFormat m_VkSwapChainImageFormat;
         VkExtent2D m_VkSwapChainExtent2D;
+        VkRenderPass m_VkRenderPass;
 
         std::vector<VkImage> m_VkSwapChainImages;
         std::vector<VkImageView> m_VkSwapChainImageViews;
@@ -36,15 +41,16 @@ namespace Flameberry {
 
         std::unique_ptr<VulkanImage> m_DepthImage;
 
-        VkRenderPass m_VkRenderPass;
         std::vector<VkSemaphore> m_ImageAvailableSemaphores;
         std::vector<VkSemaphore> m_RenderFinishedSemaphores;
         std::vector<VkFence> m_InFlightFences;
         std::vector<VkFence> m_ImagesInFlight;
 
-        uint32_t m_MinImageCount, m_ImageIndex, m_CurrentFrameIndex;
+        uint32_t m_ImageIndex, m_CurrentFrameIndex;
 
-        VkPhysicalDevice& m_VkPhysicalDevice;
-        VkDevice& m_VkDevice;
+        VkSurfaceKHR m_VkSurface;
+
+    public:
+        constexpr static uint32_t MAX_FRAMES_IN_FLIGHT = 2;
     };
 }

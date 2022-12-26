@@ -3,30 +3,34 @@
 #include <array>
 
 #include "Core/Core.h"
-#include "VulkanRenderer.h"
+#include "VulkanSwapChain.h"
+#include "VulkanContext.h"
+#include "VulkanRenderCommand.h"
 
 namespace Flameberry {
-    VulkanDescriptorPool::VulkanDescriptorPool(VkDevice& device)
-        : m_VkDevice(device)
+    VulkanDescriptorPool::VulkanDescriptorPool()
     {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
 
         VkDescriptorPoolCreateInfo vk_descriptor_pool_create_info{};
         vk_descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         vk_descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         vk_descriptor_pool_create_info.pPoolSizes = poolSizes.data();
-        vk_descriptor_pool_create_info.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        vk_descriptor_pool_create_info.maxSets = static_cast<uint32_t>(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-        FL_ASSERT(vkCreateDescriptorPool(m_VkDevice, &vk_descriptor_pool_create_info, nullptr, &m_VkDescriptorPool) == VK_SUCCESS, "Failed to create Vulkan Descriptor Pool!");
+        FL_ASSERT(vkCreateDescriptorPool(device, &vk_descriptor_pool_create_info, nullptr, &m_VkDescriptorPool) == VK_SUCCESS, "Failed to create Vulkan Descriptor Pool!");
     }
 
     VulkanDescriptorPool::~VulkanDescriptorPool()
     {
-        vkDestroyDescriptorPool(m_VkDevice, m_VkDescriptorPool, nullptr);
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyDescriptorPool(device, m_VkDescriptorPool, nullptr);
     }
 
     bool VulkanDescriptorPool::AllocateDescriptorSet(VkDescriptorSet* descriptorSet, VkDescriptorSetLayout descriptorSetLayout)
@@ -37,7 +41,8 @@ namespace Flameberry {
         vk_descriptor_set_allocate_info.descriptorSetCount = 1;
         vk_descriptor_set_allocate_info.pSetLayouts = &descriptorSetLayout;
 
-        if (vkAllocateDescriptorSets(m_VkDevice, &vk_descriptor_set_allocate_info, descriptorSet) != VK_SUCCESS)
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        if (vkAllocateDescriptorSets(device, &vk_descriptor_set_allocate_info, descriptorSet) != VK_SUCCESS)
         {
             FL_ERROR("Failed to allocate Vulkan Descriptor Sets!");
             return false;
@@ -45,8 +50,8 @@ namespace Flameberry {
         return true;
     }
 
-    VulkanDescriptorWriter::VulkanDescriptorWriter(VkDevice& device, VulkanDescriptorLayout& descriptorLayout)
-        : m_VkDevice(device), m_DescriptorLayout(descriptorLayout)
+    VulkanDescriptorWriter::VulkanDescriptorWriter(VulkanDescriptorLayout& descriptorLayout)
+        : m_DescriptorLayout(descriptorLayout)
     {
     }
 
@@ -84,15 +89,16 @@ namespace Flameberry {
     {
         for (auto& write : m_VkWrites)
             write.dstSet = descriptorSet;
-        vkUpdateDescriptorSets(m_VkDevice, static_cast<uint32_t>(m_VkWrites.size()), m_VkWrites.data(), 0, nullptr);
+
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(m_VkWrites.size()), m_VkWrites.data(), 0, nullptr);
     }
 
     VulkanDescriptorWriter::~VulkanDescriptorWriter()
     {
     }
 
-    VulkanDescriptorLayout::VulkanDescriptorLayout(VkDevice& device, const std::vector<VkDescriptorSetLayoutBinding>& bindings)
-        : m_VkDevice(device)
+    VulkanDescriptorLayout::VulkanDescriptorLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
     {
         for (const auto& binding : bindings)
             m_DescriptorTypeMap[binding.binding] = binding.descriptorType;
@@ -102,11 +108,13 @@ namespace Flameberry {
         vk_descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t>(bindings.size());
         vk_descriptor_set_layout_create_info.pBindings = bindings.data();
 
-        FL_ASSERT(vkCreateDescriptorSetLayout(m_VkDevice, &vk_descriptor_set_layout_create_info, nullptr, &m_VkDescriptorSetLayout) == VK_SUCCESS, "Failed to create Vulkan Descriptor Set Layout!");
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        FL_ASSERT(vkCreateDescriptorSetLayout(device, &vk_descriptor_set_layout_create_info, nullptr, &m_VkDescriptorSetLayout) == VK_SUCCESS, "Failed to create Vulkan Descriptor Set Layout!");
     }
 
     VulkanDescriptorLayout::~VulkanDescriptorLayout()
     {
-        vkDestroyDescriptorSetLayout(m_VkDevice, m_VkDescriptorSetLayout, nullptr);
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyDescriptorSetLayout(device, m_VkDescriptorSetLayout, nullptr);
     }
 }

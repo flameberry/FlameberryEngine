@@ -8,9 +8,10 @@
 #include "VulkanMesh.h"
 
 namespace Flameberry {
-    MeshRenderer::MeshRenderer(VkDevice& device, VkDescriptorSetLayout descriptorLayout)
-        : m_VkDevice(device)
+    MeshRenderer::MeshRenderer(VkDescriptorSetLayout descriptorLayout, VkRenderPass renderPass)
     {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
         VkPushConstantRange vk_push_constant_range{};
         vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         vk_push_constant_range.size = sizeof(ModelMatrixPushConstantData);
@@ -23,12 +24,12 @@ namespace Flameberry {
         vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
         vk_pipeline_layout_create_info.pPushConstantRanges = &vk_push_constant_range;
 
-        FL_ASSERT(vkCreatePipelineLayout(m_VkDevice, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout) == VK_SUCCESS, "Failed to create Vulkan pipeline layout!");
+        FL_ASSERT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout) == VK_SUCCESS, "Failed to create Vulkan pipeline layout!");
 
         Flameberry::VulkanPipelineSpecification pipelineSpec{};
         pipelineSpec.vertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleVert.spv";
         pipelineSpec.fragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleFrag.spv";
-        pipelineSpec.renderPass = Flameberry::VulkanRenderer::GetRenderPass();
+        pipelineSpec.renderPass = renderPass;
         pipelineSpec.subPass = 0;
 
         pipelineSpec.pipelineLayout = m_VkPipelineLayout;
@@ -47,7 +48,7 @@ namespace Flameberry {
 
         Flameberry::VulkanPipeline::FillWithDefaultPipelineSpecification(pipelineSpec);
 
-        m_MeshPipeline = std::make_unique<Flameberry::VulkanPipeline>(m_VkDevice, pipelineSpec);
+        m_MeshPipeline = std::make_unique<Flameberry::VulkanPipeline>(pipelineSpec);
     }
 
     void MeshRenderer::OnDraw(VkCommandBuffer commandBuffer, VkDescriptorSet* descriptorSet, std::vector<std::shared_ptr<VulkanMesh>>& meshes)
@@ -75,6 +76,7 @@ namespace Flameberry {
 
     MeshRenderer::~MeshRenderer()
     {
-        vkDestroyPipelineLayout(m_VkDevice, m_VkPipelineLayout, nullptr);
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
     }
 }

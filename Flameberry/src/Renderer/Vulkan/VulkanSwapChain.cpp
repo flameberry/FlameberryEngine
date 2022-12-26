@@ -2,17 +2,22 @@
 
 #include "Core/Core.h"
 
-#include "VulkanRenderer.h"
+#include "VulkanRenderCommand.h"
+#include "VulkanContext.h"
 #include "VulkanImage.h"
 
 namespace Flameberry {
-    VulkanSwapChain::VulkanSwapChain(VkPhysicalDevice& physicalDevice, VkDevice& device)
-        : m_VkPhysicalDevice(physicalDevice), m_VkDevice(device)
+    VulkanSwapChain::VulkanSwapChain(VkSurfaceKHR surface)
+        : m_VkSurface(surface)
     {
-        SwapChainDetails vk_swap_chain_details = VulkanRenderer::GetSwapChainDetails(m_VkPhysicalDevice);
-        VkSurfaceFormatKHR vk_surface_format = VulkanRenderer::SelectSwapSurfaceFormat(vk_swap_chain_details.SurfaceFormats);
-        VkPresentModeKHR vk_presentation_mode = VulkanRenderer::SelectSwapPresentationMode(vk_swap_chain_details.PresentationModes);
-        VkExtent2D vk_extent_2d = VulkanRenderer::SelectSwapExtent(vk_swap_chain_details.SurfaceCapabilities);
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();
+        const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
+
+        SwapChainDetails vk_swap_chain_details = VulkanRenderCommand::GetSwapChainDetails(physicalDevice, m_VkSurface);
+        VkSurfaceFormatKHR vk_surface_format = SelectSwapSurfaceFormat(vk_swap_chain_details.SurfaceFormats);
+        VkPresentModeKHR vk_presentation_mode = SelectSwapPresentationMode(vk_swap_chain_details.PresentationModes);
+        VkExtent2D vk_extent_2d = SelectSwapExtent(vk_swap_chain_details.SurfaceCapabilities);
 
         m_VkSwapChainImageFormat = vk_surface_format.format;
         m_VkSwapChainExtent2D = vk_extent_2d;
@@ -24,7 +29,7 @@ namespace Flameberry {
 
         VkSwapchainCreateInfoKHR vk_swap_chain_create_info{};
         vk_swap_chain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        vk_swap_chain_create_info.surface = VulkanRenderer::GetSurface();
+        vk_swap_chain_create_info.surface = m_VkSurface;
         vk_swap_chain_create_info.minImageCount = imageCount;
         vk_swap_chain_create_info.imageFormat = vk_surface_format.format;
         vk_swap_chain_create_info.imageColorSpace = vk_surface_format.colorSpace;
@@ -32,9 +37,6 @@ namespace Flameberry {
         vk_swap_chain_create_info.imageArrayLayers = 1;
         vk_swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        m_MinImageCount = imageCount;
-
-        auto queueFamilyIndices = VulkanRenderer::GetQueueFamilyIndices(m_VkPhysicalDevice);
         uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
         if (queueFamilyIndices.GraphicsSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
@@ -56,13 +58,13 @@ namespace Flameberry {
         vk_swap_chain_create_info.clipped = VK_TRUE;
         vk_swap_chain_create_info.oldSwapchain = VK_NULL_HANDLE;
 
-        FL_ASSERT(vkCreateSwapchainKHR(m_VkDevice, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain) == VK_SUCCESS, "Failed to create Vulkan Swap Chain!");
+        FL_ASSERT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain) == VK_SUCCESS, "Failed to create Vulkan Swap Chain!");
         FL_INFO("Created Vulkan Swap Chain!");
 
         uint32_t vk_swap_chain_image_count = 0;
-        vkGetSwapchainImagesKHR(m_VkDevice, m_VkSwapChain, &vk_swap_chain_image_count, nullptr);
+        vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, nullptr);
         m_VkSwapChainImages.resize(vk_swap_chain_image_count);
-        vkGetSwapchainImagesKHR(m_VkDevice, m_VkSwapChain, &vk_swap_chain_image_count, m_VkSwapChainImages.data());
+        vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, m_VkSwapChainImages.data());
 
         // Image Views creation
         m_VkSwapChainImageViews.resize(m_VkSwapChainImages.size());
@@ -84,14 +86,14 @@ namespace Flameberry {
             vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
             vk_image_view_create_info.subresourceRange.layerCount = 1;
 
-            FL_ASSERT(vkCreateImageView(m_VkDevice, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]) == VK_SUCCESS, "Failed to create Vulkan Image View!");
+            FL_ASSERT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]) == VK_SUCCESS, "Failed to create Vulkan Image View!");
         }
 
         // Create Depth Resources
-        VkFormat depthFormat = VulkanRenderer::GetDepthFormat();
+        VkFormat depthFormat = GetDepthFormat();
         // VulkanImage depthImage(m_VkDevice, m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        m_DepthImage = std::make_unique<Flameberry::VulkanImage>(m_VkDevice, m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_DepthImage = std::make_unique<Flameberry::VulkanImage>(m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         CreateRenderPass();
 
@@ -111,7 +113,7 @@ namespace Flameberry {
             vk_framebuffer_create_info.height = m_VkSwapChainExtent2D.height;
             vk_framebuffer_create_info.layers = 1;
 
-            FL_ASSERT(vkCreateFramebuffer(m_VkDevice, &vk_framebuffer_create_info, nullptr, &m_VkSwapChainFramebuffers[i]) == VK_SUCCESS, "Failed to create Vulkan Framebuffer!");
+            FL_ASSERT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VkSwapChainFramebuffers[i]) == VK_SUCCESS, "Failed to create Vulkan Framebuffer!");
         }
 
         CreateSyncObjects();
@@ -119,15 +121,21 @@ namespace Flameberry {
 
     VkResult VulkanSwapChain::AcquireNextImage()
     {
-        vkWaitForFences(m_VkDevice, 1, &m_InFlightFences[m_CurrentFrameIndex], VK_TRUE, UINT64_MAX);
-        VkResult imageAcquireStatus = vkAcquireNextImageKHR(m_VkDevice, m_VkSwapChain, UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrameIndex], VK_NULL_HANDLE, &m_ImageIndex);
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkWaitForFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex], VK_TRUE, UINT64_MAX);
+
+        VkResult imageAcquireStatus = vkAcquireNextImageKHR(device, m_VkSwapChain, UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrameIndex], VK_NULL_HANDLE, &m_ImageIndex);
         return imageAcquireStatus;
     }
 
-    VkResult VulkanSwapChain::SubmitCommandBuffer(VkCommandBuffer* commandBuffer)
+    VkResult VulkanSwapChain::SubmitCommandBuffer(VkCommandBuffer commandBuffer)
     {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        const auto& graphicsQueue = VulkanContext::GetCurrentDevice()->GetGraphicsQueue();
+        const auto& presentationQueue = VulkanContext::GetCurrentDevice()->GetPresentationQueue();
+
         if (m_ImagesInFlight[m_ImageIndex] != VK_NULL_HANDLE) // Check if a previous frame is using this image (i.e. there is its fence to wait on)
-            vkWaitForFences(m_VkDevice, 1, &m_ImagesInFlight[m_ImageIndex], VK_TRUE, UINT64_MAX);
+            vkWaitForFences(device, 1, &m_ImagesInFlight[m_ImageIndex], VK_TRUE, UINT64_MAX);
         m_ImagesInFlight[m_ImageIndex] = m_InFlightFences[m_CurrentFrameIndex];// Mark the image as now being in use by this frame
 
         // Submit Queue
@@ -140,14 +148,14 @@ namespace Flameberry {
         vk_submit_info.pWaitSemaphores = wait_semaphores;
         vk_submit_info.pWaitDstStageMask = wait_stages;
         vk_submit_info.commandBufferCount = 1;
-        vk_submit_info.pCommandBuffers = commandBuffer;
+        vk_submit_info.pCommandBuffers = &commandBuffer;
 
         VkSemaphore signal_semaphores[] = { m_RenderFinishedSemaphores[m_CurrentFrameIndex] };
         vk_submit_info.signalSemaphoreCount = 1;
         vk_submit_info.pSignalSemaphores = signal_semaphores;
 
-        vkResetFences(m_VkDevice, 1, &m_InFlightFences[m_CurrentFrameIndex]);
-        FL_ASSERT(vkQueueSubmit(VulkanRenderer::GetGraphicsQueue(), 1, &vk_submit_info, m_InFlightFences[m_CurrentFrameIndex]) == VK_SUCCESS, "Failed to submit Graphics Queue!");
+        vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex]);
+        FL_ASSERT(vkQueueSubmit(graphicsQueue, 1, &vk_submit_info, m_InFlightFences[m_CurrentFrameIndex]) == VK_SUCCESS, "Failed to submit Graphics Queue!");
 
         VkPresentInfoKHR vk_present_info{};
         vk_present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -160,7 +168,7 @@ namespace Flameberry {
         vk_present_info.pImageIndices = &m_ImageIndex;
         vk_present_info.pResults = nullptr;
 
-        VkResult queuePresentStatus = vkQueuePresentKHR(VulkanRenderer::GetPresentationQueue(), &vk_present_info);
+        VkResult queuePresentStatus = vkQueuePresentKHR(presentationQueue, &vk_present_info);
         m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
         return queuePresentStatus;
     }
@@ -190,7 +198,7 @@ namespace Flameberry {
         vk_color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription vk_depth_attachment_desc{};
-        vk_depth_attachment_desc.format = VulkanRenderer::GetDepthFormat();
+        vk_depth_attachment_desc.format = GetDepthFormat();
         vk_depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
         vk_depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         vk_depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -220,11 +228,25 @@ namespace Flameberry {
         vk_render_pass_create_info.dependencyCount = 1;
         vk_render_pass_create_info.pDependencies = &vk_subpass_dependency;
 
-        FL_ASSERT(vkCreateRenderPass(m_VkDevice, &vk_render_pass_create_info, nullptr, &m_VkRenderPass) == VK_SUCCESS, "Failed to create Vulkan Render Pass!");
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        FL_ASSERT(vkCreateRenderPass(device, &vk_render_pass_create_info, nullptr, &m_VkRenderPass) == VK_SUCCESS, "Failed to create Vulkan Render Pass!");
+    }
+
+    VkFormat VulkanSwapChain::GetDepthFormat()
+    {
+        const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
+        return VulkanRenderCommand::GetSupportedFormat(
+            physicalDevice,
+            { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+        );
     }
 
     void VulkanSwapChain::CreateSyncObjects()
     {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
         m_ImageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         m_RenderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         m_InFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -239,35 +261,38 @@ namespace Flameberry {
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            FL_ASSERT(vkCreateSemaphore(m_VkDevice, &vk_semaphore_create_info, nullptr, &m_ImageAvailableSemaphores[i]) == VK_SUCCESS, "Failed to create Image Available Semaphore!");
-            FL_ASSERT(vkCreateSemaphore(m_VkDevice, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]) == VK_SUCCESS, "Failed to create Render Finished Semaphore!");
-            FL_ASSERT(vkCreateFence(m_VkDevice, &vk_fence_create_info, nullptr, &m_InFlightFences[i]) == VK_SUCCESS, "Failed to create 'in flight Fence'!");
+            FL_ASSERT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_ImageAvailableSemaphores[i]) == VK_SUCCESS, "Failed to create Image Available Semaphore!");
+            FL_ASSERT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]) == VK_SUCCESS, "Failed to create Render Finished Semaphore!");
+            FL_ASSERT(vkCreateFence(device, &vk_fence_create_info, nullptr, &m_InFlightFences[i]) == VK_SUCCESS, "Failed to create 'in flight Fence'!");
         }
         FL_INFO("Created {0} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
     }
 
     VulkanSwapChain::~VulkanSwapChain()
     {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDeviceWaitIdle(device);
+
         m_DepthImage->~VulkanImage();
         m_DepthImage.release();
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            vkDestroySemaphore(m_VkDevice, m_ImageAvailableSemaphores[i], nullptr);
-            vkDestroySemaphore(m_VkDevice, m_RenderFinishedSemaphores[i], nullptr);
-            vkDestroyFence(m_VkDevice, m_InFlightFences[i], nullptr);
+            vkDestroySemaphore(device, m_ImageAvailableSemaphores[i], nullptr);
+            vkDestroySemaphore(device, m_RenderFinishedSemaphores[i], nullptr);
+            vkDestroyFence(device, m_InFlightFences[i], nullptr);
         }
         FL_INFO("Destroyed {0} Image Available Semaphores, Render Finished Semaphores and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
 
         for (auto& framebuffer : m_VkSwapChainFramebuffers)
-            vkDestroyFramebuffer(m_VkDevice, framebuffer, nullptr);
+            vkDestroyFramebuffer(device, framebuffer, nullptr);
 
-        vkDestroyRenderPass(m_VkDevice, m_VkRenderPass, nullptr);
+        vkDestroyRenderPass(device, m_VkRenderPass, nullptr);
 
         for (auto& imageView : m_VkSwapChainImageViews)
-            vkDestroyImageView(m_VkDevice, imageView, nullptr);
+            vkDestroyImageView(device, imageView, nullptr);
 
-        vkDestroySwapchainKHR(m_VkDevice, m_VkSwapChain, nullptr);
+        vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
     }
 
     void VulkanSwapChain::Invalidate()
@@ -275,24 +300,27 @@ namespace Flameberry {
         FL_LOG("Invalidating SwapChain...");
         int width = 0, height = 0;
         while (width == 0 || height == 0) {
-            glfwGetFramebufferSize(VulkanRenderer::GetUserGLFWwindow(), &width, &height);
+            glfwGetFramebufferSize(VulkanContext::GetCurrentWindow()->GetGLFWwindow(), &width, &height);
             glfwWaitEvents();
         }
 
-        vkDeviceWaitIdle(m_VkDevice);
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
+
+        vkDeviceWaitIdle(device);
 
         for (auto& framebuffer : m_VkSwapChainFramebuffers)
-            vkDestroyFramebuffer(m_VkDevice, framebuffer, nullptr);
+            vkDestroyFramebuffer(device, framebuffer, nullptr);
 
         for (auto& imageView : m_VkSwapChainImageViews)
-            vkDestroyImageView(m_VkDevice, imageView, nullptr);
+            vkDestroyImageView(device, imageView, nullptr);
 
-        vkDestroySwapchainKHR(m_VkDevice, m_VkSwapChain, nullptr);
+        vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
 
-        SwapChainDetails vk_swap_chain_details = VulkanRenderer::GetSwapChainDetails(m_VkPhysicalDevice);
-        VkSurfaceFormatKHR vk_surface_format = VulkanRenderer::SelectSwapSurfaceFormat(vk_swap_chain_details.SurfaceFormats);
-        VkPresentModeKHR vk_presentation_mode = VulkanRenderer::SelectSwapPresentationMode(vk_swap_chain_details.PresentationModes);
-        VkExtent2D vk_extent_2d = VulkanRenderer::SelectSwapExtent(vk_swap_chain_details.SurfaceCapabilities);
+        SwapChainDetails vk_swap_chain_details = VulkanRenderCommand::GetSwapChainDetails(physicalDevice, m_VkSurface);
+        VkSurfaceFormatKHR vk_surface_format = SelectSwapSurfaceFormat(vk_swap_chain_details.SurfaceFormats);
+        VkPresentModeKHR vk_presentation_mode = SelectSwapPresentationMode(vk_swap_chain_details.PresentationModes);
+        VkExtent2D vk_extent_2d = SelectSwapExtent(vk_swap_chain_details.SurfaceCapabilities);
 
         m_VkSwapChainImageFormat = vk_surface_format.format;
         m_VkSwapChainExtent2D = vk_extent_2d;
@@ -304,7 +332,7 @@ namespace Flameberry {
 
         VkSwapchainCreateInfoKHR vk_swap_chain_create_info{};
         vk_swap_chain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        vk_swap_chain_create_info.surface = VulkanRenderer::GetSurface();
+        vk_swap_chain_create_info.surface = m_VkSurface;
         vk_swap_chain_create_info.minImageCount = imageCount;
         vk_swap_chain_create_info.imageFormat = vk_surface_format.format;
         vk_swap_chain_create_info.imageColorSpace = vk_surface_format.colorSpace;
@@ -312,9 +340,7 @@ namespace Flameberry {
         vk_swap_chain_create_info.imageArrayLayers = 1;
         vk_swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        m_MinImageCount = imageCount;
-
-        auto queueFamilyIndices = VulkanRenderer::GetQueueFamilyIndices(m_VkPhysicalDevice);
+        auto queueFamilyIndices = VulkanRenderCommand::GetQueueFamilyIndices(physicalDevice, m_VkSurface);
         uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
         if (queueFamilyIndices.GraphicsSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
@@ -336,13 +362,13 @@ namespace Flameberry {
         vk_swap_chain_create_info.clipped = VK_TRUE;
         vk_swap_chain_create_info.oldSwapchain = VK_NULL_HANDLE;
 
-        FL_ASSERT(vkCreateSwapchainKHR(m_VkDevice, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain) == VK_SUCCESS, "Failed to create Vulkan Swap Chain!");
+        FL_ASSERT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain) == VK_SUCCESS, "Failed to create Vulkan Swap Chain!");
         FL_INFO("Created Vulkan Swap Chain!");
 
         uint32_t vk_swap_chain_image_count = 0;
-        vkGetSwapchainImagesKHR(m_VkDevice, m_VkSwapChain, &vk_swap_chain_image_count, nullptr);
+        vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, nullptr);
         m_VkSwapChainImages.resize(vk_swap_chain_image_count);
-        vkGetSwapchainImagesKHR(m_VkDevice, m_VkSwapChain, &vk_swap_chain_image_count, m_VkSwapChainImages.data());
+        vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, m_VkSwapChainImages.data());
 
         // Image Views creation
         m_VkSwapChainImageViews.resize(m_VkSwapChainImages.size());
@@ -364,12 +390,12 @@ namespace Flameberry {
             vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
             vk_image_view_create_info.subresourceRange.layerCount = 1;
 
-            FL_ASSERT(vkCreateImageView(m_VkDevice, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]) == VK_SUCCESS, "Failed to create Vulkan Image View!");
+            FL_ASSERT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]) == VK_SUCCESS, "Failed to create Vulkan Image View!");
         }
 
         // Depth Attachment
-        VkFormat depthFormat = VulkanRenderer::GetDepthFormat();
-        VulkanImage depthImage(m_VkDevice, m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
+        VkFormat depthFormat = GetDepthFormat();
+        VulkanImage depthImage(m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         // Create Framebuffers
         m_VkSwapChainFramebuffers.resize(m_VkSwapChainImageViews.size());
@@ -387,7 +413,48 @@ namespace Flameberry {
             vk_framebuffer_create_info.height = m_VkSwapChainExtent2D.height;
             vk_framebuffer_create_info.layers = 1;
 
-            FL_ASSERT(vkCreateFramebuffer(m_VkDevice, &vk_framebuffer_create_info, nullptr, &m_VkSwapChainFramebuffers[i]) == VK_SUCCESS, "Failed to create Vulkan Framebuffer!");
+            FL_ASSERT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VkSwapChainFramebuffers[i]) == VK_SUCCESS, "Failed to create Vulkan Framebuffer!");
+        }
+    }
+
+    VkSurfaceFormatKHR VulkanSwapChain::SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats)
+    {
+        for (const auto& format : available_formats)
+        {
+            if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+                return format;
+        }
+        // Implement choosing of the next best format after sRGB B8G8A8 format
+        return available_formats[0];
+    }
+
+    VkPresentModeKHR VulkanSwapChain::SelectSwapPresentationMode(const std::vector<VkPresentModeKHR>& available_presentation_modes)
+    {
+        for (const auto& mode : available_presentation_modes)
+        {
+            if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
+                return mode;
+        }
+        return VK_PRESENT_MODE_FIFO_KHR;
+    }
+
+    VkExtent2D VulkanSwapChain::SelectSwapExtent(const VkSurfaceCapabilitiesKHR& surface_capabilities)
+    {
+        if (surface_capabilities.currentExtent.width != UINT32_MAX)
+            return surface_capabilities.currentExtent;
+        else
+        {
+            VulkanWindow* pWindow = VulkanContext::GetCurrentWindow();
+            int width, height;
+            glfwGetFramebufferSize(pWindow->GetGLFWwindow(), &width, &height);
+
+            VkExtent2D actual_extent = {
+                static_cast<uint32_t>(width), static_cast<uint32_t>(height)
+            };
+
+            actual_extent.width = std::clamp(actual_extent.width, surface_capabilities.minImageExtent.width, surface_capabilities.maxImageExtent.width);
+            actual_extent.height = std::clamp(actual_extent.height, surface_capabilities.minImageExtent.height, surface_capabilities.maxImageExtent.height);
+            return actual_extent;
         }
     }
 }

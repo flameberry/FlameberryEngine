@@ -9,7 +9,7 @@ namespace Flameberry {
     class VulkanTexture
     {
     public:
-        VulkanTexture(VkDevice& device, const char* texturePath);
+        VulkanTexture(const char* texturePath);
         ~VulkanTexture();
 
         VkImageView GetImageView() const { return m_TextureImage->GetImageView(); }
@@ -17,7 +17,5 @@ namespace Flameberry {
     private:
         std::unique_ptr<VulkanImage> m_TextureImage;
         VkSampler m_VkTextureSampler;
-
-        VkDevice& m_VkDevice;
     };
 }

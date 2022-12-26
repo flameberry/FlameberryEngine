@@ -6,18 +6,15 @@
 #include "Core/Core.h"
 
 namespace Flameberry {
-    VkViewport VulkanPipeline::m_Viewport;
-    VkRect2D VulkanPipeline::m_VkScissor;
-
-    VulkanPipeline::VulkanPipeline(VkDevice& device, const VulkanPipelineSpecification& pipelineSpec)
-        : m_VkDevice(device)
+    VulkanPipeline::VulkanPipeline(const VulkanPipelineSpecification& pipelineSpec)
     {
         CreatePipeline(pipelineSpec);
     }
 
     VulkanPipeline::~VulkanPipeline()
     {
-        vkDestroyPipeline(m_VkDevice, m_VkGraphicsPipeline, nullptr);
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
     }
 
     void VulkanPipeline::Bind(VkCommandBuffer commandBuffer)
@@ -27,11 +24,13 @@ namespace Flameberry {
 
     void VulkanPipeline::CreatePipeline(const VulkanPipelineSpecification& pipelineSpec)
     {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
         std::vector<char> compiledVertexShader = VulkanRenderCommand::LoadCompiledShaderCode(pipelineSpec.vertexShaderFilePath);
         std::vector<char> compiledFragmentShader = VulkanRenderCommand::LoadCompiledShaderCode(pipelineSpec.fragmentShaderFilePath);
 
-        VkShaderModule vk_vertex_shader_module = VulkanRenderer::CreateShaderModule(compiledVertexShader);
-        VkShaderModule vk_fragment_shader_module = VulkanRenderer::CreateShaderModule(compiledFragmentShader);
+        VkShaderModule vk_vertex_shader_module = VulkanRenderCommand::CreateShaderModule(device, compiledVertexShader);
+        VkShaderModule vk_fragment_shader_module = VulkanRenderCommand::CreateShaderModule(device, compiledFragmentShader);
 
         VkPipelineShaderStageCreateInfo vk_pipeline_vertex_shader_stage_create_info{};
         vk_pipeline_vertex_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -59,21 +58,21 @@ namespace Flameberry {
         vk_graphics_pipeline_create_info.pMultisampleState = &pipelineSpec.pipelineMultisampleStateCreateInfo;
         vk_graphics_pipeline_create_info.pDepthStencilState = &pipelineSpec.pipelineDepthStencilStateCreateInfo;
         vk_graphics_pipeline_create_info.pColorBlendState = &pipelineSpec.pipelineColorBlendStateCreateInfo;
-        vk_graphics_pipeline_create_info.pDynamicState = nullptr;
+        vk_graphics_pipeline_create_info.pDynamicState = &pipelineSpec.pipelineDynamicStateCreateInfo;
         vk_graphics_pipeline_create_info.layout = pipelineSpec.pipelineLayout;
         vk_graphics_pipeline_create_info.renderPass = pipelineSpec.renderPass;
         vk_graphics_pipeline_create_info.subpass = pipelineSpec.subPass;
         vk_graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
         vk_graphics_pipeline_create_info.basePipelineIndex = -1;
 
-        FL_ASSERT(vkCreateGraphicsPipelines(m_VkDevice, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_VkGraphicsPipeline) == VK_SUCCESS, "Failed to create Vulkan Graphics Pipeline!");
+        FL_ASSERT(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_VkGraphicsPipeline) == VK_SUCCESS, "Failed to create Vulkan Graphics Pipeline!");
 
         // Destroying Shader Modules
-        vkDestroyShaderModule(m_VkDevice, vk_vertex_shader_module, nullptr);
-        vkDestroyShaderModule(m_VkDevice, vk_fragment_shader_module, nullptr);
+        vkDestroyShaderModule(device, vk_vertex_shader_module, nullptr);
+        vkDestroyShaderModule(device, vk_fragment_shader_module, nullptr);
     }
 
-    void VulkanPipeline::FillWithDefaultPipelineSpecification(VulkanPipelineSpecification& pipelineSpec)
+    void VulkanPipeline::FillWithDefaultPipelineSpecification(VulkanPipelineSpecification& pipelineSpec) // TODO
     {
         VkPipelineInputAssemblyStateCreateInfo vk_pipeline_input_assembly_state_create_info{};
         vk_pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -81,23 +80,23 @@ namespace Flameberry {
         vk_pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
         // VkViewport vk_viewport{};
-        m_Viewport.x = 0.0f;
-        m_Viewport.y = 0.0f;
-        m_Viewport.width = (float)VulkanRenderer::GetSwapChainExtent2D().width;
-        m_Viewport.height = (float)VulkanRenderer::GetSwapChainExtent2D().height;
-        m_Viewport.minDepth = 0.0f;
-        m_Viewport.maxDepth = 1.0f;
+        // m_Viewport.x = 0.0f;
+        // m_Viewport.y = 0.0f;
+        // m_Viewport.width = (float)VulkanRenderer::GetSwapChainExtent2D().width;
+        // m_Viewport.height = (float)VulkanRenderer::GetSwapChainExtent2D().height;
+        // m_Viewport.minDepth = 0.0f;
+        // m_Viewport.maxDepth = 1.0f;
 
         // VkRect2D vk_scissor_rect_2D{};
-        m_VkScissor.offset = { 0, 0 };
-        m_VkScissor.extent = VulkanRenderer::GetSwapChainExtent2D();
+        // m_VkScissor.offset = { 0, 0 };
+        // m_VkScissor.extent = VulkanRenderer::GetSwapChainExtent2D();
 
         VkPipelineViewportStateCreateInfo vk_pipeline_viewport_state_create_info{};
         vk_pipeline_viewport_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         vk_pipeline_viewport_state_create_info.viewportCount = 1;
-        vk_pipeline_viewport_state_create_info.pViewports = &m_Viewport;
+        vk_pipeline_viewport_state_create_info.pViewports = nullptr;
         vk_pipeline_viewport_state_create_info.scissorCount = 1;
-        vk_pipeline_viewport_state_create_info.pScissors = &m_VkScissor;
+        vk_pipeline_viewport_state_create_info.pScissors = nullptr;
 
         VkPipelineRasterizationStateCreateInfo vk_pipeline_rasterization_state_create_info{};
         vk_pipeline_rasterization_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -152,6 +151,12 @@ namespace Flameberry {
         vk_pipeline_color_blend_state_create_info.blendConstants[1] = 0.0f;
         vk_pipeline_color_blend_state_create_info.blendConstants[2] = 0.0f;
         vk_pipeline_color_blend_state_create_info.blendConstants[3] = 0.0f;
+
+        pipelineSpec.dynamicStatesEnabled = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+        pipelineSpec.pipelineDynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        pipelineSpec.pipelineDynamicStateCreateInfo.dynamicStateCount = static_cast<uint32_t>(pipelineSpec.dynamicStatesEnabled.size());
+        pipelineSpec.pipelineDynamicStateCreateInfo.pDynamicStates = pipelineSpec.dynamicStatesEnabled.data();
+        pipelineSpec.pipelineDynamicStateCreateInfo.flags = 0;
 
         pipelineSpec.pipelineInputAssemblyStateCreateInfo = vk_pipeline_input_assembly_state_create_info;
         pipelineSpec.pipelineViewportStateCreateInfo = vk_pipeline_viewport_state_create_info;

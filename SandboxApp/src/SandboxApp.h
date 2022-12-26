@@ -10,6 +10,8 @@ public:
     void OnUpdate(float delta) override;
     void OnUIRender() override;
 private:
+    std::shared_ptr<Flameberry::VulkanRenderer> m_VulkanRenderer;
+
     Flameberry::PerspectiveCamera m_ActiveCamera;
 
     std::unique_ptr<Flameberry::VulkanDescriptorPool> m_VulkanDescriptorPool;
@@ -18,7 +20,7 @@ private:
 
     std::vector<VkDescriptorSet> m_VkDescriptorSets;
 
-    std::unique_ptr<Flameberry::VulkanBuffer> m_UniformBuffers[MAX_FRAMES_IN_FLIGHT];
+    std::unique_ptr<Flameberry::VulkanBuffer> m_UniformBuffers[Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
 
     std::unique_ptr<Flameberry::VulkanTexture> m_Texture;
     std::unique_ptr<Flameberry::MeshRenderer> m_MeshRenderer;

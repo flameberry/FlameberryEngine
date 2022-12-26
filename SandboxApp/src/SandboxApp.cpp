@@ -15,16 +15,14 @@ SandboxApp::SandboxApp()
 
     m_ActiveCamera = Flameberry::PerspectiveCamera(cameraInfo);
 
-    Flameberry::VulkanRenderer::Init(Flameberry::Application::Get().GetWindow().GetGLFWwindow());
-
-    // Creating Texture
-    m_Texture = std::make_unique<Flameberry::VulkanTexture>(Flameberry::VulkanRenderer::GetDevice(), FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
+    m_VulkanRenderer = std::make_shared<Flameberry::VulkanRenderer>((Flameberry::VulkanWindow*)&Flameberry::Application::Get().GetWindow());
+    m_Texture = std::make_unique<Flameberry::VulkanTexture>(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
 
     // Creating Uniform Buffers
     VkDeviceSize uniformBufferSize = sizeof(Flameberry::CameraUniformBufferObject);
     for (auto& uniformBuffer : m_UniformBuffers)
     {
-        uniformBuffer = std::make_unique<Flameberry::VulkanBuffer>(Flameberry::VulkanRenderer::GetDevice(), uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        uniformBuffer = std::make_unique<Flameberry::VulkanBuffer>(uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         uniformBuffer->MapMemory(uniformBufferSize);
     }
 
@@ -45,13 +43,13 @@ SandboxApp::SandboxApp()
 
     std::vector<VkDescriptorSetLayoutBinding> bindings = { vk_uniform_buffer_object_layout_binding, samplerLayoutBinding };
 
-    m_VulkanDescriptorLayout = std::make_unique<Flameberry::VulkanDescriptorLayout>(Flameberry::VulkanRenderer::GetDevice(), bindings);
-    m_VulkanDescriptorPool = std::make_unique<Flameberry::VulkanDescriptorPool>(Flameberry::VulkanRenderer::GetDevice());
-    m_VulkanDescriptorWriter = std::make_unique<Flameberry::VulkanDescriptorWriter>(Flameberry::VulkanRenderer::GetDevice(), *m_VulkanDescriptorLayout);
+    m_VulkanDescriptorLayout = std::make_unique<Flameberry::VulkanDescriptorLayout>(bindings);
+    m_VulkanDescriptorPool = std::make_unique<Flameberry::VulkanDescriptorPool>();
+    m_VulkanDescriptorWriter = std::make_unique<Flameberry::VulkanDescriptorWriter>(*m_VulkanDescriptorLayout);
 
-    m_VkDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+    m_VkDescriptorSets.resize(Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    for (uint32_t i = 0; i < Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
     {
         VkDescriptorBufferInfo vk_descriptor_buffer_info{};
         vk_descriptor_buffer_info.buffer = m_UniformBuffers[i]->GetBuffer();
@@ -69,7 +67,7 @@ SandboxApp::SandboxApp()
         m_VulkanDescriptorWriter->Update(m_VkDescriptorSets[i]);
     }
 
-    m_MeshRenderer = std::make_unique<Flameberry::MeshRenderer>(Flameberry::VulkanRenderer::GetDevice(), m_VulkanDescriptorLayout->GetLayout());
+    m_MeshRenderer = std::make_unique<Flameberry::MeshRenderer>(m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
 
     {
         auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
@@ -84,26 +82,43 @@ SandboxApp::SandboxApp()
 void SandboxApp::OnUpdate(float delta)
 {
     m_ActiveCamera.OnUpdate(delta);
-    if (VkCommandBuffer commandBuffer = Flameberry::VulkanRenderer::BeginFrame())
+    if (VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginFrame())
     {
-        Flameberry::VulkanRenderer::BeginRenderPass();
+        m_VulkanRenderer->BeginRenderPass();
+
+        // Set Viewport and Scissor
+        VkViewport vk_viewport{};
+        vk_viewport.x = 0.0f;
+        vk_viewport.y = 0.0f;
+        vk_viewport.width = (float)m_VulkanRenderer->GetSwapChainExtent2D().width;
+        vk_viewport.height = (float)m_VulkanRenderer->GetSwapChainExtent2D().height;
+        vk_viewport.minDepth = 0.0f;
+        vk_viewport.maxDepth = 1.0f;
+
+        VkRect2D vk_scissor_rect_2D{};
+        vk_scissor_rect_2D.offset = { 0, 0 };
+        vk_scissor_rect_2D.extent = m_VulkanRenderer->GetSwapChainExtent2D();
+
+        vkCmdSetViewport(commandBuffer, 0, 1, &vk_viewport);
+        vkCmdSetScissor(commandBuffer, 0, 1, &vk_scissor_rect_2D);
 
         // Update Uniforms
-        m_ActiveCamera.OnResize((float)Flameberry::VulkanRenderer::GetSwapChainExtent2D().width / (float)Flameberry::VulkanRenderer::GetSwapChainExtent2D().height);
+        m_ActiveCamera.OnResize((float)m_VulkanRenderer->GetSwapChainExtent2D().width / (float)m_VulkanRenderer->GetSwapChainExtent2D().height);
         Flameberry::CameraUniformBufferObject uniformBufferObject{};
         uniformBufferObject.ViewProjectionMatrix = m_ActiveCamera.GetViewProjectionMatrix();
-        m_UniformBuffers[Flameberry::VulkanRenderer::GetCurrentFrameIndex()]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
+        m_UniformBuffers[m_VulkanRenderer->GetCurrentFrameIndex()]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
-        m_MeshRenderer->OnDraw(commandBuffer, &m_VkDescriptorSets[Flameberry::VulkanRenderer::GetCurrentFrameIndex()], m_Meshes);
+        m_MeshRenderer->OnDraw(commandBuffer, &m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_Meshes);
 
-        Flameberry::VulkanRenderer::EndRenderPass();
-        Flameberry::VulkanRenderer::EndFrame();
+        m_VulkanRenderer->EndRenderPass();
+        m_VulkanRenderer->EndFrame();
     }
 }
 
 SandboxApp::~SandboxApp()
 {
-    m_Texture->~VulkanTexture();
+    const auto& device = Flameberry::VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+    vkDeviceWaitIdle(device);
 
     for (auto& uniformBuffer : m_UniformBuffers)
         uniformBuffer->DestroyBuffer();
@@ -113,7 +128,6 @@ SandboxApp::~SandboxApp()
 
     m_VulkanDescriptorPool->~VulkanDescriptorPool();
     m_VulkanDescriptorPool.release();
-    Flameberry::VulkanRenderer::CleanUp();
 }
 
 void SandboxApp::OnUIRender()

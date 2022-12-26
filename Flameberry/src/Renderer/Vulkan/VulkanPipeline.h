@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-
+#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace Flameberry {
@@ -16,6 +16,7 @@ namespace Flameberry {
         VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo;
         VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState;
         VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo;
+        std::vector<VkDynamicState> dynamicStatesEnabled;
         VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo;
         VkRenderPass renderPass;
         uint32_t subPass;
@@ -27,7 +28,7 @@ namespace Flameberry {
     class VulkanPipeline
     {
     public:
-        VulkanPipeline(VkDevice& device, const VulkanPipelineSpecification& pipelineSpec);
+        VulkanPipeline(const VulkanPipelineSpecification& pipelineSpec);
         ~VulkanPipeline();
 
         void Bind(VkCommandBuffer commandBuffer);
@@ -35,10 +36,6 @@ namespace Flameberry {
     private:
         void CreatePipeline(const VulkanPipelineSpecification& pipelineSpec);
     private:
-        VkDevice& m_VkDevice;
         VkPipeline m_VkGraphicsPipeline;
-        
-        static VkViewport m_Viewport;
-        static VkRect2D m_VkScissor;
     };
 }

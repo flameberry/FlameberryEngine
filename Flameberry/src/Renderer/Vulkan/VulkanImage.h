@@ -6,7 +6,7 @@ namespace Flameberry {
     class VulkanImage
     {
     public:
-        VulkanImage(VkDevice& device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImageAspectFlags imageAspectFlags);
+        VulkanImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImageAspectFlags imageAspectFlags);
         ~VulkanImage();
 
         void WriteFromBuffer(VkBuffer srcBuffer);
@@ -21,7 +21,5 @@ namespace Flameberry {
 
         uint32_t m_Width, m_Height;
         VkFormat m_VkImageFormat;
-
-        VkDevice& m_VkDevice;
     };
 }

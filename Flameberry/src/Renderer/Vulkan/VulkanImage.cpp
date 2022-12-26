@@ -1,12 +1,16 @@
 #include "VulkanImage.h"
 
 #include "Core/Core.h"
-#include "VulkanRenderer.h"
+#include "VulkanRenderCommand.h"
+#include "VulkanContext.h"
 
 namespace Flameberry {
-    VulkanImage::VulkanImage(VkDevice& device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImageAspectFlags imageAspectFlags)
-        : m_VkDevice(device), m_Width(width), m_Height(height), m_VkImageFormat(format)
+    VulkanImage::VulkanImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImageAspectFlags imageAspectFlags)
+        : m_Width(width), m_Height(height), m_VkImageFormat(format)
     {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
+
         // Creating Image
         VkImageCreateInfo vk_image_create_info{};
         vk_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -23,18 +27,18 @@ namespace Flameberry {
         vk_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
         vk_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        FL_ASSERT(vkCreateImage(m_VkDevice, &vk_image_create_info, nullptr, &m_VkImage) == VK_SUCCESS, "Failed to create Vulkan Image!");
+        FL_ASSERT(vkCreateImage(device, &vk_image_create_info, nullptr, &m_VkImage) == VK_SUCCESS, "Failed to create Vulkan Image!");
 
         VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(m_VkDevice, m_VkImage, &memRequirements);
+        vkGetImageMemoryRequirements(device, m_VkImage, &memRequirements);
 
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = VulkanRenderer::GetValidMemoryTypeIndex(memRequirements.memoryTypeBits, properties);
+        allocInfo.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, memRequirements.memoryTypeBits, properties);
 
-        FL_ASSERT(vkAllocateMemory(m_VkDevice, &allocInfo, nullptr, &m_VkImageDeviceMemory) == VK_SUCCESS, "Failed to allocate memory for Image!");
-        vkBindImageMemory(m_VkDevice, m_VkImage, m_VkImageDeviceMemory, 0);
+        FL_ASSERT(vkAllocateMemory(device, &allocInfo, nullptr, &m_VkImageDeviceMemory) == VK_SUCCESS, "Failed to allocate memory for Image!");
+        vkBindImageMemory(device, m_VkImage, m_VkImageDeviceMemory, 0);
 
         // Creating Image View
         VkImageViewCreateInfo vk_image_view_create_info{};
@@ -48,20 +52,23 @@ namespace Flameberry {
         vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
         vk_image_view_create_info.subresourceRange.layerCount = 1;
 
-        FL_ASSERT(vkCreateImageView(m_VkDevice, &vk_image_view_create_info, nullptr, &m_VkImageView) == VK_SUCCESS, "Failed to create Vulkan Image View!");
+        FL_ASSERT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView) == VK_SUCCESS, "Failed to create Vulkan Image View!");
     }
 
     VulkanImage::~VulkanImage()
     {
-        vkDestroyImageView(m_VkDevice, m_VkImageView, nullptr);
-        vkDestroyImage(m_VkDevice, m_VkImage, nullptr);
-        vkFreeMemory(m_VkDevice, m_VkImageDeviceMemory, nullptr);
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyImageView(device, m_VkImageView, nullptr);
+        vkDestroyImage(device, m_VkImage, nullptr);
+        vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
     }
 
     void VulkanImage::WriteFromBuffer(VkBuffer srcBuffer)
     {
+        const auto& device = VulkanContext::GetCurrentDevice();
+
         VkCommandBuffer commandBuffer;
-        VulkanRenderer::BeginSingleTimeCommandBuffer(commandBuffer);
+        device->BeginSingleTimeCommandBuffer(commandBuffer);
 
         VkBufferImageCopy vk_buffer_image_copy_region{};
         vk_buffer_image_copy_region.bufferOffset = 0;
@@ -77,13 +84,15 @@ namespace Flameberry {
         vk_buffer_image_copy_region.imageExtent = { m_Width, m_Height, 1 };
 
         vkCmdCopyBufferToImage(commandBuffer, srcBuffer, m_VkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &vk_buffer_image_copy_region);
-        VulkanRenderer::EndSingleTimeCommandBuffer(commandBuffer);
+        device->EndSingleTimeCommandBuffer(commandBuffer);
     }
 
     void VulkanImage::TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout)
     {
+        const auto& device = VulkanContext::GetCurrentDevice();
+
         VkCommandBuffer commandBuffer;
-        VulkanRenderer::BeginSingleTimeCommandBuffer(commandBuffer);
+        device->BeginSingleTimeCommandBuffer(commandBuffer);
 
         VkPipelineStageFlags sourceStageFlags;
         VkPipelineStageFlags destinationStageFlags;
@@ -123,6 +132,6 @@ namespace Flameberry {
 
         vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1, &vk_image_memory_barrier);
 
-        VulkanRenderer::EndSingleTimeCommandBuffer(commandBuffer);
+        device->EndSingleTimeCommandBuffer(commandBuffer);
     }
 }
