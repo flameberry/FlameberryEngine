@@ -34,7 +34,6 @@ namespace Flameberry {
 
         VkShaderModule shaderModule;
         FL_ASSERT(vkCreateShaderModule(device, &vk_shader_module_create_info, nullptr, &shaderModule) == VK_SUCCESS, "Failed to create shader module!");
-        FL_INFO("Created Vulkan Shader Module!");
         return shaderModule;
     }
 
@@ -187,6 +186,12 @@ namespace Flameberry {
                     attrib.vertices[3 * index.vertex_index + 0],
                     attrib.vertices[3 * index.vertex_index + 1],
                     attrib.vertices[3 * index.vertex_index + 2]
+                };
+
+                vertex.normal = {
+                    attrib.normals[3 * index.normal_index + 0],
+                    attrib.normals[3 * index.normal_index + 1],
+                    attrib.normals[3 * index.normal_index + 2]
                 };
 
                 vertex.textureUV = {

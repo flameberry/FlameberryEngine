@@ -36,15 +36,20 @@ SandboxApp::SandboxApp()
 
     VkDescriptorSetLayoutBinding samplerLayoutBinding{};
     samplerLayoutBinding.binding = 1;
-    samplerLayoutBinding.descriptorCount = 1;
     samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
+    samplerLayoutBinding.descriptorCount = 1;
     samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    samplerLayoutBinding.pImmutableSamplers = nullptr;
 
     std::vector<VkDescriptorSetLayoutBinding> bindings = { vk_uniform_buffer_object_layout_binding, samplerLayoutBinding };
 
     m_VulkanDescriptorLayout = std::make_unique<Flameberry::VulkanDescriptorLayout>(bindings);
-    m_VulkanDescriptorPool = std::make_unique<Flameberry::VulkanDescriptorPool>();
+
+    std::vector<VkDescriptorPoolSize> poolSizes = {
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT },
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT }
+    };
+    m_VulkanDescriptorPool = std::make_unique<Flameberry::VulkanDescriptorPool>(poolSizes);
     m_VulkanDescriptorWriter = std::make_unique<Flameberry::VulkanDescriptorWriter>(*m_VulkanDescriptorLayout);
 
     m_VkDescriptorSets.resize(Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -117,17 +122,7 @@ void SandboxApp::OnUpdate(float delta)
 
 SandboxApp::~SandboxApp()
 {
-    const auto& device = Flameberry::VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-    vkDeviceWaitIdle(device);
-
-    for (auto& uniformBuffer : m_UniformBuffers)
-        uniformBuffer->DestroyBuffer();
-
-    m_VulkanDescriptorLayout->~VulkanDescriptorLayout();
-    m_VulkanDescriptorLayout.release();
-
-    m_VulkanDescriptorPool->~VulkanDescriptorPool();
-    m_VulkanDescriptorPool.release();
+    Flameberry::VulkanContext::GetCurrentDevice()->WaitIdle();
 }
 
 void SandboxApp::OnUIRender()

@@ -7,8 +7,13 @@
 #include "VulkanImage.h"
 
 namespace Flameberry {
-    VulkanSwapChain::VulkanSwapChain(VkSurfaceKHR surface)
+    VulkanSwapChain::VulkanSwapChain(VkSurfaceKHR surface, const std::shared_ptr<VulkanSwapChain>& oldSwapChain)
         : m_VkSurface(surface)
+    {
+        CreateSwapChain(oldSwapChain);
+    }
+
+    void VulkanSwapChain::CreateSwapChain(const std::shared_ptr<VulkanSwapChain>& oldSwapChain)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();
@@ -56,7 +61,7 @@ namespace Flameberry {
         vk_swap_chain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         vk_swap_chain_create_info.presentMode = vk_presentation_mode;
         vk_swap_chain_create_info.clipped = VK_TRUE;
-        vk_swap_chain_create_info.oldSwapchain = VK_NULL_HANDLE;
+        vk_swap_chain_create_info.oldSwapchain = oldSwapChain ? oldSwapChain->m_VkSwapChain : VK_NULL_HANDLE;
 
         FL_ASSERT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain) == VK_SUCCESS, "Failed to create Vulkan Swap Chain!");
         FL_INFO("Created Vulkan Swap Chain!");
@@ -91,31 +96,10 @@ namespace Flameberry {
 
         // Create Depth Resources
         VkFormat depthFormat = GetDepthFormat();
-        // VulkanImage depthImage(m_VkDevice, m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-        m_DepthImage = std::make_unique<Flameberry::VulkanImage>(m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_DepthImage = VulkanImage::Create(m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         CreateRenderPass();
-
-        // Create Framebuffers
-        m_VkSwapChainFramebuffers.resize(m_VkSwapChainImageViews.size());
-
-        for (size_t i = 0; i < m_VkSwapChainImageViews.size(); i++)
-        {
-            std::vector<VkImageView> attachments = { m_VkSwapChainImageViews[i], m_DepthImage->GetImageView() };
-
-            VkFramebufferCreateInfo vk_framebuffer_create_info{};
-            vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            vk_framebuffer_create_info.renderPass = m_VkRenderPass;
-            vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
-            vk_framebuffer_create_info.pAttachments = attachments.data();
-            vk_framebuffer_create_info.width = m_VkSwapChainExtent2D.width;
-            vk_framebuffer_create_info.height = m_VkSwapChainExtent2D.height;
-            vk_framebuffer_create_info.layers = 1;
-
-            FL_ASSERT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VkSwapChainFramebuffers[i]) == VK_SUCCESS, "Failed to create Vulkan Framebuffer!");
-        }
-
+        CreateFramebuffers();
         CreateSyncObjects();
     }
 
@@ -171,6 +155,28 @@ namespace Flameberry {
         VkResult queuePresentStatus = vkQueuePresentKHR(presentationQueue, &vk_present_info);
         m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
         return queuePresentStatus;
+    }
+
+    void VulkanSwapChain::CreateFramebuffers()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        m_VkSwapChainFramebuffers.resize(m_VkSwapChainImageViews.size());
+
+        for (size_t i = 0; i < m_VkSwapChainImageViews.size(); i++)
+        {
+            std::vector<VkImageView> attachments = { m_VkSwapChainImageViews[i], m_DepthImage->GetImageView() };
+
+            VkFramebufferCreateInfo vk_framebuffer_create_info{};
+            vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            vk_framebuffer_create_info.renderPass = m_VkRenderPass;
+            vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+            vk_framebuffer_create_info.pAttachments = attachments.data();
+            vk_framebuffer_create_info.width = m_VkSwapChainExtent2D.width;
+            vk_framebuffer_create_info.height = m_VkSwapChainExtent2D.height;
+            vk_framebuffer_create_info.layers = 1;
+
+            FL_ASSERT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VkSwapChainFramebuffers[i]) == VK_SUCCESS, "Failed to create Vulkan Framebuffer!");
+        }
     }
 
     void VulkanSwapChain::CreateRenderPass()
@@ -273,9 +279,6 @@ namespace Flameberry {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDeviceWaitIdle(device);
 
-        m_DepthImage->~VulkanImage();
-        m_DepthImage.release();
-
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             vkDestroySemaphore(device, m_ImageAvailableSemaphores[i], nullptr);
@@ -295,9 +298,9 @@ namespace Flameberry {
         vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
     }
 
-    void VulkanSwapChain::Invalidate()
+    void VulkanSwapChain::Invalidate(VkSwapchainKHR oldSwapChain)
     {
-        FL_LOG("Invalidating SwapChain...");
+        FL_INFO("Invalidating SwapChain...");
         int width = 0, height = 0;
         while (width == 0 || height == 0) {
             glfwGetFramebufferSize(VulkanContext::GetCurrentWindow()->GetGLFWwindow(), &width, &height);
@@ -306,16 +309,10 @@ namespace Flameberry {
 
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
+        const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();
 
         vkDeviceWaitIdle(device);
-
-        for (auto& framebuffer : m_VkSwapChainFramebuffers)
-            vkDestroyFramebuffer(device, framebuffer, nullptr);
-
-        for (auto& imageView : m_VkSwapChainImageViews)
-            vkDestroyImageView(device, imageView, nullptr);
-
-        vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
+        FL_INFO("Device is idle now...");
 
         SwapChainDetails vk_swap_chain_details = VulkanRenderCommand::GetSwapChainDetails(physicalDevice, m_VkSurface);
         VkSurfaceFormatKHR vk_surface_format = SelectSwapSurfaceFormat(vk_swap_chain_details.SurfaceFormats);
@@ -340,7 +337,6 @@ namespace Flameberry {
         vk_swap_chain_create_info.imageArrayLayers = 1;
         vk_swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        auto queueFamilyIndices = VulkanRenderCommand::GetQueueFamilyIndices(physicalDevice, m_VkSurface);
         uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
         if (queueFamilyIndices.GraphicsSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
@@ -360,10 +356,18 @@ namespace Flameberry {
         vk_swap_chain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         vk_swap_chain_create_info.presentMode = vk_presentation_mode;
         vk_swap_chain_create_info.clipped = VK_TRUE;
-        vk_swap_chain_create_info.oldSwapchain = VK_NULL_HANDLE;
+        vk_swap_chain_create_info.oldSwapchain = oldSwapChain; // TODO
 
         FL_ASSERT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain) == VK_SUCCESS, "Failed to create Vulkan Swap Chain!");
         FL_INFO("Created Vulkan Swap Chain!");
+
+        for (auto& framebuffer : m_VkSwapChainFramebuffers)
+            vkDestroyFramebuffer(device, framebuffer, nullptr);
+
+        for (auto& imageView : m_VkSwapChainImageViews)
+            vkDestroyImageView(device, imageView, nullptr);
+
+        vkDestroySwapchainKHR(device, oldSwapChain, nullptr);
 
         uint32_t vk_swap_chain_image_count = 0;
         vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, nullptr);
@@ -393,28 +397,11 @@ namespace Flameberry {
             FL_ASSERT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]) == VK_SUCCESS, "Failed to create Vulkan Image View!");
         }
 
-        // Depth Attachment
+        // Create Depth Resources
         VkFormat depthFormat = GetDepthFormat();
-        VulkanImage depthImage(m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_DepthImage = VulkanImage::Create(m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        // Create Framebuffers
-        m_VkSwapChainFramebuffers.resize(m_VkSwapChainImageViews.size());
-
-        for (size_t i = 0; i < m_VkSwapChainImageViews.size(); i++)
-        {
-            std::vector<VkImageView> attachments = { m_VkSwapChainImageViews[i], depthImage.GetImageView() };
-
-            VkFramebufferCreateInfo vk_framebuffer_create_info{};
-            vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            vk_framebuffer_create_info.renderPass = m_VkRenderPass;
-            vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
-            vk_framebuffer_create_info.pAttachments = attachments.data();
-            vk_framebuffer_create_info.width = m_VkSwapChainExtent2D.width;
-            vk_framebuffer_create_info.height = m_VkSwapChainExtent2D.height;
-            vk_framebuffer_create_info.layers = 1;
-
-            FL_ASSERT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VkSwapChainFramebuffers[i]) == VK_SUCCESS, "Failed to create Vulkan Framebuffer!");
-        }
+        CreateFramebuffers();
     }
 
     VkSurfaceFormatKHR VulkanSwapChain::SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats)

@@ -79,18 +79,6 @@ namespace Flameberry {
         vk_pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         vk_pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
-        // VkViewport vk_viewport{};
-        // m_Viewport.x = 0.0f;
-        // m_Viewport.y = 0.0f;
-        // m_Viewport.width = (float)VulkanRenderer::GetSwapChainExtent2D().width;
-        // m_Viewport.height = (float)VulkanRenderer::GetSwapChainExtent2D().height;
-        // m_Viewport.minDepth = 0.0f;
-        // m_Viewport.maxDepth = 1.0f;
-
-        // VkRect2D vk_scissor_rect_2D{};
-        // m_VkScissor.offset = { 0, 0 };
-        // m_VkScissor.extent = VulkanRenderer::GetSwapChainExtent2D();
-
         VkPipelineViewportStateCreateInfo vk_pipeline_viewport_state_create_info{};
         vk_pipeline_viewport_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         vk_pipeline_viewport_state_create_info.viewportCount = 1;

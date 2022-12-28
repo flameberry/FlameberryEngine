@@ -19,10 +19,17 @@ namespace Flameberry {
         void OnUpdate() override;
         void CreateVulkanWindowSurface(VkInstance instance);
         void DestroyVulkanWindowSurface(VkInstance instance);
+
+        bool IsWindowResized() const { return m_FramebufferResized; }
+        void ResetWindowResizedFlag() { m_FramebufferResized = false; }
+    private:
+        static void FramebufferResizeCallBack(GLFWwindow* window, int width, int height);
     private:
         GLFWwindow* m_Window;
         VkSurfaceKHR m_WindowSurface = VK_NULL_HANDLE;
         uint32_t m_Width, m_Height;
         const char* m_Title;
+
+        bool m_FramebufferResized = false;
     };
 }

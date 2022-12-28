@@ -11,6 +11,7 @@ namespace Flameberry {
         std::string errorString = "";
         switch (result)
         {
+        case VK_SUCCESS: break;
         case VK_NOT_READY: errorString = "VK_NOT_READY"; break;
         case VK_TIMEOUT: errorString = "VK_TIMEOUT"; break;
         case VK_EVENT_SET: errorString = "VK_EVENT_SET"; break;
@@ -58,5 +59,5 @@ namespace Flameberry {
 #ifdef FL_DEBUG
 #define VK_CHECK_RESULT(result) Flameberry::CheckVkResult(result)
 #else
-#define VK_CHECK_RESULT()
+#define VK_CHECK_RESULT(result) result
 #endif

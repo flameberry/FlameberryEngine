@@ -16,7 +16,11 @@ namespace Flameberry {
 #endif
 
     VulkanContext* VulkanContext::s_CurrentContext = nullptr;
+#ifdef FL_DEBUG
     bool VulkanContext::s_EnableValidationLayers = true;
+#else
+    bool VulkanContext::s_EnableValidationLayers = false;
+#endif
 
     VulkanContext::VulkanContext(VulkanWindow* pWindow)
         : m_Window(pWindow)

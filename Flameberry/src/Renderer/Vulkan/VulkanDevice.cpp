@@ -32,13 +32,16 @@ namespace Flameberry {
         vk_device_create_info.enabledExtensionCount = static_cast<uint32_t>(m_VkDeviceExtensions.size());
         vk_device_create_info.ppEnabledExtensionNames = m_VkDeviceExtensions.data();
 
-#ifdef FL_DEBUG
         auto validationLayers = VulkanContext::GetValidationLayerNames();
-        vk_device_create_info.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-        vk_device_create_info.ppEnabledLayerNames = validationLayers.data();
-#else
-        vk_device_create_info.enabledLayerCount = 0;
-#endif
+        if (VulkanContext::EnableValidationLayers())
+        {
+            vk_device_create_info.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            vk_device_create_info.ppEnabledLayerNames = validationLayers.data();
+        }
+        else
+        {
+            vk_device_create_info.enabledLayerCount = 0;
+        }
 
         FL_ASSERT(vkCreateDevice(m_VkPhysicalDevice, &vk_device_create_info, nullptr, &m_VkDevice) == VK_SUCCESS, "Failed to create Vulkan Logical Device!");
 
@@ -140,4 +143,10 @@ namespace Flameberry {
         }
         return vk_device_queue_create_infos;
     }
+    
+    void VulkanDevice::WaitIdle()
+    {
+        vkDeviceWaitIdle(m_VkDevice);
+    }
+    
 }

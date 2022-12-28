@@ -8,7 +8,7 @@ namespace Flameberry {
     class VulkanDescriptorPool
     {
     public:
-        VulkanDescriptorPool();
+        VulkanDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes);
         ~VulkanDescriptorPool();
 
         VkDescriptorPool GetDescriptorPool() { return m_VkDescriptorPool; }

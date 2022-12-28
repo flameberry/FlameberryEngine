@@ -20,6 +20,18 @@ namespace Flameberry {
         m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, NULL, NULL);
         FL_ASSERT(m_Window, "GLFW window is null!");
         FL_INFO("Created GLFW window of title '{0}' and dimensions ({1}, {2})", m_Title, m_Width, m_Height);
+
+        glfwSetWindowUserPointer(m_Window, this);
+        glfwSetFramebufferSizeCallback(m_Window, FramebufferResizeCallBack);
+
+    }
+
+    void VulkanWindow::FramebufferResizeCallBack(GLFWwindow* window, int width, int height)
+    {
+        VulkanWindow* pWindow = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
+        pWindow->m_Width = width;
+        pWindow->m_Height = height;
+        pWindow->m_FramebufferResized = true;
     }
 
     void VulkanWindow::CreateVulkanWindowSurface(VkInstance instance)

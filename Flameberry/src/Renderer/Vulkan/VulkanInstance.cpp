@@ -87,7 +87,7 @@ namespace Flameberry {
             vk_create_info.enabledLayerCount = 0;
             vk_create_info.pNext = nullptr;
         }
-
+        
         VK_CHECK_RESULT(vkCreateInstance(&vk_create_info, nullptr, &m_VkInstance));
         FL_INFO("Created Vulkan Instance!");
 

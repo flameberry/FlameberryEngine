@@ -46,7 +46,7 @@ namespace Flameberry {
         void       CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);
         VkExtent2D GetSwapChainExtent2D() { return m_SwapChain->GetExtent2D(); };
     private:
-        size_t m_CurrentFrame = 0;
+        uint32_t m_CurrentFrame = 0;
         uint32_t m_ImageIndex;
 
         VulkanContext m_VulkanContext;

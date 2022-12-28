@@ -7,10 +7,10 @@ namespace Flameberry {
     class MeshRenderer
     {
     public:
-        MeshRenderer(VkDescriptorSetLayout descriptorLayout, VkRenderPass renderPass);
+        MeshRenderer(VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass);
         ~MeshRenderer();
 
-        void OnDraw(VkCommandBuffer commandBuffer, VkDescriptorSet* descriptorSet, std::vector<std::shared_ptr<VulkanMesh>>& meshes);
+        void OnDraw(VkCommandBuffer commandBuffer, VkDescriptorSet* globalDescriptorSet, std::vector<std::shared_ptr<VulkanMesh>>& meshes);
     private:
         std::unique_ptr<VulkanPipeline> m_MeshPipeline;
         VkPipelineLayout m_VkPipelineLayout;

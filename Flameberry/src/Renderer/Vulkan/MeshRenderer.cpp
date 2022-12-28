@@ -8,7 +8,7 @@
 #include "VulkanMesh.h"
 
 namespace Flameberry {
-    MeshRenderer::MeshRenderer(VkDescriptorSetLayout descriptorLayout, VkRenderPass renderPass)
+    MeshRenderer::MeshRenderer(VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
@@ -20,7 +20,7 @@ namespace Flameberry {
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
         vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         vk_pipeline_layout_create_info.setLayoutCount = 1;
-        vk_pipeline_layout_create_info.pSetLayouts = &descriptorLayout;
+        vk_pipeline_layout_create_info.pSetLayouts = &globalDescriptorLayout;
         vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
         vk_pipeline_layout_create_info.pPushConstantRanges = &vk_push_constant_range;
 
@@ -35,7 +35,7 @@ namespace Flameberry {
         pipelineSpec.pipelineLayout = m_VkPipelineLayout;
 
         VkVertexInputBindingDescription vk_vertex_input_binding_description = Flameberry::VulkanVertex::GetBindingDescription();
-        auto vk_attribute_descriptions = Flameberry::VulkanVertex::GetAttributeDescriptions();
+        const auto& vk_attribute_descriptions = Flameberry::VulkanVertex::GetAttributeDescriptions();
 
         VkPipelineVertexInputStateCreateInfo vk_pipeline_vertex_input_state_create_info{};
         vk_pipeline_vertex_input_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -51,11 +51,10 @@ namespace Flameberry {
         m_MeshPipeline = std::make_unique<Flameberry::VulkanPipeline>(pipelineSpec);
     }
 
-    void MeshRenderer::OnDraw(VkCommandBuffer commandBuffer, VkDescriptorSet* descriptorSet, std::vector<std::shared_ptr<VulkanMesh>>& meshes)
+    void MeshRenderer::OnDraw(VkCommandBuffer commandBuffer, VkDescriptorSet* globalDescriptorSet, std::vector<std::shared_ptr<VulkanMesh>>& meshes)
     {
         m_MeshPipeline->Bind(commandBuffer);
-
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, 1, descriptorSet, 0, nullptr);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, 1, globalDescriptorSet, 0, nullptr);
 
         static auto startTime = std::chrono::high_resolution_clock::now();
         auto currentTime = std::chrono::high_resolution_clock::now();
