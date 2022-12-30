@@ -115,7 +115,7 @@ void SandboxApp::OnUpdate(float delta)
         uniformBufferObject.ViewProjectionMatrix = m_ActiveCamera.GetViewProjectionMatrix();
         m_UniformBuffers[m_VulkanRenderer->GetCurrentFrameIndex()]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
-        m_MeshRenderer->OnDraw(commandBuffer, m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_Meshes);
+        m_MeshRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_Meshes);
 
         m_VulkanRenderer->EndRenderPass();
         m_VulkanRenderer->EndFrame();

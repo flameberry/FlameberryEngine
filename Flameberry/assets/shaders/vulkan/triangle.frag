@@ -46,8 +46,8 @@ vec3 CalculateDirectionalLight(vec3 normal, DirectionalLight light)
 
 vec3 GetPixelColor()
 {
-    return u_Albedo;
-    // return texture(u_TextureSampler, v_TextureCoords).xyz;
+    // return u_Albedo;
+    return texture(u_TextureSampler, v_TextureCoords).xyz;
 }
 
 // PBR Lighting

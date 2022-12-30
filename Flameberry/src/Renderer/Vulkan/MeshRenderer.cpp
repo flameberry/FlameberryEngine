@@ -27,8 +27,13 @@ namespace Flameberry {
         FL_LOG(alignof(Material));
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-        m_SceneUniformBuffer = std::make_unique<Flameberry::VulkanBuffer>(sizeof(SceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        m_SceneUniformBuffer->MapMemory(sizeof(SceneData));
+        // Creating Uniform Buffers
+        VkDeviceSize uniformBufferSize = sizeof(Flameberry::SceneData);
+        for (auto& uniformBuffer : m_SceneUniformBuffers)
+        {
+            uniformBuffer = std::make_unique<Flameberry::VulkanBuffer>(uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            uniformBuffer->MapMemory(uniformBufferSize);
+        }
 
         VkDescriptorSetLayoutBinding sceneDataBinding{};
         sceneDataBinding.binding = 0;
@@ -42,14 +47,18 @@ namespace Flameberry {
         m_SceneDescriptorLayout = std::make_unique<Flameberry::VulkanDescriptorLayout>(bindings);
         m_SceneDescriptorWriter = std::make_unique<Flameberry::VulkanDescriptorWriter>(*m_SceneDescriptorLayout);
 
-        VkDescriptorBufferInfo vk_descriptor_lighting_buffer_info{};
-        vk_descriptor_lighting_buffer_info.buffer = m_SceneUniformBuffer->GetBuffer();
-        vk_descriptor_lighting_buffer_info.offset = 0;
-        vk_descriptor_lighting_buffer_info.range = sizeof(SceneData);
+        m_SceneDataDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            VkDescriptorBufferInfo vk_descriptor_lighting_buffer_info{};
+            vk_descriptor_lighting_buffer_info.buffer = m_SceneUniformBuffers[i]->GetBuffer();
+            vk_descriptor_lighting_buffer_info.offset = 0;
+            vk_descriptor_lighting_buffer_info.range = sizeof(SceneData);
 
-        m_GlobalDescriptorPool.AllocateDescriptorSet(&m_SceneDataDescriptorSet, m_SceneDescriptorLayout->GetLayout());
-        m_SceneDescriptorWriter->WriteBuffer(0, &vk_descriptor_lighting_buffer_info);
-        m_SceneDescriptorWriter->Update(m_SceneDataDescriptorSet);
+            m_GlobalDescriptorPool.AllocateDescriptorSet(&m_SceneDataDescriptorSets[i], m_SceneDescriptorLayout->GetLayout());
+            m_SceneDescriptorWriter->WriteBuffer(0, &vk_descriptor_lighting_buffer_info);
+            m_SceneDescriptorWriter->Update(m_SceneDataDescriptorSets[i]);
+        }
 
         VkPushConstantRange vk_push_constant_range{};
         vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -93,7 +102,7 @@ namespace Flameberry {
         m_MeshPipeline = std::make_unique<Flameberry::VulkanPipeline>(pipelineSpec);
     }
 
-    void MeshRenderer::OnDraw(VkCommandBuffer commandBuffer, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, std::vector<std::shared_ptr<VulkanMesh>>& meshes)
+    void MeshRenderer::OnDraw(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, std::vector<std::shared_ptr<VulkanMesh>>& meshes)
     {
         m_MeshPipeline->Bind(commandBuffer);
 
@@ -107,15 +116,17 @@ namespace Flameberry {
         sceneData.pointLights[0].Color = glm::vec3(1.0f);
         sceneData.pointLights[0].Intensity = 2.0f;
 
-        // sceneData.pointLights[1].Position = glm::vec3(-2.0f, 0.0f, 2.0f);
-        // sceneData.pointLights[1].Color = glm::vec3(1.0f);
-        // sceneData.pointLights[1].Intensity = 0.2f;
+        sceneData.pointLights[1].Position = glm::vec3(-2.0f, 0.0f, 2.0f);
+        sceneData.pointLights[1].Color = glm::vec3(1.0f);
+        sceneData.pointLights[1].Intensity = 0.2f;
 
-        sceneData.lightCount = 1;
+        sceneData.lightCount = 2;
 
-        m_SceneUniformBuffer->WriteToBuffer(&sceneData, sizeof(SceneData), 0);
+        FL_LOG("Camera Position: ({0}, {1}, {2})", activeCamera.GetPosition().x, activeCamera.GetPosition().y, activeCamera.GetPosition().z);
 
-        VkDescriptorSet descriptorSets[] = { globalDescriptorSet, m_SceneDataDescriptorSet };
+        m_SceneUniformBuffers[currentFrameIndex]->WriteToBuffer(&sceneData, sizeof(SceneData), 0);
+
+        VkDescriptorSet descriptorSets[] = { globalDescriptorSet, m_SceneDataDescriptorSets[currentFrameIndex] };
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
 
         // static auto startTime = std::chrono::high_resolution_clock::now();
