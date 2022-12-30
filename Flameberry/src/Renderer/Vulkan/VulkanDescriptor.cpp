@@ -6,6 +6,7 @@
 #include "VulkanSwapChain.h"
 #include "VulkanContext.h"
 #include "VulkanRenderCommand.h"
+#include "VulkanDebug.h"
 
 namespace Flameberry {
     VulkanDescriptorPool::VulkanDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes)
@@ -16,7 +17,7 @@ namespace Flameberry {
         vk_descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         vk_descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         vk_descriptor_pool_create_info.pPoolSizes = poolSizes.data();
-        vk_descriptor_pool_create_info.maxSets = static_cast<uint32_t>(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        vk_descriptor_pool_create_info.maxSets = 2 * static_cast<uint32_t>(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
 
         FL_ASSERT(vkCreateDescriptorPool(device, &vk_descriptor_pool_create_info, nullptr, &m_VkDescriptorPool) == VK_SUCCESS, "Failed to create Vulkan Descriptor Pool!");
     }
@@ -36,11 +37,7 @@ namespace Flameberry {
         vk_descriptor_set_allocate_info.pSetLayouts = &descriptorSetLayout;
 
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        if (vkAllocateDescriptorSets(device, &vk_descriptor_set_allocate_info, descriptorSet) != VK_SUCCESS)
-        {
-            FL_ERROR("Failed to allocate Vulkan Descriptor Sets!");
-            return false;
-        }
+        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &vk_descriptor_set_allocate_info, descriptorSet));
         return true;
     }
 

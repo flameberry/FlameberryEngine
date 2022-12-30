@@ -29,6 +29,9 @@ namespace Flameberry {
         void EndFrame();
         void BeginRenderPass();
         void EndRenderPass();
+
+        template<typename... Args>
+        static std::shared_ptr<VulkanRenderer> Create(Args... args) { return std::make_shared<VulkanRenderer>(std::forward<Args>(args)...); }
     public:
         // VkDevice& GetDevice() { return m_VkDevice; }
         // VkQueue GetGraphicsQueue() { return m_VkGraphicsQueue; }

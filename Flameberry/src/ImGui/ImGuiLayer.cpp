@@ -2,10 +2,10 @@
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>
+#include <backends/imgui_impl_vulkan.h>
 
 #include "Core/Application.h"
-#include "Core/Timer.h"
+#include "Renderer/Vulkan/VulkanContext.h"
 
 namespace Flameberry {
     void ImGuiLayer::OnAttach()
@@ -18,17 +18,12 @@ namespace Flameberry {
         //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-        //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoTaskBarIcons;
-        //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
+        //io.ConfigViewportsNoAutoMerge = true;
+        //io.ConfigViewportsNoTaskBarIcon = true;
 
-        float fontSize = 16.0f;// *2.0f;
-        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Bold.ttf", fontSize);
-        // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Regular.ttf", fontSize);
-        // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/HelveticaNeue.ttc", 14);
-        io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 13);
-
-        io.IniFilename = NULL;
-        ImGui::LoadIniSettingsFromDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
+        // Setup Dear ImGui style
+        ImGui::StyleColorsDark();
+        //ImGui::StyleColorsLight();
 
         // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
         ImGuiStyle& style = ImGui::GetStyle();
@@ -38,14 +33,23 @@ namespace Flameberry {
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
 
-        SetupImGuiStyle();
-
-        Application& app = Application::Get();
-        GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetGLFWwindow());
-
-        // Setup Platform/Renderer bindings
-        ImGui_ImplGlfw_InitForOpenGL(window, true);
-        ImGui_ImplOpenGL3_Init("#version 410");
+        // Setup Platform/Renderer backends
+        ImGui_ImplGlfw_InitForVulkan(VulkanContext::GetCurrentWindow()->GetGLFWwindow(), true);
+        ImGui_ImplVulkan_InitInfo init_info = {};
+        init_info.Instance = VulkanContext::GetCurrentInstance()->GetVulkanInstance();
+        init_info.PhysicalDevice = VulkanContext::GetPhysicalDevice();
+        init_info.Device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        init_info.QueueFamily = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices().GraphicsSupportedQueueFamilyIndex;
+        init_info.Queue = VulkanContext::GetCurrentDevice()->GetGraphicsQueue();
+        init_info.PipelineCache = VK_NULL_HANDLE;
+        // init_info.DescriptorPool = g_DescriptorPool;
+        // init_info.Subpass = 0;
+        // init_info.MinImageCount = g_MinImageCount;
+        // init_info.ImageCount = wd->ImageCount;
+        // init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+        // init_info.Allocator = VK_NULL_HANDLE;
+        // init_info.CheckVkResultFn = vk_check_result;
+        // ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
     }
 
     void ImGuiLayer::OnDetach()
@@ -53,14 +57,14 @@ namespace Flameberry {
         // Saving ImGui Layout
         ImGui::SaveIniSettingsToDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
 
-        ImGui_ImplOpenGL3_Shutdown();
+        // ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
     }
 
     void ImGuiLayer::Begin()
     {
-        ImGui_ImplOpenGL3_NewFrame();
+        // ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
@@ -75,7 +79,7 @@ namespace Flameberry {
 
         // Rendering
         ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {

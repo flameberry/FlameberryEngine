@@ -5,6 +5,8 @@
 
 SandboxApp::SandboxApp()
 {
+    m_VulkanRenderer = Flameberry::VulkanRenderer::Create((Flameberry::VulkanWindow*)&Flameberry::Application::Get().GetWindow());
+
     Flameberry::PerspectiveCameraInfo cameraInfo{};
     cameraInfo.aspectRatio = Flameberry::Application::Get().GetWindow().GetWidth() / Flameberry::Application::Get().GetWindow().GetHeight();
     cameraInfo.FOV = 45.0f;
@@ -15,7 +17,6 @@ SandboxApp::SandboxApp()
 
     m_ActiveCamera = Flameberry::PerspectiveCamera(cameraInfo);
 
-    m_VulkanRenderer = std::make_shared<Flameberry::VulkanRenderer>((Flameberry::VulkanWindow*)&Flameberry::Application::Get().GetWindow());
     m_Texture = std::make_unique<Flameberry::VulkanTexture>(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
 
     // Creating Uniform Buffers
@@ -46,7 +47,7 @@ SandboxApp::SandboxApp()
     m_VulkanDescriptorLayout = std::make_unique<Flameberry::VulkanDescriptorLayout>(bindings);
 
     std::vector<VkDescriptorPoolSize> poolSizes = {
-        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 2},
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT }
     };
     m_VulkanDescriptorPool = std::make_unique<Flameberry::VulkanDescriptorPool>(poolSizes);
@@ -72,20 +73,21 @@ SandboxApp::SandboxApp()
         m_VulkanDescriptorWriter->Update(m_VkDescriptorSets[i]);
     }
 
-    m_MeshRenderer = std::make_unique<Flameberry::MeshRenderer>(m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
+    m_MeshRenderer = std::make_unique<Flameberry::MeshRenderer>(*m_VulkanDescriptorPool, m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
 
     {
         auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
-        m_Meshes.emplace_back(std::make_shared<Flameberry::VulkanMesh>(vk_vertices, indices));
+        m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
     }
-    {
-        auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
-        m_Meshes.emplace_back(std::make_shared<Flameberry::VulkanMesh>(vk_vertices, indices));
-    }
+    // {
+    //     auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
+    //     m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
+    // }
 }
 
 void SandboxApp::OnUpdate(float delta)
 {
+    // FL_SCOPED_TIMER("SandboxApp::OnUpdate");
     m_ActiveCamera.OnUpdate(delta);
     if (VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginFrame())
     {
@@ -113,7 +115,7 @@ void SandboxApp::OnUpdate(float delta)
         uniformBufferObject.ViewProjectionMatrix = m_ActiveCamera.GetViewProjectionMatrix();
         m_UniformBuffers[m_VulkanRenderer->GetCurrentFrameIndex()]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
-        m_MeshRenderer->OnDraw(commandBuffer, &m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_Meshes);
+        m_MeshRenderer->OnDraw(commandBuffer, m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_Meshes);
 
         m_VulkanRenderer->EndRenderPass();
         m_VulkanRenderer->EndFrame();

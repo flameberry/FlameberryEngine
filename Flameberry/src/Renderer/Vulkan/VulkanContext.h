@@ -21,13 +21,18 @@ namespace Flameberry {
         static std::shared_ptr<VulkanInstance> GetCurrentInstance() { return GetCurrentContext()->m_VulkanInstance; }
         static std::shared_ptr<VulkanDevice> GetCurrentDevice() { return GetCurrentContext()->m_VulkanDevice; }
         static VkPhysicalDevice GetPhysicalDevice() { return GetCurrentContext()->m_VkPhysicalDevice; }
+        static VkPhysicalDeviceProperties GetPhysicalDeviceProperties() {
+            VkPhysicalDeviceProperties properties{};
+            vkGetPhysicalDeviceProperties(GetCurrentContext()->m_VkPhysicalDevice, &properties);
+            return properties;
+        }
         static VulkanWindow* GetCurrentWindow() { return GetCurrentContext()->m_Window; }
         static bool EnableValidationLayers() { return s_EnableValidationLayers; }
 
         static VkPhysicalDevice GetValidVkPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices, VkSurfaceKHR surface);
         static std::vector<const char*> GetValidationLayerNames() { return s_ValidationLayers; }
 
-        static VulkanContext* SetCurrentContext(VulkanContext* pContext) { s_CurrentContext = pContext; }
+        static void SetCurrentContext(VulkanContext* pContext) { s_CurrentContext = pContext; }
         static VulkanContext* GetCurrentContext() {
             if (!s_CurrentContext) FL_ERROR("Attempted to access current context which is null!");
             return s_CurrentContext;

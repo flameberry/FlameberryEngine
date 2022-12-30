@@ -202,7 +202,7 @@ namespace Flameberry {
                 vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
                 vertices.push_back(vertex);
-                indices.push_back(indices.size());
+                indices.push_back((uint32_t)indices.size());
             }
         }
         return std::tuple<std::vector<VulkanVertex>, std::vector<uint32_t>>(vertices, indices);

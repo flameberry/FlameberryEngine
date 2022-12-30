@@ -15,6 +15,9 @@ namespace Flameberry {
 
         void Bind(VkCommandBuffer commandBuffer) const;
         void OnDraw(VkCommandBuffer commandBuffer) const;
+
+        template<typename... Args>
+        static std::shared_ptr<VulkanMesh> Create(Args... args) { return std::make_shared<VulkanMesh>(std::forward<Args>(args)...); }
     private:
         std::vector<VulkanVertex> m_Vertices;
         std::vector<uint32_t> m_Indices;

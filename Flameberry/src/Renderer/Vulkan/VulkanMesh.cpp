@@ -43,7 +43,7 @@ namespace Flameberry {
 
     void VulkanMesh::OnDraw(VkCommandBuffer commandBuffer) const
     {
-        vkCmdDrawIndexed(commandBuffer, m_Indices.size(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(commandBuffer, (uint32_t)m_Indices.size(), 1, 0, 0, 0);
     }
 
     VulkanMesh::~VulkanMesh()

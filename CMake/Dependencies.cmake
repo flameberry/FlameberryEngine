@@ -58,7 +58,7 @@ if (FL_GRAPHICS_API STREQUAL "Vulkan")
         ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
         ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
     )
-    elseif(FL_GRAPHICS_API STREQUAL "OpenGL")
+elseif(FL_GRAPHICS_API STREQUAL "OpenGL")
     # OpenGL Helper Libs
     message("-- Using OpenGL Graphics API")
     list(APPEND FL_GRAPHICS_LIBS Glad)
@@ -86,4 +86,4 @@ if (FL_GRAPHICS_API STREQUAL "Vulkan")
         ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.h
         ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3_loader.h
     )
-    endif()
+endif()

@@ -17,7 +17,7 @@ namespace Flameberry {
         VkExtent2D GetExtent2D() const { return m_VkSwapChainExtent2D; }
         uint32_t GetAcquiredImageIndex() const { return m_ImageIndex; }
         VkFramebuffer GetFramebuffer(uint32_t index) { return m_VkSwapChainFramebuffers[index]; }
-        uint32_t GetSwapChainImageCount() const { return m_VkSwapChainImages.size(); }
+        uint32_t GetSwapChainImageCount() const { return (uint32_t)m_VkSwapChainImages.size(); }
         VkSwapchainKHR GetVulkanSwapChain() const { return m_VkSwapChain; }
 
         VkResult AcquireNextImage();
