@@ -12,6 +12,8 @@ namespace Flameberry {
     struct SceneData {
         glm::vec3 cameraPosition;
         DirectionalLight directionalLight;
+        PointLight pointLights[10];
+        int lightCount;
     };
 
     struct MeshData {
@@ -99,22 +101,32 @@ namespace Flameberry {
         sceneData.cameraPosition = activeCamera.GetPosition();
         sceneData.directionalLight.Direction = glm::vec3(-1.0f);
         sceneData.directionalLight.Color = glm::vec3(1.0f);
-        sceneData.directionalLight.Intensity = 1.0f;
+        sceneData.directionalLight.Intensity = 0.0f;
+
+        sceneData.pointLights[0].Position = glm::vec3(0.0f, 1.0f, 3.0f);
+        sceneData.pointLights[0].Color = glm::vec3(1.0f);
+        sceneData.pointLights[0].Intensity = 2.0f;
+
+        // sceneData.pointLights[1].Position = glm::vec3(-2.0f, 0.0f, 2.0f);
+        // sceneData.pointLights[1].Color = glm::vec3(1.0f);
+        // sceneData.pointLights[1].Intensity = 0.2f;
+
+        sceneData.lightCount = 1;
 
         m_SceneUniformBuffer->WriteToBuffer(&sceneData, sizeof(SceneData), 0);
 
         VkDescriptorSet descriptorSets[] = { globalDescriptorSet, m_SceneDataDescriptorSet };
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
 
-        static auto startTime = std::chrono::high_resolution_clock::now();
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        // static auto startTime = std::chrono::high_resolution_clock::now();
+        // auto currentTime = std::chrono::high_resolution_clock::now();
+        // float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         for (auto& mesh : meshes)
         {
             MeshData pushConstantMeshData;
-            pushConstantMeshData.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-            // pushConstantMeshData.ModelMatrix = glm::mat4(1.0f);
+            // pushConstantMeshData.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+            pushConstantMeshData.ModelMatrix = glm::mat4(1.0f);
             pushConstantMeshData.MeshMaterial = { glm::vec3(1, 0, 1), 0.2f, false };
 
             vkCmdPushConstants(commandBuffer, m_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);

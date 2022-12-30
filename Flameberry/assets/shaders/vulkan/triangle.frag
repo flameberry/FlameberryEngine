@@ -26,8 +26,8 @@ struct PointLight {
 layout (std140, set = 1, binding = 0) uniform SceneData {
     vec3 cameraPosition;
     DirectionalLight directionalLight;
-    // PointLight pointLights[10];
-    // int lightCount;
+    PointLight pointLights[10];
+    int lightCount;
 } u_SceneData;
 
 layout (push_constant) uniform MeshData {
@@ -160,15 +160,12 @@ vec4 CalculatePBRLighting()
 {
     vec3 normal = normalize(v_Normal);
 
-    vec3 totalLight = CalculatePBRDirectionalLight(u_SceneData.directionalLight, normal);
-    // for (int i = 0; i < u_LightCount; i++)
-    //     totalLight += CalculatePBRPointLight(u_PointLights[i], normal);
-    
-    // PointLight light;
-    // light.Position = vec3(0.0, 0.0, 2.0);
-    // light.Color = vec3(1.0);
-    // light.Intensity = 1.0;
-    // totalLight += CalculatePBRPointLight(light, normal);
+    vec3 totalLight = vec3(0.0);
+
+    totalLight += CalculatePBRDirectionalLight(u_SceneData.directionalLight, normal);
+
+    for (int i = 0; i < u_SceneData.lightCount; i++)
+        totalLight += CalculatePBRPointLight(u_SceneData.pointLights[i], normal);
     
     // HDR tone mapping
     totalLight = totalLight / (totalLight + vec3(1.0));
