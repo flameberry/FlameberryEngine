@@ -18,6 +18,7 @@ namespace Flameberry {
         uint32_t GetAcquiredImageIndex() const { return m_ImageIndex; }
         VkFramebuffer GetFramebuffer(uint32_t index) { return m_VkSwapChainFramebuffers[index]; }
         uint32_t GetSwapChainImageCount() const { return (uint32_t)m_VkSwapChainImages.size(); }
+        VkFormat GetSwapChainImageFormat() const { return m_VkSwapChainImageFormat; }
         VkSwapchainKHR GetVulkanSwapChain() const { return m_VkSwapChain; }
 
         VkResult AcquireNextImage();

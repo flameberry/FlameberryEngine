@@ -24,7 +24,6 @@ namespace Flameberry {
     MeshRenderer::MeshRenderer(VulkanDescriptorPool& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass)
         : m_GlobalDescriptorPool(globalDescriptorPool)
     {
-        FL_LOG(alignof(Material));
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
         // Creating Uniform Buffers
@@ -110,7 +109,7 @@ namespace Flameberry {
         sceneData.cameraPosition = activeCamera.GetPosition();
         sceneData.directionalLight.Direction = glm::vec3(-1.0f);
         sceneData.directionalLight.Color = glm::vec3(1.0f);
-        sceneData.directionalLight.Intensity = 0.0f;
+        sceneData.directionalLight.Intensity = 2.0f;
 
         sceneData.pointLights[0].Position = glm::vec3(0.0f, 1.0f, 3.0f);
         sceneData.pointLights[0].Color = glm::vec3(1.0f);
@@ -121,8 +120,6 @@ namespace Flameberry {
         sceneData.pointLights[1].Intensity = 0.2f;
 
         sceneData.lightCount = 2;
-
-        FL_LOG("Camera Position: ({0}, {1}, {2})", activeCamera.GetPosition().x, activeCamera.GetPosition().y, activeCamera.GetPosition().z);
 
         m_SceneUniformBuffers[currentFrameIndex]->WriteToBuffer(&sceneData, sizeof(SceneData), 0);
 

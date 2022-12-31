@@ -13,17 +13,6 @@ namespace Flameberry {
     {
         s_Instance = this;
         m_Window = Window::Create();
-        if (FL_RENDERER_API_CURRENT == FL_RENDERER_API_OPENGL)
-            ImGuiLayer::OnAttach();
-
-        // Testing the new `component_pool` class
-#if 0
-        component_pool _pool;
-        _pool.allocate(sizeof(SpriteRendererComponent), MAX_ENTITIES);
-        for (uint32_t i = 0; i < 10; i++)
-            _pool.add(entity_handle{ i });
-        FL_LOG(_pool.size());
-#endif
     }
 
     void Application::Run()
@@ -36,22 +25,12 @@ namespace Flameberry {
             last = now;
 
             this->OnUpdate(delta);
-
-            if (FL_RENDERER_API_CURRENT == FL_RENDERER_API_OPENGL)
-            {
-                ImGuiLayer::Begin();
-                this->OnUIRender();
-                ImGuiLayer::End();
-            }
-
             m_Window->OnUpdate();
         }
     }
 
     Application::~Application()
     {
-        if (FL_RENDERER_API_CURRENT == FL_RENDERER_API_OPENGL)
-            ImGuiLayer::OnDetach();
         glfwTerminate();
         FL_INFO("Ended Application!");
     }

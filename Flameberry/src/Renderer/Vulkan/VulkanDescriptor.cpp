@@ -9,7 +9,7 @@
 #include "VulkanDebug.h"
 
 namespace Flameberry {
-    VulkanDescriptorPool::VulkanDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes)
+    VulkanDescriptorPool::VulkanDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
@@ -17,7 +17,8 @@ namespace Flameberry {
         vk_descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         vk_descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         vk_descriptor_pool_create_info.pPoolSizes = poolSizes.data();
-        vk_descriptor_pool_create_info.maxSets = 2 * static_cast<uint32_t>(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        vk_descriptor_pool_create_info.maxSets = maxSets;
+        vk_descriptor_pool_create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
         FL_ASSERT(vkCreateDescriptorPool(device, &vk_descriptor_pool_create_info, nullptr, &m_VkDescriptorPool) == VK_SUCCESS, "Failed to create Vulkan Descriptor Pool!");
     }

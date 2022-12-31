@@ -22,6 +22,16 @@ namespace Flameberry {
         {
         }
 
+        bool operator==(const VulkanVertex& vertex) const
+        {
+            return this->position == vertex.position && this->color == vertex.color && this->normal == vertex.normal && this->textureUV == vertex.textureUV;
+        }
+
+        bool operator!=(const VulkanVertex& vertex) const
+        {
+            return !(*this == vertex);
+        }
+
         static VkVertexInputBindingDescription GetBindingDescription()
         {
             VkVertexInputBindingDescription vk_vertex_input_binding_description{};

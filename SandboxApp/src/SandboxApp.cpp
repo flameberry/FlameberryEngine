@@ -47,10 +47,10 @@ SandboxApp::SandboxApp()
     m_VulkanDescriptorLayout = std::make_unique<Flameberry::VulkanDescriptorLayout>(bindings);
 
     std::vector<VkDescriptorPoolSize> poolSizes = {
-        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 2},
-        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT }
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 2 },
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 10 }
     };
-    m_VulkanDescriptorPool = std::make_unique<Flameberry::VulkanDescriptorPool>(poolSizes);
+    m_VulkanDescriptorPool = std::make_unique<Flameberry::VulkanDescriptorPool>(poolSizes, 3 * Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
     m_VulkanDescriptorWriter = std::make_unique<Flameberry::VulkanDescriptorWriter>(*m_VulkanDescriptorLayout);
 
     m_VkDescriptorSets.resize(Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -79,10 +79,10 @@ SandboxApp::SandboxApp()
         auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
         m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
     }
-    {
-        auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
-        m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
-    }
+    // {
+    //     auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
+    //     m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
+    // }
 }
 
 void SandboxApp::OnUpdate(float delta)

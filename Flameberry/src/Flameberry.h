@@ -10,6 +10,7 @@
 #include "Core/Core.h"
 #include "Core/Timer.h"
 #include "Core/Input.h"
+#include "ImGui/ImGuiLayer.h"
 
 #ifdef FL_USE_OPENGL_API
 #include "Renderer/OpenGL/OpenGLRenderer2D.h"
