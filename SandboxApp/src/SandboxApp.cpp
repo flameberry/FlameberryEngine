@@ -79,10 +79,10 @@ SandboxApp::SandboxApp()
         auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
         m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
     }
-    // {
-    //     auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
-    //     m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
-    // }
+    {
+        auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/platform.obj");
+        m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
+    }
 }
 
 void SandboxApp::OnUpdate(float delta)
