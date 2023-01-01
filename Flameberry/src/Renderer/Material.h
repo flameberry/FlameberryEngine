@@ -9,6 +9,6 @@ namespace Flameberry {
         float Roughness;
         bool IsMetal;
 
-        Material(const glm::vec3& albedo = glm::vec3(1.0f), float roughness = 1.0f, bool isMetal = false) : Albedo(albedo), Roughness(roughness), IsMetal(isMetal) {}
+        Material(const glm::vec3& albedo = glm::vec3(1.0f), float roughness = 0.2f, bool isMetal = false): Albedo(albedo), Roughness(roughness), IsMetal(isMetal) {}
     };
 }

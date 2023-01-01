@@ -1,8 +1,9 @@
 #pragma once
+
 #include "Core/Window.h"
 
 namespace Flameberry {
-    class OpenGLWindow : public Window
+    class OpenGLWindow: public Window
     {
     public:
         OpenGLWindow(int width = 1280, int height = 720, const char* title = "Flameberry Engine");
@@ -14,9 +15,13 @@ namespace Flameberry {
 
         bool IsRunning() override { return !glfwWindowShouldClose(m_Window); }
         void OnUpdate() override;
+
+        void SetKeyCallBack(GLFWkeyfun keyFn) override { m_KeyCallBackFunction = keyFn; }
     private:
         GLFWwindow* m_Window;
         uint32_t m_Width, m_Height;
         const char* m_Title;
+
+        GLFWkeyfun m_KeyCallBackFunction;
     };
 }

@@ -30,6 +30,7 @@ namespace Flameberry {
         void RenderScene(OpenGLRenderer2D* renderer, const OrthographicCamera& camera);
         void RenderScene(OpenGLRenderer3D* renderer, const PerspectiveCamera& camera, const std::vector<PointLight>& lights);
         void SetSelectedEntity(entity_handle* entity) { m_SelectedEntity = entity; }
+        entity_handle GetSelectedEntity() const { return *m_SelectedEntity; }
         void LoadMesh(const Mesh& mesh);
         void SetDirectionalLight(const DirectionalLight& light) { m_SceneData.DirLight = light; }
         void AddMaterial(const std::string& materialName, const Material& material) { m_SceneData.Materials[materialName] = material; }

@@ -18,6 +18,8 @@ namespace Flameberry {
 
         virtual void OnUpdate(float delta) = 0;
         virtual void OnUIRender() = 0;
+
+        // virtual void OnKeyPress(uint32_t key);
     private:
         std::shared_ptr<Window> m_Window;
     private:

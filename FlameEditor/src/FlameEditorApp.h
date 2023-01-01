@@ -21,7 +21,7 @@ namespace Flameberry {
     private:
         std::shared_ptr<Flameberry::OpenGLFramebuffer> m_Framebuffer;
         glm::vec2 m_ViewportSize;
-        Flameberry::OrthographicCamera m_Camera;
+        Flameberry::OrthographicCamera m_OrthographicCamera;
         Flameberry::PerspectiveCamera m_PerspectiveCamera;
         double m_LastRenderTime = 0.0;
         glm::vec2 m_ViewportBounds[2];
@@ -38,5 +38,10 @@ namespace Flameberry {
         std::shared_ptr<Flameberry::Scene> m_ActiveScene;
         std::shared_ptr<Flameberry::Registry> m_Registry;
         Flameberry::entity_handle m_SquareEntity, m_TexturedEntity, m_BlueSquareEntity;
+
+        bool m_IsGizmoActive = false;
+        int m_GizmoType = -1;
+    private:
+        // std::unique_ptr<OpenGLRenderer2D> m_Renderer2D;
     };
 }

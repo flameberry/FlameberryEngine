@@ -21,18 +21,8 @@ namespace Flameberry {
     {
     }
 
-    void OpenGLRenderer3D::UpdateViewportSize()
-    {
-        int width, height;
-        glfwGetFramebufferSize(m_UserGLFWwindow, &width, &height);
-        m_ViewportSize = { (float)width, (float)height };
-    }
-
     void OpenGLRenderer3D::Begin(const PerspectiveCamera& camera)
     {
-        UpdateViewportSize();
-        m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y;
-
         m_UniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 
         /* Set Projection Matrix in GPU memory, for all shader programs to access it */
@@ -45,14 +35,11 @@ namespace Flameberry {
         m_CameraUniformBuffer.Unbind();
     }
 
-    void OpenGLRenderer3D::Init(GLFWwindow* window)
+    void OpenGLRenderer3D::Init()
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
-
-        m_UserGLFWwindow = window;
-        UpdateViewportSize();
     }
 
     void OpenGLRenderer3D::CleanUp()

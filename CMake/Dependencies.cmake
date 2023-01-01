@@ -58,7 +58,9 @@ if (FL_GRAPHICS_API STREQUAL "Vulkan")
     ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
     ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
     )
-    elseif(FL_GRAPHICS_API STREQUAL "OpenGL")
+
+elseif(FL_GRAPHICS_API STREQUAL "OpenGL")
+
     # OpenGL Helper Libs
     message("-- Using OpenGL Graphics API")
     list(APPEND FL_GRAPHICS_LIBS Glad)
@@ -80,10 +82,24 @@ if (FL_GRAPHICS_API STREQUAL "Vulkan")
     list(APPEND FL_COMPILE_DEFINITIONS FL_USE_OPENGL_API GLFW_INCLUDE_NONE IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
     list(APPEND IMGUI_SRC
-    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
-    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
-    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.cpp
-    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.h
-    ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3_loader.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3_loader.h
     )
-    endif()
+
+    list(APPEND IMGUIZMO_SRC
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/GraphEditor.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/GraphEditor.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImCurveEdit.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImCurveEdit.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGradient.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGradient.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGuizmo.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGuizmo.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImZoomSlider.h
+    )
+endif()

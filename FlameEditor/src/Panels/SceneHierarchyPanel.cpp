@@ -88,7 +88,11 @@ namespace Flameberry {
         }
 
         if (should_delete_entity)
+        {
             m_ActiveScene->m_Registry->DestroyEntity(entity);
+            if (is_selected)
+                m_SelectedEntity = entity_handle{ UINT_MAX, false };
+        }
 
         if (m_SelectedEntity == entity)
             m_ActiveScene->SetSelectedEntity(&entity);

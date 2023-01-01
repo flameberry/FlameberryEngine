@@ -15,5 +15,6 @@ namespace Flameberry {
 
         virtual bool IsRunning() = 0;
         virtual void OnUpdate() = 0;
+        virtual void SetKeyCallBack(GLFWkeyfun keyFn) = 0;
     };
 }

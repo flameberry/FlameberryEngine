@@ -219,7 +219,7 @@ vec4 CalculatePBRLighting()
     vec3 totalLight = CalculatePBRDirectionalLight(u_DirectionalLight, normal);
     for (int i = 0; i < u_LightCount; i++)
         totalLight += CalculatePBRPointLight(u_PointLights[i], normal);
-    
+
     // HDR tone mapping
     totalLight = totalLight / (totalLight + vec3(1.0));
     
@@ -231,55 +231,4 @@ void main()
 {
     o_EntityID = v_EntityID;
     FragColor = CalculatePBRLighting();
-
-//    vec3 color = vec3(0.0);
-//    for (int i = 0; i < u_LightCount; i++)
-//    {
-//        PointLight pointLight = u_PointLights[i];
-//
-//        float ambientIntensity = 0.2;
-//        vec3 ambientColor = ambientIntensity * pointLight.Color.xyz;
-//
-//        vec3 lightDir = v_Position - pointLight.Position;
-//        float distance = length(lightDir);
-//        lightDir = normalize(lightDir);
-//
-//        vec3 diffuseColor = vec3(0.0);
-//        vec3 specularColor = vec3(0.0);
-//        float diffuseFactor = dot(v_Normal, -lightDir);
-//
-//        if (diffuseFactor >= 0.0)
-//            diffuseColor = pointLight.Color.xyz * diffuseFactor * pointLight.Intensity;
-//
-//        vec3 pixelToCamera = normalize(u_CameraPosition - v_Position);
-//        vec3 reflectedLight = normalize(reflect(lightDir, v_Normal));
-//        float specularFactor = dot(pixelToCamera, reflectedLight);
-//
-//        if (specularFactor >= 0.0)
-//        {
-//            float specularExponent = 16.0;
-//            // float specularExponent = texture(u_TextureSamplers[1], v_TextureUV).r * 255.0;
-//            // specularFactor = pow(specularFactor, specularExponent) * texture(u_TextureSamplers[1], v_TextureUV).r;
-//            specularFactor = pow(specularFactor, specularExponent);
-//
-//            float specularIntensity = 5.0;
-//            specularColor = pointLight.Color.xyz * specularFactor * specularIntensity;
-//        }
-//
-//        float constant = 1.0, linear = 1.0, exp = 0.2;
-//        float attenuation = constant + linear * distance + exp * distance * distance;
-//
-//        color += (ambientColor + diffuseColor + specularColor) / attenuation;
-//        // color += (ambientColor + diffuseColor) / attenuation;
-//    }
-//
-//    if (v_TextureIndex == -1)
-//        FragColor = v_Color * vec4(color, 1.0);
-//    else
-//        FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_TextureUV) * vec4(color, 1.0);
-
-    // FragColor = v_Color * vec4(color, 1.0);
-    // FragColor = texture(u_TextureSamplers[int(v_TextureIndex)], v_TextureUV);
-
-    // FragColor = clamp(FragColor, 0.0, 1.0);
 }

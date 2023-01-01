@@ -8,6 +8,7 @@
 #include "Core/Application.h"
 #include "Core/Core.h"
 #include "Core/Input.h"
+#include "Core/Math.h"
 #include "Platform/FileDialog.h"
 #include "Platform/CustomTitleBar.h"
 

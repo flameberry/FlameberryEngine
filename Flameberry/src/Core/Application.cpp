@@ -5,11 +5,6 @@
 
 #include "ImGui/ImGuiLayer.h"
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/mman.h>
-
 namespace Flameberry {
     Application* Application::s_Instance;
 
@@ -42,6 +37,11 @@ namespace Flameberry {
             m_Window->OnUpdate();
         }
     }
+
+    // void Application::OnKeyPress(uint32_t key)
+    // {
+    //     m_Window->SetKeyCallBack([](GLFWwindow* window, int key, int scancode, int action, int mods) {});
+    // }
 
     Application::~Application()
     {

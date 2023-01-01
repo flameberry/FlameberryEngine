@@ -2,6 +2,7 @@
 
 // Includes the Entrypoint of the main application
 #include "Core/EntryPoint.h"
+#include "Application.h"
 
 SandboxApp::SandboxApp()
 {

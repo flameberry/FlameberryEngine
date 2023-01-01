@@ -41,6 +41,8 @@ namespace Flameberry {
         static std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> LoadModel(const std::string& filePath);
         static ModelData LoadModelData(const std::string& filePath);
         static uint32_t GetUniformLocation(uint32_t shaderProgramID, const std::string& uniformName);
+
+        static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
     private:
         static uint32_t GetTextureIdIfAvailable(const char* textureFilePath);
     private:

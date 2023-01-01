@@ -16,6 +16,11 @@ namespace Flameberry {
     std::unordered_map<std::string, uint32_t> OpenGLRenderCommand::s_TextureIdCache;
     std::unordered_map<std::pair<std::string, uint32_t>, uint32_t, hash_pair> OpenGLRenderCommand::s_UniformLocationCache;
 
+    void OpenGLRenderCommand::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+    {
+        glViewport(x, y, width, height);
+    }
+
     std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> OpenGLRenderCommand::LoadModel(const std::string& filePath)
     {
         FL_SCOPED_TIMER("Load_Model_tiny");
@@ -312,19 +317,13 @@ namespace Flameberry {
         glGenTextures(1, &textureID);
         glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
         std::string paths[] = {
              std::string(folderPath) + "/right.jpg",
-             std::string(folderPath) + "/left.png",
-             std::string(folderPath) + "/top.png",
-             std::string(folderPath) + "/bottom.png",
-             std::string(folderPath) + "/front.png",
-             std::string(folderPath) + "/back.png"
+             std::string(folderPath) + "/left.jpg",
+             std::string(folderPath) + "/top.jpg",
+             std::string(folderPath) + "/bottom.jpg",
+             std::string(folderPath) + "/front.jpg",
+             std::string(folderPath) + "/back.jpg"
         };
 
         for (uint32_t i = 0; i < 6; i++)
@@ -336,6 +335,13 @@ namespace Flameberry {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
         }
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
         return textureID;
     }
 }

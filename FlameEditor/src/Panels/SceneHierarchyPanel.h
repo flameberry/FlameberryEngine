@@ -11,6 +11,7 @@ namespace Flameberry {
         void OnUIRender();
         void SetSelectedEntity(const Flameberry::entity_handle& entity) { m_SelectedEntity = entity; }
         std::string RenameNode(const char* name);
+        entity_handle GetSelectedEntity() const { return m_SelectedEntity; }
     private:
         void DrawComponent(Flameberry::TransformComponent& transform);
         void DrawComponent(Flameberry::SpriteRendererComponent& sprite);

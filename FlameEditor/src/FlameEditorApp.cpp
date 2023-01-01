@@ -9,15 +9,16 @@
 
 #include "Utils.h"
 
+#include "ImGuizmo/ImGuizmo.h"
+
 namespace Flameberry {
     FlameEditorApp::FlameEditorApp()
         : m_Framebuffer(Flameberry::OpenGLFramebuffer::Create()),
         m_ViewportSize(1280, 720),
-        m_Camera({ 1280.0f, 720.0f }, 1.0f),
         m_Renderer3D(Flameberry::OpenGLRenderer3D::Create())
     {
         // Dealing with 3D Renderer
-        m_Renderer3D->Init(Flameberry::Application::Get().GetWindow().GetGLFWwindow());
+        m_Renderer3D->Init();
 
         Flameberry::PerspectiveCameraInfo cameraInfo{};
         cameraInfo.aspectRatio = 1280.0f / 720.0f;
@@ -164,6 +165,7 @@ namespace Flameberry {
         }
 
         m_Framebuffer->Bind();
+        OpenGLRenderCommand::SetViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -178,7 +180,7 @@ namespace Flameberry {
 
         m_ActiveScene->RenderScene(m_Renderer3D.get(), m_PerspectiveCamera, m_PointLights);
 
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive)
         {
             auto [mx, my] = ImGui::GetMousePos();
             mx -= m_ViewportBounds[0].x;
@@ -231,6 +233,48 @@ namespace Flameberry {
 
         uint64_t textureID = m_Framebuffer->GetColorAttachmentId();
         ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+        // ImGuizmo
+        m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+
+        const auto& selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+        if (selectedEntity && m_GizmoType != -1)
+        {
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::SetDrawlist();
+
+            float windowWidth = (float)ImGui::GetWindowWidth();
+            float windowHeight = (float)ImGui::GetWindowHeight();
+            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+            const auto& projectionMatrix = m_PerspectiveCamera.GetProjectionMatrix();
+            const auto& viewMatrix = m_PerspectiveCamera.GetViewMatrix();
+
+            auto transformComp = m_Registry->GetComponent<TransformComponent>(selectedEntity);
+            glm::mat4 transform = transformComp->GetTransform();
+
+            bool snap = Input::IsKey(GLFW_KEY_LEFT_CONTROL, GLFW_PRESS);
+            float snapValue = 0.5f;
+            if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+                snapValue = 45.0f;
+
+            float snapValues[3] = { snapValue, snapValue, snapValue };
+
+            ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, snap ? snapValues : nullptr);
+            m_IsGizmoActive = ImGuizmo::IsUsing();
+            if (m_IsGizmoActive)
+            {
+                m_IsGizmoActive = true;
+                glm::vec3 translation, rotation, scale;
+                DecomposeTransform(transform, translation, rotation, scale);
+
+                transformComp->translation = translation;
+
+                glm::vec3 deltaRotation = rotation - transformComp->rotation;
+                transformComp->rotation += deltaRotation;
+                transformComp->scale = scale;
+            }
+        }
 
         // Scene File Drop Target
         if (ImGui::BeginDragDropTarget())

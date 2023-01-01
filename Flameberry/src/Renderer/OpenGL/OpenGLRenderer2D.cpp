@@ -12,60 +12,28 @@
 
 namespace Flameberry {
     OpenGLRenderer2D::OpenGLRenderer2D()
-        : m_ViewportSize(1280.0f, 720.0f), m_CurrentTextureSlot(0)
+        : m_CameraUniformBuffer(sizeof(UniformBufferData)), m_CurrentTextureSlot(0)
     {}
 
     OpenGLRenderer2D::~OpenGLRenderer2D()
     {}
 
-    void OpenGLRenderer2D::UpdateViewportSize()
+    void OpenGLRenderer2D::Init()
     {
-        if (m_RendererInitInfo.enableCustomViewport)
-            m_ViewportSize = m_RendererInitInfo.customViewportSize;
-        else
-        {
-            int width, height;
-            glfwGetFramebufferSize(m_UserWindow, &width, &height);
-            m_ViewportSize = { width, height };
-        }
-    }
-
-    void OpenGLRenderer2D::OnResize()
-    {
-        UpdateViewportSize();
-        glViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
-    }
-
-    glm::vec2  OpenGLRenderer2D::GetViewportSize() { return m_ViewportSize; }
-    GLFWwindow* OpenGLRenderer2D::GetUserGLFWwindow() { return m_UserWindow; }
-
-    void OpenGLRenderer2D::OnUpdate()
-    {
-        glClear(GL_DEPTH_BUFFER_BIT);
-        OnResize();
-    }
-
-    void OpenGLRenderer2D::Init(const OpenGLRenderer2DInitInfo& rendererInitInfo)
-    {
-        m_RendererInitInfo = rendererInitInfo;
-        m_UserWindow = rendererInitInfo.userWindow;
-
         GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
         const char* monitorName = glfwGetMonitorName(primaryMonitor);
         FL_INFO("Primary Monitor: {0}", monitorName);
 
-        UpdateViewportSize();
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
+        // glEnable(GL_BLEND);
+        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        // glEnable(GL_DEPTH_TEST);
 
         /* Create Uniform Buffer */
-        glGenBuffers(1, &m_UniformBufferId);
-        glBindBuffer(GL_UNIFORM_BUFFER, m_UniformBufferId);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBufferData), nullptr, GL_DYNAMIC_DRAW);
-        glBindBufferRange(GL_UNIFORM_BUFFER, 0, m_UniformBufferId, 0, sizeof(UniformBufferData));
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        // glGenBuffers(1, &m_UniformBufferId);
+        // glBindBuffer(GL_UNIFORM_BUFFER, m_UniformBufferId);
+        // glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBufferData), nullptr, GL_DYNAMIC_DRAW);
+        // glBindBufferRange(GL_UNIFORM_BUFFER, 0, m_UniformBufferId, 0, sizeof(UniformBufferData));
+        // glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         InitBatch();
         FL_INFO("Initialized OpenGL Renderer2D!");
@@ -122,7 +90,7 @@ namespace Flameberry {
         int samplers[MAX_TEXTURE_SLOTS];
         for (uint32_t i = 0; i < MAX_TEXTURE_SLOTS; i++)
             samplers[i] = i;
-        glUniform1iv(OpenGLRenderer2D::GetUniformLocation("u_TextureSamplers", m_Batch.ShaderProgramId), MAX_TEXTURE_SLOTS, samplers);
+        glUniform1iv(OpenGLRenderCommand::GetUniformLocation(m_Batch.ShaderProgramId, "u_TextureSamplers"), MAX_TEXTURE_SLOTS, samplers);
         glUseProgram(0);
     }
 
@@ -257,30 +225,21 @@ namespace Flameberry {
 
     void OpenGLRenderer2D::Begin(const OrthographicCamera& camera)
     {
-        OnUpdate();
         m_UniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 
         /* Set Projection Matrix in GPU memory, for all shader programs to access it */
-        glBindBuffer(GL_UNIFORM_BUFFER, m_UniformBufferId);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(m_UniformBufferData.ViewProjectionMatrix));
+        // glBindBuffer(GL_UNIFORM_BUFFER, m_UniformBufferId);
+        // glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(m_UniformBufferData.ViewProjectionMatrix));
+
+        m_CameraUniformBuffer.Bind();
+        m_CameraUniformBuffer.SetData(&m_UniformBufferData, sizeof(UniformBufferData), 0);
     }
 
     void OpenGLRenderer2D::End()
     {
         FlushBatch();
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    }
-
-    GLint OpenGLRenderer2D::GetUniformLocation(const std::string& name, uint32_t shaderId)
-    {
-        if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
-            return m_UniformLocationCache[name];
-
-        GLint location = glGetUniformLocation(shaderId, name.c_str());
-        if (location == -1)
-            FL_WARN("Uniform \"{0}\" not found!", name);
-        m_UniformLocationCache[name] = location;
-        return location;
+        // glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        m_CameraUniformBuffer.Unbind();
     }
 
     void OpenGLRenderer2D::CleanUp()

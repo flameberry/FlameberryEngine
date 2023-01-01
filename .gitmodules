@@ -7,3 +7,6 @@
 [submodule "Flameberry/vendor/imgui"]
 	path = Flameberry/vendor/imgui
 	url = https://github.com/ocornut/imgui
+[submodule "Flameberry/vendor/ImGuizmo"]
+	path = Flameberry/vendor/ImGuizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo
