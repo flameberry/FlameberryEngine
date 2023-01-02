@@ -4,12 +4,14 @@ layout (location = 0) in vec3 v_Position;
 layout (location = 1) in vec4 v_VertexColor;
 layout (location = 2) in vec3 v_Normal;
 layout (location = 3) in vec2 v_TextureCoords;
+layout (location = 4) in vec4 v_LightFragmentPosition;
 
 layout (location = 0) out vec4 FragColor;
 
 #define PI 3.1415926535897932384626433832795
 
 layout (set = 0, binding = 1) uniform sampler2D u_TextureSampler;
+layout (set = 0, binding = 2) uniform sampler2D u_ShadowMapSampler;
 
 struct DirectionalLight {
     vec3  Direction;
@@ -48,6 +50,8 @@ vec3 GetPixelColor()
 {
     // return u_Albedo;
     return texture(u_TextureSampler, v_TextureCoords).xyz;
+    // return vec3(1.0);
+    // return vec3(texture(u_ShadowMapSampler, v_TextureCoords).r);
 }
 
 // PBR Lighting
@@ -80,6 +84,25 @@ float GGXDistribution(float n_dot_h)
     return ggxdistrib;
 }
 
+float CalculateShadowFactor()
+{
+    float shadow = 0.0;
+    // perform perspective divide
+    vec3 projCoords = v_LightFragmentPosition.xyz / v_LightFragmentPosition.w;
+
+    if (projCoords.z < -1.0 || projCoords.z > 1.0)
+        return 1.0;
+
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(u_ShadowMapSampler, projCoords.xy).r; 
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+    if (currentDepth - closestDepth > 0.0001)
+        shadow = 1.0;
+    return shadow;
+}  
+
 vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
 {
     vec3 lightIntensity = light.Color * light.Intensity;
@@ -111,8 +134,9 @@ vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
     }
     
     vec3 diffuseBRDF = kD * fLambert / PI;
-    
-    vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
+
+    vec3 finalColor = (1.0 - CalculateShadowFactor()) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l + 0.001 * GetPixelColor();
+    // vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l + 0.02 * GetPixelColor();
     return finalColor;
 }
 
@@ -177,4 +201,16 @@ vec4 CalculatePBRLighting()
 void main()
 {
     FragColor = CalculatePBRLighting();
+
+    // vec3 lightCoords = (v_LightFragmentPosition.xyz / v_LightFragmentPosition.w) * 0.5 + 0.5;
+    // float closestDepth = texture(u_ShadowMapSampler, lightCoords.xy).r;
+    // float currentDepth = lightCoords.z;
+    // FragColor = vec4(vec3(closestDepth), 1.0);
+    // FragColor = vec4(vec3(currentDepth), 1.0);
+
+    // float closestDepth = texture(u_ShadowMapSampler, v_LightFragmentPosition.xy).r;
+    // float currentDepth = v_LightFragmentPosition.z;
+    // FragColor = vec4(vec3(closestDepth), 1.0);
+    // FragColor = vec4(vec3(currentDepth), 1.0);
+    // FragColor = vec4(vec3(currentDepth > closestDepth ? 0.2 : 0.8), 1.0);
 }

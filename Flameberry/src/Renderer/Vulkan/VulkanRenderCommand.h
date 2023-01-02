@@ -18,6 +18,8 @@ namespace Flameberry {
     class VulkanRenderCommand
     {
     public:
+        static void SetViewport(VkCommandBuffer commandBuffer, float x, float y, float width, float height);
+        static void SetScissor(VkCommandBuffer commandBuffer, VkOffset2D offset, VkExtent2D extent);
         static void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);
         static VkShaderModule CreateShaderModule(VkDevice device, const std::vector<char>& compiledShaderCode);
         static uint32_t GetValidMemoryTypeIndex(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags vk_memory_property_flags);

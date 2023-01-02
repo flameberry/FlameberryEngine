@@ -34,6 +34,28 @@ namespace std {
 }
 
 namespace Flameberry {
+    void VulkanRenderCommand::SetViewport(VkCommandBuffer commandBuffer, float x, float y, float width, float height)
+    {
+        VkViewport viewport{};
+        viewport.x = x;
+        viewport.y = y;
+        viewport.width = width;
+        viewport.height = height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+    }
+
+    void VulkanRenderCommand::SetScissor(VkCommandBuffer commandBuffer, VkOffset2D offset, VkExtent2D extent)
+    {
+        VkRect2D scissor{};
+        scissor.offset = offset;
+        scissor.extent = extent;
+
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    }
+
     void VulkanRenderCommand::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize)
     {
         const auto& device = VulkanContext::GetCurrentDevice();

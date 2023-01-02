@@ -12,7 +12,7 @@ namespace Flameberry {
     class MeshRenderer
     {
     public:
-        MeshRenderer(VulkanDescriptorPool& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass);
+        MeshRenderer(const std::shared_ptr<VulkanDescriptorPool>& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass);
         ~MeshRenderer();
 
         void OnDraw(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, std::vector<std::shared_ptr<VulkanMesh>>& meshes);
@@ -25,6 +25,6 @@ namespace Flameberry {
         std::unique_ptr<VulkanDescriptorWriter> m_SceneDescriptorWriter;
         std::unique_ptr<Flameberry::VulkanBuffer> m_SceneUniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
 
-        VulkanDescriptorPool& m_GlobalDescriptorPool;
+        const std::shared_ptr<VulkanDescriptorPool>& m_GlobalDescriptorPool;
     };
 }

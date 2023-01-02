@@ -21,7 +21,7 @@ namespace Flameberry {
         Material MeshMaterial;
     };
 
-    MeshRenderer::MeshRenderer(VulkanDescriptorPool& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass)
+    MeshRenderer::MeshRenderer(const std::shared_ptr<VulkanDescriptorPool>& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass)
         : m_GlobalDescriptorPool(globalDescriptorPool)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -54,7 +54,7 @@ namespace Flameberry {
             vk_descriptor_lighting_buffer_info.offset = 0;
             vk_descriptor_lighting_buffer_info.range = sizeof(SceneData);
 
-            m_GlobalDescriptorPool.AllocateDescriptorSet(&m_SceneDataDescriptorSets[i], m_SceneDescriptorLayout->GetLayout());
+            m_GlobalDescriptorPool->AllocateDescriptorSet(&m_SceneDataDescriptorSets[i], m_SceneDescriptorLayout->GetLayout());
             m_SceneDescriptorWriter->WriteBuffer(0, &vk_descriptor_lighting_buffer_info);
             m_SceneDescriptorWriter->Update(m_SceneDataDescriptorSets[i]);
         }
@@ -119,7 +119,7 @@ namespace Flameberry {
         sceneData.pointLights[1].Color = glm::vec3(1.0f);
         sceneData.pointLights[1].Intensity = 0.2f;
 
-        sceneData.lightCount = 2;
+        sceneData.lightCount = 0;
 
         m_SceneUniformBuffers[currentFrameIndex]->WriteToBuffer(&sceneData, sizeof(SceneData), 0);
 

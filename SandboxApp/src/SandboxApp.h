@@ -14,7 +14,6 @@ private:
 
     Flameberry::PerspectiveCamera m_ActiveCamera;
 
-    std::unique_ptr<Flameberry::VulkanDescriptorPool> m_VulkanDescriptorPool;
     std::unique_ptr<Flameberry::VulkanDescriptorWriter> m_VulkanDescriptorWriter;
     std::unique_ptr<Flameberry::VulkanDescriptorLayout> m_VulkanDescriptorLayout;
 
