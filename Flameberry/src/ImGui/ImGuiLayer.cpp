@@ -7,9 +7,10 @@
 // #include "Renderer/Vulkan/VulkanContext.h"
 // #include "Renderer/Vulkan/VulkanRenderCommand.h"
 // #include "Renderer/Vulkan/VulkanSwapChain.h"
+// #include "Renderer/Vulkan/VulkanDebug.h"
 
 // namespace Flameberry {
-//     void ImGuiLayer::OnAttach(VkDescriptorPool descriptorPool, VkRenderPass renderPass, VkFormat swapChainImageFormat)
+//     void ImGuiLayer::OnAttach(VkDescriptorPool descriptorPool, VkFormat swapChainImageFormat, const std::vector<VkImageView>& imageViews, VkExtent2D extent)
 //     {
 //         // Setup Dear ImGui context
 //         IMGUI_CHECKVERSION();
@@ -73,11 +74,30 @@
 //         info.pSubpasses = &subpass;
 //         info.dependencyCount = 1;
 //         info.pDependencies = &dependency;
-//         FL_ASSERT(vkCreateRenderPass(device->GetVulkanDevice(), &info, nullptr, &renderPass) == VK_SUCCESS, "Could not create Dear ImGui's render pass");
+//         VK_CHECK_RESULT(vkCreateRenderPass(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiLayerRenderPass));
+
+//         // Creating Framebuffers
+//         m_ImGuiFramebuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+//         for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+//         {
+//             VkImageView attachment[1] = { imageViews[i] };
+//             VkFramebufferCreateInfo info{};
+//             info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+//             info.renderPass = m_ImGuiLayerRenderPass;
+//             info.attachmentCount = 1;
+//             info.pAttachments = attachment;
+//             info.width = extent.width;
+//             info.height = extent.height;
+//             info.layers = 1;
+
+//             VK_CHECK_RESULT(vkCreateFramebuffer(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiFramebuffers[i]));
+//         }
+
+//         SetupImGuiStyle();
 
 //         // Setup Platform/Renderer backends
 //         ImGui_ImplGlfw_InitForVulkan(VulkanContext::GetCurrentWindow()->GetGLFWwindow(), true);
-//         ImGui_ImplVulkan_InitInfo init_info = {};
+//         ImGui_ImplVulkan_InitInfo init_info{};
 //         init_info.Instance = VulkanContext::GetCurrentInstance()->GetVulkanInstance();
 //         init_info.PhysicalDevice = VulkanContext::GetPhysicalDevice();
 //         init_info.Device = device->GetVulkanDevice();
@@ -91,7 +111,7 @@
 //         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 //         init_info.Allocator = VK_NULL_HANDLE;
 //         // init_info.CheckVkResultFn = vk_check_result;
-//         ImGui_ImplVulkan_Init(&init_info, renderPass);
+//         ImGui_ImplVulkan_Init(&init_info, m_ImGuiLayerRenderPass);
 
 //         // Upload fonts
 //         VkCommandBuffer commandBuffer;
@@ -108,6 +128,11 @@
 //         ImGui_ImplVulkan_Shutdown();
 //         ImGui_ImplGlfw_Shutdown();
 //         ImGui::DestroyContext();
+
+//         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+//         for (uint32_t i = 0; i < m_ImGuiFramebuffers.size(); i++)
+//             vkDestroyFramebuffer(device, m_ImGuiFramebuffers[i], nullptr);
+//         vkDestroyRenderPass(device, m_ImGuiLayerRenderPass, nullptr);
 //     }
 
 //     void ImGuiLayer::Begin()
@@ -119,7 +144,7 @@
 //         // ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 //     }
 
-//     void ImGuiLayer::End(VkCommandBuffer commandBuffer)
+//     void ImGuiLayer::End(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkExtent2D extent)
 //     {
 //         ImGuiIO& io = ImGui::GetIO();
 //         io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetWidth(), (float)VulkanContext::GetCurrentWindow()->GetHeight());
@@ -127,8 +152,25 @@
 //         ImGui::Render();
 //         ImDrawData* main_draw_data = ImGui::GetDrawData();
 
+//         // Begin ImGui Render Pass
+//         VkClearValue clear_value{};
+//         clear_value.color = { 0.0f };
+
+//         VkRenderPassBeginInfo imgui_render_pass_begin_info{};
+//         imgui_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+//         imgui_render_pass_begin_info.renderPass = m_ImGuiLayerRenderPass;
+//         imgui_render_pass_begin_info.framebuffer = m_ImGuiFramebuffers[currentFrameIndex];
+//         imgui_render_pass_begin_info.renderArea.extent.width = extent.width;
+//         imgui_render_pass_begin_info.renderArea.extent.height = extent.height;
+//         imgui_render_pass_begin_info.clearValueCount = 1;
+//         imgui_render_pass_begin_info.pClearValues = &clear_value;
+//         vkCmdBeginRenderPass(commandBuffer, &imgui_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
 //         // Record dear imgui primitives into command buffer
 //         ImGui_ImplVulkan_RenderDrawData(main_draw_data, commandBuffer);
+
+//         // End ImGui Render Pass
+//         vkCmdEndRenderPass(commandBuffer);
 
 //         // Update and Render additional Platform Windows
 //         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
