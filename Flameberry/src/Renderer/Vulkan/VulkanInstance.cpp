@@ -68,7 +68,7 @@ namespace Flameberry {
 
         VkDebugUtilsMessengerCreateInfoEXT vk_debug_create_info{};
         auto validationLayers = VulkanContext::GetValidationLayerNames();
-        
+
         if (enableValidationLayers)
         {
             FL_LOG(validationLayers[0]);
@@ -87,7 +87,7 @@ namespace Flameberry {
             vk_create_info.enabledLayerCount = 0;
             vk_create_info.pNext = nullptr;
         }
-        
+
         VK_CHECK_RESULT(vkCreateInstance(&vk_create_info, nullptr, &m_VkInstance));
         FL_INFO("Created Vulkan Instance!");
 
@@ -101,7 +101,7 @@ namespace Flameberry {
             vk_debug_messenger_create_info.pfnUserCallback = vk_debug_callback;
             vk_debug_messenger_create_info.pUserData = nullptr;
 
-            FL_ASSERT(CreateDebugUtilsMessengerEXT(&vk_debug_messenger_create_info, nullptr, &m_VkDebugMessenger) == VK_SUCCESS, "Failed to created Vulkan Debug Messenger!");
+            VK_CHECK_RESULT(CreateDebugUtilsMessengerEXT(&vk_debug_messenger_create_info, nullptr, &m_VkDebugMessenger));
             FL_INFO("Created Vulkan Debug Messenger!");
         }
     }

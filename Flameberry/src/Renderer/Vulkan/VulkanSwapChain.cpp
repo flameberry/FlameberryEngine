@@ -1,6 +1,6 @@
 #include "VulkanSwapChain.h"
 
-#include "Core/Core.h"
+#include "VulkanDebug.h"
 
 #include "VulkanRenderCommand.h"
 #include "VulkanContext.h"
@@ -63,7 +63,7 @@ namespace Flameberry {
         vk_swap_chain_create_info.clipped = VK_TRUE;
         vk_swap_chain_create_info.oldSwapchain = oldSwapChain ? oldSwapChain->m_VkSwapChain : VK_NULL_HANDLE;
 
-        FL_ASSERT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain) == VK_SUCCESS, "Failed to create Vulkan Swap Chain!");
+        VK_CHECK_RESULT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain));
         FL_INFO("Created Vulkan Swap Chain!");
 
         uint32_t vk_swap_chain_image_count = 0;
@@ -91,7 +91,7 @@ namespace Flameberry {
             vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
             vk_image_view_create_info.subresourceRange.layerCount = 1;
 
-            FL_ASSERT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]) == VK_SUCCESS, "Failed to create Vulkan Image View!");
+            VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]));
         }
 
         // Create Depth Resources
@@ -139,7 +139,7 @@ namespace Flameberry {
         vk_submit_info.pSignalSemaphores = signal_semaphores;
 
         vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex]);
-        FL_ASSERT(vkQueueSubmit(graphicsQueue, 1, &vk_submit_info, m_InFlightFences[m_CurrentFrameIndex]) == VK_SUCCESS, "Failed to submit Graphics Queue!");
+        VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &vk_submit_info, m_InFlightFences[m_CurrentFrameIndex]));
 
         VkPresentInfoKHR vk_present_info{};
         vk_present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -175,7 +175,7 @@ namespace Flameberry {
             vk_framebuffer_create_info.height = m_VkSwapChainExtent2D.height;
             vk_framebuffer_create_info.layers = 1;
 
-            FL_ASSERT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VkSwapChainFramebuffers[i]) == VK_SUCCESS, "Failed to create Vulkan Framebuffer!");
+            VK_CHECK_RESULT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VkSwapChainFramebuffers[i]));
         }
     }
 
@@ -235,7 +235,7 @@ namespace Flameberry {
         vk_render_pass_create_info.pDependencies = &vk_subpass_dependency;
 
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        FL_ASSERT(vkCreateRenderPass(device, &vk_render_pass_create_info, nullptr, &m_VkRenderPass) == VK_SUCCESS, "Failed to create Vulkan Render Pass!");
+        VK_CHECK_RESULT(vkCreateRenderPass(device, &vk_render_pass_create_info, nullptr, &m_VkRenderPass));
     }
 
     VkFormat VulkanSwapChain::GetDepthFormat()
@@ -267,9 +267,9 @@ namespace Flameberry {
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            FL_ASSERT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_ImageAvailableSemaphores[i]) == VK_SUCCESS, "Failed to create Image Available Semaphore!");
-            FL_ASSERT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]) == VK_SUCCESS, "Failed to create Render Finished Semaphore!");
-            FL_ASSERT(vkCreateFence(device, &vk_fence_create_info, nullptr, &m_InFlightFences[i]) == VK_SUCCESS, "Failed to create 'in flight Fence'!");
+            VK_CHECK_RESULT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_ImageAvailableSemaphores[i]));
+            VK_CHECK_RESULT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]));
+            VK_CHECK_RESULT(vkCreateFence(device, &vk_fence_create_info, nullptr, &m_InFlightFences[i]));
         }
         FL_INFO("Created {0} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
     }
@@ -358,7 +358,7 @@ namespace Flameberry {
         vk_swap_chain_create_info.clipped = VK_TRUE;
         vk_swap_chain_create_info.oldSwapchain = oldSwapChain; // TODO
 
-        FL_ASSERT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain) == VK_SUCCESS, "Failed to create Vulkan Swap Chain!");
+        VK_CHECK_RESULT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain));
         FL_INFO("Created Vulkan Swap Chain!");
 
         for (auto& framebuffer : m_VkSwapChainFramebuffers)
@@ -394,7 +394,7 @@ namespace Flameberry {
             vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
             vk_image_view_create_info.subresourceRange.layerCount = 1;
 
-            FL_ASSERT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]) == VK_SUCCESS, "Failed to create Vulkan Image View!");
+            VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]));
         }
 
         // Create Depth Resources

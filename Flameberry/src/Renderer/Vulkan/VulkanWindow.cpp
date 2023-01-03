@@ -1,6 +1,6 @@
 #include "VulkanWindow.h"
 
-#include "Core/Core.h"
+#include "Renderer/Vulkan/VulkanDebug.h"
 #include "Renderer/Vulkan/VulkanContext.h"
 
 namespace Flameberry {
@@ -36,7 +36,7 @@ namespace Flameberry {
 
     void VulkanWindow::CreateVulkanWindowSurface(VkInstance instance)
     {
-        FL_ASSERT(glfwCreateWindowSurface(instance, m_Window, nullptr, &m_WindowSurface) == VK_SUCCESS, "Failed to create window surface!"); // TODO: Destroy Surface
+        VK_CHECK_RESULT(glfwCreateWindowSurface(instance, m_Window, nullptr, &m_WindowSurface));
     }
 
     void VulkanWindow::DestroyVulkanWindowSurface(VkInstance instance)

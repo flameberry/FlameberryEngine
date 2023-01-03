@@ -48,6 +48,7 @@ namespace Flameberry {
         VkPipelineLayout GetShadowMapPipelineLayout() const { return m_ShadowMapPipelineLayout; }
         VkImageView GetShadowMapImageView(uint32_t index) const { return m_ShadowMapImages[index]->GetImageView(); }
         VkSampler GetShadowMapSampler(uint32_t index) const { return m_ShadowMapSamplers[index]; }
+        bool EnableShadows() const { return m_EnableShadows; }
     private:
         uint32_t m_CurrentFrame = 0;
         uint32_t m_ImageIndex;

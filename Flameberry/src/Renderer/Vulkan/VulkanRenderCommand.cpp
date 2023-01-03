@@ -3,7 +3,7 @@
 #include <fstream>
 #include <unordered_map>
 
-#include "Core/Core.h"
+#include "VulkanDebug.h"
 #include "Core/Timer.h"
 #include "VulkanContext.h"
 #include "VulkanDevice.h"
@@ -79,7 +79,7 @@ namespace Flameberry {
         vk_shader_module_create_info.pCode = reinterpret_cast<const uint32_t*>(compiledShaderCode.data());
 
         VkShaderModule shaderModule;
-        FL_ASSERT(vkCreateShaderModule(device, &vk_shader_module_create_info, nullptr, &shaderModule) == VK_SUCCESS, "Failed to create shader module!");
+        VK_CHECK_RESULT(vkCreateShaderModule(device, &vk_shader_module_create_info, nullptr, &shaderModule));
         return shaderModule;
     }
 

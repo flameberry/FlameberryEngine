@@ -1,6 +1,6 @@
 #include "VulkanDevice.h"
 
-#include "Core/Core.h"
+#include "VulkanDebug.h"
 #include "VulkanContext.h"
 #include "VulkanRenderCommand.h"
 
@@ -43,7 +43,7 @@ namespace Flameberry {
             vk_device_create_info.enabledLayerCount = 0;
         }
 
-        FL_ASSERT(vkCreateDevice(m_VkPhysicalDevice, &vk_device_create_info, nullptr, &m_VkDevice) == VK_SUCCESS, "Failed to create Vulkan Logical Device!");
+        VK_CHECK_RESULT(vkCreateDevice(m_VkPhysicalDevice, &vk_device_create_info, nullptr, &m_VkDevice));
 
         vkGetDeviceQueue(m_VkDevice, m_QueueFamilyIndices.GraphicsSupportedQueueFamilyIndex, 0, &m_VkGraphicsQueue);
         vkGetDeviceQueue(m_VkDevice, m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex, 0, &m_VkPresentationQueue);
@@ -54,7 +54,7 @@ namespace Flameberry {
         vk_command_pool_create_info.queueFamilyIndex = m_QueueFamilyIndices.GraphicsSupportedQueueFamilyIndex;
         vk_command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-        FL_ASSERT(vkCreateCommandPool(m_VkDevice, &vk_command_pool_create_info, nullptr, &m_VkCommandPool) == VK_SUCCESS, "Failed to create Vulkan Command Pool!");
+        VK_CHECK_RESULT(vkCreateCommandPool(m_VkDevice, &vk_command_pool_create_info, nullptr, &m_VkCommandPool));
     }
 
     void VulkanDevice::AllocateCommandBuffers(uint32_t bufferCount)
@@ -67,7 +67,7 @@ namespace Flameberry {
         vk_command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         vk_command_buffer_allocate_info.commandBufferCount = (uint32_t)m_VkCommandBuffers.size();
 
-        FL_ASSERT(vkAllocateCommandBuffers(m_VkDevice, &vk_command_buffer_allocate_info, m_VkCommandBuffers.data()) == VK_SUCCESS, "Failed to allocate Command Buffers!");
+        VK_CHECK_RESULT(vkAllocateCommandBuffers(m_VkDevice, &vk_command_buffer_allocate_info, m_VkCommandBuffers.data()));
     }
 
     void VulkanDevice::ResetCommandBuffer(uint32_t bufferIndex)
@@ -82,12 +82,12 @@ namespace Flameberry {
         vk_command_buffer_begin_info.flags = usageFlags;
         vk_command_buffer_begin_info.pInheritanceInfo = nullptr;
 
-        FL_ASSERT(vkBeginCommandBuffer(m_VkCommandBuffers[bufferIndex], &vk_command_buffer_begin_info) == VK_SUCCESS, "Failed to begin Vulkan Command Buffer recording!");
+        VK_CHECK_RESULT(vkBeginCommandBuffer(m_VkCommandBuffers[bufferIndex], &vk_command_buffer_begin_info));
     }
 
     void VulkanDevice::EndCommandBuffer(uint32_t bufferIndex)
     {
-        FL_ASSERT(vkEndCommandBuffer(m_VkCommandBuffers[bufferIndex]) == VK_SUCCESS, "Failed to record Vulkan Command Buffer!");
+        VK_CHECK_RESULT(vkEndCommandBuffer(m_VkCommandBuffers[bufferIndex]));
     }
 
     void VulkanDevice::BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer)
@@ -143,10 +143,10 @@ namespace Flameberry {
         }
         return vk_device_queue_create_infos;
     }
-    
+
     void VulkanDevice::WaitIdle()
     {
         vkDeviceWaitIdle(m_VkDevice);
     }
-    
+
 }

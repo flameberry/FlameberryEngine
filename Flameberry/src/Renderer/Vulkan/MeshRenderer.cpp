@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Core/Core.h"
+#include "VulkanDebug.h"
 #include "VulkanRenderer.h"
 #include "VulkanMesh.h"
 #include "Renderer/Material.h"
@@ -74,7 +74,7 @@ namespace Flameberry {
         vk_pipeline_layout_create_info.pushConstantRangeCount = sizeof(pushConstantRanges) / sizeof(VkPushConstantRange);
         vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
 
-        FL_ASSERT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout) == VK_SUCCESS, "Failed to create Vulkan pipeline layout!");
+        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
 
         Flameberry::VulkanPipelineSpecification pipelineSpec{};
         pipelineSpec.vertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleVert.spv";

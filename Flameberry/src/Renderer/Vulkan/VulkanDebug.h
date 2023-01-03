@@ -6,7 +6,7 @@
 #include "Core/Core.h"
 
 namespace Flameberry {
-    static void CheckVkResult(VkResult result)
+    static std::string GetVkResult(VkResult result)
     {
         std::string errorString = "";
         switch (result)
@@ -52,12 +52,12 @@ namespace Flameberry {
         case VK_ERROR_COMPRESSION_EXHAUSTED_EXT: errorString = "VK_ERROR_COMPRESSION_EXHAUSTED_EXT"; break;
         case VK_RESULT_MAX_ENUM: errorString = "VK_RESULT_MAX_ENUM"; break;
         }
-        FL_ASSERT(result == VK_SUCCESS, "VK_RESULT: {0}", errorString);
+        return errorString;
     }
 }
 
 #ifdef FL_DEBUG
-#define VK_CHECK_RESULT(result) Flameberry::CheckVkResult(result)
+#define VK_CHECK_RESULT(result) FL_DO_ON_ASSERT(result == VK_SUCCESS, Flameberry::Logger::CoreLogger->log_assert(__FILE__, __LINE__, "Vulkan process failed with: {0}", Flameberry::GetVkResult(result)), FL_DEBUGBREAK())
 #else
 #define VK_CHECK_RESULT(result) result
 #endif

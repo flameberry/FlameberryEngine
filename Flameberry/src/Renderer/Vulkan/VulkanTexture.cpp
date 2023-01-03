@@ -1,6 +1,6 @@
 #include "VulkanTexture.h"
 
-#include "Core/Core.h"
+#include "VulkanDebug.h"
 #include "VulkanBuffer.h"
 
 #include "VulkanRenderer.h"
@@ -63,7 +63,7 @@ namespace Flameberry {
         sampler_info.minLod = 0.0f;
         sampler_info.maxLod = 0.0f;
 
-        FL_ASSERT(vkCreateSampler(device, &sampler_info, nullptr, &m_VkTextureSampler) == VK_SUCCESS, "Failed to create Vulkan Texture Sampler!");
+        VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_VkTextureSampler));
     }
 
     VulkanTexture::~VulkanTexture()

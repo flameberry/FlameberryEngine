@@ -1,6 +1,6 @@
 #include "VulkanBuffer.h"
 
-#include "Core/Core.h"
+#include "VulkanDebug.h"
 #include "VulkanRenderCommand.h"
 #include "VulkanContext.h"
 
@@ -40,7 +40,7 @@ namespace Flameberry {
         vk_buffer_create_info.usage = bufferUsageFlags;
         vk_buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        FL_ASSERT(vkCreateBuffer(device, &vk_buffer_create_info, nullptr, &m_VkBuffer) == VK_SUCCESS, "Failed to create Buffer!");
+        VK_CHECK_RESULT(vkCreateBuffer(device, &vk_buffer_create_info, nullptr, &m_VkBuffer));
 
         VkMemoryRequirements vk_memory_requirements{};
         vkGetBufferMemoryRequirements(device, m_VkBuffer, &vk_memory_requirements);
@@ -50,7 +50,7 @@ namespace Flameberry {
         vk_memory_allocate_info.allocationSize = vk_memory_requirements.size;
         vk_memory_allocate_info.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, vk_memory_requirements.memoryTypeBits, memoryPropertyFlags);
 
-        FL_ASSERT(vkAllocateMemory(device, &vk_memory_allocate_info, nullptr, &m_VkBufferDeviceMemory) == VK_SUCCESS, "Failed to allocate memory!");
+        VK_CHECK_RESULT(vkAllocateMemory(device, &vk_memory_allocate_info, nullptr, &m_VkBufferDeviceMemory));
         vkBindBufferMemory(device, m_VkBuffer, m_VkBufferDeviceMemory, 0);
     }
 

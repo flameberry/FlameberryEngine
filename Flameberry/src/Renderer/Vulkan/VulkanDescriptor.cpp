@@ -2,7 +2,6 @@
 
 #include <array>
 
-#include "Core/Core.h"
 #include "VulkanSwapChain.h"
 #include "VulkanContext.h"
 #include "VulkanRenderCommand.h"
@@ -20,7 +19,7 @@ namespace Flameberry {
         vk_descriptor_pool_create_info.maxSets = maxSets;
         vk_descriptor_pool_create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
-        FL_ASSERT(vkCreateDescriptorPool(device, &vk_descriptor_pool_create_info, nullptr, &m_VkDescriptorPool) == VK_SUCCESS, "Failed to create Vulkan Descriptor Pool!");
+        VK_CHECK_RESULT(vkCreateDescriptorPool(device, &vk_descriptor_pool_create_info, nullptr, &m_VkDescriptorPool));
     }
 
     VulkanDescriptorPool::~VulkanDescriptorPool()
@@ -101,7 +100,7 @@ namespace Flameberry {
         vk_descriptor_set_layout_create_info.pBindings = bindings.data();
 
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        FL_ASSERT(vkCreateDescriptorSetLayout(device, &vk_descriptor_set_layout_create_info, nullptr, &m_VkDescriptorSetLayout) == VK_SUCCESS, "Failed to create Vulkan Descriptor Set Layout!");
+        VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &vk_descriptor_set_layout_create_info, nullptr, &m_VkDescriptorSetLayout));
     }
 
     VulkanDescriptorLayout::~VulkanDescriptorLayout()

@@ -9,6 +9,7 @@ layout (location = 4) in vec4 v_LightFragmentPosition;
 layout (location = 0) out vec4 FragColor;
 
 #define PI 3.1415926535897932384626433832795
+#define AMBIENT 0.002
 
 layout (set = 0, binding = 1) uniform sampler2D u_TextureSampler;
 layout (set = 0, binding = 2) uniform sampler2D u_ShadowMapSampler;
@@ -50,8 +51,6 @@ vec3 GetPixelColor()
 {
     // return u_Albedo;
     return texture(u_TextureSampler, v_TextureCoords).xyz;
-    // return vec3(1.0);
-    // return vec3(texture(u_ShadowMapSampler, v_TextureCoords).r);
 }
 
 // PBR Lighting
@@ -86,22 +85,57 @@ float GGXDistribution(float n_dot_h)
 
 float CalculateShadowFactor()
 {
-    float shadow = 0.0;
+    float shadow = 1.0;
     // perform perspective divide
     vec3 projCoords = v_LightFragmentPosition.xyz / v_LightFragmentPosition.w;
 
     if (projCoords.z < -1.0 || projCoords.z > 1.0)
-        return 1.0;
+        return AMBIENT;
 
     // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
     float closestDepth = texture(u_ShadowMapSampler, projCoords.xy).r; 
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
     // check whether current frag pos is in shadow
-    if (currentDepth - closestDepth > 0.0001)
-        shadow = 1.0;
+    if (v_LightFragmentPosition.w > 0.0 && currentDepth - closestDepth > 0.0001)
+        shadow = AMBIENT;
     return shadow;
-}  
+}
+
+float FilterPCF(float bias)
+{
+    ivec2 textureDimensions = textureSize(u_ShadowMapSampler, 0);
+    float scale = 1.0;
+    float texelWidth = scale * 1.0 / float(textureDimensions.x);
+    float texelHeight = scale * 1.0 / float(textureDimensions.y);
+
+    vec2 texelSize = vec2(texelWidth, texelHeight);
+    vec3 u_ShadowMapSamplerCoords = v_LightFragmentPosition.xyz / v_LightFragmentPosition.w;
+
+    float shadowFactor = 0.0;
+
+    int range = 2;
+    float filterSize = 0;
+    // float filterSize = 9.0;
+
+    for (int y = -range; y <= range; y++)
+    {
+        for (int x = -range; x <= range; x++)
+        {
+            vec2 offset = vec2(x, y) * texelSize;
+            float depth = texture(u_ShadowMapSampler, u_ShadowMapSamplerCoords.xy + offset).r;
+
+            if (depth + bias < u_ShadowMapSamplerCoords.z)
+                shadowFactor += 0.0;
+            else
+                shadowFactor += 1.0;
+            
+            filterSize++;
+        }
+    }
+    shadowFactor /= filterSize;
+    return shadowFactor;
+}
 
 vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
 {
@@ -135,8 +169,12 @@ vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
     
     vec3 diffuseBRDF = kD * fLambert / PI;
 
-    vec3 finalColor = (1.0 - CalculateShadowFactor()) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l + 0.001 * GetPixelColor();
-    // vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l + 0.02 * GetPixelColor();
+    float bias = mix(0.001, 0.0, n_dot_l);
+
+    // vec3 finalColor = CalculateShadowFactor() * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
+    vec3 finalColor = FilterPCF(bias) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
+
+    finalColor = max(finalColor, AMBIENT * GetPixelColor());
     return finalColor;
 }
 

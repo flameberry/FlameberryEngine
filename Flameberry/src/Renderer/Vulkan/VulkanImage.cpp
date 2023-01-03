@@ -1,6 +1,6 @@
 #include "VulkanImage.h"
 
-#include "Core/Core.h"
+#include "VulkanDebug.h"
 #include "VulkanRenderCommand.h"
 #include "VulkanContext.h"
 
@@ -27,7 +27,7 @@ namespace Flameberry {
         vk_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
         vk_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        FL_ASSERT(vkCreateImage(device, &vk_image_create_info, nullptr, &m_VkImage) == VK_SUCCESS, "Failed to create Vulkan Image!");
+        VK_CHECK_RESULT(vkCreateImage(device, &vk_image_create_info, nullptr, &m_VkImage));
 
         VkMemoryRequirements memRequirements;
         vkGetImageMemoryRequirements(device, m_VkImage, &memRequirements);
@@ -37,7 +37,7 @@ namespace Flameberry {
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, memRequirements.memoryTypeBits, properties);
 
-        FL_ASSERT(vkAllocateMemory(device, &allocInfo, nullptr, &m_VkImageDeviceMemory) == VK_SUCCESS, "Failed to allocate memory for Image!");
+        VK_CHECK_RESULT(vkAllocateMemory(device, &allocInfo, nullptr, &m_VkImageDeviceMemory));
         vkBindImageMemory(device, m_VkImage, m_VkImageDeviceMemory, 0);
 
         // Creating Image View
@@ -52,7 +52,7 @@ namespace Flameberry {
         vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
         vk_image_view_create_info.subresourceRange.layerCount = 1;
 
-        FL_ASSERT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView) == VK_SUCCESS, "Failed to create Vulkan Image View!");
+        VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView));
     }
 
     VulkanImage::~VulkanImage()

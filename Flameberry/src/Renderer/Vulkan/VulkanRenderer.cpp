@@ -64,7 +64,7 @@ namespace Flameberry {
                 sampler_info.minLod = 0.0f;
                 sampler_info.maxLod = 1.0f;
 
-                FL_ASSERT(vkCreateSampler(device, &sampler_info, nullptr, &sampler) == VK_SUCCESS, "Failed to create Vulkan Texture Sampler!");
+                VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &sampler));
             }
 
             // Create Render Pass
@@ -202,7 +202,7 @@ namespace Flameberry {
             vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
             vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
 
-            FL_ASSERT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_ShadowMapPipelineLayout) == VK_SUCCESS, "Failed to create Vulkan pipeline layout!");
+            VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_ShadowMapPipelineLayout));
 
             VulkanPipelineSpecification pipelineSpec{};
             pipelineSpec.vertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_mapVert.spv";
@@ -259,7 +259,6 @@ namespace Flameberry {
         const auto& device = VulkanContext::GetCurrentDevice();
         vkCmdBeginRenderPass(device->GetCommandBuffer(m_CurrentFrame), &vk_shadow_map_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        // Extra stuff
         VulkanRenderCommand::SetViewport(device->GetCommandBuffer(m_CurrentFrame), 0.0f, 0.0f, SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT);
         VulkanRenderCommand::SetScissor(device->GetCommandBuffer(m_CurrentFrame), { 0, 0 }, { SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT });
 

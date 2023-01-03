@@ -11,7 +11,7 @@ SandboxApp::SandboxApp()
     cameraInfo.aspectRatio = Flameberry::Application::Get().GetWindow().GetWidth() / Flameberry::Application::Get().GetWindow().GetHeight();
     cameraInfo.FOV = 45.0f;
     cameraInfo.zNear = 0.1f;
-    cameraInfo.zFar = 1000.0f;
+    cameraInfo.zFar = 500.0f;
     cameraInfo.cameraPostion = glm::vec3(0.0f, 0.0f, 4.0f);
     cameraInfo.cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
 
@@ -83,7 +83,7 @@ SandboxApp::SandboxApp()
     m_MeshRenderer = std::make_unique<Flameberry::MeshRenderer>(m_VulkanRenderer->GetGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
 
     {
-        auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
+        auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/cube.obj");
         m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
     }
     {
@@ -98,33 +98,37 @@ SandboxApp::SandboxApp()
 
 void SandboxApp::OnUpdate(float delta)
 {
-    //    FL_SCOPED_TIMER("SandboxApp::OnUpdate");
+    // FL_SCOPED_TIMER("SandboxApp::OnUpdate");
     m_ActiveCamera.OnUpdate(delta);
     if (VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginFrame())
     {
-        // glm::vec3 lightInvDir(1.0f, 3.0f, 2.0f);
-        glm::vec3 lightInvDir(5.0f);
-
-        glm::mat4 lightProjectionMatrix = glm::ortho<float>(-15, 15, -15, 15, -20, 20);
-        glm::mat4 lightViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-        glm::mat4 lightViewProjectionMatrix = lightProjectionMatrix * lightViewMatrix;
-
-        // glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10, 10, -10, 10, -10, 20);
-        // glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-
-        m_VulkanRenderer->BeginShadowRenderPass(lightViewProjectionMatrix);
-
-        for (auto& mesh : m_Meshes)
+        glm::mat4 lightViewProjectionMatrix;
+        if (m_VulkanRenderer->EnableShadows())
         {
-            Flameberry::ModelMatrixPushConstantData pushContantData;
-            pushContantData.ModelMatrix = glm::mat4(1.0f);
-            vkCmdPushConstants(commandBuffer, m_VulkanRenderer->GetShadowMapPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Flameberry::ModelMatrixPushConstantData), &pushContantData);
+            // glm::vec3 lightInvDir(1.0f, 3.0f, 2.0f);
+            glm::vec3 lightInvDir(5.0f);
 
-            mesh->Bind(commandBuffer);
-            mesh->OnDraw(commandBuffer);
+            glm::mat4 lightProjectionMatrix = glm::ortho<float>(-10, 10, -10, 10, -10, 20);
+            glm::mat4 lightViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+            lightViewProjectionMatrix = lightProjectionMatrix * lightViewMatrix;
+
+            // glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10, 10, -10, 10, -10, 20);
+            // glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+            m_VulkanRenderer->BeginShadowRenderPass(lightViewProjectionMatrix);
+
+            for (auto& mesh : m_Meshes)
+            {
+                Flameberry::ModelMatrixPushConstantData pushContantData;
+                pushContantData.ModelMatrix = glm::mat4(1.0f);
+                vkCmdPushConstants(commandBuffer, m_VulkanRenderer->GetShadowMapPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Flameberry::ModelMatrixPushConstantData), &pushContantData);
+
+                mesh->Bind(commandBuffer);
+                mesh->OnDraw(commandBuffer);
+            }
+
+            m_VulkanRenderer->EndShadowRenderPass();
         }
-
-        m_VulkanRenderer->EndShadowRenderPass();
 
         m_VulkanRenderer->BeginRenderPass();
 

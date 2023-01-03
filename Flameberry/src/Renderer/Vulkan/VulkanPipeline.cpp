@@ -3,7 +3,7 @@
 #include "VulkanRenderCommand.h"
 #include "VulkanRenderer.h"
 
-#include "Core/Core.h"
+#include "VulkanDebug.h"
 
 namespace Flameberry {
     VulkanPipeline::VulkanPipeline(const VulkanPipelineSpecification& pipelineSpec)
@@ -65,7 +65,7 @@ namespace Flameberry {
         vk_graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
         vk_graphics_pipeline_create_info.basePipelineIndex = -1;
 
-        FL_ASSERT(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_VkGraphicsPipeline) == VK_SUCCESS, "Failed to create Vulkan Graphics Pipeline!");
+        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_VkGraphicsPipeline));
 
         // Destroying Shader Modules
         vkDestroyShaderModule(device, vk_vertex_shader_module, nullptr);
