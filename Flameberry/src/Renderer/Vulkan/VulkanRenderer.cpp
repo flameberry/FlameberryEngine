@@ -306,7 +306,7 @@ namespace Flameberry {
         m_CurrentFrame = (m_CurrentFrame + 1) % VulkanSwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 
-    void VulkanRenderer::BeginRenderPass()
+    void VulkanRenderer::BeginSwapChainRenderPass()
     {
         VkRenderPassBeginInfo vk_render_pass_begin_info{};
         vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -326,7 +326,7 @@ namespace Flameberry {
         vkCmdBeginRenderPass(device->GetCommandBuffer(m_CurrentFrame), &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
     }
 
-    void VulkanRenderer::EndRenderPass()
+    void VulkanRenderer::EndSwapChainRenderPass()
     {
         const auto& device = VulkanContext::GetCurrentDevice();
         vkCmdEndRenderPass(device->GetCommandBuffer(m_CurrentFrame));

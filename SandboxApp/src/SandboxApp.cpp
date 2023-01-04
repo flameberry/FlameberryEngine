@@ -130,7 +130,7 @@ void SandboxApp::OnUpdate(float delta)
             m_VulkanRenderer->EndShadowRenderPass();
         }
 
-        m_VulkanRenderer->BeginRenderPass();
+        m_VulkanRenderer->BeginSwapChainRenderPass();
 
         Flameberry::VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, (float)m_VulkanRenderer->GetSwapChainExtent2D().width, (float)m_VulkanRenderer->GetSwapChainExtent2D().height);
         Flameberry::VulkanRenderCommand::SetScissor(commandBuffer, { 0, 0 }, m_VulkanRenderer->GetSwapChainExtent2D());
@@ -146,7 +146,7 @@ void SandboxApp::OnUpdate(float delta)
 
         m_MeshRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_Meshes);
 
-        m_VulkanRenderer->EndRenderPass();
+        m_VulkanRenderer->EndSwapChainRenderPass();
         m_VulkanRenderer->EndFrame();
     }
 }
