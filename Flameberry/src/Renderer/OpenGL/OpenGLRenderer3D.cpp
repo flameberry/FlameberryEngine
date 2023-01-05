@@ -1,24 +1,16 @@
 #include "OpenGLRenderer3D.h"
 
 #include <glad/glad.h>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "OpenGLRenderCommand.h"
 #include "Core/Core.h"
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader/tiny_obj_loader.h>
-
-#include "Renderer/ModelLoader.h"
-#include "Core/Timer.h"
-
-#include "ECS/Scene.h"
-
 namespace Flameberry {
     OpenGLRenderer3D::OpenGLRenderer3D()
-        : m_CameraUniformBuffer(sizeof(CameraUniformBufferData), FL_UNIFORM_BLOCK_BINDING_CAMERA)
+        : m_CameraUniformBuffer(sizeof(CameraUniformBufferData), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW)
     {
+        m_CameraUniformBuffer.BindBufferBase(FL_UNIFORM_BLOCK_BINDING_CAMERA);
     }
 
     void OpenGLRenderer3D::Begin(const PerspectiveCamera& camera)
@@ -27,7 +19,7 @@ namespace Flameberry {
 
         /* Set Projection Matrix in GPU memory, for all shader programs to access it */
         m_CameraUniformBuffer.Bind();
-        m_CameraUniformBuffer.SetData(glm::value_ptr(m_UniformBufferData.ViewProjectionMatrix), sizeof(glm::mat4), 0);
+        m_CameraUniformBuffer.BufferSubData(&m_UniformBufferData, sizeof(CameraUniformBufferData), 0);
     }
 
     void OpenGLRenderer3D::End()
@@ -37,9 +29,6 @@ namespace Flameberry {
 
     void OpenGLRenderer3D::Init()
     {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
     }
 
     void OpenGLRenderer3D::CleanUp()
@@ -50,10 +39,5 @@ namespace Flameberry {
         glUseProgram(0);
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindVertexArray(0);
-    }
-
-    std::shared_ptr<OpenGLRenderer3D> OpenGLRenderer3D::Create()
-    {
-        return std::make_shared<OpenGLRenderer3D>();
     }
 }

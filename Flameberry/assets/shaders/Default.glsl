@@ -61,14 +61,14 @@ in mat4 v_ModelMatrix;
 struct DirectionalLight
 {
     vec3 Direction;
-    vec4 Color;
+    vec3 Color;
     float Intensity;
 };
 
 struct PointLight
 {
     vec3 Position;
-    vec4 Color;
+    vec3 Color;
     float Intensity;
 };
 
@@ -79,25 +79,20 @@ struct Material
     bool IsMetal;
 };
 
-// layout (std140) uniform Lighting
-// {
-//     DirectionalLight DirLight;
-//     PointLight PointLights[10];
-//     int LightCount;
-// } u_Lighting;
+layout (std140) uniform Lighting
+{
+    vec3 u_CameraPosition;
+    DirectionalLight u_DirectionalLight;
+    PointLight u_PointLights[10];
+    int u_LightCount;
+};
 
 uniform sampler2D u_TextureSamplers[16];
 
-// uniform int u_NormalMapIndex;
-// uniform int u_SpecularMapIndex;
-
-uniform vec3 u_CameraPosition;
-uniform int u_LightCount;
-uniform PointLight u_PointLights[10];
-uniform DirectionalLight u_DirectionalLight;
 uniform Material u_Material;
 
 #define PI 3.1415926535897932384626433832795
+#define MAX_POINT_LIGHTS 10
 
 vec3 GetPixelColor()
 {
@@ -217,7 +212,9 @@ vec4 CalculatePBRLighting()
     vec3 normal = normalize(v_Normal);
 
     vec3 totalLight = CalculatePBRDirectionalLight(u_DirectionalLight, normal);
-    for (int i = 0; i < u_LightCount; i++)
+
+    int lightCount = min(u_LightCount, MAX_POINT_LIGHTS);
+    for (int i = 0; i < lightCount; i++)
         totalLight += CalculatePBRPointLight(u_PointLights[i], normal);
 
     // HDR tone mapping
@@ -231,4 +228,6 @@ void main()
 {
     o_EntityID = v_EntityID;
     FragColor = CalculatePBRLighting();
+
+    // FragColor = vec4(vec3(u_DirectionalLight.Intensity), 1.0);
 }

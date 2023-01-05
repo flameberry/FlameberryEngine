@@ -16,6 +16,7 @@ namespace Flameberry {
         void DrawComponent(Flameberry::TransformComponent& transform);
         void DrawComponent(Flameberry::SpriteRendererComponent& sprite);
         void DrawComponent(Flameberry::MeshComponent& mesh);
+        void DrawComponent(Flameberry::LightComponent& light);
     private:
         Flameberry::entity_handle m_SelectedEntity;
         Flameberry::Scene* m_ActiveScene;

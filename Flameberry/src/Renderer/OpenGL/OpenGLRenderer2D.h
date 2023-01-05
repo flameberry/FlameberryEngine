@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 
 #include "OpenGLVertex.h"
-#include "OpenGLUniformBuffer.h"
+#include "OpenGLBuffer.h"
 
 #include "Core/Core.h"
 #include "Renderer/OrthographicCamera.h"
@@ -52,7 +52,7 @@ namespace Flameberry {
         UniformBufferData m_UniformBufferData;
         Batch m_Batch;
 
-        UniformBuffer m_CameraUniformBuffer;
+        OpenGLBuffer m_CameraUniformBuffer;
 
         float m_CurrentTextureSlot;
 

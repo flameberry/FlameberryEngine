@@ -13,14 +13,17 @@
 
 namespace Flameberry {
     FlameEditorApp::FlameEditorApp()
-        : m_Framebuffer(Flameberry::OpenGLFramebuffer::Create()),
+        : m_Framebuffer(OpenGLFramebuffer::Create()),
         m_ViewportSize(1280, 720),
-        m_Renderer3D(Flameberry::OpenGLRenderer3D::Create())
+        m_Renderer3D(OpenGLRenderer3D::Create())
     {
+        OpenGLRenderCommand::EnableBlend();
+        OpenGLRenderCommand::EnableDepthTest();
+
         // Dealing with 3D Renderer
         m_Renderer3D->Init();
 
-        Flameberry::PerspectiveCameraInfo cameraInfo{};
+        PerspectiveCameraInfo cameraInfo{};
         cameraInfo.aspectRatio = 1280.0f / 720.0f;
         cameraInfo.FOV = 45.0f;
         cameraInfo.cameraPostion = glm::vec3(0, 0, 2);
@@ -28,22 +31,22 @@ namespace Flameberry {
         cameraInfo.zFar = 1000.0f;
         cameraInfo.zNear = 0.1f;
 
-        m_PerspectiveCamera = Flameberry::PerspectiveCamera(cameraInfo);
+        m_EditorCamera = PerspectiveCamera(cameraInfo);
 
-        auto [vertices, alt_indices] = Flameberry::ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
-        m_TempMesh = Flameberry::Mesh{ vertices, alt_indices };
+        auto [vertices, alt_indices] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
+        m_TempMesh = Mesh{ vertices, alt_indices };
         m_TempMesh.Name = "Sphere";
 
-        auto [v, i] = Flameberry::ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
-        m_SponzaMesh = Flameberry::Mesh{ v, i };
+        auto [v, i] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
+        m_SponzaMesh = Mesh{ v, i };
         m_SponzaMesh.Name = "Sponza";
 
-        auto [v1, i1] = Flameberry::ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/cylinder.obj");
-        Flameberry::Mesh mesh{ v1, i1 };
+        auto [v1, i1] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/cylinder.obj");
+        Mesh mesh{ v1, i1 };
         mesh.Name = "Cylinder";
 
-        // m_TempMesh.TextureIDs.push_back(Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
-        m_SponzaMesh.TextureIDs.push_back(Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
+        // m_TempMesh.TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
+        m_SponzaMesh.TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
 
         m_FloorMesh.Vertices.emplace_back();
         m_FloorMesh.Vertices.back().position = { -1.0f, 0.0f, 1.0f };
@@ -78,54 +81,44 @@ namespace Flameberry {
             0, 2, 3
         };
 
-        m_FloorMesh.TextureIDs.push_back(Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/planks.png"));
-        m_FloorMesh.TextureIDs.push_back(Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/planksSpec.png"));
+        m_FloorMesh.TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/planks.png"));
+        m_FloorMesh.TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/planksSpec.png"));
         m_FloorMesh.Invalidate();
 
         // Test
-        // std::vector<Flameberry::Mesh> meshes;
-        // Flameberry::ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj", &meshes);
+        // std::vector<Mesh> meshes;
+        // ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj", &meshes);
         // FL_LOG("Number of meshes loaded: {0}", meshes.size());
-        // meshes.back().TextureIDs.push_back(Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
+        // meshes.back().TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
         // ----
 
-        m_PointLights.emplace_back();
-        m_PointLights.back().Position = glm::vec3(-1, 1, 1);
-        m_PointLights.back().Color = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
-        m_PointLights.back().Intensity = 2.0f;
-
-        m_PointLights.emplace_back();
-        m_PointLights.back().Position = glm::vec3(0.5f, 0.5f, 0.5f);
-        m_PointLights.back().Color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        m_PointLights.back().Intensity = 3.0f;
-
-        m_Registry = std::make_shared<Flameberry::Registry>();
+        m_Registry = std::make_shared<Registry>();
 
         m_SquareEntity = m_Registry->CreateEntity();
-        m_Registry->AddComponent<Flameberry::IDComponent>(m_SquareEntity);
-        m_Registry->AddComponent<Flameberry::TagComponent>(m_SquareEntity)->Tag = "Sphere";
-        m_Registry->AddComponent<Flameberry::TransformComponent>(m_SquareEntity);
-        auto meshComponent = m_Registry->AddComponent<Flameberry::MeshComponent>(m_SquareEntity);
+        m_Registry->AddComponent<IDComponent>(m_SquareEntity);
+        m_Registry->AddComponent<TagComponent>(m_SquareEntity)->Tag = "Sphere";
+        m_Registry->AddComponent<TransformComponent>(m_SquareEntity);
+        auto meshComponent = m_Registry->AddComponent<MeshComponent>(m_SquareEntity);
         meshComponent->MeshIndex = 0;
 
         m_BlueSquareEntity = m_Registry->CreateEntity();
-        m_Registry->AddComponent<Flameberry::IDComponent>(m_BlueSquareEntity);
-        m_Registry->AddComponent<Flameberry::TagComponent>(m_BlueSquareEntity)->Tag = "Sponza";
-        m_Registry->AddComponent<Flameberry::TransformComponent>(m_BlueSquareEntity);
-        auto meshComponent1 = m_Registry->AddComponent<Flameberry::MeshComponent>(m_BlueSquareEntity);
+        m_Registry->AddComponent<IDComponent>(m_BlueSquareEntity);
+        m_Registry->AddComponent<TagComponent>(m_BlueSquareEntity)->Tag = "Sponza";
+        m_Registry->AddComponent<TransformComponent>(m_BlueSquareEntity);
+        auto meshComponent1 = m_Registry->AddComponent<MeshComponent>(m_BlueSquareEntity);
         meshComponent1->MeshIndex = 1;
 
-        m_ActiveScene = std::make_shared<Flameberry::Scene>(m_Registry.get());
+        m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
         m_SceneHierarchyPanel = SceneHierarchyPanel(m_ActiveScene.get());
         m_ContentBrowserPanel = ContentBrowserPanel();
 
         // int inc = 0;
         // for (const auto& mesh : meshes)
         // {
-        //     Flameberry::entity_handle entity = m_Registry->CreateEntity();
-        //     m_Registry->AddComponent<Flameberry::TransformComponent>(entity);
-        //     m_Registry->AddComponent<Flameberry::TagComponent>(entity)->Tag = mesh.Name;
-        //     auto meshComponent = m_Registry->AddComponent<Flameberry::MeshComponent>(entity);
+        //     entity_handle entity = m_Registry->CreateEntity();
+        //     m_Registry->AddComponent<TransformComponent>(entity);
+        //     m_Registry->AddComponent<TagComponent>(entity)->Tag = mesh.Name;
+        //     auto meshComponent = m_Registry->AddComponent<MeshComponent>(entity);
         //     meshComponent->MeshIndex = inc;
 
         //     m_ActiveScene->LoadMesh(mesh);
@@ -143,7 +136,11 @@ namespace Flameberry {
         m_ActiveScene->AddMaterial("YELLOW_NON_METAL", nonMetal);
 
         m_DirectionalLight.Direction = { -1.0f, -1.0f, -1.0f };
+        m_DirectionalLight.Color = glm::vec3(1.0f);
+        m_DirectionalLight.Intensity = 2.0f;
         m_ActiveScene->SetDirectionalLight(m_DirectionalLight);
+
+        m_SceneRenderer = SceneRenderer::Create();
     }
 
     FlameEditorApp::~FlameEditorApp()
@@ -153,7 +150,7 @@ namespace Flameberry {
 
     void FlameEditorApp::OnUpdate(float delta)
     {
-        Flameberry::ScopedTimer timer(&m_LastRenderTime);
+        ScopedTimer timer(&m_LastRenderTime);
 
         // Framebuffer Resize
         if (glm::vec2 framebufferSize = m_Framebuffer->GetFramebufferSize();
@@ -175,10 +172,13 @@ namespace Flameberry {
 
         m_Framebuffer->ClearEntityIDAttachment();
 
-        m_PerspectiveCamera.OnResize(m_ViewportSize.x / m_ViewportSize.y);
-        m_PerspectiveCamera.OnUpdate(delta);
+        m_EditorCamera.OnResize(m_ViewportSize.x / m_ViewportSize.y);
+        m_EditorCamera.OnUpdate(delta);
 
-        m_ActiveScene->RenderScene(m_Renderer3D.get(), m_PerspectiveCamera, m_PointLights);
+        m_Renderer3D->Begin(m_EditorCamera);
+        m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera);
+        m_Renderer3D->End();
+        // m_ActiveScene->RenderScene(m_Renderer3D.get(), m_EditorCamera, m_MeshShader, m_PointLights);
 
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive)
         {
@@ -197,7 +197,7 @@ namespace Flameberry {
                 if (entityID != -1)
                     m_SceneHierarchyPanel.SetSelectedEntity(m_ActiveScene->GetRegistry()->GetEntityVector()[entityID]);
                 else
-                    m_SceneHierarchyPanel.SetSelectedEntity(Flameberry::entity_handle{ UINT32_MAX, false });
+                    m_SceneHierarchyPanel.SetSelectedEntity(entity_handle{ UINT32_MAX, false });
             }
         }
         m_Framebuffer->Unbind();
@@ -247,8 +247,8 @@ namespace Flameberry {
             float windowHeight = (float)ImGui::GetWindowHeight();
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
 
-            const auto& projectionMatrix = m_PerspectiveCamera.GetProjectionMatrix();
-            const auto& viewMatrix = m_PerspectiveCamera.GetViewMatrix();
+            const auto& projectionMatrix = m_EditorCamera.GetProjectionMatrix();
+            const auto& viewMatrix = m_EditorCamera.GetViewMatrix();
 
             auto transformComp = m_Registry->GetComponent<TransformComponent>(selectedEntity);
             glm::mat4 transform = transformComp->GetTransform();
@@ -312,22 +312,6 @@ namespace Flameberry {
         ImGui::DragFloat("Intensity", &m_DirectionalLight.Intensity, 0.01f);
 
         m_ActiveScene->SetDirectionalLight(m_DirectionalLight);
-
-        ImGui::Separator();
-        ImGui::Text("Point Lights");
-        int i = 0;
-        for (auto& light : m_PointLights)
-        {
-            ImGui::PushID(i);
-            ImGui::Text("Light - %d", i);
-            Utils::DrawVec3Control("Position", light.Position, 0.0f, 0.01f);
-            ImGui::Spacing();
-            ImGui::ColorEdit4("Color", glm::value_ptr(light.Color));
-            ImGui::DragFloat("Intensity", &light.Intensity, 0.1f);
-            ImGui::PopID();
-            i++;
-        }
-
         ImGui::End();
 
         m_SceneHierarchyPanel.OnUIRender();
@@ -338,7 +322,7 @@ namespace Flameberry {
 
     void FlameEditorApp::SaveScene()
     {
-        std::string savePath = Flameberry::FileDialog::SaveDialog();
+        std::string savePath = FileDialog::SaveDialog();
         if (savePath != "")
         {
             SceneSerializer serializer(m_ActiveScene);
@@ -351,7 +335,7 @@ namespace Flameberry {
 
     void FlameEditorApp::OpenScene()
     {
-        std::string sceneToBeLoaded = Flameberry::FileDialog::OpenDialog();
+        std::string sceneToBeLoaded = FileDialog::OpenDialog();
         if (sceneToBeLoaded != "")
         {
             SceneSerializer serializer(m_ActiveScene);
@@ -380,7 +364,7 @@ namespace Flameberry {
         }
     }
 
-    std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()
+    std::shared_ptr<Application> Application::CreateClientApp()
     {
         return std::make_shared<FlameEditorApp>();
     }

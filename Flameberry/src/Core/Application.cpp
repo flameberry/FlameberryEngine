@@ -12,8 +12,7 @@ namespace Flameberry {
     {
         s_Instance = this;
         m_Window = Window::Create();
-        if (FL_RENDERER_API_CURRENT == FL_RENDERER_API_OPENGL)
-            ImGuiLayer::OnAttach();
+        ImGuiLayer::OnAttach();
     }
 
     void Application::Run()
@@ -27,12 +26,9 @@ namespace Flameberry {
 
             this->OnUpdate(delta);
 
-            if (FL_RENDERER_API_CURRENT == FL_RENDERER_API_OPENGL)
-            {
-                ImGuiLayer::Begin();
-                this->OnUIRender();
-                ImGuiLayer::End();
-            }
+            ImGuiLayer::Begin();
+            this->OnUIRender();
+            ImGuiLayer::End();
 
             m_Window->OnUpdate();
         }
@@ -45,8 +41,7 @@ namespace Flameberry {
 
     Application::~Application()
     {
-        if (FL_RENDERER_API_CURRENT == FL_RENDERER_API_OPENGL)
-            ImGuiLayer::OnDetach();
+        ImGuiLayer::OnDetach();
         glfwTerminate();
         FL_INFO("Ended Application!");
     }

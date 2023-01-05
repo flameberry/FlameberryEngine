@@ -15,6 +15,7 @@ namespace Flameberry {
         void Add(const entity_handle& entity);
         void Remove(const entity_handle& entity);
 
+        const void* Get() const { return _Data; }
         void* GetComponentAddress(const entity_handle& entity) const;
         bool ContainsEntity(const entity_handle& entity) const { return entity.get() <= MAX_ENTITIES && _EntityIdSet.search(entity.get()) != -1; }
         utils::sparse_set& GetEntityIdSet() { return _EntityIdSet; }

@@ -10,7 +10,7 @@
 
 #include "Renderer/PerspectiveCamera.h"
 #include "Renderer/Mesh.h"
-#include "OpenGLUniformBuffer.h"
+#include "OpenGLBuffer.h"
 
 #include "Renderer/Light.h"
 
@@ -27,7 +27,9 @@ namespace Flameberry {
     public:
         OpenGLRenderer3D();
         ~OpenGLRenderer3D() = default;
-        static std::shared_ptr<OpenGLRenderer3D> Create();
+
+        template<typename... Args>
+        static std::shared_ptr<OpenGLRenderer3D> Create(Args... args) { return std::make_shared<OpenGLRenderer3D>(std::forward<Args>(args)...); }
 
         void Init();
         void CleanUp();
@@ -37,6 +39,6 @@ namespace Flameberry {
         struct CameraUniformBufferData { glm::mat4 ViewProjectionMatrix; };
     private:
         CameraUniformBufferData m_UniformBufferData;
-        UniformBuffer m_CameraUniformBuffer;
+        OpenGLBuffer m_CameraUniformBuffer;
     };
 }

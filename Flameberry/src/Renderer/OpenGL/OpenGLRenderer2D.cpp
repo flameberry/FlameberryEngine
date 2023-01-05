@@ -12,8 +12,10 @@
 
 namespace Flameberry {
     OpenGLRenderer2D::OpenGLRenderer2D()
-        : m_CameraUniformBuffer(sizeof(UniformBufferData)), m_CurrentTextureSlot(0)
-    {}
+        : m_CameraUniformBuffer(sizeof(UniformBufferData), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW), m_CurrentTextureSlot(0)
+    {
+        m_CameraUniformBuffer.BindBufferBase(0);
+    }
 
     OpenGLRenderer2D::~OpenGLRenderer2D()
     {}
@@ -232,7 +234,7 @@ namespace Flameberry {
         // glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(m_UniformBufferData.ViewProjectionMatrix));
 
         m_CameraUniformBuffer.Bind();
-        m_CameraUniformBuffer.SetData(&m_UniformBufferData, sizeof(UniformBufferData), 0);
+        m_CameraUniformBuffer.BufferSubData(&m_UniformBufferData, sizeof(UniformBufferData), 0);
     }
 
     void OpenGLRenderer2D::End()

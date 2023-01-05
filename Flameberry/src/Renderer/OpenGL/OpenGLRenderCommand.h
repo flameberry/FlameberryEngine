@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <vector>
 #include <utility>
+#include <glad/glad.h>
 
 #include "OpenGLVertex.h"
 
@@ -39,10 +40,11 @@ namespace Flameberry {
         static uint32_t CreateCubeMap(const char* folderPath);
         static uint32_t CreateShader(const std::string& filePath);
         static std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> LoadModel(const std::string& filePath);
-        static ModelData LoadModelData(const std::string& filePath);
         static uint32_t GetUniformLocation(uint32_t shaderProgramID, const std::string& uniformName);
 
         static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+        static void EnableBlend(GLenum sFactor = GL_SRC_ALPHA, GLenum dFactor = GL_ONE_MINUS_SRC_ALPHA);
+        static void EnableDepthTest(GLenum depthFunc = GL_LESS);
     private:
         static uint32_t GetTextureIdIfAvailable(const char* textureFilePath);
     private:

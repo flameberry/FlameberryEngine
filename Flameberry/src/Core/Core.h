@@ -11,20 +11,12 @@
 #define FL_DEBUGBREAK()
 #endif
 
-namespace Flameberry {
-    enum class RendererAPI { NONE = 0, OPENGL, VULKAN };
-}
-
-#define FL_RENDERER_API_NONE   Flameberry::RendererAPI::NONE
-#define FL_RENDERER_API_OPENGL Flameberry::RendererAPI::OPENGL
-#define FL_RENDERER_API_VULKAN Flameberry::RendererAPI::VULKAN
-
 #ifdef FL_USE_OPENGL_API
-#define FL_RENDERER_API_CURRENT Flameberry::RendererAPI::OPENGL
+#define FL_GET_API_SPECIFIC_CLASS(className) OpenGL##className
 #elif defined FL_USE_VULKAN_API
-#define FL_RENDERER_API_CURRENT Flameberry::RendererAPI::VULKAN
+#define FL_GET_API_SPECIFIC_CLASS(className) Vulkan##className
 #else
-#define FL_RENDERER_API_CURRENT Flameberry::RendererAPI::NONE
+#error "None of the supported graphics API is selected!"
 #endif
 
 // Including All Utils related to Logging

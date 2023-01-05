@@ -52,6 +52,12 @@ namespace Flameberry {
         template<typename T>
         void RemoveComponent(const entity_handle& entity);
 
+        template<typename T>
+        bool DoesComponentPoolExist();
+
+        template<typename T>
+        inline std::shared_ptr<ComponentPool> GetComponentPool() const { return m_ComponentPools[GetComponentTypeId<T>()]; }
+
         template<typename... ComponentTypes>
         SceneView<ComponentTypes...> View();
 
@@ -60,6 +66,8 @@ namespace Flameberry {
         std::vector<std::shared_ptr<ComponentPool>> m_ComponentPools;
         std::vector<entity_handle> m_Entities;
         std::vector<uint32_t> m_FreeEntities;
+
+        friend class Scene;
     };
 
     template<typename T, typename... Args>
@@ -103,6 +111,13 @@ namespace Flameberry {
     {
         FL_ASSERT(HasComponent<T>(entity), "Entity does not have component!");
         m_ComponentPools[GetComponentTypeId<T>()]->Remove(entity.get());
+    }
+
+    template<typename T>
+    inline bool Registry::DoesComponentPoolExist()
+    {
+        uint32_t componentTypeID = GetComponentTypeId<T>();
+        return m_ComponentPools.size() > componentTypeID && m_ComponentPools[componentTypeID].get() != nullptr;
     }
 
     template<typename T>

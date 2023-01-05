@@ -57,4 +57,12 @@ namespace Flameberry {
 
         MeshComponent(): MeshIndex(0) {}
     };
+
+    struct LightComponent
+    {
+        glm::vec3 Color;
+        float Intensity;
+
+        LightComponent(): Color(1.0f), Intensity(1.0f) {}
+    };
 }

@@ -5,6 +5,7 @@
 #include "Registry.h"
 #include "Renderer/OpenGL/OpenGLRenderer2D.h"
 #include "Renderer/OpenGL/OpenGLRenderer3D.h"
+#include "Renderer/OpenGL/OpenGLShader.h"
 #include "Renderer/Light.h"
 #include "Renderer/Material.h"
 #include "Renderer/Skybox.h"
@@ -26,9 +27,9 @@ namespace Flameberry {
         Scene(Registry* registry = nullptr);
         ~Scene() = default;
 
-        Registry* GetRegistry() { return m_Registry; }
         void RenderScene(OpenGLRenderer2D* renderer, const OrthographicCamera& camera);
-        void RenderScene(OpenGLRenderer3D* renderer, const PerspectiveCamera& camera, const std::vector<PointLight>& lights);
+
+        Registry* GetRegistry() { return m_Registry; }
         void SetSelectedEntity(entity_handle* entity) { m_SelectedEntity = entity; }
         entity_handle GetSelectedEntity() const { return *m_SelectedEntity; }
         void LoadMesh(const Mesh& mesh);
@@ -41,5 +42,6 @@ namespace Flameberry {
 
         friend class SceneHierarchyPanel;
         friend class SceneSerializer;
+        friend class SceneRenderer;
     };
 }

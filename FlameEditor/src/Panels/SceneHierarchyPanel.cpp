@@ -149,6 +149,16 @@ namespace Flameberry {
                 }
             }
 
+            if (m_ActiveScene->m_Registry->HasComponent<Flameberry::LightComponent>(m_SelectedEntity))
+            {
+                if (ImGui::CollapsingHeader("Light Component", flags))
+                {
+                    auto& light = *m_ActiveScene->m_Registry->GetComponent<Flameberry::LightComponent>(m_SelectedEntity);
+                    ImGui::Spacing();
+                    DrawComponent(light);
+                }
+            }
+
             if (ImGui::BeginPopupContextWindow((const char*)__null, ImGuiMouseButton_Right, false))
             {
                 if (ImGui::MenuItem("Transform Component"))
@@ -157,6 +167,8 @@ namespace Flameberry {
                     m_ActiveScene->m_Registry->AddComponent<Flameberry::SpriteRendererComponent>(m_SelectedEntity);
                 if (ImGui::MenuItem("Mesh Component"))
                     m_ActiveScene->m_Registry->AddComponent<Flameberry::MeshComponent>(m_SelectedEntity);
+                if (ImGui::MenuItem("Light Component"))
+                    m_ActiveScene->m_Registry->AddComponent<Flameberry::LightComponent>(m_SelectedEntity);
                 ImGui::EndPopup();
             }
         }
@@ -251,7 +263,7 @@ namespace Flameberry {
 
         if (modelPathAccepted != "")
         {
-            auto [vertices, indices] = Flameberry::ModelLoader::LoadOBJ(modelPathAccepted);
+            auto [vertices, indices] = Flameberry::OpenGLRenderCommand::LoadModel(modelPathAccepted);
             m_ActiveScene->m_SceneData.Meshes.emplace_back(vertices, indices);
             mesh.MeshIndex = (uint32_t)m_ActiveScene->m_SceneData.Meshes.size() - 1;
         }
@@ -344,5 +356,11 @@ namespace Flameberry {
         ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo));
         ImGui::DragFloat("Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f);
         ImGui::Checkbox("Metallic", &material.IsMetal);
+    }
+
+    void SceneHierarchyPanel::DrawComponent(Flameberry::LightComponent& light)
+    {
+        ImGui::ColorEdit3("Color", glm::value_ptr(light.Color));
+        ImGui::DragFloat("Intensity", &light.Intensity, 0.1f);
     }
 }

@@ -9,7 +9,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
-// #define TINYOBJLOADER_IMPLEMENTATION
+#define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
 namespace Flameberry {
@@ -19,6 +19,18 @@ namespace Flameberry {
     void OpenGLRenderCommand::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
     {
         glViewport(x, y, width, height);
+    }
+
+    void OpenGLRenderCommand::EnableBlend(GLenum sFactor, GLenum dFactor)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(sFactor, dFactor);
+    }
+
+    void OpenGLRenderCommand::EnableDepthTest(GLenum depthFunc)
+    {
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(depthFunc);
     }
 
     std::tuple<std::vector<OpenGLVertex>, std::vector<uint32_t>> OpenGLRenderCommand::LoadModel(const std::string& filePath)
@@ -66,45 +78,6 @@ namespace Flameberry {
             }
         }
         return { vertices, indices };
-    }
-
-    ModelData OpenGLRenderCommand::LoadModelData(const std::string& filePath)
-    {
-        tinyobj::attrib_t attrib;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
-
-        std::vector<OpenGLVertex2D> vertices;
-        std::vector<uint32_t> indices;
-
-        FL_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str()), err);
-
-        for (const auto& shape : shapes)
-        {
-            for (const auto& index : shape.mesh.indices)
-            {
-                OpenGLVertex2D vertex{};
-
-                vertex.position = {
-                    attrib.vertices[3 * index.vertex_index + 0],
-                    attrib.vertices[3 * index.vertex_index + 1],
-                    attrib.vertices[3 * index.vertex_index + 2]
-                };
-
-                vertex.texture_uv = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-                };
-
-                vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-                vertices.push_back(vertex);
-                indices.push_back(indices.size());
-            }
-        }
-        FL_LOG("INTERNAL: {0}, {1}", vertices.size(), indices.size());
-        return ModelData{ vertices, indices };
     }
 
     std::tuple<std::string, std::string> OpenGLRenderCommand::ReadShaderSource(const std::string& filePath)
