@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-#include "Registry.h"
+#include "ecs.hpp"
 #include "Renderer/OpenGL/OpenGLRenderer2D.h"
 #include "Renderer/OpenGL/OpenGLRenderer3D.h"
 #include "Renderer/OpenGL/OpenGLShader.h"
@@ -24,20 +24,20 @@ namespace Flameberry {
     class Scene
     {
     public:
-        Scene(Registry* registry = nullptr);
+        Scene(ecs::registry* registry = nullptr);
         ~Scene() = default;
 
         void RenderScene(OpenGLRenderer2D* renderer, const OrthographicCamera& camera);
 
-        Registry* GetRegistry() { return m_Registry; }
-        void SetSelectedEntity(entity_handle* entity) { m_SelectedEntity = entity; }
-        entity_handle GetSelectedEntity() const { return *m_SelectedEntity; }
+        ecs::registry* GetRegistry() { return m_Registry; }
+        void SetSelectedEntity(ecs::entity_handle* entity) { m_SelectedEntity = entity; }
+        ecs::entity_handle GetSelectedEntity() const { return *m_SelectedEntity; }
         void LoadMesh(const Mesh& mesh);
         void SetDirectionalLight(const DirectionalLight& light) { m_SceneData.DirLight = light; }
         void AddMaterial(const std::string& materialName, const Material& material) { m_SceneData.Materials[materialName] = material; }
     private:
-        entity_handle* m_SelectedEntity = nullptr;
-        Registry* m_Registry;
+        ecs::entity_handle* m_SelectedEntity = nullptr;
+        ecs::registry* m_Registry;
         SceneData m_SceneData;
 
         friend class SceneHierarchyPanel;

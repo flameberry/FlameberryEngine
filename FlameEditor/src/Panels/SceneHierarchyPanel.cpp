@@ -7,10 +7,10 @@
 #include "../Utils.h"
 
 namespace Flameberry {
-    SceneHierarchyPanel::SceneHierarchyPanel(Flameberry::Scene* scene)
+    SceneHierarchyPanel::SceneHierarchyPanel(Scene* scene)
         : m_ActiveScene(scene), m_SelectedEntity(UINT32_MAX, false)
     {
-        m_DefaultTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
+        m_DefaultTextureId = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
     }
 
     void SceneHierarchyPanel::OnUIRender()
@@ -23,27 +23,27 @@ namespace Flameberry {
         {
             if (ImGui::MenuItem("Create Empty"))
             {
-                auto& entity = m_ActiveScene->m_Registry->CreateEntity();
-                m_ActiveScene->m_Registry->AddComponent<Flameberry::IDComponent>(entity);
-                m_ActiveScene->m_Registry->AddComponent<Flameberry::TagComponent>(entity)->Tag = "Empty";
-                m_ActiveScene->m_Registry->AddComponent<Flameberry::TransformComponent>(entity);
+                auto entity = m_ActiveScene->m_Registry->create();
+                m_ActiveScene->m_Registry->emplace<IDComponent>(entity);
+                m_ActiveScene->m_Registry->emplace<TagComponent>(entity).Tag = "Empty";
+                m_ActiveScene->m_Registry->emplace<TransformComponent>(entity);
                 m_SelectedEntity = entity;
             }
             ImGui::EndPopup();
         }
 
-        m_ActiveScene->m_Registry->each([this](Flameberry::entity_handle& entity) {
+        m_ActiveScene->m_Registry->each([this](ecs::entity_handle& entity) {
             bool should_delete_entity = false;
-        static Flameberry::entity_handle* entity_to_be_renamed = nullptr;
+        static ecs::entity_handle* entity_to_be_renamed = nullptr;
 
-        auto& tag = m_ActiveScene->m_Registry->GetComponent<Flameberry::TagComponent>(entity)->Tag;
+        auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
 
         bool is_selected = m_SelectedEntity == entity;
         int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
         if (!entity_to_be_renamed || entity != *entity_to_be_renamed)
             treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
-        ImGui::PushID(entity.get());
+        ImGui::PushID((uint32_t)entity);
 
         float textColor = is_selected ? 0.0f : 1.0f;
         ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
@@ -89,9 +89,9 @@ namespace Flameberry {
 
         if (should_delete_entity)
         {
-            m_ActiveScene->m_Registry->DestroyEntity(entity);
+            m_ActiveScene->m_Registry->destroy(entity);
             if (is_selected)
-                m_SelectedEntity = entity_handle{ UINT_MAX, false };
+                m_SelectedEntity = ecs::entity_handle::null;
         }
 
         if (m_SelectedEntity == entity)
@@ -105,23 +105,23 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5, 5 });
         ImGui::Begin("Inspector");
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen;
-        if (m_SelectedEntity.is_valid())
+        if (m_SelectedEntity != ecs::entity_handle::null)
         {
-            if (m_ActiveScene->m_Registry->HasComponent<Flameberry::IDComponent>(m_SelectedEntity))
+            if (m_ActiveScene->m_Registry->has<IDComponent>(m_SelectedEntity))
             {
                 if (ImGui::CollapsingHeader("IDComponent", flags))
                 {
-                    auto& ID = m_ActiveScene->m_Registry->GetComponent<Flameberry::IDComponent>(m_SelectedEntity)->ID;
+                    auto& ID = m_ActiveScene->m_Registry->get<IDComponent>(m_SelectedEntity).ID;
                     ImGui::Text("ID: %llu", (uint64_t)ID);
                     ImGui::Spacing();
                 }
             }
 
-            if (m_ActiveScene->m_Registry->HasComponent<Flameberry::TransformComponent>(m_SelectedEntity))
+            if (m_ActiveScene->m_Registry->has<TransformComponent>(m_SelectedEntity))
             {
                 if (ImGui::CollapsingHeader("Transform Component", flags))
                 {
-                    auto& transform = *m_ActiveScene->m_Registry->GetComponent<Flameberry::TransformComponent>(m_SelectedEntity);
+                    auto& transform = m_ActiveScene->m_Registry->get<TransformComponent>(m_SelectedEntity);
                     ImGui::Spacing();
                     DrawComponent(transform);
                     ImGui::Spacing();
@@ -129,31 +129,31 @@ namespace Flameberry {
                 }
             }
 
-            if (m_ActiveScene->m_Registry->HasComponent<Flameberry::SpriteRendererComponent>(m_SelectedEntity))
+            if (m_ActiveScene->m_Registry->has<SpriteRendererComponent>(m_SelectedEntity))
             {
                 if (ImGui::CollapsingHeader("Sprite Renderer Component", flags))
                 {
-                    auto& sprite = *m_ActiveScene->m_Registry->GetComponent<Flameberry::SpriteRendererComponent>(m_SelectedEntity);
+                    auto& sprite = m_ActiveScene->m_Registry->get<SpriteRendererComponent>(m_SelectedEntity);
                     DrawComponent(sprite);
                     ImGui::Spacing();
                 }
             }
 
-            if (m_ActiveScene->m_Registry->HasComponent<Flameberry::MeshComponent>(m_SelectedEntity))
+            if (m_ActiveScene->m_Registry->has<MeshComponent>(m_SelectedEntity))
             {
                 if (ImGui::CollapsingHeader("Mesh Component", flags))
                 {
-                    auto& mesh = *m_ActiveScene->m_Registry->GetComponent<Flameberry::MeshComponent>(m_SelectedEntity);
+                    auto& mesh = m_ActiveScene->m_Registry->get<MeshComponent>(m_SelectedEntity);
                     ImGui::Spacing();
                     DrawComponent(mesh);
                 }
             }
 
-            if (m_ActiveScene->m_Registry->HasComponent<Flameberry::LightComponent>(m_SelectedEntity))
+            if (m_ActiveScene->m_Registry->has<LightComponent>(m_SelectedEntity))
             {
                 if (ImGui::CollapsingHeader("Light Component", flags))
                 {
-                    auto& light = *m_ActiveScene->m_Registry->GetComponent<Flameberry::LightComponent>(m_SelectedEntity);
+                    auto& light = m_ActiveScene->m_Registry->get<LightComponent>(m_SelectedEntity);
                     ImGui::Spacing();
                     DrawComponent(light);
                 }
@@ -162,13 +162,13 @@ namespace Flameberry {
             if (ImGui::BeginPopupContextWindow((const char*)__null, ImGuiMouseButton_Right, false))
             {
                 if (ImGui::MenuItem("Transform Component"))
-                    m_ActiveScene->m_Registry->AddComponent<Flameberry::TransformComponent>(m_SelectedEntity);
+                    m_ActiveScene->m_Registry->emplace<TransformComponent>(m_SelectedEntity);
                 if (ImGui::MenuItem("Sprite Renderer Component"))
-                    m_ActiveScene->m_Registry->AddComponent<Flameberry::SpriteRendererComponent>(m_SelectedEntity);
+                    m_ActiveScene->m_Registry->emplace<SpriteRendererComponent>(m_SelectedEntity);
                 if (ImGui::MenuItem("Mesh Component"))
-                    m_ActiveScene->m_Registry->AddComponent<Flameberry::MeshComponent>(m_SelectedEntity);
+                    m_ActiveScene->m_Registry->emplace<MeshComponent>(m_SelectedEntity);
                 if (ImGui::MenuItem("Light Component"))
-                    m_ActiveScene->m_Registry->AddComponent<Flameberry::LightComponent>(m_SelectedEntity);
+                    m_ActiveScene->m_Registry->emplace<LightComponent>(m_SelectedEntity);
                 ImGui::EndPopup();
             }
         }
@@ -194,7 +194,7 @@ namespace Flameberry {
         ImGui::PopStyleVar();
     }
 
-    void SceneHierarchyPanel::DrawComponent(Flameberry::TransformComponent& transform)
+    void SceneHierarchyPanel::DrawComponent(TransformComponent& transform)
     {
         Utils::DrawVec3Control("Translation", transform.translation, 0.0f, 0.01f);
         ImGui::Spacing();
@@ -203,7 +203,7 @@ namespace Flameberry {
         Utils::DrawVec3Control("Scale", transform.scale, 1.0f, 0.01f);
     }
 
-    void SceneHierarchyPanel::DrawComponent(Flameberry::SpriteRendererComponent& sprite)
+    void SceneHierarchyPanel::DrawComponent(SpriteRendererComponent& sprite)
     {
         ImGui::ColorEdit4("Color", glm::value_ptr(sprite.Color));
 
@@ -231,11 +231,11 @@ namespace Flameberry {
         if (sprite.TextureFilePath == "")
             textureID = m_DefaultTextureId;
         else
-            textureID = Flameberry::OpenGLRenderCommand::CreateTexture(sprite.TextureFilePath);
+            textureID = OpenGLRenderCommand::CreateTexture(sprite.TextureFilePath);
         ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
     }
 
-    void SceneHierarchyPanel::DrawComponent(Flameberry::MeshComponent& mesh)
+    void SceneHierarchyPanel::DrawComponent(MeshComponent& mesh)
     {
         std::string modelPathAccepted = "";
 
@@ -263,7 +263,7 @@ namespace Flameberry {
 
         if (modelPathAccepted != "")
         {
-            auto [vertices, indices] = Flameberry::OpenGLRenderCommand::LoadModel(modelPathAccepted);
+            auto [vertices, indices] = OpenGLRenderCommand::LoadModel(modelPathAccepted);
             m_ActiveScene->m_SceneData.Meshes.emplace_back(vertices, indices);
             mesh.MeshIndex = (uint32_t)m_ActiveScene->m_SceneData.Meshes.size() - 1;
         }
@@ -312,9 +312,9 @@ namespace Flameberry {
         if (textureFilePath != "")
         {
             if (isMeshTextured)
-                currentMesh.TextureIDs[0] = Flameberry::OpenGLRenderCommand::CreateTexture(textureFilePath);
+                currentMesh.TextureIDs[0] = OpenGLRenderCommand::CreateTexture(textureFilePath);
             else
-                currentMesh.TextureIDs.emplace_back() = Flameberry::OpenGLRenderCommand::CreateTexture(textureFilePath);
+                currentMesh.TextureIDs.emplace_back() = OpenGLRenderCommand::CreateTexture(textureFilePath);
         }
 
         // Material Menu
@@ -334,8 +334,8 @@ namespace Flameberry {
 
         ImGui::SameLine();
 
-        uint32_t plusIconTextureID = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/plus_icon.png");
-        uint32_t minusIconTextureID = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/minus_icon.png");
+        uint32_t plusIconTextureID = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/plus_icon.png");
+        uint32_t minusIconTextureID = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/minus_icon.png");
 
         if (ImGui::ImageButton(reinterpret_cast<void*>(plusIconTextureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
         {
@@ -358,7 +358,7 @@ namespace Flameberry {
         ImGui::Checkbox("Metallic", &material.IsMetal);
     }
 
-    void SceneHierarchyPanel::DrawComponent(Flameberry::LightComponent& light)
+    void SceneHierarchyPanel::DrawComponent(LightComponent& light)
     {
         ImGui::ColorEdit3("Color", glm::value_ptr(light.Color));
         ImGui::DragFloat("Intensity", &light.Intensity, 0.1f);

@@ -37,12 +37,12 @@ namespace Flameberry {
         //     sceneUniformBufferData.LightCount = glm::min(FL_MAX_POINT_LIGHTS, (int)scene->m_Registry->GetComponentPool<LightComponent>()->size());
         //     memcpy(sceneUniformBufferData.PointLights, lightComponentBuffer, sceneUniformBufferData.LightCount);
         // }
-        for (const auto& entity : scene->m_Registry->View<TransformComponent, LightComponent>())
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
         {
-            const auto& [transform, light] = scene->m_Registry->Get<TransformComponent, LightComponent>(entity);
-            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform->translation;
-            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Color = light->Color;
-            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Intensity = light->Intensity;
+            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
+            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform.translation;
+            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Color = light.Color;
+            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Intensity = light.Intensity;
             sceneUniformBufferData.LightCount++;
         }
 
@@ -50,14 +50,14 @@ namespace Flameberry {
         m_SceneUniformBuffer.BufferSubData(&sceneUniformBufferData, sizeof(SceneUniformBufferData), 0);
 
         scene->m_SceneData.ActiveSkybox.OnDraw(camera);
-        for (const auto& entity : scene->m_Registry->View<TransformComponent, MeshComponent>())
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
-            const auto& [transform, mesh] = scene->m_Registry->Get<TransformComponent, MeshComponent>(entity);
+            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
-            if (scene->m_SceneData.Materials.find(mesh->MaterialName) != scene->m_SceneData.Materials.end())
-                scene->m_SceneData.Meshes[mesh->MeshIndex].Draw(m_MeshShader, *transform, scene->m_SceneData.Materials[mesh->MaterialName], entity.get());
+            if (scene->m_SceneData.Materials.find(mesh.MaterialName) != scene->m_SceneData.Materials.end())
+                scene->m_SceneData.Meshes[mesh.MeshIndex].Draw(m_MeshShader, transform, scene->m_SceneData.Materials[mesh.MaterialName], (uint32_t)entity);
             else
-                scene->m_SceneData.Meshes[mesh->MeshIndex].Draw(m_MeshShader, *transform, Material(), entity.get());
+                scene->m_SceneData.Meshes[mesh.MeshIndex].Draw(m_MeshShader, transform, Material(), (uint32_t)entity);
         }
 
         m_SceneUniformBuffer.Unbind();

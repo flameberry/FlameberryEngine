@@ -9,15 +9,6 @@
 #include "Core/UUID.h"
 
 namespace Flameberry {
-    extern uint32_t typeCounter;
-
-    template<class T>
-    uint32_t GetComponentTypeId()
-    {
-        static uint32_t componentCounter = typeCounter++;
-        return componentCounter;
-    }
-
     struct IDComponent
     {
         UUID ID;

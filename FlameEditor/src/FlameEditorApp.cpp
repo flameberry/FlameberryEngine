@@ -92,30 +92,43 @@ namespace Flameberry {
         // meshes.back().TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
         // ----
 
-        m_Registry = std::make_shared<Registry>();
+        m_Registry = std::make_shared<ecs::registry>();
 
-        m_SquareEntity = m_Registry->CreateEntity();
-        m_Registry->AddComponent<IDComponent>(m_SquareEntity);
-        m_Registry->AddComponent<TagComponent>(m_SquareEntity)->Tag = "Sphere";
-        m_Registry->AddComponent<TransformComponent>(m_SquareEntity);
-        auto meshComponent = m_Registry->AddComponent<MeshComponent>(m_SquareEntity);
-        meshComponent->MeshIndex = 0;
+        m_SquareEntity = m_Registry->create();
+        m_Registry->emplace<IDComponent>(m_SquareEntity);
+        m_Registry->emplace<TagComponent>(m_SquareEntity).Tag = "Sphere";
+        m_Registry->emplace<TransformComponent>(m_SquareEntity);
+        auto& meshComponent = m_Registry->emplace<MeshComponent>(m_SquareEntity);
+        meshComponent.MeshIndex = 0;
 
-        m_BlueSquareEntity = m_Registry->CreateEntity();
-        m_Registry->AddComponent<IDComponent>(m_BlueSquareEntity);
-        m_Registry->AddComponent<TagComponent>(m_BlueSquareEntity)->Tag = "Sponza";
-        m_Registry->AddComponent<TransformComponent>(m_BlueSquareEntity);
-        auto meshComponent1 = m_Registry->AddComponent<MeshComponent>(m_BlueSquareEntity);
-        meshComponent1->MeshIndex = 1;
+        m_BlueSquareEntity = m_Registry->create();
+        m_Registry->emplace<IDComponent>(m_BlueSquareEntity);
+        m_Registry->emplace<TagComponent>(m_BlueSquareEntity).Tag = "Sponza";
+        m_Registry->emplace<TransformComponent>(m_BlueSquareEntity);
+        auto& meshComponent1 = m_Registry->emplace<MeshComponent>(m_BlueSquareEntity);
+        meshComponent1.MeshIndex = 1;
+
+        ecs::entity_handle entity = m_Registry->create();
+        m_Registry->emplace<IDComponent>(entity);
+        m_Registry->emplace<TagComponent>(entity).Tag = "Light";
+        m_Registry->emplace<TransformComponent>(entity).translation = glm::vec3(1.0f);
+        auto& light = m_Registry->emplace<LightComponent>(entity);
+        light.Color = glm::vec3(1.0f);
+        light.Intensity = 2.0f;
 
         m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
         m_SceneHierarchyPanel = SceneHierarchyPanel(m_ActiveScene.get());
         m_ContentBrowserPanel = ContentBrowserPanel();
 
+        FL_LOG(ecs::type_id<IDComponent>());
+        FL_LOG(ecs::type_id<TagComponent>());
+        FL_LOG(ecs::type_id<TransformComponent>());
+        FL_LOG(ecs::type_id<MeshComponent>());
+
         // int inc = 0;
         // for (const auto& mesh : meshes)
         // {
-        //     entity_handle entity = m_Registry->CreateEntity();
+        //     entity_handle entity = m_Registry->create();
         //     m_Registry->AddComponent<TransformComponent>(entity);
         //     m_Registry->AddComponent<TagComponent>(entity)->Tag = mesh.Name;
         //     auto meshComponent = m_Registry->AddComponent<MeshComponent>(entity);
@@ -195,9 +208,9 @@ namespace Flameberry {
                 int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
                 // FL_LOG("EntityID: {0}", entityID);
                 if (entityID != -1)
-                    m_SceneHierarchyPanel.SetSelectedEntity(m_ActiveScene->GetRegistry()->GetEntityVector()[entityID]);
+                    m_SceneHierarchyPanel.SetSelectedEntity(entityID);
                 else
-                    m_SceneHierarchyPanel.SetSelectedEntity(entity_handle{ UINT32_MAX, false });
+                    m_SceneHierarchyPanel.SetSelectedEntity(ecs::entity_handle::null);
             }
         }
         m_Framebuffer->Unbind();
@@ -238,7 +251,7 @@ namespace Flameberry {
         m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
 
         const auto& selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
-        if (selectedEntity && m_GizmoType != -1)
+        if (selectedEntity != ecs::entity_handle::null && m_GizmoType != -1)
         {
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist();
@@ -250,8 +263,8 @@ namespace Flameberry {
             const auto& projectionMatrix = m_EditorCamera.GetProjectionMatrix();
             const auto& viewMatrix = m_EditorCamera.GetViewMatrix();
 
-            auto transformComp = m_Registry->GetComponent<TransformComponent>(selectedEntity);
-            glm::mat4 transform = transformComp->GetTransform();
+            auto& transformComp = m_Registry->get<TransformComponent>(selectedEntity);
+            glm::mat4 transform = transformComp.GetTransform();
 
             bool snap = Input::IsKey(GLFW_KEY_LEFT_CONTROL, GLFW_PRESS);
             float snapValue = 0.5f;
@@ -268,11 +281,11 @@ namespace Flameberry {
                 glm::vec3 translation, rotation, scale;
                 DecomposeTransform(transform, translation, rotation, scale);
 
-                transformComp->translation = translation;
+                transformComp.translation = translation;
 
-                glm::vec3 deltaRotation = rotation - transformComp->rotation;
-                transformComp->rotation += deltaRotation;
-                transformComp->scale = scale;
+                glm::vec3 deltaRotation = rotation - transformComp.rotation;
+                transformComp.rotation += deltaRotation;
+                transformComp.scale = scale;
             }
         }
 

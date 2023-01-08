@@ -36,38 +36,38 @@ namespace Flameberry {
         value.SetArray();
         document.AddMember("Entities", value, allocator);
 
-        m_ActiveScene->m_Registry->each([&](entity_handle& entity) {
+        m_ActiveScene->m_Registry->each([&](ecs::entity_handle& entity) {
             entityJSONObject.SetObject();
-        entityJSONObject.AddMember("UUID", m_ActiveScene->m_Registry->GetComponent<IDComponent>(entity)->ID, allocator);
+        entityJSONObject.AddMember("UUID", m_ActiveScene->m_Registry->get<IDComponent>(entity).ID, allocator);
 
         // Tag Component
-        auto& tag = m_ActiveScene->m_Registry->GetComponent<TagComponent>(entity)->Tag;
+        auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
         value.SetString(tag.c_str(), tag.length());
         entityJSONObject.AddMember("TagComponent", value, allocator);
 
         // Transform Component
-        auto transformComponent = m_ActiveScene->m_Registry->GetComponent<TransformComponent>(entity);
+        auto transformComponent = m_ActiveScene->m_Registry->get<TransformComponent>(entity);
         value.SetArray();
-        value.PushBack(transformComponent->translation.x, allocator);
-        value.PushBack(transformComponent->translation.y, allocator);
-        value.PushBack(transformComponent->translation.z, allocator);
-        value.PushBack(transformComponent->rotation.x, allocator);
-        value.PushBack(transformComponent->rotation.y, allocator);
-        value.PushBack(transformComponent->rotation.z, allocator);
-        value.PushBack(transformComponent->scale.x, allocator);
-        value.PushBack(transformComponent->scale.y, allocator);
-        value.PushBack(transformComponent->scale.z, allocator);
+        value.PushBack(transformComponent.translation.x, allocator);
+        value.PushBack(transformComponent.translation.y, allocator);
+        value.PushBack(transformComponent.translation.z, allocator);
+        value.PushBack(transformComponent.rotation.x, allocator);
+        value.PushBack(transformComponent.rotation.y, allocator);
+        value.PushBack(transformComponent.rotation.z, allocator);
+        value.PushBack(transformComponent.scale.x, allocator);
+        value.PushBack(transformComponent.scale.y, allocator);
+        value.PushBack(transformComponent.scale.z, allocator);
         entityJSONObject.AddMember("TransformComponent", value, allocator);
 
         // Mesh Component
-        if (m_ActiveScene->m_Registry->HasComponent<MeshComponent>(entity))
+        if (m_ActiveScene->m_Registry->has<MeshComponent>(entity))
         {
-            auto meshComponent = m_ActiveScene->m_Registry->GetComponent<MeshComponent>(entity);
+            auto meshComponent = m_ActiveScene->m_Registry->get<MeshComponent>(entity);
             value.SetObject();
             entityJSONObject.AddMember("MeshComponent", value, allocator);
-            entityJSONObject["MeshComponent"].AddMember("MeshIndex", meshComponent->MeshIndex, allocator);
+            entityJSONObject["MeshComponent"].AddMember("MeshIndex", meshComponent.MeshIndex, allocator);
 
-            value.SetString(meshComponent->MaterialName.c_str(), meshComponent->MaterialName.length());
+            value.SetString(meshComponent.MaterialName.c_str(), meshComponent.MaterialName.length());
             entityJSONObject["MeshComponent"].AddMember("MaterialName", value, allocator);
         }
         document["Entities"].PushBack(entityJSONObject, allocator);
@@ -119,7 +119,7 @@ namespace Flameberry {
         document.ParseStream(istream);
         FL_ASSERT(document.IsObject(), "Invalid JSON file!");
 
-        m_ActiveScene->m_Registry->Clear();
+        m_ActiveScene->m_Registry->clear();
 
         m_ActiveScene->m_SceneData.Materials.clear();
         m_ActiveScene->m_SceneData.Name = document["Scene"].GetString();
@@ -127,37 +127,37 @@ namespace Flameberry {
         const rapidjson::Value& entities = document["Entities"];
         for (const auto& entityDetails : entities.GetArray())
         {
-            auto& entity = m_ActiveScene->m_Registry->CreateEntity();
+            auto entity = m_ActiveScene->m_Registry->create();
 
             auto& id = entityDetails["UUID"];
-            m_ActiveScene->m_Registry->AddComponent<IDComponent>(entity, id.GetUint64());
+            m_ActiveScene->m_Registry->emplace<IDComponent>(entity, id.GetUint64());
 
             auto& tagComponent = entityDetails["TagComponent"];
-            m_ActiveScene->m_Registry->AddComponent<TagComponent>(entity)->Tag = tagComponent.IsString() ? entityDetails["TagComponent"].GetString() : "Empty";
+            m_ActiveScene->m_Registry->emplace<TagComponent>(entity).Tag = tagComponent.IsString() ? entityDetails["TagComponent"].GetString() : "Empty";
 
             auto& transformComponent = entityDetails["TransformComponent"];
             if (transformComponent.IsArray())
             {
-                auto transform = m_ActiveScene->m_Registry->AddComponent<TransformComponent>(entity);
+                auto transform = m_ActiveScene->m_Registry->emplace<TransformComponent>(entity);
 
-                transform->translation.x = transformComponent.GetArray()[0].GetFloat();
-                transform->translation.y = transformComponent.GetArray()[1].GetFloat();
-                transform->translation.z = transformComponent.GetArray()[2].GetFloat();
-                transform->rotation.x = transformComponent.GetArray()[3].GetFloat();
-                transform->rotation.y = transformComponent.GetArray()[4].GetFloat();
-                transform->rotation.z = transformComponent.GetArray()[5].GetFloat();
-                transform->scale.x = transformComponent.GetArray()[6].GetFloat();
-                transform->scale.y = transformComponent.GetArray()[7].GetFloat();
-                transform->scale.z = transformComponent.GetArray()[8].GetFloat();
+                transform.translation.x = transformComponent.GetArray()[0].GetFloat();
+                transform.translation.y = transformComponent.GetArray()[1].GetFloat();
+                transform.translation.z = transformComponent.GetArray()[2].GetFloat();
+                transform.rotation.x = transformComponent.GetArray()[3].GetFloat();
+                transform.rotation.y = transformComponent.GetArray()[4].GetFloat();
+                transform.rotation.z = transformComponent.GetArray()[5].GetFloat();
+                transform.scale.x = transformComponent.GetArray()[6].GetFloat();
+                transform.scale.y = transformComponent.GetArray()[7].GetFloat();
+                transform.scale.z = transformComponent.GetArray()[8].GetFloat();
             }
 
             auto& meshComponent = entityDetails["MeshComponent"];
             if (meshComponent.IsObject() && meshComponent["MeshIndex"].IsUint())
             {
-                auto mesh = m_ActiveScene->m_Registry->AddComponent<MeshComponent>(entity);
-                mesh->MeshIndex = meshComponent["MeshIndex"].GetUint();
+                auto mesh = m_ActiveScene->m_Registry->emplace<MeshComponent>(entity);
+                mesh.MeshIndex = meshComponent["MeshIndex"].GetUint();
                 if (meshComponent["MaterialName"].IsString())
-                    mesh->MaterialName = meshComponent["MaterialName"].GetString();
+                    mesh.MaterialName = meshComponent["MaterialName"].GetString();
             }
         }
 
