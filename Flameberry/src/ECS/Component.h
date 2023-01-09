@@ -4,20 +4,13 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <string>
+
 namespace Flameberry {
-    extern uint32_t typeCounter;
-
-    template<class T>
-    uint32_t GetComponentTypeId()
-    {
-        static uint32_t componentCounter = typeCounter++;
-        return componentCounter;
-    }
-
     struct TransformComponent
     {
         glm::vec3 translation, rotation, scale;
-        TransformComponent() : translation(0.0f), rotation(0.0f), scale(1.0f) {};
+        TransformComponent(): translation(0.0f), rotation(0.0f), scale(1.0f) {};
         glm::mat4 GetTransform() const
         {
             return glm::translate(glm::mat4(1.0f), translation)
@@ -35,6 +28,6 @@ namespace Flameberry {
     struct TagComponent
     {
         std::string Tag;
-        TagComponent(const std::string& tag = "Default_Entity") : Tag(tag) {}
+        TagComponent(const std::string& tag = "Default_Entity"): Tag(tag) {}
     };
 }

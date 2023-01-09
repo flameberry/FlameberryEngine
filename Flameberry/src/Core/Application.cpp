@@ -4,7 +4,6 @@
 #include "Core.h"
 
 #include "ImGui/ImGuiLayer.h"
-#include "ECS/pool.h"
 
 namespace Flameberry {
     Application* Application::s_Instance;
