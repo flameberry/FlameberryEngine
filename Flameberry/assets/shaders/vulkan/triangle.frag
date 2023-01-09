@@ -239,16 +239,4 @@ vec4 CalculatePBRLighting()
 void main()
 {
     FragColor = CalculatePBRLighting();
-
-    // vec3 lightCoords = (v_LightFragmentPosition.xyz / v_LightFragmentPosition.w) * 0.5 + 0.5;
-    // float closestDepth = texture(u_ShadowMapSampler, lightCoords.xy).r;
-    // float currentDepth = lightCoords.z;
-    // FragColor = vec4(vec3(closestDepth), 1.0);
-    // FragColor = vec4(vec3(currentDepth), 1.0);
-
-    // float closestDepth = texture(u_ShadowMapSampler, v_LightFragmentPosition.xy).r;
-    // float currentDepth = v_LightFragmentPosition.z;
-    // FragColor = vec4(vec3(closestDepth), 1.0);
-    // FragColor = vec4(vec3(currentDepth), 1.0);
-    // FragColor = vec4(vec3(currentDepth > closestDepth ? 0.2 : 0.8), 1.0);
 }

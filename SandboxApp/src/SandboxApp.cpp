@@ -112,9 +112,6 @@ void SandboxApp::OnUpdate(float delta)
             glm::mat4 lightViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
             lightViewProjectionMatrix = lightProjectionMatrix * lightViewMatrix;
 
-            // glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10, 10, -10, 10, -10, 20);
-            // glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-
             m_VulkanRenderer->BeginShadowRenderPass(lightViewProjectionMatrix);
 
             for (auto& mesh : m_Meshes)
