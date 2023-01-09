@@ -159,7 +159,7 @@ namespace Flameberry {
                 }
             }
 
-            if (ImGui::BeginPopupContextWindow((const char*)__null, ImGuiMouseButton_Right, false))
+            if (ImGui::BeginPopupContextWindow((const char*)__null, ImGuiMouseButton_Right))
             {
                 if (ImGui::MenuItem("Transform Component"))
                     m_ActiveScene->m_Registry->emplace<TransformComponent>(m_SelectedEntity);
