@@ -47,37 +47,6 @@ namespace Flameberry {
 
         m_BrickTexture = OpenGLTexture::Create(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
 
-        m_FloorMesh.Vertices.emplace_back();
-        m_FloorMesh.Vertices.back().position = { -1.0f, 0.0f, 1.0f };
-        m_FloorMesh.Vertices.back().texture_uv = { 0.0f, 0.0f };
-        m_FloorMesh.Vertices.back().normal = { 0.0f, 1.0f, 0.0f };
-        m_FloorMesh.Vertices.back().entityID = 0.0f;
-
-        m_FloorMesh.Vertices.emplace_back();
-        m_FloorMesh.Vertices.back().position = { -1.0f, 0.0f, -1.0f };
-        m_FloorMesh.Vertices.back().texture_uv = { 0.0f, 1.0f };
-        m_FloorMesh.Vertices.back().normal = { 0.0f, 1.0f, 0.0f };
-        m_FloorMesh.Vertices.back().entityID = 0.0f;
-
-        m_FloorMesh.Vertices.emplace_back();
-        m_FloorMesh.Vertices.back().position = { 1.0f, 0.0f, -1.0f };
-        m_FloorMesh.Vertices.back().texture_uv = { 1.0f, 1.0f };
-        m_FloorMesh.Vertices.back().normal = { 0.0f, 1.0f, 0.0f };
-        m_FloorMesh.Vertices.back().entityID = 0.0f;
-
-        m_FloorMesh.Vertices.emplace_back();
-        m_FloorMesh.Vertices.back().position = { 1.0f, 0.0f, 1.0f };
-        m_FloorMesh.Vertices.back().texture_uv = { 1.0f, 0.0f };
-        m_FloorMesh.Vertices.back().normal = { 0.0f, 1.0f, 0.0f };
-        m_FloorMesh.Vertices.back().entityID = 0.0f;
-
-        m_FloorMesh.Indices = {
-            0, 1, 2,
-            0, 2, 3
-        };
-
-        m_FloorMesh.Invalidate();
-
         // Test
         // std::vector<Mesh> meshes;
         // ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj", &meshes);
@@ -145,7 +114,7 @@ namespace Flameberry {
         m_SceneRenderer = SceneRenderer::Create();
     }
 
-        FlameEditorApp::~FlameEditorApp()
+    FlameEditorApp::~FlameEditorApp()
     {
         m_Renderer3D->CleanUp();
     }
@@ -181,7 +150,9 @@ namespace Flameberry {
         m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera);
         m_Renderer3D->End();
 
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive)
+        bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive;
+        // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
+        if (attemptedToSelect)
         {
             auto [mx, my] = ImGui::GetMousePos();
             mx -= m_ViewportBounds[0].x;
@@ -194,10 +165,7 @@ namespace Flameberry {
             if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
             {
                 int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
-                if (entityID != -1)
-                    m_SceneHierarchyPanel.SetSelectedEntity(entityID);
-                else
-                    m_SceneHierarchyPanel.SetSelectedEntity(ecs::entity_handle::null);
+                m_SceneHierarchyPanel.SetSelectedEntity((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
             }
         }
         m_Framebuffer->Unbind();
