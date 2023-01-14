@@ -10,7 +10,7 @@ namespace Flameberry {
         ~SceneHierarchyPanel() = default;
         void OnUIRender();
         void SetSelectedEntity(const ecs::entity_handle& entity) { m_SelectedEntity = entity; }
-        std::string RenameNode(const char* name);
+        void RenameNode(std::string& tag);
         ecs::entity_handle GetSelectedEntity() const { return m_SelectedEntity; }
     private:
         void DrawComponent(TransformComponent& transform);
@@ -18,7 +18,7 @@ namespace Flameberry {
         void DrawComponent(MeshComponent& mesh);
         void DrawComponent(LightComponent& light);
     private:
-        ecs::entity_handle m_SelectedEntity;
+        ecs::entity_handle m_SelectedEntity, m_RenamedEntity;
         Scene* m_ActiveScene;
     private:
         OpenGLTexture m_DefaultTexture;

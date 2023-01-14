@@ -15,7 +15,7 @@ namespace Flameberry {
     FlameEditorApp::FlameEditorApp()
         : m_Framebuffer(OpenGLFramebuffer::Create()),
         m_ViewportSize(1280, 720),
-        m_Renderer3D(OpenGLRenderer3D::Create())
+        m_Renderer3D(OpenGLRenderer3D::Create()),
     {
         OpenGLRenderCommand::EnableBlend();
         OpenGLRenderCommand::EnableDepthTest();
@@ -101,13 +101,13 @@ namespace Flameberry {
         auto& meshComponent1 = m_Registry->emplace<MeshComponent>(m_BlueSquareEntity);
         meshComponent1.MeshIndex = 1;
 
-        //        ecs::entity_handle entity = m_Registry->create();
-        //        m_Registry->emplace<IDComponent>(entity);
-        //        m_Registry->emplace<TagComponent>(entity).Tag = "Light";
-        //        m_Registry->emplace<TransformComponent>(entity).translation = glm::vec3(1.0f);
-        //        auto& light = m_Registry->emplace<LightComponent>(entity);
-        //        light.Color = glm::vec3(1.0f);
-        //        light.Intensity = 2.0f;
+        ecs::entity_handle entity = m_Registry->create();
+        m_Registry->emplace<IDComponent>(entity);
+        m_Registry->emplace<TagComponent>(entity).Tag = "Light";
+        m_Registry->emplace<TransformComponent>(entity).translation = glm::vec3(1.0f);
+        auto& light = m_Registry->emplace<LightComponent>(entity);
+        light.Color = glm::vec3(1.0f);
+        light.Intensity = 2.0f;
 
         m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
         m_SceneHierarchyPanel = SceneHierarchyPanel(m_ActiveScene.get());
@@ -145,7 +145,7 @@ namespace Flameberry {
         m_SceneRenderer = SceneRenderer::Create();
     }
 
-    FlameEditorApp::~FlameEditorApp()
+        FlameEditorApp::~FlameEditorApp()
     {
         m_Renderer3D->CleanUp();
     }
@@ -180,6 +180,10 @@ namespace Flameberry {
         m_Renderer3D->Begin(m_EditorCamera);
         m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera);
         m_Renderer3D->End();
+
+        m_Renderer2D->Begin(m_EditorCamera.GetViewProjectionMatrix());
+        m_Renderer2D->AddQuad(glm::mat4(1.0f), glm::vec4(1, 1, 0, 1), 0);
+        m_Renderer2D->End();
 
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive)
         {

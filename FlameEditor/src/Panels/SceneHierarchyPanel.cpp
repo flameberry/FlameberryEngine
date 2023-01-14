@@ -8,7 +8,10 @@
 
 namespace Flameberry {
     SceneHierarchyPanel::SceneHierarchyPanel(Scene* scene)
-        : m_ActiveScene(scene), m_SelectedEntity(UINT32_MAX, false), m_DefaultTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png")
+        : m_ActiveScene(scene),
+        m_SelectedEntity(ecs::entity_handle::null),
+        m_RenamedEntity(ecs::entity_handle::null),
+        m_DefaultTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png")
     {
     }
 
@@ -33,13 +36,11 @@ namespace Flameberry {
 
         m_ActiveScene->m_Registry->each([this](ecs::entity_handle& entity) {
             bool should_delete_entity = false;
-            static ecs::entity_handle* entity_to_be_renamed = nullptr;
-
             auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
 
             bool is_selected = m_SelectedEntity == entity;
             int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-            if (!entity_to_be_renamed || entity != *entity_to_be_renamed)
+            if (m_RenamedEntity != entity)
                 treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
             ImGui::PushID((uint32_t)entity);
@@ -62,29 +63,15 @@ namespace Flameberry {
             if (ImGui::BeginPopupContextItem())
             {
                 if (ImGui::MenuItem("Rename"))
-                    entity_to_be_renamed = &entity;
+                    m_RenamedEntity = entity;
 
                 if (ImGui::MenuItem("Delete Entity"))
                     should_delete_entity = true;
                 ImGui::EndPopup();
             }
 
-            if (entity_to_be_renamed && *entity_to_be_renamed == entity)
-            {
-                std::string buffer(tag);
-
-                ImGui::SameLine();
-                ImGui::SetKeyboardFocusHere();
-                ImGui::PushItemWidth(-1.0f);
-
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
-                if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
-                {
-                    tag = buffer;
-                    entity_to_be_renamed = nullptr;
-                }
-                ImGui::PopStyleVar();
-            }
+            if (m_RenamedEntity == entity)
+                RenameNode(tag);
 
             if (should_delete_entity)
             {
@@ -97,11 +84,11 @@ namespace Flameberry {
                 m_ActiveScene->SetSelectedEntity(&entity);
 
             ImGui::PopID();
-            });
+            }
+        );
 
         ImGui::End();
 
-        // ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Inspector");
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth;
         if (m_SelectedEntity != ecs::entity_handle::null)
@@ -158,7 +145,6 @@ namespace Flameberry {
                 }
             }
 
-
             if (ImGui::BeginPopupContextWindow())
             {
                 if (ImGui::MenuItem("Transform Component"))
@@ -173,14 +159,11 @@ namespace Flameberry {
             }
         }
         ImGui::End();
-        // ImGui::PopStyleVar();
-        ImGui::ShowDemoWindow();
     }
 
-    std::string SceneHierarchyPanel::RenameNode(const char* name)
+    void SceneHierarchyPanel::RenameNode(std::string& tag)
     {
-        std::string tag(name);
-        std::string buffer(name);
+        std::string buffer(tag);
 
         ImGui::SameLine();
         ImGui::SetKeyboardFocusHere();
@@ -190,7 +173,7 @@ namespace Flameberry {
         if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
         {
             tag = buffer;
-            // entity_to_be_renamed = nullptr;
+            m_RenamedEntity = ecs::entity_handle::null;
         }
         ImGui::PopStyleVar();
     }

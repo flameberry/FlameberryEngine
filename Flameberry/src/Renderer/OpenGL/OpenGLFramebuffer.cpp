@@ -70,7 +70,6 @@ namespace Flameberry {
     void OpenGLFramebuffer::Bind() const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
-        glViewport(0, 0, m_FramebufferSize.x, m_FramebufferSize.y);
     }
 
     void OpenGLFramebuffer::ClearEntityIDAttachment()
