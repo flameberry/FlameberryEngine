@@ -13,10 +13,34 @@
 
 namespace Flameberry {
     FlameEditorApp::FlameEditorApp()
-        : m_Framebuffer(OpenGLFramebuffer::Create()),
-        m_ViewportSize(1280, 720),
+        : m_ViewportSize(1280, 720),
         m_Renderer3D(OpenGLRenderer3D::Create())
     {
+        OpenGLFramebufferSpecification framebufferSpec{};
+        framebufferSpec.FramebufferSize = m_ViewportSize;
+
+        OpenGLFramebufferAttachment colorAttachment{};
+        colorAttachment.InternalFormat = GL_RGBA8;
+        colorAttachment.Format = GL_RGBA;
+        colorAttachment.Type = GL_UNSIGNED_BYTE;
+        colorAttachment.Attachment = GL_COLOR_ATTACHMENT0;
+
+        OpenGLFramebufferAttachment depthAttachment{};
+        depthAttachment.InternalFormat = GL_DEPTH24_STENCIL8;
+        depthAttachment.Format = GL_DEPTH_STENCIL;
+        depthAttachment.Type = GL_UNSIGNED_INT_24_8;
+        depthAttachment.Attachment = GL_DEPTH_STENCIL_ATTACHMENT;
+
+        OpenGLFramebufferAttachment mousePickingAttachment{};
+        mousePickingAttachment.InternalFormat = GL_R32I;
+        mousePickingAttachment.Format = GL_RED_INTEGER;
+        mousePickingAttachment.Type = GL_UNSIGNED_BYTE;
+        mousePickingAttachment.Attachment = GL_COLOR_ATTACHMENT1;
+
+        framebufferSpec.Attachments = { colorAttachment, depthAttachment, mousePickingAttachment };
+
+        m_Framebuffer = OpenGLFramebuffer::Create(framebufferSpec);
+
         OpenGLRenderCommand::EnableBlend();
         OpenGLRenderCommand::EnableDepthTest();
 
@@ -199,7 +223,7 @@ namespace Flameberry {
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-        uint64_t textureID = m_Framebuffer->GetColorAttachmentId();
+        uint64_t textureID = m_Framebuffer->GetColorAttachmentID();
         ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
         // ImGuizmo
