@@ -115,7 +115,7 @@ float FilterPCF(float bias)
     float shadowFactor = 0.0;
 
     int range = 2;
-    float filterSize = 0;
+    float filterSize = 0.0;
     // float filterSize = 9.0;
 
     for (int y = -range; y <= range; y++)
