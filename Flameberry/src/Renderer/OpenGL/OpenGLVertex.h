@@ -22,12 +22,25 @@ namespace Flameberry {
         glm::vec4 color;
         glm::vec3 normal;
         glm::vec2 texture_uv;
-        float texture_index;
         int entityID;
 
         /// Default Constructor
         OpenGLVertex()
-            : position(0.0f), color(1.0f), normal(0.0f), texture_uv(0.0f), texture_index(-1.0f), entityID(-1)
+            : position(0.0f), color(1.0f), normal(0.0f), texture_uv(0.0f), entityID(-1)
         {}
     };
+
+//    enum class VertexAttribute
+//    {
+//        NONE = 0,
+//        FLOAT, VEC2F, VEC3F, VEC4F,
+//        INT, VEC2I, VEC3I, VEC4I
+//    };
+//
+//    struct VertexAttributeLayout
+//    {
+//        static void CreateLayout(const std::vector<VertexAttribute> attributes)
+//        {
+//        }
+//    };
 }

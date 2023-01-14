@@ -71,8 +71,6 @@ namespace Flameberry {
 
                 vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-                vertex.texture_index = 0.0f;
-
                 vertices.push_back(vertex);
                 indices.push_back(indices.size());
             }

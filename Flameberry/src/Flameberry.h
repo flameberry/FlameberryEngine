@@ -19,6 +19,7 @@
 #include "Renderer/SceneRenderer.h"
 #include "Renderer/OpenGL/OpenGLFramebuffer.h"
 #include "Renderer/OpenGL/OpenGLShader.h"
+#include "Renderer/OpenGL/OpenGLTexture.h"
 #include "Renderer/Skybox.h"
 
 #include "ECS/Scene.h"

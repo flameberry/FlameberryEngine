@@ -43,7 +43,6 @@ namespace Flameberry {
     struct MeshComponent
     {
         uint32_t MeshIndex;
-        std::string MeshPath = "";
         std::string MaterialName = "Default";
 
         MeshComponent(): MeshIndex(0) {}

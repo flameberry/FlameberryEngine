@@ -5,14 +5,12 @@ layout (location = 0) in vec3 a_Position;
 layout (location = 1) in vec4 a_Color;
 layout (location = 2) in vec3 a_Normal;
 layout (location = 3) in vec2 a_TextureUV;
-layout (location = 4) in float a_TextureIndex;
-layout (location = 5) in int a_EntityID;
+layout (location = 4) in int a_EntityID;
 
 out vec3 v_Position;
 out vec4 v_Color;
 out vec3 v_Normal;
 out vec2 v_TextureUV;
-out float v_TextureIndex;
 flat out int v_EntityID;
 
 uniform mat4 u_ModelMatrix;
@@ -34,7 +32,6 @@ void main()
     v_Color = a_Color;
     v_Normal = a_Normal;
     v_TextureUV = a_TextureUV;
-    v_TextureIndex = a_TextureIndex;
     v_EntityID = a_EntityID;
 
     gl_Position = u_Camera.ViewProjectionMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
@@ -53,7 +50,6 @@ in vec3 v_Position;
 in vec4 v_Color;
 in vec3 v_Normal;
 in vec2 v_TextureUV;
-in float v_TextureIndex;
 flat in int v_EntityID;
 
 in mat4 v_ModelMatrix;
@@ -76,7 +72,8 @@ struct Material
 {
     vec3 Albedo;
     float Roughness;
-    bool IsMetal;
+    bool Metallic;
+    bool TextureMapEnabled;
 };
 
 layout (std140) uniform Lighting
@@ -87,18 +84,19 @@ layout (std140) uniform Lighting
     int u_LightCount;
 };
 
-uniform sampler2D u_TextureSamplers[16];
-
+uniform sampler2D u_TextureMap;
 uniform Material u_Material;
 
 #define PI 3.1415926535897932384626433832795
+#define AMBIENT 0.01
 #define MAX_POINT_LIGHTS 10
 
 vec3 GetPixelColor()
 {
-    if (v_TextureIndex == -1.0)
+    if (u_Material.TextureMapEnabled)
+        return u_Material.Albedo * texture(u_TextureMap, v_TextureUV).xyz;
+    else
         return u_Material.Albedo;
-    return texture(u_TextureSamplers[int(v_TextureIndex)], v_TextureUV).xyz;
 }
 
 // PBR Lighting
@@ -106,7 +104,7 @@ vec3 SchlickFresnel(float v_dot_h)
 {
     vec3 F0 = vec3(0.04);
 
-    if (u_Material.IsMetal) {
+    if (u_Material.Metallic) {
         F0 = GetPixelColor();
     }
 
@@ -157,7 +155,7 @@ vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
     
     vec3 fLambert = vec3(0.0);
     
-    if (!u_Material.IsMetal) {
+    if (!u_Material.Metallic) {
         fLambert = GetPixelColor();
     }
     
@@ -197,7 +195,7 @@ vec3 CalculatePBRPointLight(PointLight light, vec3 normal)
     
     vec3 fLambert = vec3(0.0);
     
-    if (!u_Material.IsMetal) {
+    if (!u_Material.Metallic) {
         fLambert = GetPixelColor();
     }
     
@@ -217,6 +215,9 @@ vec4 CalculatePBRLighting()
     for (int i = 0; i < lightCount; i++)
         totalLight += CalculatePBRPointLight(u_PointLights[i], normal);
 
+    // Ambient
+    totalLight = max(AMBIENT * GetPixelColor(), totalLight);
+
     // HDR tone mapping
     totalLight = totalLight / (totalLight + vec3(1.0));
     
@@ -228,6 +229,4 @@ void main()
 {
     o_EntityID = v_EntityID;
     FragColor = CalculatePBRLighting();
-
-    // FragColor = vec4(vec3(u_DirectionalLight.Intensity), 1.0);
 }

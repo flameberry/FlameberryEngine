@@ -13,7 +13,7 @@ namespace ecs {
         inline static uint32_t typeCounter = 0;
         template<typename Type> friend uint32_t type_id();
     };
-    
+
     template<typename Type> uint32_t type_id() {
         static uint32_t componentCounter = TypeCounter::typeCounter++;
         return componentCounter;
@@ -146,10 +146,6 @@ namespace ecs {
             component_buffer[index] = component_buffer.back();
             component_buffer.pop_back();
         }
-
-        ~pool_handler() {
-            FL_LOG("Destroyed pool handler!");
-        }
     private:
         std::vector<Type> component_buffer;
     };
@@ -166,10 +162,10 @@ namespace ecs {
         public:
             template<typename... i_Type> class iterator {
             public:
-                iterator(const registry& reg, const pool_data& pool, uint32_t index): ref_registry(reg), ref_pool(pool), index(index) {}
+                iterator(const registry* reg, const pool_data* pool, uint32_t index): ref_registry(reg), ref_pool(pool), index(index) {}
 
                 iterator<i_Type...>& operator++() {
-                    while (++index < ref_pool.entity_set.size() && !ref_registry.has<i_Type...>(ref_registry.entities[ref_pool.entity_set[index]]));
+                    while (++index < ref_pool->entity_set.size() && !ref_registry->has<i_Type...>(ref_registry->entities[ref_pool->entity_set[index]]));
                     return *this;
                 }
 
@@ -180,7 +176,7 @@ namespace ecs {
                 }
 
                 entity_handle operator*() {
-                    return ref_registry.entities[ref_pool.entity_set[index]];
+                    return ref_registry->entities[ref_pool->entity_set[index]];
                 }
 
                 bool operator==(const iterator<i_Type...>& it) {
@@ -191,15 +187,16 @@ namespace ecs {
                     return !(*this == it);
                 }
             private:
-                const registry& ref_registry;
-                const pool_data& ref_pool;
+                const registry* ref_registry;
+                const pool_data* ref_pool;
                 uint32_t index;
             };
         public:
-            registry_view(const registry& reg, const pool_data& pool): ref_registry(reg), ref_pool(pool), begin_index(0), end_index(0) {
-                while (begin_index < pool.entity_set.size() && !reg.has<Type...>(reg.entities[pool.entity_set[begin_index]]))
+            registry_view(): begin_index(0), end_index(0) {}
+            registry_view(const registry* reg, const pool_data* pool): ref_registry(reg), ref_pool(pool), begin_index(0), end_index(0) {
+                while (begin_index < pool->entity_set.size() && !reg->has<Type...>(reg->entities[pool->entity_set[begin_index]]))
                     begin_index++;
-                end_index = pool.entity_set.size();
+                end_index = pool->entity_set.size();
             }
 
             iterator<Type...> begin() {
@@ -210,8 +207,8 @@ namespace ecs {
                 return iterator<Type...>(ref_registry, ref_pool, end_index);
             }
         private:
-            const registry& ref_registry;
-            const pool_data& ref_pool;
+            const registry* ref_registry = nullptr;
+            const pool_data* ref_pool = nullptr;
             int begin_index, end_index;
         };
     public:
@@ -233,15 +230,14 @@ namespace ecs {
 
             for (const auto& typeID : typeIDs) {
                 if (typeID >= pools.size()) {
-                    FL_ERROR("Insufficient pools for iteration!");
-                    FL_DEBUGBREAK(); // TODO: Replace with a return statement of some 'default' version of registry_view
+                    return registry_view<Type...>();
                 }
                 if (uint32_t poolSize = pools[typeID].entity_set.size(); poolSize < smallestPoolSize) {
                     smallestPoolSize = poolSize;
                     smallestPoolIndex = typeID;
                 }
             }
-            return registry_view<Type...>(*this, pools[smallestPoolIndex]);
+            return registry_view<Type...>(this, &pools[smallestPoolIndex]);
         }
 
         entity_handle create() {

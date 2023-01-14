@@ -49,7 +49,7 @@
                 1.0
             ],
             "Roughness": 0.283,
-            "IsMetal": true
+            "Metallic": true
         },
         {
             "Name": "YELLOW_NON_METAL",
@@ -59,7 +59,7 @@
                 0.0
             ],
             "Roughness": 0.483,
-            "IsMetal": false
+            "Metallic": false
         },
         {
             "Name": "PINK_ROUGH_NON_METAL",
@@ -69,7 +69,7 @@
                 1.0
             ],
             "Roughness": 0.988,
-            "IsMetal": false
+            "Metallic": false
         }
     ]
 }

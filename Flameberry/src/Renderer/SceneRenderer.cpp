@@ -11,7 +11,7 @@ namespace Flameberry {
     SceneRenderer::SceneRenderer()
         : m_SceneUniformBuffer(sizeof(SceneUniformBufferData), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW)
     {
-        m_SceneUniformBuffer.BindBufferBase(1);
+        m_SceneUniformBuffer.BindBufferBase(FL_UNIFORM_BLOCK_BINDING_LIGHTING);
 
         OpenGLShaderBinding binding;
         binding.blockBindingIndex = 0;
@@ -31,12 +31,6 @@ namespace Flameberry {
         SceneUniformBufferData sceneUniformBufferData;
         sceneUniformBufferData.CameraPosition = camera.GetPosition();
         sceneUniformBufferData.DirLight = scene->m_SceneData.DirLight;
-        // if (scene->m_Registry->DoesComponentPoolExist<LightComponent>())
-        // {
-        //     const void* lightComponentBuffer = scene->m_Registry->GetComponentPool<LightComponent>()->Get();
-        //     sceneUniformBufferData.LightCount = glm::min(FL_MAX_POINT_LIGHTS, (int)scene->m_Registry->GetComponentPool<LightComponent>()->size());
-        //     memcpy(sceneUniformBufferData.PointLights, lightComponentBuffer, sceneUniformBufferData.LightCount);
-        // }
         for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
         {
             const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);

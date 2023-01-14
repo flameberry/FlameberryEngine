@@ -37,142 +37,22 @@ namespace Flameberry {
         glBindVertexArray(m_VertexArrayID);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 13 * sizeof(float), (void*)offsetof(OpenGLVertex, position));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 12 * sizeof(float), (void*)offsetof(OpenGLVertex, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 13 * sizeof(float), (void*)offsetof(OpenGLVertex, color));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 12 * sizeof(float), (void*)offsetof(OpenGLVertex, color));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 13 * sizeof(float), (void*)offsetof(OpenGLVertex, normal));
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 12 * sizeof(float), (void*)offsetof(OpenGLVertex, normal));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 13 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_uv));
+        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 12 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_uv));
         glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 13 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_index));
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 1, GL_INT, GL_FALSE, 1 * sizeof(int) + 13 * sizeof(float), (void*)offsetof(OpenGLVertex, entityID));
+        glVertexAttribPointer(4, 1, GL_INT, GL_FALSE, 1 * sizeof(int) + 12 * sizeof(float), (void*)offsetof(OpenGLVertex, entityID));
 
         glGenBuffers(1, &m_IndexBufferID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBufferID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.size() * sizeof(uint32_t), Indices.data(), GL_STATIC_DRAW);
 
         glBindVertexArray(m_VertexArrayID);
-
-        // m_ShaderProgramID = OpenGLRenderCommand::CreateShader(FL_PROJECT_DIR"Flameberry/assets/shaders/Default.glsl");
-        // glUseProgram(m_ShaderProgramID);
-        // int samplers[16];
-        // for (uint32_t i = 0; i < 16; i++)
-        //     samplers[i] = i;
-        // glUniform1iv(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_TextureSamplers"), 16, samplers);
-
-        // Assigning binding to uniform buffers
-        // uint32_t uniformBlockIndexCamera = glGetUniformBlockIndex(m_ShaderProgramID, "Camera");
-        // glUniformBlockBinding(m_ShaderProgramID, uniformBlockIndexCamera, FL_UNIFORM_BLOCK_BINDING_CAMERA);
-
-        // uint32_t uniformBlockIndexLighting = glGetUniformBlockIndex(m_ShaderProgramID, "Lighting");
-        // glUniformBlockBinding(m_ShaderProgramID, uniformBlockIndexLighting, FL_UNIFORM_BLOCK_BINDING_LIGHTING);
-
         glUseProgram(0);
-    }
-
-    void Mesh::Draw(const glm::mat4& transform)
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
-
-        for (uint16_t i = 0; i < TextureIDs.size(); i++)
-        {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, TextureIDs[i]);
-        }
-
-        glUseProgram(m_ShaderProgramID);
-        glUniformMatrix4fv(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_ModelMatrix"), 1, GL_FALSE, glm::value_ptr(transform));
-
-        glBindVertexArray(m_VertexArrayID);
-        glDrawElements(GL_TRIANGLES, (int)Indices.size(), GL_UNSIGNED_INT, 0);
-
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    }
-
-    void Mesh::Draw(const TransformComponent& transform, const glm::vec3& cameraPosition, const std::vector<PointLight>& lights, int entityID)
-    {
-        if (m_EntityID != entityID)
-        {
-            m_EntityID = entityID;
-            for (auto& vertex : Vertices)
-                vertex.entityID = m_EntityID;
-        }
-
-        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
-
-        for (uint16_t i = 0; i < TextureIDs.size(); i++)
-        {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, TextureIDs[i]);
-        }
-
-        glUseProgram(m_ShaderProgramID);
-        glUniformMatrix4fv(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_ModelMatrix"), 1, GL_FALSE, glm::value_ptr(transform.GetTransform()));
-        glUniform1i(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_LightCount"), (int)lights.size());
-        glUniform3f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_CameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
-
-        for (uint32_t i = 0; i < lights.size(); i++)
-        {
-            std::string uniformName = "u_PointLights[" + std::to_string(i) + "]";
-            const PointLight& light = lights[i];
-
-            glUniform3f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, uniformName + ".Position"), light.Position.x, light.Position.y, light.Position.z);
-            glUniform3f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, uniformName + ".Color"), light.Color.x, light.Color.y, light.Color.z);
-            glUniform1f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, uniformName + ".Intensity"), light.Intensity);
-        }
-
-        glBindVertexArray(m_VertexArrayID);
-        glDrawElements(GL_TRIANGLES, (int)Indices.size(), GL_UNSIGNED_INT, 0);
-
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    }
-
-    void Mesh::Draw(const TransformComponent& transform, const glm::vec3& cameraPosition, const std::vector<PointLight>& lights, const Material& material, int entityID)
-    {
-        if (m_EntityID != entityID)
-        {
-            m_EntityID = entityID;
-            for (auto& vertex : Vertices)
-                vertex.entityID = m_EntityID;
-        }
-
-        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
-
-        for (uint16_t i = 0; i < TextureIDs.size(); i++)
-        {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, TextureIDs[i]);
-        }
-
-        glUseProgram(m_ShaderProgramID);
-        glUniformMatrix4fv(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_ModelMatrix"), 1, GL_FALSE, glm::value_ptr(transform.GetTransform()));
-        glUniform1i(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_LightCount"), (int)lights.size());
-        glUniform3f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_CameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
-
-        // Set Material
-        glUniform3fv(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_Material.Albedo"), 1, glm::value_ptr(material.Albedo));
-        glUniform1f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_Material.Roughness"), material.Roughness);
-        glUniform1i(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_Material.IsMetal"), material.IsMetal);
-
-        for (uint32_t i = 0; i < lights.size(); i++)
-        {
-            std::string uniformName = "u_PointLights[" + std::to_string(i) + "]";
-            const PointLight& light = lights[i];
-
-            glUniform3f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, uniformName + ".Position"), light.Position.x, light.Position.y, light.Position.z);
-            glUniform3f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, uniformName + ".Color"), light.Color.x, light.Color.y, light.Color.z);
-            glUniform1f(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, uniformName + ".Intensity"), light.Intensity);
-        }
-
-        glBindVertexArray(m_VertexArrayID);
-        glDrawElements(GL_TRIANGLES, (int)Indices.size(), GL_UNSIGNED_INT, 0);
-
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
     void Mesh::Draw(
@@ -190,38 +70,22 @@ namespace Flameberry {
             for (auto& vertex : Vertices)
                 vertex.entityID = m_EntityID;
         }
-        if (m_TextureIndex == -1.0f && TextureIDs.size())
-        {
-            m_TextureIndex = 0.0f;
-            for (auto& vertex : Vertices)
-                vertex.texture_index = m_TextureIndex;
-        }
-        else if (m_TextureIndex == 0.0f && TextureIDs.size() == 0)
-        {
-            m_TextureIndex = -1.0f;
-            for (auto& vertex : Vertices)
-                vertex.texture_index = m_TextureIndex;
-        }
 
         glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
         glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
 
-        for (uint16_t i = 0; i < TextureIDs.size(); i++)
-        {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, TextureIDs[i]);
-        }
+        if (material.TextureMapEnabled && material.TextureMap)
+            material.TextureMap->BindTextureUnit(0);
 
         shader->Bind();
         shader->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(transform.GetTransform()));
         shader->PushUniformFloat3("u_Material.Albedo", material.Albedo.x, material.Albedo.y, material.Albedo.z);
         shader->PushUniformFloat("u_Material.Roughness", material.Roughness);
-        shader->PushUniformInt("u_Material.IsMetal", material.IsMetal);
+        shader->PushUniformInt("u_Material.Metallic", material.Metallic);
+        shader->PushUniformInt("u_Material.TextureMapEnabled", material.TextureMapEnabled);
 
         glBindVertexArray(m_VertexArrayID);
         glDrawElements(GL_TRIANGLES, (int)Indices.size(), GL_UNSIGNED_INT, 0);
-
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
     Mesh::~Mesh()

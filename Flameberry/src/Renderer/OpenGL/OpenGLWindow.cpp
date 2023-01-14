@@ -34,8 +34,6 @@ namespace Flameberry {
         int actualWidth, actualHeight;
         glfwGetFramebufferSize(m_Window, &actualWidth, &actualHeight);
         glViewport(0, 0, actualWidth, actualHeight);
-
-        // glfwSetKeyCallback(m_Window, m_KeyCallBackFunction);
     }
 
     OpenGLWindow::~OpenGLWindow()

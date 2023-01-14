@@ -45,34 +45,29 @@ namespace Flameberry {
         Mesh mesh{ v1, i1 };
         mesh.Name = "Cylinder";
 
-        // m_TempMesh.TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
-        m_SponzaMesh.TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png"));
+        m_BrickTexture = OpenGLTexture::Create(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
 
         m_FloorMesh.Vertices.emplace_back();
         m_FloorMesh.Vertices.back().position = { -1.0f, 0.0f, 1.0f };
         m_FloorMesh.Vertices.back().texture_uv = { 0.0f, 0.0f };
-        m_FloorMesh.Vertices.back().texture_index = 0.0f;
         m_FloorMesh.Vertices.back().normal = { 0.0f, 1.0f, 0.0f };
         m_FloorMesh.Vertices.back().entityID = 0.0f;
 
         m_FloorMesh.Vertices.emplace_back();
         m_FloorMesh.Vertices.back().position = { -1.0f, 0.0f, -1.0f };
         m_FloorMesh.Vertices.back().texture_uv = { 0.0f, 1.0f };
-        m_FloorMesh.Vertices.back().texture_index = 0.0f;
         m_FloorMesh.Vertices.back().normal = { 0.0f, 1.0f, 0.0f };
         m_FloorMesh.Vertices.back().entityID = 0.0f;
 
         m_FloorMesh.Vertices.emplace_back();
         m_FloorMesh.Vertices.back().position = { 1.0f, 0.0f, -1.0f };
         m_FloorMesh.Vertices.back().texture_uv = { 1.0f, 1.0f };
-        m_FloorMesh.Vertices.back().texture_index = 0.0f;
         m_FloorMesh.Vertices.back().normal = { 0.0f, 1.0f, 0.0f };
         m_FloorMesh.Vertices.back().entityID = 0.0f;
 
         m_FloorMesh.Vertices.emplace_back();
         m_FloorMesh.Vertices.back().position = { 1.0f, 0.0f, 1.0f };
         m_FloorMesh.Vertices.back().texture_uv = { 1.0f, 0.0f };
-        m_FloorMesh.Vertices.back().texture_index = 0.0f;
         m_FloorMesh.Vertices.back().normal = { 0.0f, 1.0f, 0.0f };
         m_FloorMesh.Vertices.back().entityID = 0.0f;
 
@@ -81,8 +76,6 @@ namespace Flameberry {
             0, 2, 3
         };
 
-        m_FloorMesh.TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/planks.png"));
-        m_FloorMesh.TextureIDs.push_back(OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/planksSpec.png"));
         m_FloorMesh.Invalidate();
 
         // Test
@@ -108,22 +101,17 @@ namespace Flameberry {
         auto& meshComponent1 = m_Registry->emplace<MeshComponent>(m_BlueSquareEntity);
         meshComponent1.MeshIndex = 1;
 
-        ecs::entity_handle entity = m_Registry->create();
-        m_Registry->emplace<IDComponent>(entity);
-        m_Registry->emplace<TagComponent>(entity).Tag = "Light";
-        m_Registry->emplace<TransformComponent>(entity).translation = glm::vec3(1.0f);
-        auto& light = m_Registry->emplace<LightComponent>(entity);
-        light.Color = glm::vec3(1.0f);
-        light.Intensity = 2.0f;
+        //        ecs::entity_handle entity = m_Registry->create();
+        //        m_Registry->emplace<IDComponent>(entity);
+        //        m_Registry->emplace<TagComponent>(entity).Tag = "Light";
+        //        m_Registry->emplace<TransformComponent>(entity).translation = glm::vec3(1.0f);
+        //        auto& light = m_Registry->emplace<LightComponent>(entity);
+        //        light.Color = glm::vec3(1.0f);
+        //        light.Intensity = 2.0f;
 
         m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
         m_SceneHierarchyPanel = SceneHierarchyPanel(m_ActiveScene.get());
         m_ContentBrowserPanel = ContentBrowserPanel();
-
-        FL_LOG(ecs::type_id<IDComponent>());
-        FL_LOG(ecs::type_id<TagComponent>());
-        FL_LOG(ecs::type_id<TransformComponent>());
-        FL_LOG(ecs::type_id<MeshComponent>());
 
         // int inc = 0;
         // for (const auto& mesh : meshes)
@@ -144,6 +132,7 @@ namespace Flameberry {
 
         Material metal(glm::vec3(1, 0, 1), 0.2f, true);
         Material nonMetal(glm::vec3(1, 1, 0), 0.7f, false);
+        nonMetal.TextureMap = m_BrickTexture;
 
         m_ActiveScene->AddMaterial("METAL", metal);
         m_ActiveScene->AddMaterial("YELLOW_NON_METAL", nonMetal);
@@ -191,7 +180,6 @@ namespace Flameberry {
         m_Renderer3D->Begin(m_EditorCamera);
         m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera);
         m_Renderer3D->End();
-        // m_ActiveScene->RenderScene(m_Renderer3D.get(), m_EditorCamera, m_MeshShader, m_PointLights);
 
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive)
         {
@@ -206,7 +194,6 @@ namespace Flameberry {
             if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
             {
                 int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
-                // FL_LOG("EntityID: {0}", entityID);
                 if (entityID != -1)
                     m_SceneHierarchyPanel.SetSelectedEntity(entityID);
                 else
@@ -321,7 +308,7 @@ namespace Flameberry {
         ImGui::Text("Directional Light");
         Utils::DrawVec3Control("Directional", m_DirectionalLight.Direction, 0.0f, 0.01f);
         ImGui::Spacing();
-        ImGui::ColorEdit4("Color", glm::value_ptr(m_DirectionalLight.Color));
+        ImGui::ColorEdit3("Color", glm::value_ptr(m_DirectionalLight.Color));
         ImGui::DragFloat("Intensity", &m_DirectionalLight.Intensity, 0.01f);
 
         m_ActiveScene->SetDirectionalLight(m_DirectionalLight);
@@ -329,8 +316,6 @@ namespace Flameberry {
 
         m_SceneHierarchyPanel.OnUIRender();
         m_ContentBrowserPanel.OnUIRender();
-
-        // ImGui::ShowDemoWindow();
     }
 
     void FlameEditorApp::SaveScene()

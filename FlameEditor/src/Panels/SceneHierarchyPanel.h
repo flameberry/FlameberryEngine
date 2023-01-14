@@ -21,6 +21,6 @@ namespace Flameberry {
         ecs::entity_handle m_SelectedEntity;
         Scene* m_ActiveScene;
     private:
-        uint32_t m_DefaultTextureId;
+        OpenGLTexture m_DefaultTexture;
     };
 }

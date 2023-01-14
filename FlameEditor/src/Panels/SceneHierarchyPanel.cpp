@@ -8,9 +8,8 @@
 
 namespace Flameberry {
     SceneHierarchyPanel::SceneHierarchyPanel(Scene* scene)
-        : m_ActiveScene(scene), m_SelectedEntity(UINT32_MAX, false)
+        : m_ActiveScene(scene), m_SelectedEntity(UINT32_MAX, false), m_DefaultTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png")
     {
-        m_DefaultTextureId = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
     }
 
     void SceneHierarchyPanel::OnUIRender()
@@ -34,77 +33,77 @@ namespace Flameberry {
 
         m_ActiveScene->m_Registry->each([this](ecs::entity_handle& entity) {
             bool should_delete_entity = false;
-        static ecs::entity_handle* entity_to_be_renamed = nullptr;
+            static ecs::entity_handle* entity_to_be_renamed = nullptr;
 
-        auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
+            auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
 
-        bool is_selected = m_SelectedEntity == entity;
-        int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-        if (!entity_to_be_renamed || entity != *entity_to_be_renamed)
-            treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+            bool is_selected = m_SelectedEntity == entity;
+            int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+            if (!entity_to_be_renamed || entity != *entity_to_be_renamed)
+                treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
-        ImGui::PushID((uint32_t)entity);
+            ImGui::PushID((uint32_t)entity);
 
-        float textColor = is_selected ? 0.0f : 1.0f;
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
-        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-        if (is_selected)
-            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
-
-        if (ImGui::TreeNodeEx(tag.c_str(), treeNodeFlags))
-            ImGui::TreePop();
-
-        ImGui::PopStyleColor(is_selected ? 4 : 3);
-
-        if (ImGui::IsItemClicked())
-            m_SelectedEntity = entity;
-
-        if (ImGui::BeginPopupContextItem())
-        {
-            if (ImGui::MenuItem("Rename"))
-                entity_to_be_renamed = &entity;
-
-            if (ImGui::MenuItem("Delete Entity"))
-                should_delete_entity = true;
-            ImGui::EndPopup();
-        }
-
-        if (entity_to_be_renamed && *entity_to_be_renamed == entity)
-        {
-            std::string buffer(tag);
-
-            ImGui::SameLine();
-            ImGui::SetKeyboardFocusHere();
-            ImGui::PushItemWidth(-1.0f);
-
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
-            if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
-            {
-                tag = buffer;
-                entity_to_be_renamed = nullptr;
-            }
-            ImGui::PopStyleVar();
-        }
-
-        if (should_delete_entity)
-        {
-            m_ActiveScene->m_Registry->destroy(entity);
+            float textColor = is_selected ? 0.0f : 1.0f;
+            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
+            ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
             if (is_selected)
-                m_SelectedEntity = ecs::entity_handle::null;
-        }
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
 
-        if (m_SelectedEntity == entity)
-            m_ActiveScene->SetSelectedEntity(&entity);
+            if (ImGui::TreeNodeEx(tag.c_str(), treeNodeFlags))
+                ImGui::TreePop();
 
-        ImGui::PopID();
+            ImGui::PopStyleColor(is_selected ? 4 : 3);
+
+            if (ImGui::IsItemClicked())
+                m_SelectedEntity = entity;
+
+            if (ImGui::BeginPopupContextItem())
+            {
+                if (ImGui::MenuItem("Rename"))
+                    entity_to_be_renamed = &entity;
+
+                if (ImGui::MenuItem("Delete Entity"))
+                    should_delete_entity = true;
+                ImGui::EndPopup();
+            }
+
+            if (entity_to_be_renamed && *entity_to_be_renamed == entity)
+            {
+                std::string buffer(tag);
+
+                ImGui::SameLine();
+                ImGui::SetKeyboardFocusHere();
+                ImGui::PushItemWidth(-1.0f);
+
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
+                if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    tag = buffer;
+                    entity_to_be_renamed = nullptr;
+                }
+                ImGui::PopStyleVar();
+            }
+
+            if (should_delete_entity)
+            {
+                m_ActiveScene->m_Registry->destroy(entity);
+                if (is_selected)
+                    m_SelectedEntity = ecs::entity_handle::null;
+            }
+
+            if (m_SelectedEntity == entity)
+                m_ActiveScene->SetSelectedEntity(&entity);
+
+            ImGui::PopID();
             });
 
         ImGui::End();
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5, 5 });
+        // ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Inspector");
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen;
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth;
         if (m_SelectedEntity != ecs::entity_handle::null)
         {
             if (m_ActiveScene->m_Registry->has<IDComponent>(m_SelectedEntity))
@@ -159,7 +158,8 @@ namespace Flameberry {
                 }
             }
 
-            if (ImGui::BeginPopupContextWindow((const char*)__null, ImGuiMouseButton_Right))
+
+            if (ImGui::BeginPopupContextWindow())
             {
                 if (ImGui::MenuItem("Transform Component"))
                     m_ActiveScene->m_Registry->emplace<TransformComponent>(m_SelectedEntity);
@@ -173,7 +173,8 @@ namespace Flameberry {
             }
         }
         ImGui::End();
-        ImGui::PopStyleVar();
+        // ImGui::PopStyleVar();
+        ImGui::ShowDemoWindow();
     }
 
     std::string SceneHierarchyPanel::RenameNode(const char* name)
@@ -229,7 +230,7 @@ namespace Flameberry {
 
         uint32_t textureID;
         if (sprite.TextureFilePath == "")
-            textureID = m_DefaultTextureId;
+            textureID = m_DefaultTexture.GetTextureID();
         else
             textureID = OpenGLRenderCommand::CreateTexture(sprite.TextureFilePath);
         ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
@@ -283,40 +284,6 @@ namespace Flameberry {
         }
         ImGui::Spacing();
 
-        // Mesh Texture Options
-        auto& currentMesh = m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex];
-        bool isMeshTextured = currentMesh.TextureIDs.size() ? 1 : 0;
-        uint32_t currentTextureID = isMeshTextured ? currentMesh.TextureIDs[0] : m_DefaultTextureId;
-        std::string textureFilePath = "";
-
-        ImGui::Image(reinterpret_cast<ImTextureID>(currentTextureID), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-        if (ImGui::BeginDragDropTarget())
-        {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
-            {
-                std::string path = (const char*)payload->Data;
-                std::filesystem::path texturePath{ path };
-                texturePath = project::g_AssetDirectory / texturePath;
-                const std::string& ext = texturePath.extension().string();
-
-                FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
-
-                if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
-                    textureFilePath = texturePath.string();
-                else
-                    FL_WARN("Bad File given as Texture!");
-            }
-            ImGui::EndDragDropTarget();
-        }
-
-        if (textureFilePath != "")
-        {
-            if (isMeshTextured)
-                currentMesh.TextureIDs[0] = OpenGLRenderCommand::CreateTexture(textureFilePath);
-            else
-                currentMesh.TextureIDs.emplace_back() = OpenGLRenderCommand::CreateTexture(textureFilePath);
-        }
-
         // Material Menu
         ImGui::Text("Material");
         if (ImGui::BeginCombo("##combo1", mesh.MaterialName.c_str())) // The second parameter is the label previewed before opening the combo.
@@ -353,9 +320,43 @@ namespace Flameberry {
 
         // Material Controls
         auto& material = m_ActiveScene->m_SceneData.Materials[mesh.MaterialName];
+
+        bool& textureMapEnabled = material.TextureMapEnabled;
+        ImGui::Checkbox("Texture Map: ", &textureMapEnabled);
+
+        if (textureMapEnabled)
+        {
+            auto& texture = material.TextureMap;
+            if (!texture)
+                texture.reset(new OpenGLTexture(m_DefaultTexture));
+
+            OpenGLTexture& currentTexture = *(texture.get());
+
+            ImGui::SameLine();
+            ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetTextureID()), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                {
+                    std::string path = (const char*)payload->Data;
+                    std::filesystem::path texturePath{ path };
+                    texturePath = project::g_AssetDirectory / texturePath;
+                    const std::string& ext = texturePath.extension().string();
+
+                    FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+
+                    if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
+                        texture.reset(new OpenGLTexture(texturePath.string()));
+                    else
+                        FL_WARN("Bad File given as Texture!");
+                }
+                ImGui::EndDragDropTarget();
+            }
+        }
+
         ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo));
         ImGui::DragFloat("Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f);
-        ImGui::Checkbox("Metallic", &material.IsMetal);
+        ImGui::Checkbox("Metallic", &material.Metallic);
     }
 
     void SceneHierarchyPanel::DrawComponent(LightComponent& light)

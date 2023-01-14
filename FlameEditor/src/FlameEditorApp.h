@@ -28,6 +28,8 @@ namespace Flameberry {
         bool m_IsCursorInsideViewport = false;
 
         Mesh m_TempMesh, m_SponzaMesh, m_FloorMesh;
+        std::shared_ptr<OpenGLTexture> m_BrickTexture;
+
         DirectionalLight m_DirectionalLight;
 
         std::shared_ptr<SceneRenderer> m_SceneRenderer;

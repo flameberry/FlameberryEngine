@@ -1,14 +1,20 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include "OpenGL/OpenGLTexture.h"
 
 namespace Flameberry {
     struct Material
     {
         glm::vec3 Albedo;
         float Roughness;
-        bool IsMetal;
+        bool Metallic;
 
-        Material(const glm::vec3& albedo = glm::vec3(1.0f), float roughness = 0.2f, bool isMetal = false): Albedo(albedo), Roughness(roughness), IsMetal(isMetal) {}
+        bool TextureMapEnabled = false;
+        std::shared_ptr<OpenGLTexture> TextureMap;
+
+        Material(const glm::vec3& albedo = glm::vec3(1.0f), float roughness = 0.2f, bool isMetal = false)
+            : Albedo(albedo), Roughness(roughness), Metallic(isMetal)
+        {}
     };
 }

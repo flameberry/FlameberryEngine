@@ -1,1 +1,75 @@
-{"Scene":"Untitled","Entities":[{"UUID":14497606183859492041,"TagComponent":"Sponza","TransformComponent":[0.41999998688697815,0.0,-3.4800000190734863,0.0,0.0,0.0,1.0,1.0,1.0],"MeshComponent":{"MeshIndex":2,"MaterialName":"Material_2"}},{"UUID":8770959082162375172,"TagComponent":"Sphere","TransformComponent":[0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0],"MeshComponent":{"MeshIndex":0,"MaterialName":"METAL"}}],"Materials":[{"Name":"Material_2","Albedo":[1.0,1.0,1.0],"Roughness":0.3400000035762787,"IsMetal":true},{"Name":"Default","Albedo":[1.0,1.0,1.0],"Roughness":1.0,"IsMetal":false},{"Name":"METAL","Albedo":[1.0,1.0,1.0],"Roughness":0.49000000953674316,"IsMetal":true}]}
+{
+    "Scene": "Untitled",
+    "Entities": [
+        {
+            "UUID": 14497606183859492041,
+            "TagComponent": "Sponza",
+            "TransformComponent": [
+                0.41999998688697815,
+                0.0,
+                -3.4800000190734863,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "MeshComponent": {
+                "MeshIndex": 2,
+                "MaterialName": "Material_2"
+            }
+        },
+        {
+            "UUID": 8770959082162375172,
+            "TagComponent": "Sphere",
+            "TransformComponent": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "MeshComponent": {
+                "MeshIndex": 0,
+                "MaterialName": "METAL"
+            }
+        }
+    ],
+    "Materials": [
+        {
+            "Name": "Material_2",
+            "Albedo": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "Roughness": 0.3400000035762787,
+            "Metallic": true
+        },
+        {
+            "Name": "Default",
+            "Albedo": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "Roughness": 1.0,
+            "Metallic": false
+        },
+        {
+            "Name": "METAL",
+            "Albedo": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "Roughness": 0.49000000953674316,
+            "Metallic": true
+        }
+    ]
+}

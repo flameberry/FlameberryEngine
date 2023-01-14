@@ -109,6 +109,11 @@ namespace Flameberry {
             uint32_t blockIndex = glGetUniformBlockIndex(m_ProgramID, binding.blockName.c_str());
             glUniformBlockBinding(m_ProgramID, blockIndex, binding.blockBindingIndex);
         }
+
+        this->Bind();
+        this->PushUniformInt("u_TextureMap", 0);
+        this->Unbind();
+        // glUniform1iv(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_TextureSamplers"), 16, samplers);
     }
 
     OpenGLShader::~OpenGLShader()
@@ -129,6 +134,11 @@ namespace Flameberry {
     void OpenGLShader::PushUniformInt(const std::string& uniformName, int value)
     {
         glUniform1i(GetUniformLocation(uniformName), value);
+    }
+
+    void OpenGLShader::PushUniformIntArray(const std::string& uniformName, uint32_t count, const int* values)
+    {
+        glUniform1iv(GetUniformLocation(uniformName), count, values);
     }
 
     void OpenGLShader::PushUniformFloat(const std::string& uniformName, float value)

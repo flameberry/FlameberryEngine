@@ -22,6 +22,7 @@ namespace Flameberry {
         void Unbind();
 
         void PushUniformInt(const std::string& uniformName, int value);
+        void PushUniformIntArray(const std::string& uniformName, uint32_t count, const int* values);
         void PushUniformFloat(const std::string& uniformName, float value);
         void PushUniformFloat3(const std::string& uniformName, float v0, float v1, float v2);
         void PushUniformFloat4(const std::string& uniformName, float v0, float v1, float v2, float v3);
