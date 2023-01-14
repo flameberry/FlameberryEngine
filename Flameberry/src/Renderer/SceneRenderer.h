@@ -11,6 +11,7 @@ namespace Flameberry {
         ~SceneRenderer();
 
         void RenderScene(const std::shared_ptr<Scene>& scene, const PerspectiveCamera& camera);
+        void RenderSceneForShadowMapping(const std::shared_ptr<Scene>& scene, const std::shared_ptr<OpenGLShader>& shader);
 
         static std::shared_ptr<SceneRenderer> Create() { return std::make_shared<SceneRenderer>(); }
     private:

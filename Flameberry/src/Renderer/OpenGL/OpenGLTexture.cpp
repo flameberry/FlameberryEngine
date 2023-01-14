@@ -10,6 +10,10 @@ namespace Flameberry {
         m_TextureID = OpenGLRenderCommand::CreateTexture(filePath);
     }
 
+    OpenGLTexture::OpenGLTexture(uint32_t textureID)
+        : m_TextureID(textureID)
+    {}
+
     OpenGLTexture::~OpenGLTexture()
     {
         // glDeleteTextures(1, &m_TextureID); // TODO: Don't know why this causes problems

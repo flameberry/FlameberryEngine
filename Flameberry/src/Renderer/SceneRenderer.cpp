@@ -22,6 +22,10 @@ namespace Flameberry {
         binding.blockName = "Lighting";
 
         m_MeshShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/Default.glsl", { binding, lightBinding });
+        m_MeshShader->Bind();
+        m_MeshShader->PushUniformInt("u_TextureMap", 0);
+        m_MeshShader->PushUniformInt("u_ShadowMap", 1);
+        m_MeshShader->Unbind();
     }
 
     SceneRenderer::~SceneRenderer() {}
@@ -55,5 +59,14 @@ namespace Flameberry {
         }
 
         m_SceneUniformBuffer.Unbind();
+    }
+
+    void SceneRenderer::RenderSceneForShadowMapping(const std::shared_ptr<Scene>& scene, const std::shared_ptr<OpenGLShader>& shader)
+    {
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        {
+            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+            scene->m_SceneData.Meshes[mesh.MeshIndex].DrawForShadowPass(shader, transform);
+        }
     }
 }

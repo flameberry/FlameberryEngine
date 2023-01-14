@@ -11,11 +11,17 @@
 
 #include "ImGuizmo/ImGuizmo.h"
 
+#define SHADOW_MAP_DIM 2048
+
 namespace Flameberry {
     FlameEditorApp::FlameEditorApp()
         : m_ViewportSize(1280, 720),
-        m_Renderer3D(OpenGLRenderer3D::Create())
+        m_Renderer3D(OpenGLRenderer3D::Create()),
+        m_ShadowMapUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW)
     {
+        OpenGLRenderCommand::EnableBlend();
+        OpenGLRenderCommand::EnableDepthTest();
+
         OpenGLFramebufferSpecification framebufferSpec{};
         framebufferSpec.FramebufferSize = m_ViewportSize;
 
@@ -41,8 +47,25 @@ namespace Flameberry {
 
         m_Framebuffer = OpenGLFramebuffer::Create(framebufferSpec);
 
-        OpenGLRenderCommand::EnableBlend();
-        OpenGLRenderCommand::EnableDepthTest();
+        OpenGLFramebufferAttachment shadowMapFramebufferDepthAttachment{};
+        shadowMapFramebufferDepthAttachment.InternalFormat = GL_DEPTH_COMPONENT;
+        shadowMapFramebufferDepthAttachment.Format = GL_DEPTH_COMPONENT;
+        shadowMapFramebufferDepthAttachment.Type = GL_FLOAT;
+        shadowMapFramebufferDepthAttachment.Attachment = GL_DEPTH_ATTACHMENT;
+
+        OpenGLFramebufferSpecification shadowMapFramebufferSpec;
+        shadowMapFramebufferSpec.FramebufferSize = { SHADOW_MAP_DIM, SHADOW_MAP_DIM };
+        shadowMapFramebufferSpec.Attachments = { shadowMapFramebufferDepthAttachment };
+
+        m_ShadowMapFramebuffer = OpenGLFramebuffer::Create(shadowMapFramebufferSpec);
+
+        OpenGLShaderBinding binding{};
+        binding.blockBindingIndex = 3;
+        binding.blockName = "Camera";
+
+        m_ShadowMapShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/shadow_map.glsl", { binding });
+
+        m_ShadowMapUniformBuffer.BindBufferBase(binding.blockBindingIndex);
 
         // Dealing with 3D Renderer
         m_Renderer3D->Init();
@@ -61,7 +84,7 @@ namespace Flameberry {
         m_TempMesh = Mesh{ vertices, alt_indices };
         m_TempMesh.Name = "Sphere";
 
-        auto [v, i] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
+        auto [v, i] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/platform.obj");
         m_SponzaMesh = Mesh{ v, i };
         m_SponzaMesh.Name = "Sponza";
 
@@ -147,6 +170,28 @@ namespace Flameberry {
     {
         ScopedTimer timer(&m_LastRenderTime);
 
+        // Shadow Pass
+        m_ShadowMapFramebuffer->Bind();
+        OpenGLRenderCommand::SetViewport(0, 0, SHADOW_MAP_DIM, SHADOW_MAP_DIM);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        // Render
+        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
+        glm::mat4 lightView = glm::lookAt(
+            glm::vec3(1.0f),
+            glm::vec3(0.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
+        glm::mat4 lightViewProjectionMatrix = lightProjection * lightView;
+
+        m_ShadowMapUniformBuffer.Bind();
+        m_ShadowMapUniformBuffer.BufferSubData(glm::value_ptr(lightViewProjectionMatrix), sizeof(glm::mat4), 0);
+
+        m_SceneRenderer->RenderSceneForShadowMapping(m_ActiveScene, m_ShadowMapShader);
+
+        m_ShadowMapUniformBuffer.Unbind();
+        m_ShadowMapFramebuffer->Unbind();
+
         // Framebuffer Resize
         if (glm::vec2 framebufferSize = m_Framebuffer->GetFramebufferSize();
             m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
@@ -171,6 +216,8 @@ namespace Flameberry {
         m_EditorCamera.OnUpdate(delta);
 
         m_Renderer3D->Begin(m_EditorCamera);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, m_ShadowMapFramebuffer->GetColorAttachmentID());
         m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera);
         m_Renderer3D->End();
 
@@ -224,6 +271,7 @@ namespace Flameberry {
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
         uint64_t textureID = m_Framebuffer->GetColorAttachmentID();
+        // uint64_t textureID = m_ShadowMapFramebuffer->GetColorAttachmentID();
         ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
         // ImGuizmo

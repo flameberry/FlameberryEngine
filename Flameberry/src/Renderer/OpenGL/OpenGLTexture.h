@@ -9,6 +9,7 @@ namespace Flameberry {
     {
     public:
         OpenGLTexture(const std::string& filePath);
+        OpenGLTexture(uint32_t textureID);
         ~OpenGLTexture();
 
         void BindTextureUnit(uint32_t unit);

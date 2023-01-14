@@ -88,6 +88,21 @@ namespace Flameberry {
         glDrawElements(GL_TRIANGLES, (int)Indices.size(), GL_UNSIGNED_INT, 0);
     }
 
+    void Mesh::DrawForShadowPass(const std::shared_ptr<OpenGLShader>& shader, const TransformComponent& transform)
+    {
+        if (!Vertices.size())
+            return;
+
+        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
+
+        shader->Bind();
+        shader->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(transform.GetTransform()));
+
+        glBindVertexArray(m_VertexArrayID);
+        glDrawElements(GL_TRIANGLES, (int)Indices.size(), GL_UNSIGNED_INT, 0);
+    }
+
     Mesh::~Mesh()
     {
     }

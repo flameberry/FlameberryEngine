@@ -15,26 +15,20 @@ flat out int v_EntityID;
 
 uniform mat4 u_ModelMatrix;
 
-// temp
-out mat4 v_ModelMatrix;
-
 layout (std140) uniform Camera
 {
-    mat4 ViewProjectionMatrix;
-} u_Camera;
+    mat4 u_ViewProjectionMatrix;
+};
 
 void main()
 {
-    // temp
-    v_ModelMatrix = u_ModelMatrix;
-
     v_Position = a_Position;
     v_Color = a_Color;
     v_Normal = a_Normal;
     v_TextureUV = a_TextureUV;
     v_EntityID = a_EntityID;
 
-    gl_Position = u_Camera.ViewProjectionMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
+    gl_Position = u_ViewProjectionMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
 
     v_Normal = mat3(transpose(inverse(u_ModelMatrix))) * v_Normal;
     v_Position = vec3(u_ModelMatrix * vec4(v_Position, 1.0));
@@ -51,8 +45,6 @@ in vec4 v_Color;
 in vec3 v_Normal;
 in vec2 v_TextureUV;
 flat in int v_EntityID;
-
-in mat4 v_ModelMatrix;
 
 struct DirectionalLight
 {
@@ -85,6 +77,7 @@ layout (std140) uniform Lighting
 };
 
 uniform sampler2D u_TextureMap;
+uniform sampler2D u_ShadowMap;
 uniform Material u_Material;
 
 #define PI 3.1415926535897932384626433832795
@@ -93,6 +86,7 @@ uniform Material u_Material;
 
 vec3 GetPixelColor()
 {
+    return vec3(texture(u_ShadowMap, v_TextureUV).r);
     if (u_Material.TextureMapEnabled)
         return u_Material.Albedo * texture(u_TextureMap, v_TextureUV).xyz;
     else

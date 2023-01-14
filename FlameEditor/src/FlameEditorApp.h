@@ -33,6 +33,12 @@ namespace Flameberry {
         DirectionalLight m_DirectionalLight;
 
         std::shared_ptr<SceneRenderer> m_SceneRenderer;
+
+    private:
+        // Shadow Mapping Resources
+        std::shared_ptr<OpenGLFramebuffer> m_ShadowMapFramebuffer;
+        std::shared_ptr<OpenGLShader> m_ShadowMapShader;
+        OpenGLBuffer m_ShadowMapUniformBuffer;
     private:
         SceneHierarchyPanel m_SceneHierarchyPanel;
         ContentBrowserPanel m_ContentBrowserPanel;
