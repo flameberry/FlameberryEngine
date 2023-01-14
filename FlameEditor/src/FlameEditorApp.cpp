@@ -15,7 +15,7 @@ namespace Flameberry {
     FlameEditorApp::FlameEditorApp()
         : m_Framebuffer(OpenGLFramebuffer::Create()),
         m_ViewportSize(1280, 720),
-        m_Renderer3D(OpenGLRenderer3D::Create()),
+        m_Renderer3D(OpenGLRenderer3D::Create())
     {
         OpenGLRenderCommand::EnableBlend();
         OpenGLRenderCommand::EnableDepthTest();
@@ -180,10 +180,6 @@ namespace Flameberry {
         m_Renderer3D->Begin(m_EditorCamera);
         m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera);
         m_Renderer3D->End();
-
-        m_Renderer2D->Begin(m_EditorCamera.GetViewProjectionMatrix());
-        m_Renderer2D->AddQuad(glm::mat4(1.0f), glm::vec4(1, 1, 0, 1), 0);
-        m_Renderer2D->End();
 
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive)
         {
