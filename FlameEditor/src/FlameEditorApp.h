@@ -22,18 +22,13 @@ namespace Flameberry {
         std::shared_ptr<OpenGLFramebuffer> m_Framebuffer;
         glm::vec2 m_ViewportSize;
         PerspectiveCamera m_EditorCamera;
-        double m_LastRenderTime = 0.0;
         glm::vec2 m_ViewportBounds[2];
-        std::shared_ptr<OpenGLRenderer3D> m_Renderer3D;
-        bool m_IsCursorInsideViewport = false;
 
         Mesh m_TempMesh, m_SponzaMesh, m_FloorMesh;
         std::shared_ptr<OpenGLTexture> m_BrickTexture;
 
         DirectionalLight m_DirectionalLight;
-
         std::shared_ptr<SceneRenderer> m_SceneRenderer;
-
     private:
         // Shadow Mapping Resources
         std::shared_ptr<OpenGLFramebuffer> m_ShadowMapFramebuffer;

@@ -39,6 +39,6 @@ namespace Flameberry {
         struct CameraUniformBufferData { glm::mat4 ViewProjectionMatrix; };
     private:
         CameraUniformBufferData m_UniformBufferData;
-        OpenGLBuffer m_CameraUniformBuffer;
+        // OpenGLBuffer m_CameraUniformBuffer;
     };
 }

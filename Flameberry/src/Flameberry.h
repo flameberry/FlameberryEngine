@@ -9,8 +9,9 @@
 #include "Core/Core.h"
 #include "Core/Input.h"
 #include "Core/Math.h"
+#include "Core/Timer.h"
+#include "Core/Profiler.h"
 #include "Platform/FileDialog.h"
-#include "Platform/CustomTitleBar.h"
 
 #ifdef FL_USE_OPENGL_API
 #include "Renderer/OpenGL/OpenGLRenderer2D.h"
@@ -29,5 +30,3 @@
 #endif
 
 #include "Renderer/ModelLoader.h"
-
-#include "Core/Timer.h"

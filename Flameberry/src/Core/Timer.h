@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <string>
 
 namespace Flameberry {
     class Timer
@@ -24,9 +25,9 @@ namespace Flameberry {
     private:
         // Stores time in nanoseconds
         double* m_DurationVar = nullptr;
-        const char* m_ScopeName = "default";
+        std::string m_ScopeName = "default";
         decltype(std::chrono::high_resolution_clock::now()) m_Start;
     };
 
-#define FL_SCOPED_TIMER(scopeName) ScopedTimer scopedTimer(scopeName)
+#define FL_SCOPED_TIMER(scopeName) Flameberry::ScopedTimer scopedTimer(scopeName)
 }

@@ -11,12 +11,11 @@
 
 #include "ImGuizmo/ImGuizmo.h"
 
-#define SHADOW_MAP_DIM 2048
+#define SHADOW_MAP_DIM 4096
 
 namespace Flameberry {
     FlameEditorApp::FlameEditorApp()
         : m_ViewportSize(1280, 720),
-        m_Renderer3D(OpenGLRenderer3D::Create()),
         m_ShadowMapUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW)
     {
         OpenGLRenderCommand::EnableBlend();
@@ -30,18 +29,33 @@ namespace Flameberry {
         colorAttachment.Format = GL_RGBA;
         colorAttachment.Type = GL_UNSIGNED_BYTE;
         colorAttachment.Attachment = GL_COLOR_ATTACHMENT0;
+        colorAttachment.IsColorAttachment = true;
+        colorAttachment.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        };
 
         OpenGLFramebufferAttachment depthAttachment{};
         depthAttachment.InternalFormat = GL_DEPTH24_STENCIL8;
         depthAttachment.Format = GL_DEPTH_STENCIL;
         depthAttachment.Type = GL_UNSIGNED_INT_24_8;
         depthAttachment.Attachment = GL_DEPTH_STENCIL_ATTACHMENT;
+        depthAttachment.IsColorAttachment = false;
+        depthAttachment.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        };
 
         OpenGLFramebufferAttachment mousePickingAttachment{};
         mousePickingAttachment.InternalFormat = GL_R32I;
         mousePickingAttachment.Format = GL_RED_INTEGER;
         mousePickingAttachment.Type = GL_UNSIGNED_BYTE;
         mousePickingAttachment.Attachment = GL_COLOR_ATTACHMENT1;
+        mousePickingAttachment.IsColorAttachment = true;
+        mousePickingAttachment.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        };
 
         framebufferSpec.Attachments = { colorAttachment, depthAttachment, mousePickingAttachment };
 
@@ -52,6 +66,16 @@ namespace Flameberry {
         shadowMapFramebufferDepthAttachment.Format = GL_DEPTH_COMPONENT;
         shadowMapFramebufferDepthAttachment.Type = GL_FLOAT;
         shadowMapFramebufferDepthAttachment.Attachment = GL_DEPTH_ATTACHMENT;
+        shadowMapFramebufferDepthAttachment.IsColorAttachment = false;
+        shadowMapFramebufferDepthAttachment.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+            float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        };
 
         OpenGLFramebufferSpecification shadowMapFramebufferSpec;
         shadowMapFramebufferSpec.FramebufferSize = { SHADOW_MAP_DIM, SHADOW_MAP_DIM };
@@ -66,9 +90,6 @@ namespace Flameberry {
         m_ShadowMapShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/shadow_map.glsl", { binding });
 
         m_ShadowMapUniformBuffer.BindBufferBase(binding.blockBindingIndex);
-
-        // Dealing with 3D Renderer
-        m_Renderer3D->Init();
 
         PerspectiveCameraInfo cameraInfo{};
         cameraInfo.aspectRatio = 1280.0f / 720.0f;
@@ -163,83 +184,90 @@ namespace Flameberry {
 
     FlameEditorApp::~FlameEditorApp()
     {
-        m_Renderer3D->CleanUp();
     }
 
     void FlameEditorApp::OnUpdate(float delta)
     {
-        ScopedTimer timer(&m_LastRenderTime);
+        FL_PROFILE_SCOPE("Last Frame Render");
 
-        // Shadow Pass
-        m_ShadowMapFramebuffer->Bind();
-        OpenGLRenderCommand::SetViewport(0, 0, SHADOW_MAP_DIM, SHADOW_MAP_DIM);
-        glClear(GL_DEPTH_BUFFER_BIT);
-
-        // Render
-        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
-        glm::mat4 lightView = glm::lookAt(
-            glm::vec3(1.0f),
-            glm::vec3(0.0f, 0.0f, 0.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f)
-        );
-        glm::mat4 lightViewProjectionMatrix = lightProjection * lightView;
-
-        m_ShadowMapUniformBuffer.Bind();
-        m_ShadowMapUniformBuffer.BufferSubData(glm::value_ptr(lightViewProjectionMatrix), sizeof(glm::mat4), 0);
-
-        m_SceneRenderer->RenderSceneForShadowMapping(m_ActiveScene, m_ShadowMapShader);
-
-        m_ShadowMapUniformBuffer.Unbind();
-        m_ShadowMapFramebuffer->Unbind();
-
-        // Framebuffer Resize
-        if (glm::vec2 framebufferSize = m_Framebuffer->GetFramebufferSize();
-            m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
-            (framebufferSize.x != m_ViewportSize.x || framebufferSize.y != m_ViewportSize.y))
+        glm::mat4 lightViewProjectionMatrix(1.0f);
         {
-            m_Framebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            m_Framebuffer->Invalidate();
+            FL_PROFILE_SCOPE("Shadow Pass");
+            // Shadow Pass
+            glCullFace(GL_FRONT);
+            m_ShadowMapFramebuffer->Bind();
+            OpenGLRenderCommand::SetViewport(0, 0, SHADOW_MAP_DIM, SHADOW_MAP_DIM);
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            // Render
+            glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
+            glm::mat4 lightView = glm::lookAt(
+                // glm::vec3(1.0f),
+                -m_DirectionalLight.Direction,
+                glm::vec3(0.0f, 0.0f, 0.0f),
+                glm::vec3(0.0f, 1.0f, 0.0f)
+            );
+            lightViewProjectionMatrix = lightProjection * lightView;
+
+            m_ShadowMapUniformBuffer.Bind();
+            m_ShadowMapUniformBuffer.BufferSubData(glm::value_ptr(lightViewProjectionMatrix), sizeof(glm::mat4), 0);
+
+            m_SceneRenderer->RenderSceneForShadowMapping(m_ActiveScene, m_ShadowMapShader);
+
+            m_ShadowMapUniformBuffer.Unbind();
+            m_ShadowMapFramebuffer->Unbind();
+            glCullFace(GL_BACK);
         }
 
-        m_Framebuffer->Bind();
-        OpenGLRenderCommand::SetViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // constexpr glm::vec3 clearColor(20.0f / 255.0f, 20.0f / 255.0f, 20.0f / 255.0f);
-        glm::vec3 clearColor(0.0f);
-        glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
-
-        m_Framebuffer->ClearEntityIDAttachment();
-
-        m_EditorCamera.OnResize(m_ViewportSize.x / m_ViewportSize.y);
-        m_EditorCamera.OnUpdate(delta);
-
-        m_Renderer3D->Begin(m_EditorCamera);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, m_ShadowMapFramebuffer->GetColorAttachmentID());
-        m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera);
-        m_Renderer3D->End();
-
-        bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive;
-        // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
-        if (attemptedToSelect)
         {
-            auto [mx, my] = ImGui::GetMousePos();
-            mx -= m_ViewportBounds[0].x;
-            my -= m_ViewportBounds[0].y;
-            glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-            my = viewportSize.y - my;
-            int mouseX = (int)mx;
-            int mouseY = (int)my;
-
-            if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+            FL_PROFILE_SCOPE("Render Pass");
+            // Framebuffer Resize
+            if (glm::vec2 framebufferSize = m_Framebuffer->GetFramebufferSize();
+                m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+                (framebufferSize.x != m_ViewportSize.x || framebufferSize.y != m_ViewportSize.y))
             {
-                int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
-                m_SceneHierarchyPanel.SetSelectedEntity((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
+                m_Framebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+                m_Framebuffer->Invalidate();
             }
+
+            m_Framebuffer->Bind();
+            OpenGLRenderCommand::SetViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            // constexpr glm::vec3 clearColor(20.0f / 255.0f, 20.0f / 255.0f, 20.0f / 255.0f);
+            glm::vec3 clearColor(0.0f);
+            glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
+
+            m_Framebuffer->ClearEntityIDAttachment();
+
+            m_EditorCamera.OnResize(m_ViewportSize.x / m_ViewportSize.y);
+            m_EditorCamera.OnUpdate(delta);
+
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, m_ShadowMapFramebuffer->GetColorAttachmentID());
+            m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera, lightViewProjectionMatrix);
+
+            bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive;
+            // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
+            if (attemptedToSelect)
+            {
+                auto [mx, my] = ImGui::GetMousePos();
+                mx -= m_ViewportBounds[0].x;
+                my -= m_ViewportBounds[0].y;
+                glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+                my = viewportSize.y - my;
+                int mouseX = (int)mx;
+                int mouseY = (int)my;
+
+                if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+                {
+                    int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
+                    m_SceneHierarchyPanel.SetSelectedEntity((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
+                }
+            }
+            m_Framebuffer->Unbind();
         }
-        m_Framebuffer->Unbind();
     }
 
     void FlameEditorApp::OnUIRender()
@@ -341,8 +369,12 @@ namespace Flameberry {
 
         ImGui::Begin("Stats");
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGui::Text("Last Render Time: %.3fms", m_LastRenderTime * 0.001f * 0.001f);
 
+        FL_DISPLAY_SCOPE_DETAILS_IMGUI();
+
+        ImGui::Separator();
+        if (ImGui::Button("Reload Mesh Shader"))
+            m_SceneRenderer->ReloadShader();
         ImGui::Separator();
 
         ImGui::Text("Directional Light");

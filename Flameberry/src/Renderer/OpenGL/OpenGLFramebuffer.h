@@ -7,9 +7,10 @@
 #include <glm/glm.hpp>
 
 namespace Flameberry {
-    struct OpenGLFramebufferAttachment
-    {
+    struct OpenGLFramebufferAttachment {
         uint32_t InternalFormat, Format, Type, Attachment;
+        bool IsColorAttachment = true;
+        void(*SetupTextureProperties)();
     };
 
     struct OpenGLFramebufferSpecification

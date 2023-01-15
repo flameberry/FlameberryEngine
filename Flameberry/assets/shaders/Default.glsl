@@ -7,44 +7,55 @@ layout (location = 2) in vec3 a_Normal;
 layout (location = 3) in vec2 a_TextureUV;
 layout (location = 4) in int a_EntityID;
 
-out vec3 v_Position;
-out vec4 v_Color;
-out vec3 v_Normal;
-out vec2 v_TextureUV;
-flat out int v_EntityID;
+layout (location = 0) out vec3 v_Position;
+layout (location = 1) out vec4 v_Color;
+layout (location = 2) out vec3 v_Normal;
+layout (location = 3) out vec2 v_TextureUV;
+layout (location = 4) flat out int v_EntityID;
+layout (location = 5) out vec4 v_LightFragmentPosition;
 
 uniform mat4 u_ModelMatrix;
 
 layout (std140) uniform Camera
 {
     mat4 u_ViewProjectionMatrix;
+    mat4 u_LightViewProjectionMatrix;
 };
+
+const mat4 g_BiasMatrix = mat4(
+    0.5, 0.0, 0.0, 0.0,
+    0.0, 0.5, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0,
+    0.5, 0.5, 0.5, 1.0
+);
 
 void main()
 {
-    v_Position = a_Position;
     v_Color = a_Color;
     v_Normal = a_Normal;
     v_TextureUV = a_TextureUV;
     v_EntityID = a_EntityID;
 
-    gl_Position = u_ViewProjectionMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
+    v_Position = vec3(u_ModelMatrix * vec4(a_Position, 1.0));
+
+    gl_Position = u_ViewProjectionMatrix * vec4(v_Position, 1.0);
 
     v_Normal = mat3(transpose(inverse(u_ModelMatrix))) * v_Normal;
-    v_Position = vec3(u_ModelMatrix * vec4(v_Position, 1.0));
+    v_LightFragmentPosition = g_BiasMatrix * u_LightViewProjectionMatrix * vec4(v_Position, 1.0);
 }
 
 #shader fragment
 #version 410 core
 
+layout (location = 0) in vec3 v_Position;
+layout (location = 1) in vec4 v_Color;
+layout (location = 2) in vec3 v_Normal;
+layout (location = 3) in vec2 v_TextureUV;
+layout (location = 4) flat in int v_EntityID;
+layout (location = 5) in vec4 v_LightFragmentPosition;
+
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out int o_EntityID;
-
-in vec3 v_Position;
-in vec4 v_Color;
-in vec3 v_Normal;
-in vec2 v_TextureUV;
-flat in int v_EntityID;
 
 struct DirectionalLight
 {
@@ -76,8 +87,8 @@ layout (std140) uniform Lighting
     int u_LightCount;
 };
 
-uniform sampler2D u_TextureMap;
-uniform sampler2D u_ShadowMap;
+uniform sampler2D u_TextureMapSampler;
+uniform sampler2D u_ShadowMapSampler;
 uniform Material u_Material;
 
 #define PI 3.1415926535897932384626433832795
@@ -86,9 +97,9 @@ uniform Material u_Material;
 
 vec3 GetPixelColor()
 {
-    return vec3(texture(u_ShadowMap, v_TextureUV).r);
+    // return vec3(texture(u_ShadowMapSampler, v_TextureUV).r);
     if (u_Material.TextureMapEnabled)
-        return u_Material.Albedo * texture(u_TextureMap, v_TextureUV).xyz;
+        return u_Material.Albedo * texture(u_TextureMapSampler, v_TextureUV).xyz;
     else
         return u_Material.Albedo;
 }
@@ -123,6 +134,48 @@ float GGXDistribution(float n_dot_h)
     return ggxdistrib;
 }
 
+float CalculateShadowFactor(vec4 shadowCoords, vec2 offset, float bias)
+{
+    float shadow = 1.0;
+
+    if (shadowCoords.z > -1.0 && shadowCoords.z < 1.0)
+    {
+        float depth = texture(u_ShadowMapSampler, shadowCoords.xy + offset).r;
+        if (shadowCoords.w > 0.0 && depth + bias < shadowCoords.z)
+        {
+            shadow = AMBIENT;
+        }
+    }
+    return shadow;
+}
+
+float FilterPCF(float bias)
+{
+    ivec2 textureDimensions = textureSize(u_ShadowMapSampler, 0);
+    float scale = 1.0;
+    float texelWidth = scale * 1.0 / float(textureDimensions.x);
+    float texelHeight = scale * 1.0 / float(textureDimensions.y);
+
+    vec2 texelSize = vec2(texelWidth, texelHeight);
+    vec4 shadowMapSamplerCoords = v_LightFragmentPosition / v_LightFragmentPosition.w;
+
+    int range = 2;
+    float filterSize = 0.0;
+    float shadowFactor = 0.0;
+
+    for (int y = -range; y <= range; y++)
+    {
+        for (int x = -range; x <= range; x++)
+        {
+            vec2 offset = vec2(x, y) * texelSize;
+            shadowFactor += CalculateShadowFactor(shadowMapSamplerCoords, offset, bias);
+            filterSize++;
+        }
+    }
+    shadowFactor /= filterSize;
+    return shadowFactor;
+}
+
 vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
 {
     vec3 lightIntensity = light.Color.xyz * light.Intensity;
@@ -154,8 +207,11 @@ vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
     }
     
     vec3 diffuseBRDF = kD * fLambert / PI;
+
+    float bias = mix(0.1, 0.0, n_dot_l);
     
-    vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
+    vec3 finalColor = FilterPCF(bias) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
+    // vec3 finalColor = CalculateShadowFactor(v_LightFragmentPosition / v_LightFragmentPosition.w, vec2(0.0), bias) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
     return finalColor;
 }
 
@@ -203,7 +259,8 @@ vec4 CalculatePBRLighting()
 {
     vec3 normal = normalize(v_Normal);
 
-    vec3 totalLight = CalculatePBRDirectionalLight(u_DirectionalLight, normal);
+    vec3 totalLight = vec3(0.0);
+    totalLight += CalculatePBRDirectionalLight(u_DirectionalLight, normal);
 
     int lightCount = min(u_LightCount, MAX_POINT_LIGHTS);
     for (int i = 0; i < lightCount; i++)

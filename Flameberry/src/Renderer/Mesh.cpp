@@ -24,7 +24,7 @@ namespace Flameberry {
 
     void Mesh::Invalidate()
     {
-        if (Vertices.size() && Indices.size() && m_VertexArrayID && m_VertexBufferID && m_IndexBufferID && m_ShaderProgramID)
+        if (m_VertexArrayID && m_VertexBufferID && m_IndexBufferID && m_ShaderProgramID)
             return;
 
         glGenVertexArrays(1, &m_VertexArrayID);
@@ -32,7 +32,8 @@ namespace Flameberry {
 
         glGenBuffers(1, &m_VertexBufferID);
         glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
-        glBufferData(GL_ARRAY_BUFFER, 1000000 * sizeof(OpenGLVertex), nullptr, GL_DYNAMIC_DRAW);
+        // glBufferData(GL_ARRAY_BUFFER, 1000000 * sizeof(OpenGLVertex), nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(OpenGLVertex), Vertices.data(), GL_DYNAMIC_DRAW);
 
         glBindVertexArray(m_VertexArrayID);
 
@@ -69,10 +70,11 @@ namespace Flameberry {
             m_EntityID = entityID;
             for (auto& vertex : Vertices)
                 vertex.entityID = m_EntityID;
+
+            glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
 
         if (material.TextureMapEnabled && material.TextureMap)
             material.TextureMap->BindTextureUnit(0);
@@ -92,9 +94,6 @@ namespace Flameberry {
     {
         if (!Vertices.size())
             return;
-
-        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
 
         shader->Bind();
         shader->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(transform.GetTransform()));
