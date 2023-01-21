@@ -27,7 +27,9 @@
 #include "Renderer/Vulkan/VulkanDescriptor.h"
 #include "Renderer/Vulkan/VulkanTexture.h"
 #include "Renderer/Vulkan/VulkanMesh.h"
+#include "Renderer/Vulkan/VulkanDebug.h"
 #include "Renderer/Vulkan/MeshRenderer.h"
+#include <imgui/backends/imgui_impl_vulkan.h>
 #endif
 
 #include "Core/Timer.h"

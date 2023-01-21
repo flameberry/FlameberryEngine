@@ -24,4 +24,9 @@ private:
     std::unique_ptr<Flameberry::VulkanTexture> m_Texture;
     std::unique_ptr<Flameberry::MeshRenderer> m_MeshRenderer;
     std::vector<std::shared_ptr<Flameberry::VulkanMesh>> m_Meshes;
+
+    // Test
+    std::unique_ptr<Flameberry::ImGuiLayer> m_ImGuiLayer;
+    glm::vec2 m_ViewportSize;
+    VkSampler m_VkTextureSampler;
 };

@@ -38,10 +38,11 @@ namespace Flameberry {
         template<typename... Args>
         static std::shared_ptr<VulkanRenderer> Create(Args... args) { return std::make_shared<VulkanRenderer>(std::forward<Args>(args)...); }
     public:
-        VkRenderPass GetRenderPass() { return m_SwapChain->GetRenderPass(); }
-        uint32_t     GetCurrentFrameIndex() { return m_CurrentFrame; }
-        VkFormat     GetSwapChainImageFormat() { return m_SwapChain->GetSwapChainImageFormat(); }
-        VkExtent2D   GetSwapChainExtent2D() { return m_SwapChain->GetExtent2D(); };
+        VkRenderPass GetRenderPass() const { return m_SwapChain->GetRenderPass(); }
+        uint32_t     GetCurrentFrameIndex() const { return m_CurrentFrame; }
+        VkFormat     GetSwapChainImageFormat() const { return m_SwapChain->GetSwapChainImageFormat(); }
+        VkExtent2D   GetSwapChainExtent2D() const { return m_SwapChain->GetExtent2D(); }
+        std::vector<VkImageView> GetSwapChainImageViews() const { return m_SwapChain->GetImageViews(); }
         std::shared_ptr<VulkanDescriptorPool> GetGlobalDescriptorPool() const { return m_GlobalDescriptorPool; }
 
         // Shadow Map

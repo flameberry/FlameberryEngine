@@ -197,7 +197,8 @@ namespace Flameberry {
         vk_color_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         vk_color_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         vk_color_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        // vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // For ImGui
 
         VkAttachmentReference vk_color_attachment_reference{};
         vk_color_attachment_reference.attachment = 0;
@@ -408,7 +409,8 @@ namespace Flameberry {
     {
         for (const auto& format : available_formats)
         {
-            if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+            // if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+            if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
                 return format;
         }
         // Implement choosing of the next best format after sRGB B8G8A8 format

@@ -94,6 +94,25 @@ SandboxApp::SandboxApp()
     //     auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/plane.obj");
     //     m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
     // }
+
+    m_ImGuiLayer = std::make_unique<Flameberry::ImGuiLayer>();
+    m_ImGuiLayer->OnAttach(m_VulkanRenderer->GetGlobalDescriptorPool()->GetDescriptorPool(), m_VulkanRenderer->GetSwapChainImageFormat(), m_VulkanRenderer->GetSwapChainImageViews(), m_VulkanRenderer->GetSwapChainExtent2D());
+
+    // Test
+    const auto& device = Flameberry::VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+    VkSamplerCreateInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    info.magFilter = VK_FILTER_LINEAR;
+    info.minFilter = VK_FILTER_LINEAR;
+    info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    info.minLod = -1000;
+    info.maxLod = 1000;
+    info.maxAnisotropy = 1.0f;
+
+    VK_CHECK_RESULT(vkCreateSampler(device, &info, nullptr, &m_VkTextureSampler));
 }
 
 void SandboxApp::OnUpdate(float delta)
@@ -144,6 +163,12 @@ void SandboxApp::OnUpdate(float delta)
         m_MeshRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_Meshes);
 
         m_VulkanRenderer->EndSwapChainRenderPass();
+
+        m_ImGuiLayer->Begin();
+        ImGui::ShowDemoWindow();
+        OnUIRender();
+        m_ImGuiLayer->End(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VulkanRenderer->GetSwapChainExtent2D());
+
         m_VulkanRenderer->EndFrame();
     }
 }
@@ -151,10 +176,23 @@ void SandboxApp::OnUpdate(float delta)
 SandboxApp::~SandboxApp()
 {
     Flameberry::VulkanContext::GetCurrentDevice()->WaitIdle();
+    m_ImGuiLayer->OnDetach();
 }
 
 void SandboxApp::OnUIRender()
 {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
+    ImGui::Begin("Viewport");
+
+    ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+    m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
+
+    // auto ID = ImGui_ImplVulkan_AddTexture(m_VkTextureSampler, m_VulkanRenderer->GetSwapChainImageViews()[m_VulkanRenderer->GetCurrentFrameIndex()], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+    // uint64_t textureID = m_Framebuffer->GetColorAttachmentId();
+    // ImGui::Image(reinterpret_cast<ImTextureID>(ID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+    ImGui::End();
+    ImGui::PopStyleVar();
 }
 
 std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()

@@ -20,6 +20,7 @@ namespace Flameberry {
         uint32_t GetSwapChainImageCount() const { return (uint32_t)m_VkSwapChainImages.size(); }
         VkFormat GetSwapChainImageFormat() const { return m_VkSwapChainImageFormat; }
         VkSwapchainKHR GetVulkanSwapChain() const { return m_VkSwapChain; }
+        std::vector<VkImageView> GetImageViews() const { return m_VkSwapChainImageViews; }
 
         VkResult AcquireNextImage();
         VkResult SubmitCommandBuffer(VkCommandBuffer commandBuffer);
