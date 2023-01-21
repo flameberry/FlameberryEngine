@@ -180,6 +180,10 @@ namespace Flameberry {
         m_ActiveScene->SetDirectionalLight(m_DirectionalLight);
 
         m_SceneRenderer = SceneRenderer::Create();
+
+        int stencilBits = 0;
+        glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE, &stencilBits);
+        FL_LOG("Number of stencil bits: {0}", stencilBits);
     }
 
     FlameEditorApp::~FlameEditorApp()
@@ -236,7 +240,8 @@ namespace Flameberry {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // constexpr glm::vec3 clearColor(20.0f / 255.0f, 20.0f / 255.0f, 20.0f / 255.0f);
-            glm::vec3 clearColor(0.0f);
+            const auto& clearColor = m_ActiveScene->GetClearColor();
+            // glm::vec3 clearColor(0.0f);
             glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
 
             m_Framebuffer->ClearEntityIDAttachment();
@@ -375,15 +380,6 @@ namespace Flameberry {
         ImGui::Separator();
         if (ImGui::Button("Reload Mesh Shader"))
             m_SceneRenderer->ReloadShader();
-        ImGui::Separator();
-
-        ImGui::Text("Directional Light");
-        Utils::DrawVec3Control("Directional", m_DirectionalLight.Direction, 0.0f, 0.01f);
-        ImGui::Spacing();
-        ImGui::ColorEdit3("Color", glm::value_ptr(m_DirectionalLight.Color));
-        ImGui::DragFloat("Intensity", &m_DirectionalLight.Intensity, 0.01f);
-
-        m_ActiveScene->SetDirectionalLight(m_DirectionalLight);
         ImGui::End();
 
         m_SceneHierarchyPanel.OnUIRender();

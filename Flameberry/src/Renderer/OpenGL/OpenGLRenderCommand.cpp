@@ -245,20 +245,17 @@ namespace Flameberry {
         GLenum internalFormat = 0, dataFormat = 0;
         switch (channels)
         {
-        case 4:
-        {
+        case 4: {
             internalFormat = GL_RGBA8;
             dataFormat = GL_RGBA;
             break;
         }
-        case 3:
-        {
+        case 3: {
             internalFormat = GL_RGB8;
             dataFormat = GL_RGB;
             break;
         }
-        case 1:
-        {
+        case 1: {
             internalFormat = GL_RGBA;
             dataFormat = GL_RED;
             break;

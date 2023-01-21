@@ -13,6 +13,11 @@ namespace Flameberry {
     Skybox::Skybox(const char* folderPath)
         : m_VertexBufferID(0), m_IndexBufferID(0), m_ShaderProgramID(0), m_TextureID(0)
     {
+        OpenGLShaderBinding cameraBinding{};
+        cameraBinding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_CAMERA;
+        cameraBinding.blockName = "Camera";
+
+        m_SkyboxShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/Skybox.glsl", { cameraBinding });
         Load(folderPath);
     }
 
@@ -78,35 +83,27 @@ namespace Flameberry {
 
         glBindVertexArray(m_VertexArrayID);
 
-        m_ShaderProgramID = OpenGLRenderCommand::CreateShader(FL_PROJECT_DIR"Flameberry/assets/shaders/Skybox.glsl");
-        glUseProgram(m_ShaderProgramID);
-        glUniform1i(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_SamplerCube"), 0);
-
-        // Assigning binding to uniform buffers
-        uint32_t uniformBlockIndexCamera = glGetUniformBlockIndex(m_ShaderProgramID, "Camera");
-        glUniformBlockBinding(m_ShaderProgramID, uniformBlockIndexCamera, FL_UNIFORM_BLOCK_BINDING_CAMERA);
-
-        glUseProgram(0);
-
         m_TextureID = OpenGLRenderCommand::CreateCubeMap(folderPath);
     }
 
     void Skybox::OnDraw(const PerspectiveCamera& camera)
     {
+        glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, m_TextureID);
 
-        glUseProgram(m_ShaderProgramID);
-
         glm::mat4 viewProjectionMatrix = camera.GetProjectionMatrix() * glm::mat4(glm::mat3(camera.GetViewMatrix()));
-        glUniformMatrix4fv(OpenGLRenderCommand::GetUniformLocation(m_ShaderProgramID, "u_ViewProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
+
+        m_SkyboxShader->Bind();
+        m_SkyboxShader->PushUniformMatrix4f("u_ViewProjectionMatrix", 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
 
         glBindVertexArray(m_VertexArrayID);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
         glDepthFunc(GL_LESS);
+        glDepthMask(GL_TRUE);
     }
 
     Skybox::~Skybox()

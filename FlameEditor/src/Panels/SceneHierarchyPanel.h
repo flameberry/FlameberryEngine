@@ -12,6 +12,8 @@ namespace Flameberry {
         void SetSelectedEntity(const ecs::entity_handle& entity) { m_SelectedEntity = entity; }
         void RenameNode(std::string& tag);
         ecs::entity_handle GetSelectedEntity() const { return m_SelectedEntity; }
+
+        void OnEnvironmentMapPanelRender();
     private:
         void DrawComponent(TransformComponent& transform);
         void DrawComponent(SpriteRendererComponent& sprite);

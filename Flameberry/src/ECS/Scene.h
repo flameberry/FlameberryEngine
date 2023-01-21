@@ -11,14 +11,22 @@
 #include "Renderer/Skybox.h"
 
 namespace Flameberry {
+    struct EnvironmentMap
+    {
+        glm::vec3 ClearColor;
+        std::shared_ptr<Skybox> ActiveSkybox;
+        DirectionalLight DirLight;
+        bool Reflections;
+
+        EnvironmentMap(): ActiveSkybox(std::make_shared<Skybox>(FL_PROJECT_DIR"SandboxApp/assets/skybox")) {}
+    };
+
     struct SceneData
     {
         std::string Name = "Untitled";
         std::vector<Mesh> Meshes;
         std::unordered_map<std::string, Material> Materials;
-        DirectionalLight DirLight;
-        Skybox ActiveSkybox;
-        SceneData(): ActiveSkybox(FL_PROJECT_DIR"SandboxApp/assets/skybox") {}
+        EnvironmentMap ActiveEnvironmentMap;
     };
 
     class Scene
@@ -33,8 +41,10 @@ namespace Flameberry {
         void SetSelectedEntity(ecs::entity_handle* entity) { m_SelectedEntity = entity; }
         ecs::entity_handle GetSelectedEntity() const { return *m_SelectedEntity; }
         void LoadMesh(const Mesh& mesh);
-        void SetDirectionalLight(const DirectionalLight& light) { m_SceneData.DirLight = light; }
+        void SetDirectionalLight(const DirectionalLight& light) { m_SceneData.ActiveEnvironmentMap.DirLight = light; }
         void AddMaterial(const std::string& materialName, const Material& material) { m_SceneData.Materials[materialName] = material; }
+
+        glm::vec3 GetClearColor() const { return m_SceneData.ActiveEnvironmentMap.ClearColor; }
     private:
         ecs::entity_handle* m_SelectedEntity = nullptr;
         ecs::registry* m_Registry;

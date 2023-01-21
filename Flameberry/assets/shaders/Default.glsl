@@ -79,16 +79,19 @@ struct Material
     bool TextureMapEnabled;
 };
 
-layout (std140) uniform Lighting
+layout (std140) uniform SceneData
 {
     vec3 u_CameraPosition;
     DirectionalLight u_DirectionalLight;
     PointLight u_PointLights[10];
     int u_LightCount;
+    bool u_EnvironmentMapReflections;
 };
 
 uniform sampler2D u_TextureMapSampler;
 uniform sampler2D u_ShadowMapSampler;
+uniform samplerCube u_EnvironmentMapSampler;
+
 uniform Material u_Material;
 
 #define PI 3.1415926535897932384626433832795
@@ -97,11 +100,19 @@ uniform Material u_Material;
 
 vec3 GetPixelColor()
 {
-    // return vec3(texture(u_ShadowMapSampler, v_TextureUV).r);
+    vec3 pixelColor = vec3(0.0);
     if (u_Material.TextureMapEnabled)
-        return u_Material.Albedo * texture(u_TextureMapSampler, v_TextureUV).xyz;
+        pixelColor = u_Material.Albedo * texture(u_TextureMapSampler, v_TextureUV).xyz;
     else
-        return u_Material.Albedo;
+        pixelColor = u_Material.Albedo;
+
+    if (u_EnvironmentMapReflections) {
+        vec3 I = normalize(v_Position - u_CameraPosition);
+        vec3 R = reflect(I, normalize(v_Normal));
+        vec3 color = texture(u_EnvironmentMapSampler, R).rgb;
+        pixelColor *= color;
+    }
+    return pixelColor;
 }
 
 // PBR Lighting

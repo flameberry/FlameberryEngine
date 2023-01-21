@@ -11,6 +11,7 @@ namespace Flameberry {
         DirectionalLight DirLight;
         PointLight PointLights[10];
         int LightCount = 0;
+        bool EnvironmentMapReflections = false;
     };
 
     SceneRenderer::SceneRenderer()
@@ -26,12 +27,13 @@ namespace Flameberry {
 
         OpenGLShaderBinding lightBinding;
         binding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_LIGHTING;
-        binding.blockName = "Lighting";
+        binding.blockName = "SceneData";
 
         m_MeshShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/Default.glsl", { binding, lightBinding });
         m_MeshShader->Bind();
         m_MeshShader->PushUniformInt("u_TextureMapSampler", 0);
         m_MeshShader->PushUniformInt("u_ShadowMapSampler", 1);
+        m_MeshShader->PushUniformInt("u_EnvironmentMapSampler", 2);
         m_MeshShader->Unbind();
     }
 
@@ -48,7 +50,7 @@ namespace Flameberry {
 
         SceneUniformBufferData sceneUniformBufferData;
         sceneUniformBufferData.CameraPosition = camera.GetPosition();
-        sceneUniformBufferData.DirLight = scene->m_SceneData.DirLight;
+        sceneUniformBufferData.DirLight = scene->m_SceneData.ActiveEnvironmentMap.DirLight;
         for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
         {
             const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
@@ -57,11 +59,17 @@ namespace Flameberry {
             sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Intensity = light.Intensity;
             sceneUniformBufferData.LightCount++;
         }
+        sceneUniformBufferData.EnvironmentMapReflections = scene->m_SceneData.ActiveEnvironmentMap.Reflections;
 
         m_SceneUniformBuffer.Bind();
         m_SceneUniformBuffer.BufferSubData(&sceneUniformBufferData, sizeof(SceneUniformBufferData), 0);
 
-        scene->m_SceneData.ActiveSkybox.OnDraw(camera);
+        scene->m_SceneData.ActiveEnvironmentMap.ActiveSkybox->OnDraw(camera);
+        uint32_t skyboxTextureID = scene->m_SceneData.ActiveEnvironmentMap.ActiveSkybox->GetTextureID();
+
+        glActiveTexture(GL_TEXTURE0 + 2);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
+
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
@@ -93,12 +101,13 @@ namespace Flameberry {
 
         OpenGLShaderBinding lightBinding;
         binding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_LIGHTING;
-        binding.blockName = "Lighting";
+        binding.blockName = "SceneData";
 
         m_MeshShader.reset(new OpenGLShader(FL_PROJECT_DIR"Flameberry/assets/shaders/Default.glsl", { binding, lightBinding }));
         m_MeshShader->Bind();
         m_MeshShader->PushUniformInt("u_TextureMapSampler", 0);
         m_MeshShader->PushUniformInt("u_ShadowMapSampler", 1);
+        m_MeshShader->PushUniformInt("u_EnvironmentMapSampler", 2);
         m_MeshShader->Unbind();
 
         FL_LOG("Reloaded Mesh Shader!");

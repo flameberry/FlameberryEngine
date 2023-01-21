@@ -159,6 +159,8 @@ namespace Flameberry {
             }
         }
         ImGui::End();
+
+        OnEnvironmentMapPanelRender();
     }
 
     void SceneHierarchyPanel::RenameNode(std::string& tag)
@@ -346,5 +348,21 @@ namespace Flameberry {
     {
         ImGui::ColorEdit3("Color", glm::value_ptr(light.Color));
         ImGui::DragFloat("Intensity", &light.Intensity, 0.1f);
+    }
+
+    void SceneHierarchyPanel::OnEnvironmentMapPanelRender()
+    {
+        ImGui::Begin("Environment");
+
+        auto& environment = m_ActiveScene->m_SceneData.ActiveEnvironmentMap;
+        ImGui::ColorEdit3("Clear Color", glm::value_ptr(environment.ClearColor));
+        ImGui::Checkbox("Environment Reflections", &environment.Reflections);
+
+        Utils::DrawVec3Control("Directional", environment.DirLight.Direction, 0.0f, 0.01f);
+        ImGui::Spacing();
+        ImGui::ColorEdit3("Color", glm::value_ptr(environment.DirLight.Color));
+        ImGui::DragFloat("Intensity", &environment.DirLight.Intensity, 0.01f);
+
+        ImGui::End();
     }
 }
