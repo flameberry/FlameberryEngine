@@ -29,10 +29,10 @@ namespace Flameberry {
             auto& ID = m_FramebufferAttachmentIDs[i];
 
             glGenTextures(1, &ID);
-            glBindTexture(GL_TEXTURE_2D, ID);
-            glTexImage2D(GL_TEXTURE_2D, 0, attachment.InternalFormat, m_FramebufferSpec.FramebufferSize.x, m_FramebufferSpec.FramebufferSize.y, 0, attachment.Format, attachment.Type, nullptr);
+            glBindTexture(attachment.Target, ID);
+            glTexImage2D(attachment.Target, 0, attachment.InternalFormat, m_FramebufferSpec.FramebufferSize.x, m_FramebufferSpec.FramebufferSize.y, 0, attachment.Format, attachment.Type, nullptr);
             attachment.SetupTextureProperties();
-            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment.Attachment, GL_TEXTURE_2D, ID, 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment.Attachment, attachment.Target, ID, 0);
 
             if (attachment.IsColorAttachment)
                 attachmentNames.emplace_back(attachment.Attachment);
