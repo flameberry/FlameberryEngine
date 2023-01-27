@@ -81,7 +81,7 @@ namespace Flameberry {
         }
 
         m_SceneUniformBuffer.Unbind();
-        m_MeshCameraUniformBuffer.Unbind();
+        // m_MeshCameraUniformBuffer.Unbind();
     }
 
     void SceneRenderer::RenderSceneForShadowMapping(const std::shared_ptr<Scene>& scene, const std::shared_ptr<OpenGLShader>& shader)

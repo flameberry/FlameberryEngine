@@ -13,8 +13,7 @@
 namespace Flameberry {
     EditorLayer::EditorLayer()
         : m_ViewportSize(1280, 720),
-        m_ShadowMapUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW),
-        m_MousePickingUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW)
+        m_ShadowMapUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW)
     {
     }
 
@@ -107,11 +106,9 @@ namespace Flameberry {
 
         OpenGLShaderBinding cameraBinding;
         cameraBinding.blockName = "Camera";
-        cameraBinding.blockBindingIndex = 3;
+        cameraBinding.blockBindingIndex = 0;
 
         m_MousePickingShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/mouse_picking.glsl", { cameraBinding });
-
-        m_MousePickingUniformBuffer.BindBufferBase(cameraBinding.blockBindingIndex);
 
         OpenGLFramebufferAttachment shadowMapFramebufferDepthAttachment{};
         shadowMapFramebufferDepthAttachment.InternalFormat = GL_DEPTH_COMPONENT;
@@ -136,11 +133,10 @@ namespace Flameberry {
         m_ShadowMapFramebuffer = OpenGLFramebuffer::Create(shadowMapFramebufferSpec);
 
         OpenGLShaderBinding binding{};
-        binding.blockBindingIndex = 4;
+        binding.blockBindingIndex = 3;
         binding.blockName = "Camera";
 
         m_ShadowMapShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/shadow_map.glsl", { binding });
-
         m_ShadowMapUniformBuffer.BindBufferBase(binding.blockBindingIndex);
 
         PerspectiveCameraInfo cameraInfo{};
@@ -325,12 +321,7 @@ namespace Flameberry {
             int clearValue = -1;
             glClearBufferiv(GL_COLOR, 0, &clearValue);
 
-            m_MousePickingUniformBuffer.Bind();
-            m_MousePickingUniformBuffer.BufferSubData(glm::value_ptr(m_EditorCamera.GetViewProjectionMatrix()), sizeof(glm::mat4), 0);
-
             m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingShader);
-
-            m_MousePickingUniformBuffer.Unbind();
 
             bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive;
             // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);

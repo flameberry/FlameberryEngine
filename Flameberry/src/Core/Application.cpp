@@ -55,7 +55,6 @@ namespace Flameberry {
 
     void Application::OnKeyPressedEvent(KeyPressedEvent& e)
     {
-        FL_LOG(e.ToString());
     }
 
     Application::~Application()

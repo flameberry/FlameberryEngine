@@ -33,7 +33,6 @@ namespace Flameberry {
         bool m_IsCameraMoving = false;
 
         std::shared_ptr<OpenGLShader> m_MousePickingShader;
-        OpenGLBuffer m_MousePickingUniformBuffer;
 
         Mesh m_TempMesh, m_SponzaMesh, m_FloorMesh;
         std::shared_ptr<OpenGLTexture> m_BrickTexture;
