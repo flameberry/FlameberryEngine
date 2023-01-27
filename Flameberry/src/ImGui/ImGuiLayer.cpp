@@ -22,7 +22,8 @@ namespace Flameberry {
         //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
 
         float fontSize = 16.0f;// *2.0f;
-        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Bold.ttf", fontSize);
+        // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Bold.ttf", fontSize);
+        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 18.0f);
         // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Regular.ttf", fontSize);
         // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/HelveticaNeue.ttc", 14);
         io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 13);
@@ -99,6 +100,8 @@ namespace Flameberry {
     void ImGuiLayer::SetupImGuiStyle()
     {
         auto& style = ImGui::GetStyle();
+        style.FrameRounding = 2.0f;
+
         auto& colors = style.Colors;
         colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
 

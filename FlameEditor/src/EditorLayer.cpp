@@ -403,19 +403,19 @@ namespace Flameberry {
         switch (e.KeyCode)
         {
         case GLFW_KEY_Q:
-            if (!m_IsCameraMoving && !m_IsGizmoActive)
+            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
                 m_GizmoType = -1;
             break;
         case GLFW_KEY_W:
-            if (!m_IsCameraMoving && !m_IsGizmoActive)
+            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
                 m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
             break;
         case GLFW_KEY_E:
-            if (!m_IsCameraMoving && !m_IsGizmoActive)
+            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
                 m_GizmoType = ImGuizmo::OPERATION::ROTATE;
             break;
         case GLFW_KEY_R:
-            if (!m_IsCameraMoving && !m_IsGizmoActive)
+            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
                 m_GizmoType = ImGuizmo::OPERATION::SCALE;
             break;
         }

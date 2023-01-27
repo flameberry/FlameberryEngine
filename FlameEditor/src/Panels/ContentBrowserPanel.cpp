@@ -28,11 +28,14 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_BackArrowIconTextureId), ImVec2{ 15, 15 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_BackArrowIconTextureId), ImVec2{ 13, 13 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
 
+        auto bigFont = ImGui::GetIO().Fonts->Fonts[0];
+        ImGui::PushFont(bigFont);
         ImGui::Text("root://%s", std::filesystem::relative(m_CurrentDirectory, project::g_AssetDirectory).c_str());
+        ImGui::PopFont();
 
         ImGui::Separator();
 
@@ -82,7 +85,7 @@ namespace Flameberry {
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && directory.is_directory())
                 m_CurrentDirectory /= directory.path().filename().c_str();
 
-            // auto windowWidth = ImGui::GetColumnWidth();
+            // auto columnWidth = ImGui::GetColumnWidth();
             // auto textWidth = ImGui::CalcTextSize(directory.path().filename().c_str()).x;
 
             // ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (windowWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);

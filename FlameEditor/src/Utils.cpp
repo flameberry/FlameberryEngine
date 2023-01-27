@@ -11,7 +11,7 @@ void Utils::DrawVec3Control(const std::string& label, glm::vec3& value, float de
     ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
 
     ImGuiIO& io = ImGui::GetIO();
-    auto boldFont = io.Fonts->Fonts[0];
+    // auto boldFont = io.Fonts->Fonts[0];
 
     ImGui::PushID(label.c_str());
 
