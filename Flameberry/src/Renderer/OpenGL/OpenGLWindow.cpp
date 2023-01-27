@@ -1,7 +1,9 @@
 #include "OpenGLWindow.h"
 
-#include "Core/Core.h"
 #include <glad/glad.h>
+
+#include "Core/Core.h"
+#include "Core/Event.h"
 
 namespace Flameberry {
     std::shared_ptr<Window> Window::Create(int width, int height, const char* title)
@@ -45,5 +47,22 @@ namespace Flameberry {
     {
         glfwSwapBuffers(m_Window);
         glfwPollEvents();
+    }
+
+    void OpenGLWindow::SetEventCallBack(const std::function<void(Event&)>& fn)
+    {
+        m_EventCallBack = fn;
+        glfwSetWindowUserPointer(m_Window, this);
+
+        glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+            {
+                OpenGLWindow* ptr = (OpenGLWindow*)glfwGetWindowUserPointer(window);
+                if (action == GLFW_PRESS)
+                {
+                    KeyPressedEvent event(key);
+                    ptr->m_EventCallBack(event);
+                }
+            }
+        );
     }
 }

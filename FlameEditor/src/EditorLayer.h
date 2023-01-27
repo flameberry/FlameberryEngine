@@ -4,16 +4,22 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 
-#include "Renderer/Light.h"
-
 namespace Flameberry {
-    class FlameEditorApp: public Application
+    class EditorLayer: public Layer
     {
     public:
-        FlameEditorApp();
-        virtual ~FlameEditorApp();
+        EditorLayer();
+        ~EditorLayer();
+
+        void OnCreate() override;
         void OnUpdate(float delta) override;
         void OnUIRender() override;
+        void OnEvent(Event& e) override;
+        void OnDestroy() override;
+
+        void OnKeyPressedEvent(KeyPressedEvent& e);
+        void OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
+
         void SaveScene();
         void OpenScene();
         void SaveScene(const std::string& path);
@@ -23,6 +29,9 @@ namespace Flameberry {
         glm::vec2 m_ViewportSize;
         PerspectiveCamera m_EditorCamera;
         glm::vec2 m_ViewportBounds[2];
+        bool m_IsViewportFocused = false;
+
+        bool m_IsCameraMoving = false;
 
         Mesh m_TempMesh, m_SponzaMesh, m_FloorMesh;
         std::shared_ptr<OpenGLTexture> m_BrickTexture;

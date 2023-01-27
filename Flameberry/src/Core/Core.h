@@ -11,6 +11,8 @@
 #define FL_DEBUGBREAK()
 #endif
 
+#define FL_BIND_EVENT_FN(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
+
 #ifdef FL_USE_OPENGL_API
 #define FL_GET_API_SPECIFIC_CLASS(className) OpenGL##className
 #elif defined FL_USE_VULKAN_API

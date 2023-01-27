@@ -16,12 +16,12 @@ namespace Flameberry {
         bool IsRunning() override { return !glfwWindowShouldClose(m_Window); }
         void OnUpdate() override;
 
-        void SetKeyCallBack(GLFWkeyfun keyFn) override { m_KeyCallBackFunction = keyFn; }
+        void SetEventCallBack(const std::function<void(Event&)>& fn) override;
     private:
         GLFWwindow* m_Window;
         uint32_t m_Width, m_Height;
         const char* m_Title;
 
-        GLFWkeyfun m_KeyCallBackFunction;
+        std::function<void(Event&)> m_EventCallBack;
     };
 }

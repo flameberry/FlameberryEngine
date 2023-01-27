@@ -8,7 +8,7 @@
 #include "Core/Timer.h"
 
 namespace Flameberry {
-    void ImGuiLayer::OnAttach()
+    void ImGuiLayer::OnCreate()
     {
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -48,7 +48,7 @@ namespace Flameberry {
         ImGui_ImplOpenGL3_Init("#version 410");
     }
 
-    void ImGuiLayer::OnDetach()
+    void ImGuiLayer::OnDestroy()
     {
         // Saving ImGui Layout
         ImGui::SaveIniSettingsToDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
@@ -83,6 +83,16 @@ namespace Flameberry {
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
             glfwMakeContextCurrent(backup_current_context);
+        }
+    }
+
+    void ImGuiLayer::OnEvent(Event& e)
+    {
+        if (!e.Handled)
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            e.Handled |= io.WantCaptureMouse;
+            e.Handled |= io.WantCaptureKeyboard;
         }
     }
 

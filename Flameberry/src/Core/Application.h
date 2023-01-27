@@ -3,6 +3,8 @@
 #include <memory>
 
 #include "Window.h"
+#include "Layer.h"
+#include "ImGui/ImGuiLayer.h"
 
 namespace Flameberry {
     class Application
@@ -16,12 +18,19 @@ namespace Flameberry {
         static Application& Get() { return *s_Instance; }
         static std::shared_ptr<Application> CreateClientApp();
 
-        virtual void OnUpdate(float delta) = 0;
-        virtual void OnUIRender() = 0;
+        void OnEvent(Event& e);
 
-        // virtual void OnKeyPress(uint32_t key);
+        void OnKeyPressedEvent(KeyPressedEvent& e);
+
+        template<typename T> void PushLayer() {
+            auto& layer = m_LayerStack.emplace_back(std::make_shared<T>());
+            layer->OnCreate();
+        }
+        inline void PopLayer() { m_LayerStack.pop_back(); }
     private:
         std::shared_ptr<Window> m_Window;
+        std::vector<std::shared_ptr<Layer>> m_LayerStack;
+        ImGuiLayer m_ImGuiLayer;
     private:
         static Application* s_Instance;
     };

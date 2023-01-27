@@ -3,8 +3,6 @@
 #include "Timer.h"
 #include "Core.h"
 
-#include "ImGui/ImGuiLayer.h"
-
 namespace Flameberry {
     Application* Application::s_Instance;
 
@@ -12,7 +10,8 @@ namespace Flameberry {
     {
         s_Instance = this;
         m_Window = Window::Create();
-        ImGuiLayer::OnAttach();
+        m_Window->SetEventCallBack(FL_BIND_EVENT_FN(Application::OnEvent));
+        m_ImGuiLayer.OnCreate();
     }
 
     void Application::Run()
@@ -24,24 +23,47 @@ namespace Flameberry {
             float delta = now - last;
             last = now;
 
-            this->OnUpdate(delta);
+            for (auto& layer : m_LayerStack)
+                layer->OnUpdate(delta);
 
-            ImGuiLayer::Begin();
-            this->OnUIRender();
-            ImGuiLayer::End();
+            m_ImGuiLayer.Begin();
+            for (auto& layer : m_LayerStack)
+                layer->OnUIRender();
+            m_ImGuiLayer.End();
 
             m_Window->OnUpdate();
         }
     }
 
-    // void Application::OnKeyPress(uint32_t key)
-    // {
-    //     m_Window->SetKeyCallBack([](GLFWwindow* window, int key, int scancode, int action, int mods) {});
-    // }
+    void Application::OnEvent(Event& e)
+    {
+        switch (e.GetType()) {
+        case EventType::KEY_PRESSED:
+            this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
+            break;
+        }
+
+        m_ImGuiLayer.OnEvent(e);
+
+        for (auto& layer : m_LayerStack)
+        {
+            layer->OnEvent(e);
+            if (e.Handled)
+                break;
+        }
+    }
+
+    void Application::OnKeyPressedEvent(KeyPressedEvent& e)
+    {
+        FL_LOG(e.ToString());
+    }
 
     Application::~Application()
     {
-        ImGuiLayer::OnDetach();
+        for (auto& layer : m_LayerStack)
+            layer->OnDestroy();
+        m_ImGuiLayer.OnDestroy();
+
         glfwTerminate();
         FL_INFO("Ended Application!");
     }

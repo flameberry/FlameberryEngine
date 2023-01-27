@@ -1,16 +1,17 @@
 #pragma once
 
+#include "Core/Event.h"
+
 namespace Flameberry {
     class ImGuiLayer
     {
     public:
-        ImGuiLayer();
-        ~ImGuiLayer();
-        static void OnAttach();
-        static void OnDetach();
-        static void Begin();
-        static void End();
+        void OnCreate();
+        void OnDestroy();
+        void OnEvent(Event& e);
+        void Begin();
+        void End();
     private:
-        static void SetupImGuiStyle();
+        void SetupImGuiStyle();
     };
 }

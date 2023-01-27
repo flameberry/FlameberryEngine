@@ -1,7 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <functional>
 #include <GLFW/glfw3.h>
+
+#include "Event.h"
 
 namespace Flameberry {
     class Window
@@ -15,6 +18,7 @@ namespace Flameberry {
 
         virtual bool IsRunning() = 0;
         virtual void OnUpdate() = 0;
-        virtual void SetKeyCallBack(GLFWkeyfun keyFn) = 0;
+
+        virtual void SetEventCallBack(const std::function<void(Event&)>& fn) = 0;
     };
 }
