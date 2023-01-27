@@ -34,10 +34,13 @@ namespace Flameberry {
         void Invalidate();
         void SetFramebufferSize(float width, float height);
         const glm::vec2& GetFramebufferSize() { return m_FramebufferSpec.FramebufferSize; };
-        uint32_t GetColorAttachmentID() const { return m_FramebufferAttachmentIDs[0]; };
+        uint32_t GetColorAttachmentID(uint32_t index = 0) const { return m_FramebufferAttachmentIDs[index]; };
         uint32_t GetFramebufferID() const { return m_FramebufferID; }
         void Bind() const;
         void Unbind() const;
+
+        void SetRead();
+        void SetWrite();
 
         int ReadPixel(GLenum index, int x, int y);
     private:

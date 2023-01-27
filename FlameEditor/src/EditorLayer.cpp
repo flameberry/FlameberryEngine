@@ -263,20 +263,23 @@ namespace Flameberry {
             glCullFace(GL_BACK);
         }
 
+        // Framebuffer Resize
+        if (glm::vec2 framebufferSize = m_Framebuffer->GetFramebufferSize();
+            m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+            (framebufferSize.x != m_ViewportSize.x || framebufferSize.y != m_ViewportSize.y))
+        {
+            m_Framebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_Framebuffer->Invalidate();
+
+            m_IntermediateFramebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_IntermediateFramebuffer->Invalidate();
+
+            m_MousePickingFramebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_MousePickingFramebuffer->Invalidate();
+        }
+
         {
             FL_PROFILE_SCOPE("Render Pass");
-            // Framebuffer Resize
-            if (glm::vec2 framebufferSize = m_Framebuffer->GetFramebufferSize();
-                m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
-                (framebufferSize.x != m_ViewportSize.x || framebufferSize.y != m_ViewportSize.y))
-            {
-                m_Framebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-                m_Framebuffer->Invalidate();
-
-                m_IntermediateFramebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-                m_IntermediateFramebuffer->Invalidate();
-            }
-
             m_Framebuffer->Bind();
             OpenGLRenderCommand::SetViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
 
@@ -297,8 +300,8 @@ namespace Flameberry {
             m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera, lightViewProjectionMatrix);
 
             // Copy
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, m_Framebuffer->GetFramebufferID());
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_IntermediateFramebuffer->GetFramebufferID());
+            m_Framebuffer->SetRead();
+            m_IntermediateFramebuffer->SetWrite();
             glBlitFramebuffer(0, 0, m_ViewportSize.x, m_ViewportSize.y, 0, 0, m_ViewportSize.x, m_ViewportSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
             m_Framebuffer->Unbind();
@@ -306,16 +309,8 @@ namespace Flameberry {
 
         {
             FL_PROFILE_SCOPE("Mouse Picking Pass");
-            if (glm::vec2 framebufferSize = m_MousePickingFramebuffer->GetFramebufferSize();
-                m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
-                (framebufferSize.x != m_ViewportSize.x || framebufferSize.y != m_ViewportSize.y))
-            {
-                m_MousePickingFramebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-                m_MousePickingFramebuffer->Invalidate();
-            }
 
             m_MousePickingFramebuffer->Bind();
-
             glClear(GL_DEPTH_BUFFER_BIT);
 
             int clearValue = -1;

@@ -41,6 +41,8 @@ namespace Flameberry {
         case EventType::KEY_PRESSED:
             this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
             break;
+        case EventType::NONE:
+            break;
         }
 
         m_ImGuiLayer.OnEvent(e);

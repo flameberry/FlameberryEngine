@@ -81,6 +81,16 @@ namespace Flameberry {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
+    void OpenGLFramebuffer::SetRead()
+    {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FramebufferID);
+    }
+
+    void OpenGLFramebuffer::SetWrite()
+    {
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FramebufferID);
+    }
+
     OpenGLFramebuffer::~OpenGLFramebuffer()
     {
         glDeleteTextures((uint32_t)m_FramebufferAttachmentIDs.size(), m_FramebufferAttachmentIDs.data());
