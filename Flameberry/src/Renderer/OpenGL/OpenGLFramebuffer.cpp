@@ -28,11 +28,23 @@ namespace Flameberry {
             auto& attachment = m_FramebufferSpec.Attachments[i];
             auto& ID = m_FramebufferAttachmentIDs[i];
 
-            glGenTextures(1, &ID);
-            glBindTexture(attachment.Target, ID);
-            glTexImage2D(attachment.Target, 0, attachment.InternalFormat, m_FramebufferSpec.FramebufferSize.x, m_FramebufferSpec.FramebufferSize.y, 0, attachment.Format, attachment.Type, nullptr);
-            attachment.SetupTextureProperties();
-            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment.Attachment, attachment.Target, ID, 0);
+            if (attachment.Target == GL_TEXTURE_2D)
+            {
+                glGenTextures(1, &ID);
+                glBindTexture(attachment.Target, ID);
+                glTexImage2D(attachment.Target, 0, attachment.InternalFormat, m_FramebufferSpec.FramebufferSize.x, m_FramebufferSpec.FramebufferSize.y, 0, attachment.Format, attachment.Type, nullptr);
+                attachment.SetupTextureProperties();
+                glFramebufferTexture2D(GL_FRAMEBUFFER, attachment.Attachment, attachment.Target, ID, 0);
+            }
+            else if (attachment.Target == GL_TEXTURE_2D_MULTISAMPLE)
+            {
+                int samples = 4;
+                glGenTextures(1, &ID);
+                glBindTexture(attachment.Target, ID);
+                glTexImage2DMultisample(attachment.Target, samples, attachment.InternalFormat, m_FramebufferSpec.FramebufferSize.x, m_FramebufferSpec.FramebufferSize.y, GL_TRUE);
+                attachment.SetupTextureProperties();
+                glFramebufferTexture2D(GL_FRAMEBUFFER, attachment.Attachment, attachment.Target, ID, 0);
+            }
 
             if (attachment.IsColorAttachment)
                 attachmentNames.emplace_back(attachment.Attachment);
@@ -54,12 +66,6 @@ namespace Flameberry {
     void OpenGLFramebuffer::Bind() const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferID);
-    }
-
-    void OpenGLFramebuffer::ClearEntityIDAttachment()
-    {
-        int clearValue = -1;
-        glClearBufferiv(GL_COLOR, 1, &clearValue);
     }
 
     int OpenGLFramebuffer::ReadPixel(GLenum index, int x, int y)

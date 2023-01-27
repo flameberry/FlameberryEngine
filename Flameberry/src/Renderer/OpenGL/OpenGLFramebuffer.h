@@ -35,10 +35,10 @@ namespace Flameberry {
         void SetFramebufferSize(float width, float height);
         const glm::vec2& GetFramebufferSize() { return m_FramebufferSpec.FramebufferSize; };
         uint32_t GetColorAttachmentID() const { return m_FramebufferAttachmentIDs[0]; };
+        uint32_t GetFramebufferID() const { return m_FramebufferID; }
         void Bind() const;
         void Unbind() const;
 
-        void ClearEntityIDAttachment();
         int ReadPixel(GLenum index, int x, int y);
     private:
         OpenGLFramebufferSpecification m_FramebufferSpec;

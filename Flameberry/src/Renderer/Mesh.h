@@ -19,8 +19,9 @@ namespace Flameberry {
         Mesh();
         Mesh(const std::vector<OpenGLVertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = "default_mesh_name");
         ~Mesh();
-        void Draw(const std::shared_ptr<OpenGLShader>& shader, const TransformComponent& transform, const Material& material, int entityID = -1);
+        void Draw(const std::shared_ptr<OpenGLShader>& shader, const TransformComponent& transform, const Material& material);
         void DrawForShadowPass(const std::shared_ptr<OpenGLShader>& shader, const TransformComponent& transform);
+        void DrawForMousePicking(const std::shared_ptr<OpenGLShader>& shader, const TransformComponent& transform, int entityID = -1);
         void Invalidate();
     public:
         std::vector<OpenGLVertex> Vertices;

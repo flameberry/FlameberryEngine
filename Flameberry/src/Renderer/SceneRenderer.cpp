@@ -75,9 +75,9 @@ namespace Flameberry {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
             if (scene->m_SceneData.Materials.find(mesh.MaterialName) != scene->m_SceneData.Materials.end())
-                scene->m_SceneData.Meshes[mesh.MeshIndex].Draw(m_MeshShader, transform, scene->m_SceneData.Materials[mesh.MaterialName], (uint32_t)entity);
+                scene->m_SceneData.Meshes[mesh.MeshIndex].Draw(m_MeshShader, transform, scene->m_SceneData.Materials[mesh.MaterialName]);
             else
-                scene->m_SceneData.Meshes[mesh.MeshIndex].Draw(m_MeshShader, transform, Material(), (uint32_t)entity);
+                scene->m_SceneData.Meshes[mesh.MeshIndex].Draw(m_MeshShader, transform, Material());
         }
 
         m_SceneUniformBuffer.Unbind();
@@ -90,6 +90,15 @@ namespace Flameberry {
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
             scene->m_SceneData.Meshes[mesh.MeshIndex].DrawForShadowPass(shader, transform);
+        }
+    }
+
+    void SceneRenderer::RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<OpenGLShader>& shader)
+    {
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        {
+            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+            scene->m_SceneData.Meshes[mesh.MeshIndex].DrawForMousePicking(shader, transform, (uint32_t)entity);
         }
     }
 

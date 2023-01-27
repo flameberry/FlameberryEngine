@@ -25,13 +25,15 @@ namespace Flameberry {
         void SaveScene(const std::string& path);
         void OpenScene(const std::string& path);
     private:
-        std::shared_ptr<OpenGLFramebuffer> m_Framebuffer;
+        std::shared_ptr<OpenGLFramebuffer> m_Framebuffer, m_IntermediateFramebuffer, m_MousePickingFramebuffer;
         glm::vec2 m_ViewportSize;
         PerspectiveCamera m_EditorCamera;
         glm::vec2 m_ViewportBounds[2];
         bool m_IsViewportFocused = false;
-
         bool m_IsCameraMoving = false;
+
+        std::shared_ptr<OpenGLShader> m_MousePickingShader;
+        OpenGLBuffer m_MousePickingUniformBuffer;
 
         Mesh m_TempMesh, m_SponzaMesh, m_FloorMesh;
         std::shared_ptr<OpenGLTexture> m_BrickTexture;

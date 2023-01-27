@@ -13,7 +13,8 @@
 namespace Flameberry {
     EditorLayer::EditorLayer()
         : m_ViewportSize(1280, 720),
-        m_ShadowMapUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW)
+        m_ShadowMapUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW),
+        m_MousePickingUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW)
     {
     }
 
@@ -26,45 +27,91 @@ namespace Flameberry {
         OpenGLRenderCommand::EnableBlend();
         OpenGLRenderCommand::EnableDepthTest();
 
+        OpenGLFramebufferSpecification intermediateFramebufferSpec{};
+        intermediateFramebufferSpec.FramebufferSize = m_ViewportSize;
+
+        OpenGLFramebufferAttachment colAttach{};
+        colAttach.Target = GL_TEXTURE_2D;
+        colAttach.InternalFormat = GL_RGBA8;
+        colAttach.Format = GL_RGBA;
+        colAttach.Type = GL_UNSIGNED_BYTE;
+        colAttach.Attachment = GL_COLOR_ATTACHMENT0;
+        colAttach.IsColorAttachment = true;
+        colAttach.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        };
+
+        intermediateFramebufferSpec.Attachments = { colAttach };
+
+        m_IntermediateFramebuffer = OpenGLFramebuffer::Create(intermediateFramebufferSpec);
+
         OpenGLFramebufferSpecification framebufferSpec{};
         framebufferSpec.FramebufferSize = m_ViewportSize;
 
         OpenGLFramebufferAttachment colorAttachment{};
+        colorAttachment.Target = GL_TEXTURE_2D_MULTISAMPLE;
         colorAttachment.InternalFormat = GL_RGBA8;
         colorAttachment.Format = GL_RGBA;
         colorAttachment.Type = GL_UNSIGNED_BYTE;
         colorAttachment.Attachment = GL_COLOR_ATTACHMENT0;
         colorAttachment.IsColorAttachment = true;
         colorAttachment.SetupTextureProperties = []() {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         };
 
         OpenGLFramebufferAttachment depthAttachment{};
+        depthAttachment.Target = GL_TEXTURE_2D_MULTISAMPLE;
         depthAttachment.InternalFormat = GL_DEPTH24_STENCIL8;
         depthAttachment.Format = GL_DEPTH_STENCIL;
         depthAttachment.Type = GL_UNSIGNED_INT_24_8;
         depthAttachment.Attachment = GL_DEPTH_STENCIL_ATTACHMENT;
         depthAttachment.IsColorAttachment = false;
         depthAttachment.SetupTextureProperties = []() {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         };
+
+        framebufferSpec.Attachments = { colorAttachment, depthAttachment };
+
+        m_Framebuffer = OpenGLFramebuffer::Create(framebufferSpec);
 
         OpenGLFramebufferAttachment mousePickingAttachment{};
         mousePickingAttachment.InternalFormat = GL_R32I;
         mousePickingAttachment.Format = GL_RED_INTEGER;
         mousePickingAttachment.Type = GL_UNSIGNED_BYTE;
-        mousePickingAttachment.Attachment = GL_COLOR_ATTACHMENT1;
+        mousePickingAttachment.Attachment = GL_COLOR_ATTACHMENT0;
         mousePickingAttachment.IsColorAttachment = true;
         mousePickingAttachment.SetupTextureProperties = []() {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         };
 
-        framebufferSpec.Attachments = { colorAttachment, depthAttachment, mousePickingAttachment };
+        OpenGLFramebufferAttachment mousePickingDepthAttachment{};
+        mousePickingDepthAttachment.InternalFormat = GL_DEPTH_COMPONENT;
+        mousePickingDepthAttachment.Format = GL_DEPTH_COMPONENT;
+        mousePickingDepthAttachment.Type = GL_FLOAT;
+        mousePickingDepthAttachment.Attachment = GL_DEPTH_ATTACHMENT;
+        mousePickingDepthAttachment.IsColorAttachment = false;
+        mousePickingDepthAttachment.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        };
 
-        m_Framebuffer = OpenGLFramebuffer::Create(framebufferSpec);
+        OpenGLFramebufferSpecification mousePickingFramebufferSpec{};
+        mousePickingFramebufferSpec.FramebufferSize = m_ViewportSize;
+        mousePickingFramebufferSpec.Attachments = { mousePickingAttachment, mousePickingDepthAttachment };
+
+        m_MousePickingFramebuffer = OpenGLFramebuffer::Create(mousePickingFramebufferSpec);
+
+        OpenGLShaderBinding cameraBinding;
+        cameraBinding.blockName = "Camera";
+        cameraBinding.blockBindingIndex = 3;
+
+        m_MousePickingShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/mouse_picking.glsl", { cameraBinding });
+
+        m_MousePickingUniformBuffer.BindBufferBase(cameraBinding.blockBindingIndex);
 
         OpenGLFramebufferAttachment shadowMapFramebufferDepthAttachment{};
         shadowMapFramebufferDepthAttachment.InternalFormat = GL_DEPTH_COMPONENT;
@@ -89,7 +136,7 @@ namespace Flameberry {
         m_ShadowMapFramebuffer = OpenGLFramebuffer::Create(shadowMapFramebufferSpec);
 
         OpenGLShaderBinding binding{};
-        binding.blockBindingIndex = 3;
+        binding.blockBindingIndex = 4;
         binding.blockName = "Camera";
 
         m_ShadowMapShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/shadow_map.glsl", { binding });
@@ -229,6 +276,9 @@ namespace Flameberry {
             {
                 m_Framebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
                 m_Framebuffer->Invalidate();
+
+                m_IntermediateFramebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+                m_IntermediateFramebuffer->Invalidate();
             }
 
             m_Framebuffer->Bind();
@@ -241,8 +291,6 @@ namespace Flameberry {
             // glm::vec3 clearColor(0.0f);
             glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
 
-            m_Framebuffer->ClearEntityIDAttachment();
-
             m_EditorCamera.OnResize(m_ViewportSize.x / m_ViewportSize.y);
 
             if (m_IsViewportFocused)
@@ -251,6 +299,38 @@ namespace Flameberry {
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, m_ShadowMapFramebuffer->GetColorAttachmentID());
             m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera, lightViewProjectionMatrix);
+
+            // Copy
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, m_Framebuffer->GetFramebufferID());
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_IntermediateFramebuffer->GetFramebufferID());
+            glBlitFramebuffer(0, 0, m_ViewportSize.x, m_ViewportSize.y, 0, 0, m_ViewportSize.x, m_ViewportSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+            m_Framebuffer->Unbind();
+        }
+
+        {
+            FL_PROFILE_SCOPE("Mouse Picking Pass");
+            if (glm::vec2 framebufferSize = m_MousePickingFramebuffer->GetFramebufferSize();
+                m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+                (framebufferSize.x != m_ViewportSize.x || framebufferSize.y != m_ViewportSize.y))
+            {
+                m_MousePickingFramebuffer->SetFramebufferSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+                m_MousePickingFramebuffer->Invalidate();
+            }
+
+            m_MousePickingFramebuffer->Bind();
+
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            int clearValue = -1;
+            glClearBufferiv(GL_COLOR, 0, &clearValue);
+
+            m_MousePickingUniformBuffer.Bind();
+            m_MousePickingUniformBuffer.BufferSubData(glm::value_ptr(m_EditorCamera.GetViewProjectionMatrix()), sizeof(glm::mat4), 0);
+
+            m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingShader);
+
+            m_MousePickingUniformBuffer.Unbind();
 
             bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive;
             // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
@@ -266,11 +346,12 @@ namespace Flameberry {
 
                 if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
                 {
-                    int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT1, mouseX, mouseY);
+                    int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT0, mouseX, mouseY);
+                    FL_LOG(entityID);
                     m_SceneHierarchyPanel.SetSelectedEntity((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
                 }
             }
-            m_Framebuffer->Unbind();
+            m_MousePickingFramebuffer->Unbind();
         }
     }
 
@@ -304,8 +385,9 @@ namespace Flameberry {
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-        uint64_t textureID = m_Framebuffer->GetColorAttachmentID();
+        // uint64_t textureID = m_Framebuffer->GetColorAttachmentID();
         // uint64_t textureID = m_ShadowMapFramebuffer->GetColorAttachmentID();
+        uint64_t textureID = m_IntermediateFramebuffer->GetColorAttachmentID();
         ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
         // ImGuizmo
@@ -394,6 +476,8 @@ namespace Flameberry {
             break;
         case EventType::KEY_PRESSED:
             this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
+            break;
+        case EventType::NONE:
             break;
         }
     }

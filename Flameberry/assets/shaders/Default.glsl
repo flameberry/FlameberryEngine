@@ -5,13 +5,11 @@ layout (location = 0) in vec3 a_Position;
 layout (location = 1) in vec4 a_Color;
 layout (location = 2) in vec3 a_Normal;
 layout (location = 3) in vec2 a_TextureUV;
-layout (location = 4) in int a_EntityID;
 
 layout (location = 0) out vec3 v_Position;
 layout (location = 1) out vec4 v_Color;
 layout (location = 2) out vec3 v_Normal;
 layout (location = 3) out vec2 v_TextureUV;
-layout (location = 4) flat out int v_EntityID;
 layout (location = 5) out vec4 v_LightFragmentPosition;
 
 uniform mat4 u_ModelMatrix;
@@ -34,7 +32,6 @@ void main()
     v_Color = a_Color;
     v_Normal = a_Normal;
     v_TextureUV = a_TextureUV;
-    v_EntityID = a_EntityID;
 
     v_Position = vec3(u_ModelMatrix * vec4(a_Position, 1.0));
 
@@ -55,7 +52,6 @@ layout (location = 4) flat in int v_EntityID;
 layout (location = 5) in vec4 v_LightFragmentPosition;
 
 layout (location = 0) out vec4 FragColor;
-layout (location = 1) out int o_EntityID;
 
 struct DirectionalLight
 {
@@ -289,6 +285,5 @@ vec4 CalculatePBRLighting()
 
 void main()
 {
-    o_EntityID = v_EntityID;
     FragColor = CalculatePBRLighting();
 }

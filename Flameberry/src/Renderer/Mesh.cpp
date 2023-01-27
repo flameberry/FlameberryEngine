@@ -59,22 +59,11 @@ namespace Flameberry {
     void Mesh::Draw(
         const std::shared_ptr<OpenGLShader>& shader,
         const TransformComponent& transform,
-        const Material& material,
-        int entityID
+        const Material& material
     )
     {
         if (!Vertices.size())
             return;
-        if (m_EntityID != entityID)
-        {
-            m_EntityID = entityID;
-            for (auto& vertex : Vertices)
-                vertex.entityID = m_EntityID;
-
-            glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
-        }
-
 
         if (material.TextureMapEnabled && material.TextureMap)
             material.TextureMap->BindTextureUnit(0);
@@ -94,6 +83,32 @@ namespace Flameberry {
     {
         if (!Vertices.size())
             return;
+
+        shader->Bind();
+        shader->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(transform.GetTransform()));
+
+        glBindVertexArray(m_VertexArrayID);
+        glDrawElements(GL_TRIANGLES, (int)Indices.size(), GL_UNSIGNED_INT, 0);
+    }
+
+    void Mesh::DrawForMousePicking(
+        const std::shared_ptr<OpenGLShader>& shader,
+        const TransformComponent& transform,
+        int entityID
+    )
+    {
+        if (!Vertices.size())
+            return;
+
+        if (m_EntityID != entityID)
+        {
+            m_EntityID = entityID;
+            for (auto& vertex : Vertices)
+                vertex.entityID = m_EntityID;
+
+            glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
+        }
 
         shader->Bind();
         shader->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(transform.GetTransform()));
