@@ -235,9 +235,9 @@ namespace Flameberry {
         FL_PROFILE_SCOPE("Last Frame Render");
 
         glm::mat4 lightViewProjectionMatrix(1.0f);
+
         {
             FL_PROFILE_SCOPE("Shadow Pass");
-            // Shadow Pass
             glCullFace(GL_FRONT);
             m_ShadowMapFramebuffer->Bind();
             OpenGLRenderCommand::SetViewport(0, 0, SHADOW_MAP_DIM, SHADOW_MAP_DIM);
@@ -333,7 +333,6 @@ namespace Flameberry {
                 if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
                 {
                     int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT0, mouseX, mouseY);
-                    FL_LOG(entityID);
                     m_SceneHierarchyPanel.SetSelectedEntity((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
                 }
             }
@@ -371,8 +370,6 @@ namespace Flameberry {
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-        // uint64_t textureID = m_Framebuffer->GetColorAttachmentID();
-        // uint64_t textureID = m_ShadowMapFramebuffer->GetColorAttachmentID();
         uint64_t textureID = m_IntermediateFramebuffer->GetColorAttachmentID();
         ImGui::Image(reinterpret_cast<ImTextureID>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
@@ -470,8 +467,18 @@ namespace Flameberry {
 
     void EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
     {
+        bool ctrl_or_cmd = Input::IsKey(GLFW_KEY_LEFT_SUPER, GLFW_PRESS);
+        bool shift = Input::IsKey(GLFW_KEY_LEFT_SHIFT, GLFW_PRESS) || Input::IsKey(GLFW_KEY_RIGHT_SHIFT, GLFW_PRESS);
         switch (e.KeyCode)
         {
+        case GLFW_KEY_O:
+            if (ctrl_or_cmd)
+                OpenScene();
+            break;
+        case GLFW_KEY_S:
+            if (ctrl_or_cmd && shift)
+                SaveScene();
+            break;
         case GLFW_KEY_Q:
             if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
                 m_GizmoType = -1;
