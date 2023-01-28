@@ -36,42 +36,44 @@ namespace Flameberry {
         value.SetArray();
         document.AddMember("Entities", value, allocator);
 
-        m_ActiveScene->m_Registry->each([&](ecs::entity_handle& entity) {
-            entityJSONObject.SetObject();
-            entityJSONObject.AddMember("UUID", m_ActiveScene->m_Registry->get<IDComponent>(entity).ID, allocator);
-
-            // Tag Component
-            auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
-            value.SetString(tag.c_str(), tag.length());
-            entityJSONObject.AddMember("TagComponent", value, allocator);
-
-            // Transform Component
-            auto transformComponent = m_ActiveScene->m_Registry->get<TransformComponent>(entity);
-            value.SetArray();
-            value.PushBack(transformComponent.translation.x, allocator);
-            value.PushBack(transformComponent.translation.y, allocator);
-            value.PushBack(transformComponent.translation.z, allocator);
-            value.PushBack(transformComponent.rotation.x, allocator);
-            value.PushBack(transformComponent.rotation.y, allocator);
-            value.PushBack(transformComponent.rotation.z, allocator);
-            value.PushBack(transformComponent.scale.x, allocator);
-            value.PushBack(transformComponent.scale.y, allocator);
-            value.PushBack(transformComponent.scale.z, allocator);
-            entityJSONObject.AddMember("TransformComponent", value, allocator);
-
-            // Mesh Component
-            if (m_ActiveScene->m_Registry->has<MeshComponent>(entity))
+        m_ActiveScene->m_Registry->each([&](ecs::entity_handle& entity)
             {
-                auto meshComponent = m_ActiveScene->m_Registry->get<MeshComponent>(entity);
-                value.SetObject();
-                entityJSONObject.AddMember("MeshComponent", value, allocator);
-                entityJSONObject["MeshComponent"].AddMember("MeshIndex", meshComponent.MeshIndex, allocator);
+                entityJSONObject.SetObject();
+                entityJSONObject.AddMember("UUID", m_ActiveScene->m_Registry->get<IDComponent>(entity).ID, allocator);
 
-                value.SetString(meshComponent.MaterialName.c_str(), meshComponent.MaterialName.length());
-                entityJSONObject["MeshComponent"].AddMember("MaterialName", value, allocator);
+                // Tag Component
+                auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
+                value.SetString(tag.c_str(), tag.length());
+                entityJSONObject.AddMember("TagComponent", value, allocator);
+
+                // Transform Component
+                auto transformComponent = m_ActiveScene->m_Registry->get<TransformComponent>(entity);
+                value.SetArray();
+                value.PushBack(transformComponent.translation.x, allocator);
+                value.PushBack(transformComponent.translation.y, allocator);
+                value.PushBack(transformComponent.translation.z, allocator);
+                value.PushBack(transformComponent.rotation.x, allocator);
+                value.PushBack(transformComponent.rotation.y, allocator);
+                value.PushBack(transformComponent.rotation.z, allocator);
+                value.PushBack(transformComponent.scale.x, allocator);
+                value.PushBack(transformComponent.scale.y, allocator);
+                value.PushBack(transformComponent.scale.z, allocator);
+                entityJSONObject.AddMember("TransformComponent", value, allocator);
+
+                // Mesh Component
+                if (m_ActiveScene->m_Registry->has<MeshComponent>(entity))
+                {
+                    auto meshComponent = m_ActiveScene->m_Registry->get<MeshComponent>(entity);
+                    value.SetObject();
+                    entityJSONObject.AddMember("MeshComponent", value, allocator);
+                    entityJSONObject["MeshComponent"].AddMember("MeshIndex", meshComponent.MeshIndex, allocator);
+
+                    value.SetString(meshComponent.MaterialName.c_str(), meshComponent.MaterialName.length());
+                    entityJSONObject["MeshComponent"].AddMember("MaterialName", value, allocator);
+                }
+                document["Entities"].PushBack(entityJSONObject, allocator);
             }
-            document["Entities"].PushBack(entityJSONObject, allocator);
-            });
+        );
 
         value.SetArray();
         document.AddMember("Materials", value, allocator);

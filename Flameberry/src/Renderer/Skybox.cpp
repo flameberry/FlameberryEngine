@@ -90,6 +90,7 @@ namespace Flameberry {
     {
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
+        glDisable(GL_CULL_FACE);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, m_TextureID);
@@ -102,6 +103,7 @@ namespace Flameberry {
         glBindVertexArray(m_VertexArrayID);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
+        glEnable(GL_CULL_FACE);
         glDepthFunc(GL_LESS);
         glDepthMask(GL_TRUE);
     }

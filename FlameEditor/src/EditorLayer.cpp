@@ -25,6 +25,7 @@ namespace Flameberry {
     {
         OpenGLRenderCommand::EnableBlend();
         OpenGLRenderCommand::EnableDepthTest();
+        glEnable(GL_CULL_FACE);
 
         OpenGLFramebufferSpecification intermediateFramebufferSpec{};
         intermediateFramebufferSpec.FramebufferSize = m_ViewportSize;
@@ -235,7 +236,7 @@ namespace Flameberry {
 
         {
             FL_PROFILE_SCOPE("Shadow Pass");
-            glCullFace(GL_FRONT);
+            // glCullFace(GL_FRONT);
             m_ShadowMapFramebuffer->Bind();
             OpenGLRenderCommand::SetViewport(0, 0, SHADOW_MAP_DIM, SHADOW_MAP_DIM);
             glClear(GL_DEPTH_BUFFER_BIT);
@@ -257,7 +258,7 @@ namespace Flameberry {
 
             m_ShadowMapUniformBuffer.Unbind();
             m_ShadowMapFramebuffer->Unbind();
-            glCullFace(GL_BACK);
+            // glCullFace(GL_BACK);
         }
 
         // Framebuffer Resize
