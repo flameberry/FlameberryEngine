@@ -29,7 +29,7 @@ namespace Flameberry {
         binding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_LIGHTING;
         binding.blockName = "SceneData";
 
-        m_MeshShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/Default.glsl", { binding, lightBinding });
+        m_MeshShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/mesh.vert", FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/mesh.frag", { binding, lightBinding });
         m_MeshShader->Bind();
         m_MeshShader->PushUniformInt("u_TextureMapSampler", 0);
         m_MeshShader->PushUniformInt("u_ShadowMapSampler", 1);
@@ -112,7 +112,7 @@ namespace Flameberry {
         binding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_LIGHTING;
         binding.blockName = "SceneData";
 
-        m_MeshShader.reset(new OpenGLShader(FL_PROJECT_DIR"Flameberry/assets/shaders/Default.glsl", { binding, lightBinding }));
+        m_MeshShader.reset(new OpenGLShader(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/mesh.vert", FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/mesh.frag", { binding, lightBinding }));
         m_MeshShader->Bind();
         m_MeshShader->PushUniformInt("u_TextureMapSampler", 0);
         m_MeshShader->PushUniformInt("u_ShadowMapSampler", 1);

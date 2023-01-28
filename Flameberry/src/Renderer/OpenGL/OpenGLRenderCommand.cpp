@@ -88,7 +88,6 @@ namespace Flameberry {
         std::string line;
 
         uint32_t shader_type = 2;
-
         while (getline(stream, line))
         {
             if (line.find("#shader") != std::string::npos)
@@ -104,6 +103,28 @@ namespace Flameberry {
             }
         }
         stream.close();
+        return std::make_tuple(ss[0].str(), ss[1].str());
+    }
+
+    std::tuple<std::string, std::string> OpenGLRenderCommand::ReadShaderSource(const std::string& vertexPath, const std::string& fragmentPath)
+    {
+        std::stringstream ss[2];
+        std::string line;
+
+        std::ifstream stream(vertexPath);
+        FL_ASSERT(stream.is_open(), "The given shader file {0} cannot be opened", vertexPath);
+
+        while (getline(stream, line))
+            ss[0] << line << "\n";
+        stream.close();
+
+        std::ifstream fragmentStream(fragmentPath);
+        FL_ASSERT(fragmentStream.is_open(), "The given shader file {0} cannot be opened", vertexPath);
+
+        while (getline(fragmentStream, line))
+            ss[1] << line << "\n";
+        fragmentStream.close();
+
         return std::make_tuple(ss[0].str(), ss[1].str());
     }
 

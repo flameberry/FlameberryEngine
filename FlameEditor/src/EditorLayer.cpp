@@ -108,7 +108,7 @@ namespace Flameberry {
         cameraBinding.blockName = "Camera";
         cameraBinding.blockBindingIndex = 0;
 
-        m_MousePickingShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/mouse_picking.glsl", { cameraBinding });
+        m_MousePickingShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/mouse_picking.glsl", { cameraBinding });
 
         OpenGLFramebufferAttachment shadowMapFramebufferDepthAttachment{};
         shadowMapFramebufferDepthAttachment.InternalFormat = GL_DEPTH_COMPONENT;
@@ -136,7 +136,7 @@ namespace Flameberry {
         binding.blockBindingIndex = 3;
         binding.blockName = "Camera";
 
-        m_ShadowMapShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/shadow_map.glsl", { binding });
+        m_ShadowMapShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/shadow_map.glsl", { binding });
         m_ShadowMapUniformBuffer.BindBufferBase(binding.blockBindingIndex);
 
         PerspectiveCameraInfo cameraInfo{};

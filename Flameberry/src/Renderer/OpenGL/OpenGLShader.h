@@ -16,6 +16,7 @@ namespace Flameberry {
     {
     public:
         OpenGLShader(const std::string& filePath, const std::vector<OpenGLShaderBinding>& bindings = {});
+        OpenGLShader(const std::string& vertexPath, const std::string& fragmentPath, const std::vector<OpenGLShaderBinding>& bindings = {});
         ~OpenGLShader();
 
         void Bind();
@@ -32,8 +33,16 @@ namespace Flameberry {
         {
             return std::make_shared<OpenGLShader>(filePath, bindings);
         }
+
+        static std::shared_ptr<OpenGLShader> Create(const std::string& vertexPath, const std::string& fragmentPath, const std::vector<OpenGLShaderBinding>& bindings = {})
+        {
+            return std::make_shared<OpenGLShader>(vertexPath, fragmentPath, bindings);
+        }
     private:
         int GetUniformLocation(const std::string& uniformName);
+        void CreateShaderFromSingleFile(const std::string& shaderFilePath);
+        void CreateShader(const char* vertex, const char* fragment);
+        void CreateShaderWithFStream(const char* vertex, const char* fragment);
     private:
         uint32_t m_ProgramID;
         std::unordered_map<std::string, int> m_UniformLocationCache;

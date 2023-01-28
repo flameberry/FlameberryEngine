@@ -17,7 +17,7 @@ namespace Flameberry {
         cameraBinding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_CAMERA;
         cameraBinding.blockName = "Camera";
 
-        m_SkyboxShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/Skybox.glsl", { cameraBinding });
+        m_SkyboxShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/skybox.glsl", { cameraBinding });
         Load(folderPath);
     }
 

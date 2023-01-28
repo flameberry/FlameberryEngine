@@ -51,26 +51,6 @@ void main()
     else
     {
         int index = int(v_TextureIndex);
-        // switch (int(v_TextureIndex))
-        // {
-        //     case 0 : index = 0;  break;
-        //     case 1 : index = 0;  break;
-        //     case 2 : index = 2;  break;
-        //     case 3 : index = 3;  break;
-        //     case 4 : index = 4;  break;
-        //     case 5 : index = 5;  break;
-        //     case 6 : index = 6;  break; 
-        //     case 7 : index = 7;  break;
-        //     case 8 : index = 8;  break;
-        //     case 9 : index = 9;  break;
-        //     case 10: index = 10; break;
-        //     case 11: index = 11; break;
-        //     case 12: index = 12; break;
-        //     case 13: index = 13; break;
-        //     case 14: index = 14; break;
-        //     case 15: index = 15; break;
-        // }
-
         float threshold = 1.0 - u_Strength;
         vec2 msdfUnit = u_PixelRange/vec2(textureSize(u_TextureSamplers[index], 0));
         vec3 s = texture(u_TextureSamplers[index], v_Texture_UV).rgb;
