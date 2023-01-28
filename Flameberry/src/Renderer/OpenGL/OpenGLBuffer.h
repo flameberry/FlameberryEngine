@@ -7,6 +7,7 @@ namespace Flameberry {
     class OpenGLBuffer
     {
     public:
+        OpenGLBuffer() = default;
         OpenGLBuffer(uint32_t size, const void* data, GLenum bufferTarget, GLenum bufferUsage);
         ~OpenGLBuffer();
 

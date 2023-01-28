@@ -149,16 +149,13 @@ namespace Flameberry {
 
         m_EditorCamera = PerspectiveCamera(cameraInfo);
 
-        auto [vertices, alt_indices] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
-        m_TempMesh = Mesh{ vertices, alt_indices };
+        m_TempMesh = Mesh(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
         m_TempMesh.Name = "Sphere";
 
-        auto [v, i] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/platform.obj");
-        m_SponzaMesh = Mesh{ v, i };
+        m_SponzaMesh = Mesh(FL_PROJECT_DIR"SandboxApp/assets/models/platform.obj");
         m_SponzaMesh.Name = "Sponza";
 
-        auto [v1, i1] = OpenGLRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/cylinder.obj");
-        Mesh mesh{ v1, i1 };
+        Mesh mesh(FL_PROJECT_DIR"SandboxApp/assets/models/cylinder.obj");
         mesh.Name = "Cylinder";
 
         m_BrickTexture = OpenGLTexture::Create(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");

@@ -91,6 +91,9 @@ namespace Flameberry {
 
     void OpenGLShader::CreateShaderFromSingleFile(const std::string& shaderFilePath)
     {
+        FL_LOG(shaderFilePath);
+        FL_SCOPED_TIMER("fstream_create_shader_single_file");
+
         auto [vertexSource, fragmentSource] = OpenGLRenderCommand::ReadShaderSource(shaderFilePath);
         // Create an empty vertex shader handle
         GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);

@@ -17,6 +17,7 @@ namespace Flameberry {
     {
     public:
         Mesh();
+        Mesh(const char* filePath);
         Mesh(const std::vector<OpenGLVertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = "default_mesh_name");
         ~Mesh();
         void Draw(const std::shared_ptr<OpenGLShader>& shader, const TransformComponent& transform, const Material& material);
@@ -28,8 +29,7 @@ namespace Flameberry {
         std::vector<uint32_t> Indices;
         std::string Name;
     private:
-        uint32_t m_VertexArrayID, m_VertexBufferID, m_IndexBufferID, m_ShaderProgramID;
+        uint32_t m_VertexArrayID, m_VertexBufferID, m_IndexBufferID;
         int m_EntityID = -1;
-        float m_TextureIndex = -1.0f;
     };
 }

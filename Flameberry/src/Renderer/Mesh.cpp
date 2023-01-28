@@ -12,20 +12,34 @@
 
 namespace Flameberry {
     Mesh::Mesh()
-        : m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0), m_ShaderProgramID(0)
+        : m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0)
     {
     }
 
+    Mesh::Mesh(const char* filePath)
+        : m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0)
+    {
+        auto [v, i] = OpenGLRenderCommand::LoadModel(filePath);
+        Vertices = v;
+        Indices = i;
+        Invalidate();
+    }
+
     Mesh::Mesh(const std::vector<OpenGLVertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name)
-        : Vertices(vertices), Indices(indices), Name(name), m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0), m_ShaderProgramID(0)
+        : Vertices(vertices), Indices(indices), Name(name), m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0)
     {
         Invalidate();
     }
 
     void Mesh::Invalidate()
     {
-        if (m_VertexArrayID && m_VertexBufferID && m_IndexBufferID && m_ShaderProgramID)
+        if (m_VertexArrayID && m_VertexBufferID && m_IndexBufferID)
+        {
+            glDeleteVertexArrays(1, &m_VertexArrayID);
+            glDeleteBuffers(1, &m_VertexBufferID);
+            glDeleteBuffers(1, &m_IndexBufferID);
             return;
+        }
 
         glGenVertexArrays(1, &m_VertexArrayID);
         glBindVertexArray(m_VertexArrayID);
