@@ -313,7 +313,7 @@ namespace Flameberry {
         {
             auto& texture = material.TextureMap;
             if (!texture)
-                texture.reset(new OpenGLTexture(m_DefaultTexture));
+                texture.reset(new OpenGLTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png"));
 
             OpenGLTexture& currentTexture = *(texture.get());
 

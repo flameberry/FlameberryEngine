@@ -9,7 +9,10 @@ namespace Flameberry {
     Application::Application()
     {
         s_Instance = this;
-        m_Window = Window::Create();
+
+        const char* windowTitle = "Flameberry Engine - " FL_BUILD_CONFIG_NAME " - OpenGL";
+        m_Window = Window::Create(1280, 720, windowTitle);
+
         m_Window->SetEventCallBack(FL_BIND_EVENT_FN(Application::OnEvent));
         m_ImGuiLayer.OnCreate();
     }

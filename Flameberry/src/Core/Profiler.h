@@ -25,6 +25,6 @@ namespace Flameberry {
 #define FL_PROFILE_SCOPE(scopeName) Flameberry::Profiler profiler(scopeName);
 #define FL_DISPLAY_SCOPE_DETAILS_IMGUI() Flameberry::Profiler::DisplayScopeDetailsImGui()
 #else
-#define FL_PROFILE_SCOPE(scopeName)
-#define FL_DISPLAY_SCOPE_DETAILS_IMGUI()
+#define FL_PROFILE_SCOPE(scopeName) Flameberry::Profiler profiler(scopeName);
+#define FL_DISPLAY_SCOPE_DETAILS_IMGUI() Flameberry::Profiler::DisplayScopeDetailsImGui()
 #endif

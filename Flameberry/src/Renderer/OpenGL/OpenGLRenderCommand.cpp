@@ -221,7 +221,7 @@ namespace Flameberry {
         return shaderProgramId;
     }
 
-    uint32_t OpenGLRenderCommand::GetTextureIdIfAvailable(const char* textureFilePath)
+    uint32_t OpenGLRenderCommand::GetTextureIDIfAvailable(const char* textureFilePath)
     {
         if (s_TextureIdCache.find(textureFilePath) != s_TextureIdCache.end())
             return s_TextureIdCache[textureFilePath];
@@ -231,7 +231,7 @@ namespace Flameberry {
 
     uint32_t OpenGLRenderCommand::CreateTexture(const std::string& filePath)
     {
-        uint32_t textureID = GetTextureIdIfAvailable(filePath.c_str());
+        uint32_t textureID = GetTextureIDIfAvailable(filePath.c_str());
         if (textureID)
             return textureID;
 

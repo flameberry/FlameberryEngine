@@ -18,7 +18,7 @@ namespace Flameberry {
     {}
 
     OpenGLTexture::OpenGLTexture(const std::string& filePath)
-        : m_TextureID(OpenGLRenderCommand::GetTextureIdIfAvailable(filePath.c_str())), m_FilePath(filePath)
+        : m_TextureID(OpenGLRenderCommand::GetTextureIDIfAvailable(filePath.c_str())), m_FilePath(filePath)
     {
         if (m_TextureID) return;
         LoadTexture2DFromFile(filePath);

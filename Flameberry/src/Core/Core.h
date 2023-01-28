@@ -11,6 +11,12 @@
 #define FL_DEBUGBREAK()
 #endif
 
+#ifdef FL_DEBUG
+#define FL_BUILD_CONFIG_NAME "Debug"
+#elif defined(FL_RELEASE)
+#define FL_BUILD_CONFIG_NAME "Release"
+#endif
+
 #define FL_BIND_EVENT_FN(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
 
 #ifdef FL_USE_OPENGL_API

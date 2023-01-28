@@ -45,7 +45,7 @@ namespace Flameberry {
         static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
         static void EnableBlend(GLenum sFactor = GL_SRC_ALPHA, GLenum dFactor = GL_ONE_MINUS_SRC_ALPHA);
         static void EnableDepthTest(GLenum depthFunc = GL_LESS);
-        static uint32_t GetTextureIdIfAvailable(const char* textureFilePath);
+        static uint32_t GetTextureIDIfAvailable(const char* textureFilePath);
         static void AddTextureIDToCache(const std::string& textureFilePath, uint32_t textureID) { s_TextureIdCache[textureFilePath] = textureID; }
         static void RemoveTextureIDFromCache(const std::string& textureFilePath) { s_TextureIdCache.erase(textureFilePath); }
     private:
