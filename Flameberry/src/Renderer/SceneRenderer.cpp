@@ -1,4 +1,5 @@
 #include "SceneRenderer.h"
+#include "OpenGL/OpenGLUniformBufferIndices.h"
 
 namespace Flameberry {
     struct MeshCameraUniformBufferData {

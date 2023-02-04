@@ -134,7 +134,7 @@ namespace Flameberry {
         m_ShadowMapFramebuffer = OpenGLFramebuffer::Create(shadowMapFramebufferSpec);
 
         OpenGLShaderBinding binding{};
-        binding.blockBindingIndex = 3;
+        binding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_SHADOWMAPPING;
         binding.blockName = "Camera";
 
         m_ShadowMapShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/shadow_map.glsl", { binding });

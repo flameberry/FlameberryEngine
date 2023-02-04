@@ -8,34 +8,25 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "OpenGLRenderCommand.h"
+#include "OpenGLUniformBufferIndices.h"
 #include "Core/Input.h"
 
 namespace Flameberry {
     OpenGLRenderer2D::OpenGLRenderer2D()
         : m_CameraUniformBuffer(sizeof(UniformBufferData), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW), m_CurrentTextureSlot(0)
     {
-        m_CameraUniformBuffer.BindBufferBase(0);
+        m_CameraUniformBuffer.BindBufferBase(FL_UNIFORM_BLOCK_BINDING_CAMERA_2D);
     }
 
     OpenGLRenderer2D::~OpenGLRenderer2D()
-    {}
+    {
+    }
 
     void OpenGLRenderer2D::Init()
     {
         GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
         const char* monitorName = glfwGetMonitorName(primaryMonitor);
         FL_INFO("Primary Monitor: {0}", monitorName);
-
-        // glEnable(GL_BLEND);
-        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        // glEnable(GL_DEPTH_TEST);
-
-        /* Create Uniform Buffer */
-        // glGenBuffers(1, &m_UniformBufferId);
-        // glBindBuffer(GL_UNIFORM_BUFFER, m_UniformBufferId);
-        // glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBufferData), nullptr, GL_DYNAMIC_DRAW);
-        // glBindBufferRange(GL_UNIFORM_BUFFER, 0, m_UniformBufferId, 0, sizeof(UniformBufferData));
-        // glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         InitBatch();
         FL_INFO("Initialized OpenGL Renderer2D!");
@@ -229,10 +220,6 @@ namespace Flameberry {
     {
         m_UniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 
-        /* Set Projection Matrix in GPU memory, for all shader programs to access it */
-        // glBindBuffer(GL_UNIFORM_BUFFER, m_UniformBufferId);
-        // glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(m_UniformBufferData.ViewProjectionMatrix));
-
         m_CameraUniformBuffer.Bind();
         m_CameraUniformBuffer.BufferSubData(&m_UniformBufferData, sizeof(UniformBufferData), 0);
     }
@@ -240,7 +227,6 @@ namespace Flameberry {
     void OpenGLRenderer2D::End()
     {
         FlushBatch();
-        // glBindBuffer(GL_UNIFORM_BUFFER, 0);
         m_CameraUniformBuffer.Unbind();
     }
 

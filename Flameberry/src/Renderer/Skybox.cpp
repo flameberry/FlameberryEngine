@@ -1,9 +1,11 @@
 #include "Skybox.h"
 
 #include <glad/glad.h>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "OpenGL/OpenGLRenderCommand.h"
 #include "OpenGL/OpenGLRenderer3D.h"
-#include <glm/gtc/type_ptr.hpp>
+#include "OpenGL/OpenGLUniformBufferIndices.h"
 
 namespace Flameberry {
     Skybox::Skybox()

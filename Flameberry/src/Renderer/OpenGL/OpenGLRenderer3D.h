@@ -14,9 +14,6 @@
 
 #include "Renderer/Light.h"
 
-#define FL_UNIFORM_BLOCK_BINDING_CAMERA 0
-#define FL_UNIFORM_BLOCK_BINDING_LIGHTING 1
-
 #define FL_MAX_POINT_LIGHTS 10
 
 namespace Flameberry {
@@ -39,6 +36,5 @@ namespace Flameberry {
         struct CameraUniformBufferData { glm::mat4 ViewProjectionMatrix; };
     private:
         CameraUniformBufferData m_UniformBufferData;
-        // OpenGLBuffer m_CameraUniformBuffer;
     };
 }

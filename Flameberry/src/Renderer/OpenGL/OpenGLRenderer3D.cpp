@@ -8,23 +8,15 @@
 
 namespace Flameberry {
     OpenGLRenderer3D::OpenGLRenderer3D()
-        // : m_CameraUniformBuffer(sizeof(CameraUniformBufferData), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW)
     {
-        // m_CameraUniformBuffer.BindBufferBase(FL_UNIFORM_BLOCK_BINDING_CAMERA);
     }
 
     void OpenGLRenderer3D::Begin(const PerspectiveCamera& camera)
     {
-        // m_UniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
-
-        /* Set Projection Matrix in GPU memory, for all shader programs to access it */
-        // m_CameraUniformBuffer.Bind();
-        // m_CameraUniformBuffer.BufferSubData(&m_UniformBufferData, sizeof(CameraUniformBufferData), 0);
     }
 
     void OpenGLRenderer3D::End()
     {
-        // m_CameraUniformBuffer.Unbind();
     }
 
     void OpenGLRenderer3D::Init()
