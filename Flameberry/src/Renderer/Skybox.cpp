@@ -9,17 +9,20 @@
 
 namespace Flameberry {
     Skybox::Skybox()
-        : m_VertexBufferID(0), m_IndexBufferID(0), m_ShaderProgramID(0), m_TextureID(0)
+        : m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0), m_ShaderProgramID(0)
     {}
 
     Skybox::Skybox(const char* folderPath)
-        : m_VertexBufferID(0), m_IndexBufferID(0), m_ShaderProgramID(0), m_TextureID(0)
+        : m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0), m_ShaderProgramID(0)
     {
         OpenGLShaderBinding cameraBinding{};
         cameraBinding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_CAMERA;
         cameraBinding.blockName = "Camera";
 
         m_SkyboxShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/skybox.glsl", { cameraBinding });
+        m_SkyboxShader->Bind();
+        m_SkyboxShader->PushUniformInt("u_SamplerCube", 0);
+        m_SkyboxShader->Unbind();
         Load(folderPath);
     }
 
@@ -27,7 +30,6 @@ namespace Flameberry {
     {
         if (m_VertexArrayID)
         {
-            glDeleteTextures(1, &m_TextureID);
             glDeleteVertexArrays(1, &m_VertexArrayID);
             glDeleteBuffers(1, &m_VertexBufferID);
             glDeleteBuffers(1, &m_IndexBufferID);
@@ -85,7 +87,7 @@ namespace Flameberry {
 
         glBindVertexArray(m_VertexArrayID);
 
-        m_TextureID = OpenGLRenderCommand::CreateCubeMap(folderPath);
+        m_SkyboxTexture = OpenGLTexture::Create(folderPath);
     }
 
     void Skybox::OnDraw(const PerspectiveCamera& camera)
@@ -94,8 +96,7 @@ namespace Flameberry {
         glDepthFunc(GL_LEQUAL);
         glDisable(GL_CULL_FACE);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, m_TextureID);
+        m_SkyboxTexture->BindTextureUnit(0);
 
         glm::mat4 viewProjectionMatrix = camera.GetProjectionMatrix() * glm::mat4(glm::mat3(camera.GetViewMatrix()));
 

@@ -10,6 +10,7 @@
 
 #include "OpenGLVertex.h"
 #include "OpenGLBuffer.h"
+#include "OpenGLShader.h"
 
 #include "Core/Core.h"
 #include "Renderer/OrthographicCamera.h"
@@ -27,14 +28,15 @@ namespace Flameberry {
         OpenGLRenderer2D();
         ~OpenGLRenderer2D();
 
-        void        Init();
-        void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath);
-        void        AddQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID);
-        void        AddQuad(const glm::mat4& transform, const char* textureFilePath, uint32_t entityID);
-        void        AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color);
-        void        CleanUp();
-        void        Begin(const OrthographicCamera& camera);
-        void        End();
+        void Init();
+        void AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath);
+        void AddQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID);
+        void AddQuad(const glm::mat4& transform, const char* textureFilePath, uint32_t entityID);
+        void AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color);
+        void CleanUp();
+        void Begin(const OrthographicCamera& camera);
+        void Begin(const glm::mat4& cameraMatrix);
+        void End();
         static std::shared_ptr<OpenGLRenderer2D> Create() { return std::make_shared<OpenGLRenderer2D>(); }
     private:
         void InitBatch();
@@ -43,7 +45,7 @@ namespace Flameberry {
         struct UniformBufferData { glm::mat4 ViewProjectionMatrix; };
         struct Batch
         {
-            uint32_t VertexBufferId, IndexBufferId, VertexArrayId, ShaderProgramId;
+            uint32_t VertexBufferId, IndexBufferId, VertexArrayId;
             std::vector<uint32_t> TextureIds;
             std::vector<OpenGLVertex2D> Vertices;
         };
@@ -53,6 +55,7 @@ namespace Flameberry {
         Batch m_Batch;
 
         OpenGLBuffer m_CameraUniformBuffer;
+        std::shared_ptr<OpenGLShader> m_QuadShader;
 
         float m_CurrentTextureSlot;
 

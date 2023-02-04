@@ -1,5 +1,6 @@
 #include "OpenGLTexture.h"
 
+#include <filesystem>
 #include <glad/glad.h>
 #include <stb_image/stb_image.h>
 
@@ -17,11 +18,21 @@ namespace Flameberry {
             })
     {}
 
-    OpenGLTexture::OpenGLTexture(const std::string& filePath)
-        : m_TextureID(OpenGLRenderCommand::GetTextureIDIfAvailable(filePath.c_str())), m_FilePath(filePath)
+    OpenGLTexture::OpenGLTexture(const std::string& texturePath)
+        : m_TextureID(OpenGLRenderCommand::GetTextureIDIfAvailable(texturePath.c_str())), m_FilePath(texturePath)
     {
         if (m_TextureID) return;
-        LoadTexture2DFromFile(filePath);
+
+        std::filesystem::path tPath(texturePath);
+        if (!tPath.has_extension())
+            LoadCubeMapFromFolder(texturePath);
+        else
+            LoadTexture2DFromFile(texturePath);
+
+        // auto ext = tPath.extension().string();
+        // if (ext == "")
+        // {
+        // }
     }
 
     OpenGLTexture::OpenGLTexture(uint32_t textureID)
@@ -42,7 +53,7 @@ namespace Flameberry {
 
     void OpenGLTexture::Unbind()
     {
-        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(m_Specifications.Target, 0);
     }
 
     void OpenGLTexture::LoadTexture2DFromFile(const std::string& filePath)
@@ -56,7 +67,6 @@ namespace Flameberry {
 
         FL_DO_ON_ASSERT(data, FL_ERROR("Failed to load texture from \"{0}\"", filePath));
 
-        // GLenum internalFormat = 0, dataFormat = 0;
         switch (channels)
         {
         case 4: {
@@ -91,6 +101,9 @@ namespace Flameberry {
     void OpenGLTexture::LoadCubeMapFromFolder(const std::string& folderPath)
     {
         m_Specifications.Target = GL_TEXTURE_CUBE_MAP;
+        m_Specifications.InternalFormat = GL_RGB8;
+        m_Specifications.Format = GL_RGB;
+
         glGenTextures(1, &m_TextureID);
         glBindTexture(GL_TEXTURE_CUBE_MAP, m_TextureID);
 
@@ -116,7 +129,7 @@ namespace Flameberry {
             m_Specifications.Height = height;
 
             stbi_set_flip_vertically_on_load(false);
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
         }
 

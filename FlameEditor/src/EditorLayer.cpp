@@ -13,7 +13,9 @@
 namespace Flameberry {
     EditorLayer::EditorLayer()
         : m_ViewportSize(1280, 720),
-        m_ShadowMapUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW)
+        m_ShadowMapUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW),
+        // m_Renderer2D(OpenGLRenderer2D::Create()),
+        m_OrthographicCamera({ 1280, 720 }, 1.0f)
     {
     }
 
@@ -26,6 +28,8 @@ namespace Flameberry {
         OpenGLRenderCommand::EnableBlend();
         OpenGLRenderCommand::EnableDepthTest();
         glEnable(GL_CULL_FACE);
+
+        // m_Renderer2D->Init();
 
         OpenGLFramebufferSpecification intermediateFramebufferSpec{};
         intermediateFramebufferSpec.FramebufferSize = m_ViewportSize;
@@ -236,7 +240,6 @@ namespace Flameberry {
 
         {
             FL_PROFILE_SCOPE("Shadow Pass");
-            // glCullFace(GL_FRONT);
             m_ShadowMapFramebuffer->Bind();
             OpenGLRenderCommand::SetViewport(0, 0, SHADOW_MAP_DIM, SHADOW_MAP_DIM);
             glClear(GL_DEPTH_BUFFER_BIT);
@@ -258,7 +261,6 @@ namespace Flameberry {
 
             m_ShadowMapUniformBuffer.Unbind();
             m_ShadowMapFramebuffer->Unbind();
-            // glCullFace(GL_BACK);
         }
 
         // Framebuffer Resize
@@ -295,6 +297,13 @@ namespace Flameberry {
 
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, m_ShadowMapFramebuffer->GetColorAttachmentID());
+
+            // m_OrthographicCamera.SetViewportSize(m_ViewportSize);
+            // m_OrthographicCamera.OnUpdate(delta);
+            // m_Renderer2D->Begin(m_EditorCamera.GetViewProjectionMatrix());
+            // m_Renderer2D->AddQuad(glm::vec3(0.0f, 0.0f, 0.5f), glm::vec2(0.2f, 0.2f), glm::vec4(1.0f));
+            // m_Renderer2D->End();
+
             m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera, lightViewProjectionMatrix);
 
             // Copy

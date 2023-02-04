@@ -13,9 +13,20 @@
 
 namespace Flameberry {
     OpenGLRenderer2D::OpenGLRenderer2D()
-        : m_CameraUniformBuffer(sizeof(UniformBufferData), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW), m_CurrentTextureSlot(0)
+        : m_CameraUniformBuffer(sizeof(UniformBufferData), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW),
+        m_CurrentTextureSlot(0)
     {
         m_CameraUniformBuffer.BindBufferBase(FL_UNIFORM_BLOCK_BINDING_CAMERA_2D);
+
+        OpenGLShaderBinding cameraBinding{};
+        cameraBinding.blockName = "Camera";
+        cameraBinding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_CAMERA_2D;
+
+        m_QuadShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/Quad.glsl", { cameraBinding });
+        m_QuadShader->Bind();
+        int samplers[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+        m_QuadShader->PushUniformIntArray("u_TextureSamplers", 16, samplers);
+        m_QuadShader->Unbind();
     }
 
     OpenGLRenderer2D::~OpenGLRenderer2D()
@@ -76,15 +87,6 @@ namespace Flameberry {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
         glBindVertexArray(m_Batch.VertexArrayId);
-
-        m_Batch.ShaderProgramId = OpenGLRenderCommand::CreateShader(FL_PROJECT_DIR"Flameberry/assets/shaders/Quad.glsl");
-        glUseProgram(m_Batch.ShaderProgramId);
-
-        int samplers[MAX_TEXTURE_SLOTS];
-        for (uint32_t i = 0; i < MAX_TEXTURE_SLOTS; i++)
-            samplers[i] = i;
-        glUniform1iv(OpenGLRenderCommand::GetUniformLocation(m_Batch.ShaderProgramId, "u_TextureSamplers"), MAX_TEXTURE_SLOTS, samplers);
-        glUseProgram(0);
     }
 
     void OpenGLRenderer2D::FlushBatch()
@@ -101,7 +103,7 @@ namespace Flameberry {
             glBindTexture(GL_TEXTURE_2D, m_Batch.TextureIds[i]);
         }
 
-        glUseProgram(m_Batch.ShaderProgramId);
+        m_QuadShader->Bind();
         glBindVertexArray(m_Batch.VertexArrayId);
         glDrawElements(GL_TRIANGLES, (m_Batch.Vertices.size() / 4) * 6, GL_UNSIGNED_INT, 0);
 
@@ -219,6 +221,14 @@ namespace Flameberry {
     void OpenGLRenderer2D::Begin(const OrthographicCamera& camera)
     {
         m_UniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
+
+        m_CameraUniformBuffer.Bind();
+        m_CameraUniformBuffer.BufferSubData(&m_UniformBufferData, sizeof(UniformBufferData), 0);
+    }
+
+    void OpenGLRenderer2D::Begin(const glm::mat4& cameraMatrix)
+    {
+        m_UniformBufferData.ViewProjectionMatrix = cameraMatrix;
 
         m_CameraUniformBuffer.Bind();
         m_CameraUniformBuffer.BufferSubData(&m_UniformBufferData, sizeof(UniformBufferData), 0);

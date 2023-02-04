@@ -39,6 +39,8 @@ namespace Flameberry {
 
         DirectionalLight m_DirectionalLight;
         std::shared_ptr<SceneRenderer> m_SceneRenderer;
+        std::shared_ptr<OpenGLRenderer2D> m_Renderer2D;
+        OrthographicCamera m_OrthographicCamera;
     private:
         // Shadow Mapping Resources
         std::shared_ptr<OpenGLFramebuffer> m_ShadowMapFramebuffer;
