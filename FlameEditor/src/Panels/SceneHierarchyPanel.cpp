@@ -23,13 +23,39 @@ namespace Flameberry {
 
         if (ImGui::BeginPopupContextWindow())
         {
-            if (ImGui::MenuItem("Create Empty"))
+            if (ImGui::BeginMenu("Create"))
             {
-                auto entity = m_ActiveScene->m_Registry->create();
-                m_ActiveScene->m_Registry->emplace<IDComponent>(entity);
-                m_ActiveScene->m_Registry->emplace<TagComponent>(entity).Tag = "Empty";
-                m_ActiveScene->m_Registry->emplace<TransformComponent>(entity);
-                m_SelectedEntity = entity;
+                if (ImGui::MenuItem("Empty"))
+                {
+                    auto entity = m_ActiveScene->m_Registry->create();
+                    m_ActiveScene->m_Registry->emplace<IDComponent>(entity);
+                    m_ActiveScene->m_Registry->emplace<TagComponent>(entity).Tag = "Empty";
+                    m_ActiveScene->m_Registry->emplace<TransformComponent>(entity);
+                    m_SelectedEntity = entity;
+                }
+                if (ImGui::MenuItem("Mesh"))
+                {
+                    auto entity = m_ActiveScene->m_Registry->create();
+                    m_ActiveScene->m_Registry->emplace<IDComponent>(entity);
+                    m_ActiveScene->m_Registry->emplace<TagComponent>(entity).Tag = "Mesh";
+                    m_ActiveScene->m_Registry->emplace<TransformComponent>(entity);
+                    m_ActiveScene->m_Registry->emplace<MeshComponent>(entity);
+                    m_SelectedEntity = entity;
+                }
+                if (ImGui::BeginMenu("Light"))
+                {
+                    if (ImGui::MenuItem("PointLight"))
+                    {
+                        auto entity = m_ActiveScene->m_Registry->create();
+                        m_ActiveScene->m_Registry->emplace<IDComponent>(entity);
+                        m_ActiveScene->m_Registry->emplace<TagComponent>(entity).Tag = "PointLight";
+                        m_ActiveScene->m_Registry->emplace<TransformComponent>(entity);
+                        m_ActiveScene->m_Registry->emplace<LightComponent>(entity);
+                        m_SelectedEntity = entity;
+                    }
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMenu();
             }
             ImGui::EndPopup();
         }
@@ -88,6 +114,8 @@ namespace Flameberry {
         );
 
         ImGui::End();
+
+        ImGui::ShowDemoWindow();
 
         ImGui::Begin("Inspector");
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth;
