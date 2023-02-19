@@ -115,8 +115,6 @@ namespace Flameberry {
 
         ImGui::End();
 
-        ImGui::ShowDemoWindow();
-
         ImGui::Begin("Inspector");
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth;
         if (m_SelectedEntity != ecs::entity_handle::null)
