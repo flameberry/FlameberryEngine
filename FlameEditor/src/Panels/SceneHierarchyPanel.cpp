@@ -171,7 +171,11 @@ namespace Flameberry {
                 }
             }
 
-            if (ImGui::BeginPopupContextWindow())
+            ImGui::Separator();
+            if (Utils::ButtonCenteredOnLine("Add Component"))
+                ImGui::OpenPopup("AddComponentPopUp");
+
+            if (ImGui::BeginPopup("AddComponentPopUp"))
             {
                 if (ImGui::MenuItem("Transform Component"))
                     m_ActiveScene->m_Registry->emplace<TransformComponent>(m_SelectedEntity);
@@ -185,6 +189,8 @@ namespace Flameberry {
             }
         }
         ImGui::End();
+
+        ImGui::ShowDemoWindow();
 
         OnEnvironmentMapPanelRender();
     }
@@ -382,10 +388,17 @@ namespace Flameberry {
 
         auto& environment = m_ActiveScene->m_SceneData.ActiveEnvironmentMap;
         ImGui::ColorEdit3("Clear Color", glm::value_ptr(environment.ClearColor));
-        ImGui::Checkbox("Environment Reflections", &environment.Reflections);
+        ImGui::Checkbox("Enable Skybox", &environment.EnableSkybox);
 
-        Utils::DrawVec3Control("Directional", environment.DirLight.Direction, 0.0f, 0.01f);
+        if (environment.EnableSkybox)
+            ImGui::Checkbox("Environment Reflections", &environment.Reflections);
+        else
+            environment.Reflections = false;
+
         ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+        Utils::DrawVec3Control("Directional", environment.DirLight.Direction, 0.0f, 0.01f);
         ImGui::ColorEdit3("Color", glm::value_ptr(environment.DirLight.Color));
         ImGui::DragFloat("Intensity", &environment.DirLight.Intensity, 0.01f);
 

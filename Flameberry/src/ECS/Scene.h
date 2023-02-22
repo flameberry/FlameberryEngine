@@ -16,9 +16,13 @@ namespace Flameberry {
         glm::vec3 ClearColor;
         std::shared_ptr<Skybox> ActiveSkybox;
         DirectionalLight DirLight;
-        bool Reflections;
+        bool Reflections, EnableSkybox;
 
-        EnvironmentMap(): ActiveSkybox(std::make_shared<Skybox>(FL_PROJECT_DIR"SandboxApp/assets/skybox")) {}
+        EnvironmentMap()
+            : ActiveSkybox(std::make_shared<Skybox>(FL_PROJECT_DIR"SandboxApp/assets/skybox")),
+            Reflections(false),
+            EnableSkybox(true)
+        {}
     };
 
     struct SceneData

@@ -3,6 +3,20 @@
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
+bool Utils::ButtonCenteredOnLine(const char* label, float alignment)
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    float size = ImGui::CalcTextSize(label).x + style.FramePadding.x * 2.0f;
+    float avail = ImGui::GetContentRegionAvail().x;
+
+    float off = (avail - size) * alignment;
+    if (off > 0.0f)
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+
+    return ImGui::Button(label);
+}
+
 void Utils::DrawVec3Control(const std::string& label, glm::vec3& value, float defaultValue, float dragSpeed)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
