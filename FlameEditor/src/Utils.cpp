@@ -17,7 +17,7 @@ bool Utils::ButtonCenteredOnLine(const char* label, float alignment)
     return ImGui::Button(label);
 }
 
-void Utils::DrawVec3Control(const std::string& label, glm::vec3& value, float defaultValue, float dragSpeed)
+void Utils::DrawVec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 
@@ -27,12 +27,7 @@ void Utils::DrawVec3Control(const std::string& label, glm::vec3& value, float de
     ImGuiIO& io = ImGui::GetIO();
     // auto boldFont = io.Fonts->Fonts[0];
 
-    ImGui::PushID(label.c_str());
-
-    ImGui::Columns(2);
-    ImGui::SetColumnWidth(0, 80.0f);
-    ImGui::Text("%s", label.c_str());
-    ImGui::NextColumn();
+    ImGui::PushID(str_id.c_str());
 
     ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
@@ -82,9 +77,6 @@ void Utils::DrawVec3Control(const std::string& label, glm::vec3& value, float de
     ImGui::PopItemWidth();
     ImGui::PopStyleVar();
 
-    ImGui::Columns(1);
-
     ImGui::PopID();
-
     ImGui::PopStyleVar();
 }

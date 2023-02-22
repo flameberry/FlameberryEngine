@@ -6,6 +6,8 @@
 #include "../project.h"
 #include "../Utils.h"
 
+#define FL_REMOVE_LABEL(imgui_widget) { ImGui::PushItemWidth(-1); imgui_widget; ImGui::PopItemWidth(); }
+
 namespace Flameberry {
     SceneHierarchyPanel::SceneHierarchyPanel(Scene* scene)
         : m_ActiveScene(scene),
@@ -124,7 +126,13 @@ namespace Flameberry {
                 if (ImGui::CollapsingHeader("IDComponent", flags))
                 {
                     auto& ID = m_ActiveScene->m_Registry->get<IDComponent>(m_SelectedEntity).ID;
-                    ImGui::Text("ID: %llu", (uint64_t)ID);
+                    // ImGui::Text("ID: %llu", (uint64_t)ID);
+                    ImGui::Columns(2);
+                    ImGui::SetColumnWidth(0, 80.0f);
+                    ImGui::Text("ID");
+                    ImGui::NextColumn();
+                    ImGui::Text("%llu", (uint64_t)ID);
+                    ImGui::EndColumns();
                     ImGui::Spacing();
                 }
             }
@@ -190,8 +198,6 @@ namespace Flameberry {
         }
         ImGui::End();
 
-        ImGui::ShowDemoWindow();
-
         OnEnvironmentMapPanelRender();
     }
 
@@ -214,11 +220,33 @@ namespace Flameberry {
 
     void SceneHierarchyPanel::DrawComponent(TransformComponent& transform)
     {
-        Utils::DrawVec3Control("Translation", transform.translation, 0.0f, 0.01f);
-        ImGui::Spacing();
-        Utils::DrawVec3Control("Rotation", transform.rotation, 0.0f, 0.01f);
-        ImGui::Spacing();
-        Utils::DrawVec3Control("Scale", transform.scale, 1.0f, 0.01f);
+        if (ImGui::BeginTable("TransformComponentAttributes", 2, ImGuiTableFlags_BordersInnerV))
+        {
+            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+            ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Translation");
+            ImGui::TableNextColumn();
+            Utils::DrawVec3Control("Translation", transform.translation, 0.0f, 0.01f);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Rotation");
+            ImGui::TableNextColumn();
+            Utils::DrawVec3Control("Rotation", transform.rotation, 0.0f, 0.01f);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Scale");
+            ImGui::TableNextColumn();
+            Utils::DrawVec3Control("Scale", transform.scale, 1.0f, 0.01f);
+            ImGui::EndTable();
+        }
     }
 
     void SceneHierarchyPanel::DrawComponent(SpriteRendererComponent& sprite)
@@ -257,151 +285,249 @@ namespace Flameberry {
     {
         std::string modelPathAccepted = "";
 
-        ImGui::Button("Load Mesh");
-        if (ImGui::BeginDragDropTarget())
+        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5, 3 });
+        if (ImGui::BeginTable("MeshComponentAttributes", 2, m_TableFlags))
         {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
-            {
-                std::string path = (const char*)payload->Data;
-                std::filesystem::path modelPath{ path };
-                modelPath = project::g_AssetDirectory / modelPath;
-                const std::string& ext = modelPath.extension().string();
+            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+            ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Button("Load Mesh");
 
-                FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
-
-                if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
-                    modelPathAccepted = modelPath.string();
-                else
-                    FL_WARN("Bad File given as Model!");
-            }
-            ImGui::EndDragDropTarget();
-        }
-
-        ImGui::SameLine();
-
-        if (modelPathAccepted != "")
-        {
-            auto [vertices, indices] = OpenGLRenderCommand::LoadModel(modelPathAccepted);
-            m_ActiveScene->m_SceneData.Meshes.emplace_back(vertices, indices);
-            mesh.MeshIndex = (uint32_t)m_ActiveScene->m_SceneData.Meshes.size() - 1;
-        }
-
-        // Mesh Menu
-        if (ImGui::BeginCombo("##combo", m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex].Name.c_str())) // The second parameter is the label previewed before opening the combo.
-        {
-            for (int n = 0; n < m_ActiveScene->m_SceneData.Meshes.size(); n++)
-            {
-                bool is_selected = (mesh.MeshIndex == n); // You can store your selection however you want, outside or inside your objects
-                if (ImGui::Selectable(m_ActiveScene->m_SceneData.Meshes[n].Name.c_str(), is_selected))
-                    mesh.MeshIndex = n;
-                if (is_selected)
-                    ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
-            }
-            ImGui::EndCombo();
-        }
-        ImGui::Spacing();
-
-        // Material Menu
-        ImGui::Text("Material");
-        if (ImGui::BeginCombo("##combo1", mesh.MaterialName.c_str())) // The second parameter is the label previewed before opening the combo.
-        {
-            for (const auto& [materialName, material] : m_ActiveScene->m_SceneData.Materials)
-            {
-                bool is_selected = (mesh.MaterialName == materialName); // You can store your selection however you want, outside or inside your objects
-                if (ImGui::Selectable(materialName.c_str(), is_selected))
-                    mesh.MaterialName = materialName;
-                if (is_selected)
-                    ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::SameLine();
-
-        uint32_t plusIconTextureID = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/plus_icon.png");
-        uint32_t minusIconTextureID = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/minus_icon.png");
-
-        if (ImGui::ImageButton(reinterpret_cast<void*>(plusIconTextureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
-        {
-            mesh.MaterialName = "Material_" + std::to_string(m_ActiveScene->m_SceneData.Materials.size());
-            m_ActiveScene->m_SceneData.Materials[mesh.MaterialName] = Material();
-        }
-
-        ImGui::SameLine();
-
-        if (ImGui::ImageButton(reinterpret_cast<void*>(minusIconTextureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
-        {
-            m_ActiveScene->m_SceneData.Materials.erase(mesh.MaterialName);
-            mesh.MaterialName = "Default";
-        }
-
-        // Material Controls
-        auto& material = m_ActiveScene->m_SceneData.Materials[mesh.MaterialName];
-
-        bool& textureMapEnabled = material.TextureMapEnabled;
-        ImGui::Checkbox("Texture Map: ", &textureMapEnabled);
-
-        if (textureMapEnabled)
-        {
-            auto& texture = material.TextureMap;
-            if (!texture)
-                texture.reset(new OpenGLTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png"));
-
-            OpenGLTexture& currentTexture = *(texture.get());
-
-            ImGui::SameLine();
-            ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetTextureID()), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
             if (ImGui::BeginDragDropTarget())
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
                 {
                     std::string path = (const char*)payload->Data;
-                    std::filesystem::path texturePath{ path };
-                    texturePath = project::g_AssetDirectory / texturePath;
-                    const std::string& ext = texturePath.extension().string();
+                    std::filesystem::path modelPath{ path };
+                    modelPath = project::g_AssetDirectory / modelPath;
+                    const std::string& ext = modelPath.extension().string();
 
                     FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
 
-                    if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
-                        texture.reset(new OpenGLTexture(texturePath.string()));
+                    if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
+                        modelPathAccepted = modelPath.string();
                     else
-                        FL_WARN("Bad File given as Texture!");
+                        FL_WARN("Bad File given as Model!");
                 }
                 ImGui::EndDragDropTarget();
             }
-        }
 
-        ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo));
-        ImGui::DragFloat("Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f);
-        ImGui::Checkbox("Metallic", &material.Metallic);
+            if (modelPathAccepted != "")
+            {
+                auto [vertices, indices] = OpenGLRenderCommand::LoadModel(modelPathAccepted);
+                m_ActiveScene->m_SceneData.Meshes.emplace_back(vertices, indices);
+                mesh.MeshIndex = (uint32_t)m_ActiveScene->m_SceneData.Meshes.size() - 1;
+            }
+
+            ImGui::TableNextColumn();
+
+            // Mesh Menu
+            if (ImGui::BeginCombo("##combo", m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex].Name.c_str())) // The second parameter is the label previewed before opening the combo.
+            {
+                for (int n = 0; n < m_ActiveScene->m_SceneData.Meshes.size(); n++)
+                {
+                    bool is_selected = (mesh.MeshIndex == n); // You can store your selection however you want, outside or inside your objects
+                    if (ImGui::Selectable(m_ActiveScene->m_SceneData.Meshes[n].Name.c_str(), is_selected))
+                        mesh.MeshIndex = n;
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+                }
+                ImGui::EndCombo();
+            }
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            // Material Menu
+            ImGui::Text("Material");
+
+            ImGui::TableNextColumn();
+
+            if (ImGui::BeginCombo("##combo1", mesh.MaterialName.c_str())) // The second parameter is the label previewed before opening the combo.
+            {
+                for (const auto& [materialName, material] : m_ActiveScene->m_SceneData.Materials)
+                {
+                    bool is_selected = (mesh.MaterialName == materialName); // You can store your selection however you want, outside or inside your objects
+                    if (ImGui::Selectable(materialName.c_str(), is_selected))
+                        mesh.MaterialName = materialName;
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+                }
+                ImGui::EndCombo();
+            }
+
+            ImGui::SameLine();
+
+            uint32_t plusIconTextureID = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/plus_icon.png");
+            uint32_t minusIconTextureID = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/minus_icon.png");
+
+            if (ImGui::ImageButton(reinterpret_cast<void*>(plusIconTextureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
+            {
+                mesh.MaterialName = "Material_" + std::to_string(m_ActiveScene->m_SceneData.Materials.size());
+                m_ActiveScene->m_SceneData.Materials[mesh.MaterialName] = Material();
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::ImageButton(reinterpret_cast<void*>(minusIconTextureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
+            {
+                m_ActiveScene->m_SceneData.Materials.erase(mesh.MaterialName);
+                mesh.MaterialName = "Default";
+            }
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            // Material Controls
+            auto& material = m_ActiveScene->m_SceneData.Materials[mesh.MaterialName];
+
+            ImGui::Text("Texture Map");
+
+            ImGui::TableNextColumn();
+
+            bool& textureMapEnabled = material.TextureMapEnabled;
+            ImGui::Checkbox("##Texture_Map", &textureMapEnabled);
+
+
+            if (textureMapEnabled)
+            {
+                auto& texture = material.TextureMap;
+                if (!texture)
+                    texture.reset(new OpenGLTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png"));
+
+                OpenGLTexture& currentTexture = *(texture.get());
+
+                ImGui::SameLine();
+                ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetTextureID()), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                    {
+                        std::string path = (const char*)payload->Data;
+                        std::filesystem::path texturePath{ path };
+                        texturePath = project::g_AssetDirectory / texturePath;
+                        const std::string& ext = texturePath.extension().string();
+
+                        FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+
+                        if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
+                            texture.reset(new OpenGLTexture(texturePath.string()));
+                        else
+                            FL_WARN("Bad File given as Texture!");
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+            }
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Albedo");
+            ImGui::TableNextColumn();
+            FL_REMOVE_LABEL(ImGui::ColorEdit3("##Albedo", glm::value_ptr(material.Albedo)));
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Roughness");
+            ImGui::TableNextColumn();
+            FL_REMOVE_LABEL(ImGui::DragFloat("##Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f));
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Metallic");
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("##Metallic", &material.Metallic);
+            ImGui::EndTable();
+        }
+        ImGui::PopStyleVar();
     }
 
     void SceneHierarchyPanel::DrawComponent(LightComponent& light)
     {
-        ImGui::ColorEdit3("Color", glm::value_ptr(light.Color));
-        ImGui::DragFloat("Intensity", &light.Intensity, 0.1f);
+        if (ImGui::BeginTable("LightComponentAttributes", 2, m_TableFlags))
+        {
+            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+            ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Color");
+            ImGui::TableNextColumn();
+            FL_REMOVE_LABEL(ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Intensity");
+            ImGui::TableNextColumn();
+            FL_REMOVE_LABEL(ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
+            ImGui::EndTable();
+        }
     }
 
     void SceneHierarchyPanel::OnEnvironmentMapPanelRender()
     {
         ImGui::Begin("Environment");
 
-        auto& environment = m_ActiveScene->m_SceneData.ActiveEnvironmentMap;
-        ImGui::ColorEdit3("Clear Color", glm::value_ptr(environment.ClearColor));
-        ImGui::Checkbox("Enable Skybox", &environment.EnableSkybox);
+        if (ImGui::BeginTable("Environment_Attributes", 2, m_TableFlags))
+        {
+            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 90.0f);
+            ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
-        if (environment.EnableSkybox)
-            ImGui::Checkbox("Environment Reflections", &environment.Reflections);
-        else
-            environment.Reflections = false;
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
 
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-        Utils::DrawVec3Control("Directional", environment.DirLight.Direction, 0.0f, 0.01f);
-        ImGui::ColorEdit3("Color", glm::value_ptr(environment.DirLight.Color));
-        ImGui::DragFloat("Intensity", &environment.DirLight.Intensity, 0.01f);
+            auto& environment = m_ActiveScene->m_SceneData.ActiveEnvironmentMap;
 
+            ImGui::Text("Clear Color");
+            ImGui::TableNextColumn();
+
+            FL_REMOVE_LABEL(ImGui::ColorEdit3("##Clear_Color", glm::value_ptr(environment.ClearColor)));
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Enable Skybox");
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("##Enable_Skybox", &environment.EnableSkybox);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            if (environment.EnableSkybox)
+            {
+                ImGui::Text("Env Reflections");
+                ImGui::TableNextColumn();
+                ImGui::Checkbox("##Environment_Reflections", &environment.Reflections);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+            }
+            else
+                environment.Reflections = false;
+
+            ImGui::Text("Directional");
+            ImGui::TableNextColumn();
+            Utils::DrawVec3Control("##Directional_Light", environment.DirLight.Direction, 0.0f, 0.01f);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Color");
+            ImGui::TableNextColumn();
+
+            FL_REMOVE_LABEL(ImGui::ColorEdit3("##Color", glm::value_ptr(environment.DirLight.Color)));
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Intensity");
+            ImGui::TableNextColumn();
+            FL_REMOVE_LABEL(ImGui::DragFloat("##Intensity", &environment.DirLight.Intensity, 0.01f));
+            ImGui::EndTable();
+        }
         ImGui::End();
     }
 }

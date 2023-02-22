@@ -10,7 +10,7 @@ layout (location = 4) in int a_EntityID;
 out vec4 v_Color;
 out float v_TextureIndex;
 out vec2 v_Texture_UV;
-flat out int  v_EntityID;
+flat out int v_EntityID;
 
 layout (std140) uniform Camera
 {

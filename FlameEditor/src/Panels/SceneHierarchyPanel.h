@@ -22,6 +22,8 @@ namespace Flameberry {
     private:
         ecs::entity_handle m_SelectedEntity, m_RenamedEntity;
         Scene* m_ActiveScene;
+
+        ImGuiTableFlags m_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible;
     private:
         OpenGLTexture m_DefaultTexture;
     };

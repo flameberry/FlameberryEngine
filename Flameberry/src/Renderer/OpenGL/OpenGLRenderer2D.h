@@ -29,14 +29,17 @@ namespace Flameberry {
         ~OpenGLRenderer2D();
 
         void Init();
+        void Begin(const OrthographicCamera& camera);
+        void Begin(const glm::mat4& cameraMatrix);
+
         void AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath);
         void AddQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID);
         void AddQuad(const glm::mat4& transform, const char* textureFilePath, uint32_t entityID);
         void AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color);
-        void CleanUp();
-        void Begin(const OrthographicCamera& camera);
-        void Begin(const glm::mat4& cameraMatrix);
+
         void End();
+        void CleanUp();
+
         static std::shared_ptr<OpenGLRenderer2D> Create() { return std::make_shared<OpenGLRenderer2D>(); }
     private:
         void InitBatch();

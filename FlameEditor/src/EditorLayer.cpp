@@ -295,18 +295,20 @@ namespace Flameberry {
             if (m_IsViewportFocused)
                 m_IsCameraMoving = m_EditorCamera.OnUpdate(delta);
 
+            // m_OrthographicCamera.SetViewportSize(m_ViewportSize);
+            // m_OrthographicCamera.OnUpdate(delta);
+            // m_Renderer2D->Begin(m_OrthographicCamera);
+
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, m_ShadowMapFramebuffer->GetColorAttachmentID());
 
-            // m_OrthographicCamera.SetViewportSize(m_ViewportSize);
-            // m_OrthographicCamera.OnUpdate(delta);
-            // m_Renderer2D->Begin(m_EditorCamera.GetViewProjectionMatrix());
-            // m_Renderer2D->AddQuad(glm::vec3(0.0f, 0.0f, 0.5f), glm::vec2(0.2f, 0.2f), glm::vec4(1.0f));
-            // m_Renderer2D->End();
-
             m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera, lightViewProjectionMatrix);
 
-            // Copy
+            // m_Renderer2D->Begin(m_EditorCamera.GetViewProjectionMatrix());
+            // m_Renderer2D->AddQuad(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.5f), FL_PROJECT_DIR"FlameEditor/icons/light_bulb.png");
+            // m_Renderer2D->End();
+
+            // Copy framebuffer
             m_Framebuffer->SetRead();
             m_IntermediateFramebuffer->SetWrite();
             glBlitFramebuffer(0, 0, m_ViewportSize.x, m_ViewportSize.y, 0, 0, m_ViewportSize.x, m_ViewportSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
