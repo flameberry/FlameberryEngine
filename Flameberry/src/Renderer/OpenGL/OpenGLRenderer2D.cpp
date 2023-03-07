@@ -10,6 +10,7 @@
 #include "OpenGLRenderCommand.h"
 #include "OpenGLUniformBufferIndices.h"
 #include "Core/Input.h"
+#include "Renderer/PerspectiveCamera.h"
 
 namespace Flameberry {
     OpenGLRenderer2D::OpenGLRenderer2D()
@@ -20,7 +21,7 @@ namespace Flameberry {
 
         OpenGLShaderBinding cameraBinding{};
         cameraBinding.blockName = "Camera";
-        cameraBinding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_CAMERA_2D;
+        cameraBinding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_CAMERA;
 
         m_QuadShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/Quad.glsl", { cameraBinding });
         m_QuadShader->Bind();
@@ -89,7 +90,7 @@ namespace Flameberry {
         glBindVertexArray(m_Batch.VertexArrayId);
     }
 
-    void OpenGLRenderer2D::FlushBatch()
+    void OpenGLRenderer2D::FlushBatch(const std::shared_ptr<OpenGLShader>& shader)
     {
         if (!m_Batch.Vertices.size())
             return;
@@ -103,13 +104,103 @@ namespace Flameberry {
             glBindTexture(GL_TEXTURE_2D, m_Batch.TextureIds[i]);
         }
 
-        m_QuadShader->Bind();
+        shader->Bind();
         glBindVertexArray(m_Batch.VertexArrayId);
         glDrawElements(GL_TRIANGLES, (m_Batch.Vertices.size() / 4) * 6, GL_UNSIGNED_INT, 0);
 
         m_Batch.Vertices.clear();
         m_Batch.TextureIds.clear();
         m_CurrentTextureSlot = 0;
+    }
+
+    void OpenGLRenderer2D::AddQuad(const OpenGLVertex2D* vertices, int count)
+    {
+        for (uint16_t i = 0; i < count; i++)
+            m_Batch.Vertices.push_back(vertices[i]);
+    }
+
+    void OpenGLRenderer2D::AddQuad(const OpenGLVertex2D* vertices, int count, const char* texturePath)
+    {
+        for (uint16_t i = 0; i < count; i++)
+            m_Batch.Vertices.push_back(vertices[i]);
+
+        uint32_t textureID = OpenGLRenderCommand::CreateTexture(texturePath);
+        m_Batch.TextureIds.push_back(textureID);
+
+        // Increment the texture slot every time a textured quad is added
+        m_CurrentTextureSlot++;
+        if (m_CurrentTextureSlot == MAX_TEXTURE_SLOTS)
+        {
+            FlushBatch(m_QuadShader);
+            m_CurrentTextureSlot = 0;
+        }
+    }
+
+    void OpenGLRenderer2D::AddBillBoard(const glm::vec3& position, float size, const char* texturePath, const glm::mat4& cameraViewMatrix)
+    {
+        const glm::vec2 m_GenericVertexOffsets[] = {
+            {-1.0f, -1.0f},
+            {-1.0f,  1.0f},
+            { 1.0f,  1.0f},
+            { 1.0f, -1.0f}
+        };
+
+        const glm::vec3& right = { cameraViewMatrix[0][0], cameraViewMatrix[1][0], cameraViewMatrix[2][0] };
+        const glm::vec3& up = { cameraViewMatrix[0][1], cameraViewMatrix[1][1], cameraViewMatrix[2][1] };
+
+        OpenGLVertex2D vertices[4];
+        vertices[0].texture_uv = { 0.0f, 0.0f };
+        vertices[1].texture_uv = { 0.0f, 1.0f };
+        vertices[2].texture_uv = { 1.0f, 1.0f };
+        vertices[3].texture_uv = { 1.0f, 0.0f };
+
+        for (uint8_t i = 0; i < 4; i++)
+        {
+            vertices[i].position = position
+                - size * m_GenericVertexOffsets[i].x * right
+                + size * m_GenericVertexOffsets[i].y * up;
+            vertices[i].color = m_DefaultColor;
+            vertices[i].texture_index = m_CurrentTextureSlot;
+        }
+
+        for (uint8_t i = 0; i < 4; i++)
+            m_Batch.Vertices.push_back(vertices[i]);
+
+        uint32_t textureID = OpenGLRenderCommand::CreateTexture(texturePath);
+        m_Batch.TextureIds.push_back(textureID);
+
+        // Increment the texture slot every time a textured quad is added
+        m_CurrentTextureSlot++;
+        if (m_CurrentTextureSlot == MAX_TEXTURE_SLOTS)
+        {
+            FlushBatch(m_QuadShader);
+            m_CurrentTextureSlot = 0;
+        }
+    }
+
+    void OpenGLRenderer2D::AddBillBoardForMousePicking(const glm::vec3& position, float size, const glm::mat4& cameraViewMatrix, uint32_t entityID)
+    {
+        const glm::vec2 genericVertexOffsets[] = {
+            {-1.0f, -1.0f},
+            {-1.0f,  1.0f},
+            { 1.0f,  1.0f},
+            { 1.0f, -1.0f}
+        };
+
+        const glm::vec3& right = { cameraViewMatrix[0][0], cameraViewMatrix[1][0], cameraViewMatrix[2][0] };
+        const glm::vec3& up = { cameraViewMatrix[0][1], cameraViewMatrix[1][1], cameraViewMatrix[2][1] };
+
+        OpenGLVertex2D vertices[4];
+        for (uint8_t i = 0; i < 4; i++)
+        {
+            vertices[i].position = position
+                - size * genericVertexOffsets[i].x * right
+                + size * genericVertexOffsets[i].y * up;
+            vertices[i].entityID = entityID;
+        }
+
+        for (uint8_t i = 0; i < 4; i++)
+            m_Batch.Vertices.push_back(vertices[i]);
     }
 
     void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID)
@@ -180,7 +271,7 @@ namespace Flameberry {
         m_CurrentTextureSlot++;
         if (m_CurrentTextureSlot == MAX_TEXTURE_SLOTS)
         {
-            FlushBatch();
+            FlushBatch(m_QuadShader);
             m_CurrentTextureSlot = 0;
         }
     }
@@ -213,7 +304,7 @@ namespace Flameberry {
         m_CurrentTextureSlot++;
         if (m_CurrentTextureSlot == MAX_TEXTURE_SLOTS)
         {
-            FlushBatch();
+            FlushBatch(m_QuadShader);
             m_CurrentTextureSlot = 0;
         }
     }
@@ -234,10 +325,17 @@ namespace Flameberry {
         m_CameraUniformBuffer.BufferSubData(&m_UniformBufferData, sizeof(UniformBufferData), 0);
     }
 
+
     void OpenGLRenderer2D::End()
     {
-        FlushBatch();
-        m_CameraUniformBuffer.Unbind();
+        FlushBatch(m_QuadShader);
+        // m_CameraUniformBuffer.Unbind();
+    }
+
+    void OpenGLRenderer2D::End(const std::shared_ptr<OpenGLShader>& shader)
+    {
+        FlushBatch(shader);
+        // m_CameraUniformBuffer.Unbind();
     }
 
     void OpenGLRenderer2D::CleanUp()

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -36,14 +37,19 @@ namespace Flameberry {
         void AddQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID);
         void AddQuad(const glm::mat4& transform, const char* textureFilePath, uint32_t entityID);
         void AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color);
+        void AddQuad(const OpenGLVertex2D* vertices, int count = 4);
+        void AddQuad(const OpenGLVertex2D* vertices, int count, const char* texturePath);
+        void AddBillBoard(const glm::vec3& position, float size, const char* texturePath, const glm::mat4& cameraViewMatrix);
+        void AddBillBoardForMousePicking(const glm::vec3& position, float size, const glm::mat4& cameraViewMatrix, uint32_t entityID);
 
         void End();
+        void End(const std::shared_ptr<OpenGLShader>& shader);
         void CleanUp();
 
         static std::shared_ptr<OpenGLRenderer2D> Create() { return std::make_shared<OpenGLRenderer2D>(); }
+        void FlushBatch(const std::shared_ptr<OpenGLShader>& shader);
     private:
         void InitBatch();
-        void FlushBatch();
     private:
         struct UniformBufferData { glm::mat4 ViewProjectionMatrix; };
         struct Batch

@@ -19,13 +19,18 @@ namespace Flameberry {
         PerspectiveCamera() = default;
         PerspectiveCamera(const PerspectiveCameraInfo& cameraInfo);
         ~PerspectiveCamera();
+
         bool OnUpdate(float delta);
         void OnResize(float aspectRatio);
+
         const glm::mat4& GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
         const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
         const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
+        const glm::vec3& GetUpDirection() const { return m_UpDirection; }
+        const glm::vec3& GetRightDirection() const { return m_RightDirection; }
+        const glm::vec3& GetPosition() const { return m_CameraPosition; }
+
         void SetAspectRatio(float aspectRatio) { m_AspectRatio = aspectRatio; }
-        glm::vec3 GetPosition() const { return m_CameraPosition; }
     private:
         void Invalidate();
     private:

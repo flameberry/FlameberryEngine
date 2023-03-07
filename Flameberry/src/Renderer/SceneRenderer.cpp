@@ -1,5 +1,10 @@
 #include "SceneRenderer.h"
+
+#include <glm/gtc/type_ptr.hpp>
+
+#include "ECS/Component.h"
 #include "OpenGL/OpenGLUniformBufferIndices.h"
+
 
 namespace Flameberry {
     struct MeshCameraUniformBufferData {
@@ -39,6 +44,45 @@ namespace Flameberry {
     }
 
     SceneRenderer::~SceneRenderer() {}
+
+    void SceneRenderer::RenderLights(const std::shared_ptr<Scene>& scene, const std::shared_ptr<OpenGLRenderer2D>& renderer2D, const glm::mat4& cameraViewMatrix)
+    {
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
+        {
+            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
+            renderer2D->AddBillBoard(
+                transform.translation,
+                0.4f,
+                FL_PROJECT_DIR"FlameEditor/icons/bulb_icon_v2.png",
+                cameraViewMatrix
+            );
+        }
+        renderer2D->End();
+    }
+
+    void SceneRenderer::RenderLightsForMousePicking(
+        const std::shared_ptr<Scene>& scene,
+        const std::shared_ptr<OpenGLRenderer2D>& renderer2D,
+        const glm::mat4& cameraViewMatrix,
+        const std::shared_ptr<OpenGLShader>& mousePickingShader
+    )
+    {
+        glm::mat4 identityMatrix(1.0f);
+        mousePickingShader->Bind();
+        mousePickingShader->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(identityMatrix));
+
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
+        {
+            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
+            renderer2D->AddBillBoardForMousePicking(
+                transform.translation,
+                0.4f,
+                cameraViewMatrix,
+                (uint32_t)entity
+            );
+        }
+        renderer2D->FlushBatch(mousePickingShader);
+    }
 
     void SceneRenderer::RenderScene(const std::shared_ptr<Scene>& scene, const PerspectiveCamera& camera, const glm::mat4& lightViewProjectionMatrix)
     {
@@ -85,7 +129,6 @@ namespace Flameberry {
         }
 
         m_SceneUniformBuffer.Unbind();
-        // m_MeshCameraUniformBuffer.Unbind();
     }
 
     void SceneRenderer::RenderSceneForShadowMapping(const std::shared_ptr<Scene>& scene, const std::shared_ptr<OpenGLShader>& shader)

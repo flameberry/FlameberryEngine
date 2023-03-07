@@ -14,7 +14,7 @@ namespace Flameberry {
     EditorLayer::EditorLayer()
         : m_ViewportSize(1280, 720),
         m_ShadowMapUniformBuffer(sizeof(glm::mat4), nullptr, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW),
-        // m_Renderer2D(OpenGLRenderer2D::Create()),
+        m_Renderer2D(OpenGLRenderer2D::Create()),
         m_OrthographicCamera({ 1280, 720 }, 1.0f)
     {
     }
@@ -29,7 +29,7 @@ namespace Flameberry {
         OpenGLRenderCommand::EnableDepthTest();
         glEnable(GL_CULL_FACE);
 
-        // m_Renderer2D->Init();
+        m_Renderer2D->Init();
 
         OpenGLFramebufferSpecification intermediateFramebufferSpec{};
         intermediateFramebufferSpec.FramebufferSize = m_ViewportSize;
@@ -248,7 +248,8 @@ namespace Flameberry {
             glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
             glm::mat4 lightView = glm::lookAt(
                 // glm::vec3(1.0f),
-                -m_DirectionalLight.Direction,
+                // -m_DirectionalLight.Direction,
+                -m_ActiveScene->GetDirectionalLight().Direction,
                 glm::vec3(0.0f, 0.0f, 0.0f),
                 glm::vec3(0.0f, 1.0f, 0.0f)
             );
@@ -295,18 +296,11 @@ namespace Flameberry {
             if (m_IsViewportFocused)
                 m_IsCameraMoving = m_EditorCamera.OnUpdate(delta);
 
-            // m_OrthographicCamera.SetViewportSize(m_ViewportSize);
-            // m_OrthographicCamera.OnUpdate(delta);
-            // m_Renderer2D->Begin(m_OrthographicCamera);
-
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, m_ShadowMapFramebuffer->GetColorAttachmentID());
 
             m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera, lightViewProjectionMatrix);
-
-            // m_Renderer2D->Begin(m_EditorCamera.GetViewProjectionMatrix());
-            // m_Renderer2D->AddQuad(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.5f), FL_PROJECT_DIR"FlameEditor/icons/light_bulb.png");
-            // m_Renderer2D->End();
+            m_SceneRenderer->RenderLights(m_ActiveScene, m_Renderer2D, m_EditorCamera.GetViewMatrix());
 
             // Copy framebuffer
             m_Framebuffer->SetRead();
@@ -326,6 +320,7 @@ namespace Flameberry {
             glClearBufferiv(GL_COLOR, 0, &clearValue);
 
             m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingShader);
+            m_SceneRenderer->RenderLightsForMousePicking(m_ActiveScene, m_Renderer2D, m_EditorCamera.GetViewMatrix(), m_MousePickingShader);
 
             bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive;
             // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
@@ -342,6 +337,7 @@ namespace Flameberry {
                 if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
                 {
                     int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT0, mouseX, mouseY);
+                    FL_LOG(entityID);
                     m_SceneHierarchyPanel.SetSelectedEntity((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
                 }
             }

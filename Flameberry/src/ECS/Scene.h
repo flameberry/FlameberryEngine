@@ -49,6 +49,7 @@ namespace Flameberry {
         void AddMaterial(const std::string& materialName, const Material& material) { m_SceneData.Materials[materialName] = material; }
 
         glm::vec3 GetClearColor() const { return m_SceneData.ActiveEnvironmentMap.ClearColor; }
+        DirectionalLight GetDirectionalLight() const { return m_SceneData.ActiveEnvironmentMap.DirLight; }
     private:
         ecs::entity_handle* m_SelectedEntity = nullptr;
         ecs::registry* m_Registry;

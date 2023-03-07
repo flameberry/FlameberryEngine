@@ -53,6 +53,6 @@ namespace Flameberry {
         glm::vec3 Color;
         float Intensity;
 
-        LightComponent(): Color(10.0f), Intensity(1.0f) {}
+        LightComponent(): Color(1.0f), Intensity(10.0f) {}
     };
 }
