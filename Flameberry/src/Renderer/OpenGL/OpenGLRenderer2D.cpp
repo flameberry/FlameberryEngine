@@ -46,7 +46,7 @@ namespace Flameberry {
 
     void OpenGLRenderer2D::InitBatch()
     {
-        m_Batch.TextureIds.reserve(MAX_TEXTURE_SLOTS);
+        m_Batch.Textures.reserve(MAX_TEXTURE_SLOTS);
 
         uint32_t indices[MAX_INDICES];
         size_t offset = 0;
@@ -98,18 +98,15 @@ namespace Flameberry {
         glBindBuffer(GL_ARRAY_BUFFER, m_Batch.VertexBufferId);
         glBufferSubData(GL_ARRAY_BUFFER, 0, m_Batch.Vertices.size() * sizeof(OpenGLVertex2D), m_Batch.Vertices.data());
 
-        for (uint8_t i = 0; i < m_Batch.TextureIds.size(); i++)
-        {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, m_Batch.TextureIds[i]);
-        }
+        for (uint8_t i = 0; i < m_Batch.Textures.size(); i++)
+            m_Batch.Textures[i]->BindTextureUnit(i);
 
         shader->Bind();
         glBindVertexArray(m_Batch.VertexArrayId);
         glDrawElements(GL_TRIANGLES, (m_Batch.Vertices.size() / 4) * 6, GL_UNSIGNED_INT, 0);
 
         m_Batch.Vertices.clear();
-        m_Batch.TextureIds.clear();
+        m_Batch.Textures.clear();
         m_CurrentTextureSlot = 0;
     }
 
@@ -119,13 +116,14 @@ namespace Flameberry {
             m_Batch.Vertices.push_back(vertices[i]);
     }
 
-    void OpenGLRenderer2D::AddQuad(const OpenGLVertex2D* vertices, int count, const char* texturePath)
+    void OpenGLRenderer2D::AddQuad(const OpenGLVertex2D* vertices, int count, const std::shared_ptr<OpenGLTexture>& texture)
     {
         for (uint16_t i = 0; i < count; i++)
             m_Batch.Vertices.push_back(vertices[i]);
 
-        uint32_t textureID = OpenGLRenderCommand::CreateTexture(texturePath);
-        m_Batch.TextureIds.push_back(textureID);
+        // uint32_t textureID = OpenGLRenderCommand::CreateTexture(texturePath);
+        // m_Batch.Textures.push_back(textureID);
+        m_Batch.Textures.push_back(texture);
 
         // Increment the texture slot every time a textured quad is added
         m_CurrentTextureSlot++;
@@ -136,7 +134,7 @@ namespace Flameberry {
         }
     }
 
-    void OpenGLRenderer2D::AddBillBoard(const glm::vec3& position, float size, const char* texturePath, const glm::mat4& cameraViewMatrix)
+    void OpenGLRenderer2D::AddBillBoard(const glm::vec3& position, float size, const std::shared_ptr<OpenGLTexture>& texture, const glm::mat4& cameraViewMatrix)
     {
         const glm::vec2 m_GenericVertexOffsets[] = {
             {-1.0f, -1.0f},
@@ -166,8 +164,8 @@ namespace Flameberry {
         for (uint8_t i = 0; i < 4; i++)
             m_Batch.Vertices.push_back(vertices[i]);
 
-        uint32_t textureID = OpenGLRenderCommand::CreateTexture(texturePath);
-        m_Batch.TextureIds.push_back(textureID);
+        // uint32_t textureID = OpenGLRenderCommand::CreateTexture(texturePath);
+        m_Batch.Textures.push_back(texture);
 
         // Increment the texture slot every time a textured quad is added
         m_CurrentTextureSlot++;
@@ -245,7 +243,7 @@ namespace Flameberry {
             m_Batch.Vertices.push_back(vertices[i]);
     }
 
-    void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const char* textureFilePath, uint32_t entityID)
+    void OpenGLRenderer2D::AddQuad(const glm::mat4& transform, const std::shared_ptr<OpenGLTexture>& texture, uint32_t entityID)
     {
         OpenGLVertex2D vertices[4];
         vertices[0].texture_uv = { 0.0f, 0.0f };
@@ -264,8 +262,8 @@ namespace Flameberry {
         for (uint8_t i = 0; i < 4; i++)
             m_Batch.Vertices.push_back(vertices[i]);
 
-        uint32_t textureID = OpenGLRenderCommand::CreateTexture(textureFilePath);
-        m_Batch.TextureIds.push_back(textureID);
+        // uint32_t textureID = OpenGLRenderCommand::CreateTexture(textureFilePath);
+        m_Batch.Textures.push_back(texture);
 
         // Increment the texture slot every time a textured quad is added
         m_CurrentTextureSlot++;
@@ -276,7 +274,7 @@ namespace Flameberry {
         }
     }
 
-    void OpenGLRenderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath)
+    void OpenGLRenderer2D::AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const std::shared_ptr<OpenGLTexture>& texture)
     {
         OpenGLVertex2D vertices[4];
         vertices[0].texture_uv = { 0.0f, 0.0f };
@@ -297,8 +295,8 @@ namespace Flameberry {
         for (uint8_t i = 0; i < 4; i++)
             m_Batch.Vertices.push_back(vertices[i]);
 
-        uint32_t textureID = OpenGLRenderCommand::CreateTexture(textureFilePath);
-        m_Batch.TextureIds.push_back(textureID);
+        // uint32_t textureID = OpenGLRenderCommand::CreateTexture(textureFilePath);
+        m_Batch.Textures.push_back(texture);
 
         // Increment the texture slot every time a textured quad is added
         m_CurrentTextureSlot++;

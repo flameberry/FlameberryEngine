@@ -19,10 +19,6 @@ namespace Flameberry {
     {
     }
 
-    EditorLayer::~EditorLayer()
-    {
-    }
-
     void EditorLayer::OnCreate()
     {
         OpenGLRenderCommand::EnableBlend();
@@ -31,111 +27,7 @@ namespace Flameberry {
 
         m_Renderer2D->Init();
 
-        OpenGLFramebufferSpecification intermediateFramebufferSpec{};
-        intermediateFramebufferSpec.FramebufferSize = m_ViewportSize;
-
-        OpenGLFramebufferAttachment colAttach{};
-        colAttach.Target = GL_TEXTURE_2D;
-        colAttach.InternalFormat = GL_RGBA8;
-        colAttach.Format = GL_RGBA;
-        colAttach.Type = GL_UNSIGNED_BYTE;
-        colAttach.Attachment = GL_COLOR_ATTACHMENT0;
-        colAttach.IsColorAttachment = true;
-        colAttach.SetupTextureProperties = []() {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        };
-
-        intermediateFramebufferSpec.Attachments = { colAttach };
-
-        m_IntermediateFramebuffer = OpenGLFramebuffer::Create(intermediateFramebufferSpec);
-
-        OpenGLFramebufferSpecification framebufferSpec{};
-        framebufferSpec.FramebufferSize = m_ViewportSize;
-
-        OpenGLFramebufferAttachment colorAttachment{};
-        colorAttachment.Target = GL_TEXTURE_2D_MULTISAMPLE;
-        colorAttachment.InternalFormat = GL_RGBA8;
-        colorAttachment.Format = GL_RGBA;
-        colorAttachment.Type = GL_UNSIGNED_BYTE;
-        colorAttachment.Attachment = GL_COLOR_ATTACHMENT0;
-        colorAttachment.IsColorAttachment = true;
-        colorAttachment.SetupTextureProperties = []() {
-            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        };
-
-        OpenGLFramebufferAttachment depthAttachment{};
-        depthAttachment.Target = GL_TEXTURE_2D_MULTISAMPLE;
-        depthAttachment.InternalFormat = GL_DEPTH24_STENCIL8;
-        depthAttachment.Format = GL_DEPTH_STENCIL;
-        depthAttachment.Type = GL_UNSIGNED_INT_24_8;
-        depthAttachment.Attachment = GL_DEPTH_STENCIL_ATTACHMENT;
-        depthAttachment.IsColorAttachment = false;
-        depthAttachment.SetupTextureProperties = []() {
-            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        };
-
-        framebufferSpec.Attachments = { colorAttachment, depthAttachment };
-
-        m_Framebuffer = OpenGLFramebuffer::Create(framebufferSpec);
-
-        OpenGLFramebufferAttachment mousePickingAttachment{};
-        mousePickingAttachment.InternalFormat = GL_R32I;
-        mousePickingAttachment.Format = GL_RED_INTEGER;
-        mousePickingAttachment.Type = GL_UNSIGNED_BYTE;
-        mousePickingAttachment.Attachment = GL_COLOR_ATTACHMENT0;
-        mousePickingAttachment.IsColorAttachment = true;
-        mousePickingAttachment.SetupTextureProperties = []() {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        };
-
-        OpenGLFramebufferAttachment mousePickingDepthAttachment{};
-        mousePickingDepthAttachment.InternalFormat = GL_DEPTH_COMPONENT;
-        mousePickingDepthAttachment.Format = GL_DEPTH_COMPONENT;
-        mousePickingDepthAttachment.Type = GL_FLOAT;
-        mousePickingDepthAttachment.Attachment = GL_DEPTH_ATTACHMENT;
-        mousePickingDepthAttachment.IsColorAttachment = false;
-        mousePickingDepthAttachment.SetupTextureProperties = []() {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        };
-
-        OpenGLFramebufferSpecification mousePickingFramebufferSpec{};
-        mousePickingFramebufferSpec.FramebufferSize = m_ViewportSize;
-        mousePickingFramebufferSpec.Attachments = { mousePickingAttachment, mousePickingDepthAttachment };
-
-        m_MousePickingFramebuffer = OpenGLFramebuffer::Create(mousePickingFramebufferSpec);
-
-        OpenGLShaderBinding cameraBinding;
-        cameraBinding.blockName = "Camera";
-        cameraBinding.blockBindingIndex = 0;
-
-        m_MousePickingShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/mouse_picking.glsl", { cameraBinding });
-
-        OpenGLFramebufferAttachment shadowMapFramebufferDepthAttachment{};
-        shadowMapFramebufferDepthAttachment.InternalFormat = GL_DEPTH_COMPONENT;
-        shadowMapFramebufferDepthAttachment.Format = GL_DEPTH_COMPONENT;
-        shadowMapFramebufferDepthAttachment.Type = GL_FLOAT;
-        shadowMapFramebufferDepthAttachment.Attachment = GL_DEPTH_ATTACHMENT;
-        shadowMapFramebufferDepthAttachment.IsColorAttachment = false;
-        shadowMapFramebufferDepthAttachment.SetupTextureProperties = []() {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-            float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-        };
-
-        OpenGLFramebufferSpecification shadowMapFramebufferSpec;
-        shadowMapFramebufferSpec.FramebufferSize = { SHADOW_MAP_DIM, SHADOW_MAP_DIM };
-        shadowMapFramebufferSpec.Attachments = { shadowMapFramebufferDepthAttachment };
-
-        m_ShadowMapFramebuffer = OpenGLFramebuffer::Create(shadowMapFramebufferSpec);
+        CreateFramebuffers();
 
         OpenGLShaderBinding binding{};
         binding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_SHADOWMAPPING;
@@ -299,8 +191,7 @@ namespace Flameberry {
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, m_ShadowMapFramebuffer->GetColorAttachmentID());
 
-            m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera, lightViewProjectionMatrix);
-            m_SceneRenderer->RenderLights(m_ActiveScene, m_Renderer2D, m_EditorCamera.GetViewMatrix());
+            m_SceneRenderer->RenderScene(m_ActiveScene, m_EditorCamera, lightViewProjectionMatrix, m_Renderer2D);
 
             // Copy framebuffer
             m_Framebuffer->SetRead();
@@ -319,8 +210,7 @@ namespace Flameberry {
             int clearValue = -1;
             glClearBufferiv(GL_COLOR, 0, &clearValue);
 
-            m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingShader);
-            m_SceneRenderer->RenderLightsForMousePicking(m_ActiveScene, m_Renderer2D, m_EditorCamera.GetViewMatrix(), m_MousePickingShader);
+            m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_EditorCamera, m_MousePickingShader, m_Renderer2D);
 
             bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive;
             // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
@@ -337,7 +227,6 @@ namespace Flameberry {
                 if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
                 {
                     int entityID = m_Framebuffer->ReadPixel(GL_COLOR_ATTACHMENT0, mouseX, mouseY);
-                    FL_LOG(entityID);
                     m_SceneHierarchyPanel.SetSelectedEntity((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
                 }
             }
@@ -554,6 +443,115 @@ namespace Flameberry {
             SceneSerializer serializer(m_ActiveScene);
             serializer.DeserializeScene(path.c_str());
         }
+    }
+
+    void EditorLayer::CreateFramebuffers()
+    {
+        OpenGLFramebufferSpecification intermediateFramebufferSpec{};
+        intermediateFramebufferSpec.FramebufferSize = m_ViewportSize;
+
+        OpenGLFramebufferAttachment colAttach{};
+        colAttach.Target = GL_TEXTURE_2D;
+        colAttach.InternalFormat = GL_RGBA8;
+        colAttach.Format = GL_RGBA;
+        colAttach.Type = GL_UNSIGNED_BYTE;
+        colAttach.Attachment = GL_COLOR_ATTACHMENT0;
+        colAttach.IsColorAttachment = true;
+        colAttach.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        };
+
+        intermediateFramebufferSpec.Attachments = { colAttach };
+
+        m_IntermediateFramebuffer = OpenGLFramebuffer::Create(intermediateFramebufferSpec);
+
+        OpenGLFramebufferSpecification framebufferSpec{};
+        framebufferSpec.FramebufferSize = m_ViewportSize;
+
+        OpenGLFramebufferAttachment colorAttachment{};
+        colorAttachment.Target = GL_TEXTURE_2D_MULTISAMPLE;
+        colorAttachment.InternalFormat = GL_RGBA8;
+        colorAttachment.Format = GL_RGBA;
+        colorAttachment.Type = GL_UNSIGNED_BYTE;
+        colorAttachment.Attachment = GL_COLOR_ATTACHMENT0;
+        colorAttachment.IsColorAttachment = true;
+        colorAttachment.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        };
+
+        OpenGLFramebufferAttachment depthAttachment{};
+        depthAttachment.Target = GL_TEXTURE_2D_MULTISAMPLE;
+        depthAttachment.InternalFormat = GL_DEPTH24_STENCIL8;
+        depthAttachment.Format = GL_DEPTH_STENCIL;
+        depthAttachment.Type = GL_UNSIGNED_INT_24_8;
+        depthAttachment.Attachment = GL_DEPTH_STENCIL_ATTACHMENT;
+        depthAttachment.IsColorAttachment = false;
+        depthAttachment.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        };
+
+        framebufferSpec.Attachments = { colorAttachment, depthAttachment };
+
+        m_Framebuffer = OpenGLFramebuffer::Create(framebufferSpec);
+
+        OpenGLFramebufferAttachment mousePickingAttachment{};
+        mousePickingAttachment.InternalFormat = GL_R32I;
+        mousePickingAttachment.Format = GL_RED_INTEGER;
+        mousePickingAttachment.Type = GL_UNSIGNED_BYTE;
+        mousePickingAttachment.Attachment = GL_COLOR_ATTACHMENT0;
+        mousePickingAttachment.IsColorAttachment = true;
+        mousePickingAttachment.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        };
+
+        OpenGLFramebufferAttachment mousePickingDepthAttachment{};
+        mousePickingDepthAttachment.InternalFormat = GL_DEPTH_COMPONENT;
+        mousePickingDepthAttachment.Format = GL_DEPTH_COMPONENT;
+        mousePickingDepthAttachment.Type = GL_FLOAT;
+        mousePickingDepthAttachment.Attachment = GL_DEPTH_ATTACHMENT;
+        mousePickingDepthAttachment.IsColorAttachment = false;
+        mousePickingDepthAttachment.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        };
+
+        OpenGLFramebufferSpecification mousePickingFramebufferSpec{};
+        mousePickingFramebufferSpec.FramebufferSize = m_ViewportSize;
+        mousePickingFramebufferSpec.Attachments = { mousePickingAttachment, mousePickingDepthAttachment };
+
+        m_MousePickingFramebuffer = OpenGLFramebuffer::Create(mousePickingFramebufferSpec);
+
+        OpenGLShaderBinding cameraBinding;
+        cameraBinding.blockName = "Camera";
+        cameraBinding.blockBindingIndex = 0;
+
+        m_MousePickingShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/mouse_picking.glsl", { cameraBinding });
+
+        OpenGLFramebufferAttachment shadowMapFramebufferDepthAttachment{};
+        shadowMapFramebufferDepthAttachment.InternalFormat = GL_DEPTH_COMPONENT;
+        shadowMapFramebufferDepthAttachment.Format = GL_DEPTH_COMPONENT;
+        shadowMapFramebufferDepthAttachment.Type = GL_FLOAT;
+        shadowMapFramebufferDepthAttachment.Attachment = GL_DEPTH_ATTACHMENT;
+        shadowMapFramebufferDepthAttachment.IsColorAttachment = false;
+        shadowMapFramebufferDepthAttachment.SetupTextureProperties = []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+            float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        };
+
+        OpenGLFramebufferSpecification shadowMapFramebufferSpec;
+        shadowMapFramebufferSpec.FramebufferSize = { SHADOW_MAP_DIM, SHADOW_MAP_DIM };
+        shadowMapFramebufferSpec.Attachments = { shadowMapFramebufferDepthAttachment };
+
+        m_ShadowMapFramebuffer = OpenGLFramebuffer::Create(shadowMapFramebufferSpec);
     }
 
     void EditorLayer::OnDestroy()

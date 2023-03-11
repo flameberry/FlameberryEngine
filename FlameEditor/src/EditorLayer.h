@@ -9,7 +9,7 @@ namespace Flameberry {
     {
     public:
         EditorLayer();
-        ~EditorLayer();
+        ~EditorLayer() = default;
 
         void OnCreate() override;
         void OnUpdate(float delta) override;
@@ -24,6 +24,8 @@ namespace Flameberry {
         void OpenScene();
         void SaveScene(const std::string& path);
         void OpenScene(const std::string& path);
+    private:
+        void CreateFramebuffers();
     private:
         std::shared_ptr<OpenGLFramebuffer> m_Framebuffer, m_IntermediateFramebuffer, m_MousePickingFramebuffer;
         glm::vec2 m_ViewportSize;

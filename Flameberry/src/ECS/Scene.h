@@ -39,8 +39,6 @@ namespace Flameberry {
         Scene(ecs::registry* registry = nullptr);
         ~Scene() = default;
 
-        void RenderScene(OpenGLRenderer2D* renderer, const OrthographicCamera& camera);
-
         ecs::registry* GetRegistry() { return m_Registry; }
         void SetSelectedEntity(ecs::entity_handle* entity) { m_SelectedEntity = entity; }
         ecs::entity_handle GetSelectedEntity() const { return *m_SelectedEntity; }

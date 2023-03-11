@@ -41,50 +41,18 @@ namespace Flameberry {
         m_MeshShader->PushUniformInt("u_ShadowMapSampler", 1);
         m_MeshShader->PushUniformInt("u_EnvironmentMapSampler", 2);
         m_MeshShader->Unbind();
+
+        m_BulbTexture = OpenGLTexture::Create(FL_PROJECT_DIR"FlameEditor/icons/bulb_icon_v4.png", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR);
     }
 
     SceneRenderer::~SceneRenderer() {}
 
-    void SceneRenderer::RenderLights(const std::shared_ptr<Scene>& scene, const std::shared_ptr<OpenGLRenderer2D>& renderer2D, const glm::mat4& cameraViewMatrix)
-    {
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
-        {
-            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
-            renderer2D->AddBillBoard(
-                transform.translation,
-                0.4f,
-                FL_PROJECT_DIR"FlameEditor/icons/bulb_icon_v2.png",
-                cameraViewMatrix
-            );
-        }
-        renderer2D->End();
-    }
-
-    void SceneRenderer::RenderLightsForMousePicking(
+    void SceneRenderer::RenderScene(
         const std::shared_ptr<Scene>& scene,
-        const std::shared_ptr<OpenGLRenderer2D>& renderer2D,
-        const glm::mat4& cameraViewMatrix,
-        const std::shared_ptr<OpenGLShader>& mousePickingShader
+        const PerspectiveCamera& camera,
+        const glm::mat4& lightViewProjectionMatrix,
+        const std::shared_ptr<OpenGLRenderer2D>& renderer2D
     )
-    {
-        glm::mat4 identityMatrix(1.0f);
-        mousePickingShader->Bind();
-        mousePickingShader->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(identityMatrix));
-
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
-        {
-            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
-            renderer2D->AddBillBoardForMousePicking(
-                transform.translation,
-                0.4f,
-                cameraViewMatrix,
-                (uint32_t)entity
-            );
-        }
-        renderer2D->FlushBatch(mousePickingShader);
-    }
-
-    void SceneRenderer::RenderScene(const std::shared_ptr<Scene>& scene, const PerspectiveCamera& camera, const glm::mat4& lightViewProjectionMatrix)
     {
         MeshCameraUniformBufferData meshCameraUniformBufferData;
         meshCameraUniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
@@ -129,6 +97,19 @@ namespace Flameberry {
         }
 
         m_SceneUniformBuffer.Unbind();
+
+        // Render Lights in scene
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
+        {
+            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
+            renderer2D->AddBillBoard(
+                transform.translation,
+                0.4f,
+                m_BulbTexture,
+                camera.GetViewMatrix()
+            );
+        }
+        renderer2D->End();
     }
 
     void SceneRenderer::RenderSceneForShadowMapping(const std::shared_ptr<Scene>& scene, const std::shared_ptr<OpenGLShader>& shader)
@@ -140,13 +121,34 @@ namespace Flameberry {
         }
     }
 
-    void SceneRenderer::RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<OpenGLShader>& shader)
+    void SceneRenderer::RenderSceneForMousePicking(
+        const std::shared_ptr<Scene>& scene,
+        const PerspectiveCamera& camera,
+        const std::shared_ptr<OpenGLShader>& shader,
+        const std::shared_ptr<OpenGLRenderer2D>& renderer2D
+    )
     {
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
             scene->m_SceneData.Meshes[mesh.MeshIndex].DrawForMousePicking(shader, transform, (uint32_t)entity);
         }
+
+        glm::mat4 identityMatrix(1.0f);
+        shader->Bind();
+        shader->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(identityMatrix));
+
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
+        {
+            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
+            renderer2D->AddBillBoardForMousePicking(
+                transform.translation,
+                0.4f,
+                camera.GetViewMatrix(),
+                (uint32_t)entity
+            );
+        }
+        renderer2D->FlushBatch(shader);
     }
 
     void SceneRenderer::ReloadShader()

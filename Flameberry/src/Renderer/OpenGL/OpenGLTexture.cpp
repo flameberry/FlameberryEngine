@@ -8,18 +8,9 @@
 #include "Core/Core.h"
 
 namespace Flameberry {
-    OpenGLTextureSpecification::OpenGLTextureSpecification()
-        : SetupTextureProperties([](uint32_t target)
-            {
-                glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            })
-    {}
-
-    OpenGLTexture::OpenGLTexture(const std::string& texturePath)
-        : m_TextureID(OpenGLRenderCommand::GetTextureIDIfAvailable(texturePath.c_str())), m_FilePath(texturePath)
+    OpenGLTexture::OpenGLTexture(const std::string& texturePath, uint32_t minFilter, uint32_t magFilter)
+        : m_TextureID(OpenGLRenderCommand::GetTextureIDIfAvailable(texturePath.c_str())), m_FilePath(texturePath),
+        m_MinFilter(minFilter), m_MagFilter(magFilter)
     {
         if (m_TextureID) return;
 
@@ -28,11 +19,6 @@ namespace Flameberry {
             LoadCubeMapFromFolder(texturePath);
         else
             LoadTexture2DFromFile(texturePath);
-
-        // auto ext = tPath.extension().string();
-        // if (ext == "")
-        // {
-        // }
     }
 
     OpenGLTexture::OpenGLTexture(uint32_t textureID)
@@ -48,40 +34,40 @@ namespace Flameberry {
     void OpenGLTexture::BindTextureUnit(uint32_t unit)
     {
         glActiveTexture(GL_TEXTURE0 + unit);
-        glBindTexture(m_Specifications.Target, m_TextureID);
+        glBindTexture(m_Target, m_TextureID);
     }
 
     void OpenGLTexture::Unbind()
     {
-        glBindTexture(m_Specifications.Target, 0);
+        glBindTexture(m_Target, 0);
     }
 
     void OpenGLTexture::LoadTexture2DFromFile(const std::string& filePath)
     {
         m_FilePath = filePath;
-        m_Specifications.Target = GL_TEXTURE_2D;
+        m_Target = GL_TEXTURE_2D;
 
         stbi_set_flip_vertically_on_load(true);
         int channels;
-        unsigned char* data = stbi_load(filePath.c_str(), &m_Specifications.Width, &m_Specifications.Height, &channels, 0);
+        unsigned char* data = stbi_load(filePath.c_str(), &m_Width, &m_Height, &channels, 0);
 
         FL_DO_ON_ASSERT(data, FL_ERROR("Failed to load texture from \"{0}\"", filePath));
 
         switch (channels)
         {
         case 4: {
-            m_Specifications.InternalFormat = GL_RGBA8;
-            m_Specifications.Format = GL_RGBA;
+            m_InternalFormat = GL_RGBA8;
+            m_Format = GL_RGBA;
             break;
         }
         case 3: {
-            m_Specifications.InternalFormat = GL_RGB8;
-            m_Specifications.Format = GL_RGB;
+            m_InternalFormat = GL_RGB8;
+            m_Format = GL_RGB;
             break;
         }
         case 1: {
-            m_Specifications.InternalFormat = GL_RGBA;
-            m_Specifications.Format = GL_RED;
+            m_InternalFormat = GL_RGBA;
+            m_Format = GL_RED;
             break;
         }
         }
@@ -89,9 +75,13 @@ namespace Flameberry {
         glGenTextures(1, &m_TextureID);
         glBindTexture(GL_TEXTURE_2D, m_TextureID);
 
-        m_Specifications.SetupTextureProperties(GL_TEXTURE_2D);
+        glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, m_MinFilter);
+        glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, m_MagFilter);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, m_Specifications.InternalFormat, m_Specifications.Width, m_Specifications.Height, 0, m_Specifications.Format, GL_UNSIGNED_BYTE, data);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, m_InternalFormat, m_Width, m_Height, 0, m_Format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
         stbi_image_free(data);
@@ -100,9 +90,9 @@ namespace Flameberry {
 
     void OpenGLTexture::LoadCubeMapFromFolder(const std::string& folderPath)
     {
-        m_Specifications.Target = GL_TEXTURE_CUBE_MAP;
-        m_Specifications.InternalFormat = GL_RGB8;
-        m_Specifications.Format = GL_RGB;
+        m_Target = GL_TEXTURE_CUBE_MAP;
+        m_InternalFormat = GL_RGB8;
+        m_Format = GL_RGB;
 
         glGenTextures(1, &m_TextureID);
         glBindTexture(GL_TEXTURE_CUBE_MAP, m_TextureID);
@@ -122,11 +112,11 @@ namespace Flameberry {
             unsigned char* data = stbi_load(paths[i].c_str(), &width, &height, &channels, 0);
             FL_ASSERT(data, "Failed to load cube maps face: {0}", paths[i]);
 
-            if (width != m_Specifications.Width || height != m_Specifications.Height)
+            if (width != m_Width || height != m_Height)
                 FL_ERROR("Failed to load cubemap: Dimensions of all faces must be same");
 
-            m_Specifications.Width = width;
-            m_Specifications.Height = height;
+            m_Width = width;
+            m_Height = height;
 
             stbi_set_flip_vertically_on_load(false);
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);

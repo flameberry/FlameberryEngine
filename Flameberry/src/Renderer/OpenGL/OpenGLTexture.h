@@ -5,19 +5,13 @@
 #include <memory>
 #include <string>
 
+#include <glad/glad.h>
+
 namespace Flameberry {
-    struct OpenGLTextureSpecification {
-        int Width, Height;
-        uint32_t Target, InternalFormat, Format;
-        void(*SetupTextureProperties)(uint32_t target);
-
-        OpenGLTextureSpecification();
-    };
-
     class OpenGLTexture
     {
     public:
-        OpenGLTexture(const std::string& texturePath);
+        OpenGLTexture(const std::string& texturePath, uint32_t minFilter = GL_LINEAR, uint32_t magFilter = GL_LINEAR);
         OpenGLTexture(uint32_t textureID);
         ~OpenGLTexture();
 
@@ -35,7 +29,8 @@ namespace Flameberry {
         std::string m_FilePath;
         uint32_t m_TextureID;
 
-        OpenGLTextureSpecification m_Specifications;
+        int m_Width, m_Height;
+        uint32_t m_Target, m_InternalFormat, m_Format, m_MinFilter, m_MagFilter;
     };
 
 }

@@ -12,6 +12,7 @@
 #include "OpenGLVertex.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLShader.h"
+#include "OpenGLTexture.h"
 
 #include "Core/Core.h"
 #include "Renderer/OrthographicCamera.h"
@@ -33,13 +34,13 @@ namespace Flameberry {
         void Begin(const OrthographicCamera& camera);
         void Begin(const glm::mat4& cameraMatrix);
 
-        void AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const char* textureFilePath);
+        void AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const std::shared_ptr<OpenGLTexture>& texture);
         void AddQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID);
-        void AddQuad(const glm::mat4& transform, const char* textureFilePath, uint32_t entityID);
+        void AddQuad(const glm::mat4& transform, const std::shared_ptr<OpenGLTexture>& texture, uint32_t entityID);
         void AddQuad(const glm::vec3& position, const glm::vec2& dimensions, const glm::vec4& color);
         void AddQuad(const OpenGLVertex2D* vertices, int count = 4);
-        void AddQuad(const OpenGLVertex2D* vertices, int count, const char* texturePath);
-        void AddBillBoard(const glm::vec3& position, float size, const char* texturePath, const glm::mat4& cameraViewMatrix);
+        void AddQuad(const OpenGLVertex2D* vertices, int count, const std::shared_ptr<OpenGLTexture>& texture);
+        void AddBillBoard(const glm::vec3& position, float size, const std::shared_ptr<OpenGLTexture>& texture, const glm::mat4& cameraViewMatrix);
         void AddBillBoardForMousePicking(const glm::vec3& position, float size, const glm::mat4& cameraViewMatrix, uint32_t entityID);
 
         void End();
@@ -55,7 +56,7 @@ namespace Flameberry {
         struct Batch
         {
             uint32_t VertexBufferId, IndexBufferId, VertexArrayId;
-            std::vector<uint32_t> TextureIds;
+            std::vector<std::shared_ptr<OpenGLTexture>> Textures;
             std::vector<OpenGLVertex2D> Vertices;
         };
     private:
