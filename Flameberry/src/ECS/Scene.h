@@ -19,7 +19,8 @@ namespace Flameberry {
         DirectionalLight DirLight;
 
         EnvironmentMap()
-            : EnableSkybox(false),
+            : ClearColor(0.05f, 0.05f, 0.05f),
+            EnableSkybox(false),
             Reflections(false)
         {}
     };

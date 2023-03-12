@@ -30,7 +30,7 @@ namespace Flameberry {
     std::string FileDialog::SaveDialog()
     {
         NSSavePanel *panel = [NSSavePanel savePanel];
-        NSString *fileName = @"untitled.berry";
+        NSString *fileName = @"Untitled.berry";
         
         [panel setMessage:@"Select a path to save the scene file"]; // Message inside modal window
         [panel setAllowsOtherFileTypes:YES];

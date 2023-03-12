@@ -53,6 +53,7 @@ namespace Flameberry {
         std::shared_ptr<ecs::registry> m_Registry;
         ecs::entity_handle m_SquareEntity, m_TexturedEntity, m_BlueSquareEntity;
 
+        std::string m_OpenedScenePathIfExists = "";
         bool m_IsGizmoActive = false;
         int m_GizmoType = -1;
     };

@@ -74,8 +74,8 @@ namespace Flameberry {
 
         m_SceneRenderer = SceneRenderer::Create();
 
-        SceneSerializer serializer(m_ActiveScene);
-        serializer.DeserializeScene(FL_PROJECT_DIR"SandboxApp/assets/scenes/basic.berry");
+        // SceneSerializer serializer(m_ActiveScene);
+        // serializer.DeserializeScene(FL_PROJECT_DIR"SandboxApp/assets/scenes/basic.berry");
     }
 
     void EditorLayer::OnUpdate(float delta)
@@ -324,8 +324,13 @@ namespace Flameberry {
                 OpenScene();
             break;
         case GLFW_KEY_S:
-            if (ctrl_or_cmd && shift)
-                SaveScene();
+            if (ctrl_or_cmd)
+            {
+                if (shift || m_OpenedScenePathIfExists.empty())
+                    SaveScene();
+                else
+                    SaveScene(m_OpenedScenePathIfExists);
+            }
             break;
         case GLFW_KEY_Q:
             if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
@@ -374,9 +379,13 @@ namespace Flameberry {
         if (sceneToBeLoaded != "")
         {
             SceneSerializer serializer(m_ActiveScene);
-            serializer.DeserializeScene(sceneToBeLoaded.c_str());
-            FL_INFO("Loaded Scene: {0}", sceneToBeLoaded);
-            return;
+            bool success = serializer.DeserializeScene(sceneToBeLoaded.c_str());
+            if (success)
+            {
+                m_OpenedScenePathIfExists = sceneToBeLoaded;
+                FL_INFO("Loaded Scene: {0}", sceneToBeLoaded);
+                return;
+            }
         }
         FL_ERROR("Failed to load scene!");
     }
@@ -395,7 +404,9 @@ namespace Flameberry {
         if (!path.empty())
         {
             SceneSerializer serializer(m_ActiveScene);
-            serializer.DeserializeScene(path.c_str());
+            bool success = serializer.DeserializeScene(path.c_str());
+            if (success)
+                m_OpenedScenePathIfExists = path;
         }
     }
 

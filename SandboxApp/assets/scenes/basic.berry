@@ -1,4 +1,4 @@
-Scene: Basic
+Scene: basic
 EnvironmentMap:
   ClearColor: [0, 0, 0]
   Skybox: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/skybox
@@ -39,20 +39,26 @@ Entities:
 Meshes:
   - Mesh: sphere
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/sphere.obj
-  - Mesh: sponza
+  - Mesh: platform
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/platform.obj
   - Mesh: cylinder
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/cylinder.obj
 Materials:
-  - Material: METAL
-    Albedo: [1, 0, 1]
+  - Material: Default
+    Albedo: [1, 1, 1]
     Roughness: 0.200000003
-    Metallic: true
+    Metallic: false
     TextureMapEnabled: false
     TextureMap: None
   - Material: YELLOW_NON_METAL
     Albedo: [1, 1, 0]
     Roughness: 0.699999988
     Metallic: false
+    TextureMapEnabled: false
+    TextureMap: None
+  - Material: METAL
+    Albedo: [1, 0, 1]
+    Roughness: 0.200000003
+    Metallic: true
     TextureMapEnabled: false
     TextureMap: None

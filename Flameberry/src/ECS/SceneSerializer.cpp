@@ -83,13 +83,17 @@ namespace Flameberry {
     {
     }
 
-    bool SceneSerializer::SerializeScene(const char* scenePath)
+    bool SceneSerializer::SerializeScene(const std::string& scenePath)
     {
         FL_SCOPED_TIMER("Serialization");
-        YAML::Emitter out;
 
+        uint32_t lastSlashPosition = scenePath.find_last_of('/') + 1;
+        uint32_t lastDotPosition = scenePath.find_last_of('.');
+        std::string sceneName = scenePath.substr(lastSlashPosition, lastDotPosition - lastSlashPosition);
+
+        YAML::Emitter out;
         out << YAML::BeginMap;
-        out << YAML::Key << "Scene" << YAML::Value << "Untitled";
+        out << YAML::Key << "Scene" << YAML::Value << sceneName;
 
         // Environment Map
         out << YAML::Key << "EnvironmentMap" << YAML::Value << YAML::BeginMap;
