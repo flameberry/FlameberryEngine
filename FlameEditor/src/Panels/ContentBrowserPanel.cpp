@@ -56,6 +56,8 @@ namespace Flameberry {
 
             if (directory.is_directory())
                 currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/folder_icon.png");
+            else if (ext == ".berry")
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/file_berry_icon.png");
             else if (ext == ".png")
                 currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/file_png_icon.png");
             else if (ext == ".jpg")

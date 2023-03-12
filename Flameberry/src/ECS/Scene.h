@@ -46,8 +46,9 @@ namespace Flameberry {
         void SetDirectionalLight(const DirectionalLight& light) { m_SceneData.ActiveEnvironmentMap.DirLight = light; }
         void AddMaterial(const std::string& materialName, const Material& material) { m_SceneData.Materials[materialName] = material; }
 
-        glm::vec3 GetClearColor() const { return m_SceneData.ActiveEnvironmentMap.ClearColor; }
-        DirectionalLight GetDirectionalLight() const { return m_SceneData.ActiveEnvironmentMap.DirLight; }
+        inline glm::vec3 GetClearColor() const { return m_SceneData.ActiveEnvironmentMap.ClearColor; }
+        inline std::string GetName() const { return m_SceneData.Name; }
+        inline DirectionalLight GetDirectionalLight() const { return m_SceneData.ActiveEnvironmentMap.DirLight; }
     private:
         ecs::entity_handle* m_SelectedEntity = nullptr;
         ecs::registry* m_Registry;

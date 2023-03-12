@@ -195,8 +195,15 @@ namespace Flameberry {
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("Save", "Cmd+S"))
+                if (ImGui::MenuItem("Save As", "Cmd+Shift+S"))
                     SaveScene();
+                if (ImGui::MenuItem("Save", "Cmd+S"))
+                {
+                    if (m_OpenedScenePathIfExists.empty())
+                        SaveScene();
+                    else
+                        SaveScene(m_OpenedScenePathIfExists);
+                }
                 if (ImGui::MenuItem("Open", "Cmd+O"))
                     OpenScene();
                 ImGui::EndMenu();
@@ -292,6 +299,12 @@ namespace Flameberry {
         ImGui::Separator();
         if (ImGui::Button("Reload Mesh Shader"))
             m_SceneRenderer->ReloadShader();
+        ImGui::Separator();
+        if (!m_OpenedScenePathIfExists.empty())
+        {
+            ImGui::TextWrapped("Current scene: %s", m_ActiveScene->GetName().c_str());
+            ImGui::TextWrapped("Path: %s", m_OpenedScenePathIfExists.c_str());
+        }
         ImGui::End();
 
         m_SceneHierarchyPanel.OnUIRender();

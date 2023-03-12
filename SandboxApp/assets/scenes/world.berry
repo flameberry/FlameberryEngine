@@ -1,8 +1,8 @@
 Scene: world
 EnvironmentMap:
-  ClearColor: [0, 0, 0]
+  ClearColor: [0.818627477, 0.818627477, 0.818627477]
   Skybox: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/skybox
-  EnableSkybox: true
+  EnableSkybox: false
   Reflections: false
   DirectionalLight:
     Direction: [-1, -1, -1]
@@ -10,7 +10,7 @@ EnvironmentMap:
     Intensity: 2
 Entities:
   - Entity: 8487694862307973660
-    TagComponent: plat
+    TagComponent: platf
     TransformComponent:
       Translation: [0, -0.0156020522, 0]
       Rotation: [0, 0, 0]
@@ -66,9 +66,21 @@ Meshes:
   - Mesh: monkey
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/monkey.obj
 Materials:
-  - Material: Default
-    Albedo: [0.268166065, 0.911764681, 0.779258966]
+  - Material: METAL
+    Albedo: [1, 0, 1]
     Roughness: 0.200000003
+    Metallic: true
+    TextureMapEnabled: false
+    TextureMap: None
+  - Material: Material_4
+    Albedo: [1, 1, 1]
+    Roughness: 0.200000003
+    Metallic: true
+    TextureMapEnabled: true
+    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/metal.jpg
+  - Material: YELLOW_NON_METAL
+    Albedo: [1, 1, 0]
+    Roughness: 0.699999988
     Metallic: false
     TextureMapEnabled: false
     TextureMap: None
@@ -78,21 +90,9 @@ Materials:
     Metallic: false
     TextureMapEnabled: true
     TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/viking_room.png
-  - Material: YELLOW_NON_METAL
-    Albedo: [1, 1, 0]
-    Roughness: 0.699999988
-    Metallic: false
-    TextureMapEnabled: false
-    TextureMap: None
-  - Material: Material_4
-    Albedo: [1, 1, 1]
+  - Material: Default
+    Albedo: [0.268166065, 0.911764681, 0.779258966]
     Roughness: 0.200000003
     Metallic: false
-    TextureMapEnabled: true
-    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/planks.png
-  - Material: METAL
-    Albedo: [1, 0, 1]
-    Roughness: 0.200000003
-    Metallic: true
     TextureMapEnabled: false
     TextureMap: None
