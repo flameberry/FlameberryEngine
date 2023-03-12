@@ -17,12 +17,16 @@ namespace Flameberry {
     }
 
     Mesh::Mesh(const char* filePath)
-        : m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0)
+        : m_FilePath(filePath), m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0)
     {
-        auto [v, i] = OpenGLRenderCommand::LoadModel(filePath);
-        Vertices = v;
-        Indices = i;
+        const auto& [v, i] = OpenGLRenderCommand::LoadModel(filePath);
+        Vertices = std::move(v);
+        Indices = std::move(i);
         Invalidate();
+
+        uint32_t lengthSlash = m_FilePath.find_last_of('/') + 1;
+        uint32_t lengthDot = m_FilePath.find_last_of('.');
+        Name = m_FilePath.substr(lengthSlash, lengthDot - lengthSlash);
     }
 
     Mesh::Mesh(const std::vector<OpenGLVertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name)

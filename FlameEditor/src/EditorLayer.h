@@ -36,9 +36,6 @@ namespace Flameberry {
 
         std::shared_ptr<OpenGLShader> m_MousePickingShader;
 
-        Mesh m_TempMesh, m_SponzaMesh, m_FloorMesh;
-        std::shared_ptr<OpenGLTexture> m_BrickTexture;
-
         DirectionalLight m_DirectionalLight;
         std::shared_ptr<SceneRenderer> m_SceneRenderer;
         std::shared_ptr<OpenGLRenderer2D> m_Renderer2D;

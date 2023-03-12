@@ -46,17 +46,6 @@ namespace Flameberry {
 
         m_EditorCamera = PerspectiveCamera(cameraInfo);
 
-        m_TempMesh = Mesh(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
-        m_TempMesh.Name = "Sphere";
-
-        m_SponzaMesh = Mesh(FL_PROJECT_DIR"SandboxApp/assets/models/platform.obj");
-        m_SponzaMesh.Name = "Sponza";
-
-        Mesh mesh(FL_PROJECT_DIR"SandboxApp/assets/models/cylinder.obj");
-        mesh.Name = "Cylinder";
-
-        m_BrickTexture = OpenGLTexture::Create(FL_PROJECT_DIR"SandboxApp/assets/textures/brick.png");
-
         // Test
         // std::vector<Mesh> meshes;
         // ModelLoader::LoadOBJ(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj", &meshes);
@@ -86,7 +75,7 @@ namespace Flameberry {
         m_Registry->emplace<TransformComponent>(entity).translation = glm::vec3(1.0f);
         auto& light = m_Registry->emplace<LightComponent>(entity);
         light.Color = glm::vec3(1.0f);
-        light.Intensity = 2.0f;
+        light.Intensity = 10.0f;
 
         m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
         m_SceneHierarchyPanel = SceneHierarchyPanel(m_ActiveScene.get());
@@ -105,13 +94,12 @@ namespace Flameberry {
         //     inc++;
         // }
 
-        m_ActiveScene->LoadMesh(m_TempMesh);
-        m_ActiveScene->LoadMesh(m_SponzaMesh);
-        m_ActiveScene->LoadMesh(mesh);
+        m_ActiveScene->LoadMesh(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
+        m_ActiveScene->LoadMesh(FL_PROJECT_DIR"SandboxApp/assets/models/platform.obj");
+        m_ActiveScene->LoadMesh(FL_PROJECT_DIR"SandboxApp/assets/models/cylinder.obj");
 
         Material metal(glm::vec3(1, 0, 1), 0.2f, true);
         Material nonMetal(glm::vec3(1, 1, 0), 0.7f, false);
-        nonMetal.TextureMap = m_BrickTexture;
 
         m_ActiveScene->AddMaterial("METAL", metal);
         m_ActiveScene->AddMaterial("YELLOW_NON_METAL", nonMetal);

@@ -28,7 +28,7 @@ namespace Flameberry {
     struct SceneData
     {
         std::string Name = "Untitled";
-        std::vector<Mesh> Meshes;
+        std::vector<std::shared_ptr<Mesh>> Meshes;
         std::unordered_map<std::string, Material> Materials;
         EnvironmentMap ActiveEnvironmentMap;
     };
@@ -42,7 +42,7 @@ namespace Flameberry {
         ecs::registry* GetRegistry() { return m_Registry; }
         void SetSelectedEntity(ecs::entity_handle* entity) { m_SelectedEntity = entity; }
         ecs::entity_handle GetSelectedEntity() const { return *m_SelectedEntity; }
-        void LoadMesh(const Mesh& mesh);
+        void LoadMesh(const char* filePath);
         void SetDirectionalLight(const DirectionalLight& light) { m_SceneData.ActiveEnvironmentMap.DirLight = light; }
         void AddMaterial(const std::string& materialName, const Material& material) { m_SceneData.Materials[materialName] = material; }
 

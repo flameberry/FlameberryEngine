@@ -283,8 +283,6 @@ namespace Flameberry {
 
     void SceneHierarchyPanel::DrawComponent(MeshComponent& mesh)
     {
-        std::string modelPathAccepted = "";
-
         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5, 3 });
         if (ImGui::BeginTable("MeshComponentAttributes", 2, m_TableFlags))
         {
@@ -303,32 +301,28 @@ namespace Flameberry {
                     modelPath = project::g_AssetDirectory / modelPath;
                     const std::string& ext = modelPath.extension().string();
 
-                    FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+                    FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
 
                     if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
-                        modelPathAccepted = modelPath.string();
+                    {
+                        m_ActiveScene->m_SceneData.Meshes.emplace_back(std::make_shared<Mesh>(modelPath.string().c_str()));
+                        mesh.MeshIndex = (uint32_t)m_ActiveScene->m_SceneData.Meshes.size() - 1;
+                    }
                     else
                         FL_WARN("Bad File given as Model!");
                 }
                 ImGui::EndDragDropTarget();
             }
 
-            if (modelPathAccepted != "")
-            {
-                auto [vertices, indices] = OpenGLRenderCommand::LoadModel(modelPathAccepted);
-                m_ActiveScene->m_SceneData.Meshes.emplace_back(vertices, indices);
-                mesh.MeshIndex = (uint32_t)m_ActiveScene->m_SceneData.Meshes.size() - 1;
-            }
-
             ImGui::TableNextColumn();
 
             // Mesh Menu
-            if (ImGui::BeginCombo("##combo", m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex].Name.c_str())) // The second parameter is the label previewed before opening the combo.
+            if (ImGui::BeginCombo("##combo", m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex]->Name.c_str())) // The second parameter is the label previewed before opening the combo.
             {
                 for (int n = 0; n < m_ActiveScene->m_SceneData.Meshes.size(); n++)
                 {
                     bool is_selected = (mesh.MeshIndex == n); // You can store your selection however you want, outside or inside your objects
-                    if (ImGui::Selectable(m_ActiveScene->m_SceneData.Meshes[n].Name.c_str(), is_selected))
+                    if (ImGui::Selectable(m_ActiveScene->m_SceneData.Meshes[n]->Name.c_str(), is_selected))
                         mesh.MeshIndex = n;
                     if (is_selected)
                         ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)

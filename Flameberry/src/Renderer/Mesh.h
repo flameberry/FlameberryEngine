@@ -29,6 +29,7 @@ namespace Flameberry {
         std::vector<uint32_t> Indices;
         std::string Name;
     private:
+        std::string m_FilePath;
         uint32_t m_VertexArrayID, m_VertexBufferID, m_IndexBufferID;
         int m_EntityID = -1;
     };
