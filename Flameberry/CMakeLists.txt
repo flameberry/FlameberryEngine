@@ -26,6 +26,7 @@ target_include_directories(Flameberry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/vendor
 # Add Dependencies
 add_subdirectory(vendor/GLFW)
 add_subdirectory(vendor/Glad)
+add_subdirectory(vendor/yaml-cpp)
 
 target_compile_definitions(Flameberry PRIVATE ${FL_COMPILE_DEFINITIONS})
 

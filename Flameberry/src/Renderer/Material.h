@@ -13,8 +13,14 @@ namespace Flameberry {
         bool TextureMapEnabled = false;
         std::shared_ptr<OpenGLTexture> TextureMap;
 
-        Material(const glm::vec3& albedo = glm::vec3(1.0f), float roughness = 0.2f, bool isMetal = false)
-            : Albedo(albedo), Roughness(roughness), Metallic(isMetal)
+        Material(
+            const glm::vec3& albedo = glm::vec3(1.0f),
+            float roughness = 0.2f,
+            bool isMetal = false,
+            bool textureMapEnabled = false,
+            const std::shared_ptr<OpenGLTexture>& textureMap = nullptr
+        )
+            : Albedo(albedo), Roughness(roughness), Metallic(isMetal), TextureMapEnabled(textureMapEnabled), TextureMap(textureMap)
         {}
     };
 }

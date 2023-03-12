@@ -212,6 +212,8 @@ namespace ecs {
             int begin_index, end_index;
         };
     public:
+        /// @brief: Iterates over all entities in the scene
+        /// @param _Fn: A function with a param of type `ecs::entity_handle&` which represents the current entity being iterated
         template<typename Fn> void each(Fn&& _Fn) {
             static_assert(std::is_invocable_v<Fn, entity_handle&>);
             for (auto& entity : entities) {

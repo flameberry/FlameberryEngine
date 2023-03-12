@@ -21,10 +21,6 @@ namespace Flameberry {
             LoadTexture2DFromFile(texturePath);
     }
 
-    OpenGLTexture::OpenGLTexture(uint32_t textureID)
-        : m_TextureID(textureID)
-    {}
-
     OpenGLTexture::~OpenGLTexture()
     {
         OpenGLRenderCommand::RemoveTextureIDFromCache(m_FilePath);

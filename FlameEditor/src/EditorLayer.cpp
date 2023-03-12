@@ -55,28 +55,6 @@ namespace Flameberry {
 
         m_Registry = std::make_shared<ecs::registry>();
 
-        m_SquareEntity = m_Registry->create();
-        m_Registry->emplace<IDComponent>(m_SquareEntity);
-        m_Registry->emplace<TagComponent>(m_SquareEntity).Tag = "Sphere";
-        m_Registry->emplace<TransformComponent>(m_SquareEntity);
-        auto& meshComponent = m_Registry->emplace<MeshComponent>(m_SquareEntity);
-        meshComponent.MeshIndex = 0;
-
-        m_BlueSquareEntity = m_Registry->create();
-        m_Registry->emplace<IDComponent>(m_BlueSquareEntity);
-        m_Registry->emplace<TagComponent>(m_BlueSquareEntity).Tag = "Sponza";
-        m_Registry->emplace<TransformComponent>(m_BlueSquareEntity);
-        auto& meshComponent1 = m_Registry->emplace<MeshComponent>(m_BlueSquareEntity);
-        meshComponent1.MeshIndex = 1;
-
-        ecs::entity_handle entity = m_Registry->create();
-        m_Registry->emplace<IDComponent>(entity);
-        m_Registry->emplace<TagComponent>(entity).Tag = "Light";
-        m_Registry->emplace<TransformComponent>(entity).translation = glm::vec3(1.0f);
-        auto& light = m_Registry->emplace<LightComponent>(entity);
-        light.Color = glm::vec3(1.0f);
-        light.Intensity = 10.0f;
-
         m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
         m_SceneHierarchyPanel = SceneHierarchyPanel(m_ActiveScene.get());
         m_ContentBrowserPanel = ContentBrowserPanel();
@@ -94,22 +72,10 @@ namespace Flameberry {
         //     inc++;
         // }
 
-        m_ActiveScene->LoadMesh(FL_PROJECT_DIR"SandboxApp/assets/models/sphere.obj");
-        m_ActiveScene->LoadMesh(FL_PROJECT_DIR"SandboxApp/assets/models/platform.obj");
-        m_ActiveScene->LoadMesh(FL_PROJECT_DIR"SandboxApp/assets/models/cylinder.obj");
-
-        Material metal(glm::vec3(1, 0, 1), 0.2f, true);
-        Material nonMetal(glm::vec3(1, 1, 0), 0.7f, false);
-
-        m_ActiveScene->AddMaterial("METAL", metal);
-        m_ActiveScene->AddMaterial("YELLOW_NON_METAL", nonMetal);
-
-        m_DirectionalLight.Direction = { -1.0f, -1.0f, -1.0f };
-        m_DirectionalLight.Color = glm::vec3(1.0f);
-        m_DirectionalLight.Intensity = 2.0f;
-        m_ActiveScene->SetDirectionalLight(m_DirectionalLight);
-
         m_SceneRenderer = SceneRenderer::Create();
+
+        SceneSerializer serializer(m_ActiveScene);
+        serializer.DeserializeScene(FL_PROJECT_DIR"SandboxApp/assets/scenes/basic.berry");
     }
 
     void EditorLayer::OnUpdate(float delta)

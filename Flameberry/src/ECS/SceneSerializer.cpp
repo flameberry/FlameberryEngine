@@ -1,13 +1,79 @@
 #include "SceneSerializer.h"
 
-#include <rapidjson/document.h>
-#include <rapidjson/filereadstream.h>
-#include <rapidjson/filewritestream.h>
-#include <rapidjson/writer.h>
+#include <fstream>
+#include <yaml-cpp/yaml.h>
 
 #include "Core/Timer.h"
 
+namespace YAML {
+    template<>
+    struct convert<glm::vec3>
+    {
+        static Node encode(const glm::vec3& rhs)
+        {
+            Node node;
+            node.push_back(rhs.x);
+            node.push_back(rhs.y);
+            node.push_back(rhs.z);
+            node.SetStyle(EmitterStyle::Flow);
+            return node;
+        }
+
+        static bool decode(const Node& node, glm::vec3& rhs)
+        {
+            if (!node.IsSequence() || node.size() != 3)
+                return false;
+
+            rhs.x = node[0].as<float>();
+            rhs.y = node[1].as<float>();
+            rhs.z = node[2].as<float>();
+            return true;
+        }
+    };
+
+    template<>
+    struct convert<glm::vec4>
+    {
+        static Node encode(const glm::vec4& rhs)
+        {
+            Node node;
+            node.push_back(rhs.x);
+            node.push_back(rhs.y);
+            node.push_back(rhs.z);
+            node.push_back(rhs.w);
+            node.SetStyle(EmitterStyle::Flow);
+            return node;
+        }
+
+        static bool decode(const Node& node, glm::vec4& rhs)
+        {
+            if (!node.IsSequence() || node.size() != 4)
+                return false;
+
+            rhs.x = node[0].as<float>();
+            rhs.y = node[1].as<float>();
+            rhs.z = node[2].as<float>();
+            rhs.w = node[3].as<float>();
+            return true;
+        }
+    };
+}
+
 namespace Flameberry {
+    YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
+    {
+        out << YAML::Flow;
+        out << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
+        return out;
+    }
+
+    YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& v)
+    {
+        out << YAML::Flow;
+        out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
+        return out;
+    }
+
     SceneSerializer::SceneSerializer(const std::shared_ptr<Scene>& scene)
         : m_ActiveScene(scene)
     {
@@ -20,166 +86,241 @@ namespace Flameberry {
     bool SceneSerializer::SerializeScene(const char* scenePath)
     {
         FL_SCOPED_TIMER("Serialization");
-        rapidjson::Document document;
-        rapidjson::MemoryPoolAllocator allocator = document.GetAllocator();
+        YAML::Emitter out;
 
-        rapidjson::Value value(rapidjson::kStringType);
-        rapidjson::Value entityJSONObject(rapidjson::kObjectType);
-        rapidjson::Value materialJSONObject(rapidjson::kObjectType);
+        out << YAML::BeginMap;
+        out << YAML::Key << "Scene" << YAML::Value << "Untitled";
 
-        value.SetString(m_ActiveScene->m_SceneData.Name.c_str(), m_ActiveScene->m_SceneData.Name.length());
+        // Environment Map
+        out << YAML::Key << "EnvironmentMap" << YAML::Value << YAML::BeginMap;
 
-        document.SetObject();
-        document.AddMember("Scene", value, allocator);
+        auto& env = m_ActiveScene->m_SceneData.ActiveEnvironmentMap;
+        out << YAML::Key << "ClearColor" << YAML::Value << env.ClearColor;
+        out << YAML::Key << "Skybox" << YAML::Value << env.ActiveSkybox->GetFolderPath();
+        out << YAML::Key << "EnableSkybox" << YAML::Value << env.EnableSkybox;
+        out << YAML::Key << "Reflections" << YAML::Value << env.Reflections;
 
-        // Start with entities
-        value.SetArray();
-        document.AddMember("Entities", value, allocator);
+        out << YAML::Key << "DirectionalLight" << YAML::Value << YAML::BeginMap;
+        out << YAML::Key << "Direction" << YAML::Value << env.DirLight.Direction;
+        out << YAML::Key << "Color" << YAML::Value << env.DirLight.Color;
+        out << YAML::Key << "Intensity" << YAML::Value << env.DirLight.Intensity;
+        out << YAML::EndMap; // Directional Light
+
+        out << YAML::EndMap; // EnvironmentMap
+
+        out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 
         m_ActiveScene->m_Registry->each([&](ecs::entity_handle& entity)
             {
-                entityJSONObject.SetObject();
-                entityJSONObject.AddMember("UUID", m_ActiveScene->m_Registry->get<IDComponent>(entity).ID, allocator);
-
-                // Tag Component
-                auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
-                value.SetString(tag.c_str(), tag.length());
-                entityJSONObject.AddMember("TagComponent", value, allocator);
-
-                // Transform Component
-                auto transformComponent = m_ActiveScene->m_Registry->get<TransformComponent>(entity);
-                value.SetArray();
-                value.PushBack(transformComponent.translation.x, allocator);
-                value.PushBack(transformComponent.translation.y, allocator);
-                value.PushBack(transformComponent.translation.z, allocator);
-                value.PushBack(transformComponent.rotation.x, allocator);
-                value.PushBack(transformComponent.rotation.y, allocator);
-                value.PushBack(transformComponent.rotation.z, allocator);
-                value.PushBack(transformComponent.scale.x, allocator);
-                value.PushBack(transformComponent.scale.y, allocator);
-                value.PushBack(transformComponent.scale.z, allocator);
-                entityJSONObject.AddMember("TransformComponent", value, allocator);
-
-                // Mesh Component
-                if (m_ActiveScene->m_Registry->has<MeshComponent>(entity))
-                {
-                    auto meshComponent = m_ActiveScene->m_Registry->get<MeshComponent>(entity);
-                    value.SetObject();
-                    entityJSONObject.AddMember("MeshComponent", value, allocator);
-                    entityJSONObject["MeshComponent"].AddMember("MeshIndex", meshComponent.MeshIndex, allocator);
-
-                    value.SetString(meshComponent.MaterialName.c_str(), meshComponent.MaterialName.length());
-                    entityJSONObject["MeshComponent"].AddMember("MaterialName", value, allocator);
-                }
-                document["Entities"].PushBack(entityJSONObject, allocator);
+                SerializeEntity(out, entity);
             }
         );
+        out << YAML::EndSeq; // Entities
 
-        value.SetArray();
-        document.AddMember("Materials", value, allocator);
+        // Serialize Meshes loaded
+        out << YAML::Key << "Meshes" << YAML::Value << YAML::BeginSeq;
 
-        for (const auto& [name, material] : m_ActiveScene->m_SceneData.Materials)
+        for (const auto& mesh : m_ActiveScene->m_SceneData.Meshes)
         {
-            materialJSONObject.SetObject();
-
-            value.SetString(name.c_str(), name.length());
-            materialJSONObject.AddMember("Name", value, allocator);
-
-            value.SetArray();
-            value.PushBack(material.Albedo.x, allocator);
-            value.PushBack(material.Albedo.y, allocator);
-            value.PushBack(material.Albedo.z, allocator);
-
-            materialJSONObject.AddMember("Albedo", value, allocator);
-            materialJSONObject.AddMember("Roughness", material.Roughness, allocator);
-            materialJSONObject.AddMember("Metallic", material.Metallic, allocator);
-
-            document["Materials"].PushBack(materialJSONObject, allocator);
+            out << YAML::BeginMap;
+            out << YAML::Key << "Mesh" << YAML::Value << mesh->Name;
+            out << YAML::Key << "FilePath" << YAML::Value << mesh->GetFilePath();
+            out << YAML::EndMap; // Mesh
         }
 
-        FILE* fp = fopen(scenePath, "w");
+        out << YAML::EndSeq; // Meshes
 
-        char writeBuffer[65536];
-        rapidjson::FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
+        // Serialize Materials
+        out << YAML::Key << "Materials" << YAML::Value << YAML::BeginSeq;
 
-        rapidjson::Writer<rapidjson::FileWriteStream> writer(os);
-        document.Accept(writer);
-        fclose(fp);
+        for (const auto& [materialName, material] : m_ActiveScene->m_SceneData.Materials)
+        {
+            out << YAML::BeginMap;
+            out << YAML::Key << "Material" << YAML::Value << materialName;
+            out << YAML::Key << "Albedo" << YAML::Value << material.Albedo;
+            out << YAML::Key << "Roughness" << YAML::Value << material.Roughness;
+            out << YAML::Key << "Metallic" << YAML::Value << material.Metallic;
+            out << YAML::Key << "TextureMapEnabled" << YAML::Value << material.TextureMapEnabled;
+            if (material.TextureMapEnabled)
+                out << YAML::Key << "TextureMap" << YAML::Value << material.TextureMap->GetFilePath();
+            else
+                out << YAML::Key << "TextureMap" << YAML::Value << "None";
+            out << YAML::EndMap; // Material
+        }
+
+        out << YAML::EndSeq; // Materials
+        out << YAML::EndMap; // Scene
+
+        std::ofstream fout(scenePath);
+        fout << out.c_str();
+
         return true;
+    }
+
+    void SceneSerializer::SerializeEntity(YAML::Emitter& out, ecs::entity_handle& entity)
+    {
+        out << YAML::BeginMap;
+        out << YAML::Key << "Entity" << YAML::Value << m_ActiveScene->m_Registry->get<IDComponent>(entity).ID;
+
+        out << YAML::Key << "TagComponent" << YAML::Value << m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
+
+        if (m_ActiveScene->m_Registry->has<TransformComponent>(entity))
+        {
+            auto& transform = m_ActiveScene->m_Registry->get<TransformComponent>(entity);
+            out << YAML::Key << "TransformComponent" << YAML::BeginMap;
+            out << YAML::Key << "Translation" << YAML::Value << transform.translation;
+            out << YAML::Key << "Rotation" << YAML::Value << transform.rotation;
+            out << YAML::Key << "Scale" << YAML::Value << transform.scale;
+            out << YAML::EndMap; // Transform Component
+        }
+
+        if (m_ActiveScene->m_Registry->has<SpriteRendererComponent>(entity))
+        {
+            auto& sprite = m_ActiveScene->m_Registry->get<SpriteRendererComponent>(entity);
+            out << YAML::Key << "SpriteRendererComponent" << YAML::BeginMap;
+            out << YAML::Key << "Color" << YAML::Value << sprite.Color;
+            out << YAML::Key << "TextureFilePath" << YAML::Value << sprite.TextureFilePath;
+            out << YAML::EndMap; // Sprite Renderer Component
+        }
+
+        if (m_ActiveScene->m_Registry->has<MeshComponent>(entity))
+        {
+            auto& mesh = m_ActiveScene->m_Registry->get<MeshComponent>(entity);
+            out << YAML::Key << "MeshComponent" << YAML::BeginMap;
+            out << YAML::Key << "MeshIndex" << YAML::Value << mesh.MeshIndex;
+            out << YAML::Key << "MaterialName" << YAML::Value << mesh.MaterialName;
+            out << YAML::EndMap; // Mesh Component
+        }
+
+        if (m_ActiveScene->m_Registry->has<LightComponent>(entity))
+        {
+            auto& light = m_ActiveScene->m_Registry->get<LightComponent>(entity);
+            out << YAML::Key << "LightComponent" << YAML::BeginMap;
+            out << YAML::Key << "Color" << YAML::Value << light.Color;
+            out << YAML::Key << "Intensity" << YAML::Value << light.Intensity;
+            out << YAML::EndMap; // Light Component
+        }
+
+        out << YAML::EndMap; // Entity
     }
 
     bool SceneSerializer::DeserializeScene(const char* scenePath)
     {
         FL_SCOPED_TIMER("Deserialization");
-        FILE* fp = fopen(scenePath, "r");
-        FL_ASSERT(fp, "Failed to open the scene: {0}", scenePath);
+        std::ifstream in(scenePath);
+        std::stringstream ss;
+        ss << in.rdbuf();
 
-        char readBuffer[65536];
-        rapidjson::FileReadStream istream(fp, readBuffer, sizeof(readBuffer));
+        YAML::Node data = YAML::Load(ss.str());
+        if (!data["Scene"])
+        {
+            FL_ERROR("Failed to load scene [{0}]: 'Scene' attribute not present in file!", scenePath);
+            return false;
+        };
 
-        rapidjson::Document document;
-        document.ParseStream(istream);
-        FL_ASSERT(document.IsObject(), "Invalid JSON file!");
+        m_ActiveScene->m_SceneData.Name = data["Scene"].as<std::string>();
 
+        // Clearing existing scene // TODO: Remove Active Environment Map
         m_ActiveScene->m_Registry->clear();
-
         m_ActiveScene->m_SceneData.Materials.clear();
-        m_ActiveScene->m_SceneData.Name = document["Scene"].GetString();
+        m_ActiveScene->m_SceneData.Meshes.clear();
 
-        const rapidjson::Value& entities = document["Entities"];
-        for (const auto& entityDetails : entities.GetArray())
+        // Deserialize Environment Map
+        auto& env = m_ActiveScene->m_SceneData.ActiveEnvironmentMap;
+
+        auto envMapNode = data["EnvironmentMap"];
+        env.ClearColor = envMapNode["ClearColor"].as<glm::vec3>();
+        env.ActiveSkybox = std::make_shared<Skybox>(envMapNode["Skybox"].as<std::string>().c_str());
+        env.EnableSkybox = envMapNode["EnableSkybox"].as<bool>();
+        env.Reflections = envMapNode["Reflections"].as<bool>();
+        env.DirLight.Direction = envMapNode["DirectionalLight"]["Direction"].as<glm::vec3>();
+        env.DirLight.Color = envMapNode["DirectionalLight"]["Color"].as<glm::vec3>();
+        env.DirLight.Intensity = envMapNode["DirectionalLight"]["Intensity"].as<float>();
+
+        auto entities = data["Entities"];
+        if (entities)
         {
-            auto entity = m_ActiveScene->m_Registry->create();
-
-            auto& id = entityDetails["UUID"];
-            m_ActiveScene->m_Registry->emplace<IDComponent>(entity, id.GetUint64());
-
-            auto& tagComponent = entityDetails["TagComponent"];
-            m_ActiveScene->m_Registry->emplace<TagComponent>(entity).Tag = tagComponent.IsString() ? entityDetails["TagComponent"].GetString() : "Empty";
-
-            auto& transformComponent = entityDetails["TransformComponent"];
-            if (transformComponent.IsArray())
+            for (auto entity : entities)
             {
-                auto transform = m_ActiveScene->m_Registry->emplace<TransformComponent>(entity);
+                if (entity)
+                {
+                    // Deserialize entity
+                    auto deserializedEntity = m_ActiveScene->m_Registry->create();
+                    if (auto id = entity["Entity"]; id)
+                    {
+                        auto& IDComp = m_ActiveScene->m_Registry->emplace<IDComponent>(deserializedEntity);
+                        IDComp.ID = id.as<uint64_t>();
+                    }
 
-                transform.translation.x = transformComponent.GetArray()[0].GetFloat();
-                transform.translation.y = transformComponent.GetArray()[1].GetFloat();
-                transform.translation.z = transformComponent.GetArray()[2].GetFloat();
-                transform.rotation.x = transformComponent.GetArray()[3].GetFloat();
-                transform.rotation.y = transformComponent.GetArray()[4].GetFloat();
-                transform.rotation.z = transformComponent.GetArray()[5].GetFloat();
-                transform.scale.x = transformComponent.GetArray()[6].GetFloat();
-                transform.scale.y = transformComponent.GetArray()[7].GetFloat();
-                transform.scale.z = transformComponent.GetArray()[8].GetFloat();
-            }
+                    if (auto tag = entity["TagComponent"]; tag)
+                    {
+                        auto& tagComp = m_ActiveScene->m_Registry->emplace<TagComponent>(deserializedEntity);
+                        tagComp.Tag = tag.as<std::string>();
+                    }
 
-            auto& meshComponent = entityDetails["MeshComponent"];
-            if (meshComponent.IsObject() && meshComponent["MeshIndex"].IsUint())
-            {
-                auto mesh = m_ActiveScene->m_Registry->emplace<MeshComponent>(entity);
-                mesh.MeshIndex = meshComponent["MeshIndex"].GetUint();
-                if (meshComponent["MaterialName"].IsString())
-                    mesh.MaterialName = meshComponent["MaterialName"].GetString();
+                    if (auto transform = entity["TransformComponent"]; transform) // Deserialize entity
+                    {
+                        auto& transformComp = m_ActiveScene->m_Registry->emplace<TransformComponent>(deserializedEntity);
+                        transformComp.translation = transform["Translation"].as<glm::vec3>();
+                        transformComp.rotation = transform["Rotation"].as<glm::vec3>();
+                        transformComp.scale = transform["Scale"].as<glm::vec3>();
+                    }
+
+                    if (auto sprite = entity["SpriteRendererComponent"]; sprite) // Deserialize entity
+                    {
+                        auto& spriteComp = m_ActiveScene->m_Registry->emplace<SpriteRendererComponent>(deserializedEntity);
+                        spriteComp.Color = sprite["Color"].as<glm::vec4>();
+                        spriteComp.TextureFilePath = sprite["TextureFilePath"].as<std::string>();
+                    }
+
+                    if (auto mesh = entity["MeshComponent"]; mesh)
+                    {
+                        auto& meshComp = m_ActiveScene->m_Registry->emplace<MeshComponent>(deserializedEntity);
+                        meshComp.MeshIndex = mesh["MeshIndex"].as<uint32_t>();
+                        meshComp.MaterialName = mesh["MaterialName"].as<std::string>();
+                    }
+
+                    if (auto light = entity["LightComponent"]; light)
+                    {
+                        auto& lightComp = m_ActiveScene->m_Registry->emplace<LightComponent>(deserializedEntity);
+                        lightComp.Color = light["Color"].as<glm::vec3>();
+                        lightComp.Intensity = light["Intensity"].as<float>();
+                    }
+                }
             }
         }
 
-        const rapidjson::Value& materials = document["Materials"];
-        for (const auto& materialDetails : materials.GetArray())
+        auto meshes = data["Meshes"];
+        if (meshes)
         {
-            FL_ASSERT(materialDetails.IsObject(), "Invalid Material JSON Object!");
-            Material material{
-                glm::vec3 {
-                    materialDetails["Albedo"].GetArray()[0].GetFloat(),
-                    materialDetails["Albedo"].GetArray()[1].GetFloat(),
-                    materialDetails["Albedo"].GetArray()[2].GetFloat()
-                },
-                materialDetails["Roughness"].GetFloat(),
-                materialDetails["Metallic"].GetBool()
-            };
-            m_ActiveScene->m_SceneData.Materials[materialDetails["Name"].GetString()] = material;
+            for (auto mesh : meshes)
+            {
+                if (mesh)
+                    m_ActiveScene->m_SceneData.Meshes.emplace_back(std::make_shared<Mesh>(mesh["FilePath"].as<std::string>()));
+            }
         }
 
-        fclose(fp);
+        auto materials = data["Materials"];
+        if (materials)
+        {
+            for (auto material : materials)
+            {
+                if (material)
+                {
+                    if (auto materialName = material["Material"]; materialName)
+                    {
+                        bool textureMapEnabled = material["TextureMapEnabled"].as<bool>();
+                        m_ActiveScene->m_SceneData.Materials[materialName.as<std::string>()] = Material{
+                            material["Albedo"].as<glm::vec3>(),
+                            material["Roughness"].as<float>(),
+                            material["Metallic"].as<bool>(),
+                            textureMapEnabled,
+                            textureMapEnabled ? std::make_shared<OpenGLTexture>(material["TextureMap"].as<std::string>()) : nullptr
+                        };
+                    }
+                }
+            }
+        }
         return true;
     }
 }

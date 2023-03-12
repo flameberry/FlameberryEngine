@@ -13,7 +13,7 @@ namespace Flameberry {
     {}
 
     Skybox::Skybox(const char* folderPath)
-        : m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0), m_ShaderProgramID(0)
+        : m_FolderPath(folderPath), m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0), m_ShaderProgramID(0)
     {
         OpenGLShaderBinding cameraBinding{};
         cameraBinding.blockBindingIndex = FL_UNIFORM_BLOCK_BINDING_CAMERA;

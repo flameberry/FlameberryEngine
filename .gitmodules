@@ -10,3 +10,6 @@
 [submodule "Flameberry/vendor/ImGuizmo"]
 	path = Flameberry/vendor/ImGuizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo
+[submodule "Flameberry/vendor/yaml-cpp"]
+	path = Flameberry/vendor/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp

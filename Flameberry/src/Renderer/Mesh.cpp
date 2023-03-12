@@ -11,12 +11,7 @@
 #include "Core/Core.h"
 
 namespace Flameberry {
-    Mesh::Mesh()
-        : m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0)
-    {
-    }
-
-    Mesh::Mesh(const char* filePath)
+    Mesh::Mesh(const std::string& filePath)
         : m_FilePath(filePath), m_VertexArrayID(0), m_VertexBufferID(0), m_IndexBufferID(0)
     {
         const auto& [v, i] = OpenGLRenderCommand::LoadModel(filePath);

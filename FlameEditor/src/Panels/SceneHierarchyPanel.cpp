@@ -305,7 +305,7 @@ namespace Flameberry {
 
                     if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
                     {
-                        m_ActiveScene->m_SceneData.Meshes.emplace_back(std::make_shared<Mesh>(modelPath.string().c_str()));
+                        m_ActiveScene->m_SceneData.Meshes.emplace_back(std::make_shared<Mesh>(modelPath.string()));
                         mesh.MeshIndex = (uint32_t)m_ActiveScene->m_SceneData.Meshes.size() - 1;
                     }
                     else
@@ -317,7 +317,8 @@ namespace Flameberry {
             ImGui::TableNextColumn();
 
             // Mesh Menu
-            if (ImGui::BeginCombo("##combo", m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex]->Name.c_str())) // The second parameter is the label previewed before opening the combo.
+            const char* selectedMeshName = m_ActiveScene->m_SceneData.Meshes.size() ? m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex]->Name.c_str() : "";
+            if (ImGui::BeginCombo("##combo", selectedMeshName)) // The second parameter is the label previewed before opening the combo.
             {
                 for (int n = 0; n < m_ActiveScene->m_SceneData.Meshes.size(); n++)
                 {

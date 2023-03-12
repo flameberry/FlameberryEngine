@@ -12,13 +12,13 @@ namespace Flameberry {
     {
     public:
         OpenGLTexture(const std::string& texturePath, uint32_t minFilter = GL_LINEAR, uint32_t magFilter = GL_LINEAR);
-        OpenGLTexture(uint32_t textureID);
         ~OpenGLTexture();
 
         void BindTextureUnit(uint32_t unit);
         void Unbind();
 
         inline uint32_t GetTextureID() const { return m_TextureID; }
+        inline std::string GetFilePath() const { return m_FilePath; }
 
         template<typename... Args>
         static std::shared_ptr<OpenGLTexture> Create(Args... args) { return std::make_shared<OpenGLTexture>(std::forward<Args>(args)...); }

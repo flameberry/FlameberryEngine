@@ -11,12 +11,13 @@ set(VULKAN_PATH "")
 file(GLOB IMGUI_SRC ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.cpp ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.h)
 
 # Setting the paths we require irrespective of the Graphics API
-set(FL_GRAPHICS_LIBS glfw)
+set(FL_GRAPHICS_LIBS glfw yaml-cpp)
 set(FL_GRAPHICS_INCLUDE_DIRS 
     ${FL_SOURCE_DIR}/Flameberry/vendor
     ${FL_SOURCE_DIR}/Flameberry/vendor/GLFW/include
     ${FL_SOURCE_DIR}/Flameberry/vendor/glm
     ${FL_SOURCE_DIR}/Flameberry/vendor/imgui
+    ${FL_SOURCE_DIR}/Flameberry/vendor/yaml-cpp/include
 )
 
 set(FL_COMPILE_DEFINITIONS FL_PROJECT_DIR="${FL_SOURCE_DIR}" GLFW_INCLUDE_NONE)
@@ -53,10 +54,10 @@ if (FL_GRAPHICS_API STREQUAL "Vulkan")
     list(APPEND FL_COMPILE_DEFINITIONS FL_USE_VULKAN_API GLFW_INCLUDE_VULKAN)
     
     list(APPEND IMGUI_SRC
-    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp
-    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.h
-    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
-    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
+        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp
+        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.h
+        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
+        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
     )
 
 elseif(FL_GRAPHICS_API STREQUAL "OpenGL")

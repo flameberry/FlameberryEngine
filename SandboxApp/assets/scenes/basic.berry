@@ -1,0 +1,58 @@
+Scene: Basic
+EnvironmentMap:
+  ClearColor: [0, 0, 0]
+  Skybox: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/skybox
+  EnableSkybox: true
+  Reflections: false
+  DirectionalLight:
+    Direction: [-1, -1, -1]
+    Color: [1, 1, 1]
+    Intensity: 2
+Entities:
+  - Entity: 4993865933297574000
+    TagComponent: Sphere
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshIndex: 0
+      MaterialName: Default
+  - Entity: 2867677738303151356
+    TagComponent: Sponza
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshIndex: 1
+      MaterialName: Default
+  - Entity: 5194393858410325541
+    TagComponent: Light
+    TransformComponent:
+      Translation: [1, 1, 1]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    LightComponent:
+      Color: [1, 1, 1]
+      Intensity: 10
+Meshes:
+  - Mesh: sphere
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/sphere.obj
+  - Mesh: sponza
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/platform.obj
+  - Mesh: cylinder
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/cylinder.obj
+Materials:
+  - Material: METAL
+    Albedo: [1, 0, 1]
+    Roughness: 0.200000003
+    Metallic: true
+    TextureMapEnabled: false
+    TextureMap: None
+  - Material: YELLOW_NON_METAL
+    Albedo: [1, 1, 0]
+    Roughness: 0.699999988
+    Metallic: false
+    TextureMapEnabled: false
+    TextureMap: None
