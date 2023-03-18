@@ -3,6 +3,8 @@
 <image src="README_Images/world_scene_loaded_image.png">
 <figcaption align="center">Flameberry Engine &rarr; Scene Loaded: world.berry</figcaption>
 
+<hr>
+
 ### <i>Build Requirements:</i>
 1. Python OR CMake should be installed on your computer
 2. Your C++ compiler should support C++17
