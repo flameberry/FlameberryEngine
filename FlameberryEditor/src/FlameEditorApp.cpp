@@ -4,21 +4,21 @@
 #include "Core/EntryPoint.h"
 
 namespace Flameberry {
-    class FlameEditorApp: public Application
+    class FlameberryEditorApp: public Application
     {
     public:
-        FlameEditorApp()
+        FlameberryEditorApp()
         {
             PushLayer<EditorLayer>();
         }
 
-        ~FlameEditorApp()
+        ~FlameberryEditorApp()
         {
         }
     };
 
     std::shared_ptr<Application> Application::CreateClientApp()
     {
-        return std::make_shared<FlameEditorApp>();
+        return std::make_shared<FlameberryEditorApp>();
     }
 }

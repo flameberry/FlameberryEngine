@@ -354,8 +354,8 @@ namespace Flameberry {
 
             ImGui::SameLine();
 
-            uint32_t plusIconTextureID = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/plus_icon.png");
-            uint32_t minusIconTextureID = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/minus_icon.png");
+            uint32_t plusIconTextureID = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/plus_icon.png");
+            uint32_t minusIconTextureID = OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/minus_icon.png");
 
             if (ImGui::ImageButton(reinterpret_cast<void*>(plusIconTextureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
             {

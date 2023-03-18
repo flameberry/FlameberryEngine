@@ -42,7 +42,7 @@ namespace Flameberry {
         m_MeshShader->PushUniformInt("u_EnvironmentMapSampler", 2);
         m_MeshShader->Unbind();
 
-        m_BulbTexture = OpenGLTexture::Create(FL_PROJECT_DIR"FlameEditor/icons/bulb_icon_v4.png", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR);
+        m_BulbTexture = OpenGLTexture::Create(FL_PROJECT_DIR"FlameberryEditor/icons/bulb_icon_v4.png", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR);
     }
 
     SceneRenderer::~SceneRenderer() {}

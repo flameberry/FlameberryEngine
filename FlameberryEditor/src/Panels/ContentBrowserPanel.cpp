@@ -7,7 +7,7 @@ namespace Flameberry {
     ContentBrowserPanel::ContentBrowserPanel()
         : m_CurrentDirectory(project::g_AssetDirectory)
     {
-        m_BackArrowIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/back_arrow_icon.png");
+        m_BackArrowIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/back_arrow_icon.png");
     }
 
     ContentBrowserPanel::~ContentBrowserPanel()
@@ -55,21 +55,21 @@ namespace Flameberry {
             bool is_file_supported = true;
 
             if (directory.is_directory())
-                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/folder_icon.png");
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/folder_icon.png");
             else if (ext == ".berry")
-                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/file_berry_icon.png");
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/file_berry_icon.png");
             else if (ext == ".png")
-                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/file_png_icon.png");
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/file_png_icon.png");
             else if (ext == ".jpg")
-                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/file_jpg_icon.png");
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/file_jpg_icon.png");
             else if (ext == ".obj")
-                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/obj_file_icon.png");
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/obj_file_icon.png");
             else if (ext == ".mtl")
-                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/mtl_file_icon.png");
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/mtl_file_icon.png");
             else if (ext == ".json")
-                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/json_file_icon.png");
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/json_file_icon.png");
             else {
-                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameEditor/icons/file_icon_default.png");
+                currentIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/file_icon_default.png");
                 is_file_supported = false;
             }
 
