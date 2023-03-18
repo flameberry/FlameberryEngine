@@ -16,7 +16,8 @@ namespace Flameberry {
         void OnDraw(const PerspectiveCamera& camera);
         void Load(const char* folderPath);
 
-        uint32_t GetTextureID() const { return m_SkyboxTexture->GetTextureID(); }
+        void BindCubeMapTextureToUnit(uint32_t unit = 0);
+
         std::string GetFolderPath() const { return m_FolderPath; }
     private:
         std::string m_FolderPath;

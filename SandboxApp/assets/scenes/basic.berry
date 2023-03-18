@@ -2,47 +2,45 @@ Scene: basic
 EnvironmentMap:
   ClearColor: [0, 0, 0]
   Skybox: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/skybox
-  EnableSkybox: true
+  EnableSkybox: false
   Reflections: false
   DirectionalLight:
     Direction: [-1, -1, -1]
     Color: [1, 1, 1]
     Intensity: 2
 Entities:
-  - Entity: 4993865933297574000
-    TagComponent: Sphere
+  - Entity: 7741751749768360881
+    TagComponent: Plat
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [0, 1.23942137, 0]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Scale: [3, 1, 3]
     MeshComponent:
       MeshIndex: 0
       MaterialName: Default
   - Entity: 2867677738303151356
-    TagComponent: Sponza
+    TagComponent: Bugatt
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [0, 0, 3.20548058]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
       MeshIndex: 1
-      MaterialName: Default
+      MaterialName: Material_3
   - Entity: 5194393858410325541
     TagComponent: Light
     TransformComponent:
-      Translation: [1.73164368, 1.37484753, 0.91772449]
+      Translation: [-6.75875092, 2.96539402, -2.27065945]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     LightComponent:
       Color: [1, 1, 1]
       Intensity: 10
 Meshes:
-  - Mesh: sphere
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/sphere.obj
   - Mesh: platform
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/platform.obj
-  - Mesh: cylinder
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/cylinder.obj
+  - Mesh: only_bugatti_v2
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/only_bugatti_v2.obj
 Materials:
   - Material: METAL
     Albedo: [1, 0, 1]
@@ -56,9 +54,15 @@ Materials:
     Metallic: false
     TextureMapEnabled: false
     TextureMap: None
-  - Material: Default
+  - Material: Material_3
     Albedo: [1, 1, 1]
-    Roughness: 0.200000003
+    Roughness: 0.0700000003
+    Metallic: false
+    TextureMapEnabled: false
+    TextureMap: None
+  - Material: Default
+    Albedo: [0.308823526, 0.715397835, 1]
+    Roughness: 0.550000012
     Metallic: false
     TextureMapEnabled: false
     TextureMap: None

@@ -134,7 +134,6 @@ namespace Flameberry {
 
             // constexpr glm::vec3 clearColor(20.0f / 255.0f, 20.0f / 255.0f, 20.0f / 255.0f);
             const auto& clearColor = m_ActiveScene->GetClearColor();
-            // glm::vec3 clearColor(0.0f);
             glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
 
             m_EditorCamera.OnResize(m_ViewportSize.x / m_ViewportSize.y);

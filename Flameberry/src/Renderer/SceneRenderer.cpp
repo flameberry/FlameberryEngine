@@ -80,10 +80,7 @@ namespace Flameberry {
         if (scene->m_SceneData.ActiveEnvironmentMap.EnableSkybox)
         {
             scene->m_SceneData.ActiveEnvironmentMap.ActiveSkybox->OnDraw(camera);
-            uint32_t skyboxTextureID = scene->m_SceneData.ActiveEnvironmentMap.ActiveSkybox->GetTextureID();
-
-            glActiveTexture(GL_TEXTURE0 + 2);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
+            scene->m_SceneData.ActiveEnvironmentMap.ActiveSkybox->BindCubeMapTextureToUnit(2);
         }
 
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())

@@ -46,6 +46,10 @@ namespace Flameberry {
 
         FL_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str()), err);
 
+        bool has_tex_coord = true;
+        if (!attrib.texcoords.size())
+            has_tex_coord = false;
+        
         for (const auto& shape : shapes)
         {
             for (const auto& index : shape.mesh.indices)
@@ -58,10 +62,12 @@ namespace Flameberry {
                     attrib.vertices[3 * index.vertex_index + 2]
                 };
 
-                vertex.texture_uv = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-                };
+                if (has_tex_coord) {
+                    vertex.texture_uv = {
+                        attrib.texcoords[2 * index.texcoord_index + 0],
+                        1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                    };
+                }
 
                 vertex.normal = {
                     attrib.normals[3 * index.normal_index + 0],

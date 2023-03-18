@@ -90,6 +90,11 @@ namespace Flameberry {
         m_SkyboxTexture = OpenGLTexture::Create(folderPath);
     }
 
+    void Skybox::BindCubeMapTextureToUnit(uint32_t unit)
+    {
+        m_SkyboxTexture->BindTextureUnit(unit);
+    }
+
     void Skybox::OnDraw(const PerspectiveCamera& camera)
     {
         glDepthMask(GL_FALSE);
