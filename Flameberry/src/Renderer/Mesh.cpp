@@ -132,5 +132,8 @@ namespace Flameberry {
 
     Mesh::~Mesh()
     {
+        glDeleteVertexArrays(1, &m_VertexArrayID);
+        glDeleteBuffers(1, &m_VertexBufferID);
+        glDeleteBuffers(1, &m_IndexBufferID);
     }
 }

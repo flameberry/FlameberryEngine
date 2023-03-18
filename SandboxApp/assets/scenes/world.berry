@@ -1,6 +1,6 @@
 Scene: world
 EnvironmentMap:
-  ClearColor: [0.818627477, 0.818627477, 0.818627477]
+  ClearColor: [1, 0.897058845, 0.897058845]
   Skybox: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/skybox
   EnableSkybox: false
   Reflections: false
@@ -48,7 +48,7 @@ Entities:
   - Entity: 15762011954558668979
     TagComponent: PointLight
     TransformComponent:
-      Translation: [4.02661324, 1.17294645, 3.45072198]
+      Translation: [5.13277245, 1.17651224, 2.13474298]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     LightComponent:
@@ -66,21 +66,9 @@ Meshes:
   - Mesh: monkey
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/monkey.obj
 Materials:
-  - Material: METAL
-    Albedo: [1, 0, 1]
+  - Material: Default
+    Albedo: [0.268166065, 0.911764681, 0.779258966]
     Roughness: 0.200000003
-    Metallic: true
-    TextureMapEnabled: false
-    TextureMap: None
-  - Material: Material_4
-    Albedo: [1, 1, 1]
-    Roughness: 0.200000003
-    Metallic: true
-    TextureMapEnabled: true
-    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/metal.jpg
-  - Material: YELLOW_NON_METAL
-    Albedo: [1, 1, 0]
-    Roughness: 0.699999988
     Metallic: false
     TextureMapEnabled: false
     TextureMap: None
@@ -90,9 +78,21 @@ Materials:
     Metallic: false
     TextureMapEnabled: true
     TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/viking_room.png
-  - Material: Default
-    Albedo: [0.268166065, 0.911764681, 0.779258966]
-    Roughness: 0.200000003
+  - Material: YELLOW_NON_METAL
+    Albedo: [1, 1, 0]
+    Roughness: 0.699999988
     Metallic: false
+    TextureMapEnabled: false
+    TextureMap: None
+  - Material: Material_4
+    Albedo: [1, 1, 1]
+    Roughness: 0.200000003
+    Metallic: true
+    TextureMapEnabled: true
+    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/metal.jpg
+  - Material: METAL
+    Albedo: [1, 0, 1]
+    Roughness: 0.200000003
+    Metallic: true
     TextureMapEnabled: false
     TextureMap: None

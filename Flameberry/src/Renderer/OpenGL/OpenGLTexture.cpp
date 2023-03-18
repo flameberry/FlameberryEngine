@@ -24,7 +24,7 @@ namespace Flameberry {
     OpenGLTexture::~OpenGLTexture()
     {
         OpenGLRenderCommand::RemoveTextureIDFromCache(m_FilePath);
-        // glDeleteTextures(1, &m_TextureID); // TODO: Don't know why this causes problems
+        glDeleteTextures(1, &m_TextureID);
     }
 
     void OpenGLTexture::BindTextureUnit(uint32_t unit)

@@ -30,7 +30,7 @@ Entities:
   - Entity: 5194393858410325541
     TagComponent: Light
     TransformComponent:
-      Translation: [1, 1, 1]
+      Translation: [1.73164368, 1.37484753, 0.91772449]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     LightComponent:
@@ -44,10 +44,10 @@ Meshes:
   - Mesh: cylinder
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/cylinder.obj
 Materials:
-  - Material: Default
-    Albedo: [1, 1, 1]
+  - Material: METAL
+    Albedo: [1, 0, 1]
     Roughness: 0.200000003
-    Metallic: false
+    Metallic: true
     TextureMapEnabled: false
     TextureMap: None
   - Material: YELLOW_NON_METAL
@@ -56,9 +56,9 @@ Materials:
     Metallic: false
     TextureMapEnabled: false
     TextureMap: None
-  - Material: METAL
-    Albedo: [1, 0, 1]
+  - Material: Default
+    Albedo: [1, 1, 1]
     Roughness: 0.200000003
-    Metallic: true
+    Metallic: false
     TextureMapEnabled: false
     TextureMap: None
