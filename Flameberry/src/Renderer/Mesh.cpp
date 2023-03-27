@@ -22,6 +22,8 @@ namespace Flameberry {
         uint32_t lengthSlash = m_FilePath.find_last_of('/') + 1;
         uint32_t lengthDot = m_FilePath.find_last_of('.');
         Name = m_FilePath.substr(lengthSlash, lengthDot - lengthSlash);
+
+        FL_LOG("Allocated {0}, {1} bytes for {2}: Vertices, Indices", Vertices.size() * sizeof(OpenGLVertex), Indices.size() * sizeof(uint32_t), Name);
     }
 
     Mesh::Mesh(const std::vector<OpenGLVertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name)
@@ -51,15 +53,13 @@ namespace Flameberry {
         glBindVertexArray(m_VertexArrayID);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 12 * sizeof(float), (void*)offsetof(OpenGLVertex, position));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(OpenGLVertex, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 12 * sizeof(float), (void*)offsetof(OpenGLVertex, color));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(OpenGLVertex, color));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 12 * sizeof(float), (void*)offsetof(OpenGLVertex, normal));
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(OpenGLVertex, normal));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 1 * sizeof(int) + 12 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_uv));
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 1, GL_INT, GL_FALSE, 1 * sizeof(int) + 12 * sizeof(float), (void*)offsetof(OpenGLVertex, entityID));
+        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)offsetof(OpenGLVertex, texture_uv));
 
         glGenBuffers(1, &m_IndexBufferID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBufferID);
@@ -113,18 +113,11 @@ namespace Flameberry {
         if (!Vertices.size())
             return;
 
-        if (m_EntityID != entityID)
-        {
-            m_EntityID = entityID;
-            for (auto& vertex : Vertices)
-                vertex.entityID = m_EntityID;
-
-            glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(OpenGLVertex), Vertices.data());
-        }
+        m_EntityID = entityID;
 
         shader->Bind();
         shader->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(transform.GetTransform()));
+        shader->PushUniformInt("u_EntityID", m_EntityID);
 
         glBindVertexArray(m_VertexArrayID);
         glDrawElements(GL_TRIANGLES, (int)Indices.size(), GL_UNSIGNED_INT, 0);

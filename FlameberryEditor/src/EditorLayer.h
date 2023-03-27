@@ -34,7 +34,7 @@ namespace Flameberry {
         bool m_IsViewportFocused = false;
         bool m_IsCameraMoving = false;
 
-        std::shared_ptr<OpenGLShader> m_MousePickingShader;
+        std::shared_ptr<OpenGLShader> m_MousePickingShader, m_MousePickingShader2D;
 
         DirectionalLight m_DirectionalLight;
         std::shared_ptr<SceneRenderer> m_SceneRenderer;

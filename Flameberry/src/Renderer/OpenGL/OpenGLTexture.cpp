@@ -48,6 +48,7 @@ namespace Flameberry {
         unsigned char* data = stbi_load(filePath.c_str(), &m_Width, &m_Height, &channels, 0);
 
         FL_DO_ON_ASSERT(data, FL_ERROR("Failed to load texture from \"{0}\"", filePath));
+        FL_INFO("Allocated {0} bytes for texture ({1} channels): {2}", m_Width * m_Height * channels, channels, filePath);
 
         switch (channels)
         {
@@ -102,6 +103,8 @@ namespace Flameberry {
              std::string(folderPath) + "/back.jpg"
         };
 
+        size_t allocated = 0;
+
         for (uint32_t i = 0; i < 6; i++)
         {
             int width, height, channels;
@@ -114,6 +117,8 @@ namespace Flameberry {
             m_Width = width;
             m_Height = height;
 
+            allocated += m_Width * m_Height * 4;
+
             stbi_set_flip_vertically_on_load(false);
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
@@ -124,5 +129,7 @@ namespace Flameberry {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+        FL_INFO("Allocated {0} bytes for cubemap: {1}", allocated, folderPath);
     }
 }

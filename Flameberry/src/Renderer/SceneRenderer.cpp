@@ -54,6 +54,7 @@ namespace Flameberry {
         const std::shared_ptr<OpenGLRenderer2D>& renderer2D
     )
     {
+        // Updating Camera Uniform Buffer
         MeshCameraUniformBufferData meshCameraUniformBufferData;
         meshCameraUniformBufferData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
         meshCameraUniformBufferData.LightViewProjectionMatrix = lightViewProjectionMatrix;
@@ -61,6 +62,7 @@ namespace Flameberry {
         m_MeshCameraUniformBuffer.Bind();
         m_MeshCameraUniformBuffer.BufferSubData(&meshCameraUniformBufferData, sizeof(MeshCameraUniformBufferData), 0);
 
+        // Updating Scene Uniform Buffer
         SceneUniformBufferData sceneUniformBufferData;
         sceneUniformBufferData.CameraPosition = camera.GetPosition();
         sceneUniformBufferData.DirLight = scene->m_SceneData.ActiveEnvironmentMap.DirLight;
@@ -77,12 +79,14 @@ namespace Flameberry {
         m_SceneUniformBuffer.Bind();
         m_SceneUniformBuffer.BufferSubData(&sceneUniformBufferData, sizeof(SceneUniformBufferData), 0);
 
+        // Rendering skybox if activated
         if (scene->m_SceneData.ActiveEnvironmentMap.EnableSkybox)
         {
             scene->m_SceneData.ActiveEnvironmentMap.ActiveSkybox->OnDraw(camera);
             scene->m_SceneData.ActiveEnvironmentMap.ActiveSkybox->BindCubeMapTextureToUnit(2);
         }
 
+        // Rendering Meshes in Scene
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
@@ -95,7 +99,7 @@ namespace Flameberry {
 
         m_SceneUniformBuffer.Unbind();
 
-        // Render Lights in scene
+        // Rendering Lights in Scene
         for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
         {
             const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
@@ -122,18 +126,21 @@ namespace Flameberry {
         const std::shared_ptr<Scene>& scene,
         const PerspectiveCamera& camera,
         const std::shared_ptr<OpenGLShader>& shader,
+        const std::shared_ptr<OpenGLShader>& shader2D,
         const std::shared_ptr<OpenGLRenderer2D>& renderer2D
     )
     {
+        // Render Meshes for Mouse Picking
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
             scene->m_SceneData.Meshes[mesh.MeshIndex]->DrawForMousePicking(shader, transform, (uint32_t)entity);
         }
 
+        // Render Lights for Mouse Picking
         glm::mat4 identityMatrix(1.0f);
-        shader->Bind();
-        shader->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(identityMatrix));
+        shader2D->Bind();
+        shader2D->PushUniformMatrix4f("u_ModelMatrix", 1, false, glm::value_ptr(identityMatrix));
 
         for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
         {
@@ -145,7 +152,7 @@ namespace Flameberry {
                 (uint32_t)entity
             );
         }
-        renderer2D->FlushBatch(shader);
+        renderer2D->FlushBatch(shader2D);
     }
 
     void SceneRenderer::ReloadShader()

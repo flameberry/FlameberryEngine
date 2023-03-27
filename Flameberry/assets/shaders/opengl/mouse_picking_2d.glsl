@@ -1,6 +1,9 @@
 #shader vertex
 #version 410 core
 layout (location = 0) in vec3 a_Position;
+layout (location = 4) in int a_EntityID;
+
+layout (location = 0) flat out int v_EntityID;
 
 uniform mat4 u_ModelMatrix;
 
@@ -10,6 +13,7 @@ layout (std140) uniform Camera {
 
 void main()
 {
+    v_EntityID = a_EntityID;
     gl_Position = u_ViewProjectionMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
 }
 
@@ -17,9 +21,9 @@ void main()
 #version 410 core
 layout (location = 0) out int o_EntityID;
 
-uniform int u_EntityID;
+layout (location = 0) flat in int v_EntityID;
 
 void main()
 {
-    o_EntityID = u_EntityID;
+    o_EntityID = v_EntityID;
 }

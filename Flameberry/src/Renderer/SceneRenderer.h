@@ -14,7 +14,13 @@ namespace Flameberry {
 
         void RenderScene(const std::shared_ptr<Scene>& scene, const PerspectiveCamera& camera, const glm::mat4& lightViewProjectionMatrix, const std::shared_ptr<OpenGLRenderer2D>& renderer2D);
         void RenderSceneForShadowMapping(const std::shared_ptr<Scene>& scene, const std::shared_ptr<OpenGLShader>& shader);
-        void RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const PerspectiveCamera& camera, const std::shared_ptr<OpenGLShader>& shader, const std::shared_ptr<OpenGLRenderer2D>& renderer2D);
+        void RenderSceneForMousePicking(
+            const std::shared_ptr<Scene>& scene,
+            const PerspectiveCamera& camera,
+            const std::shared_ptr<OpenGLShader>& shader,
+            const std::shared_ptr<OpenGLShader>& shader2D,
+            const std::shared_ptr<OpenGLRenderer2D>& renderer2D
+        );
 
         static std::shared_ptr<SceneRenderer> Create() { return std::make_shared<SceneRenderer>(); }
         void ReloadShader();

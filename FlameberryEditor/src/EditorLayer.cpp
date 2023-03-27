@@ -163,7 +163,7 @@ namespace Flameberry {
             int clearValue = -1;
             glClearBufferiv(GL_COLOR, 0, &clearValue);
 
-            m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_EditorCamera, m_MousePickingShader, m_Renderer2D);
+            m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_EditorCamera, m_MousePickingShader, m_MousePickingShader2D, m_Renderer2D); // IMP
 
             bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive;
             // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
@@ -507,6 +507,7 @@ namespace Flameberry {
         cameraBinding.blockBindingIndex = 0;
 
         m_MousePickingShader = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/mouse_picking.glsl", { cameraBinding });
+        m_MousePickingShader2D = OpenGLShader::Create(FL_PROJECT_DIR"Flameberry/assets/shaders/opengl/mouse_picking_2d.glsl", { cameraBinding });
 
         OpenGLFramebufferAttachment shadowMapFramebufferDepthAttachment{};
         shadowMapFramebufferDepthAttachment.InternalFormat = GL_DEPTH_COMPONENT;
