@@ -100,6 +100,8 @@ namespace Flameberry {
     void ImGuiLayer::SetupImGuiStyle()
     {
         auto& style = ImGui::GetStyle();
+        style.ColorButtonPosition = ImGuiDir_Left;
+        style.WindowMenuButtonPosition = ImGuiDir_Right;
         style.FrameRounding = 2.0f;
 
         auto& colors = style.Colors;

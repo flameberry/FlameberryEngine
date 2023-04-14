@@ -38,7 +38,7 @@ namespace Flameberry {
         if (m_DurationVar)
             *m_DurationVar = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_Start).count();
         else
-            std::cout << m_ScopeName << ": Process took " << std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_Start).count() * 0.001 * 0.001 << " ms" << std::endl;
+            std::cout << "TIMER: " << m_ScopeName << ": Process took " << std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_Start).count() * 0.001 * 0.001 << " ms" << std::endl;
         // FL_LOG("{0}: Process took {1} ms", m_ScopeName, std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_Start).count() * 0.001 * 0.001);
     }
 }

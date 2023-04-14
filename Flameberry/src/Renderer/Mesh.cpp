@@ -23,7 +23,7 @@ namespace Flameberry {
         uint32_t lengthDot = m_FilePath.find_last_of('.');
         Name = m_FilePath.substr(lengthSlash, lengthDot - lengthSlash);
 
-        FL_LOG("Allocated {0}, {1} bytes for {2}: Vertices, Indices", Vertices.size() * sizeof(OpenGLVertex), Indices.size() * sizeof(uint32_t), Name);
+        FL_TRACE("Allocated {0}, {1} bytes for {2}: Vertices, Indices", Vertices.size() * sizeof(OpenGLVertex), Indices.size() * sizeof(uint32_t), Name);
     }
 
     Mesh::Mesh(const std::vector<OpenGLVertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name)

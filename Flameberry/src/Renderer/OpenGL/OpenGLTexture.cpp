@@ -48,7 +48,7 @@ namespace Flameberry {
         unsigned char* data = stbi_load(filePath.c_str(), &m_Width, &m_Height, &channels, 0);
 
         FL_DO_ON_ASSERT(data, FL_ERROR("Failed to load texture from \"{0}\"", filePath));
-        FL_INFO("Allocated {0} bytes for texture ({1} channels): {2}", m_Width * m_Height * channels, channels, filePath);
+        FL_TRACE("Allocated {0} bytes for texture ({1} channels): {2}", m_Width * m_Height * channels, channels, filePath);
 
         switch (channels)
         {
@@ -76,7 +76,6 @@ namespace Flameberry {
         glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, m_MinFilter);
         glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, m_MagFilter);
-
 
         glTexImage2D(GL_TEXTURE_2D, 0, m_InternalFormat, m_Width, m_Height, 0, m_Format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -130,6 +129,6 @@ namespace Flameberry {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-        FL_INFO("Allocated {0} bytes for cubemap: {1}", allocated, folderPath);
+        FL_TRACE("Allocated {0} bytes for cubemap: {1}", allocated, folderPath);
     }
 }

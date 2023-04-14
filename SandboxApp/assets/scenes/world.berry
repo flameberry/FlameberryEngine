@@ -10,7 +10,7 @@ EnvironmentMap:
     Intensity: 2
 Entities:
   - Entity: 8487694862307973660
-    TagComponent: platf
+    TagComponent: platform
     TransformComponent:
       Translation: [0, -0.0156020522, 0]
       Rotation: [0, 0, 0]
@@ -19,7 +19,7 @@ Entities:
       MeshIndex: 1
       MaterialName: Material_4
   - Entity: 15580115844569046756
-    TagComponent: viki
+    TagComponent: viking_room
     TransformComponent:
       Translation: [-2.14052987, -0.00110877957, 1.24938679]
       Rotation: [-1.55595922, -1.52237165, -0.014752768]
@@ -37,7 +37,7 @@ Entities:
       Color: [1, 0, 0]
       Intensity: 10
   - Entity: 13871557613990763745
-    TagComponent: monk
+    TagComponent: monkey
     TransformComponent:
       Translation: [3.71944618, 0.770911634, 0]
       Rotation: [0, -0.549166381, 0]

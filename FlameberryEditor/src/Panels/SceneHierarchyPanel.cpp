@@ -62,56 +62,59 @@ namespace Flameberry {
             ImGui::EndPopup();
         }
 
-        m_ActiveScene->m_Registry->each([this](ecs::entity_handle& entity) {
-            bool should_delete_entity = false;
-            auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
-
-            bool is_selected = m_SelectedEntity == entity;
-            int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-            if (m_RenamedEntity != entity)
-                treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-
-            ImGui::PushID((uint32_t)entity);
-
-            float textColor = is_selected ? 0.0f : 1.0f;
-            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
-            ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-            if (is_selected)
-                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
-
-            if (ImGui::TreeNodeEx(tag.c_str(), treeNodeFlags))
-                ImGui::TreePop();
-
-            ImGui::PopStyleColor(is_selected ? 4 : 3);
-
-            if (ImGui::IsItemClicked())
-                m_SelectedEntity = entity;
-
-            if (ImGui::BeginPopupContextItem())
+        m_ActiveScene->m_Registry->each([this](ecs::entity_handle& entity)
             {
-                if (ImGui::MenuItem("Rename"))
-                    m_RenamedEntity = entity;
+                auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
 
-                if (ImGui::MenuItem("Delete Entity"))
-                    should_delete_entity = true;
-                ImGui::EndPopup();
-            }
+                bool is_renamed = m_RenamedEntity == entity;
+                bool is_selected = m_SelectedEntity == entity;
+                bool should_delete_entity = false;
+                int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 
-            if (m_RenamedEntity == entity)
-                RenameNode(tag);
+                if (m_RenamedEntity != entity)
+                    treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
-            if (should_delete_entity)
-            {
-                m_ActiveScene->m_Registry->destroy(entity);
+                ImGui::PushID((uint32_t)entity);
+
+                float textColor = is_selected ? 0.0f : 1.0f;
+                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
                 if (is_selected)
-                    m_SelectedEntity = ecs::entity_handle::null;
-            }
+                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
 
-            if (m_SelectedEntity == entity)
-                m_ActiveScene->SetSelectedEntity(&entity);
+                if (ImGui::TreeNodeEx(is_renamed ? "" : tag.c_str(), treeNodeFlags))
+                    ImGui::TreePop();
 
-            ImGui::PopID();
+                ImGui::PopStyleColor(is_selected ? 4 : 3);
+
+                if (ImGui::IsItemClicked())
+                    m_SelectedEntity = entity;
+
+                if (ImGui::BeginPopupContextItem())
+                {
+                    if (ImGui::MenuItem("Rename"))
+                        m_RenamedEntity = entity;
+
+                    if (ImGui::MenuItem("Delete Entity"))
+                        should_delete_entity = true;
+                    ImGui::EndPopup();
+                }
+
+                if (is_renamed)
+                    RenameNode(tag);
+
+                if (should_delete_entity)
+                {
+                    m_ActiveScene->m_Registry->destroy(entity);
+                    if (is_selected)
+                        m_SelectedEntity = ecs::entity_handle::null;
+                }
+
+                if (is_selected)
+                    m_ActiveScene->SetSelectedEntity(&entity);
+
+                ImGui::PopID();
             }
         );
 
@@ -203,16 +206,17 @@ namespace Flameberry {
 
     void SceneHierarchyPanel::RenameNode(std::string& tag)
     {
-        std::string buffer(tag);
+        char* buffer = new char[256];
+        memcpy(buffer, tag.c_str(), tag.size());
 
         ImGui::SameLine();
         ImGui::SetKeyboardFocusHere();
         ImGui::PushItemWidth(-1.0f);
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
-        if (ImGui::InputText("###Rename", buffer.data(), 100, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
+        if (ImGui::InputText("###Rename", buffer, 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
         {
-            tag = buffer;
+            tag = std::string(buffer);
             m_RenamedEntity = ecs::entity_handle::null;
         }
         ImGui::PopStyleVar();
