@@ -12,6 +12,7 @@
 #include "Core/Timer.h"
 #include "Core/Profiler.h"
 #include "Platform/FileDialog.h"
+#include "Platform/Utils.h"
 
 #ifdef FL_USE_OPENGL_API
 #include "Renderer/OpenGL/OpenGLRenderer2D.h"

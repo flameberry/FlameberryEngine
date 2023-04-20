@@ -10,7 +10,7 @@ EnvironmentMap:
     Intensity: 2
 Entities:
   - Entity: 8487694862307973660
-    TagComponent: plat
+    TagComponent: platform
     TransformComponent:
       Translation: [0, -0.0156020522, 0]
       Rotation: [0, 0, 0]
@@ -28,7 +28,7 @@ Entities:
       Color: [1, 0, 0]
       Intensity: 10
   - Entity: 13871557613990763745
-    TagComponent: monk
+    TagComponent: monkey
     TransformComponent:
       Translation: [3.71944618, 0.770911634, 0]
       Rotation: [0, -0.549166381, 0]
@@ -37,7 +37,7 @@ Entities:
       MeshIndex: 4
       MaterialName: Default
   - Entity: 15762011954558668979
-    TagComponent: PointLight
+    TagComponent: Point Light
     TransformComponent:
       Translation: [4.02661324, 1.17294645, 3.45072198]
       Rotation: [0, 0, 0]
@@ -57,9 +57,21 @@ Meshes:
   - Mesh: monkey
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/monkey.obj
 Materials:
-  - Material: Default
-    Albedo: [0.268166065, 0.911764681, 0.779258966]
+  - Material: METAL
+    Albedo: [1, 0, 1]
     Roughness: 0.200000003
+    Metallic: true
+    TextureMapEnabled: false
+    TextureMap: None
+  - Material: Material_4
+    Albedo: [1, 1, 1]
+    Roughness: 0.200000003
+    Metallic: false
+    TextureMapEnabled: true
+    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/brick.png
+  - Material: YELLOW_NON_METAL
+    Albedo: [1, 1, 0]
+    Roughness: 0.699999988
     Metallic: false
     TextureMapEnabled: false
     TextureMap: None
@@ -69,21 +81,9 @@ Materials:
     Metallic: false
     TextureMapEnabled: true
     TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/viking_room.png
-  - Material: YELLOW_NON_METAL
-    Albedo: [1, 1, 0]
-    Roughness: 0.699999988
-    Metallic: false
-    TextureMapEnabled: false
-    TextureMap: None
-  - Material: Material_4
-    Albedo: [1, 1, 1]
+  - Material: Default
+    Albedo: [0.268166065, 0.911764681, 0.779258966]
     Roughness: 0.200000003
     Metallic: false
-    TextureMapEnabled: true
-    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/brick.png
-  - Material: METAL
-    Albedo: [1, 0, 1]
-    Roughness: 0.200000003
-    Metallic: true
     TextureMapEnabled: false
     TextureMap: None

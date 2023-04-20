@@ -46,11 +46,11 @@ namespace Flameberry {
                 }
                 if (ImGui::BeginMenu("Light"))
                 {
-                    if (ImGui::MenuItem("PointLight"))
+                    if (ImGui::MenuItem("Point Light"))
                     {
                         auto entity = m_ActiveScene->m_Registry->create();
                         m_ActiveScene->m_Registry->emplace<IDComponent>(entity);
-                        m_ActiveScene->m_Registry->emplace<TagComponent>(entity).Tag = "PointLight";
+                        m_ActiveScene->m_Registry->emplace<TagComponent>(entity).Tag = "Point Light";
                         m_ActiveScene->m_Registry->emplace<TransformComponent>(entity);
                         m_ActiveScene->m_Registry->emplace<LightComponent>(entity);
                         m_SelectedEntity = entity;

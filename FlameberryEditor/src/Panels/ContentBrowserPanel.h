@@ -12,6 +12,6 @@ namespace Flameberry {
         void OnUIRender();
     private:
         std::filesystem::path m_CurrentDirectory;
-        uint32_t m_BackArrowIconTextureId = 0;
+        uint32_t m_BackArrowIconTextureID = 0, m_ForwardArrowIconTextureID;
     };
 }

@@ -7,7 +7,8 @@ namespace Flameberry {
     ContentBrowserPanel::ContentBrowserPanel()
         : m_CurrentDirectory(project::g_AssetDirectory)
     {
-        m_BackArrowIconTextureId = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/back_arrow_icon.png");
+        m_BackArrowIconTextureID = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/arrow_back.png");
+        m_ForwardArrowIconTextureID = Flameberry::OpenGLRenderCommand::CreateTexture(FL_PROJECT_DIR"FlameberryEditor/icons/arrow_forward.png");
     }
 
     ContentBrowserPanel::~ContentBrowserPanel()
@@ -20,21 +21,41 @@ namespace Flameberry {
         ImGui::Begin("Content Browser");
         ImGui::PopStyleVar();
 
+        if (ImGui::BeginPopupContextWindow())
+        {
+            if (ImGui::MenuItem("Open In Finder"))
+                Platform::OpenInFinder(m_CurrentDirectory.string().c_str());
+            ImGui::EndPopup();
+        }
+
         float iconSize = 80.0f, padding = 10.0f;
         float cellSize = iconSize + padding;
         uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize;
         columns = columns >= 1 ? columns : 1;
 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+        // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_BackArrowIconTextureId), ImVec2{ 13, 13 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
+        float arrowSize = 18.0f;
+
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_BackArrowIconTextureID), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
+        ImGui::SameLine();
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_ForwardArrowIconTextureID), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
+            m_CurrentDirectory = m_CurrentDirectory.parent_path();
+        ImGui::SameLine();
+
+        char search_input[256] = { '\0' };
+        ImGui::PushItemWidth(150.0f);
+        ImGui::InputTextWithHint("##search", "search", search_input, 256);
+        bool isSearchBoxActive = ImGui::IsItemActive() && ImGui::IsItemFocused();
+        ImGui::PopItemWidth();
+
         ImGui::SameLine();
 
         auto bigFont = ImGui::GetIO().Fonts->Fonts[0];
         ImGui::PushFont(bigFont);
-        ImGui::Text("/%s", std::filesystem::relative(m_CurrentDirectory, project::g_AssetDirectory).c_str());
+        ImGui::Text("Assets / %s", std::filesystem::relative(m_CurrentDirectory, project::g_AssetDirectory).c_str());
         ImGui::PopFont();
 
         ImGui::Separator();
@@ -75,6 +96,13 @@ namespace Flameberry {
 
             ImGui::ImageButton(reinterpret_cast<ImTextureID>(currentIconTextureId), ImVec2{ iconSize, iconSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
+            if (ImGui::BeginPopupContextItem())
+            {
+                if (ImGui::MenuItem("Delete"))
+                    FL_LOG("Delete");
+                ImGui::EndMenu();
+            }
+
             if (ImGui::BeginDragDropSource())
             {
                 ImGui::SetDragDropPayload(
@@ -95,14 +123,13 @@ namespace Flameberry {
             auto textWidth = ImGui::CalcTextSize(filename_noextension.c_str()).x;
 
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (columnWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);
-            uint32_t limit = 11;
-            ImGui::TextWrapped("%.*s%s", limit, filename_noextension.c_str(), filename_noextension.string().length() > limit ? "..." : "");
+            uint32_t limit = 10;
+            ImGui::TextWrapped("%.*s%s", limit, filename_noextension.c_str(), filename_noextension.string().length() > limit - 2 ? "..." : "");
 
             ImGui::NextColumn();
             ImGui::PopID();
         }
-        ImGui::PopStyleColor(2);
-
+        ImGui::PopStyleColor(1);
         ImGui::End();
     }
 }

@@ -10,7 +10,7 @@ EnvironmentMap:
     Intensity: 2
 Entities:
   - Entity: 7741751749768360881
-    TagComponent: Plat
+    TagComponent: Platform
     TransformComponent:
       Translation: [0, 1.23942137, 0]
       Rotation: [0, 0, 0]
@@ -19,7 +19,7 @@ Entities:
       MeshIndex: 0
       MaterialName: Default
   - Entity: 2867677738303151356
-    TagComponent: Bugatt
+    TagComponent: Bugatti
     TransformComponent:
       Translation: [0, 0, 3.20548058]
       Rotation: [0, 0, 0]
@@ -42,15 +42,9 @@ Meshes:
   - Mesh: only_bugatti_v2
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/only_bugatti_v2.obj
 Materials:
-  - Material: METAL
-    Albedo: [1, 0, 1]
-    Roughness: 0.200000003
-    Metallic: true
-    TextureMapEnabled: false
-    TextureMap: None
-  - Material: YELLOW_NON_METAL
-    Albedo: [1, 1, 0]
-    Roughness: 0.699999988
+  - Material: Default
+    Albedo: [0.308823526, 0.715397835, 1]
+    Roughness: 0.550000012
     Metallic: false
     TextureMapEnabled: false
     TextureMap: None
@@ -60,9 +54,15 @@ Materials:
     Metallic: false
     TextureMapEnabled: false
     TextureMap: None
-  - Material: Default
-    Albedo: [0.308823526, 0.715397835, 1]
-    Roughness: 0.550000012
+  - Material: YELLOW_NON_METAL
+    Albedo: [1, 1, 0]
+    Roughness: 0.699999988
     Metallic: false
+    TextureMapEnabled: false
+    TextureMap: None
+  - Material: METAL
+    Albedo: [1, 0, 1]
+    Roughness: 0.200000003
+    Metallic: true
     TextureMapEnabled: false
     TextureMap: None

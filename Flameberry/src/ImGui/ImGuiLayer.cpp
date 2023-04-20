@@ -23,7 +23,7 @@ namespace Flameberry {
 
         float fontSize = 16.0f;// *2.0f;
         // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Bold.ttf", fontSize);
-        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 18.0f);
+        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 16);
         // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/opensans/OpenSans-Regular.ttf", fontSize);
         // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/HelveticaNeue.ttc", 14);
         io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 13);
@@ -103,8 +103,10 @@ namespace Flameberry {
         style.ColorButtonPosition = ImGuiDir_Left;
         style.WindowMenuButtonPosition = ImGuiDir_Right;
         style.FrameRounding = 2.0f;
+        style.WindowBorderSize = 0;
 
         auto& colors = style.Colors;
+
         colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
 
         // Headers
@@ -133,5 +135,13 @@ namespace Flameberry {
         colors[ImGuiCol_TitleBg] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
         colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
         colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+
+        // New
+        colors[ImGuiCol_WindowBg] = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
+        colors[ImGuiCol_Border] = ImVec4(0.24f, 0.24f, 0.25f, 1.00f);
+        colors[ImGuiCol_FrameBg] = ImVec4(0.28f, 0.28f, 0.28f, 1.00f);
+        colors[ImGuiCol_TitleBg] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
+        colors[ImGuiCol_MenuBarBg] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+        colors[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
     }
 }
