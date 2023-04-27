@@ -9,7 +9,7 @@ layout (location = 4) in vec4 v_LightFragmentPosition;
 layout (location = 0) out vec4 FragColor;
 
 #define PI 3.1415926535897932384626433832795
-#define AMBIENT 0.002
+#define AMBIENT 0.02
 
 layout (set = 0, binding = 1) uniform sampler2D u_TextureSampler;
 layout (set = 0, binding = 2) uniform sampler2D u_ShadowMapSampler;
@@ -228,6 +228,9 @@ vec4 CalculatePBRLighting()
 
     for (int i = 0; i < u_SceneData.lightCount; i++)
         totalLight += CalculatePBRPointLight(u_SceneData.pointLights[i], normal);
+    
+    // Ambient
+    totalLight = max(AMBIENT * GetPixelColor(), totalLight);
     
     // HDR tone mapping
     totalLight = totalLight / (totalLight + vec3(1.0));

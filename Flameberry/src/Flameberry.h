@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
+#include <imgui/backends/imgui_impl_vulkan.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -13,14 +14,6 @@
 #include "Core/Input.h"
 #include "ImGui/ImGuiLayer.h"
 
-#ifdef FL_USE_OPENGL_API
-#include "Renderer/OpenGL/OpenGLRenderer2D.h"
-#include "Renderer/OpenGL/OpenGLRenderCommand.h"
-#include "Renderer/OpenGL/OpenGLRenderer3D.h"
-#include "Renderer/OpenGL/OpenGLFramebuffer.h"
-
-#include "ECS/Scene.h"
-#elif defined(FL_USE_VULKAN_API)
 #include "Renderer/Vulkan/VulkanRenderer.h"
 #include "Renderer/Vulkan/VulkanRenderCommand.h"
 #include "Renderer/Vulkan/VulkanPipeline.h"
@@ -29,7 +22,6 @@
 #include "Renderer/Vulkan/VulkanMesh.h"
 #include "Renderer/Vulkan/VulkanDebug.h"
 #include "Renderer/Vulkan/MeshRenderer.h"
-#include <imgui/backends/imgui_impl_vulkan.h>
-#endif
 
 #include "Core/Timer.h"
+#include "Core/Profiler.h"

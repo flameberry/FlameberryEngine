@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <vector>
+
 #include "Core/Core.h"
 
 #define FL_TYPE_NAME(type) #type
@@ -79,11 +80,11 @@ namespace ecs {
             for (const auto& element : packed)
                 std::cout << element << "\t";
             std::cout << "\n";
-        }
+    }
 #endif
     private:
         std::vector<Type> packed, sparse;
-    };
+};
 
     class entity_handle {
     public:
@@ -96,9 +97,9 @@ namespace ecs {
             null() {};
         };
     public:
-        entity_handle(): handle(-1), validity(true) {}
-        entity_handle(handle_type handle): handle(handle), validity(true) {}
-        entity_handle(handle_type handle, bool validity): handle(handle), validity(validity) {}
+        entity_handle() : handle(-1), validity(true) {}
+        entity_handle(handle_type handle) : handle(handle), validity(true) {}
+        entity_handle(handle_type handle, bool validity) : handle(handle), validity(validity) {}
 
         entity_handle(const null& null) {
             *this = null;
@@ -146,10 +147,6 @@ namespace ecs {
             component_buffer[index] = component_buffer.back();
             component_buffer.pop_back();
         }
-
-        ~pool_handler() {
-            FL_LOG("Destroyed pool handler!");
-        }
     private:
         std::vector<Type> component_buffer;
     };
@@ -166,10 +163,10 @@ namespace ecs {
         public:
             template<typename... i_Type> class iterator {
             public:
-                iterator(const registry& reg, const pool_data& pool, uint32_t index): ref_registry(reg), ref_pool(pool), index(index) {}
+                iterator(const registry* reg, const pool_data* pool, uint32_t index) : ref_registry(reg), ref_pool(pool), index(index) {}
 
                 iterator<i_Type...>& operator++() {
-                    while (++index < ref_pool.entity_set.size() && !ref_registry.has<i_Type...>(ref_registry.entities[ref_pool.entity_set[index]]));
+                    while (++index < ref_pool->entity_set.size() && !ref_registry->has<i_Type...>(ref_registry->entities[ref_pool->entity_set[index]]));
                     return *this;
                 }
 
@@ -180,7 +177,7 @@ namespace ecs {
                 }
 
                 entity_handle operator*() {
-                    return ref_registry.entities[ref_pool.entity_set[index]];
+                    return ref_registry->entities[ref_pool->entity_set[index]];
                 }
 
                 bool operator==(const iterator<i_Type...>& it) {
@@ -191,15 +188,16 @@ namespace ecs {
                     return !(*this == it);
                 }
             private:
-                const registry& ref_registry;
-                const pool_data& ref_pool;
+                const registry* ref_registry;
+                const pool_data* ref_pool;
                 uint32_t index;
             };
         public:
-            registry_view(const registry& reg, const pool_data& pool): ref_registry(reg), ref_pool(pool), begin_index(0), end_index(0) {
-                while (begin_index < pool.entity_set.size() && !reg.has<Type...>(reg.entities[pool.entity_set[begin_index]]))
+            registry_view() : begin_index(0), end_index(0) {}
+            registry_view(const registry* reg, const pool_data* pool) : ref_registry(reg), ref_pool(pool), begin_index(0), end_index(0) {
+                while (begin_index < pool->entity_set.size() && !reg->has<Type...>(reg->entities[pool->entity_set[begin_index]]))
                     begin_index++;
-                end_index = pool.entity_set.size();
+                end_index = pool->entity_set.size();
             }
 
             iterator<Type...> begin() {
@@ -210,11 +208,13 @@ namespace ecs {
                 return iterator<Type...>(ref_registry, ref_pool, end_index);
             }
         private:
-            const registry& ref_registry;
-            const pool_data& ref_pool;
+            const registry* ref_registry = nullptr;
+            const pool_data* ref_pool = nullptr;
             int begin_index, end_index;
         };
     public:
+        /// @brief: Iterates over all entities in the scene
+        /// @param _Fn: A function with a param of type `ecs::entity_handle&` which represents the current entity being iterated
         template<typename Fn> void each(Fn&& _Fn) {
             static_assert(std::is_invocable_v<Fn, entity_handle&>);
             for (auto& entity : entities) {
@@ -233,15 +233,14 @@ namespace ecs {
 
             for (const auto& typeID : typeIDs) {
                 if (typeID >= pools.size()) {
-                    FL_ERROR("Insufficient pools for iteration!");
-                    FL_DEBUGBREAK(); // TODO: Replace with a return statement of some 'default' version of registry_view
+                    return registry_view<Type...>();
                 }
                 if (uint32_t poolSize = pools[typeID].entity_set.size(); poolSize < smallestPoolSize) {
                     smallestPoolSize = poolSize;
                     smallestPoolIndex = typeID;
                 }
             }
-            return registry_view<Type...>(*this, pools[smallestPoolIndex]);
+            return registry_view<Type...>(this, &pools[smallestPoolIndex]);
         }
 
         entity_handle create() {

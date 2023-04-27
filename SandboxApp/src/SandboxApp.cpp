@@ -87,7 +87,7 @@ SandboxApp::SandboxApp()
         m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
     }
     {
-        auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/platform.obj");
+        auto [vk_vertices, indices] = Flameberry::VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
         m_Meshes.emplace_back(Flameberry::VulkanMesh::Create(vk_vertices, indices));
     }
     // {
@@ -96,7 +96,12 @@ SandboxApp::SandboxApp()
     // }
 
     m_ImGuiLayer = std::make_unique<Flameberry::ImGuiLayer>();
-    m_ImGuiLayer->OnAttach(m_VulkanRenderer->GetGlobalDescriptorPool()->GetDescriptorPool(), m_VulkanRenderer->GetSwapChainImageFormat(), m_VulkanRenderer->GetSwapChainImageViews(), m_VulkanRenderer->GetSwapChainExtent2D());
+    m_ImGuiLayer->OnAttach(
+        m_VulkanRenderer->GetGlobalDescriptorPool()->GetDescriptorPool(),
+        m_VulkanRenderer->GetSwapChainImageFormat(),
+        m_VulkanRenderer->GetSwapChainImageViews(),
+        m_VulkanRenderer->GetSwapChainExtent2D()
+    );
 
     // Test
     const auto& device = Flameberry::VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -118,12 +123,14 @@ SandboxApp::SandboxApp()
 void SandboxApp::OnUpdate(float delta)
 {
     // FL_SCOPED_TIMER("SandboxApp::OnUpdate");
+    FL_PROFILE_SCOPE("Vulkan Frame Render Time");
     m_ActiveCamera.OnUpdate(delta);
     if (VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginFrame())
     {
         glm::mat4 lightViewProjectionMatrix;
         if (m_VulkanRenderer->EnableShadows())
         {
+            FL_PROFILE_SCOPE("Shadow Pass");
             // glm::vec3 lightInvDir(1.0f, 3.0f, 2.0f);
             glm::vec3 lightInvDir(5.0f);
 
@@ -146,23 +153,25 @@ void SandboxApp::OnUpdate(float delta)
             m_VulkanRenderer->EndShadowRenderPass();
         }
 
-        m_VulkanRenderer->BeginSwapChainRenderPass();
+        {
+            FL_PROFILE_SCOPE("Swap Chain Render Pass");
+            m_VulkanRenderer->BeginSwapChainRenderPass();
 
-        Flameberry::VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, (float)m_VulkanRenderer->GetSwapChainExtent2D().width, (float)m_VulkanRenderer->GetSwapChainExtent2D().height);
-        Flameberry::VulkanRenderCommand::SetScissor(commandBuffer, { 0, 0 }, m_VulkanRenderer->GetSwapChainExtent2D());
+            Flameberry::VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, (float)m_VulkanRenderer->GetSwapChainExtent2D().width, (float)m_VulkanRenderer->GetSwapChainExtent2D().height);
+            Flameberry::VulkanRenderCommand::SetScissor(commandBuffer, { 0, 0 }, m_VulkanRenderer->GetSwapChainExtent2D());
 
-        // Update Uniforms
-        m_ActiveCamera.OnResize((float)m_VulkanRenderer->GetSwapChainExtent2D().width / (float)m_VulkanRenderer->GetSwapChainExtent2D().height);
+            // Update Uniforms
+            m_ActiveCamera.OnResize((float)m_VulkanRenderer->GetSwapChainExtent2D().width / (float)m_VulkanRenderer->GetSwapChainExtent2D().height);
 
-        Flameberry::CameraUniformBufferObject uniformBufferObject{};
-        uniformBufferObject.ViewProjectionMatrix = m_ActiveCamera.GetViewProjectionMatrix();
-        uniformBufferObject.LightViewProjectionMatrix = lightViewProjectionMatrix;
+            Flameberry::CameraUniformBufferObject uniformBufferObject{};
+            uniformBufferObject.ViewProjectionMatrix = m_ActiveCamera.GetViewProjectionMatrix();
+            uniformBufferObject.LightViewProjectionMatrix = lightViewProjectionMatrix;
 
-        m_UniformBuffers[m_VulkanRenderer->GetCurrentFrameIndex()]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
+            m_UniformBuffers[m_VulkanRenderer->GetCurrentFrameIndex()]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
-        m_MeshRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_Meshes);
-
-        m_VulkanRenderer->EndSwapChainRenderPass();
+            m_MeshRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_Meshes);
+            m_VulkanRenderer->EndSwapChainRenderPass();
+        }
 
         m_ImGuiLayer->Begin();
         ImGui::ShowDemoWindow();
@@ -176,6 +185,7 @@ void SandboxApp::OnUpdate(float delta)
 SandboxApp::~SandboxApp()
 {
     Flameberry::VulkanContext::GetCurrentDevice()->WaitIdle();
+    vkDestroySampler(Flameberry::VulkanContext::GetCurrentDevice()->GetVulkanDevice(), m_VkTextureSampler, nullptr);
     m_ImGuiLayer->OnDetach();
 }
 
@@ -189,10 +199,12 @@ void SandboxApp::OnUIRender()
 
     // auto ID = ImGui_ImplVulkan_AddTexture(m_VkTextureSampler, m_VulkanRenderer->GetSwapChainImageViews()[m_VulkanRenderer->GetCurrentFrameIndex()], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-    // uint64_t textureID = m_Framebuffer->GetColorAttachmentId();
+    // uint64_t textureID = m_VulkanRenderer->GetFram->GetColorAttachmentId();
     // ImGui::Image(reinterpret_cast<ImTextureID>(ID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
     ImGui::End();
     ImGui::PopStyleVar();
+
+    FL_DISPLAY_SCOPE_DETAILS_IMGUI();
 }
 
 std::shared_ptr<Flameberry::Application> Flameberry::Application::CreateClientApp()
