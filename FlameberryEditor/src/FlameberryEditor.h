@@ -2,31 +2,35 @@
 
 #include "Flameberry.h"
 
-class FlameberryEditor : public Flameberry::Application
-{
-public:
-    FlameberryEditor();
-    virtual ~FlameberryEditor();
-    void OnUpdate(float delta) override;
-    void OnUIRender() override;
-private:
-    std::shared_ptr<Flameberry::VulkanRenderer> m_VulkanRenderer;
+namespace Flameberry {
+    class FlameberryEditor : public Application
+    {
+    public:
+        FlameberryEditor();
+        virtual ~FlameberryEditor();
+        void OnUpdate(float delta) override;
+        void OnUIRender() override;
+        void InvalidateViewportImGuiDescriptorSet();
+    private:
+        std::shared_ptr<VulkanRenderer> m_VulkanRenderer;
 
-    Flameberry::PerspectiveCamera m_ActiveCamera;
+        PerspectiveCamera m_ActiveCamera;
 
-    std::unique_ptr<Flameberry::VulkanDescriptorWriter> m_VulkanDescriptorWriter;
-    std::unique_ptr<Flameberry::VulkanDescriptorLayout> m_VulkanDescriptorLayout;
+        std::unique_ptr<VulkanDescriptorWriter> m_VulkanDescriptorWriter;
+        std::unique_ptr<VulkanDescriptorLayout> m_VulkanDescriptorLayout;
 
-    std::vector<VkDescriptorSet> m_VkDescriptorSets;
+        std::vector<VkDescriptorSet> m_VkDescriptorSets;
 
-    std::unique_ptr<Flameberry::VulkanBuffer> m_UniformBuffers[Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
+        std::unique_ptr<VulkanBuffer> m_UniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
 
-    std::unique_ptr<Flameberry::VulkanTexture> m_Texture;
-    std::unique_ptr<Flameberry::MeshRenderer> m_MeshRenderer;
-    std::vector<std::shared_ptr<Flameberry::VulkanMesh>> m_Meshes;
+        std::unique_ptr<VulkanTexture> m_Texture;
+        std::unique_ptr<MeshRenderer> m_MeshRenderer;
+        std::vector<std::shared_ptr<VulkanMesh>> m_Meshes;
 
-    // Test
-    std::unique_ptr<Flameberry::ImGuiLayer> m_ImGuiLayer;
-    glm::vec2 m_ViewportSize;
-    VkSampler m_VkTextureSampler;
-};
+        // Test
+        std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
+        glm::vec2 m_ViewportSize{1280, 720};
+        VkSampler m_VkTextureSampler;
+        std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
+    };
+}

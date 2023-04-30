@@ -71,35 +71,6 @@ namespace Flameberry {
         m_VkSwapChainImages.resize(vk_swap_chain_image_count);
         vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, m_VkSwapChainImages.data());
 
-        // Image Views creation
-        m_VkSwapChainImageViews.resize(m_VkSwapChainImages.size());
-
-        for (uint32_t i = 0; i < m_VkSwapChainImages.size(); i++)
-        {
-            VkImageViewCreateInfo vk_image_view_create_info{};
-            vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            vk_image_view_create_info.image = m_VkSwapChainImages[i];
-            vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            vk_image_view_create_info.format = m_VkSwapChainImageFormat;
-            vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            vk_image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
-            vk_image_view_create_info.subresourceRange.levelCount = 1;
-            vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
-            vk_image_view_create_info.subresourceRange.layerCount = 1;
-
-            VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]));
-        }
-
-        // Create Depth Resources
-        VkFormat depthFormat = GetDepthFormat();
-        m_DepthImage = VulkanImage::Create(m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-        CreateRenderPass();
-        CreateFramebuffers();
         CreateSyncObjects();
     }
 
@@ -157,88 +128,6 @@ namespace Flameberry {
         return queuePresentStatus;
     }
 
-    void VulkanSwapChain::CreateFramebuffers()
-    {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        m_VkSwapChainFramebuffers.resize(m_VkSwapChainImageViews.size());
-
-        for (size_t i = 0; i < m_VkSwapChainImageViews.size(); i++)
-        {
-            std::vector<VkImageView> attachments = { m_VkSwapChainImageViews[i], m_DepthImage->GetImageView() };
-
-            VkFramebufferCreateInfo vk_framebuffer_create_info{};
-            vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            vk_framebuffer_create_info.renderPass = m_VkRenderPass;
-            vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
-            vk_framebuffer_create_info.pAttachments = attachments.data();
-            vk_framebuffer_create_info.width = m_VkSwapChainExtent2D.width;
-            vk_framebuffer_create_info.height = m_VkSwapChainExtent2D.height;
-            vk_framebuffer_create_info.layers = 1;
-
-            VK_CHECK_RESULT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VkSwapChainFramebuffers[i]));
-        }
-    }
-
-    void VulkanSwapChain::CreateRenderPass()
-    {
-        VkSubpassDependency vk_subpass_dependency{};
-        vk_subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        vk_subpass_dependency.dstSubpass = 0;
-        vk_subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        vk_subpass_dependency.srcAccessMask = 0;
-        vk_subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        vk_subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-        VkAttachmentDescription vk_color_attachment_description{};
-        vk_color_attachment_description.format = m_VkSwapChainImageFormat;
-        vk_color_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
-        vk_color_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        vk_color_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        vk_color_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        vk_color_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        vk_color_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        // vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // For ImGui
-
-        VkAttachmentReference vk_color_attachment_reference{};
-        vk_color_attachment_reference.attachment = 0;
-        vk_color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentDescription vk_depth_attachment_desc{};
-        vk_depth_attachment_desc.format = GetDepthFormat();
-        vk_depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
-        vk_depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        vk_depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        vk_depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        vk_depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        vk_depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        vk_depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference vk_depth_attachment_ref{};
-        vk_depth_attachment_ref.attachment = 1;
-        vk_depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription vk_subpass_description{};
-        vk_subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        vk_subpass_description.colorAttachmentCount = 1;
-        vk_subpass_description.pColorAttachments = &vk_color_attachment_reference;
-        vk_subpass_description.pDepthStencilAttachment = &vk_depth_attachment_ref;
-
-        std::array<VkAttachmentDescription, 2> attachments = { vk_color_attachment_description, vk_depth_attachment_desc };
-
-        VkRenderPassCreateInfo vk_render_pass_create_info{};
-        vk_render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        vk_render_pass_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
-        vk_render_pass_create_info.pAttachments = attachments.data();
-        vk_render_pass_create_info.subpassCount = 1;
-        vk_render_pass_create_info.pSubpasses = &vk_subpass_description;
-        vk_render_pass_create_info.dependencyCount = 1;
-        vk_render_pass_create_info.pDependencies = &vk_subpass_dependency;
-
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        VK_CHECK_RESULT(vkCreateRenderPass(device, &vk_render_pass_create_info, nullptr, &m_VkRenderPass));
-    }
-
     VkFormat VulkanSwapChain::GetDepthFormat()
     {
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
@@ -287,14 +176,6 @@ namespace Flameberry {
             vkDestroyFence(device, m_InFlightFences[i], nullptr);
         }
         FL_INFO("Destroyed {0} Image Available Semaphores, Render Finished Semaphores and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
-
-        for (auto& framebuffer : m_VkSwapChainFramebuffers)
-            vkDestroyFramebuffer(device, framebuffer, nullptr);
-
-        vkDestroyRenderPass(device, m_VkRenderPass, nullptr);
-
-        for (auto& imageView : m_VkSwapChainImageViews)
-            vkDestroyImageView(device, imageView, nullptr);
 
         vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
     }
@@ -362,47 +243,12 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain));
         FL_INFO("Created Vulkan Swap Chain!");
 
-        for (auto& framebuffer : m_VkSwapChainFramebuffers)
-            vkDestroyFramebuffer(device, framebuffer, nullptr);
-
-        for (auto& imageView : m_VkSwapChainImageViews)
-            vkDestroyImageView(device, imageView, nullptr);
-
         vkDestroySwapchainKHR(device, oldSwapChain, nullptr);
 
         uint32_t vk_swap_chain_image_count = 0;
         vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, nullptr);
         m_VkSwapChainImages.resize(vk_swap_chain_image_count);
         vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, m_VkSwapChainImages.data());
-
-        // Image Views creation
-        m_VkSwapChainImageViews.resize(m_VkSwapChainImages.size());
-
-        for (uint32_t i = 0; i < m_VkSwapChainImages.size(); i++)
-        {
-            VkImageViewCreateInfo vk_image_view_create_info{};
-            vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            vk_image_view_create_info.image = m_VkSwapChainImages[i];
-            vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            vk_image_view_create_info.format = m_VkSwapChainImageFormat;
-            vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            vk_image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
-            vk_image_view_create_info.subresourceRange.levelCount = 1;
-            vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
-            vk_image_view_create_info.subresourceRange.layerCount = 1;
-
-            VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkSwapChainImageViews[i]));
-        }
-
-        // Create Depth Resources
-        VkFormat depthFormat = GetDepthFormat();
-        m_DepthImage = VulkanImage::Create(m_VkSwapChainExtent2D.width, m_VkSwapChainExtent2D.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-        CreateFramebuffers();
     }
 
     VkSurfaceFormatKHR VulkanSwapChain::SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats)

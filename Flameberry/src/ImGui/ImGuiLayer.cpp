@@ -4,13 +4,12 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
-#include "Renderer/Vulkan/VulkanContext.h"
 #include "Renderer/Vulkan/VulkanRenderCommand.h"
 #include "Renderer/Vulkan/VulkanSwapChain.h"
 #include "Renderer/Vulkan/VulkanDebug.h"
 
 namespace Flameberry {
-    void ImGuiLayer::OnAttach(VkDescriptorPool descriptorPool, VkFormat swapChainImageFormat, const std::vector<VkImageView>& imageViews, VkExtent2D extent)
+    void ImGuiLayer::OnAttach(const std::shared_ptr<VulkanRenderer>& renderer)
     {
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -40,13 +39,13 @@ namespace Flameberry {
 
         // Creating ImGui RenderPass
         VkAttachmentDescription attachment{};
-        attachment.format = swapChainImageFormat;
+        attachment.format = renderer->GetSwapChainImageFormat();
         attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
         VkAttachmentReference color_attachment{};
@@ -76,22 +75,7 @@ namespace Flameberry {
         info.pDependencies = &dependency;
         VK_CHECK_RESULT(vkCreateRenderPass(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiLayerRenderPass));
 
-        // Creating Framebuffers
-        m_ImGuiFramebuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            VkImageView attachment[1] = { imageViews[i] };
-            VkFramebufferCreateInfo info{};
-            info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            info.renderPass = m_ImGuiLayerRenderPass;
-            info.attachmentCount = 1;
-            info.pAttachments = attachment;
-            info.width = extent.width;
-            info.height = extent.height;
-            info.layers = 1;
-
-            VK_CHECK_RESULT(vkCreateFramebuffer(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiFramebuffers[i]));
-        }
+        CreateResources(renderer);
 
         SetupImGuiStyle();
 
@@ -104,7 +88,7 @@ namespace Flameberry {
         init_info.QueueFamily = device->GetQueueFamilyIndices().GraphicsSupportedQueueFamilyIndex;
         init_info.Queue = device->GetGraphicsQueue();
         init_info.PipelineCache = VK_NULL_HANDLE;
-        init_info.DescriptorPool = descriptorPool;
+        init_info.DescriptorPool = renderer->GetGlobalDescriptorPool()->GetDescriptorPool();
         init_info.Subpass = 0;
         init_info.MinImageCount = vk_swap_chain_details.SurfaceCapabilities.minImageCount;
         init_info.ImageCount = VulkanSwapChain::MAX_FRAMES_IN_FLIGHT;
@@ -132,7 +116,11 @@ namespace Flameberry {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         for (uint32_t i = 0; i < m_ImGuiFramebuffers.size(); i++)
             vkDestroyFramebuffer(device, m_ImGuiFramebuffers[i], nullptr);
+
         vkDestroyRenderPass(device, m_ImGuiLayerRenderPass, nullptr);
+
+        for (auto& imageView : m_ImGuiImageViews)
+            vkDestroyImageView(device, imageView, nullptr);
     }
 
     void ImGuiLayer::Begin()
@@ -141,7 +129,7 @@ namespace Flameberry {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
     }
 
     void ImGuiLayer::End(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkExtent2D extent)
@@ -154,17 +142,19 @@ namespace Flameberry {
 
         // Begin ImGui Render Pass
         VkClearValue clear_value{};
-        clear_value.color = { 0.0f };
+        clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
         VkRenderPassBeginInfo imgui_render_pass_begin_info{};
         imgui_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         imgui_render_pass_begin_info.renderPass = m_ImGuiLayerRenderPass;
         imgui_render_pass_begin_info.framebuffer = m_ImGuiFramebuffers[currentFrameIndex];
-        imgui_render_pass_begin_info.renderArea.extent.width = extent.width;
-        imgui_render_pass_begin_info.renderArea.extent.height = extent.height;
+        imgui_render_pass_begin_info.renderArea.extent = extent;
         imgui_render_pass_begin_info.clearValueCount = 1;
         imgui_render_pass_begin_info.pClearValues = &clear_value;
         vkCmdBeginRenderPass(commandBuffer, &imgui_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+        Flameberry::VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, (float)extent.width, (float)extent.height);
+        Flameberry::VulkanRenderCommand::SetScissor(commandBuffer, { 0, 0 }, extent);
 
         // Record dear imgui primitives into command buffer
         ImGui_ImplVulkan_RenderDrawData(main_draw_data, commandBuffer);
@@ -175,14 +165,82 @@ namespace Flameberry {
         // Update and Render additional Platform Windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
+            GLFWwindow* backup_current_context = glfwGetCurrentContext();
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
+            glfwMakeContextCurrent(backup_current_context);
+        }
+    }
+
+    void ImGuiLayer::InvalidateResources(const std::shared_ptr<VulkanRenderer>& renderer)
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        VulkanContext::GetCurrentDevice()->WaitIdle();
+
+        for (uint32_t i = 0; i < m_ImGuiFramebuffers.size(); i++)
+            vkDestroyFramebuffer(device, m_ImGuiFramebuffers[i], nullptr);
+
+        for (auto& imageView : m_ImGuiImageViews)
+            vkDestroyImageView(device, imageView, nullptr);
+
+        CreateResources(renderer);
+    }
+
+    void ImGuiLayer::CreateResources(const std::shared_ptr<VulkanRenderer>& renderer)
+    {
+        const auto& device = VulkanContext::GetCurrentDevice();
+
+        // Image Views creation
+        m_ImGuiImageViews.resize(renderer->GetSwapChainImages().size());
+
+        for (uint32_t i = 0; i < renderer->GetSwapChainImages().size(); i++)
+        {
+            VkImageViewCreateInfo vk_image_view_create_info{};
+            vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            vk_image_view_create_info.image = renderer->GetSwapChainImages()[i];
+            vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            vk_image_view_create_info.format = renderer->GetSwapChainImageFormat();
+            vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            vk_image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
+            vk_image_view_create_info.subresourceRange.levelCount = 1;
+            vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
+            vk_image_view_create_info.subresourceRange.layerCount = 1;
+
+            VK_CHECK_RESULT(vkCreateImageView(device->GetVulkanDevice(), &vk_image_view_create_info, nullptr, &m_ImGuiImageViews[i]));
+        }
+
+        // Creating Framebuffers
+        m_ImGuiFramebuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            VkImageView attachment[1] = { m_ImGuiImageViews[i] };
+            VkFramebufferCreateInfo info{};
+            info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            info.renderPass = m_ImGuiLayerRenderPass;
+            info.attachmentCount = 1;
+            info.pAttachments = attachment;
+            info.width = renderer->GetSwapChainExtent2D().width;
+            info.height = renderer->GetSwapChainExtent2D().height;
+            info.layers = 1;
+
+            VK_CHECK_RESULT(vkCreateFramebuffer(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiFramebuffers[i]));
         }
     }
 
     void ImGuiLayer::SetupImGuiStyle()
     {
-        auto& colors = ImGui::GetStyle().Colors;
+        auto& style = ImGui::GetStyle();
+        style.ColorButtonPosition = ImGuiDir_Left;
+        style.WindowMenuButtonPosition = ImGuiDir_Right;
+        style.FrameRounding = 2.0f;
+        style.WindowBorderSize = 0;
+
+        auto& colors = style.Colors;
+
         colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
 
         // Headers
@@ -211,5 +269,13 @@ namespace Flameberry {
         colors[ImGuiCol_TitleBg] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
         colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
         colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+
+        // New
+        colors[ImGuiCol_WindowBg] = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
+        colors[ImGuiCol_Border] = ImVec4(0.24f, 0.24f, 0.25f, 1.00f);
+        colors[ImGuiCol_FrameBg] = ImVec4(0.28f, 0.28f, 0.28f, 1.00f);
+        colors[ImGuiCol_TitleBg] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
+        colors[ImGuiCol_MenuBarBg] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+        colors[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
     }
 }
