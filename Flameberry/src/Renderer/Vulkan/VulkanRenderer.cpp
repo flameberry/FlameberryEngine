@@ -37,7 +37,14 @@ namespace Flameberry {
         {
             m_ShadowMapImages.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
             for (auto& shadowMapImage : m_ShadowMapImages)
-                shadowMapImage = std::make_shared<VulkanImage>(SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
+                shadowMapImage = std::make_shared<VulkanImage>(
+                    SHADOW_MAP_WIDTH,
+                    SHADOW_MAP_HEIGHT,
+                    VK_FORMAT_D32_SFLOAT,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT
+                );
 
             m_ShadowMapSamplers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
             for (auto& sampler : m_ShadowMapSamplers)

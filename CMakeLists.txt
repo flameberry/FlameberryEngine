@@ -24,7 +24,7 @@ include(CMake/CMakeUtils.cmake)
 add_subdirectory(Flameberry)
 
 # The Game Editor App
-# add_subdirectory(FlameEditor)
+add_subdirectory(FlameberryEditor)
 
 # SandboxApp
-add_subdirectory(SandboxApp)
+# add_subdirectory(SandboxApp)
