@@ -3,13 +3,21 @@
 #include "Flameberry.h"
 
 namespace Flameberry {
-    class FlameberryEditor : public Application
+    class EditorLayer : public Layer
     {
     public:
-        FlameberryEditor();
-        virtual ~FlameberryEditor();
+        EditorLayer();
+        virtual ~EditorLayer() = default;
+
+        void OnCreate() override;
         void OnUpdate(float delta) override;
         void OnUIRender() override;
+        void OnEvent(Event& e) override;
+        void OnDestroy() override;
+
+        void OnKeyPressedEvent(KeyPressedEvent& e);
+        void OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
+
         void InvalidateViewportImGuiDescriptorSet();
     private:
         std::shared_ptr<VulkanRenderer> m_VulkanRenderer;

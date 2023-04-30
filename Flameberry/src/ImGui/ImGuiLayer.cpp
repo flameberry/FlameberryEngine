@@ -9,7 +9,7 @@
 #include "Renderer/Vulkan/VulkanDebug.h"
 
 namespace Flameberry {
-    void ImGuiLayer::OnAttach(const std::shared_ptr<VulkanRenderer>& renderer)
+    ImGuiLayer::ImGuiLayer(const std::shared_ptr<VulkanRenderer>& renderer)
     {
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -107,7 +107,7 @@ namespace Flameberry {
         ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
 
-    void ImGuiLayer::OnDetach()
+    void ImGuiLayer::OnDestroy()
     {
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
@@ -228,6 +228,16 @@ namespace Flameberry {
             info.layers = 1;
 
             VK_CHECK_RESULT(vkCreateFramebuffer(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiFramebuffers[i]));
+        }
+    }
+
+    void ImGuiLayer::OnEvent(Event& e)
+    {
+        if (!e.Handled)
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            e.Handled |= io.WantCaptureMouse;
+            e.Handled |= io.WantCaptureKeyboard;
         }
     }
 

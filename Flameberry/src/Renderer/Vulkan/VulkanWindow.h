@@ -4,7 +4,7 @@
 #include <vulkan/vulkan.h>
 
 namespace Flameberry {
-    class VulkanWindow: public Window
+    class VulkanWindow : public Window
     {
     public:
         VulkanWindow(int width = 1280, int height = 720, const char* title = "Flameberry Engine");
@@ -22,6 +22,7 @@ namespace Flameberry {
 
         bool IsWindowResized() const { return m_FramebufferResized; }
         void ResetWindowResizedFlag() { m_FramebufferResized = false; }
+        void SetEventCallBack(const std::function<void(Event&)>& fn) override;
     private:
         static void FramebufferResizeCallBack(GLFWwindow* window, int width, int height);
     private:
@@ -30,6 +31,7 @@ namespace Flameberry {
         uint32_t m_Width, m_Height;
         const char* m_Title;
 
+        std::function<void(Event&)> m_EventCallBack;
         bool m_FramebufferResized = false;
     };
 }

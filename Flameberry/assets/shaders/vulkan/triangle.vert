@@ -23,13 +23,6 @@ layout (push_constant) uniform MeshData {
     bool  u_Metallic;
 };
 
-// mat4 g_BiasMatrix = mat4(
-//     0.5, 0.0, 0.0, 0.0,
-//     0.0, 0.5, 0.0, 0.0,
-//     0.0, 0.0, 0.5, 0.0,
-//     0.5, 0.5, 0.5, 1.0
-// );
-
 mat4 g_BiasMatrix = mat4(
     0.5, 0.0, 0.0, 0.0,
 	0.0, 0.5, 0.0, 0.0,
@@ -50,5 +43,4 @@ void main()
     v_Position = vec3(u_ModelMatrix * vec4(v_Position, 1.0));
 
     v_LightFragmentPosition = (g_BiasMatrix * u_LightViewProjectionMatrix) * vec4(a_Position, 1.0);
-    // v_LightFragmentPosition = (u_LightViewProjectionMatrix) * vec4(v_Position, 1.0);
 }

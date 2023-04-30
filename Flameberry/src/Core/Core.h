@@ -11,6 +11,8 @@
 #define FL_DEBUGBREAK()
 #endif
 
+#define FL_BIND_EVENT_FN(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
+
 // Including All Utils related to Logging
 #include "Log.h"
 

@@ -10,6 +10,8 @@
 
 #include "Core/Application.h"
 #include "Core/Core.h"
+#include "Core/Event.h"
+#include "Core/Layer.h"
 #include "Core/Timer.h"
 #include "Core/Input.h"
 #include "ImGui/ImGuiLayer.h"

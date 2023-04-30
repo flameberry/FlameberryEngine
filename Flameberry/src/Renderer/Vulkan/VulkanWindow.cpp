@@ -26,6 +26,23 @@ namespace Flameberry {
 
     }
 
+    void VulkanWindow::SetEventCallBack(const std::function<void(Event&)>& fn)
+    {
+        m_EventCallBack = fn;
+        glfwSetWindowUserPointer(m_Window, this);
+
+        glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+            {
+                VulkanWindow* ptr = (VulkanWindow*)glfwGetWindowUserPointer(window);
+                if (action == GLFW_PRESS)
+                {
+                    KeyPressedEvent event(key);
+                    ptr->m_EventCallBack(event);
+                }
+            }
+        );
+    }
+
     void VulkanWindow::FramebufferResizeCallBack(GLFWwindow* window, int width, int height)
     {
         VulkanWindow* pWindow = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
