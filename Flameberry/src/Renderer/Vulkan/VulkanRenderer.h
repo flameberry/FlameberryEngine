@@ -88,7 +88,7 @@ namespace Flameberry {
         const uint32_t SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
 
         // offscreen rendering resources
-        std::vector<std::shared_ptr<VulkanImage>> m_ViewportImages;
+        std::vector<std::shared_ptr<VulkanImage>> m_ViewportImagesMSAA, m_ViewportImages;
         std::shared_ptr<VulkanImage> m_ViewportDepthImage;
         std::vector<VkFramebuffer> m_ViewportFramebuffers;
         VkRenderPass m_ViewportRenderPass;

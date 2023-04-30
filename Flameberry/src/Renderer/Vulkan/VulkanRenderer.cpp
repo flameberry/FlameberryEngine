@@ -290,6 +290,21 @@ namespace Flameberry {
     void VulkanRenderer::CreateViewportResources()
     {
         VkFormat vk_swap_chain_image_format = m_SwapChain->GetSwapChainImageFormat();
+        VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+
+        m_ViewportImagesMSAA.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (auto& viewportImage : m_ViewportImagesMSAA) {
+            viewportImage = std::make_shared<VulkanImage>(
+                m_ViewportSize.x,
+                m_ViewportSize.y,
+                vk_swap_chain_image_format,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                VK_IMAGE_ASPECT_COLOR_BIT,
+                sampleCount
+            );
+        }
 
         m_ViewportImages.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (auto& viewportImage : m_ViewportImages) {
@@ -312,7 +327,8 @@ namespace Flameberry {
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            VK_IMAGE_ASPECT_DEPTH_BIT
+            VK_IMAGE_ASPECT_DEPTH_BIT,
+            sampleCount
         );
 
         // Create Framebuffers
@@ -320,7 +336,7 @@ namespace Flameberry {
 
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++) {
-            std::vector<VkImageView> attachments = { m_ViewportImages[i]->GetImageView(), m_ViewportDepthImage->GetImageView() };
+            std::vector<VkImageView> attachments = { m_ViewportImagesMSAA[i]->GetImageView(), m_ViewportDepthImage->GetImageView(), m_ViewportImages[i]->GetImageView() };
 
             VkFramebufferCreateInfo vk_framebuffer_create_info{};
             vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -338,6 +354,7 @@ namespace Flameberry {
     void VulkanRenderer::CreateViewportRenderPass()
     {
         VkFormat vk_swap_chain_image_format = m_SwapChain->GetSwapChainImageFormat();
+        VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
         // Subpass dependencies for layout transitions
         std::array<VkSubpassDependency, 2> dependencies;
@@ -368,14 +385,15 @@ namespace Flameberry {
 
         VkAttachmentDescription vk_color_attachment_description{};
         vk_color_attachment_description.format = vk_swap_chain_image_format;
-        vk_color_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+        vk_color_attachment_description.samples = sampleCount;
         vk_color_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         vk_color_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         vk_color_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         vk_color_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         vk_color_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         // vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // For ImGui
+        // vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // For ImGui
+        vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // For ImGui
 
         VkAttachmentReference vk_color_attachment_reference{};
         vk_color_attachment_reference.attachment = 0;
@@ -383,7 +401,7 @@ namespace Flameberry {
 
         VkAttachmentDescription vk_depth_attachment_desc{};
         vk_depth_attachment_desc.format = VulkanSwapChain::GetDepthFormat();
-        vk_depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+        vk_depth_attachment_desc.samples = sampleCount;
         vk_depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         vk_depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         vk_depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -395,13 +413,28 @@ namespace Flameberry {
         vk_depth_attachment_ref.attachment = 1;
         vk_depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
+        VkAttachmentDescription vk_color_attachment_resolve{};
+        vk_color_attachment_resolve.format = vk_swap_chain_image_format;
+        vk_color_attachment_resolve.samples = VK_SAMPLE_COUNT_1_BIT;
+        vk_color_attachment_resolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        vk_color_attachment_resolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        vk_color_attachment_resolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        vk_color_attachment_resolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        vk_color_attachment_resolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        vk_color_attachment_resolve.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkAttachmentReference vk_color_attachment_resolve_ref{};
+        vk_color_attachment_resolve_ref.attachment = 2;
+        vk_color_attachment_resolve_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        std::array<VkAttachmentDescription, 3> attachments = { vk_color_attachment_description, vk_depth_attachment_desc, vk_color_attachment_resolve };
+
         VkSubpassDescription vk_subpass_description{};
         vk_subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         vk_subpass_description.colorAttachmentCount = 1;
         vk_subpass_description.pColorAttachments = &vk_color_attachment_reference;
         vk_subpass_description.pDepthStencilAttachment = &vk_depth_attachment_ref;
-
-        std::array<VkAttachmentDescription, 2> attachments = { vk_color_attachment_description, vk_depth_attachment_desc };
+        vk_subpass_description.pResolveAttachments = &vk_color_attachment_resolve_ref;
 
         VkRenderPassCreateInfo vk_render_pass_create_info{};
         vk_render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -409,8 +442,6 @@ namespace Flameberry {
         vk_render_pass_create_info.pAttachments = attachments.data();
         vk_render_pass_create_info.subpassCount = 1;
         vk_render_pass_create_info.pSubpasses = &vk_subpass_description;
-        // vk_render_pass_create_info.dependencyCount = 1;
-        // vk_render_pass_create_info.pDependencies = &vk_subpass_dependency;
         vk_render_pass_create_info.dependencyCount = (uint32_t)dependencies.size();
         vk_render_pass_create_info.pDependencies = dependencies.data();
 
@@ -427,6 +458,9 @@ namespace Flameberry {
             vkDestroyFramebuffer(device, framebuffer, nullptr);
 
         for (auto& image : m_ViewportImages)
+            image = nullptr;
+
+        for (auto& image : m_ViewportImagesMSAA)
             image = nullptr;
 
         CreateViewportResources();

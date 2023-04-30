@@ -7,7 +7,16 @@ namespace Flameberry {
     class VulkanImage
     {
     public:
-        VulkanImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImageAspectFlags imageAspectFlags);
+        VulkanImage(
+            uint32_t width,
+            uint32_t height,
+            VkFormat format,
+            VkImageTiling tiling,
+            VkImageUsageFlags usage,
+            VkMemoryPropertyFlags properties,
+            VkImageAspectFlags imageAspectFlags,
+            VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT
+        );
         ~VulkanImage();
 
         void WriteFromBuffer(VkBuffer srcBuffer);

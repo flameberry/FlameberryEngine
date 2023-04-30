@@ -5,8 +5,16 @@
 #include "VulkanContext.h"
 
 namespace Flameberry {
-    VulkanImage::VulkanImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImageAspectFlags imageAspectFlags)
-        : m_Width(width), m_Height(height), m_VkImageFormat(format)
+    VulkanImage::VulkanImage(
+        uint32_t width,
+        uint32_t height,
+        VkFormat format,
+        VkImageTiling tiling,
+        VkImageUsageFlags usage,
+        VkMemoryPropertyFlags properties,
+        VkImageAspectFlags imageAspectFlags,
+        VkSampleCountFlagBits sampleCount
+    ) : m_Width(width), m_Height(height), m_VkImageFormat(format)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
@@ -24,7 +32,7 @@ namespace Flameberry {
         vk_image_create_info.tiling = tiling;
         vk_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         vk_image_create_info.usage = usage;
-        vk_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+        vk_image_create_info.samples = sampleCount;
         vk_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         VK_CHECK_RESULT(vkCreateImage(device, &vk_image_create_info, nullptr, &m_VkImage));

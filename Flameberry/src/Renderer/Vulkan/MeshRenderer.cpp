@@ -5,6 +5,7 @@
 
 #include "VulkanDebug.h"
 #include "VulkanRenderer.h"
+#include "VulkanRenderCommand.h"
 #include "VulkanMesh.h"
 #include "Renderer/Material.h"
 
@@ -97,6 +98,10 @@ namespace Flameberry {
         pipelineSpec.pipelineVertexInputStateCreateInfo = vk_pipeline_vertex_input_state_create_info;
 
         Flameberry::VulkanPipeline::FillWithDefaultPipelineSpecification(pipelineSpec);
+
+        VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+        pipelineSpec.pipelineMultisampleStateCreateInfo.rasterizationSamples = sampleCount;
+        pipelineSpec.pipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_TRUE;
 
         m_MeshPipeline = std::make_unique<Flameberry::VulkanPipeline>(pipelineSpec);
     }

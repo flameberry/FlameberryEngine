@@ -168,7 +168,7 @@ namespace Flameberry {
             m_VulkanRenderer->UpdateViewportSize(m_ViewportSize);
 
             {
-                FL_PROFILE_SCOPE("Swap Chain Render Pass");
+                FL_PROFILE_SCOPE("Viewport Render Pass");
                 m_VulkanRenderer->BeginViewportRenderPass();
 
                 VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
