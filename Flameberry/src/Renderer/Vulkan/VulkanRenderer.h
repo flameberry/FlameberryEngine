@@ -29,7 +29,7 @@ namespace Flameberry {
         ~VulkanRenderer();
         [[nodiscard]] VkCommandBuffer BeginFrame();
         bool EndFrame();
-        void BeginViewportRenderPass();
+        void BeginViewportRenderPass(const glm::vec3& clearColor = glm::vec3(0));
         void EndViewportRenderPass();
 
         void BeginShadowRenderPass(const glm::mat4& lightViewProjectionMatrix);

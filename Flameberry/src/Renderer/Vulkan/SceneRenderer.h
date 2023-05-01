@@ -8,14 +8,17 @@
 #include "Renderer/Light.h"
 #include "Renderer/PerspectiveCamera.h"
 
+#include "ECS/Scene.h"
+
 namespace Flameberry {
-    class MeshRenderer
+    class SceneRenderer
     {
     public:
-        MeshRenderer(const std::shared_ptr<VulkanDescriptorPool>& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass);
-        ~MeshRenderer();
+        SceneRenderer(const std::shared_ptr<VulkanDescriptorPool>& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass);
+        ~SceneRenderer();
 
-        void OnDraw(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, std::vector<std::shared_ptr<VulkanMesh>>& meshes);
+        void OnDraw(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene);
+        void OnDrawForShadowPass(VkCommandBuffer commandBuffer, VkPipelineLayout shadowMapPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene);
     private:
         std::unique_ptr<VulkanPipeline> m_MeshPipeline;
         VkPipelineLayout m_VkPipelineLayout;

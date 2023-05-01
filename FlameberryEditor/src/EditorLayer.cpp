@@ -81,21 +81,8 @@ namespace Flameberry {
             m_VulkanDescriptorWriter->Update(m_VkDescriptorSets[i]);
         }
 
-        m_MeshRenderer = std::make_unique<MeshRenderer>(m_VulkanRenderer->GetGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
-
-        {
-            auto [vk_vertices, indices] = VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/cube.obj");
-            m_Meshes.emplace_back(VulkanMesh::Create(vk_vertices, indices));
-        }
-        {
-            auto [vk_vertices, indices] = VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/sponza.obj");
-            m_Meshes.emplace_back(VulkanMesh::Create(vk_vertices, indices));
-        }
-        // {
-        //     auto [vk_vertices, indices] = VulkanRenderCommand::LoadModel(FL_PROJECT_DIR"SandboxApp/assets/models/plane.obj");
-        //     m_Meshes.emplace_back(VulkanMesh::Create(vk_vertices, indices));
-        // }
-
+        // m_SkyboxRenderer = std::make_unique<SkyboxRenderer>(m_VulkanRenderer->GetGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
+        m_SceneRenderer = std::make_unique<SceneRenderer>(m_VulkanRenderer->GetGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
         m_ImGuiLayer = std::make_unique<ImGuiLayer>(m_VulkanRenderer);
 
         // Test
@@ -111,6 +98,13 @@ namespace Flameberry {
             );
         }
 
+        m_Registry = std::make_shared<ecs::registry>();
+        m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
+
+        SceneSerializer serializer(m_ActiveScene);
+        serializer.DeserializeScene(FL_PROJECT_DIR"SandboxApp/assets/scenes/world.berry");
+
+        m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>(m_ActiveScene.get());
         m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
     }
 
@@ -129,21 +123,16 @@ namespace Flameberry {
                 glm::vec3 lightInvDir(5.0f);
 
                 glm::mat4 lightProjectionMatrix = glm::ortho<float>(-10, 10, -10, 10, -10, 20);
-                glm::mat4 lightViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+                glm::mat4 lightViewMatrix = glm::lookAt(
+                    lightInvDir,
+                    // m_ActiveScene->GetDirectionalLight().Direction,
+                    glm::vec3(0, 0, 0),
+                    glm::vec3(0, 1, 0)
+                );
                 lightViewProjectionMatrix = lightProjectionMatrix * lightViewMatrix;
 
                 m_VulkanRenderer->BeginShadowRenderPass(lightViewProjectionMatrix);
-
-                for (auto& mesh : m_Meshes)
-                {
-                    ModelMatrixPushConstantData pushContantData;
-                    pushContantData.ModelMatrix = glm::mat4(1.0f);
-                    vkCmdPushConstants(commandBuffer, m_VulkanRenderer->GetShadowMapPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
-
-                    mesh->Bind(commandBuffer);
-                    mesh->OnDraw(commandBuffer);
-                }
-
+                m_SceneRenderer->OnDrawForShadowPass(commandBuffer, m_VulkanRenderer->GetShadowMapPipelineLayout(), m_ActiveCamera, m_ActiveScene);
                 m_VulkanRenderer->EndShadowRenderPass();
             }
 
@@ -151,7 +140,7 @@ namespace Flameberry {
 
             {
                 FL_PROFILE_SCOPE("Viewport Render Pass");
-                m_VulkanRenderer->BeginViewportRenderPass();
+                m_VulkanRenderer->BeginViewportRenderPass(m_ActiveScene->GetClearColor());
 
                 VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
                 VulkanRenderCommand::SetScissor(commandBuffer, { 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
@@ -168,7 +157,9 @@ namespace Flameberry {
 
                 m_UniformBuffers[m_VulkanRenderer->GetCurrentFrameIndex()]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
-                m_MeshRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_Meshes);
+                // m_SkyboxRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, "");
+                m_SceneRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_ActiveScene);
+
                 m_VulkanRenderer->EndViewportRenderPass();
             }
 
@@ -210,9 +201,11 @@ namespace Flameberry {
         ImGui::PopStyleVar();
 
         ImGui::Begin("Statistics");
+        ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         FL_DISPLAY_SCOPE_DETAILS_IMGUI();
         ImGui::End();
 
+        m_SceneHierarchyPanel->OnUIRender();
         m_ContentBrowserPanel->OnUIRender();
     }
 

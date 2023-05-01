@@ -25,7 +25,13 @@
 #include "Renderer/Vulkan/VulkanTexture.h"
 #include "Renderer/Vulkan/VulkanMesh.h"
 #include "Renderer/Vulkan/VulkanDebug.h"
-#include "Renderer/Vulkan/MeshRenderer.h"
+#include "Renderer/Vulkan/SceneRenderer.h"
+#include "Renderer/SkyboxRenderer.h"
+
+#include "ECS/Component.h"
+#include "ECS/SceneSerializer.h"
+#include "ECS/Scene.h"
+#include "ECS/ecs.hpp"
 
 #include "Core/Timer.h"
 #include "Core/Profiler.h"

@@ -509,7 +509,7 @@ namespace Flameberry {
         return isResized;
     }
 
-    void VulkanRenderer::BeginViewportRenderPass()
+    void VulkanRenderer::BeginViewportRenderPass(const glm::vec3& clearColor)
     {
         VkRenderPassBeginInfo vk_render_pass_begin_info{};
         vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -519,7 +519,7 @@ namespace Flameberry {
         vk_render_pass_begin_info.renderArea.extent = VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y };
 
         std::array<VkClearValue, 2> vk_clear_values{};
-        vk_clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+        vk_clear_values[0].color = { clearColor.r, clearColor.g, clearColor.b, 1.0f };
         vk_clear_values[1].depthStencil = { 1.0f, 0 };
 
         vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(vk_clear_values.size());

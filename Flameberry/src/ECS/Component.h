@@ -6,11 +6,20 @@
 
 #include <string>
 
+#include "Core/UUID.h"
+
 namespace Flameberry {
+    struct IDComponent
+    {
+        UUID ID;
+        IDComponent(UUID id) : ID(id) {}
+        IDComponent() = default;
+    };
+
     struct TransformComponent
     {
         glm::vec3 translation, rotation, scale;
-        TransformComponent(): translation(0.0f), rotation(0.0f), scale(1.0f) {};
+        TransformComponent() : translation(0.0f), rotation(0.0f), scale(1.0f) {};
         glm::mat4 GetTransform() const
         {
             return glm::translate(glm::mat4(1.0f), translation)
@@ -28,6 +37,22 @@ namespace Flameberry {
     struct TagComponent
     {
         std::string Tag;
-        TagComponent(const std::string& tag = "Default_Entity"): Tag(tag) {}
+        TagComponent(const std::string& tag = "Default_Entity") : Tag(tag) {}
+    };
+
+    struct MeshComponent
+    {
+        uint32_t MeshIndex;
+        std::string MaterialName = "Default";
+
+        MeshComponent() : MeshIndex(0) {}
+    };
+
+    struct LightComponent
+    {
+        glm::vec3 Color;
+        float Intensity;
+
+        LightComponent() : Color(1.0f), Intensity(10.0f) {}
     };
 }

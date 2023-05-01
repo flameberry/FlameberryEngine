@@ -238,6 +238,10 @@ namespace Flameberry {
 
         FL_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str()), err);
 
+        bool has_tex_coord = true;
+        if (!attrib.texcoords.size())
+            has_tex_coord = false;
+
         std::unordered_map<VulkanVertex, uint32_t> uniqueVertices{};
         for (const auto& shape : shapes)
         {
@@ -257,10 +261,12 @@ namespace Flameberry {
                     attrib.normals[3 * index.normal_index + 2]
                 };
 
-                vertex.textureUV = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-                };
+                if (has_tex_coord) {
+                    vertex.textureUV = {
+                        attrib.texcoords[2 * index.texcoord_index + 0],
+                        1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                    };
+                }
 
                 vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
 

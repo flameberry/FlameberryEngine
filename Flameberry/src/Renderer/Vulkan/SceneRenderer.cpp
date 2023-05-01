@@ -1,4 +1,4 @@
-#include "MeshRenderer.h"
+#include "SceneRenderer.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -9,12 +9,14 @@
 #include "VulkanMesh.h"
 #include "Renderer/Material.h"
 
+#include "ECS/Component.h"
+
 namespace Flameberry {
-    struct SceneData {
+    struct SceneUniformBufferData {
         glm::vec3 cameraPosition;
         DirectionalLight directionalLight;
         PointLight pointLights[10];
-        int lightCount;
+        int lightCount = 0;
     };
 
     struct MeshData {
@@ -22,13 +24,13 @@ namespace Flameberry {
         Material MeshMaterial;
     };
 
-    MeshRenderer::MeshRenderer(const std::shared_ptr<VulkanDescriptorPool>& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass)
+    SceneRenderer::SceneRenderer(const std::shared_ptr<VulkanDescriptorPool>& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass)
         : m_GlobalDescriptorPool(globalDescriptorPool)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
         // Creating Uniform Buffers
-        VkDeviceSize uniformBufferSize = sizeof(Flameberry::SceneData);
+        VkDeviceSize uniformBufferSize = sizeof(SceneUniformBufferData);
         for (auto& uniformBuffer : m_SceneUniformBuffers)
         {
             uniformBuffer = std::make_unique<Flameberry::VulkanBuffer>(uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -53,7 +55,7 @@ namespace Flameberry {
             VkDescriptorBufferInfo vk_descriptor_lighting_buffer_info{};
             vk_descriptor_lighting_buffer_info.buffer = m_SceneUniformBuffers[i]->GetBuffer();
             vk_descriptor_lighting_buffer_info.offset = 0;
-            vk_descriptor_lighting_buffer_info.range = sizeof(SceneData);
+            vk_descriptor_lighting_buffer_info.range = sizeof(SceneUniformBufferData);
 
             m_GlobalDescriptorPool->AllocateDescriptorSet(&m_SceneDataDescriptorSets[i], m_SceneDescriptorLayout->GetLayout());
             m_SceneDescriptorWriter->WriteBuffer(0, &vk_descriptor_lighting_buffer_info);
@@ -106,50 +108,64 @@ namespace Flameberry {
         m_MeshPipeline = std::make_unique<Flameberry::VulkanPipeline>(pipelineSpec);
     }
 
-    void MeshRenderer::OnDraw(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, std::vector<std::shared_ptr<VulkanMesh>>& meshes)
+    void SceneRenderer::OnDraw(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
     {
         m_MeshPipeline->Bind(commandBuffer);
 
-        SceneData sceneData;
-        sceneData.cameraPosition = activeCamera.GetPosition();
-        sceneData.directionalLight.Direction = glm::vec3(-1.0f);
-        sceneData.directionalLight.Color = glm::vec3(1.0f);
-        sceneData.directionalLight.Intensity = 2.0f;
+        // Updating Scene Uniform Buffer
+        SceneUniformBufferData sceneUniformBufferData;
+        sceneUniformBufferData.cameraPosition = activeCamera.GetPosition();
+        sceneUniformBufferData.directionalLight = scene->m_SceneData.ActiveEnvironmentMap.DirLight;
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
+        {
+            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
+            sceneUniformBufferData.pointLights[sceneUniformBufferData.lightCount].Position = transform.translation;
+            sceneUniformBufferData.pointLights[sceneUniformBufferData.lightCount].Color = light.Color;
+            sceneUniformBufferData.pointLights[sceneUniformBufferData.lightCount].Intensity = light.Intensity;
+            sceneUniformBufferData.lightCount++;
+        }
+        // sceneUniformBufferData.EnvironmentMapReflections = scene->m_SceneData.ActiveEnvironmentMap.Reflections;
 
-        sceneData.pointLights[0].Position = glm::vec3(0.0f, 1.0f, 3.0f);
-        sceneData.pointLights[0].Color = glm::vec3(1.0f);
-        sceneData.pointLights[0].Intensity = 2.0f;
-
-        sceneData.pointLights[1].Position = glm::vec3(-2.0f, 0.0f, 2.0f);
-        sceneData.pointLights[1].Color = glm::vec3(1.0f);
-        sceneData.pointLights[1].Intensity = 0.2f;
-
-        sceneData.lightCount = 0;
-
-        m_SceneUniformBuffers[currentFrameIndex]->WriteToBuffer(&sceneData, sizeof(SceneData), 0);
+        m_SceneUniformBuffers[currentFrameIndex]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData), 0);
 
         VkDescriptorSet descriptorSets[] = { globalDescriptorSet, m_SceneDataDescriptorSets[currentFrameIndex] };
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
 
-        // static auto startTime = std::chrono::high_resolution_clock::now();
-        // auto currentTime = std::chrono::high_resolution_clock::now();
-        // float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-        for (auto& mesh : meshes)
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
+            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+
+            bool doesMeshHaveMaterial = scene->m_SceneData.Materials.find(mesh.MaterialName) != scene->m_SceneData.Materials.end();
+
             MeshData pushConstantMeshData;
-            // pushConstantMeshData.ModelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-            pushConstantMeshData.ModelMatrix = glm::mat4(1.0f);
-            pushConstantMeshData.MeshMaterial = { glm::vec3(1, 0, 1), 0.2f, false };
+            pushConstantMeshData.ModelMatrix = transform.GetTransform();
+            pushConstantMeshData.MeshMaterial = doesMeshHaveMaterial ? scene->m_SceneData.Materials[mesh.MaterialName] : Material{ glm::vec3(1, 0, 1), 0.2f, false };
 
             vkCmdPushConstants(commandBuffer, m_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
 
-            mesh->Bind(commandBuffer);
-            mesh->OnDraw(commandBuffer);
+            auto& vulkanmesh = scene->m_SceneData.Meshes[mesh.MeshIndex];
+            vulkanmesh->Bind(commandBuffer);
+            vulkanmesh->OnDraw(commandBuffer);
         }
     }
 
-    MeshRenderer::~MeshRenderer()
+    void SceneRenderer::OnDrawForShadowPass(VkCommandBuffer commandBuffer, VkPipelineLayout shadowMapPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
+    {
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        {
+            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+
+            ModelMatrixPushConstantData pushContantData;
+            pushContantData.ModelMatrix = transform.GetTransform();
+            vkCmdPushConstants(commandBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
+
+            auto& vulkanmesh = scene->m_SceneData.Meshes[mesh.MeshIndex];
+            vulkanmesh->Bind(commandBuffer);
+            vulkanmesh->OnDraw(commandBuffer);
+        }
+    }
+
+    SceneRenderer::~SceneRenderer()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
