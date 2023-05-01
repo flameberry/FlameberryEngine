@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flameberry.h"
+#include "Panels/ContentBrowserPanel.h"
 
 namespace Flameberry {
     class EditorLayer : public Layer
@@ -23,6 +24,7 @@ namespace Flameberry {
         std::shared_ptr<VulkanRenderer> m_VulkanRenderer;
 
         PerspectiveCamera m_ActiveCamera;
+        bool m_IsViewportFocused = false;
 
         std::unique_ptr<VulkanDescriptorWriter> m_VulkanDescriptorWriter;
         std::unique_ptr<VulkanDescriptorLayout> m_VulkanDescriptorLayout;
@@ -35,10 +37,12 @@ namespace Flameberry {
         std::unique_ptr<MeshRenderer> m_MeshRenderer;
         std::vector<std::shared_ptr<VulkanMesh>> m_Meshes;
 
-        // Test
         std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
         glm::vec2 m_ViewportSize{1280, 720};
         VkSampler m_VkTextureSampler;
         std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
+
+        // UI
+        std::shared_ptr<ContentBrowserPanel> m_ContentBrowserPanel;
     };
 }

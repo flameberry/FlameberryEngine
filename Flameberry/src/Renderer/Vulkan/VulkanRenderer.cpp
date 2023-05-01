@@ -29,9 +29,9 @@ namespace Flameberry {
 
         std::vector<VkDescriptorPoolSize> poolSizes = {
             { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 5 },
-            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 4 }
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 10 }
         };
-        m_GlobalDescriptorPool = std::make_shared<Flameberry::VulkanDescriptorPool>(poolSizes, 5 * Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        m_GlobalDescriptorPool = std::make_shared<Flameberry::VulkanDescriptorPool>(poolSizes, 10 * Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
 
         CreateViewportRenderPass();
         CreateViewportResources();

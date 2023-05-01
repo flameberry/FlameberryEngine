@@ -99,26 +99,7 @@ namespace Flameberry {
         m_ImGuiLayer = std::make_unique<ImGuiLayer>(m_VulkanRenderer);
 
         // Test
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        VkSamplerCreateInfo samplerInfo{};
-        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_FALSE;
-        samplerInfo.maxAnisotropy = 1.0f;
-        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        samplerInfo.compareEnable = VK_FALSE;
-        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        samplerInfo.mipLodBias = 0.0f;
-        samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = 0.0f;
-
-        VK_CHECK_RESULT(vkCreateSampler(device, &samplerInfo, nullptr, &m_VkTextureSampler));
+        m_VkTextureSampler = VulkanRenderCommand::CreateDefaultSampler();
 
         m_ViewportDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
@@ -129,13 +110,15 @@ namespace Flameberry {
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
         }
+
+        m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
     }
 
     void EditorLayer::OnUpdate(float delta)
     {
         // FL_SCOPED_TIMER("EditorLayer::OnUpdate");
         FL_PROFILE_SCOPE("Vulkan Frame Render Time");
-        m_ActiveCamera.OnUpdate(delta);
+
         if (VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginFrame())
         {
             glm::mat4 lightViewProjectionMatrix;
@@ -176,6 +159,9 @@ namespace Flameberry {
                 // Update Uniforms
                 m_ActiveCamera.OnResize(m_ViewportSize.x / m_ViewportSize.y);
 
+                if (m_IsViewportFocused)
+                    m_ActiveCamera.OnUpdate(delta);
+
                 CameraUniformBufferObject uniformBufferObject{};
                 uniformBufferObject.ViewProjectionMatrix = m_ActiveCamera.GetViewProjectionMatrix();
                 uniformBufferObject.LightViewProjectionMatrix = lightViewProjectionMatrix;
@@ -211,9 +197,10 @@ namespace Flameberry {
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-        uint32_t currentFrameIndex = m_VulkanRenderer->GetCurrentFrameIndex();
+        m_IsViewportFocused = ImGui::IsWindowFocused();
         InvalidateViewportImGuiDescriptorSet();
 
+        uint32_t currentFrameIndex = m_VulkanRenderer->GetCurrentFrameIndex();
         ImGui::Image(reinterpret_cast<ImTextureID>(
             m_ViewportDescriptorSets[currentFrameIndex]),
             ImVec2{ m_ViewportSize.x, m_ViewportSize.y }
@@ -225,6 +212,8 @@ namespace Flameberry {
         ImGui::Begin("Statistics");
         FL_DISPLAY_SCOPE_DETAILS_IMGUI();
         ImGui::End();
+
+        m_ContentBrowserPanel->OnUIRender();
     }
 
     void EditorLayer::InvalidateViewportImGuiDescriptorSet()

@@ -9,7 +9,7 @@ namespace Flameberry {
     class VulkanTexture
     {
     public:
-        VulkanTexture(const char* texturePath);
+        VulkanTexture(const char* texturePath, VkSampler sampler = VK_NULL_HANDLE);
         ~VulkanTexture();
 
         VkImageView GetImageView() const { return m_TextureImage->GetImageView(); }
@@ -17,5 +17,6 @@ namespace Flameberry {
     private:
         std::unique_ptr<VulkanImage> m_TextureImage;
         VkSampler m_VkTextureSampler;
+        bool m_DidCreateSampler = true;
     };
 }
