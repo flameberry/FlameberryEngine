@@ -32,8 +32,9 @@ namespace Flameberry {
         void EndCommandBuffer(uint32_t bufferIndex);
         void BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
         void EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
-        
+
         void WaitIdle();
+        void WaitIdleGraphicsQueue();
 
         static std::shared_ptr<VulkanDevice> Create(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow) { return std::make_shared<VulkanDevice>(physicalDevice, pVulkanWindow); }
         std::vector<VkDeviceQueueCreateInfo> CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices);

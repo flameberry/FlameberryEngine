@@ -6,6 +6,8 @@
 #include "Core/Timer.h"
 #include "Component.h"
 
+#include "Renderer/Vulkan/VulkanContext.h"
+
 namespace YAML {
     template<>
     struct convert<glm::vec3>
@@ -212,6 +214,7 @@ namespace Flameberry {
     bool SceneSerializer::DeserializeScene(const char* scenePath)
     {
         FL_SCOPED_TIMER("Deserialization");
+
         std::ifstream in(scenePath);
         std::stringstream ss;
         ss << in.rdbuf();

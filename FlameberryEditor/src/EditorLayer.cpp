@@ -1,5 +1,7 @@
 #include "EditorLayer.h"
 
+#include "project.h"
+
 namespace Flameberry {
     EditorLayer::EditorLayer()
     {}
@@ -101,9 +103,6 @@ namespace Flameberry {
         m_Registry = std::make_shared<ecs::registry>();
         m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
 
-        SceneSerializer serializer(m_ActiveScene);
-        serializer.DeserializeScene(FL_PROJECT_DIR"SandboxApp/assets/scenes/world.berry");
-
         m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>(m_ActiveScene.get());
         m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
     }
@@ -171,6 +170,14 @@ namespace Flameberry {
             if (isResized)
                 m_ImGuiLayer->InvalidateResources(m_VulkanRenderer);
         }
+
+        if (m_ShouldOpenAnotherScene)
+        {
+            VulkanContext::GetCurrentDevice()->WaitIdleGraphicsQueue();
+            OpenScene(m_ScenePathToBeOpened);
+            m_ShouldOpenAnotherScene = false;
+            m_ScenePathToBeOpened = "";
+        }
     }
 
     void EditorLayer::OnDestroy()
@@ -196,6 +203,28 @@ namespace Flameberry {
             m_ViewportDescriptorSets[currentFrameIndex]),
             ImVec2{ m_ViewportSize.x, m_ViewportSize.y }
         );
+
+        // Scene File Drop Target
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+            {
+                std::string path = (const char*)payload->Data;
+                std::filesystem::path scenePath{ path };
+                scenePath = project::g_AssetDirectory / scenePath;
+                const std::string& ext = scenePath.extension().string();
+
+                FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+
+                if (std::filesystem::exists(scenePath) && std::filesystem::is_regular_file(scenePath) && (ext == ".scene" || ext == ".json" || ext == ".berry")) {
+                    m_ShouldOpenAnotherScene = true;
+                    m_ScenePathToBeOpened = scenePath;
+                }
+                else
+                    FL_WARN("Bad File given as Scene!");
+            }
+            ImGui::EndDragDropTarget();
+        }
 
         ImGui::End();
         ImGui::PopStyleVar();
@@ -246,38 +275,40 @@ namespace Flameberry {
     {
         bool ctrl_or_cmd = Input::IsKey(GLFW_KEY_LEFT_SUPER, GLFW_PRESS);
         bool shift = Input::IsKey(GLFW_KEY_LEFT_SHIFT, GLFW_PRESS) || Input::IsKey(GLFW_KEY_RIGHT_SHIFT, GLFW_PRESS);
-        // switch (e.KeyCode)
-        // {
-        // case GLFW_KEY_O:
-        //     if (ctrl_or_cmd)
-        //         OpenScene();
-        //     break;
-        // case GLFW_KEY_S:
-        //     if (ctrl_or_cmd)
-        //     {
-        //         if (shift || m_OpenedScenePathIfExists.empty())
-        //             SaveScene();
-        //         else
-        //             SaveScene(m_OpenedScenePathIfExists);
-        //     }
-        //     break;
-        // case GLFW_KEY_Q:
-        //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-        //         m_GizmoType = -1;
-        //     break;
-        // case GLFW_KEY_W:
-        //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-        //         m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-        //     break;
-        // case GLFW_KEY_E:
-        //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-        //         m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-        //     break;
-        // case GLFW_KEY_R:
-        //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-        //         m_GizmoType = ImGuizmo::OPERATION::SCALE;
-        //     break;
-        // }
+        switch (e.KeyCode)
+        {
+        case GLFW_KEY_O:
+            if (ctrl_or_cmd) {
+                m_ShouldOpenAnotherScene = true;
+                m_ScenePathToBeOpened = platform::OpenDialog();
+            }
+            break;
+        case GLFW_KEY_S:
+            if (ctrl_or_cmd)
+            {
+                if (shift || m_OpenedScenePathIfExists.empty())
+                    SaveScene();
+                else
+                    SaveScene(m_OpenedScenePathIfExists);
+            }
+            break;
+            // case GLFW_KEY_Q:
+            //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+            //         m_GizmoType = -1;
+            //     break;
+            // case GLFW_KEY_W:
+            //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+            //         m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+            //     break;
+            // case GLFW_KEY_E:
+            //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+            //         m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+            //     break;
+            // case GLFW_KEY_R:
+            //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+            //         m_GizmoType = ImGuizmo::OPERATION::SCALE;
+            //     break;
+        }
     }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
@@ -289,4 +320,53 @@ namespace Flameberry {
         }
     }
 
+    void EditorLayer::SaveScene()
+    {
+        std::string savePath = platform::SaveDialog();
+        if (savePath != "")
+        {
+            SceneSerializer serializer(m_ActiveScene);
+            serializer.SerializeScene(savePath.c_str());
+            FL_LOG("Scene saved to path: {0}", savePath);
+            return;
+        }
+        FL_ERROR("Failed to save scene!");
+    }
+
+    void EditorLayer::OpenScene()
+    {
+        std::string sceneToBeLoaded = platform::OpenDialog();
+        if (sceneToBeLoaded != "")
+        {
+            SceneSerializer serializer(m_ActiveScene);
+            bool success = serializer.DeserializeScene(sceneToBeLoaded.c_str());
+            if (success)
+            {
+                m_OpenedScenePathIfExists = sceneToBeLoaded;
+                FL_INFO("Loaded Scene: {0}", sceneToBeLoaded);
+                return;
+            }
+        }
+        FL_ERROR("Failed to load scene!");
+    }
+
+    void EditorLayer::SaveScene(const std::string& path)
+    {
+        if (!path.empty())
+        {
+            SceneSerializer serializer(m_ActiveScene);
+            serializer.SerializeScene(path.c_str());
+        }
+    }
+
+    void EditorLayer::OpenScene(const std::string& path)
+    {
+        if (!path.empty())
+        {
+            SceneSerializer serializer(m_ActiveScene);
+            bool success = serializer.DeserializeScene(path.c_str());
+            if (success)
+                m_OpenedScenePathIfExists = path;
+        }
+    }
 }

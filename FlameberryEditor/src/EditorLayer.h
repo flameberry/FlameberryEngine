@@ -22,6 +22,11 @@ namespace Flameberry {
         void OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
 
         void InvalidateViewportImGuiDescriptorSet();
+
+        void SaveScene();
+        void OpenScene();
+        void SaveScene(const std::string& path);
+        void OpenScene(const std::string& path);
     private:
         std::shared_ptr<VulkanRenderer> m_VulkanRenderer;
 
@@ -53,5 +58,8 @@ namespace Flameberry {
         // UI
         std::shared_ptr<SceneHierarchyPanel> m_SceneHierarchyPanel;
         std::shared_ptr<ContentBrowserPanel> m_ContentBrowserPanel;
+
+        std::string m_OpenedScenePathIfExists = "", m_ScenePathToBeOpened = "";
+        bool m_ShouldOpenAnotherScene = false;
     };
 }

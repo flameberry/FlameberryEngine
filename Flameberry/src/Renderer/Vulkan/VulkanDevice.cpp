@@ -150,4 +150,8 @@ namespace Flameberry {
         vkDeviceWaitIdle(m_VkDevice);
     }
 
+    void VulkanDevice::WaitIdleGraphicsQueue()
+    {
+        vkQueueWaitIdle(m_VkGraphicsQueue);
+    }
 }

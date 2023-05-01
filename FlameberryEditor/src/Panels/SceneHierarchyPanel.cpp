@@ -287,7 +287,7 @@ namespace Flameberry {
             ImGui::TableNextColumn();
 
             // Mesh Menu
-            const char* selectedMeshName = m_ActiveScene->m_SceneData.Meshes.size() ? m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex]->GetName().c_str() : "";
+            const char* selectedMeshName = m_ActiveScene->m_SceneData.Meshes.size() ? (m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex]->GetName().c_str()) : "";
             if (ImGui::BeginCombo("##combo", selectedMeshName)) // The second parameter is the label previewed before opening the combo.
             {
                 for (int n = 0; n < m_ActiveScene->m_SceneData.Meshes.size(); n++)

@@ -35,3 +35,5 @@
 
 #include "Core/Timer.h"
 #include "Core/Profiler.h"
+
+#include "Platform/Utils.h"
