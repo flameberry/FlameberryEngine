@@ -273,7 +273,7 @@ namespace Flameberry {
 
                     if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
                     {
-                        m_ActiveScene->m_SceneData.Meshes.emplace_back(std::make_shared<VulkanMesh>(modelPath.string()));
+                        m_ActiveScene->m_SceneData.Meshes.emplace_back(VulkanMesh::TryGetOrLoadMesh(modelPath));
                         mesh.MeshIndex = (uint32_t)m_ActiveScene->m_SceneData.Meshes.size() - 1;
                     }
                     else
