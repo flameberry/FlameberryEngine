@@ -3,6 +3,8 @@
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
+#include "Flameberry.h"
+
 bool Utils::ButtonCenteredOnLine(const char* label, float alignment)
 {
     ImGuiStyle& style = ImGui::GetStyle();
@@ -17,7 +19,7 @@ bool Utils::ButtonCenteredOnLine(const char* label, float alignment)
     return ImGui::Button(label);
 }
 
-void Utils::DrawVec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed)
+void Utils::DrawVec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 
@@ -29,7 +31,7 @@ void Utils::DrawVec3Control(const std::string& str_id, glm::vec3& value, float d
 
     ImGui::PushID(str_id.c_str());
 
-    ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+    ImGui::PushMultiItemsWidths(3, ceil(availWidth + 7.0f - 3 * buttonSize.x));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });

@@ -228,23 +228,26 @@ namespace Flameberry {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
+
             ImGui::Text("Translation");
             ImGui::TableNextColumn();
-            Utils::DrawVec3Control("Translation", transform.translation, 0.0f, 0.01f);
+
+            float colWidth = ImGui::GetColumnWidth();
+            Utils::DrawVec3Control("Translation", transform.translation, 0.0f, 0.01f, colWidth);
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
             ImGui::Text("Rotation");
             ImGui::TableNextColumn();
-            Utils::DrawVec3Control("Rotation", transform.rotation, 0.0f, 0.01f);
+            Utils::DrawVec3Control("Rotation", transform.rotation, 0.0f, 0.01f, colWidth);
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
             ImGui::Text("Scale");
             ImGui::TableNextColumn();
-            Utils::DrawVec3Control("Scale", transform.scale, 1.0f, 0.01f);
+            Utils::DrawVec3Control("Scale", transform.scale, 1.0f, 0.01f, colWidth);
             ImGui::EndTable();
         }
     }
@@ -471,7 +474,8 @@ namespace Flameberry {
 
             ImGui::Text("Directional");
             ImGui::TableNextColumn();
-            Utils::DrawVec3Control("##Directional_Light", environment.DirLight.Direction, 0.0f, 0.01f);
+            float colWidth = ImGui::GetColumnWidth();
+            Utils::DrawVec3Control("##Directional_Light", environment.DirLight.Direction, 0.0f, 0.01f, colWidth);
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
