@@ -45,11 +45,8 @@ namespace Flameberry {
         VkExtent2D   GetSwapChainExtent2D() const { return m_SwapChain->GetExtent2D(); }
         std::vector<VkImageView> GetSwapChainImageViews() const { return m_SwapChain->GetImageViews(); }
         std::vector<VkImage>     GetSwapChainImages() const { return m_SwapChain->GetImages(); }
-        std::shared_ptr<VulkanDescriptorPool> GetGlobalDescriptorPool() const { return m_GlobalDescriptorPool; }
 
         VkImageView  GetViewportImageView(uint32_t index) { return m_ViewportImages[index]->GetImageView(); }
-
-        // ImGui Rendering
 
         // Shadow Map
         VkPipelineLayout GetShadowMapPipelineLayout() const { return m_ShadowMapPipelineLayout; }
@@ -69,7 +66,6 @@ namespace Flameberry {
 
         VulkanContext m_VulkanContext;
         std::unique_ptr<VulkanSwapChain> m_SwapChain;
-        std::shared_ptr<VulkanDescriptorPool> m_GlobalDescriptorPool;
 
         // Shadow Resources
         std::vector<std::shared_ptr<VulkanImage>> m_ShadowMapImages;

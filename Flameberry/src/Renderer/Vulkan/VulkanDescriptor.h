@@ -8,10 +8,10 @@ namespace Flameberry {
     class VulkanDescriptorPool
     {
     public:
-        VulkanDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets);
+        VulkanDescriptorPool(VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets);
         ~VulkanDescriptorPool();
 
-        VkDescriptorPool GetDescriptorPool() { return m_VkDescriptorPool; }
+        VkDescriptorPool GetVulkanDescriptorPool() { return m_VkDescriptorPool; }
         bool AllocateDescriptorSet(VkDescriptorSet* descriptorSet, VkDescriptorSetLayout descriptorSetLayout);
     private:
         VkDescriptorPool m_VkDescriptorPool = VK_NULL_HANDLE;

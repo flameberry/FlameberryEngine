@@ -40,7 +40,6 @@ namespace Flameberry {
 
         std::unique_ptr<VulkanBuffer> m_UniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
 
-        std::unique_ptr<VulkanTexture> m_Texture;
         std::unique_ptr<SceneRenderer> m_SceneRenderer;
         std::vector<std::shared_ptr<VulkanMesh>> m_Meshes;
 

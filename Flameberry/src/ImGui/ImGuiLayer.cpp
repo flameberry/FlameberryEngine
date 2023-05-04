@@ -88,7 +88,7 @@ namespace Flameberry {
         init_info.QueueFamily = device->GetQueueFamilyIndices().GraphicsSupportedQueueFamilyIndex;
         init_info.Queue = device->GetGraphicsQueue();
         init_info.PipelineCache = VK_NULL_HANDLE;
-        init_info.DescriptorPool = renderer->GetGlobalDescriptorPool()->GetDescriptorPool();
+        init_info.DescriptorPool = VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool();
         init_info.Subpass = 0;
         init_info.MinImageCount = vk_swap_chain_details.SurfaceCapabilities.minImageCount;
         init_info.ImageCount = VulkanSwapChain::MAX_FRAMES_IN_FLIGHT;

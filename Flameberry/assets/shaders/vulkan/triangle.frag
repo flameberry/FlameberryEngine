@@ -11,8 +11,8 @@ layout (location = 0) out vec4 FragColor;
 #define PI 3.1415926535897932384626433832795
 #define AMBIENT 0.02
 
-layout (set = 0, binding = 1) uniform sampler2D u_TextureSampler;
-layout (set = 0, binding = 2) uniform sampler2D u_ShadowMapSampler;
+layout (set = 0, binding = 1) uniform sampler2D u_ShadowMapSampler;
+layout (set = 2, binding = 0) uniform sampler2D u_TextureSampler;
 
 struct DirectionalLight {
     vec3  Direction;
@@ -38,6 +38,7 @@ layout (push_constant) uniform MeshData {
     vec3  u_Albedo;
     float u_Roughness;
     float u_Metallic;
+    float u_TextureMapEnabled;
 };
 
 vec3 CalculateDirectionalLight(vec3 normal, DirectionalLight light)
@@ -49,8 +50,10 @@ vec3 CalculateDirectionalLight(vec3 normal, DirectionalLight light)
 
 vec3 GetPixelColor()
 {
-    // return u_Albedo;
-    return texture(u_TextureSampler, v_TextureCoords).xyz;
+    if (u_TextureMapEnabled == 1.0)
+        return texture(u_TextureSampler, v_TextureCoords).xyz;
+    else
+        return u_Albedo;
 }
 
 // PBR Lighting

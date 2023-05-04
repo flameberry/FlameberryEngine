@@ -12,6 +12,7 @@
 #include "Core/Core.h"
 #include "Core/Timer.h"
 #include "VulkanRenderCommand.h"
+#include "VulkanTexture.h"
 #include "VulkanDebug.h"
 
 namespace Flameberry {
@@ -27,11 +28,8 @@ namespace Flameberry {
 
         VulkanContext::GetCurrentDevice()->AllocateCommandBuffers(m_SwapChain->GetSwapChainImageCount());
 
-        std::vector<VkDescriptorPoolSize> poolSizes = {
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 5 },
-            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 10 }
-        };
-        m_GlobalDescriptorPool = std::make_shared<Flameberry::VulkanDescriptorPool>(poolSizes, 10 * Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        // Create the generic texture descriptor layout
+        VulkanTexture::InitStaticResources();
 
         CreateViewportRenderPass();
         CreateViewportResources();
@@ -185,16 +183,16 @@ namespace Flameberry {
             m_ShadowMapDescriptorLayout = std::make_unique<VulkanDescriptorLayout>(bindings);
             m_ShadowMapDescriptorWriter = std::make_unique<VulkanDescriptorWriter>(*m_ShadowMapDescriptorLayout);
 
-            m_ShadowMapDescriptorSets.resize(Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+            m_ShadowMapDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-            for (uint32_t i = 0; i < Flameberry::VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+            for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
             {
                 VkDescriptorBufferInfo vk_descriptor_buffer_info{};
                 vk_descriptor_buffer_info.buffer = m_ShadowMapUniformBuffers[i]->GetBuffer();
                 vk_descriptor_buffer_info.offset = 0;
                 vk_descriptor_buffer_info.range = sizeof(glm::mat4);
 
-                m_GlobalDescriptorPool->AllocateDescriptorSet(&m_ShadowMapDescriptorSets[i], m_ShadowMapDescriptorLayout->GetLayout());
+                VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_ShadowMapDescriptorSets[i], m_ShadowMapDescriptorLayout->GetLayout());
                 m_ShadowMapDescriptorWriter->WriteBuffer(0, &vk_descriptor_buffer_info);
                 m_ShadowMapDescriptorWriter->Update(m_ShadowMapDescriptorSets[i]);
             }
@@ -244,7 +242,7 @@ namespace Flameberry {
 
             pipelineSpec.pipelineVertexInputStateCreateInfo = vk_pipeline_vertex_input_state_create_info;
 
-            Flameberry::VulkanPipeline::FillWithDefaultPipelineSpecification(pipelineSpec);
+            VulkanPipeline::FillWithDefaultPipelineSpecification(pipelineSpec);
 
             m_ShadowMapPipeline = std::make_unique<VulkanPipeline>(pipelineSpec);
         }
@@ -538,6 +536,8 @@ namespace Flameberry {
     VulkanRenderer::~VulkanRenderer()
     {
         VulkanContext::GetCurrentDevice()->WaitIdle();
+
+        VulkanTexture::DestroyStaticResources();
 
         // Destroy Shadow Map Resources
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();

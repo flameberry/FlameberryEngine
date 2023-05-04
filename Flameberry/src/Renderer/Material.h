@@ -1,12 +1,15 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include "Vulkan/VulkanTexture.h"
 
 namespace Flameberry {
     struct Material
     {
-        alignas(16) glm::vec3 Albedo;
-        alignas(4) float Roughness;
-        alignas(4) float Metallic;
+        glm::vec3 Albedo;
+        float Roughness;
+        bool Metallic;
+        bool TextureMapEnabled = false;
+        std::shared_ptr<VulkanTexture> TextureMap;
     };
 }

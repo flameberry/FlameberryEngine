@@ -15,9 +15,7 @@ namespace Flameberry {
         m_RenamedEntity(ecs::entity_handle::null),
         m_VkTextureSampler(VulkanRenderCommand::CreateDefaultSampler()),
         m_PlusIconTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/plus_icon.png", m_VkTextureSampler),
-        m_MinusIconTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/minus_icon.png", m_VkTextureSampler),
-        m_PlusIconTextureID(ImGui_ImplVulkan_AddTexture(m_VkTextureSampler, m_PlusIconTexture.GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)),
-        m_MinusIconTextureID(ImGui_ImplVulkan_AddTexture(m_VkTextureSampler, m_MinusIconTexture.GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL))
+        m_MinusIconTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/minus_icon.png", m_VkTextureSampler)
     {
     }
 
@@ -324,7 +322,7 @@ namespace Flameberry {
 
             ImGui::SameLine();
 
-            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_PlusIconTextureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
+            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_PlusIconTexture.GetDescriptorSet()), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
             {
                 mesh.MaterialName = "Material_" + std::to_string(m_ActiveScene->m_SceneData.Materials.size());
                 m_ActiveScene->m_SceneData.Materials[mesh.MaterialName] = Material();
@@ -332,7 +330,7 @@ namespace Flameberry {
 
             ImGui::SameLine();
 
-            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_MinusIconTextureID), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
+            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_MinusIconTexture.GetDescriptorSet()), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
             {
                 m_ActiveScene->m_SceneData.Materials.erase(mesh.MaterialName);
                 mesh.MaterialName = "Default";
@@ -344,42 +342,42 @@ namespace Flameberry {
             // Material Controls
             auto& material = m_ActiveScene->m_SceneData.Materials[mesh.MaterialName];
 
-            // ImGui::Text("Texture Map");
+            ImGui::Text("Texture Map");
 
-            // ImGui::TableNextColumn();
+            ImGui::TableNextColumn();
 
-            // bool& textureMapEnabled = material.TextureMapEnabled;
-            // ImGui::Checkbox("##Texture_Map", &textureMapEnabled);
+            bool& textureMapEnabled = material.TextureMapEnabled;
+            ImGui::Checkbox("##Texture_Map", &textureMapEnabled);
 
-            // if (textureMapEnabled)
-            // {
-            //     auto& texture = material.TextureMap;
-            //     if (!texture)
-            //         texture.reset(new OpenGLTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png"));
+            if (textureMapEnabled)
+            {
+                auto& texture = material.TextureMap;
+                if (!texture)
+                    texture = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
 
-            //     OpenGLTexture& currentTexture = *(texture.get());
+                VulkanTexture& currentTexture = *(texture.get());
 
-            //     ImGui::SameLine();
-            //     ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetTextureID()), ImVec2{ 50, 50 }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-            //     if (ImGui::BeginDragDropTarget())
-            //     {
-            //         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
-            //         {
-            //             std::string path = (const char*)payload->Data;
-            //             std::filesystem::path texturePath{ path };
-            //             texturePath = project::g_AssetDirectory / texturePath;
-            //             const std::string& ext = texturePath.extension().string();
+                ImGui::SameLine();
+                ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetDescriptorSet()), ImVec2{ 50, 50 });
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                    {
+                        std::string path = (const char*)payload->Data;
+                        std::filesystem::path texturePath{ path };
+                        texturePath = project::g_AssetDirectory / texturePath;
+                        const std::string& ext = texturePath.extension().string();
 
-            //             FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+                        FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
 
-            //             if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
-            //                 texture.reset(new OpenGLTexture(texturePath.string()));
-            //             else
-            //                 FL_WARN("Bad File given as Texture!");
-            //         }
-            //         ImGui::EndDragDropTarget();
-            //     }
-            // }
+                        if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
+                            texture = VulkanTexture::TryGetOrLoadTexture(texturePath.string());
+                        else
+                            FL_WARN("Bad File given as Texture!");
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+            }
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();

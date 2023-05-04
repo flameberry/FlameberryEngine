@@ -26,6 +26,5 @@ namespace Flameberry {
 
         VkSampler m_VkTextureSampler;
         VulkanTexture m_PlusIconTexture, m_MinusIconTexture;
-        ImTextureID m_PlusIconTextureID, m_MinusIconTextureID;
     };
 }

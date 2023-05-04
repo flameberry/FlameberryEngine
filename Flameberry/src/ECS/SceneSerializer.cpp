@@ -147,11 +147,11 @@ namespace Flameberry {
             out << YAML::Key << "Albedo" << YAML::Value << material.Albedo;
             out << YAML::Key << "Roughness" << YAML::Value << material.Roughness;
             out << YAML::Key << "Metallic" << YAML::Value << material.Metallic;
-            // out << YAML::Key << "TextureMapEnabled" << YAML::Value << material.TextureMapEnabled;
-            // if (material.TextureMapEnabled)
-            //     out << YAML::Key << "TextureMap" << YAML::Value << material.TextureMap->GetFilePath();
-            // else
-            //     out << YAML::Key << "TextureMap" << YAML::Value << "None";
+            out << YAML::Key << "TextureMapEnabled" << YAML::Value << material.TextureMapEnabled;
+            if (material.TextureMapEnabled)
+                out << YAML::Key << "TextureMap" << YAML::Value << material.TextureMap->GetFilePath();
+            else
+                out << YAML::Key << "TextureMap" << YAML::Value << "None";
             out << YAML::EndMap; // Material
         }
 
@@ -321,9 +321,9 @@ namespace Flameberry {
                         m_ActiveScene->m_SceneData.Materials[materialName.as<std::string>()] = Material{
                             material["Albedo"].as<glm::vec3>(),
                             material["Roughness"].as<float>(),
-                            material["Metallic"].as<bool>() ? 1.0f : 0.0f
-                            // textureMapEnabled,
-                            // textureMapEnabled ? std::make_shared<OpenGLTexture>(material["TextureMap"].as<std::string>()) : nullptr
+                            material["Metallic"].as<bool>(),
+                            textureMapEnabled,
+                            textureMapEnabled ? VulkanTexture::TryGetOrLoadTexture(material["TextureMap"].as<std::string>().c_str()) : nullptr
                         };
                     }
                 }

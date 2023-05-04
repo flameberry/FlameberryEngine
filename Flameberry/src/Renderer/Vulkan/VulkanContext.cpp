@@ -4,7 +4,9 @@
 #include <string>
 
 #include "Core/Core.h"
+
 #include "VulkanRenderCommand.h"
+#include "VulkanSwapChain.h"
 
 namespace Flameberry {
     const std::vector<const char*> VulkanContext::s_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
@@ -37,7 +39,6 @@ namespace Flameberry {
         // Setting up Valid Vulkan Physical Device
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(m_VulkanInstance->GetVulkanInstance(), &deviceCount, nullptr);
-
         FL_ASSERT(deviceCount, "Failed to find GPUs which support Vulkan!");
 
         std::vector<VkPhysicalDevice> vk_physical_devices(deviceCount);
@@ -65,6 +66,12 @@ namespace Flameberry {
         FL_INFO("Selected Vulkan Physical Device: {0}", vk_physical_device_props.deviceName);
 
         m_VulkanDevice = VulkanDevice::Create(m_VkPhysicalDevice, pWindow);
+
+        std::vector<VkDescriptorPoolSize> poolSizes = {
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 5 },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 10 }
+        };
+        m_GlobalDescriptorPool = std::make_shared<VulkanDescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, 10 * VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
     }
 
     VulkanContext::~VulkanContext()

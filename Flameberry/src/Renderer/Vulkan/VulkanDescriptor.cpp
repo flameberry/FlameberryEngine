@@ -8,10 +8,8 @@
 #include "VulkanDebug.h"
 
 namespace Flameberry {
-    VulkanDescriptorPool::VulkanDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets)
+    VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets)
     {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-
         VkDescriptorPoolCreateInfo vk_descriptor_pool_create_info{};
         vk_descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         vk_descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t>(poolSizes.size());

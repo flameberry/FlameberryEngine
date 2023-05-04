@@ -33,10 +33,7 @@ namespace Flameberry {
         m_VkTextureSampler(VulkanRenderCommand::CreateDefaultSampler())
     {
         for (const auto& path : g_IconPaths)
-        {
             m_IconTextures.emplace_back(std::make_shared<VulkanTexture>(path.c_str(), m_VkTextureSampler));
-            m_IconTextureIDs.emplace_back(ImGui_ImplVulkan_AddTexture(m_VkTextureSampler, m_IconTextures.back()->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
-        }
     }
 
     ContentBrowserPanel::~ContentBrowserPanel()
@@ -67,10 +64,10 @@ namespace Flameberry {
 
         float arrowSize = 18.0f;
 
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextureIDs[FL_BACK_ARROW_ICON]), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_BACK_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextureIDs[FL_FORWARD_ARROW_ICON]), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FORWARD_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
 
@@ -101,29 +98,29 @@ namespace Flameberry {
 
             ImGui::PushID(filePath.filename().c_str());
             std::string ext = filePath.extension().string();
-            ImTextureID currentIconTextureID;
+            int currentIconIndex;
             bool is_file_supported = true;
 
             if (directory.is_directory())
-                currentIconTextureID = m_IconTextureIDs[FL_FOLDER_ICON];
+                currentIconIndex = FL_FOLDER_ICON;
             else if (ext == ".berry")
-                currentIconTextureID = m_IconTextureIDs[FL_FILE_BERRY_ICON];
+                currentIconIndex = FL_FILE_BERRY_ICON;
             else if (ext == ".png")
-                currentIconTextureID = m_IconTextureIDs[FL_FILE_PNG_ICON];
+                currentIconIndex = FL_FILE_PNG_ICON;
             else if (ext == ".jpg")
-                currentIconTextureID = m_IconTextureIDs[FL_FILE_JPG_ICON];
+                currentIconIndex = FL_FILE_JPG_ICON;
             else if (ext == ".obj")
-                currentIconTextureID = m_IconTextureIDs[FL_FILE_OBJ_ICON];
+                currentIconIndex = FL_FILE_OBJ_ICON;
             else if (ext == ".mtl")
-                currentIconTextureID = m_IconTextureIDs[FL_FILE_MTL_ICON];
+                currentIconIndex = FL_FILE_MTL_ICON;
             else if (ext == ".json")
-                currentIconTextureID = m_IconTextureIDs[FL_FILE_JSON_ICON];
+                currentIconIndex = FL_FILE_JSON_ICON;
             else {
-                currentIconTextureID = m_IconTextureIDs[FL_FILE_DEFAULT_ICON];
+                currentIconIndex = FL_FILE_DEFAULT_ICON;
                 is_file_supported = false;
             }
 
-            ImGui::ImageButton(reinterpret_cast<ImTextureID>(currentIconTextureID), ImVec2{ iconSize, iconSize });
+            ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[currentIconIndex]->GetDescriptorSet()), ImVec2{ iconSize, iconSize });
 
             if (ImGui::BeginPopupContextItem())
             {

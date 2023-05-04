@@ -21,7 +21,10 @@ namespace Flameberry {
 
     struct MeshData {
         alignas(16) glm::mat4 ModelMatrix;
-        Material MeshMaterial;
+        alignas(16) glm::vec3 Albedo{1.0f};
+        alignas(4) float Roughness = 0.2f;
+        alignas(4) float Metallic = 0.0f;
+        alignas(4) float TextureMapEnabled = 0.0f;
     };
 
     SceneRenderer::SceneRenderer(const std::shared_ptr<VulkanDescriptorPool>& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass)
@@ -67,7 +70,7 @@ namespace Flameberry {
         vk_push_constant_range.size = sizeof(MeshData);
         vk_push_constant_range.offset = 0;
 
-        VkDescriptorSetLayout descriptorSetLayouts[] = { globalDescriptorLayout, m_SceneDescriptorLayout->GetLayout() };
+        VkDescriptorSetLayout descriptorSetLayouts[] = { globalDescriptorLayout, m_SceneDescriptorLayout->GetLayout(), VulkanTexture::GetDescriptorLayout()->GetLayout() };
         VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
 
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
@@ -136,10 +139,25 @@ namespace Flameberry {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
             bool doesMeshHaveMaterial = scene->m_SceneData.Materials.find(mesh.MaterialName) != scene->m_SceneData.Materials.end();
+            auto& material = scene->m_SceneData.Materials[mesh.MaterialName];
 
             MeshData pushConstantMeshData;
             pushConstantMeshData.ModelMatrix = transform.GetTransform();
-            pushConstantMeshData.MeshMaterial = doesMeshHaveMaterial ? scene->m_SceneData.Materials[mesh.MaterialName] : Material{ glm::vec3(1, 0, 1), 0.2f, false };
+            if (doesMeshHaveMaterial) {
+                pushConstantMeshData.Albedo = material.Albedo;
+                pushConstantMeshData.Roughness = material.Roughness;
+                pushConstantMeshData.Metallic = material.Metallic;
+                pushConstantMeshData.TextureMapEnabled = material.TextureMapEnabled;
+
+            }
+            if (doesMeshHaveMaterial && material.TextureMapEnabled) {
+                VkDescriptorSet descriptorSet[1] = { material.TextureMap->GetDescriptorSet() };
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 2, 1, descriptorSet, 0, nullptr);
+            }
+            else {
+                VkDescriptorSet descriptorSet[1] = { VulkanTexture::GetEmptyDescriptorSet() };
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 2, 1, descriptorSet, 0, nullptr);
+            }
 
             vkCmdPushConstants(commandBuffer, m_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
 

@@ -116,6 +116,7 @@ namespace Flameberry {
 
             m_VkBuffer = VK_NULL_HANDLE;
             m_VkBufferDeviceMemory = VK_NULL_HANDLE;
+            FL_LOG("Destroyed Vulkan Buffer!");
         }
     }
 }

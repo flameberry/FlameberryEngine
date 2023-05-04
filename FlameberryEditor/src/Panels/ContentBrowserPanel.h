@@ -17,6 +17,5 @@ namespace Flameberry {
 
         VkSampler m_VkTextureSampler;
         std::vector<std::shared_ptr<VulkanTexture>> m_IconTextures;
-        std::vector<ImTextureID> m_IconTextureIDs;
     };
 }
