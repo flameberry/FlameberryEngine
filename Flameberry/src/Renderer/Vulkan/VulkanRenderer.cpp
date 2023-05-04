@@ -13,6 +13,7 @@
 #include "Core/Timer.h"
 #include "VulkanRenderCommand.h"
 #include "VulkanTexture.h"
+#include "VulkanMesh.h"
 #include "VulkanDebug.h"
 
 namespace Flameberry {
@@ -538,6 +539,7 @@ namespace Flameberry {
         VulkanContext::GetCurrentDevice()->WaitIdle();
 
         VulkanTexture::DestroyStaticResources();
+        VulkanMesh::ClearCache();
 
         // Destroy Shadow Map Resources
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();

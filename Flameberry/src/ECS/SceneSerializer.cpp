@@ -304,7 +304,7 @@ namespace Flameberry {
             for (auto mesh : meshes)
             {
                 if (mesh)
-                    m_ActiveScene->m_SceneData.Meshes.emplace_back(std::make_shared<VulkanMesh>(mesh["FilePath"].as<std::string>()));
+                    m_ActiveScene->m_SceneData.Meshes.emplace_back(VulkanMesh::TryGetOrLoadMesh(mesh["FilePath"].as<std::string>()));
             }
         }
 

@@ -4,6 +4,8 @@
 #include "VulkanRenderCommand.h"
 
 namespace Flameberry {
+    std::unordered_map<std::string, std::shared_ptr<VulkanMesh>> VulkanMesh::s_MeshCacheDirectory;
+
     VulkanMesh::VulkanMesh(const std::string& path)
         : m_FilePath(path)
     {
@@ -37,6 +39,20 @@ namespace Flameberry {
     void VulkanMesh::OnDraw(VkCommandBuffer commandBuffer) const
     {
         vkCmdDrawIndexed(commandBuffer, (uint32_t)m_Indices.size(), 1, 0, 0, 0);
+    }
+
+    std::shared_ptr<VulkanMesh> VulkanMesh::TryGetOrLoadMesh(const std::string& path)
+    {
+        if (s_MeshCacheDirectory.find(path) != s_MeshCacheDirectory.end()) {
+            FL_INFO("Successfully retrieved vulkan mesh from cache!");
+            return s_MeshCacheDirectory[path];
+        }
+        else {
+            std::shared_ptr<VulkanMesh> mesh = std::make_shared<VulkanMesh>(path.c_str());
+            s_MeshCacheDirectory[path] = mesh;
+            FL_INFO("Mesh not found in cache! Loading mesh from disk!");
+            return mesh;
+        }
     }
 
     void VulkanMesh::CreateBuffers()
