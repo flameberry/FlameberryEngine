@@ -69,6 +69,7 @@ namespace Flameberry {
         int m_GizmoType = -1;
 
         std::shared_ptr<VulkanTexture> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon;
+        std::shared_ptr<VulkanTexture> m_CursorIconActive, m_TranslateIconActive, m_RotateIconActive, m_ScaleIconActive;
 
         // Debug
         float zNear = 0.5f, zFar = 50.0f;
