@@ -16,6 +16,11 @@
 #include "Core/Layer.h"
 #include "Core/Timer.h"
 #include "Core/Input.h"
+#include "Core/Math.h"
+#include "Core/Timer.h"
+#include "Core/Profiler.h"
+
+#include "Platform/Utils.h"
 #include "ImGui/ImGuiLayer.h"
 
 #include "Renderer/Vulkan/VulkanRenderer.h"
@@ -32,8 +37,3 @@
 #include "ECS/SceneSerializer.h"
 #include "ECS/Scene.h"
 #include "ECS/ecs.hpp"
-
-#include "Core/Timer.h"
-#include "Core/Profiler.h"
-
-#include "Platform/Utils.h"

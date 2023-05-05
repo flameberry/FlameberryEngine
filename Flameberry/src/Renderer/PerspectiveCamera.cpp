@@ -35,7 +35,7 @@ namespace Flameberry {
         }
     }
 
-    void PerspectiveCamera::OnUpdate(float delta)
+    bool PerspectiveCamera::OnUpdate(float delta)
     {
         glm::vec2 mousePos = Input::GetCursorPosition();
         glm::vec2 rotationDelta = (mousePos - m_LastMousePosition) * 0.002f;
@@ -44,7 +44,7 @@ namespace Flameberry {
         if (!Input::IsMouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS))
         {
             Input::SetCursorMode(GLFW_CURSOR_NORMAL);
-            return;
+            return false;
         }
 
         Input::SetCursorMode(GLFW_CURSOR_DISABLED);
@@ -99,6 +99,8 @@ namespace Flameberry {
 
         if (moved)
             Invalidate();
+
+        return true;
     }
 
     void PerspectiveCamera::Invalidate()

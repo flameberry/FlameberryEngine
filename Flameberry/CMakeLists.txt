@@ -8,7 +8,7 @@ endif()
 
 exclude_from_list(SRC_FILES ${EXCLUDE_FILES})
 
-add_library(Flameberry STATIC ${SRC_FILES} ${IMGUI_SRC})
+add_library(Flameberry STATIC ${SRC_FILES} ${IMGUI_SRC} ${IMGUIZMO_SRC})
 target_compile_features(Flameberry PUBLIC cxx_std_17)
 
 set_custom_build_properties(Flameberry)

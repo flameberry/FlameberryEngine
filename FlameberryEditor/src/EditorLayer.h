@@ -22,6 +22,7 @@ namespace Flameberry {
         void OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
 
         void InvalidateViewportImGuiDescriptorSet();
+        void InvalidateShadowMapImGuiDescriptorSet();
 
         void SaveScene();
         void OpenScene();
@@ -51,8 +52,10 @@ namespace Flameberry {
 
         std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
         glm::vec2 m_ViewportSize{1280, 720};
+        glm::vec2 m_ShadowMapViewportSize{1280, 720};
         VkSampler m_VkTextureSampler;
         std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
+        std::vector<VkDescriptorSet> m_ShadowMapDescriptorSets;
 
         // UI
         std::shared_ptr<SceneHierarchyPanel> m_SceneHierarchyPanel;
@@ -60,5 +63,12 @@ namespace Flameberry {
 
         std::string m_OpenedScenePathIfExists = "", m_ScenePathToBeOpened = "";
         bool m_ShouldOpenAnotherScene = false;
+
+        bool m_IsCameraMoving = false;
+        bool m_IsGizmoActive = false;
+        int m_GizmoType = -1;
+
+        // Debug
+        float zNear = 0.5f, zFar = 50.0f;
     };
 }

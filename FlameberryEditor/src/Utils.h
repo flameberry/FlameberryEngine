@@ -3,6 +3,8 @@
 #include <string>
 #include <glm/glm.hpp>
 
+#define FL_REMOVE_LABEL(imgui_widget) { ImGui::PushItemWidth(-1); imgui_widget; ImGui::PopItemWidth(); }
+
 class Utils
 {
 public:

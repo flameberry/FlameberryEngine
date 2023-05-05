@@ -236,7 +236,9 @@ namespace Flameberry {
         std::vector<VulkanVertex> vertices;
         std::vector<uint32_t> indices;
 
-        FL_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str()), err);
+        size_t pos = filePath.find_last_of('/');
+        std::string mtlBaseDir = filePath.substr(0, pos);
+        FL_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str(), mtlBaseDir.c_str()), err);
 
         bool has_tex_coord = true;
         if (!attrib.texcoords.size())

@@ -6,8 +6,6 @@
 #include "../project.h"
 #include "../Utils.h"
 
-#define FL_REMOVE_LABEL(imgui_widget) { ImGui::PushItemWidth(-1); imgui_widget; ImGui::PopItemWidth(); }
-
 namespace Flameberry {
     SceneHierarchyPanel::SceneHierarchyPanel(Scene* scene)
         : m_ActiveScene(scene),
@@ -73,10 +71,14 @@ namespace Flameberry {
             {
                 auto& tag = m_ActiveScene->m_Registry->get<TagComponent>(entity).Tag;
 
+                // bool hasRelationShipComponent = m_ActiveScene->m_Registry->has<RelationshipComponent>(entity);
+                // if (hasRelationShipComponent && m_ActiveScene->m_Registry->get<RelationshipComponent>(entity).Parent != ecs::entity_handle::null)
+                //     return;
+
                 bool is_renamed = m_RenamedEntity == entity;
                 bool is_selected = m_SelectedEntity == entity;
                 bool should_delete_entity = false;
-                int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+                int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | (ImGuiTreeNodeFlags_Leaf);
 
                 if (m_RenamedEntity != entity)
                     treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -90,8 +92,27 @@ namespace Flameberry {
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
 
-                if (ImGui::TreeNodeEx(is_renamed ? "" : tag.c_str(), treeNodeFlags))
+                bool open = ImGui::TreeNodeEx(is_renamed ? "" : tag.c_str(), treeNodeFlags);
+                if (open) {
                     ImGui::TreePop();
+                }
+                // if (open) {
+                //     if (hasRelationShipComponent) {
+                //         ecs::entity_handle iter_entity = entity;
+                //         auto& relationship = m_ActiveScene->m_Registry->get<RelationshipComponent>(entity);
+                //         while (relationship.FirstChild != ecs::entity_handle::null)
+                //         {
+                //             auto& childTag = m_ActiveScene->m_Registry->get<TagComponent>(relationship.FirstChild).Tag;
+                //             if (ImGui::TreeNodeEx(is_renamed ? "" : childTag.c_str(), treeNodeFlags))
+                //                 ImGui::TreePop();
+                //             else break;
+
+                //             if (m_ActiveScene->m_Registry->has<RelationshipComponent>(relationship.FirstChild))
+                //                 relationship = m_ActiveScene->m_Registry->get<RelationshipComponent>(relationship.FirstChild);
+                //         }
+                //     }
+                //     ImGui::TreePop();
+                // }
 
                 ImGui::PopStyleColor(is_selected ? 4 : 3);
 
@@ -227,7 +248,6 @@ namespace Flameberry {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-
 
             ImGui::Text("Translation");
             ImGui::TableNextColumn();

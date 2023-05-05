@@ -1,6 +1,9 @@
 #include "EditorLayer.h"
 
+#include "ImGuizmo/ImGuizmo.h"
+
 #include "project.h"
+#include "Utils.h"
 
 namespace Flameberry {
     EditorLayer::EditorLayer()
@@ -85,6 +88,16 @@ namespace Flameberry {
             );
         }
 
+        m_ShadowMapDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            m_ShadowMapDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
+                m_VkTextureSampler,
+                m_VulkanRenderer->GetShadowMapImageView(i),
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+            );
+        }
+
         m_Registry = std::make_shared<ecs::registry>();
         m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
 
@@ -103,13 +116,9 @@ namespace Flameberry {
             if (m_VulkanRenderer->EnableShadows())
             {
                 FL_PROFILE_SCOPE("Shadow Pass");
-                // glm::vec3 lightInvDir(1.0f, 3.0f, 2.0f);
-                glm::vec3 lightInvDir(5.0f);
-
-                glm::mat4 lightProjectionMatrix = glm::ortho<float>(-10, 10, -10, 10, -10, 20);
+                glm::mat4 lightProjectionMatrix = glm::ortho<float>(-40, 40, -40, 40, zNear, zFar);
                 glm::mat4 lightViewMatrix = glm::lookAt(
-                    lightInvDir,
-                    // m_ActiveScene->GetDirectionalLight().Direction,
+                    -m_ActiveScene->GetDirectionalLight().Direction,
                     glm::vec3(0, 0, 0),
                     glm::vec3(0, 1, 0)
                 );
@@ -133,7 +142,7 @@ namespace Flameberry {
                 m_ActiveCamera.OnResize(m_ViewportSize.x / m_ViewportSize.y);
 
                 if (m_IsViewportFocused)
-                    m_ActiveCamera.OnUpdate(delta);
+                    m_IsCameraMoving = m_ActiveCamera.OnUpdate(delta);
 
                 CameraUniformBufferObject uniformBufferObject{};
                 uniformBufferObject.ViewProjectionMatrix = m_ActiveCamera.GetViewProjectionMatrix();
@@ -211,12 +220,71 @@ namespace Flameberry {
             ImGui::EndDragDropTarget();
         }
 
+        // ImGuizmo
+        const auto& selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
+        if (selectedEntity != ecs::entity_handle::null && m_GizmoType != -1)
+        {
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::SetDrawlist();
+
+            float windowWidth = (float)ImGui::GetWindowWidth();
+            float windowHeight = (float)ImGui::GetWindowHeight();
+            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+            glm::mat4 projectionMatrix = m_ActiveCamera.GetProjectionMatrix();
+            projectionMatrix[1][1] *= -1;
+            const auto& viewMatrix = m_ActiveCamera.GetViewMatrix();
+
+            auto& transformComp = m_Registry->get<TransformComponent>(selectedEntity);
+            glm::mat4 transform = transformComp.GetTransform();
+
+            bool snap = Input::IsKey(GLFW_KEY_LEFT_CONTROL, GLFW_PRESS);
+            float snapValue = 0.5f;
+            if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+                snapValue = 45.0f;
+
+            float snapValues[3] = { snapValue, snapValue, snapValue };
+
+            ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, snap ? snapValues : nullptr);
+            m_IsGizmoActive = ImGuizmo::IsUsing();
+            if (m_IsGizmoActive)
+            {
+                m_IsGizmoActive = true;
+                glm::vec3 translation, rotation, scale;
+                DecomposeTransform(transform, translation, rotation, scale);
+
+                transformComp.translation = translation;
+
+                glm::vec3 deltaRotation = rotation - transformComp.rotation;
+                transformComp.rotation += deltaRotation;
+                transformComp.scale = scale;
+            }
+        }
+
         ImGui::End();
         ImGui::PopStyleVar();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
+        ImGui::Begin("Shadow Map");
+        ImGui::PopStyleVar();
+
+        ImVec2 shadowMapViewportSize = ImGui::GetContentRegionAvail();
+        m_ShadowMapViewportSize = { shadowMapViewportSize.x, shadowMapViewportSize.y };
+
+        InvalidateShadowMapImGuiDescriptorSet();
+
+        ImGui::Image(reinterpret_cast<ImTextureID>(
+            m_ShadowMapDescriptorSets[currentFrameIndex]),
+            ImVec2{ m_ShadowMapViewportSize.x, m_ShadowMapViewportSize.y }
+        );
+        ImGui::End();
 
         ImGui::Begin("Statistics");
         ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         FL_DISPLAY_SCOPE_DETAILS_IMGUI();
+        ImGui::Separator();
+        ImGui::DragFloat("zNear", &zNear, 0.2f);
+        ImGui::DragFloat("zFar", &zFar, 0.2f);
         ImGui::End();
 
         m_SceneHierarchyPanel->OnUIRender();
@@ -241,8 +309,27 @@ namespace Flameberry {
         vkUpdateDescriptorSets(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), 1, write_desc, 0, nullptr);
     }
 
+    void EditorLayer::InvalidateShadowMapImGuiDescriptorSet()
+    {
+        uint32_t currentFrameIndex = m_VulkanRenderer->GetCurrentFrameIndex();
+
+        VkDescriptorImageInfo desc_image[1] = {};
+        desc_image[0].sampler = m_VkTextureSampler;
+        desc_image[0].imageView = m_VulkanRenderer->GetShadowMapImageView(currentFrameIndex);
+        desc_image[0].imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+        VkWriteDescriptorSet write_desc[1] = {};
+        write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_desc[0].dstSet = m_ShadowMapDescriptorSets[currentFrameIndex];
+        write_desc[0].descriptorCount = 1;
+        write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write_desc[0].pImageInfo = desc_image;
+        vkUpdateDescriptorSets(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), 1, write_desc, 0, nullptr);
+    }
+
     void EditorLayer::OnEvent(Event& e)
     {
+        m_ImGuiLayer->OnEvent(e);
         switch (e.GetType())
         {
         case EventType::MOUSEBUTTON_PRESSED:
@@ -277,22 +364,22 @@ namespace Flameberry {
                     SaveScene(m_OpenedScenePathIfExists);
             }
             break;
-            // case GLFW_KEY_Q:
-            //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-            //         m_GizmoType = -1;
-            //     break;
-            // case GLFW_KEY_W:
-            //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-            //         m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-            //     break;
-            // case GLFW_KEY_E:
-            //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-            //         m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-            //     break;
-            // case GLFW_KEY_R:
-            //     if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-            //         m_GizmoType = ImGuizmo::OPERATION::SCALE;
-            //     break;
+        case GLFW_KEY_Q:
+            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                m_GizmoType = -1;
+            break;
+        case GLFW_KEY_W:
+            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+            break;
+        case GLFW_KEY_E:
+            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+            break;
+        case GLFW_KEY_R:
+            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                m_GizmoType = ImGuizmo::OPERATION::SCALE;
+            break;
         }
     }
 

@@ -1,10 +1,10 @@
 Scene: world
 EnvironmentMap:
-  ClearColor: [1, 0.897058845, 0.897058845]
+  ClearColor: [0, 0, 0]
   EnableSkybox: false
   Reflections: false
   DirectionalLight:
-    Direction: [-1, -1, -1]
+    Direction: [-5.53000021, -25, -24.5100002]
     Color: [1, 1, 1]
     Intensity: 2
 Entities:
@@ -65,21 +65,9 @@ Meshes:
   - Mesh: monkey
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/monkey.obj
 Materials:
-  - Material: METAL
-    Albedo: [1, 0, 1]
+  - Material: Default
+    Albedo: [0.268166065, 0.911764681, 0.779258966]
     Roughness: 0.200000003
-    Metallic: true
-    TextureMapEnabled: false
-    TextureMap: None
-  - Material: Material_4
-    Albedo: [1, 1, 1]
-    Roughness: 0.200000003
-    Metallic: false
-    TextureMapEnabled: true
-    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/brick.png
-  - Material: YELLOW_NON_METAL
-    Albedo: [1, 1, 0]
-    Roughness: 0.699999988
     Metallic: false
     TextureMapEnabled: false
     TextureMap: None
@@ -89,9 +77,21 @@ Materials:
     Metallic: false
     TextureMapEnabled: true
     TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/viking_room.png
-  - Material: Default
-    Albedo: [0.268166065, 0.911764681, 0.779258966]
+  - Material: YELLOW_NON_METAL
+    Albedo: [1, 1, 0]
+    Roughness: 0.699999988
+    Metallic: false
+    TextureMapEnabled: false
+    TextureMap: None
+  - Material: Material_4
+    Albedo: [1, 1, 1]
     Roughness: 0.200000003
     Metallic: false
+    TextureMapEnabled: true
+    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/brick.png
+  - Material: METAL
+    Albedo: [1, 0, 1]
+    Roughness: 0.200000003
+    Metallic: true
     TextureMapEnabled: false
     TextureMap: None

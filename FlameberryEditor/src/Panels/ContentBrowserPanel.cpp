@@ -47,13 +47,6 @@ namespace Flameberry {
         ImGui::Begin("Content Browser");
         ImGui::PopStyleVar();
 
-        // if (ImGui::BeginPopupContextWindow())
-        // {
-        //     if (ImGui::MenuItem("Open In Finder"))
-        //         Platform::OpenInFinder(m_CurrentDirectory.string().c_str());
-        //     ImGui::EndPopup();
-        // }
-
         float iconSize = 80.0f, padding = 10.0f;
         float cellSize = iconSize + padding;
         uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize;
@@ -155,6 +148,14 @@ namespace Flameberry {
             ImGui::NextColumn();
             ImGui::PopID();
         }
+
+        if (ImGui::BeginPopupContextWindow())
+        {
+            if (ImGui::MenuItem("Open In Finder"))
+                platform::OpenInFinder(m_CurrentDirectory.string().c_str());
+            ImGui::EndPopup();
+        }
+
         ImGui::PopStyleColor(1);
         ImGui::End();
     }

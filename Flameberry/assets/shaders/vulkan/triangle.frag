@@ -105,7 +105,7 @@ float CalculateShadowFactor()
     return shadow;
 }
 
-float FilterPCF(float bias)
+float FilterPCF(/*float bias*/)
 {
     ivec2 textureDimensions = textureSize(u_ShadowMapSampler, 0);
     float scale = 1.0;
@@ -128,7 +128,7 @@ float FilterPCF(float bias)
             vec2 offset = vec2(x, y) * texelSize;
             float depth = texture(u_ShadowMapSampler, u_ShadowMapSamplerCoords.xy + offset).r;
 
-            if (depth + bias < u_ShadowMapSamplerCoords.z)
+            if (depth /*+ bias*/ < u_ShadowMapSamplerCoords.z)
                 shadowFactor += 0.0;
             else
                 shadowFactor += 1.0;
@@ -172,10 +172,10 @@ vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
     
     vec3 diffuseBRDF = kD * fLambert / PI;
 
-    float bias = mix(0.001, 0.0, n_dot_l);
+    // float bias = mix(0.001, 0.0, n_dot_l);
 
     // vec3 finalColor = CalculateShadowFactor() * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
-    vec3 finalColor = FilterPCF(bias) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
+    vec3 finalColor = FilterPCF(/*bias*/) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
 
     finalColor = max(finalColor, AMBIENT * GetPixelColor());
     return finalColor;

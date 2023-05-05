@@ -59,6 +59,20 @@ if (FL_GRAPHICS_API STREQUAL "Vulkan")
         ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
         ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
     )
+
+    list(APPEND IMGUIZMO_SRC
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/GraphEditor.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/GraphEditor.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImCurveEdit.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImCurveEdit.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGradient.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGradient.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGuizmo.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGuizmo.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.cpp
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.h
+        ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImZoomSlider.h
+    )
 elseif(FL_GRAPHICS_API STREQUAL "OpenGL")
     # OpenGL Helper Libs
     message("-- Using OpenGL Graphics API")

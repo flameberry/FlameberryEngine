@@ -80,11 +80,11 @@ namespace ecs {
             for (const auto& element : packed)
                 std::cout << element << "\t";
             std::cout << "\n";
-    }
+        }
 #endif
     private:
         std::vector<Type> packed, sparse;
-};
+    };
 
     class entity_handle {
     public:
@@ -116,7 +116,6 @@ namespace ecs {
         inline bool operator!=(const null& null) const {
             return !(*this == null);
         }
-
         inline bool operator==(const entity_handle& entity) const {
             return this->handle == entity.handle && this->validity == entity.validity;
         }
@@ -268,7 +267,7 @@ namespace ecs {
         }
 
         template<typename Type, typename... Args> Type& emplace(const entity_handle& entity, Args... args) {
-            FL_ASSERT(entities[(uint32_t)entity] != entity_handle::null, "Attempted to emplace invalid entity!");
+            FL_ASSERT(entities[(uint32_t)entity] != entity_handle::null, "Attempted to emplace component to an invalid entity!");
 
             uint32_t typeID = type_id<Type>();
             if (pools.size() <= typeID) {
@@ -293,7 +292,7 @@ namespace ecs {
         }
 
         template<typename... Type> decltype(auto) get(const entity_handle& entity) const {
-            FL_ASSERT(entities[(uint32_t)entity] != entity_handle::null, "Attempted to emplace invalid entity!");
+            FL_ASSERT(entities[(uint32_t)entity] != entity_handle::null, "Attempted to get component of invalid entity!");
 
             if constexpr (sizeof...(Type) == 1) {
                 using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
