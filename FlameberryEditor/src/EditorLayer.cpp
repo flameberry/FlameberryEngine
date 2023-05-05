@@ -13,6 +13,11 @@ namespace Flameberry {
     {
         m_VulkanRenderer = VulkanRenderer::Create((VulkanWindow*)&Application::Get().GetWindow());
 
+        m_CursorIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon_2.png");
+        m_TranslateIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/translate_icon.png");
+        m_RotateIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/rotate_icon.png");
+        m_ScaleIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/scale_icon.png");
+
         PerspectiveCameraInfo cameraInfo{};
         cameraInfo.aspectRatio = Application::Get().GetWindow().GetWidth() / Application::Get().GetWindow().GetHeight();
         cameraInfo.FOV = 45.0f;
@@ -184,7 +189,7 @@ namespace Flameberry {
     void EditorLayer::OnUIRender()
     {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-        ImGui::Begin("Viewport");
+        bool beginViewport = ImGui::Begin("Viewport");
 
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
@@ -260,32 +265,94 @@ namespace Flameberry {
                 transformComp.scale = scale;
             }
         }
-
+        ImVec2 work_pos = ImGui::GetWindowContentRegionMin();
+        work_pos.x += ImGui::GetWindowPos().x;
+        work_pos.y += ImGui::GetWindowPos().y;
         ImGui::End();
+
+        if (beginViewport) {
+            ImVec2 overlayButtonSize = { 20, 20 };
+
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
+                | ImGuiWindowFlags_AlwaysAutoResize
+                | ImGuiWindowFlags_NoSavedSettings
+                | ImGuiWindowFlags_NoFocusOnAppearing
+                | ImGuiWindowFlags_NoNav;
+            const float PAD = 10.0f;
+            ImVec2 window_pos;
+            window_pos.x = work_pos.x + PAD;
+            window_pos.y = work_pos.y + PAD;
+            ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always);
+            window_flags |= ImGuiWindowFlags_NoMove;
+
+            ImGui::SetNextWindowBgAlpha(0.45f); // Transparent background
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, overlayButtonSize);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.5f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 3.0f });
+            ImGui::Begin("##GizmoOverlay", __null, window_flags);
+            ImGui::PopStyleVar(4);
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_CursorIcon->GetDescriptorSet()), overlayButtonSize))
+            {
+                m_GizmoType = -1;
+                ImGui::SetWindowFocus("Viewport");
+            }
+            ImGui::SameLine();
+            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_TranslateIcon->GetDescriptorSet()), overlayButtonSize))
+            {
+                m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                ImGui::SetWindowFocus("Viewport");
+            }
+            ImGui::SameLine();
+            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_RotateIcon->GetDescriptorSet()), overlayButtonSize))
+            {
+                m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+                ImGui::SetWindowFocus("Viewport");
+            }
+            ImGui::SameLine();
+            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_ScaleIcon->GetDescriptorSet()), overlayButtonSize))
+            {
+                m_GizmoType = ImGuizmo::OPERATION::SCALE;
+                ImGui::SetWindowFocus("Viewport");
+            }
+            ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
+            ImGui::End();
+        }
         ImGui::PopStyleVar();
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-        ImGui::Begin("Shadow Map");
-        ImGui::PopStyleVar();
-
-        ImVec2 shadowMapViewportSize = ImGui::GetContentRegionAvail();
-        m_ShadowMapViewportSize = { shadowMapViewportSize.x, shadowMapViewportSize.y };
-
-        InvalidateShadowMapImGuiDescriptorSet();
-
-        ImGui::Image(reinterpret_cast<ImTextureID>(
-            m_ShadowMapDescriptorSets[currentFrameIndex]),
-            ImVec2{ m_ShadowMapViewportSize.x, m_ShadowMapViewportSize.y }
-        );
-        ImGui::End();
+        // ImGui::ShowDemoWindow();
 
         ImGui::Begin("Statistics");
         ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         FL_DISPLAY_SCOPE_DETAILS_IMGUI();
         ImGui::Separator();
+        ImGui::End();
+
+        ImGui::Begin("Settings");
         ImGui::DragFloat("zNear", &zNear, 0.2f);
         ImGui::DragFloat("zFar", &zFar, 0.2f);
+        ImGui::Checkbox("Display Shadow Map", &m_DisplayShadowMap);
         ImGui::End();
+
+        if (m_DisplayShadowMap) {
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
+            ImGui::Begin("Shadow Map");
+            ImGui::PopStyleVar();
+
+            ImVec2 shadowMapViewportSize = ImGui::GetContentRegionAvail();
+            m_ShadowMapViewportSize = { shadowMapViewportSize.x, shadowMapViewportSize.y };
+
+            InvalidateShadowMapImGuiDescriptorSet();
+
+            ImGui::Image(reinterpret_cast<ImTextureID>(
+                m_ShadowMapDescriptorSets[currentFrameIndex]),
+                ImVec2{ m_ShadowMapViewportSize.x, m_ShadowMapViewportSize.y }
+            );
+            ImGui::End();
+        }
 
         m_SceneHierarchyPanel->OnUIRender();
         m_ContentBrowserPanel->OnUIRender();
