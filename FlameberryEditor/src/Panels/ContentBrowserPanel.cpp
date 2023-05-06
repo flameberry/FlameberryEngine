@@ -85,7 +85,11 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
         ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
 
-        RecursivelyAddDirectoryNodes(std::filesystem::directory_entry(project::g_AssetDirectory), std::filesystem::directory_iterator(project::g_AssetDirectory), true);
+        for (auto& directory : std::filesystem::directory_iterator(project::g_AssetDirectory)) {
+            if (directory.is_directory()) {
+                RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator(directory), false);
+            }
+        }
 
         ImGui::EndChild();
         ImGui::SameLine();

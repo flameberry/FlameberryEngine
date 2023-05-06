@@ -9,7 +9,7 @@ EnvironmentMap:
     Intensity: 2
 Entities:
   - Entity: 8487694862307973660
-    TagComponent: platform
+    TagComponent: Sponza
     TransformComponent:
       Translation: [0, -0.0156020522, 0]
       Rotation: [0, 0, 0]
@@ -58,9 +58,21 @@ Meshes:
   - Mesh: sponza
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/sponza.obj
 Materials:
-  - Material: Default
-    Albedo: [0.268166065, 0.911764681, 0.779258966]
+  - Material: METAL
+    Albedo: [1, 0, 1]
     Roughness: 0.200000003
+    Metallic: true
+    TextureMapEnabled: false
+    TextureMap: None
+  - Material: Material_4
+    Albedo: [1, 1, 1]
+    Roughness: 0.200000003
+    Metallic: false
+    TextureMapEnabled: true
+    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/brick.png
+  - Material: YELLOW_NON_METAL
+    Albedo: [1, 1, 0]
+    Roughness: 0.699999988
     Metallic: false
     TextureMapEnabled: false
     TextureMap: None
@@ -70,21 +82,9 @@ Materials:
     Metallic: false
     TextureMapEnabled: true
     TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/viking_room.png
-  - Material: YELLOW_NON_METAL
-    Albedo: [1, 1, 0]
-    Roughness: 0.699999988
-    Metallic: false
-    TextureMapEnabled: false
-    TextureMap: None
-  - Material: Material_4
-    Albedo: [1, 1, 1]
+  - Material: Default
+    Albedo: [0.268166065, 0.911764681, 0.779258966]
     Roughness: 0.200000003
     Metallic: false
-    TextureMapEnabled: true
-    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/brick.png
-  - Material: METAL
-    Albedo: [1, 0, 1]
-    Roughness: 0.200000003
-    Metallic: true
     TextureMapEnabled: false
     TextureMap: None
