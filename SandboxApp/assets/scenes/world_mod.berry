@@ -15,7 +15,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      MeshIndex: 1
+      MeshIndex: 5
       MaterialName: Material_4
   - Entity: 5194393858410325541
     TagComponent: Light
@@ -29,7 +29,7 @@ Entities:
   - Entity: 13871557613990763745
     TagComponent: monkey
     TransformComponent:
-      Translation: [3.71944618, 0.770911634, 0]
+      Translation: [3.71944618, 3.35144806, 0]
       Rotation: [0, -0.549166381, 0]
       Scale: [8.68559551, 8.68559837, 8.68559551]
     MeshComponent:
@@ -55,6 +55,8 @@ Meshes:
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/viking_room.obj
   - Mesh: monkey
     FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/monkey.obj
+  - Mesh: sponza
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/sponza.obj
 Materials:
   - Material: Default
     Albedo: [0.268166065, 0.911764681, 0.779258966]

@@ -13,10 +13,14 @@ namespace Flameberry {
     {
         m_VulkanRenderer = VulkanRenderer::Create((VulkanWindow*)&Application::Get().GetWindow());
 
-        m_CursorIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon_2.png");
-        m_TranslateIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/translate_icon.png");
+        m_CursorIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon.png");
+        m_CursorIconActive = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon_active.png");
+        m_TranslateIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/translate_icon_2.png");
+        m_TranslateIconActive = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/translate_icon_2_active.png");
         m_RotateIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/rotate_icon.png");
+        m_RotateIconActive = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/rotate_icon_active.png");
         m_ScaleIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/scale_icon.png");
+        m_ScaleIconActive = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/scale_icon_active.png");
 
         PerspectiveCameraInfo cameraInfo{};
         cameraInfo.aspectRatio = Application::Get().GetWindow().GetWidth() / Application::Get().GetWindow().GetHeight();
@@ -288,36 +292,37 @@ namespace Flameberry {
             ImGui::SetNextWindowBgAlpha(0.45f); // Transparent background
             ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, overlayButtonSize);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.5f);
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 3.0f });
             ImGui::Begin("##GizmoOverlay", __null, window_flags);
             ImGui::PopStyleVar(4);
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_CursorIcon->GetDescriptorSet()), overlayButtonSize))
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_GizmoType == -1 ? m_CursorIconActive->GetDescriptorSet() : m_CursorIcon->GetDescriptorSet()), overlayButtonSize))
             {
                 m_GizmoType = -1;
                 ImGui::SetWindowFocus("Viewport");
             }
             ImGui::SameLine();
-            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_TranslateIcon->GetDescriptorSet()), overlayButtonSize))
+            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_GizmoType == ImGuizmo::OPERATION::TRANSLATE ? m_TranslateIconActive->GetDescriptorSet() : m_TranslateIcon->GetDescriptorSet()), overlayButtonSize))
             {
                 m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
                 ImGui::SetWindowFocus("Viewport");
             }
             ImGui::SameLine();
-            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_RotateIcon->GetDescriptorSet()), overlayButtonSize))
+            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_GizmoType == ImGuizmo::OPERATION::ROTATE ? m_RotateIconActive->GetDescriptorSet() : m_RotateIcon->GetDescriptorSet()), overlayButtonSize))
             {
                 m_GizmoType = ImGuizmo::OPERATION::ROTATE;
                 ImGui::SetWindowFocus("Viewport");
             }
             ImGui::SameLine();
-            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_ScaleIcon->GetDescriptorSet()), overlayButtonSize))
+            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_GizmoType == ImGuizmo::OPERATION::SCALE ? m_ScaleIconActive->GetDescriptorSet() : m_ScaleIcon->GetDescriptorSet()), overlayButtonSize))
             {
                 m_GizmoType = ImGuizmo::OPERATION::SCALE;
                 ImGui::SetWindowFocus("Viewport");
             }
-            ImGui::PopStyleColor();
+            ImGui::PopStyleColor(2);
             ImGui::PopStyleVar();
             ImGui::End();
         }
