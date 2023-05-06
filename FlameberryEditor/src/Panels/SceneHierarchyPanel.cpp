@@ -19,7 +19,6 @@ namespace Flameberry {
 
     SceneHierarchyPanel::~SceneHierarchyPanel()
     {
-        vkDestroySampler(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), m_VkTextureSampler, nullptr);
     }
 
     void SceneHierarchyPanel::OnUIRender()

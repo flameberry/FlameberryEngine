@@ -13,7 +13,7 @@ namespace Flameberry {
         ~ContentBrowserPanel();
         void OnUIRender();
     private:
-        void RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator);
+        void RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator, bool open = false);
     private:
         std::filesystem::path m_CurrentDirectory;
 
