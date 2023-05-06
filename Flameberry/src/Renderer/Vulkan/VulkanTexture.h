@@ -27,6 +27,7 @@ namespace Flameberry {
 
         static std::shared_ptr<VulkanDescriptorLayout> GetDescriptorLayout() { return s_DescriptorLayout; }
         static VkDescriptorSet GetEmptyDescriptorSet() { return s_EmptyDescriptorSet; }
+        static VkSampler GetDefaultSampler() { return s_DefaultSampler; }
 
         static std::shared_ptr<VulkanTexture> TryGetOrLoadTexture(const std::string& texturePath);
     private:

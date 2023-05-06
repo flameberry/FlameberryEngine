@@ -11,7 +11,7 @@ namespace Flameberry {
         : m_ActiveScene(scene),
         m_SelectedEntity(ecs::entity_handle::null),
         m_RenamedEntity(ecs::entity_handle::null),
-        m_VkTextureSampler(VulkanRenderCommand::CreateDefaultSampler()),
+        m_VkTextureSampler(VulkanTexture::GetDefaultSampler()),
         m_PlusIconTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/plus_icon.png", m_VkTextureSampler),
         m_MinusIconTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/minus_icon.png", m_VkTextureSampler)
     {

@@ -2,6 +2,7 @@
 
 #include "Flameberry.h"
 #include "../project.h"
+#include "../Utils.h"
 
 #define FL_BACK_ARROW_ICON 0
 #define FL_FORWARD_ARROW_ICON 1
@@ -30,7 +31,7 @@ static std::vector<std::string> g_IconPaths = {
 namespace Flameberry {
     ContentBrowserPanel::ContentBrowserPanel()
         : m_CurrentDirectory(project::g_AssetDirectory),
-        m_VkTextureSampler(VulkanRenderCommand::CreateDefaultSampler())
+        m_VkTextureSampler(VulkanTexture::GetDefaultSampler())
     {
         for (const auto& path : g_IconPaths)
             m_IconTextures.emplace_back(std::make_shared<VulkanTexture>(path.c_str(), m_VkTextureSampler));
@@ -41,10 +42,61 @@ namespace Flameberry {
         vkDestroySampler(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), m_VkTextureSampler, nullptr);
     }
 
+    void ContentBrowserPanel::RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator)
+    {
+        static bool is_selected = false;
+        static const int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanFullWidth;
+        for (auto& directory : iterator)
+        {
+            if (directory.is_directory())
+            {
+                bool open = ImGui::TreeNodeEx(directory.path().filename().c_str(), treeNodeFlags);
+                if (ImGui::IsItemClicked())
+                {
+                    m_CurrentDirectory = directory.path();
+                    is_selected = true;
+                }
+                if (open)
+                {
+                    RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator(directory));
+                    ImGui::TreePop();
+                }
+            }
+        }
+    }
+
     void ContentBrowserPanel::OnUIRender()
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 10, 7 });
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Content Browser");
+        ImGui::PopStyleVar();
+
+        m_SecondChildSize = ImGui::GetWindowContentRegionMax().x - m_FirstChildSize;
+
+        Utils::Splitter(true, 3.0f, &m_FirstChildSize, &m_SecondChildSize, 10.0f, 80.0f);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 7 });
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
+
+        static bool is_selected = false;
+        static const int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanFullWidth;
+        bool open = ImGui::TreeNodeEx(project::g_AssetDirectory.filename().c_str());
+        if (ImGui::IsItemClicked())
+        {
+            m_CurrentDirectory = project::g_AssetDirectory;
+            is_selected = true;
+        }
+        if (open) {
+            RecursivelyAddDirectoryNodes(std::filesystem::directory_entry(project::g_AssetDirectory), std::filesystem::directory_iterator{ project::g_AssetDirectory });
+            ImGui::TreePop();
+        }
+
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::PopStyleVar();
+
+        ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleVar();
 
         float iconSize = 80.0f, padding = 10.0f;
@@ -155,8 +207,9 @@ namespace Flameberry {
                 platform::OpenInFinder(m_CurrentDirectory.string().c_str());
             ImGui::EndPopup();
         }
+        ImGui::PopStyleColor();
+        ImGui::EndChild();
 
-        ImGui::PopStyleColor(1);
         ImGui::End();
     }
 }
