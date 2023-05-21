@@ -219,14 +219,25 @@ namespace Flameberry {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
             {
                 const char* path = (const char*)payload->Data;
-                std::filesystem::path scenePath{ path };
-                const std::string& ext = scenePath.extension().string();
+                std::filesystem::path filePath{ path };
+                const std::string& ext = filePath.extension().string();
 
                 FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
 
-                if (std::filesystem::exists(scenePath) && std::filesystem::is_regular_file(scenePath) && (ext == ".scene" || ext == ".json" || ext == ".berry")) {
-                    m_ShouldOpenAnotherScene = true;
-                    m_ScenePathToBeOpened = scenePath;
+                if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath)) {
+                    if (ext == ".scene" || ext == ".json" || ext == ".berry") {
+                        m_ShouldOpenAnotherScene = true;
+                        m_ScenePathToBeOpened = filePath;
+                    }
+                    else if (ext == ".obj") {
+                        const auto& staticMesh = AssetManager::TryGetOrLoadAssetFromFile<StaticMesh>(path);
+                        auto entity = m_Registry->create();
+                        m_Registry->emplace<IDComponent>(entity);
+                        m_Registry->emplace<TagComponent>(entity, "StaticMesh");
+                        m_Registry->emplace<TransformComponent>(entity);
+                        m_Registry->emplace<MeshComponent>(entity, staticMesh->GetUUID());
+                        m_SceneHierarchyPanel->SetSelectedEntity(entity);
+                    }
                 }
                 else
                     FL_WARN("Bad File given as Scene!");
@@ -332,8 +343,6 @@ namespace Flameberry {
             ImGui::End();
         }
         ImGui::PopStyleVar();
-
-        // ImGui::ShowDemoWindow();
 
         ImGui::Begin("Statistics");
         ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);

@@ -327,8 +327,10 @@ namespace Flameberry {
                 int i = 0;
                 for (const auto& submesh : staticMesh->GetSubMeshes())
                 {
-                    ImGui::Text("Submesh %d: %s", i, AssetManager::GetAsset<Material>(submesh.MaterialUUID)->Name.c_str());
-                    i++;
+                    if (AssetManager::IsAssetHandleValid(submesh.MaterialUUID)) {
+                        ImGui::Text("Submesh %d: %s", i, AssetManager::GetAsset<Material>(submesh.MaterialUUID)->Name.c_str());
+                        i++;
+                    }
                 }
             }
 
