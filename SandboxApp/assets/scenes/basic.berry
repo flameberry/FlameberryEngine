@@ -1,7 +1,7 @@
 Scene: basic
 EnvironmentMap:
   ClearColor: [0, 0, 0]
-  Skybox: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/skybox
+  Skybox: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/skybox
   EnableSkybox: false
   Reflections: false
   DirectionalLight:
@@ -38,9 +38,9 @@ Entities:
       Intensity: 10
 Meshes:
   - Mesh: platform
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/platform.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/platform.obj
   - Mesh: only_bugatti_v2
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/only_bugatti_v2.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/only_bugatti_v2.obj
 Materials:
   - Material: Default
     Albedo: [0.308823526, 0.715397835, 1]

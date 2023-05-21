@@ -22,13 +22,14 @@
 
 #include "Platform/Utils.h"
 #include "ImGui/ImGuiLayer.h"
+#include "AssetManager/AssetManager.h"
 
 #include "Renderer/Vulkan/VulkanRenderer.h"
 #include "Renderer/Vulkan/VulkanRenderCommand.h"
 #include "Renderer/Vulkan/VulkanPipeline.h"
 #include "Renderer/Vulkan/VulkanDescriptor.h"
 #include "Renderer/Vulkan/VulkanTexture.h"
-#include "Renderer/Vulkan/VulkanMesh.h"
+#include "Renderer/Vulkan/StaticMesh.h"
 #include "Renderer/Vulkan/VulkanDebug.h"
 #include "Renderer/Vulkan/SceneRenderer.h"
 #include "Renderer/SkyboxRenderer.h"

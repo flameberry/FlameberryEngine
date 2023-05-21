@@ -7,18 +7,22 @@ namespace Flameberry {
     class FlameberryEditor : public Application
     {
     public:
-        FlameberryEditor()
+        FlameberryEditor(const std::string_view& projectPath)
+            : m_ProjectPath(projectPath)
         {
-            PushLayer<EditorLayer>();
+            std::filesystem::current_path(m_ProjectPath);
+            PushLayer<EditorLayer>(m_ProjectPath);
         }
 
         ~FlameberryEditor()
         {
         }
+    private:
+        std::string_view m_ProjectPath;
     };
 
     std::shared_ptr<Application> Application::CreateClientApp()
     {
-        return std::make_shared<FlameberryEditor>();
+        return std::make_shared<FlameberryEditor>(FL_PROJECT_DIR"SandboxApp");
     }
 }

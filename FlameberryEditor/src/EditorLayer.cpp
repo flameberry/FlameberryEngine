@@ -1,12 +1,11 @@
 #include "EditorLayer.h"
 
 #include "ImGuizmo/ImGuizmo.h"
-
-#include "project.h"
 #include "Utils.h"
 
 namespace Flameberry {
-    EditorLayer::EditorLayer()
+    EditorLayer::EditorLayer(const std::string_view& projectPath)
+        : m_ProjectPath(projectPath)
     {}
 
     void EditorLayer::OnCreate()
@@ -111,13 +110,20 @@ namespace Flameberry {
         m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
 
         m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>(m_ActiveScene.get());
-        m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
+        m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>(m_ProjectPath);
+
+        auto mesh = AssetManager::TryGetOrLoadAssetFromFile<StaticMesh>("Assets/models/cube.obj");
+        auto meshRef = AssetManager::GetAsset<StaticMesh>(mesh->GetUUID());
+        auto texture = AssetManager::TryGetOrLoadAssetFromFile<VulkanTexture>("Assets/textures/brick.png");
+        auto textureRef = AssetManager::GetAsset<VulkanTexture>(texture->GetUUID());
+
+        FL_LOG(meshRef->GetFilePath());
+        FL_LOG(textureRef->GetFilePath());
     }
 
     void EditorLayer::OnUpdate(float delta)
     {
-        // FL_SCOPED_TIMER("EditorLayer::OnUpdate");
-        FL_PROFILE_SCOPE("Vulkan Frame Render Time");
+        FL_PROFILE_SCOPE("Editor_OnUpdate");
 
         if (VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginFrame())
         {
@@ -125,7 +131,7 @@ namespace Flameberry {
             if (m_VulkanRenderer->EnableShadows())
             {
                 FL_PROFILE_SCOPE("Shadow Pass");
-                glm::mat4 lightProjectionMatrix = glm::ortho<float>(-40, 40, -40, 40, zNear, zFar);
+                glm::mat4 lightProjectionMatrix = glm::ortho<float>(-40, 40, -40, 40, m_ZNearFar.x, m_ZNearFar.y);
                 glm::mat4 lightViewMatrix = glm::lookAt(
                     -m_ActiveScene->GetDirectionalLight().Direction,
                     glm::vec3(0, 0, 0),
@@ -212,9 +218,8 @@ namespace Flameberry {
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
             {
-                std::string path = (const char*)payload->Data;
+                const char* path = (const char*)payload->Data;
                 std::filesystem::path scenePath{ path };
-                scenePath = project::g_AssetDirectory / scenePath;
                 const std::string& ext = scenePath.extension().string();
 
                 FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
@@ -337,8 +342,7 @@ namespace Flameberry {
         ImGui::End();
 
         ImGui::Begin("Settings");
-        ImGui::DragFloat("zNear", &zNear, 0.2f);
-        ImGui::DragFloat("zFar", &zFar, 0.2f);
+        ImGui::DragFloat2("zNear, zFar", glm::value_ptr(m_ZNearFar), 0.2f);
         ImGui::Checkbox("Display Shadow Map", &m_DisplayShadowMap);
         ImGui::End();
 

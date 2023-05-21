@@ -1,0 +1,15 @@
+Scene: submesh
+EnvironmentMap:
+  ClearColor: [0.0500000007, 0.0500000007, 0.0500000007]
+  EnableSkybox: false
+  Reflections: false
+  DirectionalLight:
+    Direction: [0, 0, 0]
+    Color: [0, 0, 0]
+    Intensity: 0
+Entities:
+  []
+Meshes:
+  []
+Materials:
+  []

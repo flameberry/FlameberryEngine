@@ -55,15 +55,15 @@ Entities:
       Intensity: 32.5999985
 Meshes:
   - Mesh: sphere
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/sphere.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/sphere.obj
   - Mesh: platform
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/platform.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/platform.obj
   - Mesh: cylinder
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/cylinder.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/cylinder.obj
   - Mesh: viking_room
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/viking_room.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/viking_room.obj
   - Mesh: monkey
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/monkey.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/monkey.obj
 Materials:
   - Material: Default
     Albedo: [0.268166065, 0.911764681, 0.779258966]
@@ -76,7 +76,7 @@ Materials:
     Roughness: 0.600000024
     Metallic: false
     TextureMapEnabled: true
-    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/viking_room.png
+    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/textures/viking_room.png
   - Material: YELLOW_NON_METAL
     Albedo: [1, 1, 0]
     Roughness: 0.699999988
@@ -88,7 +88,7 @@ Materials:
     Roughness: 0.200000003
     Metallic: false
     TextureMapEnabled: true
-    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/brick.png
+    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/textures/brick.png
   - Material: METAL
     Albedo: [1, 0, 1]
     Roughness: 0.200000003

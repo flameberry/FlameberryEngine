@@ -7,6 +7,7 @@
 #include "Component.h"
 
 #include "Renderer/Vulkan/VulkanContext.h"
+#include "AssetManager/AssetManager.h"
 
 namespace YAML {
     template<>
@@ -124,38 +125,39 @@ namespace Flameberry {
         );
         out << YAML::EndSeq; // Entities
 
-        // Serialize Meshes loaded
-        out << YAML::Key << "Meshes" << YAML::Value << YAML::BeginSeq;
+        // // Serialize Meshes loaded
+        // out << YAML::Key << "Meshes" << YAML::Value << YAML::BeginSeq;
 
-        for (const auto& mesh : m_ActiveScene->m_SceneData.Meshes)
-        {
-            out << YAML::BeginMap;
-            out << YAML::Key << "Mesh" << YAML::Value << mesh->GetName();
-            out << YAML::Key << "FilePath" << YAML::Value << mesh->GetFilePath();
-            out << YAML::EndMap; // Mesh
-        }
+        // for (const auto& mesh : m_ActiveScene->m_SceneData.Meshes)
+        // {
+        //     out << YAML::BeginMap;
+        //     out << YAML::Key << "Mesh" << YAML::Value << mesh->GetName();
+        //     out << YAML::Key << "FilePath" << YAML::Value << mesh->GetFilePath();
+        //     out << YAML::EndMap; // Mesh
+        // }
 
-        out << YAML::EndSeq; // Meshes
+        // out << YAML::EndSeq; // Meshes
 
-        // Serialize Materials
-        out << YAML::Key << "Materials" << YAML::Value << YAML::BeginSeq;
+        // // Serialize Materials
+        // out << YAML::Key << "Materials" << YAML::Value << YAML::BeginSeq;
 
-        for (const auto& [materialName, material] : m_ActiveScene->m_SceneData.Materials)
-        {
-            out << YAML::BeginMap;
-            out << YAML::Key << "Material" << YAML::Value << materialName;
-            out << YAML::Key << "Albedo" << YAML::Value << material.Albedo;
-            out << YAML::Key << "Roughness" << YAML::Value << material.Roughness;
-            out << YAML::Key << "Metallic" << YAML::Value << material.Metallic;
-            out << YAML::Key << "TextureMapEnabled" << YAML::Value << material.TextureMapEnabled;
-            if (material.TextureMapEnabled)
-                out << YAML::Key << "TextureMap" << YAML::Value << material.TextureMap->GetFilePath();
-            else
-                out << YAML::Key << "TextureMap" << YAML::Value << "None";
-            out << YAML::EndMap; // Material
-        }
+        // for (const auto& [materialName, material] : m_ActiveScene->m_SceneData.Materials)
+        // {
+        //     out << YAML::BeginMap;
+        //     out << YAML::Key << "Material" << YAML::Value << material.GetUUID();
+        //     out << YAML::Key << "Name" << YAML::Value << materialName;
+        //     out << YAML::Key << "Albedo" << YAML::Value << material.Albedo;
+        //     out << YAML::Key << "Roughness" << YAML::Value << material.Roughness;
+        //     out << YAML::Key << "Metallic" << YAML::Value << material.Metallic;
+        //     out << YAML::Key << "TextureMapEnabled" << YAML::Value << material.TextureMapEnabled;
+        //     if (material.TextureMapEnabled)
+        //         out << YAML::Key << "TextureMap" << YAML::Value << material.TextureMap->GetFilePath();
+        //     else
+        //         out << YAML::Key << "TextureMap" << YAML::Value << "None";
+        //     out << YAML::EndMap; // Material
+        // }
+        // out << YAML::EndSeq; // Materials
 
-        out << YAML::EndSeq; // Materials
         out << YAML::EndMap; // Scene
 
         std::ofstream fout(scenePath);
@@ -194,8 +196,7 @@ namespace Flameberry {
         {
             auto& mesh = m_ActiveScene->m_Registry->get<MeshComponent>(entity);
             out << YAML::Key << "MeshComponent" << YAML::BeginMap;
-            out << YAML::Key << "MeshIndex" << YAML::Value << mesh.MeshIndex;
-            out << YAML::Key << "MaterialName" << YAML::Value << mesh.MaterialName;
+            out << YAML::Key << "MeshUUID" << YAML::Value << (uint64_t)(mesh.MeshUUID);
             out << YAML::EndMap; // Mesh Component
         }
 
@@ -230,8 +231,6 @@ namespace Flameberry {
 
         // Clearing existing scene // TODO: Remove Active Environment Map
         m_ActiveScene->m_Registry->clear();
-        m_ActiveScene->m_SceneData.Materials.clear();
-        m_ActiveScene->m_SceneData.Meshes.clear();
 
         // Deserialize Environment Map
         auto& env = m_ActiveScene->m_SceneData.ActiveEnvironmentMap;
@@ -283,9 +282,8 @@ namespace Flameberry {
 
                     if (auto mesh = entity["MeshComponent"]; mesh)
                     {
-                        auto& meshComp = m_ActiveScene->m_Registry->emplace<MeshComponent>(deserializedEntity);
-                        meshComp.MeshIndex = mesh["MeshIndex"].as<uint32_t>();
-                        meshComp.MaterialName = mesh["MaterialName"].as<std::string>();
+                        auto& meshComp = m_ActiveScene->m_Registry->emplace<MeshComponent>(deserializedEntity, 0);
+                        meshComp.MeshUUID = mesh["MeshUUID"].as<uint64_t>();
                     }
 
                     if (auto light = entity["LightComponent"]; light)
@@ -298,37 +296,35 @@ namespace Flameberry {
             }
         }
 
-        auto meshes = data["Meshes"];
-        if (meshes)
-        {
-            for (auto mesh : meshes)
-            {
-                if (mesh)
-                    m_ActiveScene->m_SceneData.Meshes.emplace_back(VulkanMesh::TryGetOrLoadMesh(mesh["FilePath"].as<std::string>()));
-            }
-        }
+        // auto meshes = data["Meshes"];
+        // if (meshes)
+        // {
+        //     for (auto mesh : meshes)
+        //     {
+        //         if (mesh)
+        //             m_ActiveScene->m_SceneData.Meshes.emplace_back(StaticMesh::TryGetOrLoadMesh(mesh["FilePath"].as<std::string>()));
+        //     }
+        // }
 
-        auto materials = data["Materials"];
-        if (materials)
-        {
-            for (auto material : materials)
-            {
-                if (material)
-                {
-                    if (auto materialName = material["Material"]; materialName)
-                    {
-                        bool textureMapEnabled = material["TextureMapEnabled"].as<bool>();
-                        m_ActiveScene->m_SceneData.Materials[materialName.as<std::string>()] = Material{
-                            material["Albedo"].as<glm::vec3>(),
-                            material["Roughness"].as<float>(),
-                            material["Metallic"].as<bool>(),
-                            textureMapEnabled,
-                            textureMapEnabled ? VulkanTexture::TryGetOrLoadTexture(material["TextureMap"].as<std::string>().c_str()) : nullptr
-                        };
-                    }
-                }
-            }
-        }
+        // auto materials = data["Materials"];
+        // if (materials)
+        // {
+        //     for (auto material : materials)
+        //     {
+        //         if (material)
+        //         {
+        //             bool textureMapEnabled = material["TextureMapEnabled"].as<bool>();
+        //             m_ActiveScene->m_SceneData.Materials[material["Material"].as<std::string>()] = Material{
+        //                 material["Material"].as<std::string>(),
+        //                 material["Albedo"].as<glm::vec3>(),
+        //                 material["Roughness"].as<float>(),
+        //                 material["Metallic"].as<bool>(),
+        //                 textureMapEnabled,
+        //                 textureMapEnabled ? VulkanTexture::TryGetOrLoadTexture(material["TextureMap"].as<std::string>().c_str()) : nullptr
+        //             };
+        //         }
+        //     }
+        // }
         return true;
     }
 }

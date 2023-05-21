@@ -14,6 +14,9 @@ namespace Flameberry {
         s_Instance = this;
         m_Window = Window::Create();
         m_Window->SetEventCallBack(FL_BIND_EVENT_FN(Application::OnEvent));
+
+        m_VulkanContext = VulkanContext::Create((VulkanWindow*)m_Window.get());
+        VulkanContext::SetCurrentContext(m_VulkanContext.get());
     }
 
     void Application::Run()

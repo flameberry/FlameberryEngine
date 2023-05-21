@@ -7,7 +7,7 @@
 #include "Vulkan/VulkanPipeline.h"
 #include "Vulkan/VulkanDescriptor.h"
 #include "Vulkan/VulkanBuffer.h"
-#include "Vulkan/VulkanMesh.h"
+#include "Vulkan/StaticMesh.h"
 
 namespace Flameberry {
     class SkyboxRenderer
@@ -40,6 +40,6 @@ namespace Flameberry {
         const std::shared_ptr<VulkanDescriptorPool>& m_GlobalDescriptorPool;
 
         // Test
-        VulkanMesh m_CubeMesh;
+        StaticMesh m_CubeMesh;
     };
 }

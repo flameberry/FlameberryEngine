@@ -3,7 +3,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
 
-#include "../project.h"
 #include "../Utils.h"
 
 namespace Flameberry {
@@ -77,10 +76,13 @@ namespace Flameberry {
                 bool is_renamed = m_RenamedEntity == entity;
                 bool is_selected = m_SelectedEntity == entity;
                 bool should_delete_entity = false;
-                int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | (ImGuiTreeNodeFlags_Leaf);
+                int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
+                    | ImGuiTreeNodeFlags_OpenOnArrow
+                    | ImGuiTreeNodeFlags_FramePadding
+                    | ImGuiTreeNodeFlags_Leaf;
 
                 if (m_RenamedEntity != entity)
-                    treeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+                    treeNodeFlags |= ImGuiTreeNodeFlags_SpanFullWidth;
 
                 ImGui::PushID((uint32_t)entity);
 
@@ -91,7 +93,10 @@ namespace Flameberry {
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
 
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
                 bool open = ImGui::TreeNodeEx(is_renamed ? "" : tag.c_str(), treeNodeFlags);
+                ImGui::PopStyleVar(2);
                 if (open) {
                     ImGui::TreePop();
                 }
@@ -280,23 +285,22 @@ namespace Flameberry {
             ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::Button("Load Mesh");
 
+            ImGui::Button("Load Mesh");
             if (ImGui::BeginDragDropTarget())
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
                 {
-                    std::string path = (const char*)payload->Data;
+                    const char* path = (const char*)payload->Data;
                     std::filesystem::path modelPath{ path };
-                    modelPath = project::g_AssetDirectory / modelPath;
                     const std::string& ext = modelPath.extension().string();
 
                     FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
 
                     if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
                     {
-                        m_ActiveScene->m_SceneData.Meshes.emplace_back(VulkanMesh::TryGetOrLoadMesh(modelPath));
-                        mesh.MeshIndex = (uint32_t)m_ActiveScene->m_SceneData.Meshes.size() - 1;
+                        const auto& loadedMesh = AssetManager::TryGetOrLoadAssetFromFile<StaticMesh>(modelPath);
+                        mesh.MeshUUID = loadedMesh->GetUUID();
                     }
                     else
                         FL_WARN("Bad File given as Model!");
@@ -306,121 +310,120 @@ namespace Flameberry {
 
             ImGui::TableNextColumn();
 
-            // Mesh Menu
-            const char* selectedMeshName = m_ActiveScene->m_SceneData.Meshes.size() ? (m_ActiveScene->m_SceneData.Meshes[mesh.MeshIndex]->GetName().c_str()) : "";
-            if (ImGui::BeginCombo("##combo", selectedMeshName)) // The second parameter is the label previewed before opening the combo.
-            {
-                for (int n = 0; n < m_ActiveScene->m_SceneData.Meshes.size(); n++)
-                {
-                    bool is_selected = (mesh.MeshIndex == n); // You can store your selection however you want, outside or inside your objects
-                    if (ImGui::Selectable(m_ActiveScene->m_SceneData.Meshes[n]->GetName().c_str(), is_selected))
-                        mesh.MeshIndex = n;
-                    if (is_selected)
-                        ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
-                }
-                ImGui::EndCombo();
-            }
+            const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
+            if (staticMesh)
+                ImGui::Text("%s", staticMesh->GetName().c_str());
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
             // Material Menu
-            ImGui::Text("Material");
+            ImGui::Text("Materials");
 
             ImGui::TableNextColumn();
 
-            if (ImGui::BeginCombo("##combo1", mesh.MaterialName.c_str())) // The second parameter is the label previewed before opening the combo.
+            if (staticMesh)
             {
-                for (const auto& [materialName, material] : m_ActiveScene->m_SceneData.Materials)
+                int i = 0;
+                for (const auto& submesh : staticMesh->GetSubMeshes())
                 {
-                    bool is_selected = (mesh.MaterialName == materialName); // You can store your selection however you want, outside or inside your objects
-                    if (ImGui::Selectable(materialName.c_str(), is_selected))
-                        mesh.MaterialName = materialName;
-                    if (is_selected)
-                        ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+                    ImGui::Text("Submesh %d: %s", i, AssetManager::GetAsset<Material>(submesh.MaterialUUID)->Name.c_str());
+                    i++;
                 }
-                ImGui::EndCombo();
             }
 
-            ImGui::SameLine();
+            // if (ImGui::BeginCombo("##combo1", mesh.MaterialName.c_str())) // The second parameter is the label previewed before opening the combo.
+            // {
+            //     for (const auto& [materialName, material] : m_ActiveScene->m_SceneData.Materials)
+            //     {
+            //         bool is_selected = (mesh.MaterialName == materialName); // You can store your selection however you want, outside or inside your objects
+            //         if (ImGui::Selectable(materialName.c_str(), is_selected))
+            //             mesh.MaterialName = materialName;
+            //         if (is_selected)
+            //             ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+            //     }
+            //     ImGui::EndCombo();
+            // }
 
-            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_PlusIconTexture.GetDescriptorSet()), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
-            {
-                mesh.MaterialName = "Material_" + std::to_string(m_ActiveScene->m_SceneData.Materials.size());
-                m_ActiveScene->m_SceneData.Materials[mesh.MaterialName] = Material();
-            }
+            // ImGui::SameLine();
 
-            ImGui::SameLine();
+            // if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_PlusIconTexture.GetDescriptorSet()), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
+            // {
+            //     mesh.MaterialName = "Material_" + std::to_string(m_ActiveScene->m_SceneData.Materials.size());
+            //     m_ActiveScene->m_SceneData.Materials[mesh.MaterialName] = Material();
+            // }
 
-            if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_MinusIconTexture.GetDescriptorSet()), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
-            {
-                m_ActiveScene->m_SceneData.Materials.erase(mesh.MaterialName);
-                mesh.MaterialName = "Default";
-            }
+            // ImGui::SameLine();
+
+            // if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_MinusIconTexture.GetDescriptorSet()), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
+            // {
+            //     m_ActiveScene->m_SceneData.Materials.erase(mesh.MaterialName);
+            //     mesh.MaterialName = "Default";
+            // }
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
             // Material Controls
-            auto& material = m_ActiveScene->m_SceneData.Materials[mesh.MaterialName];
+            // auto& material = m_ActiveScene->m_SceneData.Materials[mesh.MaterialName];
 
-            ImGui::Text("Texture Map");
+            // ImGui::Text("Texture Map");
 
-            ImGui::TableNextColumn();
+            // ImGui::TableNextColumn();
 
-            bool& textureMapEnabled = material.TextureMapEnabled;
-            ImGui::Checkbox("##Texture_Map", &textureMapEnabled);
+            // bool& textureMapEnabled = material.TextureMapEnabled;
+            // ImGui::Checkbox("##Texture_Map", &textureMapEnabled);
 
-            if (textureMapEnabled)
-            {
-                auto& texture = material.TextureMap;
-                if (!texture)
-                    texture = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"SandboxApp/assets/textures/Checkerboard.png");
+            // if (textureMapEnabled)
+            // {
+            //     auto& texture = material.TextureMap;
+            //     if (!texture)
+            //         texture = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"SandboxApp/Assets/textures/Checkerboard.png");
 
-                VulkanTexture& currentTexture = *(texture.get());
+            //     VulkanTexture& currentTexture = *(texture.get());
 
-                ImGui::SameLine();
-                ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetDescriptorSet()), ImVec2{ 50, 50 });
-                if (ImGui::BeginDragDropTarget())
-                {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
-                    {
-                        std::string path = (const char*)payload->Data;
-                        std::filesystem::path texturePath{ path };
-                        texturePath = project::g_AssetDirectory / texturePath;
-                        const std::string& ext = texturePath.extension().string();
+            //     ImGui::SameLine();
+            //     ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetDescriptorSet()), ImVec2{ 50, 50 });
+            //     if (ImGui::BeginDragDropTarget())
+            //     {
+            //         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+            //         {
+            //             std::string path = (const char*)payload->Data;
+            //             std::filesystem::path texturePath{ path };
+            //             texturePath = project::g_AssetDirectory / texturePath;
+            //             const std::string& ext = texturePath.extension().string();
 
-                        FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+            //             FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
 
-                        if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
-                            texture = VulkanTexture::TryGetOrLoadTexture(texturePath.string());
-                        else
-                            FL_WARN("Bad File given as Texture!");
-                    }
-                    ImGui::EndDragDropTarget();
-                }
-            }
+            //             if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
+            //                 texture = VulkanTexture::TryGetOrLoadTexture(texturePath.string());
+            //             else
+            //                 FL_WARN("Bad File given as Texture!");
+            //         }
+            //         ImGui::EndDragDropTarget();
+            //     }
+            // }
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
+            // ImGui::TableNextRow();
+            // ImGui::TableNextColumn();
 
-            ImGui::Text("Albedo");
-            ImGui::TableNextColumn();
-            FL_REMOVE_LABEL(ImGui::ColorEdit3("##Albedo", glm::value_ptr(material.Albedo)));
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
+            // ImGui::Text("Albedo");
+            // ImGui::TableNextColumn();
+            // FL_REMOVE_LABEL(ImGui::ColorEdit3("##Albedo", glm::value_ptr(material.Albedo)));
+            // ImGui::TableNextRow();
+            // ImGui::TableNextColumn();
 
-            ImGui::Text("Roughness");
-            ImGui::TableNextColumn();
-            FL_REMOVE_LABEL(ImGui::DragFloat("##Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f));
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
+            // ImGui::Text("Roughness");
+            // ImGui::TableNextColumn();
+            // FL_REMOVE_LABEL(ImGui::DragFloat("##Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f));
+            // ImGui::TableNextRow();
+            // ImGui::TableNextColumn();
 
-            ImGui::Text("Metallic");
-            ImGui::TableNextColumn();
-            bool metallic = material.Metallic == 1.0f;
-            ImGui::Checkbox("##Metallic", &metallic);
-            material.Metallic = metallic ? 1.0f : 0.0f;
+            // ImGui::Text("Metallic");
+            // ImGui::TableNextColumn();
+            // bool metallic = material.Metallic == 1.0f;
+            // ImGui::Checkbox("##Metallic", &metallic);
+            // material.Metallic = metallic ? 1.0f : 0.0f;
             ImGui::EndTable();
         }
         ImGui::PopStyleVar();

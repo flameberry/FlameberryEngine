@@ -2,7 +2,7 @@
 
 #include "VulkanPipeline.h"
 #include "VulkanSwapChain.h"
-#include "VulkanMesh.h"
+#include "StaticMesh.h"
 #include "VulkanDescriptor.h"
 
 #include "Renderer/Light.h"

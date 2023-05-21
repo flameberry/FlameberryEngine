@@ -17,13 +17,15 @@ namespace Flameberry {
 
     std::unordered_map<std::string, std::shared_ptr<VulkanTexture>> VulkanTexture::s_TextureCacheDirectory;
 
-    VulkanTexture::VulkanTexture(const char* texturePath, VkSampler sampler)
+    VulkanTexture::VulkanTexture(const std::string& texturePath, VkSampler sampler)
         : m_FilePath(texturePath)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         int width, height, channels;
-        stbi_uc* pixels = stbi_load(texturePath, &width, &height, &channels, STBI_rgb_alpha);
+        stbi_uc* pixels = stbi_load(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
         FL_ASSERT(pixels, "Texture pixels are empty!");
+
+        uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
 
         VkDeviceSize imageSize = 4 * width * height;
         VulkanBuffer stagingBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -37,19 +39,47 @@ namespace Flameberry {
         m_TextureImage = std::make_unique<VulkanImage>(
             width,
             height,
+            mipLevels,
             VK_FORMAT_R8G8B8A8_SRGB,
             VK_IMAGE_TILING_OPTIMAL,
-            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
             VK_IMAGE_ASPECT_COLOR_BIT
         );
 
         m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         m_TextureImage->WriteFromBuffer(stagingBuffer.GetBuffer());
-        m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_TextureImage->GenerateMipMaps();
+        // m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         if (sampler == VK_NULL_HANDLE)
-            m_VkTextureSampler = s_DefaultSampler;
+        {
+            m_DidCreateSampler = true;
+
+            VkSamplerCreateInfo sampler_info{};
+            sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+            sampler_info.magFilter = VK_FILTER_LINEAR;
+            sampler_info.minFilter = VK_FILTER_LINEAR;
+            sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            sampler_info.anisotropyEnable = VK_TRUE;
+
+            VkPhysicalDeviceProperties properties;
+            vkGetPhysicalDeviceProperties(VulkanContext::GetPhysicalDevice(), &properties);
+
+            sampler_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+            sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+            sampler_info.unnormalizedCoordinates = VK_FALSE;
+            sampler_info.compareEnable = VK_FALSE;
+            sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+            sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            sampler_info.mipLodBias = 0.0f;
+            sampler_info.minLod = 0.0f;
+            sampler_info.maxLod = (float)mipLevels;
+
+            VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_VkTextureSampler));
+        }
         else
             m_VkTextureSampler = sampler;
 
@@ -77,6 +107,8 @@ namespace Flameberry {
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
+        if (m_DidCreateSampler)
+            vkDestroySampler(device, m_VkTextureSampler, nullptr);
     }
 
     std::shared_ptr<VulkanTexture> VulkanTexture::TryGetOrLoadTexture(const std::string& texturePath)
@@ -98,6 +130,7 @@ namespace Flameberry {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
         s_EmptyImage = std::make_shared<VulkanImage>(
+            1,
             1,
             1,
             VK_FORMAT_R8G8B8A8_SRGB,

@@ -9,7 +9,7 @@ namespace Flameberry {
     class EditorLayer : public Layer
     {
     public:
-        EditorLayer();
+        EditorLayer(const std::string_view& projectPath);
         virtual ~EditorLayer() = default;
 
         void OnCreate() override;
@@ -42,7 +42,7 @@ namespace Flameberry {
         std::unique_ptr<VulkanBuffer> m_UniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
 
         std::unique_ptr<SceneRenderer> m_SceneRenderer;
-        std::vector<std::shared_ptr<VulkanMesh>> m_Meshes;
+        std::vector<std::shared_ptr<StaticMesh>> m_Meshes;
 
         // std::unique_ptr<SkyboxRenderer> m_SkyboxRenderer;
 
@@ -72,7 +72,9 @@ namespace Flameberry {
         std::shared_ptr<VulkanTexture> m_CursorIconActive, m_TranslateIconActive, m_RotateIconActive, m_ScaleIconActive;
 
         // Debug
-        float zNear = 0.5f, zFar = 50.0f;
+        glm::vec2 m_ZNearFar{0.5f, 50.0f};
         bool m_DisplayShadowMap = false;
+
+        std::filesystem::path m_ProjectPath;
     };
 }

@@ -64,7 +64,6 @@ namespace Flameberry {
         uint32_t m_ImageIndex;
         bool m_EnableShadows = true;
 
-        VulkanContext m_VulkanContext;
         std::unique_ptr<VulkanSwapChain> m_SwapChain;
 
         // Shadow Resources

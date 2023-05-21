@@ -8,13 +8,14 @@ namespace Flameberry {
     VulkanImage::VulkanImage(
         uint32_t width,
         uint32_t height,
+        uint32_t mipLevels,
         VkFormat format,
         VkImageTiling tiling,
         VkImageUsageFlags usage,
         VkMemoryPropertyFlags properties,
         VkImageAspectFlags imageAspectFlags,
         VkSampleCountFlagBits sampleCount
-    ) : m_Width(width), m_Height(height), m_VkImageFormat(format)
+    ) : m_Width(width), m_Height(height), m_MipLevels(mipLevels), m_VkImageFormat(format)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
@@ -26,7 +27,7 @@ namespace Flameberry {
         vk_image_create_info.extent.width = width;
         vk_image_create_info.extent.height = height;
         vk_image_create_info.extent.depth = 1;
-        vk_image_create_info.mipLevels = 1;
+        vk_image_create_info.mipLevels = m_MipLevels;
         vk_image_create_info.arrayLayers = 1;
         vk_image_create_info.format = format;
         vk_image_create_info.tiling = tiling;
@@ -56,7 +57,7 @@ namespace Flameberry {
         vk_image_view_create_info.format = format;
         vk_image_view_create_info.subresourceRange.aspectMask = imageAspectFlags;
         vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
-        vk_image_view_create_info.subresourceRange.levelCount = 1;
+        vk_image_view_create_info.subresourceRange.levelCount = m_MipLevels;
         vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
         vk_image_view_create_info.subresourceRange.layerCount = 1;
 
@@ -69,6 +70,98 @@ namespace Flameberry {
         vkDestroyImageView(device, m_VkImageView, nullptr);
         vkDestroyImage(device, m_VkImage, nullptr);
         vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
+    }
+
+    void VulkanImage::GenerateMipMaps()
+    {
+        VkFormatProperties formatProperties;
+        vkGetPhysicalDeviceFormatProperties(VulkanContext::GetPhysicalDevice(), m_VkImageFormat, &formatProperties);
+        FL_ASSERT(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT, "Texture Image Format does not support linear blitting!");
+
+        const auto& device = VulkanContext::GetCurrentDevice();
+        VkCommandBuffer commandBuffer;
+        device->BeginSingleTimeCommandBuffer(commandBuffer);
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.image = m_VkImage;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+        barrier.subresourceRange.levelCount = 1;
+
+        int32_t mipWidth = m_Width;
+        int32_t mipHeight = m_Height;
+
+        for (uint32_t i = 1; i < m_MipLevels; i++) {
+            barrier.subresourceRange.baseMipLevel = i - 1;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+            vkCmdPipelineBarrier(commandBuffer,
+                VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                0, nullptr,
+                0, nullptr,
+                1, &barrier
+            );
+
+            VkImageBlit blit{};
+            blit.srcOffsets[0] = { 0, 0, 0 };
+            blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
+            blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.srcSubresource.mipLevel = i - 1;
+            blit.srcSubresource.baseArrayLayer = 0;
+            blit.srcSubresource.layerCount = 1;
+            blit.dstOffsets[0] = { 0, 0, 0 };
+            blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
+            blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.dstSubresource.mipLevel = i;
+            blit.dstSubresource.baseArrayLayer = 0;
+            blit.dstSubresource.layerCount = 1;
+
+            vkCmdBlitImage(commandBuffer,
+                m_VkImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                m_VkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1, &blit,
+                VK_FILTER_LINEAR
+            );
+
+            barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            vkCmdPipelineBarrier(commandBuffer,
+                VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+                0, nullptr,
+                0, nullptr,
+                1, &barrier
+            );
+
+            if (mipWidth > 1)
+                mipWidth /= 2;
+            if (mipHeight > 1)
+                mipHeight /= 2;
+        }
+
+        barrier.subresourceRange.baseMipLevel = m_MipLevels - 1;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        vkCmdPipelineBarrier(commandBuffer,
+            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+            0, nullptr,
+            0, nullptr,
+            1, &barrier
+        );
+
+        device->EndSingleTimeCommandBuffer(commandBuffer);
     }
 
     void VulkanImage::WriteFromBuffer(VkBuffer srcBuffer)
@@ -134,7 +227,7 @@ namespace Flameberry {
         vk_image_memory_barrier.image = m_VkImage;
         vk_image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         vk_image_memory_barrier.subresourceRange.baseMipLevel = 0;
-        vk_image_memory_barrier.subresourceRange.levelCount = 1;
+        vk_image_memory_barrier.subresourceRange.levelCount = m_MipLevels;
         vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
         vk_image_memory_barrier.subresourceRange.layerCount = 1;
 

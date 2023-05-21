@@ -13,15 +13,14 @@
 #include "Core/Timer.h"
 #include "VulkanRenderCommand.h"
 #include "VulkanTexture.h"
-#include "VulkanMesh.h"
+#include "StaticMesh.h"
 #include "VulkanDebug.h"
+
+#include "AssetManager/AssetManager.h"
 
 namespace Flameberry {
     VulkanRenderer::VulkanRenderer(VulkanWindow* pWindow)
-        : m_VulkanContext(pWindow)
     {
-        VulkanContext::SetCurrentContext(&m_VulkanContext);
-
         VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         VkPhysicalDevice physicalDevice = VulkanContext::GetPhysicalDevice();
 
@@ -42,6 +41,7 @@ namespace Flameberry {
                 shadowMapImage = std::make_shared<VulkanImage>(
                     SHADOW_MAP_WIDTH,
                     SHADOW_MAP_HEIGHT,
+                    1,
                     VK_FORMAT_D32_SFLOAT,
                     VK_IMAGE_TILING_OPTIMAL,
                     VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -301,6 +301,7 @@ namespace Flameberry {
             viewportImage = std::make_shared<VulkanImage>(
                 m_ViewportSize.x,
                 m_ViewportSize.y,
+                1,
                 vk_swap_chain_image_format,
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -315,6 +316,7 @@ namespace Flameberry {
             viewportImage = std::make_shared<VulkanImage>(
                 m_ViewportSize.x,
                 m_ViewportSize.y,
+                1,
                 vk_swap_chain_image_format,
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -327,6 +329,7 @@ namespace Flameberry {
         m_ViewportDepthImage = VulkanImage::Create(
             m_ViewportSize.x,
             m_ViewportSize.y,
+            1,
             depthFormat,
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
@@ -544,7 +547,8 @@ namespace Flameberry {
         VulkanContext::GetCurrentDevice()->WaitIdle();
 
         VulkanTexture::DestroyStaticResources();
-        VulkanMesh::ClearCache();
+
+        AssetManager::DestroyAssets();
 
         // Destroy Shadow Map Resources
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();

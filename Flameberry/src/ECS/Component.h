@@ -7,6 +7,7 @@
 #include <string>
 
 #include "Core/UUID.h"
+#include "ecs.hpp"
 
 namespace Flameberry {
     struct IDComponent
@@ -42,10 +43,8 @@ namespace Flameberry {
 
     struct MeshComponent
     {
-        uint32_t MeshIndex;
-        std::string MaterialName = "Default";
-
-        MeshComponent() : MeshIndex(0) {}
+        UUID MeshUUID;
+        MeshComponent(UUID meshUUID = 0) : MeshUUID(meshUUID) {}
     };
 
     struct LightComponent
@@ -54,5 +53,13 @@ namespace Flameberry {
         float Intensity;
 
         LightComponent() : Color(1.0f), Intensity(10.0f) {}
+    };
+
+    struct RelationshipComponent
+    {
+        ecs::entity_handle Parent{ ecs::entity_handle::null };
+        ecs::entity_handle FirstChild{ ecs::entity_handle::null };
+        ecs::entity_handle PrevSibling{ ecs::entity_handle::null };
+        ecs::entity_handle NextSibling{ ecs::entity_handle::null };
     };
 }

@@ -4,6 +4,7 @@
 
 #include "Core/optional.h"
 #include "VulkanVertex.h"
+#include "StaticMesh.h"
 
 namespace Flameberry {
     struct QueueFamilyIndices;
@@ -30,7 +31,6 @@ namespace Flameberry {
         static QueueFamilyIndices GetQueueFamilyIndices(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
         static SwapChainDetails GetSwapChainDetails(VkPhysicalDevice vk_device, VkSurfaceKHR surface);
         static std::vector<char> LoadCompiledShaderCode(const std::string& filePath);
-        static std::tuple<std::vector<VulkanVertex>, std::vector<uint32_t>> LoadModel(const std::string& filePath);
         static VkSampler CreateDefaultSampler();
     };
 }

@@ -6,10 +6,11 @@
 #include "VulkanDebug.h"
 #include "VulkanRenderer.h"
 #include "VulkanRenderCommand.h"
-#include "VulkanMesh.h"
+#include "StaticMesh.h"
 #include "Renderer/Material.h"
 
 #include "ECS/Component.h"
+#include "AssetManager/AssetManager.h"
 
 namespace Flameberry {
     struct SceneUniformBufferData {
@@ -138,32 +139,41 @@ namespace Flameberry {
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
-            bool doesMeshHaveMaterial = scene->m_SceneData.Materials.find(mesh.MaterialName) != scene->m_SceneData.Materials.end();
-            auto& material = scene->m_SceneData.Materials[mesh.MaterialName];
+            if (!mesh.MeshUUID) // TODO: MeshUUID should never be invalid either it should point to default mesh or user loaded mesh
+                continue;
 
-            MeshData pushConstantMeshData;
-            pushConstantMeshData.ModelMatrix = transform.GetTransform();
-            if (doesMeshHaveMaterial) {
-                pushConstantMeshData.Albedo = material.Albedo;
-                pushConstantMeshData.Roughness = material.Roughness;
-                pushConstantMeshData.Metallic = material.Metallic;
-                pushConstantMeshData.TextureMapEnabled = material.TextureMapEnabled;
+            const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
+            staticMesh->Bind(commandBuffer);
 
+            int submeshIndex = 0;
+            for (const auto& submesh : staticMesh->GetSubMeshes()) {
+                MeshData pushConstantMeshData;
+                pushConstantMeshData.ModelMatrix = transform.GetTransform();
+
+                bool isMaterialHandleValid = AssetManager::IsAssetHandleValid(submesh.MaterialUUID);
+                std::shared_ptr<Material> materialAsset;
+                if (isMaterialHandleValid) {
+                    materialAsset = AssetManager::GetAsset<Material>(submesh.MaterialUUID);
+                    pushConstantMeshData.Albedo = materialAsset->Albedo;
+                    pushConstantMeshData.Roughness = materialAsset->Roughness;
+                    pushConstantMeshData.Metallic = materialAsset->Metallic;
+                    pushConstantMeshData.TextureMapEnabled = materialAsset->TextureMapEnabled;
+                }
+
+                if (isMaterialHandleValid && materialAsset->TextureMapEnabled) {
+                    VkDescriptorSet descriptorSet[1] = { materialAsset->TextureMap->GetDescriptorSet() };
+                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 2, 1, descriptorSet, 0, nullptr);
+                }
+                else {
+                    VkDescriptorSet descriptorSet[1] = { VulkanTexture::GetEmptyDescriptorSet() };
+                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 2, 1, descriptorSet, 0, nullptr);
+                }
+
+                vkCmdPushConstants(commandBuffer, m_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
+
+                staticMesh->OnDrawSubMesh(commandBuffer, submeshIndex);
+                submeshIndex++;
             }
-            if (doesMeshHaveMaterial && material.TextureMapEnabled) {
-                VkDescriptorSet descriptorSet[1] = { material.TextureMap->GetDescriptorSet() };
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 2, 1, descriptorSet, 0, nullptr);
-            }
-            else {
-                VkDescriptorSet descriptorSet[1] = { VulkanTexture::GetEmptyDescriptorSet() };
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 2, 1, descriptorSet, 0, nullptr);
-            }
-
-            vkCmdPushConstants(commandBuffer, m_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
-
-            auto& vulkanmesh = scene->m_SceneData.Meshes[mesh.MeshIndex];
-            vulkanmesh->Bind(commandBuffer);
-            vulkanmesh->OnDraw(commandBuffer);
         }
     }
 
@@ -173,13 +183,16 @@ namespace Flameberry {
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
+            if (!mesh.MeshUUID)
+                continue;
+
             ModelMatrixPushConstantData pushContantData;
             pushContantData.ModelMatrix = transform.GetTransform();
             vkCmdPushConstants(commandBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
 
-            auto& vulkanmesh = scene->m_SceneData.Meshes[mesh.MeshIndex];
-            vulkanmesh->Bind(commandBuffer);
-            vulkanmesh->OnDraw(commandBuffer);
+            const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
+            staticMesh->Bind(commandBuffer);
+            staticMesh->OnDraw(commandBuffer);
         }
     }
 

@@ -11,9 +11,9 @@ Entities:
   - Entity: 8487694862307973660
     TagComponent: Sponza
     TransformComponent:
-      Translation: [0, -0.0156020522, 0]
+      Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Scale: [0.150000006, 0.150000006, 0.150000006]
     MeshComponent:
       MeshIndex: 5
       MaterialName: Material_4
@@ -27,9 +27,9 @@ Entities:
       Color: [1, 0, 0]
       Intensity: 10
   - Entity: 13871557613990763745
-    TagComponent: monkey
+    TagComponent: Monkey
     TransformComponent:
-      Translation: [3.71944618, 3.35144806, 0]
+      Translation: [3.71944618, 4.03969097, 0]
       Rotation: [0, -0.549166381, 0]
       Scale: [8.68559551, 8.68559837, 8.68559551]
     MeshComponent:
@@ -46,17 +46,17 @@ Entities:
       Intensity: 32.5999985
 Meshes:
   - Mesh: sphere
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/sphere.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/sphere.obj
   - Mesh: platform
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/platform.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/platform.obj
   - Mesh: cylinder
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/cylinder.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/cylinder.obj
   - Mesh: viking_room
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/viking_room.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/viking_room.obj
   - Mesh: monkey
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/monkey.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/monkey.obj
   - Mesh: sponza
-    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/models/sponza.obj
+    FilePath: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/models/sponza/sponza.obj
 Materials:
   - Material: METAL
     Albedo: [1, 0, 1]
@@ -69,7 +69,7 @@ Materials:
     Roughness: 0.200000003
     Metallic: false
     TextureMapEnabled: true
-    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/brick.png
+    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/textures/brick.png
   - Material: YELLOW_NON_METAL
     Albedo: [1, 1, 0]
     Roughness: 0.699999988
@@ -81,7 +81,7 @@ Materials:
     Roughness: 0.600000024
     Metallic: false
     TextureMapEnabled: true
-    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/assets/textures/viking_room.png
+    TextureMap: /Users/flameberry/Developer/FlameberryEngine/SandboxApp/Assets/textures/viking_room.png
   - Material: Default
     Albedo: [0.268166065, 0.911764681, 0.779258966]
     Roughness: 0.200000003

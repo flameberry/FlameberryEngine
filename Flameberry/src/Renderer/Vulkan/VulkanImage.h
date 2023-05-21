@@ -10,6 +10,7 @@ namespace Flameberry {
         VulkanImage(
             uint32_t width,
             uint32_t height,
+            uint32_t mipLevels,
             VkFormat format,
             VkImageTiling tiling,
             VkImageUsageFlags usage,
@@ -19,6 +20,7 @@ namespace Flameberry {
         );
         ~VulkanImage();
 
+        void GenerateMipMaps();
         void WriteFromBuffer(VkBuffer srcBuffer);
         void TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
 
@@ -33,6 +35,7 @@ namespace Flameberry {
         VkDeviceMemory m_VkImageDeviceMemory;
 
         uint32_t m_Width, m_Height;
+        uint32_t m_MipLevels = 1;
         VkFormat m_VkImageFormat;
     };
 }

@@ -1,7 +1,6 @@
 #include "ContentBrowserPanel.h"
 
 #include "Flameberry.h"
-#include "../project.h"
 #include "../Utils.h"
 
 #define FL_BACK_ARROW_ICON 0
@@ -29,8 +28,9 @@ static std::vector<std::string> g_IconPaths = {
 };
 
 namespace Flameberry {
-    ContentBrowserPanel::ContentBrowserPanel()
-        : m_CurrentDirectory(project::g_AssetDirectory),
+    ContentBrowserPanel::ContentBrowserPanel(const std::filesystem::path& projectDirectory)
+        : m_ProjectDirectory(projectDirectory),
+        m_CurrentDirectory(projectDirectory / "Assets"),
         m_VkTextureSampler(VulkanTexture::GetDefaultSampler())
     {
         for (const auto& path : g_IconPaths)
@@ -41,26 +41,44 @@ namespace Flameberry {
     {
     }
 
-    void ContentBrowserPanel::RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator, bool open)
+    void ContentBrowserPanel::RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator)
     {
-        static bool is_selected = false;
-        static const int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
+        bool is_leaf = true;
+        for (auto& directory : std::filesystem::directory_iterator{ parent }) {
+            is_leaf = is_leaf && !directory.is_directory();
+        }
+        const bool is_selected = m_CurrentDirectory == parent.path();
+        m_IsSelectedNodeDisplayed = m_IsSelectedNodeDisplayed || is_selected;
+
+        const int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
             | ImGuiTreeNodeFlags_OpenOnArrow
             | ImGuiTreeNodeFlags_SpanFullWidth
-            | (open ? ImGuiTreeNodeFlags_DefaultOpen : 0);
+            | (is_leaf ? ImGuiTreeNodeFlags_Leaf : 0);
 
         ImGui::PushID(parent.path().filename().c_str());
-        bool is_opened = ImGui::TreeNodeEx("##node", treeNodeFlags);
-        if (ImGui::IsItemClicked())
-        {
-            m_CurrentDirectory = parent.path();
-            is_selected = true;
+
+        float textColor = is_selected ? 0.0f : 1.0f;
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        if (is_selected)
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
+
+        if (!m_IsSelectedNodeDisplayed) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
         }
+        bool is_opened = ImGui::TreeNodeEx("##node", treeNodeFlags);
+
+        if (ImGui::IsItemClicked())
+            m_CurrentDirectory = parent.path();
+
         ImGui::SameLine();
         ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FOLDER_ICON]->GetDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() });
         ImGui::SameLine();
         ImGui::Text("%s", parent.path().filename().c_str());
+        ImGui::PopStyleColor(is_selected ? 4 : 3);
         ImGui::PopID();
+
         if (is_opened) {
             for (auto& directory : iterator) {
                 if (directory.is_directory()) {
@@ -85,15 +103,17 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
         ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
 
-        for (auto& directory : std::filesystem::directory_iterator(project::g_AssetDirectory)) {
+        m_IsSelectedNodeDisplayed = false;
+        for (auto& directory : std::filesystem::directory_iterator(m_ProjectDirectory / "Assets")) {
             if (directory.is_directory()) {
-                RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator(directory), false);
+                RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator(directory));
             }
         }
 
         ImGui::EndChild();
-        ImGui::SameLine();
         ImGui::PopStyleVar();
+
+        ImGui::SameLine();
 
         ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleVar();
@@ -108,10 +128,10 @@ namespace Flameberry {
 
         float arrowSize = 18.0f;
 
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_BACK_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_BACK_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != m_ProjectDirectory / "Assets")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FORWARD_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != project::g_AssetDirectory)
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FORWARD_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != m_ProjectDirectory / "Assets")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
 
@@ -125,7 +145,7 @@ namespace Flameberry {
 
         auto bigFont = ImGui::GetIO().Fonts->Fonts[0];
         ImGui::PushFont(bigFont);
-        ImGui::Text("Assets / %s", std::filesystem::relative(m_CurrentDirectory, project::g_AssetDirectory).c_str());
+        ImGui::Text("%s", std::filesystem::relative(m_CurrentDirectory, m_ProjectDirectory).c_str());
         ImGui::PopFont();
 
         ImGui::Separator();
@@ -135,7 +155,7 @@ namespace Flameberry {
         for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory })
         {
             const std::filesystem::path& filePath = directory.path();
-            std::filesystem::path relativePath = std::filesystem::relative(directory.path(), project::g_AssetDirectory);
+            std::filesystem::path relativePath = std::filesystem::relative(directory.path(), m_ProjectDirectory);
 
             if (filePath.filename().string() == ".DS_Store")
                 continue;
@@ -186,7 +206,7 @@ namespace Flameberry {
             }
 
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && directory.is_directory())
-                m_CurrentDirectory /= directory.path().filename().c_str();
+                m_CurrentDirectory = directory.path();
 
             auto columnWidth = ImGui::GetColumnWidth();
             const auto& filename_noextension = is_file_supported ? directory.path().filename().replace_extension() : directory.path().filename();
