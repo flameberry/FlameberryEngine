@@ -217,12 +217,18 @@ namespace Flameberry {
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && directory.is_directory())
                 m_CurrentDirectory = directory.path();
 
-            auto columnWidth = ImGui::GetColumnWidth();
+            auto columnWidth = cellSize;
             auto textWidth = ImGui::CalcTextSize(filename_noextension.c_str()).x;
+            auto aSize = ImGui::CalcTextSize("A");
 
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (columnWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);
-            uint32_t limit = 10;
-            ImGui::TextWrapped("%.*s%s", limit, filename_noextension.c_str(), filename_noextension.string().length() > limit - 3 ? "..." : "");
+            if (textWidth > columnWidth) {
+                uint32_t characters = columnWidth / aSize.x - 3;
+                ImGui::Text("%.*s%s", characters, filename_noextension.c_str(), "...");
+            }
+            else {
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (columnWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);
+                ImGui::Text("%s", filename_noextension.c_str());
+            }
 
             ImGui::NextColumn();
             ImGui::PopID();
