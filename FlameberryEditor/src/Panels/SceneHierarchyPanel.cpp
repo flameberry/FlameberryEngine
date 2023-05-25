@@ -227,17 +227,16 @@ namespace Flameberry {
 
     void SceneHierarchyPanel::RenameNode(std::string& tag)
     {
-        char* buffer = new char[256];
-        memcpy(buffer, tag.c_str(), tag.size());
+        memcpy(m_RenameBuffer, tag.c_str(), tag.size());
 
         ImGui::SameLine();
         ImGui::SetKeyboardFocusHere();
         ImGui::PushItemWidth(-1.0f);
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
-        if (ImGui::InputText("###Rename", buffer, 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
+        if (ImGui::InputText("###Rename", m_RenameBuffer, 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
         {
-            tag = std::string(buffer);
+            tag = std::string(m_RenameBuffer);
             m_RenamedEntity = ecs::entity_handle::null;
         }
         ImGui::PopStyleVar();
