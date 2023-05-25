@@ -21,6 +21,6 @@ namespace Flameberry {
         std::vector<std::shared_ptr<VulkanTexture>> m_IconTextures;
 
         float m_FirstChildSize = 150.0f, m_SecondChildSize = 0.0f;
-        bool m_IsSelectedNodeDisplayed = false;
+        bool m_IsSelectedNodeDisplayed = false, m_IsSearchBoxFocused = false;
     };
 }

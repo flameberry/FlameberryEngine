@@ -19,6 +19,7 @@
 #include "Core/Math.h"
 #include "Core/Timer.h"
 #include "Core/Profiler.h"
+#include "Core/PatternMatching.h"
 
 #include "Platform/Utils.h"
 #include "ImGui/ImGuiLayer.h"

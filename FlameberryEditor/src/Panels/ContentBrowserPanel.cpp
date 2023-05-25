@@ -144,10 +144,22 @@ namespace Flameberry {
 
         char search_input[256] = { '\0' };
         ImGui::PushItemWidth(150.0f);
-        ImGui::InputTextWithHint("##search", "search", search_input, 256);
-        bool isSearchBoxActive = ImGui::IsItemActive() && ImGui::IsItemFocused();
+        if (m_IsSearchBoxFocused)
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+            ImGui::PushStyleColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        }
+
+        ImGui::InputTextWithHint("##search", "Search...", search_input, 256);
+
+        if (m_IsSearchBoxFocused)
+        {
+            ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
+        }
         ImGui::PopItemWidth();
 
+        m_IsSearchBoxFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
         ImGui::SameLine();
 
         auto bigFont = ImGui::GetIO().Fonts->Fonts[0];
@@ -166,6 +178,13 @@ namespace Flameberry {
 
             if (filePath.filename().string() == ".DS_Store")
                 continue;
+
+            if (m_IsSearchBoxFocused) {
+                // TODO: Maybe some optimisation to not search again if the input string is same
+                int index = kmpSearch(filePath.filename().replace_extension().c_str(), search_input, true);
+                if (index == -1)
+                    continue;
+            }
 
             ImGui::PushID(filePath.filename().c_str());
             std::string ext = filePath.extension().string();
