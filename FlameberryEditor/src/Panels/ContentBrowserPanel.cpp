@@ -180,8 +180,6 @@ namespace Flameberry {
                 continue;
 
             if (m_SearchInputBuffer[0] != '\0') {
-                FL_LOG("Searching...");
-
                 // TODO: Maybe some optimisation to not search again if the input string is same
                 int index = kmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer, true);
                 if (index == -1)
@@ -267,5 +265,7 @@ namespace Flameberry {
         ImGui::EndChild();
 
         ImGui::End();
+
+        ImGui::ShowDemoWindow();
     }
 }

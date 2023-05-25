@@ -323,6 +323,10 @@ namespace Flameberry {
 
             if (staticMesh)
             {
+                constexpr uint32_t limit = 6;
+                ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
+                ImGui::BeginChild("MaterialList", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * limit), false, window_flags);
+
                 int i = 0;
                 for (const auto& submesh : staticMesh->GetSubMeshes())
                 {
@@ -331,6 +335,7 @@ namespace Flameberry {
                         i++;
                     }
                 }
+                ImGui::EndChild();
             }
 
             // if (ImGui::BeginCombo("##combo1", mesh.MaterialName.c_str())) // The second parameter is the label previewed before opening the combo.

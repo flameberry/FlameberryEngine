@@ -25,7 +25,7 @@ namespace Flameberry {
         cameraInfo.aspectRatio = Application::Get().GetWindow().GetWidth() / Application::Get().GetWindow().GetHeight();
         cameraInfo.FOV = 45.0f;
         cameraInfo.zNear = 0.1f;
-        cameraInfo.zFar = 500.0f;
+        cameraInfo.zFar = 1000.0f;
         cameraInfo.cameraPostion = glm::vec3(0.0f, 0.0f, 4.0f);
         cameraInfo.cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
 
