@@ -102,7 +102,7 @@ namespace Flameberry {
         ImGui::Begin("Content Browser");
         ImGui::PopStyleVar();
 
-        m_SecondChildSize = ImGui::GetWindowContentRegionMax().x - m_FirstChildSize;
+        m_SecondChildSize = ImGui::GetWindowContentRegionWidth() - m_FirstChildSize - 8.0f;
 
         Utils::Splitter(true, 3.0f, &m_FirstChildSize, &m_SecondChildSize, 10.0f, 80.0f);
 
@@ -217,10 +217,11 @@ namespace Flameberry {
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && directory.is_directory())
                 m_CurrentDirectory = directory.path();
 
-            auto columnWidth = cellSize;
+            auto columnWidth = ImGui::GetColumnWidth();
             auto textWidth = ImGui::CalcTextSize(filename_noextension.c_str()).x;
-            auto aSize = ImGui::CalcTextSize("A");
+            const auto aSize = ImGui::CalcTextSize("A");
 
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 5.0f, 20.0f });
             if (textWidth > columnWidth) {
                 uint32_t characters = columnWidth / aSize.x - 3;
                 ImGui::Text("%.*s%s", characters, filename_noextension.c_str(), "...");
@@ -229,6 +230,7 @@ namespace Flameberry {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (columnWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);
                 ImGui::Text("%s", filename_noextension.c_str());
             }
+            ImGui::PopStyleVar();
 
             ImGui::NextColumn();
             ImGui::PopID();
@@ -244,7 +246,5 @@ namespace Flameberry {
         ImGui::EndChild();
 
         ImGui::End();
-
-        ImGui::ShowDemoWindow();
     }
 }
