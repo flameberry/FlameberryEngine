@@ -4,7 +4,7 @@ EnvironmentMap:
   EnableSkybox: false
   Reflections: false
   DirectionalLight:
-    Direction: [-1, -1, 1.13]
+    Direction: [2.0999999, -0.99000001, 0.74000001]
     Color: [1, 1, 1]
     Intensity: 4
 Entities:

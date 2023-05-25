@@ -53,6 +53,7 @@ namespace Flameberry {
         const int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
             | ImGuiTreeNodeFlags_OpenOnArrow
             | ImGuiTreeNodeFlags_SpanFullWidth
+            | ImGuiTreeNodeFlags_FramePadding
             | (is_leaf ? ImGuiTreeNodeFlags_Leaf : 0);
 
         ImGui::PushID(parent.path().filename().c_str());
@@ -67,13 +68,19 @@ namespace Flameberry {
         if (!m_IsSelectedNodeDisplayed) {
             ImGui::SetNextItemOpen(true, ImGuiCond_Always);
         }
+
+        constexpr float framePaddingY = 1.8f;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, framePaddingY });
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
         bool is_opened = ImGui::TreeNodeEx("##node", treeNodeFlags);
+        ImGui::PopStyleVar(2);
 
         if (ImGui::IsItemClicked())
             m_CurrentDirectory = parent.path();
 
         ImGui::SameLine();
-        ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FOLDER_ICON]->GetDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() });
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FOLDER_ICON]->GetDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight() + framePaddingY, ImGui::GetTextLineHeight() + framePaddingY });
         ImGui::SameLine();
         ImGui::Text("%s", parent.path().filename().c_str());
         ImGui::PopStyleColor(is_selected ? 4 : 3);
@@ -118,7 +125,7 @@ namespace Flameberry {
         ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleVar();
 
-        float iconSize = 80.0f, padding = 10.0f;
+        float iconSize = 75.0f, padding = 15.0f;
         float cellSize = iconSize + padding;
         uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize;
         columns = columns >= 1 ? columns : 1;
@@ -186,6 +193,8 @@ namespace Flameberry {
 
             ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[currentIconIndex]->GetDescriptorSet()), ImVec2{ iconSize, iconSize });
 
+            const auto& filename_noextension = is_file_supported ? directory.path().filename().replace_extension() : directory.path().filename();
+
             if (ImGui::BeginPopupContextItem())
             {
                 if (ImGui::MenuItem("Delete"))
@@ -209,12 +218,11 @@ namespace Flameberry {
                 m_CurrentDirectory = directory.path();
 
             auto columnWidth = ImGui::GetColumnWidth();
-            const auto& filename_noextension = is_file_supported ? directory.path().filename().replace_extension() : directory.path().filename();
             auto textWidth = ImGui::CalcTextSize(filename_noextension.c_str()).x;
 
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (columnWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);
             uint32_t limit = 10;
-            ImGui::TextWrapped("%.*s%s", limit, filename_noextension.c_str(), filename_noextension.string().length() > limit - 2 ? "..." : "");
+            ImGui::TextWrapped("%.*s%s", limit, filename_noextension.c_str(), filename_noextension.string().length() > limit - 3 ? "..." : "");
 
             ImGui::NextColumn();
             ImGui::PopID();
@@ -230,5 +238,7 @@ namespace Flameberry {
         ImGui::EndChild();
 
         ImGui::End();
+
+        ImGui::ShowDemoWindow();
     }
 }
