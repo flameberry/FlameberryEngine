@@ -78,6 +78,23 @@ namespace Flameberry {
             return nullptr;
         }
 
+        template <typename Type>
+        static void RegisterAsset(const std::shared_ptr<Type>& asset, const std::string& path = "")
+        {
+            constexpr AssetType assetType = GetAssetTypeEnumFromType<Type>();
+            static_assert(assetType != AssetType::NONE, "Cannot get asset of invalid Asset Type!");
+
+            if (s_AssetTable.find(asset->GetUUID()) == s_AssetTable.end())
+            {
+                s_AssetTable[asset->GetUUID()] = { assetType, asset };
+                if (!path.empty())
+                    s_AssetFilePathToUUIDTable[path] = asset->GetUUID();
+                return;
+            }
+            FL_WARN("Failed to register asset with UUID: {0}, Asset already registered!", asset->GetUUID());
+
+        }
+
         static bool IsAssetHandleValid(UUID handle)
         {
             return s_AssetTable.find(handle) != s_AssetTable.end();

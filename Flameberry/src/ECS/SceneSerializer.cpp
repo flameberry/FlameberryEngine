@@ -234,7 +234,9 @@ namespace Flameberry {
         {
             for (auto mesh : meshes)
             {
-                auto meshAsset = AssetManager::TryGetOrLoadAssetFromFile<StaticMesh>(mesh["FilePath"].as<std::string>());
+                auto meshAsset = StaticMesh::LoadFromFile(mesh["FilePath"].as<std::string>().c_str());
+                meshAsset->m_UUID = mesh["Mesh"].as<uint64_t>();
+                AssetManager::RegisterAsset<StaticMesh>(meshAsset, mesh["FilePath"].as<std::string>());
 
                 for (auto fbMaterial : mesh["NonDerivedMaterials"])
                 {
