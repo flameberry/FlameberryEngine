@@ -47,6 +47,7 @@ namespace Flameberry {
         std::vector<VkFence> m_ImagesInFlight;
 
         uint32_t m_ImageIndex, m_CurrentFrameIndex;
+        uint32_t m_ImageCount = 0;
     public:
         constexpr static uint32_t MAX_FRAMES_IN_FLIGHT = 3;
     };

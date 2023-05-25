@@ -10,6 +10,8 @@ EnvironmentMap:
 Entities:
   []
 Meshes:
-  []
-Materials:
-  []
+  - Mesh: 2329020293204102
+    FilePath: Assets/Meshes/cube.obj
+    FBMaterials:
+      - SubMeshIndex: 0
+        FBMaterial: Assets/Materials/Test.fbmat

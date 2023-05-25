@@ -1,83 +1,15 @@
 #include "SceneSerializer.h"
 
 #include <fstream>
-#include <yaml-cpp/yaml.h>
 
+#include "Core/YamlUtils.h"
 #include "Core/Timer.h"
 #include "Component.h"
 
 #include "Renderer/Vulkan/VulkanContext.h"
 #include "AssetManager/AssetManager.h"
 
-namespace YAML {
-    template<>
-    struct convert<glm::vec3>
-    {
-        static Node encode(const glm::vec3& rhs)
-        {
-            Node node;
-            node.push_back(rhs.x);
-            node.push_back(rhs.y);
-            node.push_back(rhs.z);
-            node.SetStyle(EmitterStyle::Flow);
-            return node;
-        }
-
-        static bool decode(const Node& node, glm::vec3& rhs)
-        {
-            if (!node.IsSequence() || node.size() != 3)
-                return false;
-
-            rhs.x = node[0].as<float>();
-            rhs.y = node[1].as<float>();
-            rhs.z = node[2].as<float>();
-            return true;
-        }
-    };
-
-    template<>
-    struct convert<glm::vec4>
-    {
-        static Node encode(const glm::vec4& rhs)
-        {
-            Node node;
-            node.push_back(rhs.x);
-            node.push_back(rhs.y);
-            node.push_back(rhs.z);
-            node.push_back(rhs.w);
-            node.SetStyle(EmitterStyle::Flow);
-            return node;
-        }
-
-        static bool decode(const Node& node, glm::vec4& rhs)
-        {
-            if (!node.IsSequence() || node.size() != 4)
-                return false;
-
-            rhs.x = node[0].as<float>();
-            rhs.y = node[1].as<float>();
-            rhs.z = node[2].as<float>();
-            rhs.w = node[3].as<float>();
-            return true;
-        }
-    };
-}
-
 namespace Flameberry {
-    YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
-    {
-        out << YAML::Flow;
-        out << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
-        return out;
-    }
-
-    YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& v)
-    {
-        out << YAML::Flow;
-        out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
-        return out;
-    }
-
     SceneSerializer::SceneSerializer(const std::shared_ptr<Scene>& scene)
         : m_ActiveScene(scene)
     {
@@ -118,55 +50,54 @@ namespace Flameberry {
 
         out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 
+        std::vector<UUID> meshUUIDs;
+
         m_ActiveScene->m_Registry->each([&](ecs::entity_handle& entity)
             {
-                SerializeEntity(out, entity);
+                SerializeEntity(out, entity, meshUUIDs);
             }
         );
         out << YAML::EndSeq; // Entities
 
-        // // Serialize Meshes loaded
-        // out << YAML::Key << "Meshes" << YAML::Value << YAML::BeginSeq;
+        // Serialize Meshes loaded
+        out << YAML::Key << "Meshes" << YAML::Value << YAML::BeginSeq;
 
-        // for (const auto& mesh : m_ActiveScene->m_SceneData.Meshes)
-        // {
-        //     out << YAML::BeginMap;
-        //     out << YAML::Key << "Mesh" << YAML::Value << mesh->GetName();
-        //     out << YAML::Key << "FilePath" << YAML::Value << mesh->GetFilePath();
-        //     out << YAML::EndMap; // Mesh
-        // }
+        for (const auto& uuid : meshUUIDs)
+        {
+            auto mesh = AssetManager::GetAsset<StaticMesh>(uuid);
 
-        // out << YAML::EndSeq; // Meshes
+            out << YAML::BeginMap;
+            out << YAML::Key << "Mesh" << YAML::Value << mesh->GetUUID();
+            out << YAML::Key << "FilePath" << YAML::Value << mesh->GetFilePath();
 
-        // // Serialize Materials
-        // out << YAML::Key << "Materials" << YAML::Value << YAML::BeginSeq;
+            out << YAML::Key << "NonDerivedMaterials" << YAML::BeginSeq;
 
-        // for (const auto& [materialName, material] : m_ActiveScene->m_SceneData.Materials)
-        // {
-        //     out << YAML::BeginMap;
-        //     out << YAML::Key << "Material" << YAML::Value << material.GetUUID();
-        //     out << YAML::Key << "Name" << YAML::Value << materialName;
-        //     out << YAML::Key << "Albedo" << YAML::Value << material.Albedo;
-        //     out << YAML::Key << "Roughness" << YAML::Value << material.Roughness;
-        //     out << YAML::Key << "Metallic" << YAML::Value << material.Metallic;
-        //     out << YAML::Key << "TextureMapEnabled" << YAML::Value << material.TextureMapEnabled;
-        //     if (material.TextureMapEnabled)
-        //         out << YAML::Key << "TextureMap" << YAML::Value << material.TextureMap->GetFilePath();
-        //     else
-        //         out << YAML::Key << "TextureMap" << YAML::Value << "None";
-        //     out << YAML::EndMap; // Material
-        // }
-        // out << YAML::EndSeq; // Materials
+            uint32_t i = 0;
+            for (const auto& submesh : mesh->GetSubMeshes())
+            {
+                auto mat = AssetManager::GetAsset<Material>(submesh.MaterialUUID);
+                if (!mat->IsDerived)
+                {
+                    out << YAML::BeginMap;
+                    out << YAML::Key << "FlameberryMaterial" << YAML::Value << mat->FilePath;
+                    out << YAML::Key << "SubMeshIndex" << YAML::Value << i;
+                    out << YAML::EndMap;
+                }
+                i++;
+            }
 
+            out << YAML::EndSeq;
+            out << YAML::EndMap; // Mesh
+        }
+        out << YAML::EndSeq; // Meshes
         out << YAML::EndMap; // Scene
 
         std::ofstream fout(scenePath);
         fout << out.c_str();
-
         return true;
     }
 
-    void SceneSerializer::SerializeEntity(YAML::Emitter& out, ecs::entity_handle& entity)
+    void SceneSerializer::SerializeEntity(YAML::Emitter& out, ecs::entity_handle& entity, std::vector<UUID>& meshUUIDs)
     {
         out << YAML::BeginMap;
         out << YAML::Key << "Entity" << YAML::Value << m_ActiveScene->m_Registry->get<IDComponent>(entity).ID;
@@ -198,6 +129,8 @@ namespace Flameberry {
             out << YAML::Key << "MeshComponent" << YAML::BeginMap;
             out << YAML::Key << "MeshUUID" << YAML::Value << (uint64_t)(mesh.MeshUUID);
             out << YAML::EndMap; // Mesh Component
+
+            meshUUIDs.emplace_back(mesh.MeshUUID);
         }
 
         if (m_ActiveScene->m_Registry->has<LightComponent>(entity))
@@ -296,35 +229,20 @@ namespace Flameberry {
             }
         }
 
-        // auto meshes = data["Meshes"];
-        // if (meshes)
-        // {
-        //     for (auto mesh : meshes)
-        //     {
-        //         if (mesh)
-        //             m_ActiveScene->m_SceneData.Meshes.emplace_back(StaticMesh::TryGetOrLoadMesh(mesh["FilePath"].as<std::string>()));
-        //     }
-        // }
+        auto meshes = data["Meshes"];
+        if (meshes)
+        {
+            for (auto mesh : meshes)
+            {
+                auto meshAsset = AssetManager::TryGetOrLoadAssetFromFile<StaticMesh>(mesh["FilePath"].as<std::string>());
 
-        // auto materials = data["Materials"];
-        // if (materials)
-        // {
-        //     for (auto material : materials)
-        //     {
-        //         if (material)
-        //         {
-        //             bool textureMapEnabled = material["TextureMapEnabled"].as<bool>();
-        //             m_ActiveScene->m_SceneData.Materials[material["Material"].as<std::string>()] = Material{
-        //                 material["Material"].as<std::string>(),
-        //                 material["Albedo"].as<glm::vec3>(),
-        //                 material["Roughness"].as<float>(),
-        //                 material["Metallic"].as<bool>(),
-        //                 textureMapEnabled,
-        //                 textureMapEnabled ? VulkanTexture::TryGetOrLoadTexture(material["TextureMap"].as<std::string>().c_str()) : nullptr
-        //             };
-        //         }
-        //     }
-        // }
+                for (auto fbMaterial : mesh["NonDerivedMaterials"])
+                {
+                    auto mat = AssetManager::TryGetOrLoadAssetFromFile<Material>(fbMaterial["FlameberryMaterial"].as<std::string>());
+                    meshAsset->m_SubMeshes[fbMaterial["SubMeshIndex"].as<uint32_t>()].MaterialUUID = mat->GetUUID();
+                }
+            }
+        }
         return true;
     }
 }

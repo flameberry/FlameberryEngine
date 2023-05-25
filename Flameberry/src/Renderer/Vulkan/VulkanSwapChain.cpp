@@ -66,10 +66,9 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain));
         FL_INFO("Created Vulkan Swap Chain!");
 
-        uint32_t vk_swap_chain_image_count = 0;
-        vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, nullptr);
-        m_VkSwapChainImages.resize(vk_swap_chain_image_count);
-        vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, m_VkSwapChainImages.data());
+        vkGetSwapchainImagesKHR(device, m_VkSwapChain, &m_ImageCount, nullptr);
+        m_VkSwapChainImages.resize(m_ImageCount);
+        vkGetSwapchainImagesKHR(device, m_VkSwapChain, &m_ImageCount, m_VkSwapChainImages.data());
 
         CreateSyncObjects();
     }
@@ -91,7 +90,7 @@ namespace Flameberry {
 
         if (m_ImagesInFlight[m_ImageIndex] != VK_NULL_HANDLE) // Check if a previous frame is using this image (i.e. there is its fence to wait on)
             vkWaitForFences(device, 1, &m_ImagesInFlight[m_ImageIndex], VK_TRUE, UINT64_MAX);
-        m_ImagesInFlight[m_ImageIndex] = m_InFlightFences[m_CurrentFrameIndex];// Mark the image as now being in use by this frame
+        m_ImagesInFlight[m_ImageIndex] = m_InFlightFences[m_CurrentFrameIndex]; // Mark the image as now being in use by this frame
 
         // Submit Queue
         VkSubmitInfo vk_submit_info{};

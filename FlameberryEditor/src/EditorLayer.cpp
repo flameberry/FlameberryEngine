@@ -112,13 +112,15 @@ namespace Flameberry {
         m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>(m_ActiveScene.get());
         m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>(m_ProjectPath);
 
-        auto mesh = AssetManager::TryGetOrLoadAssetFromFile<StaticMesh>("Assets/models/cube.obj");
-        auto meshRef = AssetManager::GetAsset<StaticMesh>(mesh->GetUUID());
-        auto texture = AssetManager::TryGetOrLoadAssetFromFile<VulkanTexture>("Assets/textures/brick.png");
-        auto textureRef = AssetManager::GetAsset<VulkanTexture>(texture->GetUUID());
+        // std::shared_ptr<Material> material = std::make_shared<Material>();
+        // material->Name = "Test Material";
+        // material->TextureMapEnabled = true;
+        // material->TextureMap = VulkanTexture::TryGetOrLoadTexture("Assets/Textures/brick.png");
+        // MaterialSerializer::Serialize(material, "Assets/Materials/Test.fbmat");
 
-        FL_LOG(meshRef->GetFilePath());
-        FL_LOG(textureRef->GetFilePath());
+        // auto mat = MaterialSerializer::Deserialize("Assets/Materials/Test.fbmat");
+
+        // FL_DEBUGBREAK();
     }
 
     void EditorLayer::OnUpdate(float delta)
@@ -128,7 +130,6 @@ namespace Flameberry {
         if (VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginFrame())
         {
             glm::mat4 lightViewProjectionMatrix;
-            if (m_VulkanRenderer->EnableShadows())
             {
                 FL_PROFILE_SCOPE("Shadow Pass");
                 glm::mat4 lightProjectionMatrix = glm::ortho<float>(-40, 40, -40, 40, m_ZNearFar.x, m_ZNearFar.y);
@@ -225,7 +226,7 @@ namespace Flameberry {
                 FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
 
                 if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath)) {
-                    if (ext == ".scene" || ext == ".json" || ext == ".berry") {
+                    if (ext == ".scene" || ext == ".berry") {
                         m_ShouldOpenAnotherScene = true;
                         m_ScenePathToBeOpened = filePath;
                     }

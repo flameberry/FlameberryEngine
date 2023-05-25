@@ -1,0 +1,7 @@
+UUID: 10459709004153775111
+Name: Test Material
+Albedo: [0.5, 0.5, 0.5]
+Roughness: 0.2
+Metallic: false
+TextureMapEnabled: true
+TextureMap: Assets/Textures/brick.png

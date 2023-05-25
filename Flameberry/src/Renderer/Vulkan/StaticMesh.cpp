@@ -36,7 +36,7 @@ namespace Flameberry {
     StaticMesh::StaticMesh(const std::string& path)
         : m_FilePath(path)
     {
-        LoadFromFile(path);
+        Load(path);
         CreateBuffers();
 
         uint32_t lengthSlash = m_FilePath.find_last_of('/') + 1;
@@ -71,7 +71,7 @@ namespace Flameberry {
         vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, 1, submesh.IndexOffset, 0, 0);
     }
 
-    void StaticMesh::LoadFromFile(const std::string& path)
+    void StaticMesh::Load(const std::string& path)
     {
         FL_SCOPED_TIMER("Load_Model");
         tinyobj::attrib_t attrib;
@@ -90,6 +90,7 @@ namespace Flameberry {
 
         for (const auto& mat : materials) {
             auto materialAsset = AssetManager::CreateAsset<Material>();
+            materialAsset->IsDerived = true;
             materialAsset->Name = mat.name;
             materialAsset->Albedo = { mat.diffuse[0], mat.diffuse[1], mat.diffuse[2] };
             materialAsset->Roughness = mat.roughness;

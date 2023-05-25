@@ -43,7 +43,7 @@ namespace Flameberry {
                 return std::static_pointer_cast<Tp>(asset.AssetRef);
             }
 
-            auto asset = std::make_shared<Tp>(path);
+            auto asset = Tp::LoadFromFile(path.c_str());
             s_AssetTable[asset->GetUUID()] = { assetType, asset };
             s_AssetFilePathToUUIDTable[path] = asset->GetUUID();
             return asset;

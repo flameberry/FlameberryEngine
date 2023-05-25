@@ -34,8 +34,10 @@ namespace Flameberry {
         std::string GetName() const { return m_Name; }
         std::string GetFilePath() const { return m_FilePath; }
         const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
+
+        static std::shared_ptr<StaticMesh> LoadFromFile(const char* path) { return std::make_shared<StaticMesh>(path); }
     private:
-        void LoadFromFile(const std::string& path);
+        void Load(const std::string& path);
         void CreateBuffers();
     private:
         std::vector<VulkanVertex> m_Vertices; // TODO: Does it need to be stored?
@@ -47,5 +49,7 @@ namespace Flameberry {
 
         std::vector<SubMesh> m_SubMeshes;
         UUID m_UUID;
+
+        friend class SceneSerializer;
     };
 }

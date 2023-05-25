@@ -17,7 +17,7 @@ namespace Flameberry {
         bool SerializeScene(const std::string& scenePath);
         bool DeserializeScene(const char* scenePath);
     private:
-        void SerializeEntity(YAML::Emitter& out, ecs::entity_handle& entity);
+        void SerializeEntity(YAML::Emitter& out, ecs::entity_handle& entity, std::vector<UUID>& assetUUIDs);
     private:
         std::shared_ptr<Scene> m_ActiveScene;
     };

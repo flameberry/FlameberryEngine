@@ -8,27 +8,31 @@
 namespace Flameberry {
     struct Material
     {
-        std::string Name;
+    public:
+        // Meta Data
+        std::string Name, FilePath;
+        bool IsDerived = false;
+
+        // Actual properties
         glm::vec3 Albedo;
         float Roughness;
         bool Metallic;
-
         bool TextureMapEnabled = false;
         std::shared_ptr<VulkanTexture> TextureMap;
-
+    public:
+        static std::shared_ptr<Material> LoadFromFile(const char* path);
         UUID GetUUID() const { return m_UUID; }
 
         Material() = default;
-        Material(
-            const std::string& name,
-            const glm::vec3& albedo,
-            float roughness,
-            bool metallic,
-            bool textureMapEnabled,
-            const std::shared_ptr<VulkanTexture>& textureMap
-        ) : Name(name), Albedo(albedo), Roughness(roughness), Metallic(metallic), TextureMapEnabled(textureMapEnabled), TextureMap(textureMap)
-        {}
+        Material(UUID uuid);
     private:
         UUID m_UUID;
+    };
+
+    class MaterialSerializer
+    {
+    public:
+        static void Serialize(const std::shared_ptr<Material>& material, const char* path);
+        static std::shared_ptr<Material> Deserialize(const char* path);
     };
 }
