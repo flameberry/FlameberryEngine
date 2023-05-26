@@ -36,7 +36,7 @@ namespace Flameberry {
         void BeginShadowRenderPass(const glm::mat4& lightViewProjectionMatrix);
         void EndShadowRenderPass();
 
-        void BeginMousePickingRenderPass(const glm::vec2& mousePosition, const glm::mat4& viewProjectionMatrix);
+        void BeginMousePickingRenderPass(const glm::vec2& renderOffset, const glm::mat4& viewProjectionMatrix);
         void EndMousePickingRenderPass();
 
         template<typename... Args>
@@ -69,7 +69,7 @@ namespace Flameberry {
         void CreateMousePickingRenderPass();
         VkPipelineLayout GetMousePickingPipelineLayout() const { return m_MousePickingPipelineLayout; }
 
-        void WriteMousePickingImageToBuffer(VkBuffer buffer);
+        void WriteMousePickingImagePixelToBuffer(VkBuffer buffer, const glm::vec2& pixelOffset = { 0, 0 });
     private:
         uint32_t m_CurrentFrame = 0;
         uint32_t m_ImageIndex;

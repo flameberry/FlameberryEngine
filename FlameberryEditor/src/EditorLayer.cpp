@@ -125,7 +125,7 @@ namespace Flameberry {
         // m_CurrentMaterial = MaterialSerializer::Deserialize("Assets/Materials/Test.fbmat");
 
         m_MousePickingBuffer = std::make_unique<VulkanBuffer>(
-            m_ViewportSize.x * m_ViewportSize.y * sizeof(int32_t),
+            sizeof(int32_t),
             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
         );
@@ -136,8 +136,8 @@ namespace Flameberry {
         FL_PROFILE_SCOPE("Editor_OnUpdate");
 
         bool isClickedInsideViewport = false;
-        int mouseX;
-        int mouseY;
+        int mouseX = 0;
+        int mouseY = 0;
 
         if (VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginFrame())
         {
@@ -180,7 +180,6 @@ namespace Flameberry {
 
                 // m_SkyboxRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, "");
                 m_SceneRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_ActiveScene);
-
                 m_VulkanRenderer->EndViewportRenderPass();
             }
 
@@ -201,7 +200,7 @@ namespace Flameberry {
                     FL_PROFILE_SCOPE("Last Mouse Picking Pass");
                     isClickedInsideViewport = true;
 
-                    m_VulkanRenderer->BeginMousePickingRenderPass({ mouseX, mouseY }, m_ActiveCamera.GetViewProjectionMatrix());
+                    m_VulkanRenderer->BeginMousePickingRenderPass({ mouseX, m_ViewportSize.y - mouseY }, m_ActiveCamera.GetViewProjectionMatrix());
                     m_SceneRenderer->OnDrawForMousePickingPass(commandBuffer, m_VulkanRenderer->GetMousePickingPipelineLayout(), m_ActiveCamera, m_ActiveScene);
                     m_VulkanRenderer->EndMousePickingRenderPass();
                 }
@@ -218,14 +217,12 @@ namespace Flameberry {
 
         if (isClickedInsideViewport)
         {
-            m_VulkanRenderer->WriteMousePickingImageToBuffer(m_MousePickingBuffer->GetBuffer());
-            m_MousePickingBuffer->MapMemory(m_ViewportSize.x * m_ViewportSize.y * sizeof(int32_t));
+            m_VulkanRenderer->WriteMousePickingImagePixelToBuffer(m_MousePickingBuffer->GetBuffer(), { mouseX, m_ViewportSize.y - mouseY });
+            m_MousePickingBuffer->MapMemory(sizeof(int32_t));
             int32_t* data = (int32_t*)m_MousePickingBuffer->GetMappedMemory();
-            // std::vector<int> vdata(m_ViewportSize.x * m_ViewportSize.y);
-            // memcpy(vdata.data(), data, sizeof(int32_t) * m_ViewportSize.x * m_ViewportSize.y);
-            int entityID = data[mouseX + (int)m_ViewportSize.x * (int)(m_ViewportSize.y - mouseY)];
-            FL_LOG("Selected Entity: {0}", entityID);
+            int32_t entityID = data[0];
             m_MousePickingBuffer->UnmapMemory();
+            // FL_LOG("Selected Entity: {0}", entityID);
             m_SceneHierarchyPanel->SetSelectedEntity((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
         }
 

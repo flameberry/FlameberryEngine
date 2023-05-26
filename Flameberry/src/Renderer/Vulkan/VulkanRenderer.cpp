@@ -681,7 +681,7 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreateRenderPass(device, &mouse_picking_render_pass_info, nullptr, &m_MousePickingRenderPass));
     }
 
-    void VulkanRenderer::WriteMousePickingImageToBuffer(VkBuffer buffer)
+    void VulkanRenderer::WriteMousePickingImagePixelToBuffer(VkBuffer buffer, const glm::vec2& pixelOffset)
     {
         const auto& device = VulkanContext::GetCurrentDevice();
 
@@ -716,12 +716,12 @@ namespace Flameberry {
 
         VkBufferImageCopy region{};
         region.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
-        region.imageOffset = { 0, 0 };
-        region.imageExtent = { (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y, 1 };
+        region.imageOffset = { (int)pixelOffset.x, (int)pixelOffset.y };
+        region.imageExtent = { 1, 1, 1 };
 
         region.bufferOffset = 0;
-        region.bufferRowLength = m_ViewportSize.x;
-        region.bufferImageHeight = m_ViewportSize.y;
+        region.bufferRowLength = 1;
+        region.bufferImageHeight = 1;
 
         vkCmdCopyImageToBuffer(commandBuffer, m_MousePickingImage->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
 
@@ -754,16 +754,14 @@ namespace Flameberry {
         device->EndSingleTimeCommandBuffer(commandBuffer);
     }
 
-    void VulkanRenderer::BeginMousePickingRenderPass(const glm::vec2& mousePosition, const glm::mat4& viewProjectionMatrix)
+    void VulkanRenderer::BeginMousePickingRenderPass(const glm::vec2& renderOffset, const glm::mat4& viewProjectionMatrix)
     {
         VkRenderPassBeginInfo vk_render_pass_begin_info{};
         vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         vk_render_pass_begin_info.renderPass = m_MousePickingRenderPass;
         vk_render_pass_begin_info.framebuffer = m_MousePickingFramebuffer;
-        vk_render_pass_begin_info.renderArea.offset = { 0, 0 };
-        vk_render_pass_begin_info.renderArea.extent = VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y };
-        // vk_render_pass_begin_info.renderArea.offset = { (int32_t)mousePosition.x, (int32_t)mousePosition.y };
-        // vk_render_pass_begin_info.renderArea.extent = VkExtent2D{ 1, 1 };
+        vk_render_pass_begin_info.renderArea.offset = { (int32_t)renderOffset.x, (int32_t)renderOffset.y };
+        vk_render_pass_begin_info.renderArea.extent = VkExtent2D{ 1, 1 };
 
         std::array<VkClearValue, 2> vk_clear_values{};
         vk_clear_values[0].color = { .int32 = {-1} };
