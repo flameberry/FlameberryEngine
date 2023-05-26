@@ -16,8 +16,20 @@ Entities:
       Scale: [0.0500000007, 0.0500000007, 0.0500000007]
     MeshComponent:
       MeshUUID: 6660299724953548194
+  - Entity: 3972767720073990067
+    TagComponent: StaticMesh
+    TransformComponent:
+      Translation: [0, 2.58226037, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshUUID: 16847563272622732710
 Meshes:
   - Mesh: 6660299724953548194
     FilePath: Assets/Meshes/sponza/sponza.obj
+    NonDerivedMaterials:
+      []
+  - Mesh: 16847563272622732710
+    FilePath: Assets/Meshes/sphere.obj
     NonDerivedMaterials:
       []

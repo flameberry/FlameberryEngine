@@ -110,6 +110,8 @@ namespace Flameberry {
             s_AssetTable.clear();
             s_AssetFilePathToUUIDTable.clear();
         }
+
+        static const std::unordered_map<UUID, Asset>& GetAssetTable() { return s_AssetTable; }
     private:
         inline static std::unordered_map<UUID, Asset> s_AssetTable;
         inline static std::unordered_map<std::string, UUID> s_AssetFilePathToUUIDTable; // TODO: Ensure to hash relative file paths

@@ -51,8 +51,10 @@ namespace Flameberry {
         std::shared_ptr<ecs::registry> m_Registry;
 
         std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
-        glm::vec2 m_ViewportSize{1280, 720};
-        glm::vec2 m_ShadowMapViewportSize{1280, 720};
+        glm::vec2 m_ViewportSize{ 1280, 720 };
+        glm::vec2 m_ViewportBounds[2];
+        glm::vec2 m_ShadowMapViewportSize{ 1280, 720 };
+
         VkSampler m_VkTextureSampler;
         std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
         std::vector<VkDescriptorSet> m_ShadowMapDescriptorSets;
@@ -72,9 +74,14 @@ namespace Flameberry {
         std::shared_ptr<VulkanTexture> m_CursorIconActive, m_TranslateIconActive, m_RotateIconActive, m_ScaleIconActive;
 
         // Debug
-        glm::vec2 m_ZNearFar{0.5f, 50.0f};
+        glm::vec2 m_ZNearFar{ 0.5f, 50.0f };
         bool m_DisplayShadowMap = false;
 
         std::filesystem::path m_ProjectPath;
+
+        // Test
+        // std::shared_ptr<Material> m_CurrentMaterial;
+        std::unique_ptr<VulkanBuffer> m_MousePickingBuffer;
+        bool m_IsClickedInsideViewport = false;
     };
 }

@@ -34,6 +34,9 @@ namespace Flameberry {
         CreateViewportRenderPass();
         CreateViewportResources();
 
+        CreateMousePickingRenderPass();
+        CreateMousePickingResources();
+
         if (m_EnableShadows)
         {
             m_ShadowMapImages.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -482,6 +485,309 @@ namespace Flameberry {
         }
     }
 
+    void VulkanRenderer::CreateMousePickingResources()
+    {
+        m_MousePickingImage = std::make_shared<VulkanImage>(
+            m_ViewportSize.x,
+            m_ViewportSize.y,
+            1,
+            VK_FORMAT_R32_SINT,
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            VK_IMAGE_ASPECT_COLOR_BIT
+        );
+
+        VkFormat depthFormat = VulkanSwapChain::GetDepthFormat();
+        m_MousePickingDepthImage = VulkanImage::Create(
+            m_ViewportSize.x,
+            m_ViewportSize.y,
+            1,
+            depthFormat,
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            VK_IMAGE_ASPECT_DEPTH_BIT,
+            VK_SAMPLE_COUNT_1_BIT
+        );
+
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        std::vector<VkImageView> attachments = { m_MousePickingImage->GetImageView(), m_MousePickingDepthImage->GetImageView() };
+
+        VkFramebufferCreateInfo vk_framebuffer_create_info{};
+        vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        vk_framebuffer_create_info.renderPass = m_MousePickingRenderPass;
+        vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+        vk_framebuffer_create_info.pAttachments = attachments.data();
+        vk_framebuffer_create_info.width = m_ViewportSize.x;
+        vk_framebuffer_create_info.height = m_ViewportSize.y;
+        vk_framebuffer_create_info.layers = 1;
+
+        VK_CHECK_RESULT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_MousePickingFramebuffer));
+
+        // Create Descriptors
+        m_MousePickingUniformBuffer = std::make_unique<VulkanBuffer>(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        m_MousePickingUniformBuffer->MapMemory(sizeof(glm::mat4));
+
+        // Creating Descriptors
+        VkDescriptorSetLayoutBinding vk_uniform_buffer_object_layout_binding{};
+        vk_uniform_buffer_object_layout_binding.binding = 0;
+        vk_uniform_buffer_object_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        vk_uniform_buffer_object_layout_binding.descriptorCount = 1;
+        vk_uniform_buffer_object_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vk_uniform_buffer_object_layout_binding.pImmutableSamplers = nullptr;
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings = { vk_uniform_buffer_object_layout_binding };
+
+        m_MousePickingDescriptorLayout = std::make_unique<VulkanDescriptorLayout>(bindings);
+        m_MousePickingDescriptorWriter = std::make_unique<VulkanDescriptorWriter>(*m_MousePickingDescriptorLayout);
+
+        VkDescriptorBufferInfo vk_descriptor_buffer_info{};
+        vk_descriptor_buffer_info.buffer = m_MousePickingUniformBuffer->GetBuffer();
+        vk_descriptor_buffer_info.offset = 0;
+        vk_descriptor_buffer_info.range = sizeof(glm::mat4);
+
+        VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_MousePickingDescriptorSet, m_MousePickingDescriptorLayout->GetLayout());
+        m_MousePickingDescriptorWriter->WriteBuffer(0, &vk_descriptor_buffer_info);
+        m_MousePickingDescriptorWriter->Update(m_MousePickingDescriptorSet);
+
+        // Pipeline Creation
+        VkPushConstantRange vk_push_constant_range{};
+        vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        vk_push_constant_range.size = sizeof(MousePickingPushConstantData);
+        vk_push_constant_range.offset = 0;
+
+        VkDescriptorSetLayout descriptorSetLayouts[] = { m_MousePickingDescriptorLayout->GetLayout() };
+        VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
+
+        VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
+        vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        vk_pipeline_layout_create_info.setLayoutCount = 1;
+        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
+        vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
+        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
+
+        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_MousePickingPipelineLayout));
+
+        VulkanPipelineSpecification pipelineSpec{};
+        pipelineSpec.vertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_pickingVert.spv";
+        pipelineSpec.fragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_pickingFrag.spv";
+        pipelineSpec.subPass = 0;
+
+        pipelineSpec.pipelineLayout = m_MousePickingPipelineLayout;
+        pipelineSpec.renderPass = m_MousePickingRenderPass;
+
+        VkVertexInputBindingDescription vk_vertex_input_binding_description{};
+        vk_vertex_input_binding_description.binding = 0;
+        vk_vertex_input_binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        vk_vertex_input_binding_description.stride = sizeof(VulkanVertex);
+
+        const auto& vk_attribute_descriptions = VertexInputAttributeLayout::CreateVertexInputAttributeDescriptions(
+            {
+                VertexInputAttribute::VEC3F
+            }
+        );
+
+        VkPipelineVertexInputStateCreateInfo vk_pipeline_vertex_input_state_create_info{};
+        vk_pipeline_vertex_input_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        vk_pipeline_vertex_input_state_create_info.vertexBindingDescriptionCount = 1;
+        vk_pipeline_vertex_input_state_create_info.pVertexBindingDescriptions = &vk_vertex_input_binding_description;
+        vk_pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(vk_attribute_descriptions.size());
+        vk_pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = vk_attribute_descriptions.data();
+
+        pipelineSpec.pipelineVertexInputStateCreateInfo = vk_pipeline_vertex_input_state_create_info;
+        pipelineSpec.blendingEnable = false;
+
+        VulkanPipeline::FillWithDefaultPipelineSpecification(pipelineSpec);
+
+        m_MousePickingPipeline = std::make_unique<VulkanPipeline>(pipelineSpec);
+    }
+
+    void VulkanRenderer::CreateMousePickingRenderPass()
+    {
+        // Subpass dependencies for layout transitions
+        std::array<VkSubpassDependency, 2> dependencies;
+
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        VkSubpassDependency vk_subpass_dependency{};
+        vk_subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        vk_subpass_dependency.dstSubpass = 0;
+        vk_subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        vk_subpass_dependency.srcAccessMask = 0;
+        vk_subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        vk_subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+        VkAttachmentDescription vk_color_attachment_description{};
+        vk_color_attachment_description.format = VK_FORMAT_R32_SINT;
+        vk_color_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+        vk_color_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        vk_color_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        vk_color_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        vk_color_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        vk_color_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference vk_color_attachment_reference{};
+        vk_color_attachment_reference.attachment = 0;
+        vk_color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentDescription vk_depth_attachment_desc{};
+        vk_depth_attachment_desc.format = VulkanSwapChain::GetDepthFormat();
+        vk_depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+        vk_depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        vk_depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        vk_depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        vk_depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        vk_depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        vk_depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference vk_depth_attachment_ref{};
+        vk_depth_attachment_ref.attachment = 1;
+        vk_depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        std::array<VkAttachmentDescription, 2> attachments = { vk_color_attachment_description, vk_depth_attachment_desc };
+
+        VkSubpassDescription vk_subpass_description{};
+        vk_subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        vk_subpass_description.colorAttachmentCount = 1;
+        vk_subpass_description.pColorAttachments = &vk_color_attachment_reference;
+        vk_subpass_description.pDepthStencilAttachment = &vk_depth_attachment_ref;
+
+        VkRenderPassCreateInfo mouse_picking_render_pass_info{};
+        mouse_picking_render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        mouse_picking_render_pass_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+        mouse_picking_render_pass_info.pAttachments = attachments.data();
+        mouse_picking_render_pass_info.subpassCount = 1;
+        mouse_picking_render_pass_info.pSubpasses = &vk_subpass_description;
+        mouse_picking_render_pass_info.dependencyCount = (uint32_t)dependencies.size();
+        mouse_picking_render_pass_info.pDependencies = dependencies.data();
+
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        VK_CHECK_RESULT(vkCreateRenderPass(device, &mouse_picking_render_pass_info, nullptr, &m_MousePickingRenderPass));
+    }
+
+    void VulkanRenderer::WriteMousePickingImageToBuffer(VkBuffer buffer)
+    {
+        const auto& device = VulkanContext::GetCurrentDevice();
+
+        VkCommandBuffer commandBuffer;
+        device->BeginSingleTimeCommandBuffer(commandBuffer);
+        {
+            VkPipelineStageFlags sourceStageFlags;
+            VkPipelineStageFlags destinationStageFlags;
+
+            VkImageMemoryBarrier vk_image_memory_barrier{};
+
+            sourceStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            destinationStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+            vk_image_memory_barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+            vk_image_memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+            vk_image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            vk_image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            vk_image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            vk_image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            vk_image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            vk_image_memory_barrier.image = m_MousePickingImage->GetImage();
+            vk_image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            vk_image_memory_barrier.subresourceRange.baseMipLevel = 0;
+            vk_image_memory_barrier.subresourceRange.levelCount = 1;
+            vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
+            vk_image_memory_barrier.subresourceRange.layerCount = 1;
+
+            vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1, &vk_image_memory_barrier);
+        }
+
+        VkBufferImageCopy region{};
+        region.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+        region.imageOffset = { 0, 0 };
+        region.imageExtent = { (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y, 1 };
+
+        region.bufferOffset = 0;
+        region.bufferRowLength = m_ViewportSize.x;
+        region.bufferImageHeight = m_ViewportSize.y;
+
+        vkCmdCopyImageToBuffer(commandBuffer, m_MousePickingImage->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
+
+        {
+            VkPipelineStageFlags sourceStageFlags;
+            VkPipelineStageFlags destinationStageFlags;
+
+            VkImageMemoryBarrier vk_image_memory_barrier{};
+
+            sourceStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            destinationStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+            vk_image_memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            vk_image_memory_barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+
+            vk_image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            vk_image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            vk_image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            vk_image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            vk_image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            vk_image_memory_barrier.image = m_MousePickingImage->GetImage();
+            vk_image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            vk_image_memory_barrier.subresourceRange.baseMipLevel = 0;
+            vk_image_memory_barrier.subresourceRange.levelCount = 1;
+            vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
+            vk_image_memory_barrier.subresourceRange.layerCount = 1;
+
+            vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1, &vk_image_memory_barrier);
+        }
+        device->EndSingleTimeCommandBuffer(commandBuffer);
+    }
+
+    void VulkanRenderer::BeginMousePickingRenderPass(const glm::vec2& mousePosition, const glm::mat4& viewProjectionMatrix)
+    {
+        VkRenderPassBeginInfo vk_render_pass_begin_info{};
+        vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        vk_render_pass_begin_info.renderPass = m_MousePickingRenderPass;
+        vk_render_pass_begin_info.framebuffer = m_MousePickingFramebuffer;
+        vk_render_pass_begin_info.renderArea.offset = { 0, 0 };
+        vk_render_pass_begin_info.renderArea.extent = VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y };
+        // vk_render_pass_begin_info.renderArea.offset = { (int32_t)mousePosition.x, (int32_t)mousePosition.y };
+        // vk_render_pass_begin_info.renderArea.extent = VkExtent2D{ 1, 1 };
+
+        std::array<VkClearValue, 2> vk_clear_values{};
+        vk_clear_values[0].color = { .int32 = {-1} };
+        vk_clear_values[1].depthStencil = { 1.0f, 0 };
+
+        vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(vk_clear_values.size());
+        vk_render_pass_begin_info.pClearValues = vk_clear_values.data();
+
+        const auto& device = VulkanContext::GetCurrentDevice();
+        vkCmdBeginRenderPass(device->GetCommandBuffer(m_CurrentFrame), &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+        m_MousePickingPipeline->Bind(device->GetCommandBuffer(m_CurrentFrame));
+
+        m_MousePickingUniformBuffer->WriteToBuffer(glm::value_ptr(viewProjectionMatrix), sizeof(glm::mat4), 0);
+
+        vkCmdBindDescriptorSets(device->GetCommandBuffer(m_CurrentFrame), VK_PIPELINE_BIND_POINT_GRAPHICS, m_MousePickingPipelineLayout, 0, 1, &m_MousePickingDescriptorSet, 0, nullptr);
+    }
+
+    void VulkanRenderer::EndMousePickingRenderPass()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice();
+        vkCmdEndRenderPass(device->GetCommandBuffer(m_CurrentFrame));
+    }
+
     VkCommandBuffer VulkanRenderer::BeginFrame()
     {
         VkResult result = m_SwapChain->AcquireNextImage();
@@ -562,9 +868,16 @@ namespace Flameberry {
         for (auto& sampler : m_ShadowMapSamplers)
             vkDestroySampler(device, sampler, nullptr);
 
+        // Destroy Viewport Resources
+
         for (auto& framebuffer : m_ViewportFramebuffers)
             vkDestroyFramebuffer(device, framebuffer, nullptr);
 
         vkDestroyRenderPass(device, m_ViewportRenderPass, nullptr);
+
+        // Destroy Mouse Picking Resources
+        vkDestroyPipelineLayout(device, m_MousePickingPipelineLayout, nullptr);
+        vkDestroyFramebuffer(device, m_MousePickingFramebuffer, nullptr);
+        vkDestroyRenderPass(device, m_MousePickingRenderPass, nullptr);
     }
 }

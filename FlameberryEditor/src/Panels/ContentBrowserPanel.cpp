@@ -265,7 +265,5 @@ namespace Flameberry {
         ImGui::EndChild();
 
         ImGui::End();
-
-        ImGui::ShowDemoWindow();
     }
 }

@@ -19,6 +19,8 @@ namespace Flameberry {
         void UnmapMemory();
 
         void DestroyBuffer();
+
+        const void* GetMappedMemory() const { return m_VkBufferMappedMemory; };
     private:
         void CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize minOffsetAlignment);
         VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);

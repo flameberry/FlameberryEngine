@@ -21,6 +21,7 @@ namespace Flameberry {
         VkRenderPass renderPass;
         uint32_t subPass;
         VkPipelineLayout pipelineLayout;
+        bool blendingEnable = true;
 
         VulkanPipelineSpecification() = default;
     };

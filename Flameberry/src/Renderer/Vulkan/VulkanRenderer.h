@@ -21,6 +21,7 @@
 namespace Flameberry {
     struct CameraUniformBufferObject { glm::mat4 ViewProjectionMatrix; glm::mat4 LightViewProjectionMatrix; };
     struct ModelMatrixPushConstantData { glm::mat4 ModelMatrix; };
+    struct MousePickingPushConstantData { glm::mat4 ModelMatrix; int EntityID; };
 
     class VulkanRenderer
     {
@@ -34,6 +35,9 @@ namespace Flameberry {
 
         void BeginShadowRenderPass(const glm::mat4& lightViewProjectionMatrix);
         void EndShadowRenderPass();
+
+        void BeginMousePickingRenderPass(const glm::vec2& mousePosition, const glm::mat4& viewProjectionMatrix);
+        void EndMousePickingRenderPass();
 
         template<typename... Args>
         static std::shared_ptr<VulkanRenderer> Create(Args... args) { return std::make_shared<VulkanRenderer>(std::forward<Args>(args)...); }
@@ -59,6 +63,13 @@ namespace Flameberry {
         void CreateViewportRenderPass();
         void InvalidateViewportResources();
         void UpdateViewportSize(const glm::vec2& viewportSize);
+
+        // Mouse Picking
+        void CreateMousePickingResources();
+        void CreateMousePickingRenderPass();
+        VkPipelineLayout GetMousePickingPipelineLayout() const { return m_MousePickingPipelineLayout; }
+
+        void WriteMousePickingImageToBuffer(VkBuffer buffer);
     private:
         uint32_t m_CurrentFrame = 0;
         uint32_t m_ImageIndex;
@@ -87,6 +98,18 @@ namespace Flameberry {
         std::shared_ptr<VulkanImage> m_ViewportDepthImage;
         std::vector<VkFramebuffer> m_ViewportFramebuffers;
         VkRenderPass m_ViewportRenderPass;
-        glm::vec2 m_ViewportSize{1280, 720};
+        glm::vec2 m_ViewportSize{ 1280, 720 };
+
+        // mouse picking resources
+        std::shared_ptr<VulkanImage> m_MousePickingImage, m_MousePickingDepthImage;
+        VkFramebuffer m_MousePickingFramebuffer;
+        VkRenderPass m_MousePickingRenderPass;
+        VkPipelineLayout m_MousePickingPipelineLayout;
+        std::shared_ptr<VulkanPipeline> m_MousePickingPipeline;
+
+        std::unique_ptr<VulkanDescriptorLayout> m_MousePickingDescriptorLayout;
+        std::unique_ptr<VulkanDescriptorWriter> m_MousePickingDescriptorWriter;
+        VkDescriptorSet m_MousePickingDescriptorSet;
+        std::unique_ptr<VulkanBuffer> m_MousePickingUniformBuffer;
     };
 }

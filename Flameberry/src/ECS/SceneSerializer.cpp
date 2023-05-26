@@ -76,7 +76,7 @@ namespace Flameberry {
             for (const auto& submesh : mesh->GetSubMeshes())
             {
                 auto mat = AssetManager::GetAsset<Material>(submesh.MaterialUUID);
-                if (!mat->IsDerived)
+                if (mat && !mat->IsDerived)
                 {
                     out << YAML::BeginMap;
                     out << YAML::Key << "FlameberryMaterial" << YAML::Value << mat->FilePath;

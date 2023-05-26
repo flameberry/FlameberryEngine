@@ -338,35 +338,6 @@ namespace Flameberry {
                 ImGui::EndChild();
             }
 
-            // if (ImGui::BeginCombo("##combo1", mesh.MaterialName.c_str())) // The second parameter is the label previewed before opening the combo.
-            // {
-            //     for (const auto& [materialName, material] : m_ActiveScene->m_SceneData.Materials)
-            //     {
-            //         bool is_selected = (mesh.MaterialName == materialName); // You can store your selection however you want, outside or inside your objects
-            //         if (ImGui::Selectable(materialName.c_str(), is_selected))
-            //             mesh.MaterialName = materialName;
-            //         if (is_selected)
-            //             ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
-            //     }
-            //     ImGui::EndCombo();
-            // }
-
-            // ImGui::SameLine();
-
-            // if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_PlusIconTexture.GetDescriptorSet()), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
-            // {
-            //     mesh.MaterialName = "Material_" + std::to_string(m_ActiveScene->m_SceneData.Materials.size());
-            //     m_ActiveScene->m_SceneData.Materials[mesh.MaterialName] = Material();
-            // }
-
-            // ImGui::SameLine();
-
-            // if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_MinusIconTexture.GetDescriptorSet()), ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight())))
-            // {
-            //     m_ActiveScene->m_SceneData.Materials.erase(mesh.MaterialName);
-            //     mesh.MaterialName = "Default";
-            // }
-
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 

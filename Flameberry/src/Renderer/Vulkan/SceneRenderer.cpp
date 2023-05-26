@@ -22,7 +22,7 @@ namespace Flameberry {
 
     struct MeshData {
         alignas(16) glm::mat4 ModelMatrix;
-        alignas(16) glm::vec3 Albedo{1.0f};
+        alignas(16) glm::vec3 Albedo{ 1.0f };
         alignas(4) float Roughness = 0.2f;
         alignas(4) float Metallic = 0.0f;
         alignas(4) float TextureMapEnabled = 0.0f;
@@ -189,6 +189,26 @@ namespace Flameberry {
             ModelMatrixPushConstantData pushContantData;
             pushContantData.ModelMatrix = transform.GetTransform();
             vkCmdPushConstants(commandBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
+
+            const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
+            staticMesh->Bind(commandBuffer);
+            staticMesh->OnDraw(commandBuffer);
+        }
+    }
+
+    void SceneRenderer::OnDrawForMousePickingPass(VkCommandBuffer commandBuffer, VkPipelineLayout mousePickingPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
+    {
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        {
+            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+
+            if (!mesh.MeshUUID)
+                continue;
+
+            MousePickingPushConstantData pushContantData;
+            pushContantData.ModelMatrix = transform.GetTransform();
+            pushContantData.EntityID = (int)entity;
+            vkCmdPushConstants(commandBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);
 
             const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
             staticMesh->Bind(commandBuffer);
