@@ -89,5 +89,8 @@ namespace Flameberry {
 
         std::shared_ptr<RenderPass> m_ShadowMapRenderPass;
         std::vector<std::shared_ptr<Framebuffer>> m_ShadowMapFramebuffers;
+
+        std::shared_ptr<RenderPass> m_MousePickingRenderPass;
+        std::shared_ptr<Framebuffer> m_MousePickingFramebuffer;
     };
 }

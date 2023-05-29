@@ -12,7 +12,7 @@
 namespace Flameberry {
     std::shared_ptr<VulkanDescriptorLayout> VulkanTexture::s_DescriptorLayout;
     VkDescriptorSet VulkanTexture::s_EmptyDescriptorSet;
-    std::shared_ptr<VulkanImage> VulkanTexture::s_EmptyImage;
+    std::shared_ptr<Image> VulkanTexture::s_EmptyImage;
     VkSampler VulkanTexture::s_DefaultSampler;
 
     std::unordered_map<std::string, std::shared_ptr<VulkanTexture>> VulkanTexture::s_TextureCacheDirectory;
@@ -36,16 +36,18 @@ namespace Flameberry {
 
         stbi_image_free(pixels);
 
-        m_TextureImage = std::make_unique<VulkanImage>(
-            width,
-            height,
-            mipLevels,
-            VK_FORMAT_R8G8B8A8_SRGB,
-            VK_IMAGE_TILING_OPTIMAL,
-            VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            VK_IMAGE_ASPECT_COLOR_BIT
-        );
+        ImageSpecification imageSpec;
+        imageSpec.Width = width;
+        imageSpec.Height = height;
+        imageSpec.MipLevels = mipLevels;
+        imageSpec.Samples = 1;
+        imageSpec.Format = VK_FORMAT_R8G8B8A8_SRGB;
+        imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageSpec.Usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        imageSpec.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+
+        m_TextureImage = Image::Create(imageSpec);
 
         m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         m_TextureImage->WriteFromBuffer(stagingBuffer.GetBuffer());
@@ -129,16 +131,18 @@ namespace Flameberry {
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-        s_EmptyImage = std::make_shared<VulkanImage>(
-            1,
-            1,
-            1,
-            VK_FORMAT_R8G8B8A8_SRGB,
-            VK_IMAGE_TILING_OPTIMAL,
-            VK_IMAGE_USAGE_SAMPLED_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            VK_IMAGE_ASPECT_COLOR_BIT
-        );
+        ImageSpecification imageSpec;
+        imageSpec.Width = 1;
+        imageSpec.Height = 1;
+        imageSpec.MipLevels = 1;
+        imageSpec.Samples = 1;
+        imageSpec.Format = VK_FORMAT_R8G8B8A8_SRGB;
+        imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageSpec.Usage = VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        imageSpec.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+
+        s_EmptyImage = Image::Create(imageSpec);
 
         // Create Sampler
         VkSamplerCreateInfo sampler_info{};

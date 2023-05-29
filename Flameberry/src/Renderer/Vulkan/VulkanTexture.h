@@ -7,7 +7,7 @@
 
 #include "Core/UUID.h"
 
-#include "VulkanImage.h"
+#include "Image.h"
 #include "VulkanDescriptor.h"
 
 namespace Flameberry {
@@ -36,7 +36,7 @@ namespace Flameberry {
     private:
         std::string m_FilePath;
 
-        std::unique_ptr<VulkanImage> m_TextureImage;
+        std::shared_ptr<Image> m_TextureImage;
         VkSampler m_VkTextureSampler;
         VkDescriptorSet m_DescriptorSet;
 
@@ -44,7 +44,7 @@ namespace Flameberry {
 
         static std::shared_ptr<VulkanDescriptorLayout> s_DescriptorLayout;
         static VkDescriptorSet s_EmptyDescriptorSet;
-        static std::shared_ptr<VulkanImage> s_EmptyImage;
+        static std::shared_ptr<Image> s_EmptyImage;
         static VkSampler s_DefaultSampler;
 
         UUID m_UUID;

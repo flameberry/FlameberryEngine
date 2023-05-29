@@ -3,7 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
-#include "VulkanImage.h"
+#include "Image.h"
 
 namespace Flameberry {
     struct FramebufferSpecification
@@ -28,6 +28,7 @@ namespace Flameberry {
         FramebufferSpecification GetSpecification() const { return m_FramebufferSpec; }
         VkFramebuffer GetVulkanFramebuffer() const { return m_VkFramebuffer; }
         VkImageView GetAttachmentImageView(uint32_t attachmentIndex) const { return m_FramebufferImages[attachmentIndex]->GetImageView(); }
+        VkImage GetAttachmentImage(uint32_t attachmentIndex) const { return m_FramebufferImages[attachmentIndex]->GetImage(); }
 
         void CreateVulkanFramebuffer(VkRenderPass renderPass);
 
@@ -36,7 +37,7 @@ namespace Flameberry {
     private:
         void Invalidate();
     private:
-        std::vector<std::shared_ptr<VulkanImage>> m_FramebufferImages;
+        std::vector<std::shared_ptr<Image>> m_FramebufferImages;
 
         FramebufferSpecification m_FramebufferSpec;
         VkFramebuffer m_VkFramebuffer = VK_NULL_HANDLE;

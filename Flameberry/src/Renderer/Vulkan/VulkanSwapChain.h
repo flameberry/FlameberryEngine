@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-#include "VulkanImage.h"
+#include "Image.h"
 
 namespace Flameberry {
     class VulkanSwapChain

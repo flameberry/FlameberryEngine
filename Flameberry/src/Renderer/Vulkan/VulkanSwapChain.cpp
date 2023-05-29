@@ -4,7 +4,7 @@
 
 #include "VulkanRenderCommand.h"
 #include "VulkanContext.h"
-#include "VulkanImage.h"
+#include "Image.h"
 
 namespace Flameberry {
     VulkanSwapChain::VulkanSwapChain(VkSurfaceKHR surface, const std::shared_ptr<VulkanSwapChain>& oldSwapChain)

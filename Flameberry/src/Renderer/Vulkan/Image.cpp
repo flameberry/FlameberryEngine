@@ -1,21 +1,12 @@
-#include "VulkanImage.h"
+#include "Image.h"
 
 #include "VulkanDebug.h"
 #include "VulkanRenderCommand.h"
 #include "VulkanContext.h"
 
 namespace Flameberry {
-    VulkanImage::VulkanImage(
-        uint32_t width,
-        uint32_t height,
-        uint32_t mipLevels,
-        VkFormat format,
-        VkImageTiling tiling,
-        VkImageUsageFlags usage,
-        VkMemoryPropertyFlags properties,
-        VkImageAspectFlags imageAspectFlags,
-        VkSampleCountFlagBits sampleCount
-    ) : m_Width(width), m_Height(height), m_MipLevels(mipLevels), m_VkImageFormat(format)
+    Image::Image(const ImageSpecification& specification)
+        : m_ImageSpec(specification)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
@@ -24,16 +15,16 @@ namespace Flameberry {
         VkImageCreateInfo vk_image_create_info{};
         vk_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         vk_image_create_info.imageType = VK_IMAGE_TYPE_2D;
-        vk_image_create_info.extent.width = width;
-        vk_image_create_info.extent.height = height;
+        vk_image_create_info.extent.width = m_ImageSpec.Width;
+        vk_image_create_info.extent.height = m_ImageSpec.Height;
         vk_image_create_info.extent.depth = 1;
-        vk_image_create_info.mipLevels = m_MipLevels;
+        vk_image_create_info.mipLevels = m_ImageSpec.MipLevels;
         vk_image_create_info.arrayLayers = 1;
-        vk_image_create_info.format = format;
-        vk_image_create_info.tiling = tiling;
+        vk_image_create_info.format = m_ImageSpec.Format;
+        vk_image_create_info.tiling = m_ImageSpec.Tiling;
         vk_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        vk_image_create_info.usage = usage;
-        vk_image_create_info.samples = sampleCount;
+        vk_image_create_info.usage = m_ImageSpec.Usage;
+        vk_image_create_info.samples = (VkSampleCountFlagBits)m_ImageSpec.Samples;
         vk_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         VK_CHECK_RESULT(vkCreateImage(device, &vk_image_create_info, nullptr, &m_VkImage));
@@ -44,7 +35,7 @@ namespace Flameberry {
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, memRequirements.memoryTypeBits, properties);
+        allocInfo.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, memRequirements.memoryTypeBits, m_ImageSpec.MemoryProperties);
 
         VK_CHECK_RESULT(vkAllocateMemory(device, &allocInfo, nullptr, &m_VkImageDeviceMemory));
         vkBindImageMemory(device, m_VkImage, m_VkImageDeviceMemory, 0);
@@ -54,17 +45,17 @@ namespace Flameberry {
         vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         vk_image_view_create_info.image = m_VkImage;
         vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        vk_image_view_create_info.format = format;
-        vk_image_view_create_info.subresourceRange.aspectMask = imageAspectFlags;
+        vk_image_view_create_info.format = m_ImageSpec.Format;
+        vk_image_view_create_info.subresourceRange.aspectMask = m_ImageSpec.ImageAspectFlags;
         vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
-        vk_image_view_create_info.subresourceRange.levelCount = m_MipLevels;
+        vk_image_view_create_info.subresourceRange.levelCount = m_ImageSpec.MipLevels;
         vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
         vk_image_view_create_info.subresourceRange.layerCount = 1;
 
         VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView));
     }
 
-    VulkanImage::~VulkanImage()
+    Image::~Image()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDestroyImageView(device, m_VkImageView, nullptr);
@@ -72,10 +63,10 @@ namespace Flameberry {
         vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
     }
 
-    void VulkanImage::GenerateMipMaps()
+    void Image::GenerateMipMaps()
     {
         VkFormatProperties formatProperties;
-        vkGetPhysicalDeviceFormatProperties(VulkanContext::GetPhysicalDevice(), m_VkImageFormat, &formatProperties);
+        vkGetPhysicalDeviceFormatProperties(VulkanContext::GetPhysicalDevice(), m_ImageSpec.Format, &formatProperties);
         FL_ASSERT(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT, "Texture Image Format does not support linear blitting!");
 
         const auto& device = VulkanContext::GetCurrentDevice();
@@ -92,10 +83,10 @@ namespace Flameberry {
         barrier.subresourceRange.layerCount = 1;
         barrier.subresourceRange.levelCount = 1;
 
-        int32_t mipWidth = m_Width;
-        int32_t mipHeight = m_Height;
+        int32_t mipWidth = m_ImageSpec.Width;
+        int32_t mipHeight = m_ImageSpec.Height;
 
-        for (uint32_t i = 1; i < m_MipLevels; i++) {
+        for (uint32_t i = 1; i < m_ImageSpec.MipLevels; i++) {
             barrier.subresourceRange.baseMipLevel = i - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -148,7 +139,7 @@ namespace Flameberry {
                 mipHeight /= 2;
         }
 
-        barrier.subresourceRange.baseMipLevel = m_MipLevels - 1;
+        barrier.subresourceRange.baseMipLevel = m_ImageSpec.MipLevels - 1;
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -164,7 +155,7 @@ namespace Flameberry {
         device->EndSingleTimeCommandBuffer(commandBuffer);
     }
 
-    void VulkanImage::WriteFromBuffer(VkBuffer srcBuffer)
+    void Image::WriteFromBuffer(VkBuffer srcBuffer)
     {
         const auto& device = VulkanContext::GetCurrentDevice();
 
@@ -182,13 +173,13 @@ namespace Flameberry {
         vk_buffer_image_copy_region.imageSubresource.layerCount = 1;
 
         vk_buffer_image_copy_region.imageOffset = { 0, 0, 0 };
-        vk_buffer_image_copy_region.imageExtent = { m_Width, m_Height, 1 };
+        vk_buffer_image_copy_region.imageExtent = { m_ImageSpec.Width, m_ImageSpec.Height, 1 };
 
         vkCmdCopyBufferToImage(commandBuffer, srcBuffer, m_VkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &vk_buffer_image_copy_region);
         device->EndSingleTimeCommandBuffer(commandBuffer);
     }
 
-    void VulkanImage::TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout)
+    void Image::TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout)
     {
         const auto& device = VulkanContext::GetCurrentDevice();
 
@@ -227,7 +218,7 @@ namespace Flameberry {
         vk_image_memory_barrier.image = m_VkImage;
         vk_image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         vk_image_memory_barrier.subresourceRange.baseMipLevel = 0;
-        vk_image_memory_barrier.subresourceRange.levelCount = m_MipLevels;
+        vk_image_memory_barrier.subresourceRange.levelCount = m_ImageSpec.MipLevels;
         vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
         vk_image_memory_barrier.subresourceRange.layerCount = 1;
 

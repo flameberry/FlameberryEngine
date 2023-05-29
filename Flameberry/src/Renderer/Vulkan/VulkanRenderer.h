@@ -9,7 +9,7 @@
 #include "Renderer/PerspectiveCamera.h"
 #include "VulkanVertex.h"
 #include "VulkanBuffer.h"
-#include "VulkanImage.h"
+#include "Image.h"
 #include "VulkanSwapChain.h"
 #include "VulkanContext.h"
 #include "VulkanPipeline.h"
@@ -69,7 +69,7 @@ namespace Flameberry {
         void CreateMousePickingRenderPass();
         VkPipelineLayout GetMousePickingPipelineLayout() const { return m_MousePickingPipelineLayout; }
 
-        void WriteMousePickingImagePixelToBuffer(VkBuffer buffer, const glm::vec2& pixelOffset = { 0, 0 });
+        void WriteMousePickingImagePixelToBuffer(VkBuffer buffer, VkImage image, const glm::vec2& pixelOffset = { 0, 0 });
     private:
         uint32_t m_CurrentFrame = 0;
         uint32_t m_ImageIndex;
@@ -78,7 +78,7 @@ namespace Flameberry {
         std::unique_ptr<VulkanSwapChain> m_SwapChain;
 
         // Shadow Resources
-        std::vector<std::shared_ptr<VulkanImage>> m_ShadowMapImages;
+        std::vector<std::shared_ptr<Image>> m_ShadowMapImages;
         VkSampler m_ShadowMapSampler;
         std::vector<VkFramebuffer> m_ShadowMapFramebuffers;
 
@@ -94,14 +94,14 @@ namespace Flameberry {
         const uint32_t SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
 
         // offscreen rendering resources
-        std::vector<std::shared_ptr<VulkanImage>> m_ViewportImagesMSAA, m_ViewportImages;
-        std::shared_ptr<VulkanImage> m_ViewportDepthImage;
+        std::vector<std::shared_ptr<Image>> m_ViewportImagesMSAA, m_ViewportImages;
+        std::shared_ptr<Image> m_ViewportDepthImage;
         std::vector<VkFramebuffer> m_ViewportFramebuffers;
         VkRenderPass m_ViewportRenderPass;
         glm::vec2 m_ViewportSize{ 1280, 720 };
 
         // mouse picking resources
-        std::shared_ptr<VulkanImage> m_MousePickingImage, m_MousePickingDepthImage;
+        std::shared_ptr<Image> m_MousePickingImage, m_MousePickingDepthImage;
         VkFramebuffer m_MousePickingFramebuffer;
         VkRenderPass m_MousePickingRenderPass;
         VkPipelineLayout m_MousePickingPipelineLayout;

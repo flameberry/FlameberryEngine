@@ -158,6 +158,23 @@ namespace Flameberry {
             m_SceneRenderPass = RenderPass::Create(sceneRenderPassSpec);
         }
 
+        {
+            FramebufferSpecification mousePickingFramebufferSpec;
+            mousePickingFramebufferSpec.Width = m_ViewportSize.x;
+            mousePickingFramebufferSpec.Height = m_ViewportSize.y;
+            mousePickingFramebufferSpec.Samples = 1;
+            mousePickingFramebufferSpec.Attachments = { VK_FORMAT_R32_SINT, VK_FORMAT_D32_SFLOAT };
+            mousePickingFramebufferSpec.ClearColorValue = { .int32 = { -1 } };
+            mousePickingFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+
+            m_MousePickingFramebuffer = Framebuffer::Create(mousePickingFramebufferSpec);
+
+            RenderPassSpecification mousePickingRenderPassSpec;
+            mousePickingRenderPassSpec.TargetFramebuffers = { m_MousePickingFramebuffer };
+
+            m_MousePickingRenderPass = RenderPass::Create(mousePickingRenderPassSpec);
+        }
+
         m_SceneRenderer = std::make_unique<SceneRenderer>(VulkanContext::GetCurrentGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_SceneRenderPass->GetRenderPass());
 
         m_VkTextureSampler = VulkanRenderCommand::CreateDefaultSampler();
@@ -258,9 +275,11 @@ namespace Flameberry {
                     FL_PROFILE_SCOPE("Last Mouse Picking Pass");
                     isClickedInsideViewport = true;
 
+                    m_MousePickingRenderPass->Begin(commandBuffer, 0, { mouseX, (int)(m_ViewportSize.y - mouseY) }, { 1, 1 });
                     m_VulkanRenderer->BeginMousePickingRenderPass({ mouseX, m_ViewportSize.y - mouseY }, m_ActiveCamera.GetViewProjectionMatrix());
                     m_SceneRenderer->OnDrawForMousePickingPass(commandBuffer, m_VulkanRenderer->GetMousePickingPipelineLayout(), m_ActiveCamera, m_ActiveScene);
-                    m_VulkanRenderer->EndMousePickingRenderPass();
+                    m_MousePickingRenderPass->End(commandBuffer);
+                    // m_VulkanRenderer->EndMousePickingRenderPass();
                 }
             }
 
@@ -275,7 +294,7 @@ namespace Flameberry {
 
         if (isClickedInsideViewport)
         {
-            m_VulkanRenderer->WriteMousePickingImagePixelToBuffer(m_MousePickingBuffer->GetBuffer(), { mouseX, m_ViewportSize.y - mouseY });
+            m_VulkanRenderer->WriteMousePickingImagePixelToBuffer(m_MousePickingBuffer->GetBuffer(), m_MousePickingFramebuffer->GetAttachmentImage(0), { mouseX, m_ViewportSize.y - mouseY });
             m_MousePickingBuffer->MapMemory(sizeof(int32_t));
             int32_t* data = (int32_t*)m_MousePickingBuffer->GetMappedMemory();
             int32_t entityID = data[0];

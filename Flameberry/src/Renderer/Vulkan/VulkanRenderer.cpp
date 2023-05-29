@@ -72,7 +72,7 @@ namespace Flameberry {
         {
             // m_ShadowMapImages.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
             // for (auto& shadowMapImage : m_ShadowMapImages) {
-            //     shadowMapImage = std::make_shared<VulkanImage>(
+            //     shadowMapImage = std::make_shared<Image>(
             //         SHADOW_MAP_WIDTH,
             //         SHADOW_MAP_HEIGHT,
             //         1,
@@ -295,159 +295,160 @@ namespace Flameberry {
 
     void VulkanRenderer::CreateViewportResources()
     {
-        VkFormat vk_swap_chain_image_format = m_SwapChain->GetSwapChainImageFormat();
-        VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+        // VkFormat vk_swap_chain_image_format = m_SwapChain->GetSwapChainImageFormat();
+        // VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
-        m_ViewportImagesMSAA.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (auto& viewportImage : m_ViewportImagesMSAA) {
-            viewportImage = std::make_shared<VulkanImage>(
-                m_ViewportSize.x,
-                m_ViewportSize.y,
-                1,
-                vk_swap_chain_image_format,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                VK_IMAGE_ASPECT_COLOR_BIT,
-                sampleCount
-            );
-        }
+        // m_ViewportImagesMSAA.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        // for (auto& viewportImage : m_ViewportImagesMSAA) {
+        //     ImageSpecification imageSpec;
+        //     imageSpec.Width = m_ViewportSize.x;
+        //     imageSpec.Height = m_ViewportSize.y;
+        //     imageSpec.MipLevels = 1;
+        //     imageSpec.Samples = sampleCount;
+        //     imageSpec.Format = vk_swap_chain_image_format;
+        //     imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
+        //     imageSpec.Usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        //     imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        //     imageSpec.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
-        m_ViewportImages.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (auto& viewportImage : m_ViewportImages) {
-            viewportImage = std::make_shared<VulkanImage>(
-                m_ViewportSize.x,
-                m_ViewportSize.y,
-                1,
-                vk_swap_chain_image_format,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                VK_IMAGE_ASPECT_COLOR_BIT
-            );
-        }
+        //     viewportImage = Image::Create(imageSpec);
+        // }
 
-        VkFormat depthFormat = VulkanSwapChain::GetDepthFormat();
-        m_ViewportDepthImage = VulkanImage::Create(
-            m_ViewportSize.x,
-            m_ViewportSize.y,
-            1,
-            depthFormat,
-            VK_IMAGE_TILING_OPTIMAL,
-            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            VK_IMAGE_ASPECT_DEPTH_BIT,
-            sampleCount
-        );
+        // m_ViewportImages.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        // for (auto& viewportImage : m_ViewportImages) {
+        //     viewportImage = std::make_shared<Image>(
+        //         m_ViewportSize.x,
+        //         m_ViewportSize.y,
+        //         1,
+        //         vk_swap_chain_image_format,
+        //         VK_IMAGE_TILING_OPTIMAL,
+        //         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        //         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        //         VK_IMAGE_ASPECT_COLOR_BIT
+        //     );
+        // }
 
-        // Create Framebuffers
-        m_ViewportFramebuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        // VkFormat depthFormat = VulkanSwapChain::GetDepthFormat();
+        // m_ViewportDepthImage = Image::Create(
+        //     m_ViewportSize.x,
+        //     m_ViewportSize.y,
+        //     1,
+        //     depthFormat,
+        //     VK_IMAGE_TILING_OPTIMAL,
+        //     VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        //     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        //     VK_IMAGE_ASPECT_DEPTH_BIT,
+        //     sampleCount
+        // );
 
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++) {
-            std::vector<VkImageView> attachments = { m_ViewportImagesMSAA[i]->GetImageView(), m_ViewportDepthImage->GetImageView(), m_ViewportImages[i]->GetImageView() };
+        // // Create Framebuffers
+        // m_ViewportFramebuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-            VkFramebufferCreateInfo vk_framebuffer_create_info{};
-            vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            vk_framebuffer_create_info.renderPass = m_ViewportRenderPass;
-            vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
-            vk_framebuffer_create_info.pAttachments = attachments.data();
-            vk_framebuffer_create_info.width = m_ViewportSize.x;
-            vk_framebuffer_create_info.height = m_ViewportSize.y;
-            vk_framebuffer_create_info.layers = 1;
+        // const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        // for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++) {
+        //     std::vector<VkImageView> attachments = { m_ViewportImagesMSAA[i]->GetImageView(), m_ViewportDepthImage->GetImageView(), m_ViewportImages[i]->GetImageView() };
 
-            VK_CHECK_RESULT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_ViewportFramebuffers[i]));
-        }
+        //     VkFramebufferCreateInfo vk_framebuffer_create_info{};
+        //     vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        //     vk_framebuffer_create_info.renderPass = m_ViewportRenderPass;
+        //     vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+        //     vk_framebuffer_create_info.pAttachments = attachments.data();
+        //     vk_framebuffer_create_info.width = m_ViewportSize.x;
+        //     vk_framebuffer_create_info.height = m_ViewportSize.y;
+        //     vk_framebuffer_create_info.layers = 1;
+
+        //     VK_CHECK_RESULT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_ViewportFramebuffers[i]));
+        // }
     }
 
     void VulkanRenderer::CreateViewportRenderPass()
     {
-        VkFormat vk_swap_chain_image_format = m_SwapChain->GetSwapChainImageFormat();
-        VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+        // VkFormat vk_swap_chain_image_format = m_SwapChain->GetSwapChainImageFormat();
+        // VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
-        // Subpass dependencies for layout transitions
-        std::array<VkSubpassDependency, 2> dependencies;
+        // // Subpass dependencies for layout transitions
+        // std::array<VkSubpassDependency, 2> dependencies;
 
-        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[0].dstSubpass = 0;
-        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        // dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        // dependencies[0].dstSubpass = 0;
+        // dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        // dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        // dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        // dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        // dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        dependencies[1].srcSubpass = 0;
-        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        // dependencies[1].srcSubpass = 0;
+        // dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        // dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        // dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        // dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        // dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        // dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        VkAttachmentDescription vk_color_attachment_description{};
-        vk_color_attachment_description.format = vk_swap_chain_image_format;
-        vk_color_attachment_description.samples = sampleCount;
-        vk_color_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        vk_color_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        vk_color_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        vk_color_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        vk_color_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        // vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        // vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // For ImGui
-        vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // For ImGui
+        // VkAttachmentDescription vk_color_attachment_description{};
+        // vk_color_attachment_description.format = vk_swap_chain_image_format;
+        // vk_color_attachment_description.samples = sampleCount;
+        // vk_color_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        // vk_color_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        // vk_color_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        // vk_color_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        // vk_color_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        // // vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        // // vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // For ImGui
+        // vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // For ImGui
 
-        VkAttachmentReference vk_color_attachment_reference{};
-        vk_color_attachment_reference.attachment = 0;
-        vk_color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        // VkAttachmentReference vk_color_attachment_reference{};
+        // vk_color_attachment_reference.attachment = 0;
+        // vk_color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentDescription vk_depth_attachment_desc{};
-        vk_depth_attachment_desc.format = VulkanSwapChain::GetDepthFormat();
-        vk_depth_attachment_desc.samples = sampleCount;
-        vk_depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        vk_depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        vk_depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        vk_depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        vk_depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        vk_depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        // VkAttachmentDescription vk_depth_attachment_desc{};
+        // vk_depth_attachment_desc.format = VulkanSwapChain::GetDepthFormat();
+        // vk_depth_attachment_desc.samples = sampleCount;
+        // vk_depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        // vk_depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        // vk_depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        // vk_depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        // vk_depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        // vk_depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentReference vk_depth_attachment_ref{};
-        vk_depth_attachment_ref.attachment = 1;
-        vk_depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        // VkAttachmentReference vk_depth_attachment_ref{};
+        // vk_depth_attachment_ref.attachment = 1;
+        // vk_depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentDescription vk_color_attachment_resolve{};
-        vk_color_attachment_resolve.format = vk_swap_chain_image_format;
-        vk_color_attachment_resolve.samples = VK_SAMPLE_COUNT_1_BIT;
-        vk_color_attachment_resolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        vk_color_attachment_resolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        vk_color_attachment_resolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        vk_color_attachment_resolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        vk_color_attachment_resolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        vk_color_attachment_resolve.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        // VkAttachmentDescription vk_color_attachment_resolve{};
+        // vk_color_attachment_resolve.format = vk_swap_chain_image_format;
+        // vk_color_attachment_resolve.samples = VK_SAMPLE_COUNT_1_BIT;
+        // vk_color_attachment_resolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        // vk_color_attachment_resolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        // vk_color_attachment_resolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        // vk_color_attachment_resolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        // vk_color_attachment_resolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        // vk_color_attachment_resolve.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        VkAttachmentReference vk_color_attachment_resolve_ref{};
-        vk_color_attachment_resolve_ref.attachment = 2;
-        vk_color_attachment_resolve_ref.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        // VkAttachmentReference vk_color_attachment_resolve_ref{};
+        // vk_color_attachment_resolve_ref.attachment = 2;
+        // vk_color_attachment_resolve_ref.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        std::array<VkAttachmentDescription, 3> attachments = { vk_color_attachment_description, vk_depth_attachment_desc, vk_color_attachment_resolve };
+        // std::array<VkAttachmentDescription, 3> attachments = { vk_color_attachment_description, vk_depth_attachment_desc, vk_color_attachment_resolve };
 
-        VkSubpassDescription vk_subpass_description{};
-        vk_subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        vk_subpass_description.colorAttachmentCount = 1;
-        vk_subpass_description.pColorAttachments = &vk_color_attachment_reference;
-        vk_subpass_description.pDepthStencilAttachment = &vk_depth_attachment_ref;
-        vk_subpass_description.pResolveAttachments = &vk_color_attachment_resolve_ref;
+        // VkSubpassDescription vk_subpass_description{};
+        // vk_subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        // vk_subpass_description.colorAttachmentCount = 1;
+        // vk_subpass_description.pColorAttachments = &vk_color_attachment_reference;
+        // vk_subpass_description.pDepthStencilAttachment = &vk_depth_attachment_ref;
+        // vk_subpass_description.pResolveAttachments = &vk_color_attachment_resolve_ref;
 
-        VkRenderPassCreateInfo vk_render_pass_create_info{};
-        vk_render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        vk_render_pass_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
-        vk_render_pass_create_info.pAttachments = attachments.data();
-        vk_render_pass_create_info.subpassCount = 1;
-        vk_render_pass_create_info.pSubpasses = &vk_subpass_description;
-        vk_render_pass_create_info.dependencyCount = (uint32_t)dependencies.size();
-        vk_render_pass_create_info.pDependencies = dependencies.data();
+        // VkRenderPassCreateInfo vk_render_pass_create_info{};
+        // vk_render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        // vk_render_pass_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+        // vk_render_pass_create_info.pAttachments = attachments.data();
+        // vk_render_pass_create_info.subpassCount = 1;
+        // vk_render_pass_create_info.pSubpasses = &vk_subpass_description;
+        // vk_render_pass_create_info.dependencyCount = (uint32_t)dependencies.size();
+        // vk_render_pass_create_info.pDependencies = dependencies.data();
 
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        VK_CHECK_RESULT(vkCreateRenderPass(device, &vk_render_pass_create_info, nullptr, &m_ViewportRenderPass));
+        // const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        // VK_CHECK_RESULT(vkCreateRenderPass(device, &vk_render_pass_create_info, nullptr, &m_ViewportRenderPass));
     }
 
     void VulkanRenderer::InvalidateViewportResources()
@@ -478,43 +479,43 @@ namespace Flameberry {
 
     void VulkanRenderer::CreateMousePickingResources()
     {
-        m_MousePickingImage = std::make_shared<VulkanImage>(
-            m_ViewportSize.x,
-            m_ViewportSize.y,
-            1,
-            VK_FORMAT_R32_SINT,
-            VK_IMAGE_TILING_OPTIMAL,
-            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            VK_IMAGE_ASPECT_COLOR_BIT
-        );
+        // m_MousePickingImage = std::make_shared<Image>(
+        //     m_ViewportSize.x,
+        //     m_ViewportSize.y,
+        //     1,
+        //     VK_FORMAT_R32_SINT,
+        //     VK_IMAGE_TILING_OPTIMAL,
+        //     VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+        //     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        //     VK_IMAGE_ASPECT_COLOR_BIT
+        // );
 
-        VkFormat depthFormat = VulkanSwapChain::GetDepthFormat();
-        m_MousePickingDepthImage = VulkanImage::Create(
-            m_ViewportSize.x,
-            m_ViewportSize.y,
-            1,
-            depthFormat,
-            VK_IMAGE_TILING_OPTIMAL,
-            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            VK_IMAGE_ASPECT_DEPTH_BIT,
-            VK_SAMPLE_COUNT_1_BIT
-        );
+        // VkFormat depthFormat = VulkanSwapChain::GetDepthFormat();
+        // m_MousePickingDepthImage = Image::Create(
+        //     m_ViewportSize.x,
+        //     m_ViewportSize.y,
+        //     1,
+        //     depthFormat,
+        //     VK_IMAGE_TILING_OPTIMAL,
+        //     VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        //     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        //     VK_IMAGE_ASPECT_DEPTH_BIT,
+        //     VK_SAMPLE_COUNT_1_BIT
+        // );
 
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        std::vector<VkImageView> attachments = { m_MousePickingImage->GetImageView(), m_MousePickingDepthImage->GetImageView() };
+        // std::vector<VkImageView> attachments = { m_MousePickingImage->GetImageView(), m_MousePickingDepthImage->GetImageView() };
 
-        VkFramebufferCreateInfo vk_framebuffer_create_info{};
-        vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        vk_framebuffer_create_info.renderPass = m_MousePickingRenderPass;
-        vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
-        vk_framebuffer_create_info.pAttachments = attachments.data();
-        vk_framebuffer_create_info.width = m_ViewportSize.x;
-        vk_framebuffer_create_info.height = m_ViewportSize.y;
-        vk_framebuffer_create_info.layers = 1;
+        // VkFramebufferCreateInfo vk_framebuffer_create_info{};
+        // vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        // vk_framebuffer_create_info.renderPass = m_MousePickingRenderPass;
+        // vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+        // vk_framebuffer_create_info.pAttachments = attachments.data();
+        // vk_framebuffer_create_info.width = m_ViewportSize.x;
+        // vk_framebuffer_create_info.height = m_ViewportSize.y;
+        // vk_framebuffer_create_info.layers = 1;
 
-        VK_CHECK_RESULT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_MousePickingFramebuffer));
+        // VK_CHECK_RESULT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_MousePickingFramebuffer));
 
         // Create Descriptors
         m_MousePickingUniformBuffer = std::make_unique<VulkanBuffer>(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -672,7 +673,7 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreateRenderPass(device, &mouse_picking_render_pass_info, nullptr, &m_MousePickingRenderPass));
     }
 
-    void VulkanRenderer::WriteMousePickingImagePixelToBuffer(VkBuffer buffer, const glm::vec2& pixelOffset)
+    void VulkanRenderer::WriteMousePickingImagePixelToBuffer(VkBuffer buffer, VkImage image, const glm::vec2& pixelOffset)
     {
         const auto& device = VulkanContext::GetCurrentDevice();
 
@@ -695,7 +696,8 @@ namespace Flameberry {
             vk_image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
             vk_image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             vk_image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            vk_image_memory_barrier.image = m_MousePickingImage->GetImage();
+            // vk_image_memory_barrier.image = m_MousePickingImage->GetImage();
+            vk_image_memory_barrier.image = image;
             vk_image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             vk_image_memory_barrier.subresourceRange.baseMipLevel = 0;
             vk_image_memory_barrier.subresourceRange.levelCount = 1;
@@ -714,7 +716,7 @@ namespace Flameberry {
         region.bufferRowLength = 1;
         region.bufferImageHeight = 1;
 
-        vkCmdCopyImageToBuffer(commandBuffer, m_MousePickingImage->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
+        vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
 
         {
             VkPipelineStageFlags sourceStageFlags;
@@ -733,7 +735,8 @@ namespace Flameberry {
             vk_image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
             vk_image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             vk_image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            vk_image_memory_barrier.image = m_MousePickingImage->GetImage();
+            // vk_image_memory_barrier.image = m_MousePickingImage->GetImage();
+            vk_image_memory_barrier.image = image;
             vk_image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             vk_image_memory_barrier.subresourceRange.baseMipLevel = 0;
             vk_image_memory_barrier.subresourceRange.levelCount = 1;
@@ -747,22 +750,22 @@ namespace Flameberry {
 
     void VulkanRenderer::BeginMousePickingRenderPass(const glm::vec2& renderOffset, const glm::mat4& viewProjectionMatrix)
     {
-        VkRenderPassBeginInfo vk_render_pass_begin_info{};
-        vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        vk_render_pass_begin_info.renderPass = m_MousePickingRenderPass;
-        vk_render_pass_begin_info.framebuffer = m_MousePickingFramebuffer;
-        vk_render_pass_begin_info.renderArea.offset = { (int32_t)renderOffset.x, (int32_t)renderOffset.y };
-        vk_render_pass_begin_info.renderArea.extent = VkExtent2D{ 1, 1 };
+        // VkRenderPassBeginInfo vk_render_pass_begin_info{};
+        // vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        // vk_render_pass_begin_info.renderPass = m_MousePickingRenderPass;
+        // vk_render_pass_begin_info.framebuffer = m_MousePickingFramebuffer;
+        // vk_render_pass_begin_info.renderArea.offset = { (int32_t)renderOffset.x, (int32_t)renderOffset.y };
+        // vk_render_pass_begin_info.renderArea.extent = VkExtent2D{ 1, 1 };
 
-        std::array<VkClearValue, 2> vk_clear_values{};
-        vk_clear_values[0].color = { .int32 = {-1} };
-        vk_clear_values[1].depthStencil = { 1.0f, 0 };
+        // std::array<VkClearValue, 2> vk_clear_values{};
+        // vk_clear_values[0].color = { .int32 = {-1} };
+        // vk_clear_values[1].depthStencil = { 1.0f, 0 };
 
-        vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(vk_clear_values.size());
-        vk_render_pass_begin_info.pClearValues = vk_clear_values.data();
+        // vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(vk_clear_values.size());
+        // vk_render_pass_begin_info.pClearValues = vk_clear_values.data();
 
         const auto& device = VulkanContext::GetCurrentDevice();
-        vkCmdBeginRenderPass(device->GetCommandBuffer(m_CurrentFrame), &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+        // vkCmdBeginRenderPass(device->GetCommandBuffer(m_CurrentFrame), &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
         m_MousePickingPipeline->Bind(device->GetCommandBuffer(m_CurrentFrame));
 
