@@ -26,7 +26,7 @@ namespace Flameberry {
     class VulkanRenderer
     {
     public:
-        VulkanRenderer(VulkanWindow* pWindow);
+        VulkanRenderer(VulkanWindow* pWindow, VkRenderPass shadowMapRenderPass);
         ~VulkanRenderer();
         [[nodiscard]] VkCommandBuffer BeginFrame();
         bool EndFrame();
@@ -55,7 +55,7 @@ namespace Flameberry {
         // Shadow Map
         VkPipelineLayout GetShadowMapPipelineLayout() const { return m_ShadowMapPipelineLayout; }
         VkImageView GetShadowMapImageView(uint32_t index) const { return m_ShadowMapImages[index]->GetImageView(); }
-        VkSampler GetShadowMapSampler(uint32_t index) const { return m_ShadowMapSamplers[index]; }
+        VkSampler GetShadowMapSampler() const { return m_ShadowMapSampler; }
         bool EnableShadows() const { return m_EnableShadows; }
 
         // Viewport Rendering
@@ -79,7 +79,7 @@ namespace Flameberry {
 
         // Shadow Resources
         std::vector<std::shared_ptr<VulkanImage>> m_ShadowMapImages;
-        std::vector<VkSampler> m_ShadowMapSamplers;
+        VkSampler m_ShadowMapSampler;
         std::vector<VkFramebuffer> m_ShadowMapFramebuffers;
 
         std::unique_ptr<VulkanPipeline> m_ShadowMapPipeline;

@@ -175,8 +175,8 @@ vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
     // float bias = mix(0.001, 0.0, n_dot_l);
 
     // vec3 finalColor = CalculateShadowFactor() * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
-    // vec3 finalColor = FilterPCF(/*bias*/) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
-    vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
+    vec3 finalColor = FilterPCF(/*bias*/) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
+    // vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
 
     finalColor = max(finalColor, AMBIENT * GetPixelColor());
     return finalColor;

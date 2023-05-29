@@ -79,9 +79,15 @@ namespace Flameberry {
 
         std::filesystem::path m_ProjectPath;
 
-        // Test
-        // std::shared_ptr<Material> m_CurrentMaterial;
         std::unique_ptr<VulkanBuffer> m_MousePickingBuffer;
         bool m_IsClickedInsideViewport = false;
+        // std::shared_ptr<Material> m_CurrentMaterial;
+
+        // Test
+        std::shared_ptr<RenderPass> m_SceneRenderPass;
+        std::vector<std::shared_ptr<Framebuffer>> m_SceneFramebuffers;
+
+        std::shared_ptr<RenderPass> m_ShadowMapRenderPass;
+        std::vector<std::shared_ptr<Framebuffer>> m_ShadowMapFramebuffers;
     };
 }

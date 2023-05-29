@@ -10,7 +10,31 @@ namespace Flameberry {
 
     void EditorLayer::OnCreate()
     {
-        m_VulkanRenderer = VulkanRenderer::Create((VulkanWindow*)&Application::Get().GetWindow());
+        {
+            FramebufferSpecification shadowMapFramebufferSpec;
+            shadowMapFramebufferSpec.Width = 2048;
+            shadowMapFramebufferSpec.Height = 2048;
+            shadowMapFramebufferSpec.Attachments = { VK_FORMAT_D32_SFLOAT };
+            shadowMapFramebufferSpec.Samples = 1;
+            shadowMapFramebufferSpec.DepthStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+            shadowMapFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+
+            RenderPassSpecification shadowMapRenderPassSpec;
+
+            uint32_t imageCount = 3;
+            m_ShadowMapFramebuffers.resize(imageCount);
+            shadowMapRenderPassSpec.TargetFramebuffers.resize(imageCount);
+
+            for (uint32_t i = 0; i < imageCount; i++)
+            {
+                m_ShadowMapFramebuffers[i] = Framebuffer::Create(shadowMapFramebufferSpec);
+                shadowMapRenderPassSpec.TargetFramebuffers[i] = m_ShadowMapFramebuffers[i];
+            }
+
+            m_ShadowMapRenderPass = RenderPass::Create(shadowMapRenderPassSpec);
+        }
+
+        m_VulkanRenderer = VulkanRenderer::Create((VulkanWindow*)&Application::Get().GetWindow(), m_ShadowMapRenderPass->GetRenderPass());
 
         m_CursorIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon.png");
         m_CursorIconActive = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon_active.png");
@@ -70,8 +94,9 @@ namespace Flameberry {
 
             VkDescriptorImageInfo vk_shadow_map_image_info{};
             vk_shadow_map_image_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-            vk_shadow_map_image_info.imageView = m_VulkanRenderer->GetShadowMapImageView(i);
-            vk_shadow_map_image_info.sampler = m_VulkanRenderer->GetShadowMapSampler(i);
+            // vk_shadow_map_image_info.imageView = m_VulkanRenderer->GetShadowMapImageView(i);
+            vk_shadow_map_image_info.imageView = m_ShadowMapFramebuffers[i]->GetAttachmentImageView(0);
+            vk_shadow_map_image_info.sampler = m_VulkanRenderer->GetShadowMapSampler();
 
             VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_VkDescriptorSets[i], m_VulkanDescriptorLayout->GetLayout());
             m_VulkanDescriptorWriter->WriteBuffer(0, &vk_descriptor_buffer_info);
@@ -80,31 +105,7 @@ namespace Flameberry {
         }
 
         // m_SkyboxRenderer = std::make_unique<SkyboxRenderer>(m_VulkanRenderer->GetGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
-        m_SceneRenderer = std::make_unique<SceneRenderer>(VulkanContext::GetCurrentGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
         m_ImGuiLayer = std::make_unique<ImGuiLayer>(m_VulkanRenderer);
-
-        // Test
-        m_VkTextureSampler = VulkanRenderCommand::CreateDefaultSampler();
-
-        m_ViewportDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            m_ViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
-                m_VkTextureSampler,
-                m_VulkanRenderer->GetViewportImageView(i),
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            );
-        }
-
-        m_ShadowMapDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            m_ShadowMapDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
-                m_VkTextureSampler,
-                m_VulkanRenderer->GetShadowMapImageView(i),
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-            );
-        }
 
         m_Registry = std::make_shared<ecs::registry>();
         m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
@@ -129,6 +130,57 @@ namespace Flameberry {
             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
         );
+
+        {
+            VkFormat swapChainImageFormat = m_VulkanRenderer->GetSwapChainImageFormat();
+            VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+
+            FramebufferSpecification sceneFramebufferSpec;
+            sceneFramebufferSpec.Width = m_ViewportSize.x;
+            sceneFramebufferSpec.Height = m_ViewportSize.y;
+            sceneFramebufferSpec.Attachments = { swapChainImageFormat, VK_FORMAT_D32_SFLOAT };
+            sceneFramebufferSpec.Samples = sampleCount;
+            sceneFramebufferSpec.ClearColorValue = { 1.0f, 1.0f, 1.0f, 1.0f };
+            sceneFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+
+            RenderPassSpecification sceneRenderPassSpec;
+
+            uint32_t imageCount = m_VulkanRenderer->GetSwapChainImages().size();
+            m_SceneFramebuffers.resize(imageCount);
+            sceneRenderPassSpec.TargetFramebuffers.resize(imageCount);
+
+            for (uint32_t i = 0; i < imageCount; i++)
+            {
+                m_SceneFramebuffers[i] = Framebuffer::Create(sceneFramebufferSpec);
+                sceneRenderPassSpec.TargetFramebuffers[i] = m_SceneFramebuffers[i];
+            }
+
+            m_SceneRenderPass = RenderPass::Create(sceneRenderPassSpec);
+        }
+
+        m_SceneRenderer = std::make_unique<SceneRenderer>(VulkanContext::GetCurrentGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_SceneRenderPass->GetRenderPass());
+
+        m_VkTextureSampler = VulkanRenderCommand::CreateDefaultSampler();
+        m_ViewportDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            m_ViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
+                m_VkTextureSampler,
+                m_SceneFramebuffers[i]->GetAttachmentImageView(2),
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+        }
+
+        m_ShadowMapDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            m_ShadowMapDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
+                m_VkTextureSampler,
+                m_ShadowMapFramebuffers[i]->GetAttachmentImageView(0),
+                // m_VulkanRenderer->GetShadowMapImageView(i),
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+            );
+        }
     }
 
     void EditorLayer::OnUpdate(float delta)
@@ -152,16 +204,20 @@ namespace Flameberry {
                 );
                 lightViewProjectionMatrix = lightProjectionMatrix * lightViewMatrix;
 
+                m_ShadowMapRenderPass->Begin(commandBuffer, m_VulkanRenderer->GetImageIndex());
                 m_VulkanRenderer->BeginShadowRenderPass(lightViewProjectionMatrix);
                 m_SceneRenderer->OnDrawForShadowPass(commandBuffer, m_VulkanRenderer->GetShadowMapPipelineLayout(), m_ActiveCamera, m_ActiveScene);
-                m_VulkanRenderer->EndShadowRenderPass();
+                m_ShadowMapRenderPass->End(commandBuffer);
+                // m_VulkanRenderer->EndShadowRenderPass();
             }
 
-            m_VulkanRenderer->UpdateViewportSize(m_ViewportSize);
+            // m_VulkanRenderer->UpdateViewportSize(m_ViewportSize);
+            m_SceneFramebuffers[m_VulkanRenderer->GetImageIndex()]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_SceneRenderPass->GetRenderPass());
 
             {
                 FL_PROFILE_SCOPE("Viewport Render Pass");
-                m_VulkanRenderer->BeginViewportRenderPass(m_ActiveScene->GetClearColor());
+                // m_VulkanRenderer->BeginViewportRenderPass(m_ActiveScene->GetClearColor());
+                m_SceneRenderPass->Begin(commandBuffer, m_VulkanRenderer->GetImageIndex());
 
                 VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
                 VulkanRenderCommand::SetScissor(commandBuffer, { 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
@@ -180,7 +236,9 @@ namespace Flameberry {
 
                 // m_SkyboxRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, "");
                 m_SceneRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_ActiveScene);
-                m_VulkanRenderer->EndViewportRenderPass();
+
+                m_SceneRenderPass->End(commandBuffer);
+                // m_VulkanRenderer->EndViewportRenderPass();
             }
 
             bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive;
@@ -528,7 +586,8 @@ namespace Flameberry {
 
         VkDescriptorImageInfo desc_image[1] = {};
         desc_image[0].sampler = m_VkTextureSampler;
-        desc_image[0].imageView = m_VulkanRenderer->GetViewportImageView(currentFrameIndex);
+        // desc_image[0].imageView = m_VulkanRenderer->GetViewportImageView(currentFrameIndex);
+        desc_image[0].imageView = m_SceneFramebuffers[m_VulkanRenderer->GetImageIndex()]->GetAttachmentImageView(2);
         desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet write_desc[1] = {};
@@ -546,7 +605,9 @@ namespace Flameberry {
 
         VkDescriptorImageInfo desc_image[1] = {};
         desc_image[0].sampler = m_VkTextureSampler;
-        desc_image[0].imageView = m_VulkanRenderer->GetShadowMapImageView(currentFrameIndex);
+        // desc_image[0].imageView = m_VulkanRenderer->GetShadowMapImageView(currentFrameIndex);
+        desc_image[0].imageView = m_ShadowMapFramebuffers[m_VulkanRenderer->GetImageIndex()]->GetAttachmentImageView(0);
+
         desc_image[0].imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet write_desc[1] = {};

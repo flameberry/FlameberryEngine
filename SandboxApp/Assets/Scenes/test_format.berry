@@ -17,7 +17,7 @@ Entities:
     MeshComponent:
       MeshUUID: 6660299724953548194
   - Entity: 3972767720073990067
-    TagComponent: StaticMesh
+    TagComponent: Sphere
     TransformComponent:
       Translation: [0, 2.58226037, 0]
       Rotation: [0, 0, 0]
