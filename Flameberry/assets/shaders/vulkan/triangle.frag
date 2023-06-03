@@ -240,19 +240,17 @@ vec4 CalculatePBRLighting(vec3 normal)
     // HDR tone mapping
     totalLight = totalLight / (totalLight + vec3(1.0));
     
-    // Gamma correction
-    return vec4(pow(totalLight, vec3(1.0 / 2.2)), 1.0);
+    return vec4(totalLight, 1.0);
 }
 
 void main()
 {
-    vec3 normal = v_Normal;
+    vec3 normal = normalize(v_Normal);
     if (u_NormalMapEnabled == 1.0)
     {
-        vec3 rgbNormal = texture(u_NormalMapSampler, v_TextureCoords).rgb * 2.0 - 1.0;
-        normal = normalize(v_TBNMatrix * rgbNormal);
+        vec3 rgbNormal = texture(u_NormalMapSampler, v_TextureCoords).rgb * 2.0 - 1.003921568627451;
+        normal = normalize(v_TBNMatrix * normalize(rgbNormal));
     }
 
-    // o_FragColor = CalculatePBRLighting(normal);
-    o_FragColor = vec4(normal, 1.0);
+    o_FragColor = CalculatePBRLighting(normal);
 }

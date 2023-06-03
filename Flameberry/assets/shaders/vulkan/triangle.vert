@@ -36,23 +36,25 @@ void main()
     gl_Position = u_ViewProjectionMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
 
     v_Position = a_Position;
-    v_Normal = a_Normal;
+    v_Normal = normalize(a_Normal);
     v_TextureCoords = a_TextureCoords;
 
-    mat3 worldSpaceMatrix = mat3(transpose(inverse(u_ModelMatrix)));
+    mat3 worldSpaceMatrix = transpose(inverse(mat3(u_ModelMatrix)));
 
     v_Normal =  worldSpaceMatrix * v_Normal; // TODO: Currently inefficient
     v_Position = vec3(u_ModelMatrix * vec4(v_Position, 1.0));
 
     v_LightFragmentPosition = (g_BiasMatrix * u_LightViewProjectionMatrix) * vec4(a_Position, 1.0);
 
-    vec3 T = normalize(vec3(u_ModelMatrix * vec4(a_Tangent,   0.0)));
-    // vec3 B = normalize(vec3(u_ModelMatrix * vec4(a_BiTangent, 0.0)));
-    vec3 N = normalize(vec3(u_ModelMatrix * vec4(a_Normal,    0.0)));
+    vec3 T = normalize(vec3(u_ModelMatrix * vec4(a_Tangent, 0.0)));
+    vec3 N = normalize(vec3(u_ModelMatrix * vec4(a_Normal,  0.0)));
 
     // Re-orthogonalize T with respect to N
     T = normalize(T - dot(T, N) * N);
     vec3 B = cross(N, T);
-    
+
+    if (dot(a_Normal, cross(a_Tangent, a_BiTangent)) < 0.0)
+        B *= -1.0;
+
     v_TBNMatrix = mat3(T, B, N);
 }

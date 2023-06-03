@@ -4,9 +4,9 @@ EnvironmentMap:
   EnableSkybox: false
   Reflections: false
   DirectionalLight:
-    Direction: [2.0999999, -0.99000001, 0.74000001]
+    Direction: [2.0999999, -3.70000005, 0.74000001]
     Color: [1, 1, 1]
-    Intensity: 4
+    Intensity: 8
 Entities:
   - Entity: 17488711170162876725
     TagComponent: Sponza

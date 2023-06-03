@@ -41,7 +41,7 @@ namespace Flameberry {
         imageSpec.Height = height;
         imageSpec.MipLevels = mipLevels;
         imageSpec.Samples = 1;
-        imageSpec.Format = VK_FORMAT_R8G8B8A8_SRGB;
+        imageSpec.Format = VK_FORMAT_R8G8B8A8_UNORM;
         imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
         imageSpec.Usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;

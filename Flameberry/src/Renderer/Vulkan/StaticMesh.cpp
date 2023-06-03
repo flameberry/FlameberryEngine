@@ -26,7 +26,7 @@ namespace std {
     struct hash<Flameberry::VulkanVertex> {
         size_t operator()(Flameberry::VulkanVertex const& vertex) const {
             size_t seed = 0;
-            Flameberry::hashCombine(seed, vertex.Position, vertex.Normal, vertex.TextureUV, vertex.Tangent, vertex.BiTangent);
+            Flameberry::hashCombine(seed, vertex.Position, vertex.Normal, vertex.TextureUV);
             return seed;
         }
     };
@@ -166,22 +166,23 @@ namespace Flameberry {
                     bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
                     bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
 
-                    triangleVertices[0].Tangent = tangent;
-                    triangleVertices[0].BiTangent = bitangent;
-
-                    triangleVertices[1].Tangent = tangent;
-                    triangleVertices[1].BiTangent = bitangent;
-
-                    triangleVertices[2].Tangent = tangent;
-                    triangleVertices[2].BiTangent = bitangent;
-
                     for (uint16_t j = 0; j < 3; j++)
                     {
                         auto& vertex = triangleVertices[j];
 
                         if (uniqueVertices.count(vertex) == 0) {
+                            vertex.Tangent = tangent;
+                            vertex.BiTangent = bitangent;
+
                             uniqueVertices[vertex] = static_cast<uint32_t>(m_Vertices.size());
                             m_Vertices.push_back(vertex);
+                        }
+                        else
+                        {
+                            int index = uniqueVertices[vertex];
+                            m_Vertices[index].Normal += vertex.Normal;
+                            m_Vertices[index].Tangent += tangent;
+                            m_Vertices[index].BiTangent += bitangent;
                         }
                         m_Indices.push_back(uniqueVertices[vertex]);
                     }
