@@ -26,7 +26,7 @@ namespace std {
     struct hash<Flameberry::VulkanVertex> {
         size_t operator()(Flameberry::VulkanVertex const& vertex) const {
             size_t seed = 0;
-            Flameberry::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.textureUV);
+            Flameberry::hashCombine(seed, vertex.Position, vertex.Normal, vertex.TextureUV, vertex.Tangent, vertex.BiTangent);
             return seed;
         }
     };
@@ -94,46 +94,98 @@ namespace Flameberry {
             materialAsset->Name = mat.name;
             materialAsset->Albedo = { mat.diffuse[0], mat.diffuse[1], mat.diffuse[2] };
             materialAsset->Roughness = mat.roughness;
+
             materialAsset->TextureMapEnabled = !mat.diffuse_texname.empty();
-            if (materialAsset->TextureMapEnabled) {
+            if (materialAsset->TextureMapEnabled)
                 materialAsset->TextureMap = VulkanTexture::TryGetOrLoadTexture(mtlBaseDir + "/" + mat.diffuse_texname);
-            }
+
+            materialAsset->NormalMapEnabled = !mat.displacement_texname.empty();
+            if (materialAsset->NormalMapEnabled)
+                materialAsset->NormalMap = VulkanTexture::TryGetOrLoadTexture(mtlBaseDir + "/" + mat.displacement_texname);
+
             materialUUIDs.emplace_back(materialAsset->GetUUID());
         }
 
+        std::vector<VulkanVertex> tempVertices;
+
         for (const auto& shape : shapes)
         {
+            int i = 0;
             uint32_t indexCount = m_Indices.size();
+
+            VulkanVertex triangleVertices[3] = {};
+
             for (const auto& index : shape.mesh.indices)
             {
-                VulkanVertex vertex{};
-
-                vertex.position = {
+                triangleVertices[i % 3].Position = {
                     attrib.vertices[3 * index.vertex_index + 0],
                     attrib.vertices[3 * index.vertex_index + 1],
                     attrib.vertices[3 * index.vertex_index + 2]
                 };
 
-                vertex.normal = {
+                triangleVertices[i % 3].Normal = {
                     attrib.normals[3 * index.normal_index + 0],
                     attrib.normals[3 * index.normal_index + 1],
                     attrib.normals[3 * index.normal_index + 2]
                 };
 
                 if (has_tex_coord) {
-                    vertex.textureUV = {
+                    triangleVertices[i % 3].TextureUV = {
                         attrib.texcoords[2 * index.texcoord_index + 0],
                         1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
                     };
                 }
 
-                vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+                i++;
 
-                if (uniqueVertices.count(vertex) == 0) {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(m_Vertices.size());
-                    m_Vertices.push_back(vertex);
+                if (i % 3 == 0)
+                {
+                    glm::vec3 vertex0 = triangleVertices[0].Position;
+                    glm::vec3 vertex1 = triangleVertices[1].Position;
+                    glm::vec3 vertex2 = triangleVertices[2].Position;
+
+                    glm::vec3 tangent, bitangent;
+
+                    glm::vec3 edge1 = vertex1 - vertex0;
+                    glm::vec3 edge2 = vertex2 - vertex0;
+
+                    glm::vec2 uv0 = triangleVertices[0].TextureUV;
+                    glm::vec2 uv1 = triangleVertices[1].TextureUV;
+                    glm::vec2 uv2 = triangleVertices[2].TextureUV;
+
+                    glm::vec2 deltaUV1 = uv1 - uv0;
+                    glm::vec2 deltaUV2 = uv2 - uv0;
+
+                    float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+                    tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+                    tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+                    tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+                    bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+                    bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+                    bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+                    triangleVertices[0].Tangent = tangent;
+                    triangleVertices[0].BiTangent = bitangent;
+
+                    triangleVertices[1].Tangent = tangent;
+                    triangleVertices[1].BiTangent = bitangent;
+
+                    triangleVertices[2].Tangent = tangent;
+                    triangleVertices[2].BiTangent = bitangent;
+
+                    for (uint16_t j = 0; j < 3; j++)
+                    {
+                        auto& vertex = triangleVertices[j];
+
+                        if (uniqueVertices.count(vertex) == 0) {
+                            uniqueVertices[vertex] = static_cast<uint32_t>(m_Vertices.size());
+                            m_Vertices.push_back(vertex);
+                        }
+                        m_Indices.push_back(uniqueVertices[vertex]);
+                    }
                 }
-                m_Indices.push_back(uniqueVertices[vertex]);
             }
 
             auto& submesh = m_SubMeshes.emplace_back();

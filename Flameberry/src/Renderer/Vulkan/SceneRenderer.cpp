@@ -26,9 +26,10 @@ namespace Flameberry {
         alignas(4) float Roughness = 0.2f;
         alignas(4) float Metallic = 0.0f;
         alignas(4) float TextureMapEnabled = 0.0f;
+        alignas(4) float NormalMapEnabled = 0.0f;
     };
 
-    SceneRenderer::SceneRenderer(const std::shared_ptr<VulkanDescriptorPool>& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, VkRenderPass renderPass)
+    SceneRenderer::SceneRenderer(const std::shared_ptr<VulkanDescriptorPool>& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass)
         : m_GlobalDescriptorPool(globalDescriptorPool)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -71,7 +72,7 @@ namespace Flameberry {
         vk_push_constant_range.size = sizeof(MeshData);
         vk_push_constant_range.offset = 0;
 
-        VkDescriptorSetLayout descriptorSetLayouts[] = { globalDescriptorLayout, m_SceneDescriptorLayout->GetLayout(), VulkanTexture::GetDescriptorLayout()->GetLayout() };
+        VkDescriptorSetLayout descriptorSetLayouts[] = { globalDescriptorLayout, m_SceneDescriptorLayout->GetLayout(), VulkanTexture::GetDescriptorLayout()->GetLayout(), VulkanTexture::GetDescriptorLayout()->GetLayout() };
         VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
 
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
@@ -83,33 +84,23 @@ namespace Flameberry {
 
         VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
 
-        Flameberry::VulkanPipelineSpecification pipelineSpec{};
-        pipelineSpec.vertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleVert.spv";
-        pipelineSpec.fragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleFrag.spv";
-        pipelineSpec.renderPass = renderPass;
-        pipelineSpec.subPass = 0;
+        Flameberry::PipelineSpecification pipelineSpec{};
+        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleVert.spv";
+        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleFrag.spv";
+        pipelineSpec.RenderPass = renderPass;
+        pipelineSpec.PipelineLayout = m_VkPipelineLayout;
 
-        pipelineSpec.pipelineLayout = m_VkPipelineLayout;
+        pipelineSpec.VertexLayout = {
+            VertexInputAttribute::VEC3F, // a_Position
+            VertexInputAttribute::VEC3F, // a_Normal
+            VertexInputAttribute::VEC2F, // a_TextureCoords
+            VertexInputAttribute::VEC3F, // a_Tangent
+            VertexInputAttribute::VEC3F  // a_BiTangent
+        };
+        pipelineSpec.VertexInputBindingDescription = Flameberry::VulkanVertex::GetBindingDescription();
+        pipelineSpec.Samples = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
-        VkVertexInputBindingDescription vk_vertex_input_binding_description = Flameberry::VulkanVertex::GetBindingDescription();
-        const auto& vk_attribute_descriptions = Flameberry::VulkanVertex::GetAttributeDescriptions();
-
-        VkPipelineVertexInputStateCreateInfo vk_pipeline_vertex_input_state_create_info{};
-        vk_pipeline_vertex_input_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vk_pipeline_vertex_input_state_create_info.vertexBindingDescriptionCount = 1;
-        vk_pipeline_vertex_input_state_create_info.pVertexBindingDescriptions = &vk_vertex_input_binding_description;
-        vk_pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(vk_attribute_descriptions.size());
-        vk_pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = vk_attribute_descriptions.data();
-
-        pipelineSpec.pipelineVertexInputStateCreateInfo = vk_pipeline_vertex_input_state_create_info;
-
-        Flameberry::VulkanPipeline::FillWithDefaultPipelineSpecification(pipelineSpec);
-
-        VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
-        pipelineSpec.pipelineMultisampleStateCreateInfo.rasterizationSamples = sampleCount;
-        pipelineSpec.pipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_TRUE;
-
-        m_MeshPipeline = std::make_unique<Flameberry::VulkanPipeline>(pipelineSpec);
+        m_MeshPipeline = std::make_unique<Flameberry::Pipeline>(pipelineSpec);
     }
 
     void SceneRenderer::OnDraw(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
@@ -158,17 +149,20 @@ namespace Flameberry {
                     pushConstantMeshData.Roughness = materialAsset->Roughness;
                     pushConstantMeshData.Metallic = materialAsset->Metallic;
                     pushConstantMeshData.TextureMapEnabled = materialAsset->TextureMapEnabled;
+                    pushConstantMeshData.NormalMapEnabled = materialAsset->NormalMapEnabled;
                 }
 
-                if (isMaterialHandleValid && materialAsset->TextureMapEnabled) {
-                    VkDescriptorSet descriptorSet[1] = { materialAsset->TextureMap->GetDescriptorSet() };
-                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 2, 1, descriptorSet, 0, nullptr);
-                }
-                else {
-                    VkDescriptorSet descriptorSet[1] = { VulkanTexture::GetEmptyDescriptorSet() };
-                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 2, 1, descriptorSet, 0, nullptr);
+                std::vector<VkDescriptorSet> materialDescriptorSets;
+                materialDescriptorSets.resize(2, VulkanTexture::GetEmptyDescriptorSet());
+
+                if (isMaterialHandleValid) {
+                    if (materialAsset->TextureMapEnabled)
+                        materialDescriptorSets[0] = materialAsset->TextureMap->GetDescriptorSet();
+                    if (materialAsset->NormalMapEnabled)
+                        materialDescriptorSets[1] = materialAsset->NormalMap->GetDescriptorSet();
                 }
 
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 2, materialDescriptorSets.size(), materialDescriptorSets.data(), 0, nullptr);
                 vkCmdPushConstants(commandBuffer, m_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
 
                 staticMesh->OnDrawSubMesh(commandBuffer, submeshIndex);

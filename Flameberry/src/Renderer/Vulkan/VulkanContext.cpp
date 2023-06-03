@@ -110,11 +110,13 @@ namespace Flameberry {
                 && indices.PresentationSupportedQueueFamilyIndex.has_value()
                 && found_required_extensions
                 && is_swap_chain_adequate
-                && supportedFeatures.samplerAnisotropy;
+                && supportedFeatures.samplerAnisotropy
+                && supportedFeatures.sampleRateShading;
 
             if (is_physical_device_valid)
                 return vk_device;
         }
+        FL_ASSERT(0, "Failed to find valid physical device!");
         return VK_NULL_HANDLE;
     }
 }

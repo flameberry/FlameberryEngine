@@ -17,6 +17,19 @@ namespace Flameberry {
         VkDescriptorPool m_VkDescriptorPool = VK_NULL_HANDLE;
     };
 
+    struct DescriptorSetSpecification
+    {
+
+    };
+
+    class DescriptorSet
+    {
+    public:
+        DescriptorSet();
+        ~DescriptorSet();
+    private:
+    };
+
     class VulkanDescriptorLayout
     {
     public:

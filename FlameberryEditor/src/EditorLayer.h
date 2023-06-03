@@ -29,6 +29,9 @@ namespace Flameberry {
         void SaveScene(const std::string& path);
         void OpenScene(const std::string& path);
     private:
+        void CreateMousePickingPipeline();
+        void CreateShadowMapPipeline();
+    private:
         std::shared_ptr<VulkanRenderer> m_VulkanRenderer;
 
         PerspectiveCamera m_ActiveCamera;
@@ -57,7 +60,7 @@ namespace Flameberry {
 
         VkSampler m_VkTextureSampler;
         std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
-        std::vector<VkDescriptorSet> m_ShadowMapDescriptorSets;
+        std::vector<VkDescriptorSet> m_ShadowMapViewportDescriptorSets;
 
         // UI
         std::shared_ptr<SceneHierarchyPanel> m_SceneHierarchyPanel;
@@ -80,7 +83,7 @@ namespace Flameberry {
         std::filesystem::path m_ProjectPath;
 
         std::unique_ptr<VulkanBuffer> m_MousePickingBuffer;
-        bool m_IsClickedInsideViewport = false;
+        bool m_IsClickedInsideViewport = false, m_DidViewportBegin = true, m_IsGizmoOverlayHovered = false;
         // std::shared_ptr<Material> m_CurrentMaterial;
 
         // Test
@@ -92,5 +95,25 @@ namespace Flameberry {
 
         std::shared_ptr<RenderPass> m_MousePickingRenderPass;
         std::shared_ptr<Framebuffer> m_MousePickingFramebuffer;
+
+        VkPipelineLayout m_MousePickingPipelineLayout;
+        std::shared_ptr<Pipeline> m_MousePickingPipeline;
+
+        std::unique_ptr<VulkanDescriptorLayout> m_MousePickingDescriptorLayout;
+        std::unique_ptr<VulkanDescriptorWriter> m_MousePickingDescriptorWriter;
+        VkDescriptorSet m_MousePickingDescriptorSet;
+        std::unique_ptr<VulkanBuffer> m_MousePickingUniformBuffer;
+
+        std::shared_ptr<Pipeline> m_ShadowMapPipeline;
+        VkPipelineLayout m_ShadowMapPipelineLayout;
+
+        VkSampler m_ShadowMapSampler;
+
+        std::unique_ptr<VulkanDescriptorLayout> m_ShadowMapDescriptorLayout;
+        std::unique_ptr<VulkanDescriptorWriter> m_ShadowMapDescriptorWriter;
+        std::vector<VkDescriptorSet> m_ShadowMapDescriptorSets;
+        std::vector<std::unique_ptr<VulkanBuffer>> m_ShadowMapUniformBuffers;
+
+        const uint32_t SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
     };
 }

@@ -33,8 +33,9 @@ namespace Flameberry {
 
             m_ShadowMapRenderPass = RenderPass::Create(shadowMapRenderPassSpec);
         }
+        CreateShadowMapPipeline();
 
-        m_VulkanRenderer = VulkanRenderer::Create((VulkanWindow*)&Application::Get().GetWindow(), m_ShadowMapRenderPass->GetRenderPass());
+        m_VulkanRenderer = VulkanRenderer::Create((VulkanWindow*)&Application::Get().GetWindow(), m_ShadowMapRenderPass);
 
         m_CursorIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon.png");
         m_CursorIconActive = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon_active.png");
@@ -69,14 +70,12 @@ namespace Flameberry {
         vk_uniform_buffer_object_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         vk_uniform_buffer_object_layout_binding.descriptorCount = 1;
         vk_uniform_buffer_object_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        vk_uniform_buffer_object_layout_binding.pImmutableSamplers = nullptr;
 
         VkDescriptorSetLayoutBinding shadowMapSamplerLayoutBinding{};
         shadowMapSamplerLayoutBinding.binding = 1;
         shadowMapSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         shadowMapSamplerLayoutBinding.descriptorCount = 1;
         shadowMapSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        shadowMapSamplerLayoutBinding.pImmutableSamplers = nullptr;
 
         std::vector<VkDescriptorSetLayoutBinding> bindings = { vk_uniform_buffer_object_layout_binding, shadowMapSamplerLayoutBinding };
 
@@ -94,9 +93,8 @@ namespace Flameberry {
 
             VkDescriptorImageInfo vk_shadow_map_image_info{};
             vk_shadow_map_image_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-            // vk_shadow_map_image_info.imageView = m_VulkanRenderer->GetShadowMapImageView(i);
             vk_shadow_map_image_info.imageView = m_ShadowMapFramebuffers[i]->GetAttachmentImageView(0);
-            vk_shadow_map_image_info.sampler = m_VulkanRenderer->GetShadowMapSampler();
+            vk_shadow_map_image_info.sampler = m_ShadowMapSampler;
 
             VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_VkDescriptorSets[i], m_VulkanDescriptorLayout->GetLayout());
             m_VulkanDescriptorWriter->WriteBuffer(0, &vk_descriptor_buffer_info);
@@ -140,7 +138,7 @@ namespace Flameberry {
             sceneFramebufferSpec.Height = m_ViewportSize.y;
             sceneFramebufferSpec.Attachments = { swapChainImageFormat, VK_FORMAT_D32_SFLOAT };
             sceneFramebufferSpec.Samples = sampleCount;
-            sceneFramebufferSpec.ClearColorValue = { 1.0f, 1.0f, 1.0f, 1.0f };
+            sceneFramebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
             sceneFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
 
             RenderPassSpecification sceneRenderPassSpec;
@@ -175,7 +173,9 @@ namespace Flameberry {
             m_MousePickingRenderPass = RenderPass::Create(mousePickingRenderPassSpec);
         }
 
-        m_SceneRenderer = std::make_unique<SceneRenderer>(VulkanContext::GetCurrentGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_SceneRenderPass->GetRenderPass());
+        CreateMousePickingPipeline();
+
+        m_SceneRenderer = std::make_unique<SceneRenderer>(VulkanContext::GetCurrentGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_SceneRenderPass);
 
         m_VkTextureSampler = VulkanRenderCommand::CreateDefaultSampler();
         m_ViewportDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -188,13 +188,12 @@ namespace Flameberry {
             );
         }
 
-        m_ShadowMapDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        m_ShadowMapViewportDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
         {
-            m_ShadowMapDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
+            m_ShadowMapViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
                 m_VkTextureSampler,
                 m_ShadowMapFramebuffers[i]->GetAttachmentImageView(0),
-                // m_VulkanRenderer->GetShadowMapImageView(i),
                 VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
             );
         }
@@ -210,6 +209,8 @@ namespace Flameberry {
 
         if (VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginFrame())
         {
+            uint32_t currentFrameIndex = m_VulkanRenderer->GetCurrentFrameIndex();
+
             glm::mat4 lightViewProjectionMatrix;
             {
                 FL_PROFILE_SCOPE("Shadow Pass");
@@ -222,18 +223,19 @@ namespace Flameberry {
                 lightViewProjectionMatrix = lightProjectionMatrix * lightViewMatrix;
 
                 m_ShadowMapRenderPass->Begin(commandBuffer, m_VulkanRenderer->GetImageIndex());
-                m_VulkanRenderer->BeginShadowRenderPass(lightViewProjectionMatrix);
-                m_SceneRenderer->OnDrawForShadowPass(commandBuffer, m_VulkanRenderer->GetShadowMapPipelineLayout(), m_ActiveCamera, m_ActiveScene);
+
+                m_ShadowMapPipeline->Bind(commandBuffer);
+                m_ShadowMapUniformBuffers[currentFrameIndex]->WriteToBuffer(glm::value_ptr(lightViewProjectionMatrix), sizeof(glm::mat4), 0);
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPipelineLayout, 0, 1, &m_ShadowMapDescriptorSets[currentFrameIndex], 0, nullptr);
+
+                m_SceneRenderer->OnDrawForShadowPass(commandBuffer, m_ShadowMapPipelineLayout, m_ActiveCamera, m_ActiveScene);
                 m_ShadowMapRenderPass->End(commandBuffer);
-                // m_VulkanRenderer->EndShadowRenderPass();
             }
 
-            // m_VulkanRenderer->UpdateViewportSize(m_ViewportSize);
             m_SceneFramebuffers[m_VulkanRenderer->GetImageIndex()]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_SceneRenderPass->GetRenderPass());
 
             {
                 FL_PROFILE_SCOPE("Viewport Render Pass");
-                // m_VulkanRenderer->BeginViewportRenderPass(m_ActiveScene->GetClearColor());
                 m_SceneRenderPass->Begin(commandBuffer, m_VulkanRenderer->GetImageIndex());
 
                 VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
@@ -249,17 +251,16 @@ namespace Flameberry {
                 uniformBufferObject.ViewProjectionMatrix = m_ActiveCamera.GetViewProjectionMatrix();
                 uniformBufferObject.LightViewProjectionMatrix = lightViewProjectionMatrix;
 
-                m_UniformBuffers[m_VulkanRenderer->GetCurrentFrameIndex()]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
+                m_UniformBuffers[currentFrameIndex]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
-                // m_SkyboxRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, "");
-                m_SceneRenderer->OnDraw(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VkDescriptorSets[m_VulkanRenderer->GetCurrentFrameIndex()], m_ActiveCamera, m_ActiveScene);
+                // m_SkyboxRenderer->OnDraw(commandBuffer, currentFrameIndex, m_VkDescriptorSets[currentFrameIndex], m_ActiveCamera, "");
+                m_SceneRenderer->OnDraw(commandBuffer, currentFrameIndex, m_VkDescriptorSets[currentFrameIndex], m_ActiveCamera, m_ActiveScene);
 
                 m_SceneRenderPass->End(commandBuffer);
-                // m_VulkanRenderer->EndViewportRenderPass();
             }
 
-            bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsGizmoActive;
             // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
+            bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && m_DidViewportBegin && !m_IsGizmoOverlayHovered && !m_IsGizmoActive;
             if (attemptedToSelect)
             {
                 auto [mx, my] = ImGui::GetMousePos();
@@ -276,16 +277,20 @@ namespace Flameberry {
                     isClickedInsideViewport = true;
 
                     m_MousePickingRenderPass->Begin(commandBuffer, 0, { mouseX, (int)(m_ViewportSize.y - mouseY) }, { 1, 1 });
-                    m_VulkanRenderer->BeginMousePickingRenderPass({ mouseX, m_ViewportSize.y - mouseY }, m_ActiveCamera.GetViewProjectionMatrix());
-                    m_SceneRenderer->OnDrawForMousePickingPass(commandBuffer, m_VulkanRenderer->GetMousePickingPipelineLayout(), m_ActiveCamera, m_ActiveScene);
+
+                    const auto& device = VulkanContext::GetCurrentDevice();
+                    m_MousePickingPipeline->Bind(commandBuffer);
+                    m_MousePickingUniformBuffer->WriteToBuffer(glm::value_ptr(m_ActiveCamera.GetViewProjectionMatrix()), sizeof(glm::mat4), 0);
+                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MousePickingPipelineLayout, 0, 1, &m_MousePickingDescriptorSet, 0, nullptr);
+
+                    m_SceneRenderer->OnDrawForMousePickingPass(commandBuffer, m_MousePickingPipelineLayout, m_ActiveCamera, m_ActiveScene);
                     m_MousePickingRenderPass->End(commandBuffer);
-                    // m_VulkanRenderer->EndMousePickingRenderPass();
                 }
             }
 
             m_ImGuiLayer->Begin();
             OnUIRender();
-            m_ImGuiLayer->End(commandBuffer, m_VulkanRenderer->GetCurrentFrameIndex(), m_VulkanRenderer->GetSwapChainExtent2D());
+            m_ImGuiLayer->End(commandBuffer, currentFrameIndex, m_VulkanRenderer->GetSwapChainExtent2D());
 
             bool isResized = m_VulkanRenderer->EndFrame();
             if (isResized)
@@ -315,14 +320,18 @@ namespace Flameberry {
     void EditorLayer::OnDestroy()
     {
         VulkanContext::GetCurrentDevice()->WaitIdle();
-        vkDestroySampler(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), m_VkTextureSampler, nullptr);
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroySampler(device, m_VkTextureSampler, nullptr);
+        vkDestroySampler(device, m_ShadowMapSampler, nullptr);
+        vkDestroyPipelineLayout(device, m_ShadowMapPipelineLayout, nullptr);
+        vkDestroyPipelineLayout(device, m_MousePickingPipelineLayout, nullptr);
         m_ImGuiLayer->OnDestroy();
     }
 
     void EditorLayer::OnUIRender()
     {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-        bool beginViewport = ImGui::Begin("Viewport");
+        m_DidViewportBegin = ImGui::Begin("Viewport");
 
         ImVec2 viewportMinRegion = ImGui::GetWindowContentRegionMin();
         ImVec2 viewportMaxRegion = ImGui::GetWindowContentRegionMax();
@@ -419,7 +428,8 @@ namespace Flameberry {
         work_pos.y += ImGui::GetWindowPos().y;
         ImGui::End();
 
-        if (beginViewport) {
+        if (m_DidViewportBegin)
+        {
             ImVec2 overlayButtonSize = { 20, 20 };
 
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
@@ -440,6 +450,9 @@ namespace Flameberry {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 3.0f });
             ImGui::Begin("##GizmoOverlay", __null, window_flags);
+
+            m_IsGizmoOverlayHovered = ImGui::IsWindowHovered();
+
             ImGui::PopStyleVar(4);
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
@@ -495,7 +508,7 @@ namespace Flameberry {
             InvalidateShadowMapImGuiDescriptorSet();
 
             ImGui::Image(reinterpret_cast<ImTextureID>(
-                m_ShadowMapDescriptorSets[currentFrameIndex]),
+                m_ShadowMapViewportDescriptorSets[currentFrameIndex]),
                 ImVec2{ m_ShadowMapViewportSize.x, m_ShadowMapViewportSize.y }
             );
             ImGui::End();
@@ -605,7 +618,6 @@ namespace Flameberry {
 
         VkDescriptorImageInfo desc_image[1] = {};
         desc_image[0].sampler = m_VkTextureSampler;
-        // desc_image[0].imageView = m_VulkanRenderer->GetViewportImageView(currentFrameIndex);
         desc_image[0].imageView = m_SceneFramebuffers[m_VulkanRenderer->GetImageIndex()]->GetAttachmentImageView(2);
         desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
@@ -624,14 +636,12 @@ namespace Flameberry {
 
         VkDescriptorImageInfo desc_image[1] = {};
         desc_image[0].sampler = m_VkTextureSampler;
-        // desc_image[0].imageView = m_VulkanRenderer->GetShadowMapImageView(currentFrameIndex);
         desc_image[0].imageView = m_ShadowMapFramebuffers[m_VulkanRenderer->GetImageIndex()]->GetAttachmentImageView(0);
-
         desc_image[0].imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet write_desc[1] = {};
         write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_desc[0].dstSet = m_ShadowMapDescriptorSets[currentFrameIndex];
+        write_desc[0].dstSet = m_ShadowMapViewportDescriptorSets[currentFrameIndex];
         write_desc[0].descriptorCount = 1;
         write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         write_desc[0].pImageInfo = desc_image;
@@ -751,5 +761,168 @@ namespace Flameberry {
             if (success)
                 m_OpenedScenePathIfExists = path;
         }
+    }
+
+    void EditorLayer::CreateMousePickingPipeline()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
+        // Create Descriptors
+        m_MousePickingUniformBuffer = std::make_unique<VulkanBuffer>(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        m_MousePickingUniformBuffer->MapMemory(sizeof(glm::mat4));
+
+        // Creating Descriptors
+        VkDescriptorSetLayoutBinding vk_uniform_buffer_object_layout_binding{};
+        vk_uniform_buffer_object_layout_binding.binding = 0;
+        vk_uniform_buffer_object_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        vk_uniform_buffer_object_layout_binding.descriptorCount = 1;
+        vk_uniform_buffer_object_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vk_uniform_buffer_object_layout_binding.pImmutableSamplers = nullptr;
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings = { vk_uniform_buffer_object_layout_binding };
+
+        m_MousePickingDescriptorLayout = std::make_unique<VulkanDescriptorLayout>(bindings);
+        m_MousePickingDescriptorWriter = std::make_unique<VulkanDescriptorWriter>(*m_MousePickingDescriptorLayout);
+
+        VkDescriptorBufferInfo vk_descriptor_buffer_info{};
+        vk_descriptor_buffer_info.buffer = m_MousePickingUniformBuffer->GetBuffer();
+        vk_descriptor_buffer_info.offset = 0;
+        vk_descriptor_buffer_info.range = sizeof(glm::mat4);
+
+        VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_MousePickingDescriptorSet, m_MousePickingDescriptorLayout->GetLayout());
+        m_MousePickingDescriptorWriter->WriteBuffer(0, &vk_descriptor_buffer_info);
+        m_MousePickingDescriptorWriter->Update(m_MousePickingDescriptorSet);
+
+        // Pipeline Creation
+        VkPushConstantRange vk_push_constant_range{};
+        vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        vk_push_constant_range.size = sizeof(MousePickingPushConstantData);
+        vk_push_constant_range.offset = 0;
+
+        VkDescriptorSetLayout descriptorSetLayouts[] = { m_MousePickingDescriptorLayout->GetLayout() };
+        VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
+
+        VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
+        vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        vk_pipeline_layout_create_info.setLayoutCount = 1;
+        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
+        vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
+        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
+
+        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_MousePickingPipelineLayout));
+
+        PipelineSpecification pipelineSpec{};
+        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_pickingVert.spv";
+        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_pickingFrag.spv";
+
+        pipelineSpec.PipelineLayout = m_MousePickingPipelineLayout;
+        pipelineSpec.RenderPass = m_MousePickingRenderPass;
+
+        pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
+        pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
+
+        m_MousePickingPipeline = Pipeline::Create(pipelineSpec);
+    }
+
+    void EditorLayer::CreateShadowMapPipeline()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
+        VkSamplerCreateInfo sampler_info{};
+        sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_info.magFilter = VK_FILTER_LINEAR;
+        sampler_info.minFilter = VK_FILTER_LINEAR;
+        sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_info.anisotropyEnable = VK_TRUE;
+        sampler_info.mipLodBias = 0.0f;
+        sampler_info.maxAnisotropy = 1.0f;
+        sampler_info.minLod = 0.0f;
+        sampler_info.maxLod = 1.0f;
+        sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+
+        VkPhysicalDeviceProperties properties;
+        vkGetPhysicalDeviceProperties(VulkanContext::GetPhysicalDevice(), &properties);
+
+        sampler_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+        sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        sampler_info.unnormalizedCoordinates = VK_FALSE;
+        sampler_info.compareEnable = VK_FALSE;
+        sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+        sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        sampler_info.mipLodBias = 0.0f;
+        sampler_info.minLod = 0.0f;
+        sampler_info.maxLod = 1.0f;
+
+        VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_ShadowMapSampler));
+
+        m_ShadowMapUniformBuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (auto& uniformBuffer : m_ShadowMapUniformBuffers)
+        {
+            uniformBuffer = std::make_unique<VulkanBuffer>(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            uniformBuffer->MapMemory(sizeof(glm::mat4));
+        }
+
+        // Creating Descriptors
+        VkDescriptorSetLayoutBinding vk_uniform_buffer_object_layout_binding{};
+        vk_uniform_buffer_object_layout_binding.binding = 0;
+        vk_uniform_buffer_object_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        vk_uniform_buffer_object_layout_binding.descriptorCount = 1;
+        vk_uniform_buffer_object_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vk_uniform_buffer_object_layout_binding.pImmutableSamplers = nullptr;
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings = { vk_uniform_buffer_object_layout_binding };
+
+        m_ShadowMapDescriptorLayout = std::make_unique<VulkanDescriptorLayout>(bindings);
+        m_ShadowMapDescriptorWriter = std::make_unique<VulkanDescriptorWriter>(*m_ShadowMapDescriptorLayout);
+
+        m_ShadowMapDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            VkDescriptorBufferInfo vk_descriptor_buffer_info{};
+            vk_descriptor_buffer_info.buffer = m_ShadowMapUniformBuffers[i]->GetBuffer();
+            vk_descriptor_buffer_info.offset = 0;
+            vk_descriptor_buffer_info.range = sizeof(glm::mat4);
+
+            VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_ShadowMapDescriptorSets[i], m_ShadowMapDescriptorLayout->GetLayout());
+            m_ShadowMapDescriptorWriter->WriteBuffer(0, &vk_descriptor_buffer_info);
+            m_ShadowMapDescriptorWriter->Update(m_ShadowMapDescriptorSets[i]);
+        }
+
+        VkPushConstantRange vk_push_constant_range{};
+        vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vk_push_constant_range.size = sizeof(ModelMatrixPushConstantData);
+        vk_push_constant_range.offset = 0;
+
+        VkDescriptorSetLayout descriptorSetLayouts[] = { m_ShadowMapDescriptorLayout->GetLayout() };
+        VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
+
+        VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
+        vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        vk_pipeline_layout_create_info.setLayoutCount = 1;
+        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
+        vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
+        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
+
+        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_ShadowMapPipelineLayout));
+
+        PipelineSpecification pipelineSpec{};
+        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_mapVert.spv";
+        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_mapFrag.spv";
+
+        pipelineSpec.PipelineLayout = m_ShadowMapPipelineLayout;
+        pipelineSpec.RenderPass = m_ShadowMapRenderPass;
+
+        pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
+        pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
+
+        pipelineSpec.Viewport.width = SHADOW_MAP_WIDTH;
+        pipelineSpec.Viewport.height = SHADOW_MAP_HEIGHT;
+
+        pipelineSpec.Scissor = { {0, 0}, {SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT} };
+
+        m_ShadowMapPipeline = Pipeline::Create(pipelineSpec);
     }
 }

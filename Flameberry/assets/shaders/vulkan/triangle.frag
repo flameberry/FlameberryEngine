@@ -1,18 +1,20 @@
 #version 450
 
 layout (location = 0) in vec3 v_Position;
-layout (location = 1) in vec4 v_VertexColor;
-layout (location = 2) in vec3 v_Normal;
-layout (location = 3) in vec2 v_TextureCoords;
-layout (location = 4) in vec4 v_LightFragmentPosition;
+layout (location = 1) in vec3 v_Normal;
+layout (location = 2) in vec2 v_TextureCoords;
+layout (location = 3) in vec4 v_LightFragmentPosition;
+layout (location = 4) in mat3 v_TBNMatrix;
 
-layout (location = 0) out vec4 FragColor;
+layout (location = 0) out vec4 o_FragColor;
 
 #define PI 3.1415926535897932384626433832795
 #define AMBIENT 0.02
 
 layout (set = 0, binding = 1) uniform sampler2D u_ShadowMapSampler;
-layout (set = 2, binding = 0) uniform sampler2D u_TextureSampler;
+
+layout (set = 2, binding = 0) uniform sampler2D u_TextureMapSampler;
+layout (set = 3, binding = 0) uniform sampler2D u_NormalMapSampler;
 
 struct DirectionalLight {
     vec3  Direction;
@@ -39,6 +41,7 @@ layout (push_constant) uniform MeshData {
     float u_Roughness;
     float u_Metallic;
     float u_TextureMapEnabled;
+    float u_NormalMapEnabled;
 };
 
 vec3 CalculateDirectionalLight(vec3 normal, DirectionalLight light)
@@ -51,7 +54,7 @@ vec3 CalculateDirectionalLight(vec3 normal, DirectionalLight light)
 vec3 GetPixelColor()
 {
     if (u_TextureMapEnabled == 1.0)
-        return texture(u_TextureSampler, v_TextureCoords).xyz;
+        return texture(u_TextureMapSampler, v_TextureCoords).xyz;
     else
         return u_Albedo;
 }
@@ -175,8 +178,8 @@ vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
     // float bias = mix(0.001, 0.0, n_dot_l);
 
     // vec3 finalColor = CalculateShadowFactor() * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
-    vec3 finalColor = FilterPCF(/*bias*/) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
-    // vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
+    // vec3 finalColor = FilterPCF(/*bias*/) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
+    vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
 
     finalColor = max(finalColor, AMBIENT * GetPixelColor());
     return finalColor;
@@ -222,10 +225,8 @@ vec3 CalculatePBRPointLight(PointLight light, vec3 normal)
     return finalColor;
 }
 
-vec4 CalculatePBRLighting()
+vec4 CalculatePBRLighting(vec3 normal)
 {
-    vec3 normal = normalize(v_Normal);
-
     vec3 totalLight = vec3(0.0);
 
     totalLight += CalculatePBRDirectionalLight(u_SceneData.directionalLight, normal);
@@ -245,5 +246,13 @@ vec4 CalculatePBRLighting()
 
 void main()
 {
-    FragColor = CalculatePBRLighting();
+    vec3 normal = v_Normal;
+    if (u_NormalMapEnabled == 1.0)
+    {
+        vec3 rgbNormal = texture(u_NormalMapSampler, v_TextureCoords).rgb * 2.0 - 1.0;
+        normal = normalize(v_TBNMatrix * rgbNormal);
+    }
+
+    // o_FragColor = CalculatePBRLighting(normal);
+    o_FragColor = vec4(normal, 1.0);
 }

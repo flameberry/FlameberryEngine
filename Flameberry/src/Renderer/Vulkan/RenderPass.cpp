@@ -74,7 +74,7 @@ namespace Flameberry {
             attachments[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             attachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-            if (format == VK_FORMAT_D32_SFLOAT || format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT)
+            if (IsDepthAttachment(format))
             {
                 attachments[i].loadOp = framebufferSpec.DepthLoadOp;
                 attachments[i].storeOp = framebufferSpec.DepthStoreOp;
@@ -106,7 +106,7 @@ namespace Flameberry {
 
                     auto& resolveRef = resolveRefs.emplace_back();
                     resolveRef.attachment = i + framebufferSpec.Attachments.size();
-                    resolveRef.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    resolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                 }
             }
             i++;
@@ -148,12 +148,18 @@ namespace Flameberry {
         vk_render_pass_begin_info.renderArea.extent = (renderAreaExtent.width == 0 || renderAreaExtent.height == 0) ?
             VkExtent2D{ framebufferSpec.Width, framebufferSpec.Height } : renderAreaExtent;
 
-        std::array<VkClearValue, 2> vk_clear_values{};
-        vk_clear_values[0].color = framebufferSpec.ClearColorValue;
-        vk_clear_values[1].depthStencil = framebufferSpec.DepthStencilClearValue;
+        std::vector<VkClearValue> clearValues;
+        for (auto& format : framebufferSpec.Attachments)
+        {
+            auto& value = clearValues.emplace_back();
+            if (IsDepthAttachment(format))
+                value.depthStencil = framebufferSpec.DepthStencilClearValue;
+            else
+                value.color = framebufferSpec.ClearColorValue;
+        }
 
-        vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(vk_clear_values.size());
-        vk_render_pass_begin_info.pClearValues = vk_clear_values.data();
+        vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        vk_render_pass_begin_info.pClearValues = clearValues.data();
 
         vkCmdBeginRenderPass(commandBuffer, &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
     }

@@ -26,8 +26,6 @@ namespace Flameberry {
     struct SceneData
     {
         std::string Name = "Untitled";
-        // std::vector<std::shared_ptr<StaticMesh>> Meshes;
-        // std::unordered_map<std::string, Material> Materials;
         EnvironmentMap ActiveEnvironmentMap;
     };
 
@@ -36,6 +34,8 @@ namespace Flameberry {
     public:
         Scene(ecs::registry* registry = nullptr);
         ~Scene() = default;
+
+        void RenderScene(const glm::mat4& cameraMatrix);
 
         ecs::registry* GetRegistry() { return m_Registry; }
         void SetSelectedEntity(ecs::entity_handle* entity) { m_SelectedEntity = entity; }

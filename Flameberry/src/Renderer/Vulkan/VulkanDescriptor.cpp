@@ -39,6 +39,14 @@ namespace Flameberry {
         return true;
     }
 
+    DescriptorSet::DescriptorSet()
+    {
+    }
+
+    DescriptorSet::~DescriptorSet()
+    {
+    }
+
     VulkanDescriptorWriter::VulkanDescriptorWriter(VulkanDescriptorLayout& descriptorLayout)
         : m_DescriptorLayout(descriptorLayout)
     {

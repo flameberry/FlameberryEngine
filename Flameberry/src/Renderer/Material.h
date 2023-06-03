@@ -17,8 +17,8 @@ namespace Flameberry {
         glm::vec3 Albedo;
         float Roughness;
         bool Metallic;
-        bool TextureMapEnabled = false;
-        std::shared_ptr<VulkanTexture> TextureMap;
+        bool TextureMapEnabled = false, NormalMapEnabled = false;
+        std::shared_ptr<VulkanTexture> TextureMap, NormalMap;
     public:
         static std::shared_ptr<Material> LoadFromFile(const char* path);
         UUID GetUUID() const { return m_UUID; }
