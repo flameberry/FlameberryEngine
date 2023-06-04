@@ -36,18 +36,17 @@ namespace Flameberry {
 
         stbi_image_free(pixels);
 
-        ImageSpecification imageSpec;
-        imageSpec.Width = width;
-        imageSpec.Height = height;
-        imageSpec.MipLevels = mipLevels;
-        imageSpec.Samples = 1;
-        imageSpec.Format = VK_FORMAT_R8G8B8A8_UNORM;
-        imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
-        imageSpec.Usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        imageSpec.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+        m_TextureImageSpecification.Width = width;
+        m_TextureImageSpecification.Height = height;
+        m_TextureImageSpecification.MipLevels = mipLevels;
+        m_TextureImageSpecification.Samples = 1;
+        m_TextureImageSpecification.Format = VK_FORMAT_R8G8B8A8_UNORM;
+        m_TextureImageSpecification.Tiling = VK_IMAGE_TILING_OPTIMAL;
+        m_TextureImageSpecification.Usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        m_TextureImageSpecification.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        m_TextureImageSpecification.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
-        m_TextureImage = Image::Create(imageSpec);
+        m_TextureImage = Image::Create(m_TextureImageSpecification);
 
         m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         m_TextureImage->WriteFromBuffer(stagingBuffer.GetBuffer());

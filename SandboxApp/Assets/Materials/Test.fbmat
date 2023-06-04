@@ -1,7 +1,9 @@
-UUID: 10459709004153775111
+UUID: 12187434111446586689
 Name: Test Material
-Albedo: [0.5, 0.5, 0.5]
-Roughness: 0.2
+Albedo: [0, 0, 0]
+Roughness: 0
 Metallic: false
 TextureMapEnabled: true
-TextureMap: Assets/Textures/brick.png
+TextureMap: Assets/Textures/diffuse.png
+NormalMapEnabled: true
+NormalMap: Assets/Textures/normal.png

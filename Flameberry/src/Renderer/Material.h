@@ -14,9 +14,9 @@ namespace Flameberry {
         bool IsDerived = false;
 
         // Actual properties
-        glm::vec3 Albedo;
-        float Roughness;
-        bool Metallic;
+        glm::vec3 Albedo{ 1.0f };
+        float Roughness = 0.2f;
+        bool Metallic = false;
         bool TextureMapEnabled = false, NormalMapEnabled = false;
         std::shared_ptr<VulkanTexture> TextureMap, NormalMap;
     public:

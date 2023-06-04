@@ -29,6 +29,7 @@ namespace Flameberry {
         void SaveScene(const std::string& path);
         void OpenScene(const std::string& path);
     private:
+        void ShowMenuBar();
         void CreateMousePickingPipeline();
         void CreateShadowMapPipeline();
     private:
@@ -84,7 +85,6 @@ namespace Flameberry {
 
         std::unique_ptr<VulkanBuffer> m_MousePickingBuffer;
         bool m_IsClickedInsideViewport = false, m_DidViewportBegin = true, m_IsGizmoOverlayHovered = false;
-        // std::shared_ptr<Material> m_CurrentMaterial;
 
         // Test
         std::shared_ptr<RenderPass> m_SceneRenderPass;

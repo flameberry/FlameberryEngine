@@ -111,18 +111,6 @@ namespace Flameberry {
         m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>(m_ActiveScene.get());
         m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>(m_ProjectPath);
 
-        // std::shared_ptr<Material> material = std::make_shared<Material>();
-        // material->Name = "Test Material";
-        // material->TextureMapEnabled = true;
-        // material->TextureMap = VulkanTexture::TryGetOrLoadTexture("Assets/Textures/brick.png");
-        // MaterialSerializer::Serialize(material, "Assets/Materials/Test.fbmat");
-
-        // auto mat = MaterialSerializer::Deserialize("Assets/Materials/Test.fbmat");
-
-        // FL_DEBUGBREAK();
-
-        // m_CurrentMaterial = MaterialSerializer::Deserialize("Assets/Materials/Test.fbmat");
-
         m_MousePickingBuffer = std::make_unique<VulkanBuffer>(
             sizeof(int32_t),
             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -260,7 +248,12 @@ namespace Flameberry {
             }
 
             // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
-            bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && m_DidViewportBegin && !m_IsGizmoOverlayHovered && !m_IsGizmoActive;
+            bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left)
+                && m_DidViewportBegin
+                && m_IsViewportFocused
+                && !m_IsGizmoOverlayHovered
+                && !m_IsGizmoActive;
+
             if (attemptedToSelect)
             {
                 auto [mx, my] = ImGui::GetMousePos();
@@ -330,6 +323,8 @@ namespace Flameberry {
 
     void EditorLayer::OnUIRender()
     {
+        // ShowMenuBar();
+
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         m_DidViewportBegin = ImGui::Begin("Viewport");
 
@@ -516,100 +511,6 @@ namespace Flameberry {
 
         m_SceneHierarchyPanel->OnUIRender();
         m_ContentBrowserPanel->OnUIRender();
-
-        // Test
-        // ImGui::Begin("Material Editor");
-
-        // ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5, 3 });
-        // if (ImGui::BeginTable("MeshComponentAttributes", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible))
-        // {
-        //     ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
-        //     ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-        //     ImGui::TableNextRow();
-        //     ImGui::TableNextColumn();
-
-        //     ImGui::Text("Name");
-        //     ImGui::TableNextColumn();
-        //     ImGui::Text("%s", m_CurrentMaterial->Name.c_str());
-
-        //     ImGui::TableNextRow();
-        //     ImGui::TableNextColumn();
-
-        //     ImGui::Text("FilePath");
-        //     ImGui::TableNextColumn();
-        //     ImGui::Text("%s", m_CurrentMaterial->FilePath.c_str());
-
-        //     ImGui::TableNextRow();
-        //     ImGui::TableNextColumn();
-
-        //     ImGui::Text("Texture Map");
-
-        //     ImGui::TableNextColumn();
-
-        //     bool& textureMapEnabled = m_CurrentMaterial->TextureMapEnabled;
-        //     ImGui::Checkbox("##Texture_Map", &textureMapEnabled);
-
-        //     if (textureMapEnabled)
-        //     {
-        //         auto& texture = m_CurrentMaterial->TextureMap;
-        //         if (!texture)
-        //             texture = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"SandboxApp/Assets/textures/Checkerboard.png");
-
-        //         VulkanTexture& currentTexture = *(texture.get());
-
-        //         ImGui::SameLine();
-        //         ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetDescriptorSet()), ImVec2{ 50, 50 });
-        //         if (ImGui::BeginDragDropTarget())
-        //         {
-        //             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
-        //             {
-        //                 std::string path = (const char*)payload->Data;
-        //                 std::filesystem::path texturePath{ path };
-        //                 const std::string& ext = texturePath.extension().string();
-
-        //                 FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
-
-        //                 if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
-        //                     texture = VulkanTexture::TryGetOrLoadTexture(texturePath.string());
-        //                 else
-        //                     FL_WARN("Bad File given as Texture!");
-        //             }
-        //             ImGui::EndDragDropTarget();
-        //         }
-        //     }
-
-        //     ImGui::TableNextRow();
-        //     ImGui::TableNextColumn();
-
-        //     ImGui::Text("Albedo");
-        //     ImGui::TableNextColumn();
-        //     FL_REMOVE_LABEL(ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_CurrentMaterial->Albedo)));
-        //     ImGui::TableNextRow();
-        //     ImGui::TableNextColumn();
-
-        //     ImGui::Text("Roughness");
-        //     ImGui::TableNextColumn();
-        //     FL_REMOVE_LABEL(ImGui::DragFloat("##Roughness", &m_CurrentMaterial->Roughness, 0.01f, 0.0f, 1.0f));
-        //     ImGui::TableNextRow();
-        //     ImGui::TableNextColumn();
-
-        //     ImGui::Text("Metallic");
-        //     ImGui::TableNextColumn();
-        //     bool metallic = m_CurrentMaterial->Metallic == 1.0f;
-        //     ImGui::Checkbox("##Metallic", &metallic);
-        //     m_CurrentMaterial->Metallic = metallic ? 1.0f : 0.0f;
-        //     ImGui::EndTable();
-        // }
-        // ImGui::PopStyleVar();
-        // ImGui::End();
-
-        // ImGui::Begin("Material Finder");
-        // for (const auto& [uuid, asset] : AssetManager::GetAssetTable())
-        // {
-        //     if (asset.Type == AssetType::MATERIAL)
-        //         ImGui::Text("%s", std::static_pointer_cast<Material>(asset.AssetRef)->Name.c_str());
-        // }
-        // ImGui::End();
     }
 
     void EditorLayer::InvalidateViewportImGuiDescriptorSet()
@@ -760,6 +661,30 @@ namespace Flameberry {
             bool success = serializer.DeserializeScene(path.c_str());
             if (success)
                 m_OpenedScenePathIfExists = path;
+        }
+    }
+
+    void EditorLayer::ShowMenuBar()
+    {
+        // Main Menu
+        if (ImGui::BeginMainMenuBar())
+        {
+            if (ImGui::BeginMenu("File"))
+            {
+                if (ImGui::MenuItem("Save As", "Cmd+Shift+S"))
+                    SaveScene();
+                if (ImGui::MenuItem("Save", "Cmd+S"))
+                {
+                    if (m_OpenedScenePathIfExists.empty())
+                        SaveScene();
+                    else
+                        SaveScene(m_OpenedScenePathIfExists);
+                }
+                if (ImGui::MenuItem("Open", "Cmd+O"))
+                    OpenScene();
+                ImGui::EndMenu();
+            }
+            ImGui::EndMainMenuBar();
         }
     }
 

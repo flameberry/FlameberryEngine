@@ -12,7 +12,9 @@ namespace Flameberry {
         m_RenamedEntity(ecs::entity_handle::null),
         m_VkTextureSampler(VulkanTexture::GetDefaultSampler()),
         m_PlusIconTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/plus_icon.png", m_VkTextureSampler),
-        m_MinusIconTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/minus_icon.png", m_VkTextureSampler)
+        m_MinusIconTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/minus_icon.png", m_VkTextureSampler),
+        m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
+        m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>())
     {
     }
 
@@ -223,6 +225,9 @@ namespace Flameberry {
         ImGui::End();
 
         OnEnvironmentMapPanelRender();
+
+        m_MaterialSelectorPanel->OnUIRender();
+        m_MaterialEditorPanel->OnUIRender();
     }
 
     void SceneHierarchyPanel::RenameNode(std::string& tag)
@@ -285,7 +290,13 @@ namespace Flameberry {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
-            ImGui::Button("Load Mesh");
+            ImGui::Text("Mesh");
+
+            ImGui::TableNextColumn();
+
+            const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
+            ImGui::Button(staticMesh ? staticMesh->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f));
+
             if (ImGui::BeginDragDropTarget())
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
@@ -307,101 +318,88 @@ namespace Flameberry {
                 ImGui::EndDragDropTarget();
             }
 
-            ImGui::TableNextColumn();
-
-            const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
-            if (staticMesh)
-                ImGui::Text("%s", staticMesh->GetName().c_str());
-
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
+            ImGui::EndTable();
+        }
 
-            // Material Menu
-            ImGui::Text("Materials");
-
-            ImGui::TableNextColumn();
-
+        if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth))
+        {
+            const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
             if (staticMesh)
             {
-                constexpr uint32_t limit = 6;
-                ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
-                ImGui::BeginChild("MaterialList", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * limit), false, window_flags);
+                constexpr uint32_t limit = 10;
+                ImGui::SetNextWindowSizeConstraints(ImVec2(-1.0f, 10.0f), ImVec2(-1.0f, ImGui::GetTextLineHeightWithSpacing() * limit));
 
-                int i = 0;
-                for (const auto& submesh : staticMesh->GetSubMeshes())
+                ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
+                ImGui::BeginChild("MaterialList", ImVec2(ImGui::GetContentRegionAvail().x, 0), false, window_flags);
+                if (ImGui::BeginTable("MaterialTable", 2, m_TableFlags))
                 {
-                    if (AssetManager::IsAssetHandleValid(submesh.MaterialUUID)) {
-                        ImGui::Text("Submesh %d: %s", i, AssetManager::GetAsset<Material>(submesh.MaterialUUID)->Name.c_str());
+                    ImGui::TableSetupColumn("Material_Index");
+                    ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
+                    int i = 0;
+                    for (const auto& submesh : staticMesh->GetSubMeshes())
+                    {
+                        ImGui::Text("Material %d", i);
+                        ImGui::TableNextColumn();
+
+                        auto mat = AssetManager::GetAsset<Material>(submesh.MaterialUUID);
+
+                        ImGui::Button(
+                            AssetManager::IsAssetHandleValid(submesh.MaterialUUID) ?
+                            mat->Name.c_str() : "Null",
+                            ImVec2(
+                                ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetStyle().ItemSpacing.x - ImGui::GetStyle().WindowPadding.x,
+                                0.0f
+                            )
+                        );
+
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                            m_MaterialEditorPanel->SetCurrentMaterial(mat);
+
+                        ImGui::SameLine();
+                        ImGui::Button("O", ImVec2(-1.0f, 0.0f));
+                        if (ImGui::IsItemClicked())
+                        {
+                            m_MaterialSelectorPanel->OpenPanel([staticMesh, i](const std::shared_ptr<Material>& material)
+                                {
+                                    staticMesh->SetMaterialToSubMesh(i, material->GetUUID());
+                                }
+                            );
+                        }
+
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                            {
+                                const char* path = (const char*)payload->Data;
+                                std::filesystem::path matPath{ path };
+                                const std::string& ext = matPath.extension().string();
+
+                                FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+
+                                if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
+                                {
+                                    const auto& loadedMat = AssetManager::TryGetOrLoadAssetFromFile<Material>(matPath);
+                                    staticMesh->SetMaterialToSubMesh(i, loadedMat->GetUUID());
+                                }
+                                else
+                                    FL_WARN("Bad File given as Material!");
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
                         i++;
                     }
+                    ImGui::EndTable();
                 }
                 ImGui::EndChild();
             }
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-
-            // Material Controls
-            // auto& material = m_ActiveScene->m_SceneData.Materials[mesh.MaterialName];
-
-            // ImGui::Text("Texture Map");
-
-            // ImGui::TableNextColumn();
-
-            // bool& textureMapEnabled = material.TextureMapEnabled;
-            // ImGui::Checkbox("##Texture_Map", &textureMapEnabled);
-
-            // if (textureMapEnabled)
-            // {
-            //     auto& texture = material.TextureMap;
-            //     if (!texture)
-            //         texture = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"SandboxApp/Assets/textures/Checkerboard.png");
-
-            //     VulkanTexture& currentTexture = *(texture.get());
-
-            //     ImGui::SameLine();
-            //     ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetDescriptorSet()), ImVec2{ 50, 50 });
-            //     if (ImGui::BeginDragDropTarget())
-            //     {
-            //         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
-            //         {
-            //             std::string path = (const char*)payload->Data;
-            //             std::filesystem::path texturePath{ path };
-            //             texturePath = project::g_AssetDirectory / texturePath;
-            //             const std::string& ext = texturePath.extension().string();
-
-            //             FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
-
-            //             if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
-            //                 texture = VulkanTexture::TryGetOrLoadTexture(texturePath.string());
-            //             else
-            //                 FL_WARN("Bad File given as Texture!");
-            //         }
-            //         ImGui::EndDragDropTarget();
-            //     }
-            // }
-
-            // ImGui::TableNextRow();
-            // ImGui::TableNextColumn();
-
-            // ImGui::Text("Albedo");
-            // ImGui::TableNextColumn();
-            // FL_REMOVE_LABEL(ImGui::ColorEdit3("##Albedo", glm::value_ptr(material.Albedo)));
-            // ImGui::TableNextRow();
-            // ImGui::TableNextColumn();
-
-            // ImGui::Text("Roughness");
-            // ImGui::TableNextColumn();
-            // FL_REMOVE_LABEL(ImGui::DragFloat("##Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f));
-            // ImGui::TableNextRow();
-            // ImGui::TableNextColumn();
-
-            // ImGui::Text("Metallic");
-            // ImGui::TableNextColumn();
-            // bool metallic = material.Metallic == 1.0f;
-            // ImGui::Checkbox("##Metallic", &metallic);
-            // material.Metallic = metallic ? 1.0f : 0.0f;
-            ImGui::EndTable();
         }
         ImGui::PopStyleVar();
     }

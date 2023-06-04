@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Flameberry.h"
+#include "MaterialSelectorPanel.h"
+#include "MaterialEditorPanel.h"
 
 namespace Flameberry {
     class SceneHierarchyPanel
@@ -26,6 +28,9 @@ namespace Flameberry {
 
         VkSampler m_VkTextureSampler;
         VulkanTexture m_PlusIconTexture, m_MinusIconTexture;
+
+        std::shared_ptr<MaterialSelectorPanel> m_MaterialSelectorPanel;
+        std::shared_ptr<MaterialEditorPanel> m_MaterialEditorPanel;
 
         char m_RenameBuffer[256];
     };

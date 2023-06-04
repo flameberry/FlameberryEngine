@@ -25,6 +25,9 @@ namespace Flameberry {
         // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 16);
         // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 13);
 
+        // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", 16);
+        // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", 14);
+
         io.IniFilename = NULL;
         ImGui::LoadIniSettingsFromDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
 

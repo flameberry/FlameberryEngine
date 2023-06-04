@@ -34,10 +34,13 @@ namespace Flameberry {
         std::string GetName() const { return m_Name; }
         std::string GetFilePath() const { return m_FilePath; }
         const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
+        void SetMaterialToSubMesh(uint32_t submeshIndex, UUID materialID) { m_SubMeshes[submeshIndex].MaterialUUID = materialID; }
 
         static std::shared_ptr<StaticMesh> LoadFromFile(const char* path) { return std::make_shared<StaticMesh>(path); }
     private:
         void Load(const std::string& path);
+        void LoadOBJ(const std::string& path);
+        void LoadGLTF(const std::string& path, bool isBinary);
         void CreateBuffers();
     private:
         std::vector<VulkanVertex> m_Vertices; // TODO: Does it need to be stored?

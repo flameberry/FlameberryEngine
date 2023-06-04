@@ -192,7 +192,7 @@ namespace Flameberry {
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
         const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();
 
-        vkDeviceWaitIdle(device);
+        VulkanContext::GetCurrentDevice()->WaitIdle();
         FL_INFO("Device is idle now...");
 
         SwapChainDetails vk_swap_chain_details = VulkanRenderCommand::GetSwapChainDetails(physicalDevice, m_VkSurface);

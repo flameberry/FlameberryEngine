@@ -32,4 +32,5 @@ Meshes:
   - Mesh: 16847563272622732710
     FilePath: Assets/Meshes/sphere.obj
     NonDerivedMaterials:
-      []
+      - FlameberryMaterial: Assets/Materials/Test.fbmat
+        SubMeshIndex: 0

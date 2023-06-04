@@ -73,6 +73,19 @@ namespace Flameberry {
 
     void StaticMesh::Load(const std::string& path)
     {
+        std::filesystem::path filepath(path);
+        const auto& extension = filepath.extension();
+
+        if (extension == ".obj")
+            LoadOBJ(path);
+        else if (extension == ".gltf")
+            LoadGLTF(path, false);
+        else if (extension == ".glb")
+            LoadGLTF(path, true);
+    }
+
+    void StaticMesh::LoadOBJ(const std::string& path)
+    {
         FL_SCOPED_TIMER("Load_Model");
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
@@ -197,6 +210,11 @@ namespace Flameberry {
                 submesh.MaterialUUID = materialUUIDs[shape.mesh.material_ids[0]];
         }
         FL_INFO("Loaded Model: '{0}': Vertices: {1}, Indices: {2}", path, m_Vertices.size(), m_Indices.size());
+    }
+
+    void StaticMesh::LoadGLTF(const std::string& path, bool isBinary)
+    {
+        FL_ASSERT(false, "GLTF files are not supported yet!");
     }
 
     void StaticMesh::CreateBuffers()

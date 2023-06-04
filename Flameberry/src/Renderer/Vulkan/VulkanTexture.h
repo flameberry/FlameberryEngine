@@ -23,6 +23,7 @@ namespace Flameberry {
         VkImageView GetImageView() const { return m_TextureImage->GetImageView(); }
         VkSampler GetSampler() const { return m_VkTextureSampler; }
         VkDescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
+        ImageSpecification GetImageSpecification() const { return m_TextureImageSpecification; }
 
         // This function is to be used when initializing the Vulkan Renderer
         static void InitStaticResources();
@@ -35,6 +36,8 @@ namespace Flameberry {
         static std::shared_ptr<VulkanTexture> TryGetOrLoadTexture(const std::string& texturePath);
     private:
         std::string m_FilePath;
+
+        ImageSpecification m_TextureImageSpecification;
 
         std::shared_ptr<Image> m_TextureImage;
         VkSampler m_VkTextureSampler;

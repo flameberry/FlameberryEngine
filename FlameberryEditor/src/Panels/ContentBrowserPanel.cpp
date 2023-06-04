@@ -122,27 +122,21 @@ namespace Flameberry {
 
         ImGui::SameLine();
 
-        ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::PopStyleVar();
-
-        float iconSize = 75.0f, padding = 15.0f;
-        float cellSize = iconSize + padding;
-        uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize;
-        columns = columns >= 1 ? columns : 1;
-
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-        // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 
+        float topChildHeight = 38.0f;
+        float bottomChildHeight = ImGui::GetContentRegionAvail().y - topChildHeight;
+
+        ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         float arrowSize = 18.0f;
-
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_BACK_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != m_ProjectDirectory / "Assets")
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_BACK_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != m_ProjectDirectory / "Assets")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FORWARD_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }) && m_CurrentDirectory != m_ProjectDirectory / "Assets")
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FORWARD_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != m_ProjectDirectory / "Assets")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
 
-        // char search_input[256] = { '\0' };
         ImGui::PushItemWidth(150.0f);
         if (m_IsSearchBoxFocused)
         {
@@ -167,8 +161,20 @@ namespace Flameberry {
         ImGui::Text("%s", std::filesystem::relative(m_CurrentDirectory, m_ProjectDirectory).c_str());
         ImGui::PopFont();
 
-        ImGui::Separator();
+        ImVec2 pos = ImVec2(ImGui::GetWindowPos().x, ImGui::GetWindowHeight() + ImGui::GetWindowPos().y);
+        ImGui::GetWindowDrawList()->AddLine(pos, ImVec2{ pos.x + ImGui::GetWindowWidth() - 5.0f, pos.y }, 0xff646161, 4.0f);
+        ImGui::EndChild();
 
+        ImGui::SetNextWindowPos(pos);
+
+        ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, bottomChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::PopStyleVar();
+
+        float iconWidth = 75.0f, padding = 15.0f;
+
+        float cellSize = iconWidth + padding;
+        uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize;
+        columns = columns >= 1 ? columns : 1;
         ImGui::Columns(columns, (const char*)__null, false);
 
         for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory })
@@ -210,7 +216,10 @@ namespace Flameberry {
                 is_file_supported = false;
             }
 
-            ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[currentIconIndex]->GetDescriptorSet()), ImVec2{ iconSize, iconSize });
+            // TODO: Precalculate iconWidths for all
+            // float iconHeight = iconWidth * m_IconTextures[currentIconIndex]->GetImageSpecification().Height / m_IconTextures[currentIconIndex]->GetImageSpecification().Width;
+
+            ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[currentIconIndex]->GetDescriptorSet()), ImVec2{ iconWidth, iconWidth });
 
             const auto& filename_noextension = is_file_supported ? directory.path().filename().replace_extension() : directory.path().filename();
 
@@ -261,7 +270,7 @@ namespace Flameberry {
                 platform::OpenInFinder(m_CurrentDirectory.string().c_str());
             ImGui::EndPopup();
         }
-        ImGui::PopStyleColor();
+        ImGui::PopStyleColor(2);
         ImGui::EndChild();
 
         ImGui::End();
