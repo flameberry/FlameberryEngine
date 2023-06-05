@@ -3,7 +3,7 @@
 #include "Vulkan/Pipeline.h"
 #include "Vulkan/VulkanSwapChain.h"
 #include "Vulkan/StaticMesh.h"
-#include "Vulkan/VulkanDescriptor.h"
+#include "Vulkan/DescriptorSet.h"
 
 #include "Light.h"
 #include "PerspectiveCamera.h"
@@ -24,9 +24,9 @@ namespace Flameberry {
         std::shared_ptr<Pipeline> m_MeshPipeline;
         VkPipelineLayout m_VkPipelineLayout;
 
-        std::vector<VkDescriptorSet> m_SceneDataDescriptorSets;
-        std::unique_ptr<VulkanDescriptorLayout> m_SceneDescriptorLayout;
-        std::unique_ptr<VulkanDescriptorWriter> m_SceneDescriptorWriter;
+        std::vector<std::shared_ptr<DescriptorSet>> m_SceneDataDescriptorSets;
+        std::shared_ptr<DescriptorSetLayout> m_SceneDescriptorSetLayout;
+
         std::unique_ptr<Flameberry::VulkanBuffer> m_SceneUniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
     };
 }

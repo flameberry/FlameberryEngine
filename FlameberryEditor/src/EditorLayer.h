@@ -23,7 +23,7 @@ namespace Flameberry {
         void OnKeyPressedEvent(KeyPressedEvent& e);
         void OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
 
-        void InvalidateViewportImGuiDescriptorSet();
+        void InvalidateViewportImGuiDescriptorSet(uint32_t index);
         void InvalidateShadowMapImGuiDescriptorSet();
 
         void SaveScene();
@@ -40,10 +40,8 @@ namespace Flameberry {
         PerspectiveCamera m_ActiveCamera;
         bool m_IsViewportFocused = false;
 
-        std::unique_ptr<VulkanDescriptorWriter> m_VulkanDescriptorWriter;
-        std::unique_ptr<VulkanDescriptorLayout> m_VulkanDescriptorLayout;
-
-        std::vector<VkDescriptorSet> m_VkDescriptorSets;
+        std::shared_ptr<DescriptorSetLayout> m_CameraBufferDescSetLayout;
+        std::vector<std::shared_ptr<DescriptorSet>> m_CameraBufferDescriptorSets;
 
         std::unique_ptr<VulkanBuffer> m_UniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
 
@@ -102,9 +100,8 @@ namespace Flameberry {
         VkPipelineLayout m_MousePickingPipelineLayout;
         std::shared_ptr<Pipeline> m_MousePickingPipeline;
 
-        std::unique_ptr<VulkanDescriptorLayout> m_MousePickingDescriptorLayout;
-        std::unique_ptr<VulkanDescriptorWriter> m_MousePickingDescriptorWriter;
-        VkDescriptorSet m_MousePickingDescriptorSet;
+        std::shared_ptr<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
+        std::shared_ptr<DescriptorSet> m_MousePickingDescriptorSet;
         std::unique_ptr<VulkanBuffer> m_MousePickingUniformBuffer;
 
         std::shared_ptr<Pipeline> m_ShadowMapPipeline;
@@ -112,9 +109,8 @@ namespace Flameberry {
 
         VkSampler m_ShadowMapSampler;
 
-        std::unique_ptr<VulkanDescriptorLayout> m_ShadowMapDescriptorLayout;
-        std::unique_ptr<VulkanDescriptorWriter> m_ShadowMapDescriptorWriter;
-        std::vector<VkDescriptorSet> m_ShadowMapDescriptorSets;
+        std::shared_ptr<DescriptorSetLayout> m_ShadowMapDescriptorSetLayout;
+        std::vector<std::shared_ptr<DescriptorSet>> m_ShadowMapDescriptorSets;
         std::vector<std::unique_ptr<VulkanBuffer>> m_ShadowMapUniformBuffers;
 
         const uint32_t SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;

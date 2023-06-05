@@ -8,7 +8,7 @@
 #include "Core/UUID.h"
 
 #include "Image.h"
-#include "VulkanDescriptor.h"
+#include "DescriptorSet.h"
 
 namespace Flameberry {
     class VulkanTexture
@@ -29,8 +29,8 @@ namespace Flameberry {
         static void InitStaticResources();
         static void DestroyStaticResources();
 
-        static std::shared_ptr<VulkanDescriptorLayout> GetDescriptorLayout() { return s_DescriptorLayout; }
-        static VkDescriptorSet GetEmptyDescriptorSet() { return s_EmptyDescriptorSet; }
+        static std::shared_ptr<DescriptorSetLayout> GetDescriptorLayout() { return s_DescriptorLayout; }
+        static VkDescriptorSet GetEmptyDescriptorSet() { return s_EmptyDescriptorSet->GetDescriptorSet(); }
         static VkSampler GetDefaultSampler() { return s_DefaultSampler; }
 
         static std::shared_ptr<VulkanTexture> TryGetOrLoadTexture(const std::string& texturePath);
@@ -45,8 +45,8 @@ namespace Flameberry {
 
         bool m_DidCreateSampler = false;
 
-        static std::shared_ptr<VulkanDescriptorLayout> s_DescriptorLayout;
-        static VkDescriptorSet s_EmptyDescriptorSet;
+        static std::shared_ptr<DescriptorSetLayout> s_DescriptorLayout;
+        static std::shared_ptr<DescriptorSet> s_EmptyDescriptorSet;
         static std::shared_ptr<Image> s_EmptyImage;
         static VkSampler s_DefaultSampler;
 

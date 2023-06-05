@@ -10,7 +10,7 @@ namespace Flameberry {
         Invalidate();
     }
 
-    void Framebuffer::Resize(uint32_t width, uint32_t height, VkRenderPass renderPass)
+    bool Framebuffer::Resize(uint32_t width, uint32_t height, VkRenderPass renderPass)
     {
         if (width != 0 || height != 0 || m_FramebufferSpec.Width != width || m_FramebufferSpec.Height != height)
         {
@@ -18,7 +18,9 @@ namespace Flameberry {
             m_FramebufferSpec.Height = height;
             Invalidate();
             CreateVulkanFramebuffer(renderPass);
+            return true;
         }
+        return false;
     }
 
     void Framebuffer::CreateVulkanFramebuffer(VkRenderPass renderPass)

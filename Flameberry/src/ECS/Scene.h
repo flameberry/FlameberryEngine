@@ -7,7 +7,6 @@
 #include "Renderer/Light.h"
 #include "Renderer/Material.h"
 #include "Renderer/Vulkan/StaticMesh.h"
-// #include "Renderer/Skybox.h"
 
 namespace Flameberry {
     struct EnvironmentMap

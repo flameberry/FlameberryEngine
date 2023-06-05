@@ -10,8 +10,8 @@
 #include <stb_image/stb_image.h>
 
 namespace Flameberry {
-    std::shared_ptr<VulkanDescriptorLayout> VulkanTexture::s_DescriptorLayout;
-    VkDescriptorSet VulkanTexture::s_EmptyDescriptorSet;
+    std::shared_ptr<DescriptorSetLayout> VulkanTexture::s_DescriptorLayout;
+    std::shared_ptr<DescriptorSet> VulkanTexture::s_EmptyDescriptorSet;
     std::shared_ptr<Image> VulkanTexture::s_EmptyImage;
     VkSampler VulkanTexture::s_DefaultSampler;
 
@@ -168,30 +168,28 @@ namespace Flameberry {
 
         VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &s_DefaultSampler));
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 0;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        DescriptorSetLayoutSpecification emptyDescSetLayoutSpec;
+        emptyDescSetLayoutSpec.Bindings.emplace_back();
+        emptyDescSetLayoutSpec.Bindings[0].binding = 0;
+        emptyDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        emptyDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
+        emptyDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        emptyDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
 
-        s_DescriptorLayout = std::make_shared<VulkanDescriptorLayout>(std::vector<VkDescriptorSetLayoutBinding>{ samplerLayoutBinding });
+        s_DescriptorLayout = DescriptorSetLayout::Create(emptyDescSetLayoutSpec);
 
-        VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&s_EmptyDescriptorSet, s_DescriptorLayout->GetLayout());
+        DescriptorSetSpecification emptyDescSetSpec;
+        emptyDescSetSpec.Layout = s_DescriptorLayout;
 
-        // Update the Descriptor Set:
-        VkDescriptorImageInfo desc_image[1] = {};
-        desc_image[0].sampler = s_DefaultSampler;
-        desc_image[0].imageView = s_EmptyImage->GetImageView();
-        desc_image[0].imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        s_EmptyDescriptorSet = DescriptorSet::Create(emptyDescSetSpec);
 
-        VkWriteDescriptorSet write_desc[1] = {};
-        write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_desc[0].dstSet = s_EmptyDescriptorSet;
-        write_desc[0].descriptorCount = 1;
-        write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        write_desc[0].pImageInfo = desc_image;
-        vkUpdateDescriptorSets(device, 1, write_desc, 0, nullptr);
+        VkDescriptorImageInfo desc_image{};
+        desc_image.sampler = s_DefaultSampler;
+        desc_image.imageView = s_EmptyImage->GetImageView();
+        desc_image.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+        s_EmptyDescriptorSet->WriteImage(0, desc_image);
+        s_EmptyDescriptorSet->Update();
     }
 
     void VulkanTexture::DestroyStaticResources()
@@ -199,6 +197,7 @@ namespace Flameberry {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDestroySampler(device, s_DefaultSampler, nullptr);
 
+        s_EmptyDescriptorSet = nullptr;
         s_DescriptorLayout = nullptr;
         s_EmptyImage = nullptr;
 

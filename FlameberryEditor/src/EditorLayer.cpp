@@ -65,27 +65,29 @@ namespace Flameberry {
         }
 
         // Creating Descriptors
-        VkDescriptorSetLayoutBinding vk_uniform_buffer_object_layout_binding{};
-        vk_uniform_buffer_object_layout_binding.binding = 0;
-        vk_uniform_buffer_object_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        vk_uniform_buffer_object_layout_binding.descriptorCount = 1;
-        vk_uniform_buffer_object_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        DescriptorSetLayoutSpecification cameraBufferDescLayoutSpec;
+        cameraBufferDescLayoutSpec.Bindings.resize(2);
 
-        VkDescriptorSetLayoutBinding shadowMapSamplerLayoutBinding{};
-        shadowMapSamplerLayoutBinding.binding = 1;
-        shadowMapSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        shadowMapSamplerLayoutBinding.descriptorCount = 1;
-        shadowMapSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        cameraBufferDescLayoutSpec.Bindings[0].binding = 0;
+        cameraBufferDescLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cameraBufferDescLayoutSpec.Bindings[0].descriptorCount = 1;
+        cameraBufferDescLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-        std::vector<VkDescriptorSetLayoutBinding> bindings = { vk_uniform_buffer_object_layout_binding, shadowMapSamplerLayoutBinding };
+        cameraBufferDescLayoutSpec.Bindings[1].binding = 1;
+        cameraBufferDescLayoutSpec.Bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cameraBufferDescLayoutSpec.Bindings[1].descriptorCount = 1;
+        cameraBufferDescLayoutSpec.Bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        m_VulkanDescriptorLayout = std::make_unique<VulkanDescriptorLayout>(bindings);
-        m_VulkanDescriptorWriter = std::make_unique<VulkanDescriptorWriter>(*m_VulkanDescriptorLayout);
+        m_CameraBufferDescSetLayout = DescriptorSetLayout::Create(cameraBufferDescLayoutSpec);
 
-        m_VkDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        DescriptorSetSpecification cameraBufferDescSetSpec;
+        cameraBufferDescSetSpec.Layout = m_CameraBufferDescSetLayout;
 
+        m_CameraBufferDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
         {
+            m_CameraBufferDescriptorSets[i] = DescriptorSet::Create(cameraBufferDescSetSpec);
+
             VkDescriptorBufferInfo vk_descriptor_buffer_info{};
             vk_descriptor_buffer_info.buffer = m_UniformBuffers[i]->GetBuffer();
             vk_descriptor_buffer_info.offset = 0;
@@ -96,10 +98,9 @@ namespace Flameberry {
             vk_shadow_map_image_info.imageView = m_ShadowMapFramebuffers[i]->GetAttachmentImageView(0);
             vk_shadow_map_image_info.sampler = m_ShadowMapSampler;
 
-            VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_VkDescriptorSets[i], m_VulkanDescriptorLayout->GetLayout());
-            m_VulkanDescriptorWriter->WriteBuffer(0, &vk_descriptor_buffer_info);
-            m_VulkanDescriptorWriter->WriteImage(1, &vk_shadow_map_image_info);
-            m_VulkanDescriptorWriter->Update(m_VkDescriptorSets[i]);
+            m_CameraBufferDescriptorSets[i]->WriteBuffer(0, vk_descriptor_buffer_info);
+            m_CameraBufferDescriptorSets[i]->WriteImage(1, vk_shadow_map_image_info);
+            m_CameraBufferDescriptorSets[i]->Update();
         }
 
         // m_SkyboxRenderer = std::make_unique<SkyboxRenderer>(m_VulkanRenderer->GetGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
@@ -164,11 +165,13 @@ namespace Flameberry {
 
         CreateMousePickingPipeline();
 
-        m_SceneRenderer = std::make_unique<SceneRenderer>(m_VulkanDescriptorLayout->GetLayout(), m_SceneRenderPass);
+        m_SceneRenderer = std::make_unique<SceneRenderer>(m_CameraBufferDescSetLayout->GetLayout(), m_SceneRenderPass);
 
         m_VkTextureSampler = VulkanRenderCommand::CreateDefaultSampler();
-        m_ViewportDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+
+        uint32_t imageCount = m_VulkanRenderer->GetSwapChainImages().size();
+        m_ViewportDescriptorSets.resize(imageCount);
+        for (int i = 0; i < imageCount; i++)
         {
             m_ViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
                 m_VkTextureSampler,
@@ -177,8 +180,8 @@ namespace Flameberry {
             );
         }
 
-        m_ShadowMapViewportDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (int i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        m_ShadowMapViewportDescriptorSets.resize(imageCount);
+        for (int i = 0; i < imageCount; i++)
         {
             m_ShadowMapViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
                 m_VkTextureSampler,
@@ -215,13 +218,17 @@ namespace Flameberry {
 
                 m_ShadowMapPipeline->Bind(commandBuffer);
                 m_ShadowMapUniformBuffers[currentFrameIndex]->WriteToBuffer(glm::value_ptr(lightViewProjectionMatrix), sizeof(glm::mat4), 0);
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPipelineLayout, 0, 1, &m_ShadowMapDescriptorSets[currentFrameIndex], 0, nullptr);
+
+                auto shadowMapDesc = m_ShadowMapDescriptorSets[currentFrameIndex]->GetDescriptorSet();
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPipelineLayout, 0, 1, &shadowMapDesc, 0, nullptr);
 
                 m_SceneRenderer->OnDrawForShadowPass(commandBuffer, m_ShadowMapPipelineLayout, m_ActiveCamera, m_ActiveScene);
                 m_ShadowMapRenderPass->End(commandBuffer);
             }
 
-            m_SceneFramebuffers[m_VulkanRenderer->GetImageIndex()]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_SceneRenderPass->GetRenderPass());
+            bool isFramebufferResized = m_SceneFramebuffers[m_VulkanRenderer->GetImageIndex()]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_SceneRenderPass->GetRenderPass());
+            if (isFramebufferResized)
+                InvalidateViewportImGuiDescriptorSet(m_VulkanRenderer->GetImageIndex());
             m_SceneFramebuffers[m_VulkanRenderer->GetImageIndex()]->SetClearColorValue({ m_ActiveScene->GetClearColor().x, m_ActiveScene->GetClearColor().y, m_ActiveScene->GetClearColor().z, 1.0f });
 
             {
@@ -244,7 +251,7 @@ namespace Flameberry {
                 m_UniformBuffers[currentFrameIndex]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
                 // m_SkyboxRenderer->OnDraw(commandBuffer, currentFrameIndex, m_VkDescriptorSets[currentFrameIndex], m_ActiveCamera, "");
-                m_SceneRenderer->OnDraw(commandBuffer, currentFrameIndex, m_VkDescriptorSets[currentFrameIndex], m_ActiveCamera, m_ActiveScene);
+                m_SceneRenderer->OnDraw(commandBuffer, currentFrameIndex, m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), m_ActiveCamera, m_ActiveScene);
 
                 m_SceneRenderPass->End(commandBuffer);
             }
@@ -276,7 +283,9 @@ namespace Flameberry {
                     const auto& device = VulkanContext::GetCurrentDevice();
                     m_MousePickingPipeline->Bind(commandBuffer);
                     m_MousePickingUniformBuffer->WriteToBuffer(glm::value_ptr(m_ActiveCamera.GetViewProjectionMatrix()), sizeof(glm::mat4), 0);
-                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MousePickingPipelineLayout, 0, 1, &m_MousePickingDescriptorSet, 0, nullptr);
+
+                    auto descSet = m_MousePickingDescriptorSet->GetDescriptorSet();
+                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
 
                     m_SceneRenderer->OnDrawForMousePickingPass(commandBuffer, m_MousePickingPipelineLayout, m_ActiveCamera, m_ActiveScene);
                     m_MousePickingRenderPass->End(commandBuffer);
@@ -288,8 +297,9 @@ namespace Flameberry {
             m_ImGuiLayer->End(commandBuffer, currentFrameIndex, m_VulkanRenderer->GetSwapChainExtent2D());
 
             bool isResized = m_VulkanRenderer->EndFrame();
-            if (isResized)
+            if (isResized) {
                 m_ImGuiLayer->InvalidateResources(m_VulkanRenderer);
+            }
         }
 
         if (isClickedInsideViewport)
@@ -340,11 +350,12 @@ namespace Flameberry {
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
         m_IsViewportFocused = ImGui::IsWindowFocused();
-        InvalidateViewportImGuiDescriptorSet();
 
         uint32_t currentFrameIndex = m_VulkanRenderer->GetCurrentFrameIndex();
+        uint32_t imageIndex = m_VulkanRenderer->GetImageIndex();
+
         ImGui::Image(reinterpret_cast<ImTextureID>(
-            m_ViewportDescriptorSets[currentFrameIndex]),
+            m_ViewportDescriptorSets[imageIndex]),
             ImVec2{ m_ViewportSize.x, m_ViewportSize.y }
         );
 
@@ -516,18 +527,16 @@ namespace Flameberry {
         m_EnvironmentSettingsPanel->OnUIRender();
     }
 
-    void EditorLayer::InvalidateViewportImGuiDescriptorSet()
+    void EditorLayer::InvalidateViewportImGuiDescriptorSet(uint32_t index)
     {
-        uint32_t currentFrameIndex = m_VulkanRenderer->GetCurrentFrameIndex();
-
         VkDescriptorImageInfo desc_image[1] = {};
         desc_image[0].sampler = m_VkTextureSampler;
-        desc_image[0].imageView = m_SceneFramebuffers[m_VulkanRenderer->GetImageIndex()]->GetAttachmentImageView(2);
+        desc_image[0].imageView = m_SceneFramebuffers[index]->GetAttachmentImageView(2);
         desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet write_desc[1] = {};
         write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_desc[0].dstSet = m_ViewportDescriptorSets[currentFrameIndex];
+        write_desc[0].dstSet = m_ViewportDescriptorSets[index];
         write_desc[0].descriptorCount = 1;
         write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         write_desc[0].pImageInfo = desc_image;
@@ -700,26 +709,28 @@ namespace Flameberry {
         m_MousePickingUniformBuffer->MapMemory(sizeof(glm::mat4));
 
         // Creating Descriptors
-        VkDescriptorSetLayoutBinding vk_uniform_buffer_object_layout_binding{};
-        vk_uniform_buffer_object_layout_binding.binding = 0;
-        vk_uniform_buffer_object_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        vk_uniform_buffer_object_layout_binding.descriptorCount = 1;
-        vk_uniform_buffer_object_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        vk_uniform_buffer_object_layout_binding.pImmutableSamplers = nullptr;
+        DescriptorSetLayoutSpecification mousePickingDescSetLayoutSpec;
+        mousePickingDescSetLayoutSpec.Bindings.emplace_back();
+        mousePickingDescSetLayoutSpec.Bindings[0].binding = 0;
+        mousePickingDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        mousePickingDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
+        mousePickingDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        mousePickingDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
 
-        std::vector<VkDescriptorSetLayoutBinding> bindings = { vk_uniform_buffer_object_layout_binding };
+        m_MousePickingDescriptorSetLayout = DescriptorSetLayout::Create(mousePickingDescSetLayoutSpec);
 
-        m_MousePickingDescriptorLayout = std::make_unique<VulkanDescriptorLayout>(bindings);
-        m_MousePickingDescriptorWriter = std::make_unique<VulkanDescriptorWriter>(*m_MousePickingDescriptorLayout);
+        DescriptorSetSpecification mousePickingDescSetSpec;
+        mousePickingDescSetSpec.Layout = m_MousePickingDescriptorSetLayout;
+
+        m_MousePickingDescriptorSet = DescriptorSet::Create(mousePickingDescSetSpec);
 
         VkDescriptorBufferInfo vk_descriptor_buffer_info{};
         vk_descriptor_buffer_info.buffer = m_MousePickingUniformBuffer->GetBuffer();
         vk_descriptor_buffer_info.offset = 0;
         vk_descriptor_buffer_info.range = sizeof(glm::mat4);
 
-        VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_MousePickingDescriptorSet, m_MousePickingDescriptorLayout->GetLayout());
-        m_MousePickingDescriptorWriter->WriteBuffer(0, &vk_descriptor_buffer_info);
-        m_MousePickingDescriptorWriter->Update(m_MousePickingDescriptorSet);
+        m_MousePickingDescriptorSet->WriteBuffer(0, vk_descriptor_buffer_info);
+        m_MousePickingDescriptorSet->Update();
 
         // Pipeline Creation
         VkPushConstantRange vk_push_constant_range{};
@@ -727,7 +738,7 @@ namespace Flameberry {
         vk_push_constant_range.size = sizeof(MousePickingPushConstantData);
         vk_push_constant_range.offset = 0;
 
-        VkDescriptorSetLayout descriptorSetLayouts[] = { m_MousePickingDescriptorLayout->GetLayout() };
+        VkDescriptorSetLayout descriptorSetLayouts[] = { m_MousePickingDescriptorSetLayout->GetLayout() };
         VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
 
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
@@ -793,30 +804,32 @@ namespace Flameberry {
         }
 
         // Creating Descriptors
-        VkDescriptorSetLayoutBinding vk_uniform_buffer_object_layout_binding{};
-        vk_uniform_buffer_object_layout_binding.binding = 0;
-        vk_uniform_buffer_object_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        vk_uniform_buffer_object_layout_binding.descriptorCount = 1;
-        vk_uniform_buffer_object_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        vk_uniform_buffer_object_layout_binding.pImmutableSamplers = nullptr;
+        DescriptorSetLayoutSpecification shadowDescSetLayoutSpec;
+        shadowDescSetLayoutSpec.Bindings.emplace_back();
+        shadowDescSetLayoutSpec.Bindings[0].binding = 0;
+        shadowDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        shadowDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
+        shadowDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        shadowDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
 
-        std::vector<VkDescriptorSetLayoutBinding> bindings = { vk_uniform_buffer_object_layout_binding };
-
-        m_ShadowMapDescriptorLayout = std::make_unique<VulkanDescriptorLayout>(bindings);
-        m_ShadowMapDescriptorWriter = std::make_unique<VulkanDescriptorWriter>(*m_ShadowMapDescriptorLayout);
+        m_ShadowMapDescriptorSetLayout = DescriptorSetLayout::Create(shadowDescSetLayoutSpec);
 
         m_ShadowMapDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
 
+        DescriptorSetSpecification shadowMapDescSetSpec;
+        shadowMapDescSetSpec.Layout = m_ShadowMapDescriptorSetLayout;
+
         for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
         {
+            m_ShadowMapDescriptorSets[i] = DescriptorSet::Create(shadowMapDescSetSpec);
+
             VkDescriptorBufferInfo vk_descriptor_buffer_info{};
             vk_descriptor_buffer_info.buffer = m_ShadowMapUniformBuffers[i]->GetBuffer();
             vk_descriptor_buffer_info.offset = 0;
             vk_descriptor_buffer_info.range = sizeof(glm::mat4);
 
-            VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_ShadowMapDescriptorSets[i], m_ShadowMapDescriptorLayout->GetLayout());
-            m_ShadowMapDescriptorWriter->WriteBuffer(0, &vk_descriptor_buffer_info);
-            m_ShadowMapDescriptorWriter->Update(m_ShadowMapDescriptorSets[i]);
+            m_ShadowMapDescriptorSets[i]->WriteBuffer(0, vk_descriptor_buffer_info);
+            m_ShadowMapDescriptorSets[i]->Update();
         }
 
         VkPushConstantRange vk_push_constant_range{};
@@ -824,7 +837,7 @@ namespace Flameberry {
         vk_push_constant_range.size = sizeof(ModelMatrixPushConstantData);
         vk_push_constant_range.offset = 0;
 
-        VkDescriptorSetLayout descriptorSetLayouts[] = { m_ShadowMapDescriptorLayout->GetLayout() };
+        VkDescriptorSetLayout descriptorSetLayouts[] = { m_ShadowMapDescriptorSetLayout->GetLayout() };
         VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
 
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};

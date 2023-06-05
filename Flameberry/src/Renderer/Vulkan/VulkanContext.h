@@ -8,7 +8,7 @@
 #include "VulkanWindow.h"
 #include "VulkanInstance.h"
 #include "VulkanDevice.h"
-#include "VulkanDescriptor.h"
+#include "DescriptorSet.h"
 
 namespace Flameberry {
     class VulkanContext
@@ -28,7 +28,7 @@ namespace Flameberry {
             return properties;
         }
         static VulkanWindow* GetCurrentWindow() { return GetCurrentContext()->m_Window; }
-        static std::shared_ptr<VulkanDescriptorPool> GetCurrentGlobalDescriptorPool() { return GetCurrentContext()->m_GlobalDescriptorPool; }
+        static std::shared_ptr<DescriptorPool> GetCurrentGlobalDescriptorPool() { return GetCurrentContext()->m_GlobalDescriptorPool; }
         static bool EnableValidationLayers() { return s_EnableValidationLayers; }
 
         static VkPhysicalDevice GetValidVkPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices, VkSurfaceKHR surface);
@@ -46,7 +46,7 @@ namespace Flameberry {
         VkPhysicalDevice m_VkPhysicalDevice = VK_NULL_HANDLE;
         VulkanWindow* m_Window = nullptr;
 
-        std::shared_ptr<VulkanDescriptorPool> m_GlobalDescriptorPool;
+        std::shared_ptr<DescriptorPool> m_GlobalDescriptorPool;
     private:
         static std::vector<const char*> s_VkDeviceExtensions;
         static const std::vector<const char*> s_ValidationLayers;

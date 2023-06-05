@@ -40,29 +40,31 @@ namespace Flameberry {
             uniformBuffer->MapMemory(uniformBufferSize);
         }
 
-        VkDescriptorSetLayoutBinding sceneDataBinding{};
-        sceneDataBinding.binding = 0;
-        sceneDataBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        sceneDataBinding.descriptorCount = 1;
-        sceneDataBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        sceneDataBinding.pImmutableSamplers = nullptr;
+        DescriptorSetLayoutSpecification sceneDescSetLayoutSpec;
+        sceneDescSetLayoutSpec.Bindings.emplace_back();
+        sceneDescSetLayoutSpec.Bindings[0].binding = 0;
+        sceneDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        sceneDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
+        sceneDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        sceneDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
 
-        std::vector<VkDescriptorSetLayoutBinding> bindings = { sceneDataBinding };
+        m_SceneDescriptorSetLayout = DescriptorSetLayout::Create(sceneDescSetLayoutSpec);
 
-        m_SceneDescriptorLayout = std::make_unique<Flameberry::VulkanDescriptorLayout>(bindings);
-        m_SceneDescriptorWriter = std::make_unique<Flameberry::VulkanDescriptorWriter>(*m_SceneDescriptorLayout);
+        DescriptorSetSpecification sceneDescSetSpec;
+        sceneDescSetSpec.Layout = m_SceneDescriptorSetLayout;
 
         m_SceneDataDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
         {
+            m_SceneDataDescriptorSets[i] = DescriptorSet::Create(sceneDescSetSpec);
+
             VkDescriptorBufferInfo vk_descriptor_lighting_buffer_info{};
             vk_descriptor_lighting_buffer_info.buffer = m_SceneUniformBuffers[i]->GetBuffer();
             vk_descriptor_lighting_buffer_info.offset = 0;
             vk_descriptor_lighting_buffer_info.range = sizeof(SceneUniformBufferData);
 
-            VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_SceneDataDescriptorSets[i], m_SceneDescriptorLayout->GetLayout());
-            m_SceneDescriptorWriter->WriteBuffer(0, &vk_descriptor_lighting_buffer_info);
-            m_SceneDescriptorWriter->Update(m_SceneDataDescriptorSets[i]);
+            m_SceneDataDescriptorSets[i]->WriteBuffer(0, vk_descriptor_lighting_buffer_info);
+            m_SceneDataDescriptorSets[i]->Update();
         }
 
         VkPushConstantRange vk_push_constant_range{};
@@ -70,7 +72,7 @@ namespace Flameberry {
         vk_push_constant_range.size = sizeof(MeshData);
         vk_push_constant_range.offset = 0;
 
-        VkDescriptorSetLayout descriptorSetLayouts[] = { globalDescriptorLayout, m_SceneDescriptorLayout->GetLayout(), VulkanTexture::GetDescriptorLayout()->GetLayout(), VulkanTexture::GetDescriptorLayout()->GetLayout() };
+        VkDescriptorSetLayout descriptorSetLayouts[] = { globalDescriptorLayout, m_SceneDescriptorSetLayout->GetLayout(), VulkanTexture::GetDescriptorLayout()->GetLayout(), VulkanTexture::GetDescriptorLayout()->GetLayout() };
         VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
 
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
@@ -121,7 +123,7 @@ namespace Flameberry {
 
         m_SceneUniformBuffers[currentFrameIndex]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData), 0);
 
-        VkDescriptorSet descriptorSets[] = { globalDescriptorSet, m_SceneDataDescriptorSets[currentFrameIndex] };
+        VkDescriptorSet descriptorSets[] = { globalDescriptorSet, m_SceneDataDescriptorSets[currentFrameIndex]->GetDescriptorSet() };
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
 
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())

@@ -13,7 +13,7 @@
 #include "VulkanSwapChain.h"
 #include "VulkanContext.h"
 #include "Pipeline.h"
-#include "VulkanDescriptor.h"
+#include "DescriptorSet.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
