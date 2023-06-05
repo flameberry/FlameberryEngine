@@ -5,26 +5,24 @@
 
 #define FL_BACK_ARROW_ICON 0
 #define FL_FORWARD_ARROW_ICON 1
-#define FL_FOLDER_ICON 2
-#define FL_FILE_BERRY_ICON 3
-#define FL_FILE_PNG_ICON 4
-#define FL_FILE_JPG_ICON 5
-#define FL_FILE_OBJ_ICON 6
-#define FL_FILE_MTL_ICON 7
-#define FL_FILE_JSON_ICON 8
-#define FL_FILE_DEFAULT_ICON 9
+
+enum FileTypeIndex {
+    DEFAULT = 2,
+    FOLDER, BERRY, PNG, JPG, OBJ, FBMAT, MTL, JSON
+};
 
 static std::vector<std::string> g_IconPaths = {
     FL_PROJECT_DIR"FlameberryEditor/assets/icons/arrow_back.png",
     FL_PROJECT_DIR"FlameberryEditor/assets/icons/arrow_forward.png",
+    FL_PROJECT_DIR"FlameberryEditor/assets/icons/default_file_icon.png",
     FL_PROJECT_DIR"FlameberryEditor/assets/icons/folder_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/file_berry_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/file_png_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/file_jpg_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/assets/icons/berry_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/assets/icons/png_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/assets/icons/jpg_file_icon.png",
     FL_PROJECT_DIR"FlameberryEditor/assets/icons/obj_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/assets/icons/fbmat_file_icon.png",
     FL_PROJECT_DIR"FlameberryEditor/assets/icons/mtl_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/json_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/file_icon_default.png"
+    FL_PROJECT_DIR"FlameberryEditor/assets/icons/json_file_icon.png"
 };
 
 namespace Flameberry {
@@ -80,7 +78,7 @@ namespace Flameberry {
             m_CurrentDirectory = parent.path();
 
         ImGui::SameLine();
-        ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FOLDER_ICON]->GetDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight() + framePaddingY, ImGui::GetTextLineHeight() + framePaddingY });
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FileTypeIndex::FOLDER]->GetDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight() + framePaddingY, ImGui::GetTextLineHeight() + framePaddingY });
         ImGui::SameLine();
         ImGui::Text("%s", parent.path().filename().c_str());
         ImGui::PopStyleColor(is_selected ? 4 : 3);
@@ -198,21 +196,23 @@ namespace Flameberry {
             bool is_file_supported = true;
 
             if (directory.is_directory())
-                currentIconIndex = FL_FOLDER_ICON;
+                currentIconIndex = FileTypeIndex::FOLDER;
             else if (ext == ".berry")
-                currentIconIndex = FL_FILE_BERRY_ICON;
+                currentIconIndex = FileTypeIndex::BERRY;
             else if (ext == ".png")
-                currentIconIndex = FL_FILE_PNG_ICON;
+                currentIconIndex = FileTypeIndex::PNG;
             else if (ext == ".jpg")
-                currentIconIndex = FL_FILE_JPG_ICON;
+                currentIconIndex = FileTypeIndex::JPG;
             else if (ext == ".obj")
-                currentIconIndex = FL_FILE_OBJ_ICON;
+                currentIconIndex = FileTypeIndex::OBJ;
             else if (ext == ".mtl")
-                currentIconIndex = FL_FILE_MTL_ICON;
+                currentIconIndex = FileTypeIndex::MTL;
+            else if (ext == ".fbmat")
+                currentIconIndex = FileTypeIndex::FBMAT;
             else if (ext == ".json")
-                currentIconIndex = FL_FILE_JSON_ICON;
+                currentIconIndex = FileTypeIndex::JSON;
             else {
-                currentIconIndex = FL_FILE_DEFAULT_ICON;
+                currentIconIndex = FileTypeIndex::DEFAULT;
                 is_file_supported = false;
             }
 
@@ -221,7 +221,7 @@ namespace Flameberry {
 
             ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[currentIconIndex]->GetDescriptorSet()), ImVec2{ iconWidth, iconWidth });
 
-            const auto& filename_noextension = is_file_supported ? directory.path().filename().replace_extension() : directory.path().filename();
+            const auto& filename = is_file_supported ? directory.path().stem() : directory.path().filename();
 
             if (ImGui::BeginPopupContextItem())
             {
@@ -246,17 +246,17 @@ namespace Flameberry {
                 m_CurrentDirectory = directory.path();
 
             auto columnWidth = ImGui::GetColumnWidth();
-            auto textWidth = ImGui::CalcTextSize(filename_noextension.c_str()).x;
+            auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
             const auto aSize = ImGui::CalcTextSize("A");
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 5.0f, 20.0f });
             if (textWidth > columnWidth) {
                 uint32_t characters = columnWidth / aSize.x - 3;
-                ImGui::Text("%.*s%s", characters, filename_noextension.c_str(), "...");
+                ImGui::Text("%.*s%s", characters, filename.c_str(), "...");
             }
             else {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (columnWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);
-                ImGui::Text("%s", filename_noextension.c_str());
+                ImGui::Text("%s", filename.c_str());
             }
             ImGui::PopStyleVar();
 
