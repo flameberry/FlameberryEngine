@@ -164,7 +164,7 @@ namespace Flameberry {
 
         CreateMousePickingPipeline();
 
-        m_SceneRenderer = std::make_unique<SceneRenderer>(VulkanContext::GetCurrentGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_SceneRenderPass);
+        m_SceneRenderer = std::make_unique<SceneRenderer>(m_VulkanDescriptorLayout->GetLayout(), m_SceneRenderPass);
 
         m_VkTextureSampler = VulkanRenderCommand::CreateDefaultSampler();
         m_ViewportDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);

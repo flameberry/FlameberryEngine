@@ -158,12 +158,13 @@ namespace Flameberry {
         ImGui::SetKeyboardFocusHere();
         ImGui::PushItemWidth(-1.0f);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0, 0 });
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
         if (ImGui::InputText("###Rename", m_RenameBuffer, 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
         {
             tag = std::string(m_RenameBuffer);
             m_RenamedEntity = ecs::entity_handle::null;
         }
         ImGui::PopStyleVar();
+        ImGui::PopItemWidth();
     }
 }

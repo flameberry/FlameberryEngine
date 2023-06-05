@@ -3,11 +3,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "VulkanDebug.h"
-#include "VulkanRenderer.h"
-#include "VulkanRenderCommand.h"
-#include "StaticMesh.h"
-#include "Renderer/Material.h"
+#include "Vulkan/VulkanDebug.h"
+#include "Vulkan/VulkanRenderer.h"
+#include "Vulkan/VulkanRenderCommand.h"
+#include "Material.h"
 
 #include "ECS/Component.h"
 #include "AssetManager/AssetManager.h"
@@ -29,8 +28,7 @@ namespace Flameberry {
         alignas(4) float NormalMapEnabled = 0.0f;
     };
 
-    SceneRenderer::SceneRenderer(const std::shared_ptr<VulkanDescriptorPool>& globalDescriptorPool, VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass)
-        : m_GlobalDescriptorPool(globalDescriptorPool)
+    SceneRenderer::SceneRenderer(VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
@@ -62,7 +60,7 @@ namespace Flameberry {
             vk_descriptor_lighting_buffer_info.offset = 0;
             vk_descriptor_lighting_buffer_info.range = sizeof(SceneUniformBufferData);
 
-            m_GlobalDescriptorPool->AllocateDescriptorSet(&m_SceneDataDescriptorSets[i], m_SceneDescriptorLayout->GetLayout());
+            VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_SceneDataDescriptorSets[i], m_SceneDescriptorLayout->GetLayout());
             m_SceneDescriptorWriter->WriteBuffer(0, &vk_descriptor_lighting_buffer_info);
             m_SceneDescriptorWriter->Update(m_SceneDataDescriptorSets[i]);
         }
@@ -100,7 +98,7 @@ namespace Flameberry {
         pipelineSpec.VertexInputBindingDescription = Flameberry::VulkanVertex::GetBindingDescription();
         pipelineSpec.Samples = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
-        m_MeshPipeline = std::make_unique<Flameberry::Pipeline>(pipelineSpec);
+        m_MeshPipeline = Pipeline::Create(pipelineSpec);
     }
 
     void SceneRenderer::OnDraw(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)

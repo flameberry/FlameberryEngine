@@ -32,7 +32,7 @@
 #include "Renderer/Vulkan/VulkanTexture.h"
 #include "Renderer/Vulkan/StaticMesh.h"
 #include "Renderer/Vulkan/VulkanDebug.h"
-#include "Renderer/Vulkan/SceneRenderer.h"
+#include "Renderer/SceneRenderer.h"
 #include "Renderer/Vulkan/RenderPass.h"
 #include "Renderer/SkyboxRenderer.h"
 
