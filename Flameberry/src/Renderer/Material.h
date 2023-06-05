@@ -10,7 +10,7 @@ namespace Flameberry {
     {
     public:
         // Meta Data
-        std::string Name, FilePath;
+        std::string Name = "Default_Material", FilePath;
         bool IsDerived = false;
 
         // Actual properties

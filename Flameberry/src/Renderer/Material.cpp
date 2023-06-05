@@ -24,9 +24,9 @@ namespace Flameberry {
         out << YAML::Key << "Roughness" << YAML::Value << material->Roughness;
         out << YAML::Key << "Metallic" << YAML::Value << material->Metallic;
         out << YAML::Key << "TextureMapEnabled" << YAML::Value << material->TextureMapEnabled;
-        out << YAML::Key << "TextureMap" << YAML::Value << material->TextureMap->GetFilePath();
+        out << YAML::Key << "TextureMap" << YAML::Value << (material->TextureMapEnabled ? material->TextureMap->GetFilePath() : "");
         out << YAML::Key << "NormalMapEnabled" << YAML::Value << material->NormalMapEnabled;
-        out << YAML::Key << "NormalMap" << YAML::Value << material->NormalMap->GetFilePath();
+        out << YAML::Key << "NormalMap" << YAML::Value << (material->NormalMapEnabled ? material->NormalMap->GetFilePath() : "");
         out << YAML::EndMap;
 
         std::ofstream fout(path);

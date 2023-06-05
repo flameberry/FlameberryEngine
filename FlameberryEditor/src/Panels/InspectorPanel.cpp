@@ -205,18 +205,7 @@ namespace Flameberry {
                         );
 
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                            m_MaterialEditorPanel->SetCurrentMaterial(mat);
-
-                        ImGui::SameLine();
-                        ImGui::Button("O", ImVec2(-1.0f, 0.0f));
-                        if (ImGui::IsItemClicked())
-                        {
-                            m_MaterialSelectorPanel->OpenPanel([staticMesh, i](const std::shared_ptr<Material>& material)
-                                {
-                                    staticMesh->SetMaterialToSubMesh(i, material->GetUUID());
-                                }
-                            );
-                        }
+                            m_MaterialEditorPanel->SetEditingContext(mat);
 
                         if (ImGui::BeginDragDropTarget())
                         {
@@ -237,6 +226,17 @@ namespace Flameberry {
                                     FL_WARN("Bad File given as Material!");
                             }
                             ImGui::EndDragDropTarget();
+                        }
+
+                        ImGui::SameLine();
+                        ImGui::Button("O", ImVec2(-1.0f, 0.0f));
+                        if (ImGui::IsItemClicked())
+                        {
+                            m_MaterialSelectorPanel->OpenPanel([staticMesh, i](const std::shared_ptr<Material>& material)
+                                {
+                                    staticMesh->SetMaterialToSubMesh(i, material->GetUUID());
+                                }
+                            );
                         }
 
                         ImGui::TableNextRow();

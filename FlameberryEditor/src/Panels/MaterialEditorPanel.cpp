@@ -6,7 +6,7 @@
 namespace Flameberry {
     void MaterialEditorPanel::OnUIRender()
     {
-        if (m_CurrentMaterial)
+        if (m_EditingContext)
         {
             bool isMaterialEdited = false;
 
@@ -19,16 +19,34 @@ namespace Flameberry {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                ImGui::Text("Name");
+                ImGui::Text("Material");
                 ImGui::TableNextColumn();
-                ImGui::Text("%s", m_CurrentMaterial->Name.c_str());
+
+                ImGui::Button(m_EditingContext->Name.c_str(), ImVec2(-1.0f, 0.0f));
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                    {
+                        const char* path = (const char*)payload->Data;
+                        std::filesystem::path matPath{ path };
+                        const std::string& ext = matPath.extension().string();
+
+                        FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+
+                        if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
+                            m_EditingContext = AssetManager::TryGetOrLoadAssetFromFile<Material>(matPath);
+                        else
+                            FL_WARN("Bad File given as Material!");
+                    }
+                    ImGui::EndDragDropTarget();
+                }
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
                 ImGui::Text("FilePath");
                 ImGui::TableNextColumn();
-                ImGui::Text("%s", m_CurrentMaterial->FilePath.c_str());
+                ImGui::TextWrapped("%s", m_EditingContext->FilePath.c_str());
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -37,14 +55,14 @@ namespace Flameberry {
 
                 ImGui::TableNextColumn();
 
-                bool& textureMapEnabled = m_CurrentMaterial->TextureMapEnabled;
+                bool& textureMapEnabled = m_EditingContext->TextureMapEnabled;
                 ImGui::Checkbox("##Texture_Map", &textureMapEnabled);
 
                 isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
                 if (textureMapEnabled)
                 {
-                    auto& texture = m_CurrentMaterial->TextureMap;
+                    auto& texture = m_EditingContext->TextureMap;
                     if (!texture)
                         texture = VulkanTexture::TryGetOrLoadTexture("Assets/Textures/Checkerboard.png");
 
@@ -80,13 +98,13 @@ namespace Flameberry {
                 ImGui::Text("Normal Map");
                 ImGui::TableNextColumn();
 
-                bool& normalMapEnabled = m_CurrentMaterial->NormalMapEnabled;
+                bool& normalMapEnabled = m_EditingContext->NormalMapEnabled;
                 ImGui::Checkbox("##Normal_Map", &normalMapEnabled);
                 isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
                 if (normalMapEnabled)
                 {
-                    auto& texture = m_CurrentMaterial->NormalMap;
+                    auto& texture = m_EditingContext->NormalMap;
                     if (!texture)
                         texture = VulkanTexture::TryGetOrLoadTexture("Assets/Textures/Checkerboard.png");
 
@@ -121,31 +139,31 @@ namespace Flameberry {
 
                 ImGui::Text("Albedo");
                 ImGui::TableNextColumn();
-                FL_REMOVE_LABEL(ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_CurrentMaterial->Albedo)));
+                FL_REMOVE_LABEL(ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_EditingContext->Albedo)));
                 isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
                 ImGui::Text("Roughness");
                 ImGui::TableNextColumn();
-                FL_REMOVE_LABEL(ImGui::DragFloat("##Roughness", &m_CurrentMaterial->Roughness, 0.01f, 0.0f, 1.0f));
+                FL_REMOVE_LABEL(ImGui::DragFloat("##Roughness", &m_EditingContext->Roughness, 0.01f, 0.0f, 1.0f));
                 isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
                 ImGui::Text("Metallic");
                 ImGui::TableNextColumn();
-                bool metallic = m_CurrentMaterial->Metallic;
+                bool metallic = m_EditingContext->Metallic;
                 ImGui::Checkbox("##Metallic", &metallic);
                 isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
-                m_CurrentMaterial->Metallic = metallic;
+                m_EditingContext->Metallic = metallic;
                 ImGui::EndTable();
             }
             ImGui::PopStyleVar();
             ImGui::End();
 
-            if (isMaterialEdited && !m_CurrentMaterial->IsDerived)
-                MaterialSerializer::Serialize(m_CurrentMaterial, m_CurrentMaterial->FilePath.c_str());
+            if (isMaterialEdited && !m_EditingContext->IsDerived)
+                MaterialSerializer::Serialize(m_EditingContext, m_EditingContext->FilePath.c_str());
         }
     }
 }

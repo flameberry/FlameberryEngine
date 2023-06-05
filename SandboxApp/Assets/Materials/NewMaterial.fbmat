@@ -1,0 +1,9 @@
+UUID: 18267918019237702578
+Name: Default_Material
+Albedo: [1, 1, 1]
+Roughness: 0.200000003
+Metallic: false
+TextureMapEnabled: true
+TextureMap: Assets/Textures/brick.png
+NormalMapEnabled: false
+NormalMap: ""

@@ -266,6 +266,15 @@ namespace Flameberry {
 
         if (ImGui::BeginPopupContextWindow())
         {
+            if (ImGui::BeginMenu("Create"))
+            {
+                if (ImGui::MenuItem("Material"))
+                {
+                    auto mat = std::make_shared<Material>();
+                    MaterialSerializer::Serialize(mat, (m_CurrentDirectory / "NewMaterial.fbmat").c_str());
+                }
+                ImGui::EndMenu();
+            }
             if (ImGui::MenuItem("Open In Finder"))
                 platform::OpenInFinder(m_CurrentDirectory.string().c_str());
             ImGui::EndPopup();
