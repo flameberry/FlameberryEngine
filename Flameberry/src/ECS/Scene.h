@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <memory>
 
 #include "ecs.hpp"
 #include "Renderer/Light.h"
@@ -32,25 +33,25 @@ namespace Flameberry {
     class Scene
     {
     public:
-        Scene(ecs::registry* registry = nullptr);
+        Scene(const std::shared_ptr<ecs::registry>& reg);
         ~Scene() = default;
 
         void RenderScene(const glm::mat4& cameraMatrix);
-
-        ecs::registry* GetRegistry() { return m_Registry; }
-        void SetSelectedEntity(ecs::entity_handle* entity) { m_SelectedEntity = entity; }
-        ecs::entity_handle GetSelectedEntity() const { return *m_SelectedEntity; }
         void SetDirectionalLight(const DirectionalLight& light) { m_SceneData.ActiveEnvironmentMap.DirLight = light; }
 
         inline glm::vec3 GetClearColor() const { return m_SceneData.ActiveEnvironmentMap.ClearColor; }
         inline std::string GetName() const { return m_SceneData.Name; }
         inline DirectionalLight GetDirectionalLight() const { return m_SceneData.ActiveEnvironmentMap.DirLight; }
+
+        template<typename... Args>
+        static std::shared_ptr<Scene> Create(Args... args) { return std::make_shared<Scene>(std::forward<Args>(args)...); }
     private:
-        ecs::entity_handle* m_SelectedEntity = nullptr;
-        ecs::registry* m_Registry;
+        std::shared_ptr<ecs::registry> m_Registry;
         SceneData m_SceneData;
 
         friend class SceneHierarchyPanel;
+        friend class InspectorPanel;
+        friend class EnvironmentSettingsPanel;
         friend class SceneSerializer;
         friend class SceneRenderer;
     };

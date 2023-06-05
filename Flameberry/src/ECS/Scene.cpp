@@ -2,7 +2,7 @@
 #include "Core/Timer.h"
 
 namespace Flameberry {
-    Scene::Scene(ecs::registry* registry)
+    Scene::Scene(const std::shared_ptr<ecs::registry>& registry)
         : m_Registry(registry)
     {}
 

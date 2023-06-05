@@ -4,6 +4,8 @@
 
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
+#include "Panels/InspectorPanel.h"
+#include "Panels/EnvironmentSettingsPanel.h"
 
 namespace Flameberry {
     class EditorLayer : public Layer
@@ -66,6 +68,7 @@ namespace Flameberry {
         // UI
         std::shared_ptr<SceneHierarchyPanel> m_SceneHierarchyPanel;
         std::shared_ptr<ContentBrowserPanel> m_ContentBrowserPanel;
+        std::shared_ptr<EnvironmentSettingsPanel> m_EnvironmentSettingsPanel;
 
         std::string m_OpenedScenePathIfExists = "", m_ScenePathToBeOpened = "";
         bool m_ShouldOpenAnotherScene = false;

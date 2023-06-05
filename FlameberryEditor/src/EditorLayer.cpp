@@ -106,10 +106,11 @@ namespace Flameberry {
         m_ImGuiLayer = std::make_unique<ImGuiLayer>(m_VulkanRenderer);
 
         m_Registry = std::make_shared<ecs::registry>();
-        m_ActiveScene = std::make_shared<Scene>(m_Registry.get());
+        m_ActiveScene = Scene::Create(m_Registry);
 
-        m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>(m_ActiveScene.get());
-        m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>(m_ProjectPath);
+        m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
+        m_ContentBrowserPanel = ContentBrowserPanel::Create(m_ProjectPath);
+        m_EnvironmentSettingsPanel = EnvironmentSettingsPanel::Create(m_ActiveScene);
 
         m_MousePickingBuffer = std::make_unique<VulkanBuffer>(
             sizeof(int32_t),
@@ -299,7 +300,7 @@ namespace Flameberry {
             int32_t entityID = data[0];
             m_MousePickingBuffer->UnmapMemory();
             // FL_LOG("Selected Entity: {0}", entityID);
-            m_SceneHierarchyPanel->SetSelectedEntity((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
+            m_SceneHierarchyPanel->SetSelectionContext((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
         }
 
         if (m_ShouldOpenAnotherScene)
@@ -370,7 +371,7 @@ namespace Flameberry {
                         m_Registry->emplace<TagComponent>(entity, "StaticMesh");
                         m_Registry->emplace<TransformComponent>(entity);
                         m_Registry->emplace<MeshComponent>(entity, staticMesh->GetUUID());
-                        m_SceneHierarchyPanel->SetSelectedEntity(entity);
+                        m_SceneHierarchyPanel->SetSelectionContext(entity);
                     }
                 }
                 else
@@ -380,7 +381,7 @@ namespace Flameberry {
         }
 
         // ImGuizmo
-        const auto& selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
+        const auto& selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
         if (selectedEntity != ecs::entity_handle::null && m_GizmoType != -1)
         {
             ImGuizmo::SetOrthographic(false);
@@ -512,6 +513,7 @@ namespace Flameberry {
 
         m_SceneHierarchyPanel->OnUIRender();
         m_ContentBrowserPanel->OnUIRender();
+        m_EnvironmentSettingsPanel->OnUIRender();
     }
 
     void EditorLayer::InvalidateViewportImGuiDescriptorSet()

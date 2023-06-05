@@ -12,6 +12,9 @@ namespace Flameberry {
         ContentBrowserPanel(const std::filesystem::path& projectDirectory);
         ~ContentBrowserPanel();
         void OnUIRender();
+
+        template<typename... Args>
+        static std::shared_ptr<ContentBrowserPanel> Create(Args... args) { return std::make_shared<ContentBrowserPanel>(std::forward<Args>(args)...); }
     private:
         void RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator);
     private:

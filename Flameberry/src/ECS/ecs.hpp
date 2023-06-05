@@ -97,7 +97,7 @@ namespace ecs {
             null() {};
         };
     public:
-        entity_handle() : handle(-1), validity(true) {}
+        entity_handle() : handle(-1), validity(false) {}
         entity_handle(handle_type handle) : handle(handle), validity(true) {}
         entity_handle(handle_type handle, bool validity) : handle(handle), validity(validity) {}
 
@@ -286,7 +286,7 @@ namespace ecs {
             pools[typeID].remove = [](const pool_data& pool, uint32_t index) {
                 auto& handler = (*((pool_handler<Type>*)pool.handler.get()));
                 handler.remove(index);
-            };
+                };
             auto& handler = (*((pool_handler<Type>*)pools[typeID].handler.get()));
             return handler.emplace(std::forward<Args>(args)...);
         }

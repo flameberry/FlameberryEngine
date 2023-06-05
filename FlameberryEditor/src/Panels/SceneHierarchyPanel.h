@@ -1,37 +1,29 @@
 #pragma once
 
 #include "Flameberry.h"
-#include "MaterialSelectorPanel.h"
-#include "MaterialEditorPanel.h"
+#include "InspectorPanel.h"
 
 namespace Flameberry {
     class SceneHierarchyPanel
     {
     public:
-        SceneHierarchyPanel(Flameberry::Scene* scene = nullptr);
+        SceneHierarchyPanel(const std::shared_ptr<Scene>& context);
         ~SceneHierarchyPanel();
-        void OnUIRender();
-        void SetSelectedEntity(const ecs::entity_handle& entity) { m_SelectedEntity = entity; }
-        void RenameNode(std::string& tag);
-        ecs::entity_handle GetSelectedEntity() const { return m_SelectedEntity; }
 
-        void OnEnvironmentMapPanelRender();
+        void OnUIRender();
+
+        void RenameNode(std::string& tag);
+        void SetSelectionContext(const ecs::entity_handle& entity) { m_SelectionContext = entity; }
+        ecs::entity_handle GetSelectionContext() const { return m_SelectionContext; }
+
+        template<typename... Args>
+        static std::shared_ptr<SceneHierarchyPanel> Create(Args... args) { return std::make_shared<SceneHierarchyPanel>(std::forward<Args>(args)...); }
     private:
-        void DrawComponent(TransformComponent& transform);
-        void DrawComponent(MeshComponent& mesh);
-        void DrawComponent(LightComponent& light);
-    private:
-        ecs::entity_handle m_SelectedEntity, m_RenamedEntity;
-        Scene* m_ActiveScene;
+        ecs::entity_handle m_SelectionContext = {}, m_RenamedEntity = {};
+        std::shared_ptr<Scene> m_Context;
+        std::shared_ptr<InspectorPanel> m_InspectorPanel;
 
         ImGuiTableFlags m_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible;
-
-        VkSampler m_VkTextureSampler;
-        VulkanTexture m_PlusIconTexture, m_MinusIconTexture;
-
-        std::shared_ptr<MaterialSelectorPanel> m_MaterialSelectorPanel;
-        std::shared_ptr<MaterialEditorPanel> m_MaterialEditorPanel;
-
         char m_RenameBuffer[256];
     };
 }
