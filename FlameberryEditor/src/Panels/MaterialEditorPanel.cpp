@@ -6,43 +6,44 @@
 namespace Flameberry {
     void MaterialEditorPanel::OnUIRender()
     {
-        if (m_EditingContext)
+        bool isMaterialEdited = false;
+
+        ImGui::Begin("Material Editor");
+        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5, 3 });
+        if (ImGui::BeginTable("MaterialAttributeTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible))
         {
-            bool isMaterialEdited = false;
+            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+            ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
 
-            ImGui::Begin("Material Editor");
-            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5, 3 });
-            if (ImGui::BeginTable("MaterialAttributeTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible))
+            ImGui::Text("Material");
+            ImGui::TableNextColumn();
+
+            ImGui::Button(m_EditingContext ? m_EditingContext->Name.c_str() : "Null", ImVec2(-1.0f, 0.0f));
+            if (ImGui::BeginDragDropTarget())
             {
-                ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
-                ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                ImGui::Text("Material");
-                ImGui::TableNextColumn();
-
-                ImGui::Button(m_EditingContext->Name.c_str(), ImVec2(-1.0f, 0.0f));
-                if (ImGui::BeginDragDropTarget())
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
                 {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
-                    {
-                        const char* path = (const char*)payload->Data;
-                        std::filesystem::path matPath{ path };
-                        const std::string& ext = matPath.extension().string();
+                    const char* path = (const char*)payload->Data;
+                    std::filesystem::path matPath{ path };
+                    const std::string& ext = matPath.extension().string();
 
-                        FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                    FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
 
-                        if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
-                            m_EditingContext = AssetManager::TryGetOrLoadAssetFromFile<Material>(matPath);
-                        else
-                            FL_WARN("Bad File given as Material!");
-                    }
-                    ImGui::EndDragDropTarget();
+                    if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
+                        m_EditingContext = AssetManager::TryGetOrLoadAssetFromFile<Material>(matPath);
+                    else
+                        FL_WARN("Bad File given as Material!");
                 }
+                ImGui::EndDragDropTarget();
+            }
 
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            if (m_EditingContext)
+            {
 
                 ImGui::Text("FilePath");
                 ImGui::TableNextColumn();
@@ -157,13 +158,13 @@ namespace Flameberry {
                 ImGui::Checkbox("##Metallic", &metallic);
                 isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 m_EditingContext->Metallic = metallic;
-                ImGui::EndTable();
             }
-            ImGui::PopStyleVar();
-            ImGui::End();
-
-            if (isMaterialEdited && !m_EditingContext->IsDerived)
-                MaterialSerializer::Serialize(m_EditingContext, m_EditingContext->FilePath.c_str());
+            ImGui::EndTable();
         }
+        ImGui::PopStyleVar();
+        ImGui::End();
+
+        if (isMaterialEdited && !m_EditingContext->IsDerived)
+            MaterialSerializer::Serialize(m_EditingContext, m_EditingContext->FilePath.c_str());
     }
 }
