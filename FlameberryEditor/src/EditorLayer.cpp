@@ -58,9 +58,16 @@ namespace Flameberry {
 
         // Creating Uniform Buffers
         VkDeviceSize uniformBufferSize = sizeof(CameraUniformBufferObject);
+
+        BufferSpecification uniformBufferSpec;
+        uniformBufferSpec.InstanceCount = 1;
+        uniformBufferSpec.InstanceSize = uniformBufferSize;
+        uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
         for (auto& uniformBuffer : m_UniformBuffers)
         {
-            uniformBuffer = std::make_unique<VulkanBuffer>(uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
             uniformBuffer->MapMemory(uniformBufferSize);
         }
 
@@ -113,11 +120,13 @@ namespace Flameberry {
         m_ContentBrowserPanel = ContentBrowserPanel::Create(m_ProjectPath);
         m_EnvironmentSettingsPanel = EnvironmentSettingsPanel::Create(m_ActiveScene);
 
-        m_MousePickingBuffer = std::make_unique<VulkanBuffer>(
-            sizeof(int32_t),
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-        );
+        BufferSpecification mousePickingBufferSpec;
+        mousePickingBufferSpec.InstanceCount = 1;
+        mousePickingBufferSpec.InstanceSize = sizeof(int32_t);
+        mousePickingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        mousePickingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+        m_MousePickingBuffer = std::make_unique<Buffer>(mousePickingBufferSpec);
 
         {
             VkFormat swapChainImageFormat = m_VulkanRenderer->GetSwapChainImageFormat();
@@ -704,8 +713,13 @@ namespace Flameberry {
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-        // Create Descriptors
-        m_MousePickingUniformBuffer = std::make_unique<VulkanBuffer>(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        BufferSpecification uniformBufferSpec;
+        uniformBufferSpec.InstanceCount = 1;
+        uniformBufferSpec.InstanceSize = sizeof(glm::mat4);
+        uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+        m_MousePickingUniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
         m_MousePickingUniformBuffer->MapMemory(sizeof(glm::mat4));
 
         // Creating Descriptors
@@ -797,9 +811,16 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_ShadowMapSampler));
 
         m_ShadowMapUniformBuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        BufferSpecification uniformBufferSpec;
+        uniformBufferSpec.InstanceCount = 1;
+        uniformBufferSpec.InstanceSize = sizeof(glm::mat4);
+        uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
         for (auto& uniformBuffer : m_ShadowMapUniformBuffers)
         {
-            uniformBuffer = std::make_unique<VulkanBuffer>(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
             uniformBuffer->MapMemory(sizeof(glm::mat4));
         }
 

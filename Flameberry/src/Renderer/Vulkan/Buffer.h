@@ -3,12 +3,20 @@
 #include <vulkan/vulkan.h>
 
 namespace Flameberry {
-    class VulkanBuffer
+    struct BufferSpecification
+    {
+        VkDeviceSize InstanceSize;
+        uint32_t InstanceCount;
+        VkBufferUsageFlags Usage;
+        VkMemoryPropertyFlags MemoryProperties;
+        VkDeviceSize MinOffsetAlignment = 0;
+    };
+
+    class Buffer
     {
     public:
-        VulkanBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags);
-        VulkanBuffer(VkDeviceSize instanceSize, uint32_t instanceCount, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize minOffsetAlignment);
-        ~VulkanBuffer();
+        Buffer(const BufferSpecification& specification);
+        ~Buffer();
 
         const VkBuffer& GetBuffer() const { return m_VkBuffer; }
         VkResult MapMemory(VkDeviceSize size, VkDeviceSize offset = 0);
@@ -22,13 +30,14 @@ namespace Flameberry {
 
         const void* GetMappedMemory() const { return m_VkBufferMappedMemory; };
     private:
-        void CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize minOffsetAlignment);
         VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
     private:
         VkBuffer m_VkBuffer = VK_NULL_HANDLE;
         VkDeviceMemory m_VkBufferDeviceMemory = VK_NULL_HANDLE;
         void* m_VkBufferMappedMemory = nullptr;
 
-        VkDeviceSize m_InstanceSize = 0, m_AlignmentSize = 1;
+        uint32_t m_AlignmentSize;
+
+        BufferSpecification m_BufferSpec;
     };
 }

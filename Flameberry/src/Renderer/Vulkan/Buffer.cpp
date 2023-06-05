@@ -1,43 +1,29 @@
-#include "VulkanBuffer.h"
+#include "Buffer.h"
 
 #include "VulkanDebug.h"
 #include "VulkanRenderCommand.h"
 #include "VulkanContext.h"
 
 namespace Flameberry {
-    VkDeviceSize VulkanBuffer::GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment) {
+    VkDeviceSize Buffer::GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment) {
         if (minOffsetAlignment > 0)
             return (instanceSize + minOffsetAlignment - 1) & ~(minOffsetAlignment - 1);
         return instanceSize;
     }
 
-    VulkanBuffer::VulkanBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags)
+    Buffer::Buffer(const BufferSpecification& specification)
+        : m_BufferSpec(specification)
     {
-        CreateBuffer(bufferSize, bufferUsageFlags, memoryPropertyFlags, 1);
-    }
+        m_AlignmentSize = GetAlignment(m_BufferSpec.InstanceSize, m_BufferSpec.MinOffsetAlignment);
+        VkDeviceSize bufferSize = m_AlignmentSize * m_BufferSpec.InstanceCount;
 
-    VulkanBuffer::VulkanBuffer(VkDeviceSize instanceSize, uint32_t instanceCount, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize minOffsetAlignment)
-        : m_InstanceSize(instanceSize), m_AlignmentSize(minOffsetAlignment)
-    {
-        VkDeviceSize alignmentSize = GetAlignment(m_InstanceSize, minOffsetAlignment);
-        VkDeviceSize bufferSize = alignmentSize * instanceCount;
-        CreateBuffer(bufferSize, bufferUsageFlags, memoryPropertyFlags, minOffsetAlignment);
-    }
-
-    VulkanBuffer::~VulkanBuffer()
-    {
-        DestroyBuffer();
-    }
-
-    void VulkanBuffer::CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize minOffsetAlignment)
-    {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
 
         VkBufferCreateInfo vk_buffer_create_info{};
         vk_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         vk_buffer_create_info.size = bufferSize;
-        vk_buffer_create_info.usage = bufferUsageFlags;
+        vk_buffer_create_info.usage = m_BufferSpec.Usage;
         vk_buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         VK_CHECK_RESULT(vkCreateBuffer(device, &vk_buffer_create_info, nullptr, &m_VkBuffer));
@@ -48,20 +34,25 @@ namespace Flameberry {
         VkMemoryAllocateInfo vk_memory_allocate_info{};
         vk_memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         vk_memory_allocate_info.allocationSize = vk_memory_requirements.size;
-        vk_memory_allocate_info.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, vk_memory_requirements.memoryTypeBits, memoryPropertyFlags);
+        vk_memory_allocate_info.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, vk_memory_requirements.memoryTypeBits, m_BufferSpec.MemoryProperties);
 
         VK_CHECK_RESULT(vkAllocateMemory(device, &vk_memory_allocate_info, nullptr, &m_VkBufferDeviceMemory));
         vkBindBufferMemory(device, m_VkBuffer, m_VkBufferDeviceMemory, 0);
     }
 
-    VkResult VulkanBuffer::MapMemory(VkDeviceSize size, VkDeviceSize offset)
+    Buffer::~Buffer()
+    {
+        DestroyBuffer();
+    }
+
+    VkResult Buffer::MapMemory(VkDeviceSize size, VkDeviceSize offset)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         FL_ASSERT(size && m_VkBufferDeviceMemory, "Cannot Map memory of size: 0!");
         return vkMapMemory(device, m_VkBufferDeviceMemory, offset, size, 0, &m_VkBufferMappedMemory);
     }
 
-    void VulkanBuffer::UnmapMemory()
+    void Buffer::UnmapMemory()
     {
         if (m_VkBufferMappedMemory)
         {
@@ -71,7 +62,7 @@ namespace Flameberry {
         }
     }
 
-    void VulkanBuffer::WriteToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset)
+    void Buffer::WriteToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset)
     {
         if (size == VK_WHOLE_SIZE)
             memcpy(m_VkBufferMappedMemory, data, size);
@@ -83,13 +74,13 @@ namespace Flameberry {
         }
     }
 
-    void VulkanBuffer::WriteToIndex(const void* data, uint32_t index)
+    void Buffer::WriteToIndex(const void* data, uint32_t index)
     {
-        FL_ASSERT(m_InstanceSize, "Failed to write to index: Instance size not specified during buffer creation!");
-        WriteToBuffer(data, m_InstanceSize, index * m_AlignmentSize);
+        FL_ASSERT(m_BufferSpec.InstanceSize, "Failed to write to index: Instance size not specified during buffer creation!");
+        WriteToBuffer(data, m_BufferSpec.InstanceSize, index * m_AlignmentSize);
     }
 
-    VkResult VulkanBuffer::Flush(VkDeviceSize size, VkDeviceSize offset)
+    VkResult Buffer::Flush(VkDeviceSize size, VkDeviceSize offset)
     {
         VkMappedMemoryRange mappedRange = {};
         mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
@@ -101,12 +92,12 @@ namespace Flameberry {
         return vkFlushMappedMemoryRanges(device, 1, &mappedRange);
     }
 
-    VkResult VulkanBuffer::FlushIndex(int index)
+    VkResult Buffer::FlushIndex(int index)
     {
         return Flush(m_AlignmentSize, index * m_AlignmentSize);
     }
 
-    void VulkanBuffer::DestroyBuffer()
+    void Buffer::DestroyBuffer()
     {
         if (m_VkBuffer != VK_NULL_HANDLE && m_VkBufferDeviceMemory != VK_NULL_HANDLE)
         {

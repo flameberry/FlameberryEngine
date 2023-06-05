@@ -222,26 +222,52 @@ namespace Flameberry {
         {
             // Creating Vertex Buffer
             VkDeviceSize bufferSize = sizeof(VulkanVertex) * m_Vertices.size();
-            VulkanBuffer stagingBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+            BufferSpecification stagingBufferSpec;
+            stagingBufferSpec.InstanceCount = 1;
+            stagingBufferSpec.InstanceSize = bufferSize;
+            stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+            Buffer stagingBuffer(stagingBufferSpec);
 
             stagingBuffer.MapMemory(bufferSize);
             stagingBuffer.WriteToBuffer(m_Vertices.data(), bufferSize, 0);
             stagingBuffer.UnmapMemory();
 
-            m_VertexBuffer = std::make_unique<VulkanBuffer>(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            BufferSpecification vertexBufferSpec;
+            vertexBufferSpec.InstanceCount = 1;
+            vertexBufferSpec.InstanceSize = bufferSize;
+            vertexBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+            vertexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+            m_VertexBuffer = std::make_unique<Buffer>(vertexBufferSpec);
             VulkanRenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), m_VertexBuffer->GetBuffer(), bufferSize);
         }
 
         {
             // Creating Index Buffer
             VkDeviceSize bufferSize = sizeof(uint32_t) * m_Indices.size();
-            VulkanBuffer stagingBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            BufferSpecification stagingBufferSpec;
+
+            stagingBufferSpec.InstanceCount = 1;
+            stagingBufferSpec.InstanceSize = bufferSize;
+            stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+            Buffer stagingBuffer(stagingBufferSpec);
 
             stagingBuffer.MapMemory(bufferSize);
             stagingBuffer.WriteToBuffer(m_Indices.data(), bufferSize, 0);
             stagingBuffer.UnmapMemory();
 
-            m_IndexBuffer = std::make_unique<VulkanBuffer>(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            BufferSpecification indexBufferSpec;
+            indexBufferSpec.InstanceCount = 1;
+            indexBufferSpec.InstanceSize = bufferSize;
+            indexBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+            indexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+            m_IndexBuffer = std::make_unique<Buffer>(indexBufferSpec);
             VulkanRenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), m_IndexBuffer->GetBuffer(), bufferSize);
         }
     }

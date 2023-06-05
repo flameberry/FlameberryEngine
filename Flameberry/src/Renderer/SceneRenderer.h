@@ -27,6 +27,6 @@ namespace Flameberry {
         std::vector<std::shared_ptr<DescriptorSet>> m_SceneDataDescriptorSets;
         std::shared_ptr<DescriptorSetLayout> m_SceneDescriptorSetLayout;
 
-        std::unique_ptr<Flameberry::VulkanBuffer> m_SceneUniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
+        std::unique_ptr<Flameberry::Buffer> m_SceneUniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
     };
 }

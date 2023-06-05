@@ -43,7 +43,7 @@ namespace Flameberry {
         std::shared_ptr<DescriptorSetLayout> m_CameraBufferDescSetLayout;
         std::vector<std::shared_ptr<DescriptorSet>> m_CameraBufferDescriptorSets;
 
-        std::unique_ptr<VulkanBuffer> m_UniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
+        std::unique_ptr<Buffer> m_UniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
 
         std::unique_ptr<SceneRenderer> m_SceneRenderer;
         std::vector<std::shared_ptr<StaticMesh>> m_Meshes;
@@ -84,7 +84,7 @@ namespace Flameberry {
 
         std::filesystem::path m_ProjectPath;
 
-        std::unique_ptr<VulkanBuffer> m_MousePickingBuffer;
+        std::unique_ptr<Buffer> m_MousePickingBuffer;
         bool m_IsClickedInsideViewport = false, m_DidViewportBegin = true, m_IsGizmoOverlayHovered = false;
 
         // Test
@@ -102,7 +102,7 @@ namespace Flameberry {
 
         std::shared_ptr<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
         std::shared_ptr<DescriptorSet> m_MousePickingDescriptorSet;
-        std::unique_ptr<VulkanBuffer> m_MousePickingUniformBuffer;
+        std::unique_ptr<Buffer> m_MousePickingUniformBuffer;
 
         std::shared_ptr<Pipeline> m_ShadowMapPipeline;
         VkPipelineLayout m_ShadowMapPipelineLayout;
@@ -111,7 +111,7 @@ namespace Flameberry {
 
         std::shared_ptr<DescriptorSetLayout> m_ShadowMapDescriptorSetLayout;
         std::vector<std::shared_ptr<DescriptorSet>> m_ShadowMapDescriptorSets;
-        std::vector<std::unique_ptr<VulkanBuffer>> m_ShadowMapUniformBuffers;
+        std::vector<std::unique_ptr<Buffer>> m_ShadowMapUniformBuffers;
 
         const uint32_t SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
     };

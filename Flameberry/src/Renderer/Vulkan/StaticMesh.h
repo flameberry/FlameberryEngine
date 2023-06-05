@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #include "VulkanVertex.h"
-#include "VulkanBuffer.h"
+#include "Buffer.h"
 
 #include "Core/UUID.h"
 
@@ -46,7 +46,7 @@ namespace Flameberry {
         std::vector<VulkanVertex> m_Vertices; // TODO: Does it need to be stored?
         std::vector<uint32_t> m_Indices;
 
-        std::unique_ptr<VulkanBuffer> m_VertexBuffer, m_IndexBuffer;
+        std::unique_ptr<Buffer> m_VertexBuffer, m_IndexBuffer;
         std::string m_Name = "StaticMesh";
         std::string m_FilePath;
 

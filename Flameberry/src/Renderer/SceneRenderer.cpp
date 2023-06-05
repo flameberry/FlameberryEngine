@@ -34,9 +34,16 @@ namespace Flameberry {
 
         // Creating Uniform Buffers
         VkDeviceSize uniformBufferSize = sizeof(SceneUniformBufferData);
+
+        BufferSpecification bufferSpec;
+        bufferSpec.InstanceCount = 1;
+        bufferSpec.InstanceSize = uniformBufferSize;
+        bufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        bufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
         for (auto& uniformBuffer : m_SceneUniformBuffers)
         {
-            uniformBuffer = std::make_unique<Flameberry::VulkanBuffer>(uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            uniformBuffer = std::make_unique<Buffer>(bufferSpec);
             uniformBuffer->MapMemory(uniformBufferSize);
         }
 
@@ -84,7 +91,7 @@ namespace Flameberry {
 
         VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
 
-        Flameberry::PipelineSpecification pipelineSpec{};
+        PipelineSpecification pipelineSpec{};
         pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleVert.spv";
         pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleFrag.spv";
         pipelineSpec.RenderPass = renderPass;
@@ -97,7 +104,7 @@ namespace Flameberry {
             VertexInputAttribute::VEC3F, // a_Tangent
             VertexInputAttribute::VEC3F  // a_BiTangent
         };
-        pipelineSpec.VertexInputBindingDescription = Flameberry::VulkanVertex::GetBindingDescription();
+        pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
         pipelineSpec.Samples = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
         m_MeshPipeline = Pipeline::Create(pipelineSpec);

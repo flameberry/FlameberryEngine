@@ -8,7 +8,7 @@
 
 #include "Renderer/PerspectiveCamera.h"
 #include "VulkanVertex.h"
-#include "VulkanBuffer.h"
+#include "Buffer.h"
 #include "Image.h"
 #include "VulkanSwapChain.h"
 #include "VulkanContext.h"

@@ -5,8 +5,8 @@
 
 // #include "Vulkan/VulkanTexture.h"
 // #include "Vulkan/Pipeline.h"
-// #include "Vulkan/VulkanDescriptor.h"
-// #include "Vulkan/VulkanBuffer.h"
+// #include "Vulkan/DescriptorSet.h"
+// #include "Vulkan/Buffer.h"
 // #include "Vulkan/StaticMesh.h"
 
 // namespace Flameberry {

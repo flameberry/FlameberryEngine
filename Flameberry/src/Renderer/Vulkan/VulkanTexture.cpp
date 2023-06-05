@@ -1,7 +1,7 @@
 #include "VulkanTexture.h"
 
 #include "VulkanDebug.h"
-#include "VulkanBuffer.h"
+#include "Buffer.h"
 
 #include "VulkanRenderer.h"
 #include "VulkanContext.h"
@@ -28,7 +28,14 @@ namespace Flameberry {
         uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
 
         VkDeviceSize imageSize = 4 * width * height;
-        VulkanBuffer stagingBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        BufferSpecification stagingBufferSpec;
+        stagingBufferSpec.InstanceCount = 1;
+        stagingBufferSpec.InstanceSize = imageSize;
+        stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+        Buffer stagingBuffer(stagingBufferSpec);
 
         stagingBuffer.MapMemory(imageSize);
         stagingBuffer.WriteToBuffer(pixels, imageSize, 0);
