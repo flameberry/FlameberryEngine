@@ -30,6 +30,8 @@ namespace Flameberry {
         VkImageView GetAttachmentImageView(uint32_t attachmentIndex) const { return m_FramebufferImages[attachmentIndex]->GetImageView(); }
         VkImage GetAttachmentImage(uint32_t attachmentIndex) const { return m_FramebufferImages[attachmentIndex]->GetImage(); }
 
+        void SetClearColorValue(const VkClearColorValue& value) { m_FramebufferSpec.ClearColorValue = value; }
+
         void CreateVulkanFramebuffer(VkRenderPass renderPass);
 
         template<typename... Args>

@@ -55,7 +55,7 @@ namespace Flameberry {
                 physical_device_list += ", ";
         }
 
-        FL_INFO("{0} Physical devices found: {1}", deviceCount, physical_device_list);
+        FL_TRACE("{0} Physical devices found: {1}", deviceCount, physical_device_list);
 
         // Accessing the actual physical device
         m_VkPhysicalDevice = GetValidVkPhysicalDevice(vk_physical_devices, pWindow->GetWindowSurface());

@@ -1,7 +1,7 @@
 UUID: 12187434111446586689
 Name: Test Material
-Albedo: [0, 0, 0]
-Roughness: 0
+Albedo: [1, 1, 1]
+Roughness: 0.200000003
 Metallic: false
 TextureMapEnabled: true
 TextureMap: Assets/Textures/diffuse.png

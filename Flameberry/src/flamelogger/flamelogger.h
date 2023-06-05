@@ -24,7 +24,9 @@
 #define FL_COLOR_DEFAULT "\e[0m"
 #define FL_COLOR_RED "\e[0;31m"
 #define FL_COLOR_GREEN "\e[0;32m"
+#define FL_COLOR_BRIGHT_GREEN "\e[0;92m"
 #define FL_COLOR_YELLOW "\e[0;33m"
+#define FL_COLOR_BRIGHT_YELLOW "\e[0;93m"
 #define FL_COLOR_CYAN "\e[0;36m"
 #define FL_COLOR_PURPLE "\e[0;35m"
 #define FL_COLOR_WHITE "\e[0;37m"
@@ -157,7 +159,7 @@ namespace flamelogger {
             if (m_CurrentLogLevel <= LogLevel::TRACE)
             {
                 std::string output_message = format_string(message, args...);
-                std::cout << get_prefix(LogLevel::TRACE) << output_message << std::endl;
+                std::cout << FL_COLOR_WHITE << get_prefix(LogLevel::TRACE) << output_message << FL_COLOR_DEFAULT << std::endl;
             }
         }
 
@@ -168,7 +170,7 @@ namespace flamelogger {
             if (m_CurrentLogLevel <= LogLevel::INFO)
             {
                 std::string output_message = format_string(message, args...);
-                std::cout << FL_COLOR_GREEN << get_prefix(LogLevel::INFO) << output_message << FL_COLOR_DEFAULT << std::endl;
+                std::cout << FL_COLOR_BRIGHT_GREEN << get_prefix(LogLevel::INFO) << output_message << FL_COLOR_DEFAULT << std::endl;
             }
         }
 
@@ -179,7 +181,7 @@ namespace flamelogger {
             if (m_CurrentLogLevel <= LogLevel::WARNING)
             {
                 std::string output_message = format_string(message, args...);
-                std::cout << FL_COLOR_YELLOW << get_prefix(LogLevel::WARNING) << output_message << FL_COLOR_DEFAULT << std::endl;
+                std::cout << FL_COLOR_BRIGHT_YELLOW << get_prefix(LogLevel::WARNING) << output_message << FL_COLOR_DEFAULT << std::endl;
             }
         }
 

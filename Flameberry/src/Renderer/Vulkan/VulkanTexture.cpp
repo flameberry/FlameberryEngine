@@ -121,7 +121,7 @@ namespace Flameberry {
         else {
             std::shared_ptr<VulkanTexture> texture = std::make_shared<VulkanTexture>(texturePath.c_str());
             s_TextureCacheDirectory[texturePath] = texture;
-            FL_INFO("Texture not found in cache! Loading texture from disk!");
+            FL_WARN("Texture not found in cache! Loading texture from disk!");
             return texture;
         }
     }

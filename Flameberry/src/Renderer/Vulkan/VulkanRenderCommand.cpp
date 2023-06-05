@@ -144,7 +144,7 @@ namespace Flameberry {
             if (!(i == layerCount - 1))
                 layer_list += ", ";
         }
-        FL_INFO("Found the following Vulkan Validation Layers: {0}", layer_list);
+        FL_TRACE("Found the following Vulkan Validation Layers: {0}", layer_list);
         return true;
     }
 
@@ -235,7 +235,7 @@ namespace Flameberry {
 
         size_t fileSize = (size_t)stream.tellg();
 
-        FL_INFO("File size of buffer taken from '{0}' is {1}", filePath, fileSize);
+        FL_TRACE("File size of buffer taken from '{0}' is {1}", filePath, fileSize);
 
         std::vector<char> buffer(fileSize);
 

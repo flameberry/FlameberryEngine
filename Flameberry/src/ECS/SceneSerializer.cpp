@@ -147,7 +147,7 @@ namespace Flameberry {
 
     bool SceneSerializer::DeserializeScene(const char* scenePath)
     {
-        FL_SCOPED_TIMER("Deserialization");
+        FL_SCOPED_TIMER("Scene Deserialization");
 
         std::ifstream in(scenePath);
         std::stringstream ss;

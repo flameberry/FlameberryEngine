@@ -8,6 +8,8 @@ namespace Flameberry {
     {
         if (m_CurrentMaterial)
         {
+            bool isMaterialEdited = false;
+
             ImGui::Begin("Material Editor");
             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5, 3 });
             if (ImGui::BeginTable("MaterialAttributeTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible))
@@ -38,6 +40,8 @@ namespace Flameberry {
                 bool& textureMapEnabled = m_CurrentMaterial->TextureMapEnabled;
                 ImGui::Checkbox("##Texture_Map", &textureMapEnabled);
 
+                isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
+
                 if (textureMapEnabled)
                 {
                     auto& texture = m_CurrentMaterial->TextureMap;
@@ -59,7 +63,10 @@ namespace Flameberry {
                             FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
 
                             if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
+                            {
                                 texture = VulkanTexture::TryGetOrLoadTexture(texturePath.string());
+                                isMaterialEdited = true;
+                            }
                             else
                                 FL_WARN("Bad File given as Texture!");
                         }
@@ -75,6 +82,7 @@ namespace Flameberry {
 
                 bool& normalMapEnabled = m_CurrentMaterial->NormalMapEnabled;
                 ImGui::Checkbox("##Normal_Map", &normalMapEnabled);
+                isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
                 if (normalMapEnabled)
                 {
@@ -97,7 +105,10 @@ namespace Flameberry {
                             FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
 
                             if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
+                            {
                                 texture = VulkanTexture::TryGetOrLoadTexture(texturePath.string());
+                                isMaterialEdited = true;
+                            }
                             else
                                 FL_WARN("Bad File given as Texture!");
                         }
@@ -111,12 +122,14 @@ namespace Flameberry {
                 ImGui::Text("Albedo");
                 ImGui::TableNextColumn();
                 FL_REMOVE_LABEL(ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_CurrentMaterial->Albedo)));
+                isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
                 ImGui::Text("Roughness");
                 ImGui::TableNextColumn();
                 FL_REMOVE_LABEL(ImGui::DragFloat("##Roughness", &m_CurrentMaterial->Roughness, 0.01f, 0.0f, 1.0f));
+                isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
@@ -124,11 +137,15 @@ namespace Flameberry {
                 ImGui::TableNextColumn();
                 bool metallic = m_CurrentMaterial->Metallic;
                 ImGui::Checkbox("##Metallic", &metallic);
+                isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 m_CurrentMaterial->Metallic = metallic;
                 ImGui::EndTable();
             }
             ImGui::PopStyleVar();
             ImGui::End();
+
+            if (isMaterialEdited && !m_CurrentMaterial->IsDerived)
+                MaterialSerializer::Serialize(m_CurrentMaterial, m_CurrentMaterial->FilePath.c_str());
         }
     }
 }

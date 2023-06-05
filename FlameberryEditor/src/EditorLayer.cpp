@@ -221,6 +221,7 @@ namespace Flameberry {
             }
 
             m_SceneFramebuffers[m_VulkanRenderer->GetImageIndex()]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_SceneRenderPass->GetRenderPass());
+            m_SceneFramebuffers[m_VulkanRenderer->GetImageIndex()]->SetClearColorValue({ m_ActiveScene->GetClearColor().x, m_ActiveScene->GetClearColor().y, m_ActiveScene->GetClearColor().z, 1.0f });
 
             {
                 FL_PROFILE_SCOPE("Viewport Render Pass");
