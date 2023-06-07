@@ -3,7 +3,6 @@
 #include "VulkanDebug.h"
 #include "Buffer.h"
 
-#include "VulkanRenderer.h"
 #include "VulkanContext.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -193,7 +192,7 @@ namespace Flameberry {
         VkDescriptorImageInfo desc_image{};
         desc_image.sampler = s_DefaultSampler;
         desc_image.imageView = s_EmptyImage->GetImageView();
-        desc_image.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        desc_image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         s_EmptyDescriptorSet->WriteImage(0, desc_image);
         s_EmptyDescriptorSet->Update();

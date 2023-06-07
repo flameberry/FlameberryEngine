@@ -5,6 +5,7 @@
 
 #include "VulkanRenderCommand.h"
 #include "Renderer/Material.h"
+#include "Renderer/Renderer.h"
 #include "AssetManager/AssetManager.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -52,23 +53,38 @@ namespace Flameberry {
         CreateBuffers();
     }
 
-    void StaticMesh::Bind(VkCommandBuffer commandBuffer) const
+    void StaticMesh::Bind() const
     {
-        VkBuffer vk_vertex_buffers[] = { m_VertexBuffer->GetBuffer() };
+        VkBuffer vertexBuffers[] = { m_VertexBuffer->GetBuffer() };
         VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vk_vertex_buffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+        VkBuffer indexBuffer = m_IndexBuffer->GetBuffer();
+
+        Renderer::Submit([vertexBuffers, offsets, indexBuffer](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindVertexBuffers(cmdBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+            }
+        );
     }
 
-    void StaticMesh::OnDraw(VkCommandBuffer commandBuffer) const
+    void StaticMesh::OnDraw() const
     {
-        vkCmdDrawIndexed(commandBuffer, (uint32_t)m_Indices.size(), 1, 0, 0, 0);
+        const uint32_t& size = m_Indices.size();
+        Renderer::Submit([size](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
+            }
+        );
     }
 
-    void StaticMesh::OnDrawSubMesh(VkCommandBuffer commandBuffer, uint32_t subMeshIndex) const
+    void StaticMesh::OnDrawSubMesh(uint32_t subMeshIndex) const
     {
-        auto& submesh = m_SubMeshes[subMeshIndex];
-        vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, 1, submesh.IndexOffset, 0, 0);
+        const auto& submesh = m_SubMeshes[subMeshIndex];
+        Renderer::Submit([submesh](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdDrawIndexed(cmdBuffer, submesh.IndexCount, 1, submesh.IndexOffset, 0, 0);
+            }
+        );
     }
 
     void StaticMesh::Load(const std::string& path)

@@ -26,9 +26,9 @@ namespace Flameberry {
         StaticMesh(const std::vector<VulkanVertex>& vertices, const std::vector<uint32_t>& indices);
         ~StaticMesh();
 
-        void Bind(VkCommandBuffer commandBuffer) const;
-        void OnDraw(VkCommandBuffer commandBuffer) const;
-        void OnDrawSubMesh(VkCommandBuffer commandBuffer, uint32_t subMeshIndex) const;
+        void Bind() const;
+        void OnDraw() const;
+        void OnDrawSubMesh(uint32_t subMeshIndex) const;
 
         UUID GetUUID() const { return m_UUID; }
         std::string GetName() const { return m_Name; }

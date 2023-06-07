@@ -1,7 +1,8 @@
 #include "Pipeline.h"
 
 #include "VulkanRenderCommand.h"
-#include "VulkanRenderer.h"
+#include "VulkanContext.h"
+#include "Renderer/Renderer.h"
 
 #include "VulkanDebug.h"
 
@@ -129,7 +130,7 @@ namespace Flameberry {
         {
             pipelineViewportStateCreateInfo.scissorCount = 1;
             pipelineViewportStateCreateInfo.pScissors = nullptr;
-            
+
             dynamicStates.emplace_back(VK_DYNAMIC_STATE_SCISSOR);
         }
         else
@@ -191,8 +192,13 @@ namespace Flameberry {
         vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
     }
 
-    void Pipeline::Bind(VkCommandBuffer commandBuffer)
+    void Pipeline::Bind()
     {
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkGraphicsPipeline);
+        const auto& pipeline = m_VkGraphicsPipeline;
+        Renderer::Submit([pipeline](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+            }
+        );
     }
 }

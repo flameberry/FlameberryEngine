@@ -11,15 +11,18 @@
 #include "ECS/Scene.h"
 
 namespace Flameberry {
+    struct ModelMatrixPushConstantData { glm::mat4 ModelMatrix; };
+    struct MousePickingPushConstantData { glm::mat4 ModelMatrix; int EntityID; };
+
     class SceneRenderer
     {
     public:
         SceneRenderer(VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass);
         ~SceneRenderer();
 
-        void OnDraw(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene);
-        void OnDrawForShadowPass(VkCommandBuffer commandBuffer, VkPipelineLayout shadowMapPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene);
-        void OnDrawForMousePickingPass(VkCommandBuffer commandBuffer, VkPipelineLayout mousePickingPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene);
+        void OnDraw(VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene);
+        void OnDrawForShadowPass(VkPipelineLayout shadowMapPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene);
+        void OnDrawForMousePickingPass(VkPipelineLayout mousePickingPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene);
     private:
         std::shared_ptr<Pipeline> m_MeshPipeline;
         VkPipelineLayout m_VkPipelineLayout;

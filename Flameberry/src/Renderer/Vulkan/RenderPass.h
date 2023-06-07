@@ -17,8 +17,8 @@ namespace Flameberry {
         RenderPass(const RenderPassSpecification& specification);
         ~RenderPass();
 
-        void Begin(VkCommandBuffer commandBuffer, uint32_t framebufferInstance = 0, VkOffset2D renderAreaOffset = { 0, 0 }, VkExtent2D renderAreaExtent = { 0, 0 });
-        void End(VkCommandBuffer commandBuffer);
+        void Begin(uint32_t framebufferInstance = -1, VkOffset2D renderAreaOffset = { 0, 0 }, VkExtent2D renderAreaExtent = { 0, 0 });
+        void End();
 
         RenderPassSpecification GetSpecification() const { return m_RenderPassSpec; }
         VkRenderPass GetRenderPass() const { return m_VkRenderPass; }

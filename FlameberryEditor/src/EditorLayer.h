@@ -24,7 +24,7 @@ namespace Flameberry {
         void OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
 
         void InvalidateViewportImGuiDescriptorSet(uint32_t index);
-        void InvalidateShadowMapImGuiDescriptorSet();
+        void InvalidateShadowMapImGuiDescriptorSet(uint32_t index);
 
         void SaveScene();
         void OpenScene();
@@ -35,8 +35,6 @@ namespace Flameberry {
         void CreateMousePickingPipeline();
         void CreateShadowMapPipeline();
     private:
-        std::shared_ptr<VulkanRenderer> m_VulkanRenderer;
-
         PerspectiveCamera m_ActiveCamera;
         bool m_IsViewportFocused = false;
 
@@ -54,7 +52,6 @@ namespace Flameberry {
         std::shared_ptr<Scene> m_ActiveScene;
         std::shared_ptr<ecs::registry> m_Registry;
 
-        std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
         glm::vec2 m_ViewportSize{ 1280, 720 };
         glm::vec2 m_ViewportBounds[2];
         glm::vec2 m_ShadowMapViewportSize{ 1280, 720 };
@@ -71,6 +68,9 @@ namespace Flameberry {
         std::string m_OpenedScenePathIfExists = "", m_ScenePathToBeOpened = "";
         bool m_ShouldOpenAnotherScene = false;
 
+        int m_MouseX = 0, m_MouseY = 0;
+
+        bool m_IsClickedInsideViewport = false;
         bool m_IsCameraMoving = false;
         bool m_IsGizmoActive = false;
         int m_GizmoType = -1;
@@ -85,7 +85,7 @@ namespace Flameberry {
         std::filesystem::path m_ProjectPath;
 
         std::unique_ptr<Buffer> m_MousePickingBuffer;
-        bool m_IsClickedInsideViewport = false, m_DidViewportBegin = true, m_IsGizmoOverlayHovered = false;
+        bool m_IsMousePickingBufferReady = false, m_DidViewportBegin = true, m_IsGizmoOverlayHovered = false;
 
         // Test
         std::shared_ptr<RenderPass> m_SceneRenderPass;

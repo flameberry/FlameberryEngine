@@ -4,6 +4,7 @@
 
 #include "Window.h"
 #include "Layer.h"
+#include "ImGui/ImGuiLayer.h"
 
 #include "Renderer/Vulkan/VulkanContext.h"
 
@@ -30,6 +31,8 @@ namespace Flameberry {
     private:
         std::shared_ptr<Window> m_Window;
         std::shared_ptr<VulkanContext> m_VulkanContext;
+        std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
+
         std::vector<std::shared_ptr<Layer>> m_LayerStack;
     private:
         static Application* s_Instance;

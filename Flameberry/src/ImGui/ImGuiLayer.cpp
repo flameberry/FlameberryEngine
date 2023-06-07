@@ -7,9 +7,11 @@
 #include "Renderer/Vulkan/VulkanRenderCommand.h"
 #include "Renderer/Vulkan/VulkanSwapChain.h"
 #include "Renderer/Vulkan/VulkanDebug.h"
+#include "Renderer/Vulkan/VulkanContext.h"
+#include "Renderer/Renderer.h"
 
 namespace Flameberry {
-    ImGuiLayer::ImGuiLayer(const std::shared_ptr<VulkanRenderer>& renderer)
+    ImGuiLayer::ImGuiLayer()
     {
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -48,7 +50,7 @@ namespace Flameberry {
 
         // Creating ImGui RenderPass
         VkAttachmentDescription attachment{};
-        attachment.format = renderer->GetSwapChainImageFormat();
+        attachment.format = VulkanContext::GetCurrentWindow()->GetSwapChain()->GetSwapChainImageFormat();
         attachment.samples = VK_SAMPLE_COUNT_1_BIT;
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -84,7 +86,7 @@ namespace Flameberry {
         info.pDependencies = &dependency;
         VK_CHECK_RESULT(vkCreateRenderPass(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiLayerRenderPass));
 
-        CreateResources(renderer);
+        CreateResources();
 
         SetupImGuiStyle();
 
@@ -144,7 +146,7 @@ namespace Flameberry {
         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
     }
 
-    void ImGuiLayer::End(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkExtent2D extent)
+    void ImGuiLayer::End()
     {
         ImGuiIO& io = ImGui::GetIO();
         io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetWidth(), (float)VulkanContext::GetCurrentWindow()->GetHeight());
@@ -156,17 +158,23 @@ namespace Flameberry {
         VkClearValue clear_value{};
         clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
+        uint32_t imageIndex = VulkanContext::GetCurrentWindow()->GetImageIndex();
+        const auto& swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
+
         VkRenderPassBeginInfo imgui_render_pass_begin_info{};
         imgui_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         imgui_render_pass_begin_info.renderPass = m_ImGuiLayerRenderPass;
-        imgui_render_pass_begin_info.framebuffer = m_ImGuiFramebuffers[currentFrameIndex];
-        imgui_render_pass_begin_info.renderArea.extent = extent;
+        imgui_render_pass_begin_info.framebuffer = m_ImGuiFramebuffers[imageIndex];
+        imgui_render_pass_begin_info.renderArea.extent = swapchain->GetExtent2D();
         imgui_render_pass_begin_info.clearValueCount = 1;
         imgui_render_pass_begin_info.pClearValues = &clear_value;
+
+        uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
+        VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(currentFrameIndex);
         vkCmdBeginRenderPass(commandBuffer, &imgui_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        Flameberry::VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, (float)extent.width, (float)extent.height);
-        Flameberry::VulkanRenderCommand::SetScissor(commandBuffer, { 0, 0 }, extent);
+        // Flameberry::VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, (float)swapchain->Get.width, (float)extent.height);
+        // Flameberry::VulkanRenderCommand::SetScissor(commandBuffer, { 0, 0 }, extent);
 
         // Record dear imgui primitives into command buffer
         ImGui_ImplVulkan_RenderDrawData(main_draw_data, commandBuffer);
@@ -184,7 +192,7 @@ namespace Flameberry {
         }
     }
 
-    void ImGuiLayer::InvalidateResources(const std::shared_ptr<VulkanRenderer>& renderer)
+    void ImGuiLayer::InvalidateResources()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         VulkanContext::GetCurrentDevice()->WaitIdle();
@@ -195,23 +203,26 @@ namespace Flameberry {
         for (auto& imageView : m_ImGuiImageViews)
             vkDestroyImageView(device, imageView, nullptr);
 
-        CreateResources(renderer);
+        CreateResources();
     }
 
-    void ImGuiLayer::CreateResources(const std::shared_ptr<VulkanRenderer>& renderer)
+    void ImGuiLayer::CreateResources()
     {
         const auto& device = VulkanContext::GetCurrentDevice();
 
-        // Image Views creation
-        m_ImGuiImageViews.resize(renderer->GetSwapChainImages().size());
+        const auto& swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
+        uint32_t imageCount = swapchain->GetImages().size();
 
-        for (uint32_t i = 0; i < renderer->GetSwapChainImages().size(); i++)
+        // Image Views creation
+        m_ImGuiImageViews.resize(imageCount);
+
+        for (uint32_t i = 0; i < imageCount; i++)
         {
             VkImageViewCreateInfo vk_image_view_create_info{};
             vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            vk_image_view_create_info.image = renderer->GetSwapChainImages()[i];
+            vk_image_view_create_info.image = swapchain->GetImages()[i];
             vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            vk_image_view_create_info.format = renderer->GetSwapChainImageFormat();
+            vk_image_view_create_info.format = swapchain->GetSwapChainImageFormat();
             vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
             vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
             vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -235,8 +246,8 @@ namespace Flameberry {
             info.renderPass = m_ImGuiLayerRenderPass;
             info.attachmentCount = 1;
             info.pAttachments = attachment;
-            info.width = renderer->GetSwapChainExtent2D().width;
-            info.height = renderer->GetSwapChainExtent2D().height;
+            info.width = swapchain->GetExtent2D().width;
+            info.height = swapchain->GetExtent2D().height;
             info.layers = 1;
 
             VK_CHECK_RESULT(vkCreateFramebuffer(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiFramebuffers[i]));

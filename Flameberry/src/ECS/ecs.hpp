@@ -253,7 +253,7 @@ namespace ecs {
         }
 
         void destroy(entity_handle& entity) {
-            FL_ASSERT(entities[(uint32_t)entity] != entity_handle::null, "Attempted to destroy invalid entity!");
+            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != entity_handle::null, "Attempted to destroy invalid entity!");
 
             for (auto& pool : pools) {
                 if (pool.entity_set.find((uint32_t)entity) != -1) {
@@ -267,7 +267,7 @@ namespace ecs {
         }
 
         template<typename Type, typename... Args> Type& emplace(const entity_handle& entity, Args... args) {
-            FL_ASSERT(entities[(uint32_t)entity] != entity_handle::null, "Attempted to emplace component to an invalid entity!");
+            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != entity_handle::null, "Attempted to emplace component to an invalid entity!");
 
             uint32_t typeID = type_id<Type>();
             if (pools.size() <= typeID) {
@@ -292,7 +292,7 @@ namespace ecs {
         }
 
         template<typename... Type> decltype(auto) get(const entity_handle& entity) const {
-            FL_ASSERT(entities[(uint32_t)entity] != entity_handle::null, "Attempted to get component of invalid entity!");
+            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != entity_handle::null, "Attempted to get component of invalid entity!");
 
             if constexpr (sizeof...(Type) == 1) {
                 using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
@@ -317,7 +317,7 @@ namespace ecs {
         }
 
         template<typename... Type> bool has(const entity_handle& entity) const {
-            FL_ASSERT(entities[(uint32_t)entity] != entity_handle::null, "Failed to check existence of component of type: {0} invalid entity!", FL_TYPE_NAME(Type));
+            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != entity_handle::null, "Failed to check existence of component of type: {0} invalid entity!", FL_TYPE_NAME(Type));
 
             if constexpr (sizeof...(Type) == 1) {
                 using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());

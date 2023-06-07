@@ -9,28 +9,110 @@
 #include "VulkanDevice.h"
 
 #include "Renderer/Material.h"
+#include "Renderer/Renderer.h"
 
 namespace Flameberry {
-    void VulkanRenderCommand::SetViewport(VkCommandBuffer commandBuffer, float x, float y, float width, float height)
+    void VulkanRenderCommand::WritePixelFromImageToBuffer(VkBuffer buffer, VkImage image, const glm::vec2& pixelOffset)
     {
-        VkViewport viewport{};
-        viewport.x = x;
-        viewport.y = y;
-        viewport.width = width;
-        viewport.height = height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+        const auto& device = VulkanContext::GetCurrentDevice();
 
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+        VkCommandBuffer commandBuffer;
+        device->BeginSingleTimeCommandBuffer(commandBuffer);
+        {
+            VkPipelineStageFlags sourceStageFlags;
+            VkPipelineStageFlags destinationStageFlags;
+
+            VkImageMemoryBarrier vk_image_memory_barrier{};
+
+            sourceStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            destinationStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+            vk_image_memory_barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+            vk_image_memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+            vk_image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            vk_image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            vk_image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            vk_image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            vk_image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            vk_image_memory_barrier.image = image;
+            vk_image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            vk_image_memory_barrier.subresourceRange.baseMipLevel = 0;
+            vk_image_memory_barrier.subresourceRange.levelCount = 1;
+            vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
+            vk_image_memory_barrier.subresourceRange.layerCount = 1;
+
+            vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1, &vk_image_memory_barrier);
+        }
+
+        VkBufferImageCopy region{};
+        region.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+        region.imageOffset = { (int)pixelOffset.x, (int)pixelOffset.y };
+        region.imageExtent = { 1, 1, 1 };
+
+        region.bufferOffset = 0;
+        region.bufferRowLength = 1;
+        region.bufferImageHeight = 1;
+
+        vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
+
+        {
+            VkPipelineStageFlags sourceStageFlags;
+            VkPipelineStageFlags destinationStageFlags;
+
+            VkImageMemoryBarrier vk_image_memory_barrier{};
+
+            sourceStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            destinationStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+            vk_image_memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            vk_image_memory_barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+
+            vk_image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            vk_image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            vk_image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            vk_image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            vk_image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            vk_image_memory_barrier.image = image;
+            vk_image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            vk_image_memory_barrier.subresourceRange.baseMipLevel = 0;
+            vk_image_memory_barrier.subresourceRange.levelCount = 1;
+            vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
+            vk_image_memory_barrier.subresourceRange.layerCount = 1;
+
+            vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1, &vk_image_memory_barrier);
+        }
+        device->EndSingleTimeCommandBuffer(commandBuffer);
     }
 
-    void VulkanRenderCommand::SetScissor(VkCommandBuffer commandBuffer, VkOffset2D offset, VkExtent2D extent)
+    void VulkanRenderCommand::SetViewport(float x, float y, float width, float height)
     {
-        VkRect2D scissor{};
-        scissor.offset = offset;
-        scissor.extent = extent;
+        Renderer::Submit([x, y, width, height](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                VkViewport viewport{};
+                viewport.x = x;
+                viewport.y = y;
+                viewport.width = width;
+                viewport.height = height;
+                viewport.minDepth = 0.0f;
+                viewport.maxDepth = 1.0f;
 
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+                vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+            }
+        );
+    }
+
+    void VulkanRenderCommand::SetScissor(VkOffset2D offset, VkExtent2D extent)
+    {
+        Renderer::Submit([offset, extent](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                VkRect2D scissor{};
+                scissor.offset = offset;
+                scissor.extent = extent;
+
+                vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+            });
+
     }
 
     void VulkanRenderCommand::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize)

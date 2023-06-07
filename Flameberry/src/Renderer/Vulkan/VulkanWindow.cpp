@@ -23,7 +23,17 @@ namespace Flameberry {
 
         glfwSetWindowUserPointer(m_Window, this);
         glfwSetFramebufferSizeCallback(m_Window, FramebufferResizeCallBack);
+    }
 
+    void VulkanWindow::Init()
+    {
+        m_SwapChain = std::make_shared<VulkanSwapChain>(m_WindowSurface);
+    }
+
+    void VulkanWindow::Destroy()
+    {
+        m_SwapChain = nullptr;
+        glfwDestroyWindow(m_Window);
     }
 
     void VulkanWindow::SetEventCallBack(const std::function<void(Event&)>& fn)
@@ -63,11 +73,33 @@ namespace Flameberry {
 
     VulkanWindow::~VulkanWindow()
     {
-        glfwDestroyWindow(m_Window);
     }
 
-    void VulkanWindow::OnUpdate()
+    bool VulkanWindow::BeginFrame()
     {
-        glfwPollEvents();
+        VkResult result = m_SwapChain->AcquireNextImage();
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            m_SwapChain->Invalidate(m_SwapChain->GetVulkanSwapChain());
+            return false;
+        }
+        m_ImageIndex = m_SwapChain->GetAcquiredImageIndex();
+
+        const auto& device = VulkanContext::GetCurrentDevice();
+        device->ResetCommandBuffer(m_CurrentFrameIndex);
+        device->BeginCommandBuffer(m_CurrentFrameIndex);
+        return true;
+    }
+
+    void VulkanWindow::SwapBuffers()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice();
+        device->EndCommandBuffer(m_CurrentFrameIndex);
+
+        VkResult queuePresentStatus = m_SwapChain->SubmitCommandBuffer(device->GetCommandBuffer(m_CurrentFrameIndex));
+        if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR || IsWindowResized())
+            m_SwapChain->Invalidate(m_SwapChain->GetVulkanSwapChain());
+
+        m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % VulkanSwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 }

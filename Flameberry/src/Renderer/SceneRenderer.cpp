@@ -4,9 +4,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Vulkan/VulkanDebug.h"
-#include "Vulkan/VulkanRenderer.h"
 #include "Vulkan/VulkanRenderCommand.h"
+#include "Vulkan/VulkanContext.h"
 #include "Material.h"
+#include "Renderer.h"
 
 #include "ECS/Component.h"
 #include "AssetManager/AssetManager.h"
@@ -110,9 +111,10 @@ namespace Flameberry {
         m_MeshPipeline = Pipeline::Create(pipelineSpec);
     }
 
-    void SceneRenderer::OnDraw(VkCommandBuffer commandBuffer, uint32_t currentFrameIndex, VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
+    void SceneRenderer::OnDraw(VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
     {
-        m_MeshPipeline->Bind(commandBuffer);
+        uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
+        m_MeshPipeline->Bind();
 
         // Updating Scene Uniform Buffer
         SceneUniformBufferData sceneUniformBufferData;
@@ -131,7 +133,13 @@ namespace Flameberry {
         m_SceneUniformBuffers[currentFrameIndex]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData), 0);
 
         VkDescriptorSet descriptorSets[] = { globalDescriptorSet, m_SceneDataDescriptorSets[currentFrameIndex]->GetDescriptorSet() };
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+        const auto& pipelineLayout = m_VkPipelineLayout;
+
+        Renderer::Submit([pipelineLayout, descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+            vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+            }
+        );
+
 
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
@@ -141,7 +149,7 @@ namespace Flameberry {
                 continue;
 
             const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
-            staticMesh->Bind(commandBuffer);
+            staticMesh->Bind();
 
             int submeshIndex = 0;
             for (const auto& submesh : staticMesh->GetSubMeshes()) {
@@ -169,16 +177,19 @@ namespace Flameberry {
                         materialDescriptorSets[1] = materialAsset->NormalMap->GetDescriptorSet();
                 }
 
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 2, materialDescriptorSets.size(), materialDescriptorSets.data(), 0, nullptr);
-                vkCmdPushConstants(commandBuffer, m_VkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
+                Renderer::Submit([pipelineLayout, materialDescriptorSets, pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, materialDescriptorSets.size(), materialDescriptorSets.data(), 0, nullptr);
+                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
+                    }
+                );
 
-                staticMesh->OnDrawSubMesh(commandBuffer, submeshIndex);
+                staticMesh->OnDrawSubMesh(submeshIndex);
                 submeshIndex++;
             }
         }
     }
 
-    void SceneRenderer::OnDrawForShadowPass(VkCommandBuffer commandBuffer, VkPipelineLayout shadowMapPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
+    void SceneRenderer::OnDrawForShadowPass(VkPipelineLayout shadowMapPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
     {
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
@@ -189,15 +200,18 @@ namespace Flameberry {
 
             ModelMatrixPushConstantData pushContantData;
             pushContantData.ModelMatrix = transform.GetTransform();
-            vkCmdPushConstants(commandBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
+            Renderer::Submit([shadowMapPipelineLayout, pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+                vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
+                }
+            );
 
             const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
-            staticMesh->Bind(commandBuffer);
-            staticMesh->OnDraw(commandBuffer);
+            staticMesh->Bind();
+            staticMesh->OnDraw();
         }
     }
 
-    void SceneRenderer::OnDrawForMousePickingPass(VkCommandBuffer commandBuffer, VkPipelineLayout mousePickingPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
+    void SceneRenderer::OnDrawForMousePickingPass(VkPipelineLayout mousePickingPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
     {
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
@@ -209,11 +223,15 @@ namespace Flameberry {
             MousePickingPushConstantData pushContantData;
             pushContantData.ModelMatrix = transform.GetTransform();
             pushContantData.EntityID = (int)entity;
-            vkCmdPushConstants(commandBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);
+
+            Renderer::Submit([mousePickingPipelineLayout, pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+                vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);
+                }
+            );
 
             const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
-            staticMesh->Bind(commandBuffer);
-            staticMesh->OnDraw(commandBuffer);
+            staticMesh->Bind();
+            staticMesh->OnDraw();
         }
     }
 

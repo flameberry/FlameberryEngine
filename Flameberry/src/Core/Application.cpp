@@ -5,6 +5,9 @@
 #include "Layer.h"
 
 #include "ImGui/ImGuiLayer.h"
+#include "Renderer/Renderer.h"
+#include "Renderer/Vulkan/VulkanTexture.h"
+#include "AssetManager/AssetManager.h"
 
 namespace Flameberry {
     Application* Application::s_Instance;
@@ -17,6 +20,16 @@ namespace Flameberry {
 
         m_VulkanContext = VulkanContext::Create((VulkanWindow*)m_Window.get());
         VulkanContext::SetCurrentContext(m_VulkanContext.get());
+
+        m_Window->Init();
+
+        auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
+        VulkanContext::GetCurrentDevice()->AllocateCommandBuffers(swapchain->GetSwapChainImageCount());
+
+        // Create the generic texture descriptor layout
+        VulkanTexture::InitStaticResources();
+
+        m_ImGuiLayer = std::make_unique<ImGuiLayer>();
     }
 
     void Application::Run()
@@ -31,7 +44,25 @@ namespace Flameberry {
             for (auto& layer : m_LayerStack)
                 layer->OnUpdate(delta);
 
-            m_Window->OnUpdate();
+            if (m_Window->BeginFrame())
+            {
+                Renderer::Render();
+
+                m_ImGuiLayer->Begin();
+                for (auto& layer : m_LayerStack)
+                    layer->OnUIRender();
+                m_ImGuiLayer->End();
+
+                m_Window->SwapBuffers();
+                if (m_Window->IsWindowResized())
+                {
+                    m_ImGuiLayer->InvalidateResources();
+                    m_Window->ResetWindowResizedFlag();
+                }
+            }
+
+            Renderer::ClearCommandQueue();
+            glfwPollEvents();
         }
     }
 
@@ -43,6 +74,7 @@ namespace Flameberry {
             break;
         }
 
+        m_ImGuiLayer->OnEvent(e);
         for (auto& layer : m_LayerStack)
         {
             layer->OnEvent(e);
@@ -57,8 +89,17 @@ namespace Flameberry {
 
     Application::~Application()
     {
+        VulkanContext::GetCurrentDevice()->WaitIdle();
         for (auto& layer : m_LayerStack)
             layer->OnDestroy();
+
+        m_ImGuiLayer->OnDestroy();
+
+        VulkanTexture::DestroyStaticResources();
+        AssetManager::DestroyAssets();
+
+        m_Window->Destroy();
+
         glfwTerminate();
         FL_INFO("Ended Application!");
     }

@@ -115,6 +115,7 @@ namespace Flameberry {
         vk_present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         vk_present_info.waitSemaphoreCount = 1;
         vk_present_info.pWaitSemaphores = signal_semaphores;
+        vk_present_info.pResults = nullptr;
 
         VkSwapchainKHR vk_swap_chains[] = { m_VkSwapChain };
         vk_present_info.swapchainCount = 1;
