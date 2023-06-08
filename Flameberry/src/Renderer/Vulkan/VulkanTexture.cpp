@@ -149,6 +149,8 @@ namespace Flameberry {
 
         s_EmptyImage = Image::Create(imageSpec);
 
+        s_EmptyImage->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
         // Create Sampler
         VkSamplerCreateInfo sampler_info{};
         sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

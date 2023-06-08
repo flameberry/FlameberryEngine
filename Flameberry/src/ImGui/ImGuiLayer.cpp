@@ -173,9 +173,6 @@ namespace Flameberry {
         VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(currentFrameIndex);
         vkCmdBeginRenderPass(commandBuffer, &imgui_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        // Flameberry::VulkanRenderCommand::SetViewport(commandBuffer, 0.0f, 0.0f, (float)swapchain->Get.width, (float)extent.height);
-        // Flameberry::VulkanRenderCommand::SetScissor(commandBuffer, { 0, 0 }, extent);
-
         // Record dear imgui primitives into command buffer
         ImGui_ImplVulkan_RenderDrawData(main_draw_data, commandBuffer);
 
@@ -237,8 +234,8 @@ namespace Flameberry {
         }
 
         // Creating Framebuffers
-        m_ImGuiFramebuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        m_ImGuiFramebuffers.resize(imageCount);
+        for (uint32_t i = 0; i < imageCount; i++)
         {
             VkImageView attachment[1] = { m_ImGuiImageViews[i] };
             VkFramebufferCreateInfo info{};

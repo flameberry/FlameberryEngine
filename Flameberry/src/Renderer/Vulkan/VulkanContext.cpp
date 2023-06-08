@@ -68,10 +68,10 @@ namespace Flameberry {
         m_VulkanDevice = VulkanDevice::Create(m_VkPhysicalDevice, pWindow);
 
         std::vector<VkDescriptorPoolSize> poolSizes = {
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 5 },
-            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VulkanSwapChain::MAX_FRAMES_IN_FLIGHT * 30 }
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 * 5 },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3 * 30 }
         };
-        m_GlobalDescriptorPool = std::make_shared<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, 30 * VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        m_GlobalDescriptorPool = std::make_shared<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, 30 * 3);
     }
 
     VulkanContext::~VulkanContext()
