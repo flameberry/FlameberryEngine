@@ -11,7 +11,7 @@ layout (location = 0) out vec4 o_FragColor;
 #define PI 3.1415926535897932384626433832795
 #define AMBIENT 0.02
 
-layout (set = 0, binding = 1) uniform sampler2D u_ShadowMapSampler;
+layout (set = 1, binding = 1) uniform sampler2D u_ShadowMapSampler;
 
 layout (set = 2, binding = 0) uniform sampler2D u_TextureMapSampler;
 layout (set = 3, binding = 0) uniform sampler2D u_NormalMapSampler;

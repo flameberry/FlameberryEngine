@@ -99,10 +99,7 @@ namespace Flameberry {
 
         VkPipelineLayout m_MousePickingPipelineLayout;
         std::shared_ptr<Pipeline> m_MousePickingPipeline;
-
         std::shared_ptr<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
-        std::shared_ptr<DescriptorSet> m_MousePickingDescriptorSet;
-        std::unique_ptr<Buffer> m_MousePickingUniformBuffer;
 
         std::shared_ptr<Pipeline> m_ShadowMapPipeline;
         VkPipelineLayout m_ShadowMapPipelineLayout;

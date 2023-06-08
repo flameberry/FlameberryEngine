@@ -149,7 +149,37 @@ namespace Flameberry {
 
         s_EmptyImage = Image::Create(imageSpec);
 
-        s_EmptyImage->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        {
+            const auto& device = VulkanContext::GetCurrentDevice();
+
+            VkCommandBuffer commandBuffer;
+            device->BeginSingleTimeCommandBuffer(commandBuffer);
+
+            VkPipelineStageFlags sourceStageFlags;
+            VkPipelineStageFlags destinationStageFlags;
+
+            VkImageMemoryBarrier vk_image_memory_barrier{};
+            vk_image_memory_barrier.srcAccessMask = 0;
+            vk_image_memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            sourceStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            destinationStageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
+            vk_image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            vk_image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            vk_image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            vk_image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            vk_image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            vk_image_memory_barrier.image = s_EmptyImage->GetImage();
+            vk_image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            vk_image_memory_barrier.subresourceRange.baseMipLevel = 0;
+            vk_image_memory_barrier.subresourceRange.levelCount = 1;
+            vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
+            vk_image_memory_barrier.subresourceRange.layerCount = 1;
+
+            vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1, &vk_image_memory_barrier);
+
+            device->EndSingleTimeCommandBuffer(commandBuffer);
+        }
 
         // Create Sampler
         VkSamplerCreateInfo sampler_info{};

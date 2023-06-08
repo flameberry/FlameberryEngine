@@ -29,7 +29,7 @@ namespace Flameberry {
         alignas(4) float NormalMapEnabled = 0.0f;
     };
 
-    SceneRenderer::SceneRenderer(VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass)
+    SceneRenderer::SceneRenderer(VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass, const std::vector<VkImageView>& shadowMapImageViews, VkSampler shadowMapSampler)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
@@ -49,12 +49,18 @@ namespace Flameberry {
         }
 
         DescriptorSetLayoutSpecification sceneDescSetLayoutSpec;
-        sceneDescSetLayoutSpec.Bindings.emplace_back();
+        sceneDescSetLayoutSpec.Bindings.resize(2);
         sceneDescSetLayoutSpec.Bindings[0].binding = 0;
         sceneDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         sceneDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
         sceneDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         sceneDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
+
+        sceneDescSetLayoutSpec.Bindings[1].binding = 1;
+        sceneDescSetLayoutSpec.Bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        sceneDescSetLayoutSpec.Bindings[1].descriptorCount = 1;
+        sceneDescSetLayoutSpec.Bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        sceneDescSetLayoutSpec.Bindings[1].pImmutableSamplers = nullptr;
 
         m_SceneDescriptorSetLayout = DescriptorSetLayout::Create(sceneDescSetLayoutSpec);
 
@@ -71,7 +77,13 @@ namespace Flameberry {
             vk_descriptor_lighting_buffer_info.offset = 0;
             vk_descriptor_lighting_buffer_info.range = sizeof(SceneUniformBufferData);
 
+            VkDescriptorImageInfo vk_shadow_map_image_info{};
+            vk_shadow_map_image_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+            vk_shadow_map_image_info.imageView = shadowMapImageViews[i];
+            vk_shadow_map_image_info.sampler = shadowMapSampler;
+
             m_SceneDataDescriptorSets[i]->WriteBuffer(0, vk_descriptor_lighting_buffer_info);
+            m_SceneDataDescriptorSets[i]->WriteImage(1, vk_shadow_map_image_info);
             m_SceneDataDescriptorSets[i]->Update();
         }
 
@@ -140,7 +152,6 @@ namespace Flameberry {
             }
         );
 
-
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
@@ -189,7 +200,7 @@ namespace Flameberry {
         }
     }
 
-    void SceneRenderer::OnDrawForShadowPass(VkPipelineLayout shadowMapPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
+    void SceneRenderer::OnDrawForShadowPass(VkPipelineLayout shadowMapPipelineLayout, const std::shared_ptr<Scene>& scene)
     {
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
@@ -211,7 +222,7 @@ namespace Flameberry {
         }
     }
 
-    void SceneRenderer::OnDrawForMousePickingPass(VkPipelineLayout mousePickingPipelineLayout, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene)
+    void SceneRenderer::OnDrawForMousePickingPass(VkPipelineLayout mousePickingPipelineLayout, const std::shared_ptr<Scene>& scene)
     {
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
