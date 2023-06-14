@@ -57,9 +57,9 @@ namespace Flameberry {
 
     struct RelationshipComponent
     {
-        ecs::entity_handle Parent{ ecs::entity_handle::null };
-        ecs::entity_handle FirstChild{ ecs::entity_handle::null };
-        ecs::entity_handle PrevSibling{ ecs::entity_handle::null };
-        ecs::entity_handle NextSibling{ ecs::entity_handle::null };
+        fbentt::entity_handle Parent = {};
+        fbentt::entity_handle FirstChild = {};
+        fbentt::entity_handle PrevSibling = {};
+        fbentt::entity_handle NextSibling = {};
     };
 }

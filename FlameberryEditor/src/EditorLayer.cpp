@@ -102,7 +102,7 @@ namespace Flameberry {
 
         // m_SkyboxRenderer = std::make_unique<SkyboxRenderer>(m_VulkanRenderer->GetGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
 
-        m_Registry = std::make_shared<ecs::registry>();
+        m_Registry = std::make_shared<fbentt::registry>();
         m_ActiveScene = Scene::Create(m_Registry);
 
         m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
@@ -125,7 +125,7 @@ namespace Flameberry {
             FramebufferSpecification sceneFramebufferSpec;
             sceneFramebufferSpec.Width = m_ViewportSize.x;
             sceneFramebufferSpec.Height = m_ViewportSize.y;
-            sceneFramebufferSpec.Attachments = { swapChainImageFormat, VK_FORMAT_D32_SFLOAT };
+            sceneFramebufferSpec.Attachments = { swapChainImageFormat, VulkanSwapChain::GetDepthFormat() };
             sceneFramebufferSpec.Samples = sampleCount;
             sceneFramebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
             sceneFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
@@ -191,6 +191,10 @@ namespace Flameberry {
                 VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
             );
         }
+
+        fbentt::entity_handle entity = { 0, false };
+        bool is_null = entity == fbentt::null;
+        FL_BASIC_ASSERT(is_null);
     }
 
     void EditorLayer::OnUpdate(float delta)
@@ -259,7 +263,7 @@ namespace Flameberry {
             m_UniformBuffers[currentFrameIndex]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
             // m_SkyboxRenderer->OnDraw(commandBuffer, currentFrameIndex, m_VkDescriptorSets[currentFrameIndex], m_ActiveCamera, "");
-            m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), m_ActiveCamera, m_ActiveScene);
+            m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), m_ActiveCamera, m_ActiveScene, m_ViewportSize, m_SceneHierarchyPanel->GetSelectionContext());
 
             m_SceneRenderPass->End();
         }
@@ -272,7 +276,7 @@ namespace Flameberry {
             int32_t entityID = data[0];
             m_MousePickingBuffer->UnmapMemory();
             // FL_LOG("Selected Entity: {0}", entityID);
-            m_SceneHierarchyPanel->SetSelectionContext((entityID != -1) ? ecs::entity_handle(entityID) : ecs::entity_handle::null);
+            m_SceneHierarchyPanel->SetSelectionContext((entityID != -1) ? fbentt::entity_handle(entityID) : fbentt::null);
             m_IsMousePickingBufferReady = false;
         }
 
@@ -395,7 +399,7 @@ namespace Flameberry {
 
         // ImGuizmo
         const auto& selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
-        if (selectedEntity != ecs::entity_handle::null && m_GizmoType != -1)
+        if (selectedEntity != fbentt::null && m_GizmoType != -1)
         {
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist();

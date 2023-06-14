@@ -61,86 +61,9 @@ namespace Flameberry {
             ImGui::EndPopup();
         }
 
-        m_Context->m_Registry->each([this](ecs::entity_handle& entity)
+        m_Context->m_Registry->each([this](fbentt::entity_handle& entity)
             {
-                auto& tag = m_Context->m_Registry->get<TagComponent>(entity).Tag;
-
-                // bool hasRelationShipComponent = m_ActiveScene->m_Registry->has<RelationshipComponent>(entity);
-                // if (hasRelationShipComponent && m_ActiveScene->m_Registry->get<RelationshipComponent>(entity).Parent != ecs::entity_handle::null)
-                //     return;
-
-                bool is_renamed = m_RenamedEntity == entity;
-                bool is_selected = m_SelectionContext == entity;
-                bool should_delete_entity = false;
-                int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
-                    | ImGuiTreeNodeFlags_OpenOnArrow
-                    | ImGuiTreeNodeFlags_FramePadding
-                    | ImGuiTreeNodeFlags_Leaf;
-
-                if (m_RenamedEntity != entity)
-                    treeNodeFlags |= ImGuiTreeNodeFlags_SpanFullWidth;
-
-                ImGui::PushID((uint32_t)entity);
-
-                float textColor = is_selected ? 0.0f : 1.0f;
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
-                ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-                if (is_selected)
-                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
-
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
-                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
-                bool open = ImGui::TreeNodeEx(is_renamed ? "" : tag.c_str(), treeNodeFlags);
-                ImGui::PopStyleVar(2);
-                if (open) {
-                    ImGui::TreePop();
-                }
-                // if (open) {
-                //     if (hasRelationShipComponent) {
-                //         ecs::entity_handle iter_entity = entity;
-                //         auto& relationship = m_ActiveScene->m_Registry->get<RelationshipComponent>(entity);
-                //         while (relationship.FirstChild != ecs::entity_handle::null)
-                //         {
-                //             auto& childTag = m_ActiveScene->m_Registry->get<TagComponent>(relationship.FirstChild).Tag;
-                //             if (ImGui::TreeNodeEx(is_renamed ? "" : childTag.c_str(), treeNodeFlags))
-                //                 ImGui::TreePop();
-                //             else break;
-
-                //             if (m_ActiveScene->m_Registry->has<RelationshipComponent>(relationship.FirstChild))
-                //                 relationship = m_ActiveScene->m_Registry->get<RelationshipComponent>(relationship.FirstChild);
-                //         }
-                //     }
-                //     ImGui::TreePop();
-                // }
-
-                ImGui::PopStyleColor(is_selected ? 4 : 3);
-
-                if (ImGui::IsItemClicked())
-                    m_SelectionContext = entity;
-
-                if (ImGui::BeginPopupContextItem())
-                {
-                    if (ImGui::MenuItem("Rename"))
-                        m_RenamedEntity = entity;
-
-                    if (ImGui::MenuItem("Delete Entity"))
-                        should_delete_entity = true;
-                    ImGui::EndPopup();
-                }
-
-                if (is_renamed)
-                    RenameNode(tag);
-
-                if (should_delete_entity)
-                {
-                    m_Context->m_Registry->destroy(entity);
-                    if (is_selected)
-                    {
-                        m_SelectionContext = ecs::entity_handle::null;
-                    }
-                }
-                ImGui::PopID();
+                DrawEntityNode(entity);
             }
         );
 
@@ -162,9 +85,92 @@ namespace Flameberry {
         if (ImGui::InputText("###Rename", m_RenameBuffer, 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
         {
             tag = std::string(m_RenameBuffer);
-            m_RenamedEntity = ecs::entity_handle::null;
+            m_RenamedEntity = fbentt::null;
         }
         ImGui::PopStyleVar();
         ImGui::PopItemWidth();
+    }
+
+    void SceneHierarchyPanel::DrawEntityNode(fbentt::entity_handle entity)
+    {
+        auto& tag = m_Context->m_Registry->get<TagComponent>(entity).Tag;
+
+        bool is_renamed = m_RenamedEntity == entity;
+        bool is_selected = m_SelectionContext == entity;
+        bool should_delete_entity = false;
+        int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
+            | ImGuiTreeNodeFlags_OpenOnArrow
+            | ImGuiTreeNodeFlags_FramePadding;
+
+        if (!m_Context->m_Registry->has<RelationshipComponent>(entity) || m_Context->m_Registry->get<RelationshipComponent>(entity).FirstChild == fbentt::null)
+            treeNodeFlags |= ImGuiTreeNodeFlags_Leaf;
+
+        if (m_RenamedEntity != entity)
+            treeNodeFlags |= ImGuiTreeNodeFlags_SpanFullWidth;
+
+        ImGui::PushID((uint32_t)entity);
+
+        float textColor = is_selected ? 0.0f : 1.0f;
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        if (is_selected)
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+
+        bool open = ImGui::TreeNodeEx((void*)((uint32_t)entity), treeNodeFlags, tag.c_str());
+
+        ImGui::PopStyleVar(2);
+        if (open) {
+            ImGui::TreePop();
+        }
+
+        // if (open) {
+        //     if (hasRelationShipComponent) {
+        //         ecs::entity_handle iter_entity = entity;
+        //         auto& relationship = m_ActiveScene->m_Registry->get<RelationshipComponent>(entity);
+        //         while (relationship.FirstChild != ecs::entity_handle::null)
+        //         {
+        //             auto& childTag = m_ActiveScene->m_Registry->get<TagComponent>(relationship.FirstChild).Tag;
+        //             if (ImGui::TreeNodeEx(is_renamed ? "" : childTag.c_str(), treeNodeFlags))
+        //                 ImGui::TreePop();
+        //             else break;
+
+        //             if (m_ActiveScene->m_Registry->has<RelationshipComponent>(relationship.FirstChild))
+        //                 relationship = m_ActiveScene->m_Registry->get<RelationshipComponent>(relationship.FirstChild);
+        //         }
+        //     }
+        //     ImGui::TreePop();
+        // }
+
+        ImGui::PopStyleColor(is_selected ? 4 : 3);
+
+        if (ImGui::IsItemClicked())
+            m_SelectionContext = entity;
+
+        if (ImGui::BeginPopupContextItem())
+        {
+            if (ImGui::MenuItem("Rename"))
+                m_RenamedEntity = entity;
+
+            if (ImGui::MenuItem("Delete Entity"))
+                should_delete_entity = true;
+            ImGui::EndPopup();
+        }
+
+        if (is_renamed)
+            RenameNode(tag);
+
+        if (should_delete_entity)
+        {
+            m_Context->m_Registry->destroy(entity);
+            if (is_selected)
+            {
+                m_SelectionContext = fbentt::null;
+            }
+        }
+        ImGui::PopID();
     }
 }

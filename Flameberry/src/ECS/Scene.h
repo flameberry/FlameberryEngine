@@ -32,7 +32,7 @@ namespace Flameberry {
     class Scene
     {
     public:
-        Scene(const std::shared_ptr<ecs::registry>& reg);
+        Scene(const std::shared_ptr<fbentt::registry>& reg);
         ~Scene() = default;
 
         void RenderScene(const glm::mat4& cameraMatrix);
@@ -45,7 +45,7 @@ namespace Flameberry {
         template<typename... Args>
         static std::shared_ptr<Scene> Create(Args... args) { return std::make_shared<Scene>(std::forward<Args>(args)...); }
     private:
-        std::shared_ptr<ecs::registry> m_Registry;
+        std::shared_ptr<fbentt::registry> m_Registry;
         SceneData m_SceneData;
 
         friend class SceneHierarchyPanel;

@@ -9,7 +9,7 @@
 
 /* This is a header only implementation of the ecs system */
 /* Formatting for this file includes brackets on the same line as the function to keep it compact */
-namespace ecs {
+namespace fbentt {
     class TypeCounter {
         inline static uint32_t typeCounter = 0;
         template<typename Type> friend uint32_t type_id();
@@ -86,36 +86,19 @@ namespace ecs {
         std::vector<Type> packed, sparse;
     };
 
+    struct null_t;
+    extern null_t null;
+
     class entity_handle {
     public:
         using handle_type = uint32_t;
-    private:
-        struct null { // TODO: Use C++ class conversion
-            entity_handle::handle_type handle = -1;
-            bool validity = false;
-
-            null() {};
-        };
     public:
-        entity_handle() : handle(-1), validity(false) {}
+        entity_handle();
         entity_handle(handle_type handle) : handle(handle), validity(true) {}
         entity_handle(handle_type handle, bool validity) : handle(handle), validity(validity) {}
 
-        entity_handle(const null& null) {
-            *this = null;
-        }
-
         inline operator handle_type() const { return handle; }
-        inline void operator=(const null& null) {
-            this->handle = null.handle;
-            this->validity = null.validity;
-        }
-        inline bool operator==(const null& null) const {
-            return this->handle == null.handle && this->validity == null.validity;
-        }
-        inline bool operator!=(const null& null) const {
-            return !(*this == null);
-        }
+
         inline bool operator==(const entity_handle& entity) const {
             return this->handle == entity.handle && this->validity == entity.validity;
         }
@@ -124,11 +107,31 @@ namespace ecs {
         }
     private:
         handle_type handle;
-        bool validity; // TODO: Replace with version variable
+        bool validity;
 
         friend class registry;
-    public:
-        inline static null null;
+    };
+
+    struct null_t {
+        inline operator entity_handle() const {
+            return entity_handle(-1, false);
+        }
+
+        inline constexpr bool operator==(const null_t& other) const {
+            return true;
+        }
+
+        inline constexpr bool operator!=(const null_t& other) const {
+            return false;
+        }
+
+        inline constexpr bool operator==(const entity_handle& other) const {
+            return false;
+        }
+
+        inline constexpr bool operator!=(const entity_handle& other) const {
+            return true;
+        }
     };
 
     template<typename Type> class pool_handler {
@@ -217,7 +220,7 @@ namespace ecs {
         template<typename Fn> void each(Fn&& _Fn) {
             static_assert(std::is_invocable_v<Fn, entity_handle&>);
             for (auto& entity : entities) {
-                if (entity != entity_handle::null) {
+                if (entity != null) {
                     _Fn(entity);
                 }
             }
@@ -253,7 +256,7 @@ namespace ecs {
         }
 
         void destroy(entity_handle& entity) {
-            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != entity_handle::null, "Attempted to destroy invalid entity!");
+            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != null, "Attempted to destroy invalid entity!");
 
             for (auto& pool : pools) {
                 if (pool.entity_set.find((uint32_t)entity) != -1) {
@@ -262,12 +265,12 @@ namespace ecs {
                 }
             }
             free_entities.emplace_back((uint32_t)entity);
-            entities[(uint32_t)entity] = entity_handle::null;
-            entity = entity_handle::null;
+            entities[(uint32_t)entity] = null;
+            entity = null;
         }
 
         template<typename Type, typename... Args> Type& emplace(const entity_handle& entity, Args... args) {
-            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != entity_handle::null, "Attempted to emplace component to an invalid entity!");
+            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != null, "Attempted to emplace component to an invalid entity!");
 
             uint32_t typeID = type_id<Type>();
             if (pools.size() <= typeID) {
@@ -292,7 +295,7 @@ namespace ecs {
         }
 
         template<typename... Type> decltype(auto) get(const entity_handle& entity) const {
-            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != entity_handle::null, "Attempted to get component of invalid entity!");
+            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != null, "Attempted to get component of invalid entity!");
 
             if constexpr (sizeof...(Type) == 1) {
                 using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
@@ -317,7 +320,7 @@ namespace ecs {
         }
 
         template<typename... Type> bool has(const entity_handle& entity) const {
-            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != entity_handle::null, "Failed to check existence of component of type: {0} invalid entity!", FL_TYPE_NAME(Type));
+            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != null, "Failed to check existence of component of type: {0} invalid entity!", FL_TYPE_NAME(Type));
 
             if constexpr (sizeof...(Type) == 1) {
                 using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());

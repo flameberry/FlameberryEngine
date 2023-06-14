@@ -82,15 +82,15 @@ namespace Flameberry {
 
         VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo{};
         pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        pipelineDepthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-        pipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+        pipelineDepthStencilStateCreateInfo.depthTestEnable = (VkBool32)m_PipelineSpec.DepthTestEnable;
+        pipelineDepthStencilStateCreateInfo.depthWriteEnable = (VkBool32)m_PipelineSpec.DepthTestEnable;
         pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
         pipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
         pipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
         pipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
-        pipelineDepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
-        pipelineDepthStencilStateCreateInfo.front = {}; // Optional
-        pipelineDepthStencilStateCreateInfo.back = {}; // Optional
+        pipelineDepthStencilStateCreateInfo.stencilTestEnable = (VkBool32)m_PipelineSpec.StencilTestEnable;
+        pipelineDepthStencilStateCreateInfo.front = m_PipelineSpec.StencilOpState;
+        pipelineDepthStencilStateCreateInfo.back = {};
 
         const auto& vertexAttributeDesc = m_PipelineSpec.VertexLayout.CreateVertexInputAttributeDescriptions();
 
@@ -110,6 +110,11 @@ namespace Flameberry {
         VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo{};
 
         std::vector<VkDynamicState> dynamicStates;
+
+        if (m_PipelineSpec.DynamicStencilEnable)
+            dynamicStates.emplace_back(VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE);
+        if (m_PipelineSpec.DynamicStencilOp)
+            dynamicStates.emplace_back(VK_DYNAMIC_STATE_STENCIL_OP);
 
         if (m_PipelineSpec.Viewport.width == 0 || m_PipelineSpec.Viewport.width == 0)
         {

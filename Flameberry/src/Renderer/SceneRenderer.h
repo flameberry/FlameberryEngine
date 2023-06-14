@@ -20,7 +20,7 @@ namespace Flameberry {
         SceneRenderer(VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass, const std::vector<VkImageView>& shadowMapImageViews, VkSampler shadowMapSampler);
         ~SceneRenderer();
 
-        void OnDraw(VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene);
+        void OnDraw(VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene, const glm::vec2& framebufferSize, const fbentt::entity_handle& selectedEntity = {});
         void OnDrawForShadowPass(VkPipelineLayout shadowMapPipelineLayout, const std::shared_ptr<Scene>& scene);
         void OnDrawForMousePickingPass(VkPipelineLayout mousePickingPipelineLayout, const std::shared_ptr<Scene>& scene);
     private:
@@ -31,5 +31,8 @@ namespace Flameberry {
         std::shared_ptr<DescriptorSetLayout> m_SceneDescriptorSetLayout;
 
         std::unique_ptr<Flameberry::Buffer> m_SceneUniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
+
+        std::shared_ptr<Pipeline> m_OutlinePipeline;
+        VkPipelineLayout m_OutlinePipelineLayout;
     };
 }

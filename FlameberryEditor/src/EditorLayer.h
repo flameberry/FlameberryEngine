@@ -50,7 +50,7 @@ namespace Flameberry {
 
         // ECS
         std::shared_ptr<Scene> m_ActiveScene;
-        std::shared_ptr<ecs::registry> m_Registry;
+        std::shared_ptr<fbentt::registry> m_Registry;
 
         glm::vec2 m_ViewportSize{ 1280, 720 };
         glm::vec2 m_ViewportBounds[2];

@@ -22,7 +22,7 @@ namespace Flameberry {
         ImGui::Begin("Inspector");
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth;
 
-        if (m_SelectionContext != ecs::entity_handle::null)
+        if (m_SelectionContext != fbentt::null)
         {
             if (m_Context->m_Registry->has<IDComponent>(m_SelectionContext))
             {

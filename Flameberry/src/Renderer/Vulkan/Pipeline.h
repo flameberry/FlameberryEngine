@@ -19,7 +19,9 @@ namespace Flameberry {
         uint32_t Samples = 1;
         VkViewport Viewport = { 0, 0, 0, 0, 0.0f, 1.0f };
         VkRect2D Scissor;
-        bool BlendingEnable = false;
+        bool BlendingEnable = false, DepthTestEnable = true, StencilTestEnable = false;
+        bool DynamicStencilEnable = false, DynamicStencilOp = false;
+        VkStencilOpState StencilOpState = {};
     };
 
     class Pipeline

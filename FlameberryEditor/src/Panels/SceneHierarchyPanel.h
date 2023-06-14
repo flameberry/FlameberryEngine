@@ -13,13 +13,15 @@ namespace Flameberry {
         void OnUIRender();
 
         void RenameNode(std::string& tag);
-        void SetSelectionContext(const ecs::entity_handle& entity) { m_SelectionContext = entity; }
-        ecs::entity_handle GetSelectionContext() const { return m_SelectionContext; }
+        void SetSelectionContext(const fbentt::entity_handle& entity) { m_SelectionContext = entity; }
+        fbentt::entity_handle GetSelectionContext() const { return m_SelectionContext; }
+
+        void DrawEntityNode(fbentt::entity_handle entity);
 
         template<typename... Args>
         static std::shared_ptr<SceneHierarchyPanel> Create(Args... args) { return std::make_shared<SceneHierarchyPanel>(std::forward<Args>(args)...); }
     private:
-        ecs::entity_handle m_SelectionContext = {}, m_RenamedEntity = {};
+        fbentt::entity_handle m_SelectionContext = {}, m_RenamedEntity = {};
         std::shared_ptr<Scene> m_Context;
         std::shared_ptr<InspectorPanel> m_InspectorPanel;
 
