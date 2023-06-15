@@ -10,7 +10,9 @@ namespace Flameberry {
 
     void EnvironmentSettingsPanel::OnUIRender()
     {
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::Begin("Environment");
+        ImGui::PopStyleVar();
 
         if (ImGui::BeginTable("Environment_Attributes", 2, m_TableFlags))
         {
@@ -22,6 +24,7 @@ namespace Flameberry {
 
             auto& environment = m_Context->m_SceneData.ActiveEnvironmentMap;
 
+            ImGui::AlignTextToFramePadding();
             ImGui::Text("Clear Color");
             ImGui::TableNextColumn();
 
@@ -30,6 +33,7 @@ namespace Flameberry {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
+            ImGui::AlignTextToFramePadding();
             ImGui::Text("Enable Skybox");
             ImGui::TableNextColumn();
             ImGui::Checkbox("##Enable_Skybox", &environment.EnableSkybox);
@@ -39,6 +43,7 @@ namespace Flameberry {
 
             if (environment.EnableSkybox)
             {
+                ImGui::AlignTextToFramePadding();
                 ImGui::Text("Env Reflections");
                 ImGui::TableNextColumn();
                 ImGui::Checkbox("##Environment_Reflections", &environment.Reflections);
@@ -49,6 +54,7 @@ namespace Flameberry {
             else
                 environment.Reflections = false;
 
+            ImGui::AlignTextToFramePadding();
             ImGui::Text("Directional");
             ImGui::TableNextColumn();
             float colWidth = ImGui::GetColumnWidth();
@@ -57,6 +63,7 @@ namespace Flameberry {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
+            ImGui::AlignTextToFramePadding();
             ImGui::Text("Color");
             ImGui::TableNextColumn();
 
@@ -65,6 +72,7 @@ namespace Flameberry {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
+            ImGui::AlignTextToFramePadding();
             ImGui::Text("Intensity");
             ImGui::TableNextColumn();
             FL_REMOVE_LABEL(ImGui::DragFloat("##Intensity", &environment.DirLight.Intensity, 0.01f));

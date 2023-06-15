@@ -399,6 +399,34 @@ namespace fbentt {
             }
         }
 
+        template<typename... Type> void erase(const entity& entity) const {
+            FL_ASSERT(entity != null, "Failed to erase component: Entity is null!");
+            const uint32_t index = to_index(entity);
+            const uint32_t version = to_version(entities[index]);
+            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to erase component: Invalid/Outdated handle!");
+
+            if constexpr (sizeof...(Type) == 1) {
+                using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
+                uint32_t typeID = type_id<ComponentType>();
+                if (pools.size() <= typeID
+                    || pools[typeID].handler == nullptr
+                    || pools[typeID].entity_set.empty()
+                    || pools[typeID].entity_set.find(index) == -1
+                    ) {
+                    return;
+                }
+
+                pool_data& pool = *((pool_data*)&pools[typeID]);
+                if (pool.entity_set.find(index) != -1) {
+                    int set_index = pool.entity_set.remove(index);
+                    pool.remove(pool, set_index);
+                }
+            }
+            else {
+                ((void)erase<Type>(entity), ...);
+            }
+        }
+
         void clear() {
             pools.clear();
             entities.clear();

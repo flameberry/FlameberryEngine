@@ -30,7 +30,6 @@ namespace Flameberry {
         std::shared_ptr<Scene> m_Context;
         std::shared_ptr<InspectorPanel> m_InspectorPanel;
 
-        ImGuiTableFlags m_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible;
         ImGuiPopupFlags m_PopupFlags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
         char m_RenameBuffer[256];
 

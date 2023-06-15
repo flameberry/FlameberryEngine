@@ -15,6 +15,6 @@ namespace Flameberry {
         static std::shared_ptr<EnvironmentSettingsPanel> Create(Args... args) { return std::make_shared<EnvironmentSettingsPanel>(std::forward<Args>(args)...); }
     private:
         const std::shared_ptr<Scene> m_Context;
-        ImGuiTableFlags m_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible;
+        ImGuiTableFlags m_TableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
     };
 }

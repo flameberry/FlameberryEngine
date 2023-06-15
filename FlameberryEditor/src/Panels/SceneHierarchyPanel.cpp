@@ -39,8 +39,10 @@ namespace Flameberry {
             }
         );
 
-        ImGui::PopStyleVar();
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
+            m_SelectionContext = fbentt::null;
 
+        ImGui::PopStyleVar();
         ImGui::End();
 
         m_InspectorPanel->SetSelectionContext(m_SelectionContext);

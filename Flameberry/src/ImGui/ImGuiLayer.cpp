@@ -24,11 +24,17 @@ namespace Flameberry {
         //io.ConfigViewportsNoAutoMerge = true;
         //io.ConfigViewportsNoTaskBarIcon = true;
 
-        // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 16);
-        // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 13);
+        ImFontConfig config{};
+        config.OversampleH = 3;
+        config.GlyphExtraSpacing = ImVec2(0.62f, 0.62f);
+        config.RasterizerMultiply = 1.12f;
+        config.OversampleV = 3;
 
-        // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", 16);
-        // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", 14);
+        // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 16, &config);
+        // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 13, &config);
+
+        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", 16, &config);
+        io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", 14, &config);
 
         io.IniFilename = NULL;
         ImGui::LoadIniSettingsFromDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
@@ -267,7 +273,7 @@ namespace Flameberry {
         style.ColorButtonPosition = ImGuiDir_Left;
         style.WindowMenuButtonPosition = ImGuiDir_Right;
         style.FrameRounding = 2.0f;
-        style.WindowBorderSize = 0;
+        style.CellPadding = ImVec2(8, 5);
 
         auto& colors = style.Colors;
 

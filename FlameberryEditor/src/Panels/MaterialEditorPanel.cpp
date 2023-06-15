@@ -8,9 +8,11 @@ namespace Flameberry {
     {
         bool isMaterialEdited = false;
 
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
         ImGui::Begin("Material Editor");
-        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5, 3 });
-        if (ImGui::BeginTable("MaterialAttributeTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible))
+        ImGui::PopStyleVar();
+
+        if (ImGui::BeginTable("MaterialAttributeTable", 2, m_TableFlags))
         {
             ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
             ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
@@ -39,12 +41,12 @@ namespace Flameberry {
                 ImGui::EndDragDropTarget();
             }
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-
             if (m_EditingContext)
             {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
 
+                ImGui::AlignTextToFramePadding();
                 ImGui::Text("FilePath");
                 ImGui::TableNextColumn();
                 ImGui::TextWrapped("%s", m_EditingContext->FilePath.c_str());
@@ -52,6 +54,7 @@ namespace Flameberry {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
+                ImGui::AlignTextToFramePadding();
                 ImGui::Text("Texture Map");
 
                 ImGui::TableNextColumn();
@@ -96,6 +99,7 @@ namespace Flameberry {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
+                ImGui::AlignTextToFramePadding();
                 ImGui::Text("Normal Map");
                 ImGui::TableNextColumn();
 
@@ -138,6 +142,7 @@ namespace Flameberry {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
+                ImGui::AlignTextToFramePadding();
                 ImGui::Text("Albedo");
                 ImGui::TableNextColumn();
                 FL_REMOVE_LABEL(ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_EditingContext->Albedo)));
@@ -145,6 +150,7 @@ namespace Flameberry {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
+                ImGui::AlignTextToFramePadding();
                 ImGui::Text("Roughness");
                 ImGui::TableNextColumn();
                 FL_REMOVE_LABEL(ImGui::DragFloat("##Roughness", &m_EditingContext->Roughness, 0.01f, 0.0f, 1.0f));
@@ -152,6 +158,7 @@ namespace Flameberry {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
+                ImGui::AlignTextToFramePadding();
                 ImGui::Text("Metallic");
                 ImGui::TableNextColumn();
                 bool metallic = m_EditingContext->Metallic;
@@ -161,7 +168,6 @@ namespace Flameberry {
             }
             ImGui::EndTable();
         }
-        ImGui::PopStyleVar();
         ImGui::End();
 
         if (isMaterialEdited && !m_EditingContext->IsDerived)
