@@ -57,9 +57,19 @@ namespace Flameberry {
 
     struct RelationshipComponent
     {
-        fbentt::entity_handle Parent = {};
-        fbentt::entity_handle FirstChild = {};
-        fbentt::entity_handle PrevSibling = {};
-        fbentt::entity_handle NextSibling = {};
+        fbentt::entity Parent{};
+        fbentt::entity FirstChild{};
+        fbentt::entity PrevSibling{};
+        fbentt::entity NextSibling{};
+
+        RelationshipComponent()
+            : Parent(fbentt::null), FirstChild(fbentt::null), PrevSibling(fbentt::null), NextSibling(fbentt::null)
+        {
+        }
+
+        RelationshipComponent(const RelationshipComponent& dest)
+            : Parent(dest.Parent), FirstChild(dest.FirstChild), PrevSibling(dest.PrevSibling), NextSibling(dest.NextSibling)
+        {
+        }
     };
 }

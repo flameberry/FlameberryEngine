@@ -191,10 +191,6 @@ namespace Flameberry {
                 VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
             );
         }
-
-        fbentt::entity_handle entity = { 0, false };
-        bool is_null = entity == fbentt::null;
-        FL_BASIC_ASSERT(is_null);
     }
 
     void EditorLayer::OnUpdate(float delta)
@@ -273,10 +269,10 @@ namespace Flameberry {
             VulkanRenderCommand::WritePixelFromImageToBuffer(m_MousePickingBuffer->GetBuffer(), m_MousePickingFramebuffer->GetAttachmentImage(0), { m_MouseX, m_ViewportSize.y - m_MouseY });
             m_MousePickingBuffer->MapMemory(sizeof(int32_t));
             int32_t* data = (int32_t*)m_MousePickingBuffer->GetMappedMemory();
-            int32_t entityID = data[0];
+            int32_t entityIndex = data[0];
             m_MousePickingBuffer->UnmapMemory();
-            // FL_LOG("Selected Entity: {0}", entityID);
-            m_SceneHierarchyPanel->SetSelectionContext((entityID != -1) ? fbentt::entity_handle(entityID) : fbentt::null);
+            m_SceneHierarchyPanel->SetSelectionContext((entityIndex != -1) ? m_Registry->get_entity_at_index(entityIndex) : fbentt::null);
+            // FL_LOG("Selected Entity Index: {0}", entityIndex);
             m_IsMousePickingBufferReady = false;
         }
 

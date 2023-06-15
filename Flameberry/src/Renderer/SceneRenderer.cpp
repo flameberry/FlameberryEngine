@@ -179,7 +179,7 @@ namespace Flameberry {
         }
     }
 
-    void SceneRenderer::OnDraw(VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene, const glm::vec2& framebufferSize, const fbentt::entity_handle& selectedEntity)
+    void SceneRenderer::OnDraw(VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene, const glm::vec2& framebufferSize, const fbentt::entity& selectedEntity)
     {
         uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
         m_MeshPipeline->Bind();
@@ -262,6 +262,10 @@ namespace Flameberry {
         if (selectedEntity != fbentt::null && scene->m_Registry->has<MeshComponent>(selectedEntity))
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(selectedEntity);
+
+            if (!mesh.MeshUUID) // TODO: MeshUUID should never be invalid either it should point to default mesh or user loaded mesh
+                return;
+
             auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
 
             Renderer::Submit([framebufferSize](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
@@ -369,7 +373,7 @@ namespace Flameberry {
 
             MousePickingPushConstantData pushContantData;
             pushContantData.ModelMatrix = transform.GetTransform();
-            pushContantData.EntityID = (int)entity;
+            pushContantData.EntityIndex = fbentt::to_index(entity);
 
             Renderer::Submit([mousePickingPipelineLayout, pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
                 vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);

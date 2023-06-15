@@ -89,48 +89,60 @@ namespace fbentt {
     struct null_t;
     extern null_t null;
 
-    class entity_handle {
+    /// @brief Contains a 64 bit integer -> Layout of handle: | 32-bit index | 31-bit version | 1-bit validity |
+    class entity {
     public:
-        using handle_type = uint32_t;
+        using handle_type = std::uint64_t;
+        using version_type = std::uint32_t;
     public:
-        entity_handle();
-        entity_handle(handle_type handle) : handle(handle), validity(true) {}
-        entity_handle(handle_type handle, bool validity) : handle(handle), validity(validity) {}
+        entity() : handle(0xFFFFFFFF00000000) {}
+        entity(handle_type handle) : handle(handle) {}
+        entity(const entity& entity) : handle(entity.handle) {}
 
         inline operator handle_type() const { return handle; }
 
-        inline bool operator==(const entity_handle& entity) const {
-            return this->handle == entity.handle && this->validity == entity.validity;
+        inline void operator=(entity entity) {
+            this->handle = entity.handle;
         }
-        inline bool operator!=(const entity_handle& entity) const {
+
+        inline void operator=(handle_type handle) {
+            this->handle = handle;
+        }
+
+        inline constexpr void operator=(const null_t& n) {
+            this->handle = 0xFFFFFFFF00000000;
+        }
+
+        inline bool operator==(const entity& entity) const {
+            return this->handle == entity.handle;
+        }
+
+        inline bool operator!=(const entity& entity) const {
             return !(*this == entity);
         }
     private:
         handle_type handle;
-        bool validity;
-
-        friend class registry;
     };
 
+    inline entity to_handle(uint32_t index, entity::version_type version, bool validity) {
+        return (entity::handle_type(index) << 32) | (entity::handle_type(version) << 1) | validity;
+    }
+
+    inline uint32_t to_index(entity handle) {
+        return static_cast<uint32_t>(handle >> 32);
+    }
+
+    inline entity::version_type to_version(entity handle) {
+        return static_cast<entity::version_type>(handle) >> 1;
+    }
+
+    inline bool is_valid(entity handle) {
+        return handle & 0x1;
+    }
+
     struct null_t {
-        inline operator entity_handle() const {
-            return entity_handle(-1, false);
-        }
-
-        inline constexpr bool operator==(const null_t& other) const {
-            return true;
-        }
-
-        inline constexpr bool operator!=(const null_t& other) const {
-            return false;
-        }
-
-        inline constexpr bool operator==(const entity_handle& other) const {
-            return false;
-        }
-
-        inline constexpr bool operator!=(const entity_handle& other) const {
-            return true;
+        inline operator entity() const {
+            return 0xFFFFFFFF00000000;
         }
     };
 
@@ -178,7 +190,7 @@ namespace fbentt {
                     return it;
                 }
 
-                entity_handle operator*() {
+                entity operator*() {
                     return ref_registry->entities[ref_pool->entity_set[index]];
                 }
 
@@ -215,12 +227,18 @@ namespace fbentt {
             int begin_index, end_index;
         };
     public:
+        entity get_entity_at_index(uint32_t index)
+        {
+            FL_ASSERT(index < entities.size() && is_valid(entities[index]), "Failed to get entity at index: Invalid index/entity!");
+            return entities[index];
+        }
+
         /// @brief: Iterates over all entities in the scene
-        /// @param _Fn: A function with a param of type `ecs::entity_handle&` which represents the current entity being iterated
+        /// @param _Fn: A function with a param of type `const ecs::entity&` which represents the current entity being iterated
         template<typename Fn> void each(Fn&& _Fn) {
-            static_assert(std::is_invocable_v<Fn, entity_handle&>);
-            for (auto& entity : entities) {
-                if (entity != null) {
+            static_assert(std::is_invocable_v<Fn, entity>);
+            for (auto entity : entities) {
+                if (is_valid(entity)) {
                     _Fn(entity);
                 }
             }
@@ -245,32 +263,41 @@ namespace fbentt {
             return registry_view<Type...>(this, &pools[smallestPoolIndex]);
         }
 
-        entity_handle create() {
+        entity create() {
             if (!free_entities.empty()) {
-                uint32_t handle = (uint32_t)free_entities.back();
-                entities[handle] = entity_handle(handle, true);
+                const uint32_t freeEntityIndex = free_entities.back();
+                const uint32_t version = to_version(entities[freeEntityIndex]);
+                entities[freeEntityIndex] = to_handle(freeEntityIndex, version + 1, true);
+
                 free_entities.pop_back();
-                return entities[handle];
+                return entities[freeEntityIndex];
             }
-            return entities.emplace_back(entities.size(), true);
+            return entities.emplace_back(to_handle(entities.size(), 0, true));
         }
 
-        void destroy(entity_handle& entity) {
-            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != null, "Attempted to destroy invalid entity!");
+        void destroy(entity entity) {
+            FL_ASSERT(entity != null, "Failed to destroy entity: Entity is null!");
+
+            const uint32_t index = to_index(entity);
+            const uint32_t version = to_version(entities[index]);
+
+            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to delete entity: Invalid handle!");
 
             for (auto& pool : pools) {
-                if (pool.entity_set.find((uint32_t)entity) != -1) {
-                    int index = pool.entity_set.remove((uint32_t)entity);
-                    pool.remove(pool, index);
+                if (pool.entity_set.find(index) != -1) {
+                    int set_index = pool.entity_set.remove(index);
+                    pool.remove(pool, set_index);
                 }
             }
-            free_entities.emplace_back((uint32_t)entity);
-            entities[(uint32_t)entity] = null;
-            entity = null;
+            free_entities.emplace_back(index);
+            entities[index] = entities[index] & 0xFFFFFFFFFFFFFFFE;
         }
 
-        template<typename Type, typename... Args> Type& emplace(const entity_handle& entity, Args... args) {
-            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != null, "Attempted to emplace component to an invalid entity!");
+        template<typename Type, typename... Args> Type& emplace(const entity& entity, Args... args) {
+            FL_ASSERT(entity != null, "Failed to emplace component: Entity is null!");
+            const uint32_t index = to_index(entity);
+            const uint32_t version = to_version(entities[index]);
+            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to emplace component: Invalid/Outdated handle!");
 
             uint32_t typeID = type_id<Type>();
             if (pools.size() <= typeID) {
@@ -281,11 +308,11 @@ namespace fbentt {
             else if (pools[typeID].handler == nullptr) {
                 pools[typeID].handler = std::make_shared<pool_handler<Type>>();
             }
-            else if (pools[typeID].entity_set.find(entity) != -1) {
-                FL_ERROR("Failed to emplace component of type: {0} to the entity: {1}: Entity already has component!", FL_TYPE_NAME(Type), (uint32_t)entity);
+            else if (pools[typeID].entity_set.find(index) != -1) {
+                FL_ERROR("Failed to emplace component: Entity already has component!");
                 FL_DEBUGBREAK();
             }
-            pools[typeID].entity_set.add(entity.handle);
+            pools[typeID].entity_set.add(index);
             pools[typeID].remove = [](const pool_data& pool, uint32_t index) {
                 auto& handler = (*((pool_handler<Type>*)pool.handler.get()));
                 handler.remove(index);
@@ -294,24 +321,26 @@ namespace fbentt {
             return handler.emplace(std::forward<Args>(args)...);
         }
 
-        template<typename... Type> decltype(auto) get(const entity_handle& entity) const {
-            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != null, "Attempted to get component of invalid entity!");
-
+        template<typename... Type> decltype(auto) try_get(const entity& entity) const {
             if constexpr (sizeof...(Type) == 1) {
+                const uint32_t index = to_index(entity);
+
                 using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
                 uint32_t typeID = type_id<ComponentType>();
-                if (pools.size() <= typeID
+                if (entity == null
+                    || index > entities.size()
+                    || to_version(entities[index]) != to_version(entity)
+                    || pools.size() <= typeID
                     || pools[typeID].handler == nullptr
                     || pools[typeID].entity_set.empty()
-                    || pools[typeID].entity_set.find(entity.handle) == -1
+                    || pools[typeID].entity_set.find(index) == -1
                     ) {
-                    FL_ERROR("Failed to get component of type: {0} of entity: {1}", FL_TYPE_NAME(ComponentType), entity.handle);
-                    FL_DEBUGBREAK();
+                    return (ComponentType*)nullptr;
                 }
                 else {
-                    int index = pools[typeID].entity_set.find(entity.handle);
+                    int set_index = pools[typeID].entity_set.find(index);
                     auto& handler = (*((pool_handler<ComponentType>*)pools[typeID].handler.get()));
-                    return static_cast<ComponentType&>(handler.get(index));
+                    return &handler.get(set_index);
                 }
             }
             else {
@@ -319,8 +348,11 @@ namespace fbentt {
             }
         }
 
-        template<typename... Type> bool has(const entity_handle& entity) const {
-            FL_ASSERT(entity < entities.size() && entities[(uint32_t)entity] != null, "Failed to check existence of component of type: {0} invalid entity!", FL_TYPE_NAME(Type));
+        template<typename... Type> decltype(auto) get(const entity& entity) const {
+            FL_ASSERT(entity != null, "Failed to get component: Entity is null!");
+            const uint32_t index = to_index(entity);
+            const uint32_t version = to_version(entities[index]);
+            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to get component: Invalid/Outdated handle!");
 
             if constexpr (sizeof...(Type) == 1) {
                 using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
@@ -328,7 +360,35 @@ namespace fbentt {
                 if (pools.size() <= typeID
                     || pools[typeID].handler == nullptr
                     || pools[typeID].entity_set.empty()
-                    || pools[typeID].entity_set.find(entity.handle) == -1
+                    || pools[typeID].entity_set.find(index) == -1
+                    ) {
+                    FL_ERROR("Failed to get component: Component does not exist!");
+                    FL_DEBUGBREAK();
+                }
+                else {
+                    int set_index = pools[typeID].entity_set.find(index);
+                    auto& handler = (*((pool_handler<ComponentType>*)pools[typeID].handler.get()));
+                    return static_cast<ComponentType&>(handler.get(set_index));
+                }
+            }
+            else {
+                return std::make_tuple(get<Type>(entity)...);
+            }
+        }
+
+        template<typename... Type> bool has(const entity& entity) const {
+            FL_ASSERT(entity != null, "Failed to check component: Entity is null!");
+            const uint32_t index = to_index(entity);
+            const uint32_t version = to_version(entities[index]);
+            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to check component: Invalid/Outdated handle!");
+
+            if constexpr (sizeof...(Type) == 1) {
+                using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
+                uint32_t typeID = type_id<ComponentType>();
+                if (pools.size() <= typeID
+                    || pools[typeID].handler == nullptr
+                    || pools[typeID].entity_set.empty()
+                    || pools[typeID].entity_set.find(index) == -1
                     ) {
                     return false;
                 }
@@ -346,7 +406,7 @@ namespace fbentt {
         }
     private:
         std::vector<pool_data> pools;
-        std::vector<entity_handle> entities;
+        std::vector<entity> entities;
         std::vector<uint32_t> free_entities;
     };
 }

@@ -8,7 +8,7 @@ layout (set = 0, binding = 0) uniform UniformBufferObject {
 
 layout (push_constant) uniform MousePickingPushConstant {
     mat4 u_ModelMatrix;
-    int u_EntityID;
+    int u_EntityIndex;
 };
 
 void main()

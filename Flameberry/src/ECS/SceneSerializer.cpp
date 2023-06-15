@@ -52,7 +52,7 @@ namespace Flameberry {
 
         std::vector<UUID> meshUUIDs;
 
-        m_ActiveScene->m_Registry->each([&](fbentt::entity_handle& entity)
+        m_ActiveScene->m_Registry->each([&](fbentt::entity entity)
             {
                 SerializeEntity(out, entity, meshUUIDs);
             }
@@ -97,7 +97,7 @@ namespace Flameberry {
         return true;
     }
 
-    void SceneSerializer::SerializeEntity(YAML::Emitter& out, fbentt::entity_handle& entity, std::vector<UUID>& meshUUIDs)
+    void SceneSerializer::SerializeEntity(YAML::Emitter& out, const fbentt::entity& entity, std::vector<UUID>& meshUUIDs)
     {
         out << YAML::BeginMap;
         out << YAML::Key << "Entity" << YAML::Value << m_ActiveScene->m_Registry->get<IDComponent>(entity).ID;

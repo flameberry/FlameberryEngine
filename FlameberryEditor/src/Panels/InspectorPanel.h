@@ -13,7 +13,7 @@ namespace Flameberry {
         ~InspectorPanel() = default;
 
         void SetContext(const std::shared_ptr<Scene>& context) { m_Context = context; }
-        void SetSelectionContext(const fbentt::entity_handle& selectionContext) { m_SelectionContext = selectionContext; }
+        void SetSelectionContext(const fbentt::entity& selectionContext) { m_SelectionContext = selectionContext; }
         void OnUIRender();
 
         template<typename... Args>
@@ -28,7 +28,7 @@ namespace Flameberry {
         std::shared_ptr<MaterialEditorPanel> m_MaterialEditorPanel;
         std::shared_ptr<MaterialSelectorPanel> m_MaterialSelectorPanel;
 
-        fbentt::entity_handle m_SelectionContext = {};
+        fbentt::entity m_SelectionContext = {};
         std::shared_ptr<Scene> m_Context;
     };
 }

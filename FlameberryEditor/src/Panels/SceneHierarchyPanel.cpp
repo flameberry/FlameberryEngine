@@ -22,50 +22,24 @@ namespace Flameberry {
         ImGui::Begin("Scene Hierarchy");
         ImGui::PopStyleVar();
 
-        if (ImGui::BeginPopupContextWindow())
+        if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))
         {
-            if (ImGui::BeginMenu("Create"))
-            {
-                if (ImGui::MenuItem("Empty"))
-                {
-                    auto entity = m_Context->m_Registry->create();
-                    m_Context->m_Registry->emplace<IDComponent>(entity);
-                    m_Context->m_Registry->emplace<TagComponent>(entity).Tag = "Empty";
-                    m_Context->m_Registry->emplace<TransformComponent>(entity);
-                    m_SelectionContext = entity;
-                }
-                if (ImGui::MenuItem("Mesh"))
-                {
-                    auto entity = m_Context->m_Registry->create();
-                    m_Context->m_Registry->emplace<IDComponent>(entity);
-                    m_Context->m_Registry->emplace<TagComponent>(entity).Tag = "Mesh";
-                    m_Context->m_Registry->emplace<TransformComponent>(entity);
-                    m_Context->m_Registry->emplace<MeshComponent>(entity);
-                    m_SelectionContext = entity;
-                }
-                if (ImGui::BeginMenu("Light"))
-                {
-                    if (ImGui::MenuItem("Point Light"))
-                    {
-                        auto entity = m_Context->m_Registry->create();
-                        m_Context->m_Registry->emplace<IDComponent>(entity);
-                        m_Context->m_Registry->emplace<TagComponent>(entity).Tag = "Point Light";
-                        m_Context->m_Registry->emplace<TransformComponent>(entity);
-                        m_Context->m_Registry->emplace<LightComponent>(entity);
-                        m_SelectionContext = entity;
-                    }
-                    ImGui::EndMenu();
-                }
-                ImGui::EndMenu();
-            }
+            DrawCreateEntityMenu();
             ImGui::EndPopup();
         }
 
-        m_Context->m_Registry->each([this](fbentt::entity_handle& entity)
+        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
+
+        m_IsSelectedNodeDisplayed = false;
+        m_Context->m_Registry->each([this](fbentt::entity entity)
             {
-                DrawEntityNode(entity);
+                auto* relation = m_Context->m_Registry->try_get<RelationshipComponent>(entity);
+                if (!relation || relation->Parent == fbentt::null)
+                    DrawEntityNode(entity);
             }
         );
+
+        ImGui::PopStyleVar();
 
         ImGui::End();
 
@@ -75,7 +49,7 @@ namespace Flameberry {
 
     void SceneHierarchyPanel::RenameNode(std::string& tag)
     {
-        memcpy(m_RenameBuffer, tag.c_str(), tag.size());
+        strcpy(m_RenameBuffer, tag.c_str());
 
         ImGui::SameLine();
         ImGui::SetKeyboardFocusHere();
@@ -91,24 +65,34 @@ namespace Flameberry {
         ImGui::PopItemWidth();
     }
 
-    void SceneHierarchyPanel::DrawEntityNode(fbentt::entity_handle entity)
+    void SceneHierarchyPanel::DrawEntityNode(fbentt::entity entity)
     {
         auto& tag = m_Context->m_Registry->get<TagComponent>(entity).Tag;
 
         bool is_renamed = m_RenamedEntity == entity;
         bool is_selected = m_SelectionContext == entity;
+        m_IsSelectedNodeDisplayed = m_IsSelectedNodeDisplayed || is_selected;
+
         bool should_delete_entity = false;
         int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
             | ImGuiTreeNodeFlags_OpenOnArrow
             | ImGuiTreeNodeFlags_FramePadding;
 
-        if (!m_Context->m_Registry->has<RelationshipComponent>(entity) || m_Context->m_Registry->get<RelationshipComponent>(entity).FirstChild == fbentt::null)
+        bool has_child = false;
+
+        if (m_Context->m_Registry->has<RelationshipComponent>(entity))
+        {
+            auto& relation = m_Context->m_Registry->get<RelationshipComponent>(entity);
+            has_child = relation.FirstChild != fbentt::null;
+        }
+
+        if (!has_child)
             treeNodeFlags |= ImGuiTreeNodeFlags_Leaf;
 
         if (m_RenamedEntity != entity)
             treeNodeFlags |= ImGuiTreeNodeFlags_SpanFullWidth;
 
-        ImGui::PushID((uint32_t)entity);
+        ImGui::PushID((const void*)(uint64_t)entity);
 
         float textColor = is_selected ? 0.0f : 1.0f;
         ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
@@ -120,57 +104,226 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 
-        bool open = ImGui::TreeNodeEx((void*)((uint32_t)entity), treeNodeFlags, tag.c_str());
-
-        ImGui::PopStyleVar(2);
-        if (open) {
-            ImGui::TreePop();
+        if (!m_IsSelectedNodeDisplayed) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
         }
 
-        // if (open) {
-        //     if (hasRelationShipComponent) {
-        //         ecs::entity_handle iter_entity = entity;
-        //         auto& relationship = m_ActiveScene->m_Registry->get<RelationshipComponent>(entity);
-        //         while (relationship.FirstChild != ecs::entity_handle::null)
-        //         {
-        //             auto& childTag = m_ActiveScene->m_Registry->get<TagComponent>(relationship.FirstChild).Tag;
-        //             if (ImGui::TreeNodeEx(is_renamed ? "" : childTag.c_str(), treeNodeFlags))
-        //                 ImGui::TreePop();
-        //             else break;
+        bool open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, tag.c_str());
 
-        //             if (m_ActiveScene->m_Registry->has<RelationshipComponent>(relationship.FirstChild))
-        //                 relationship = m_ActiveScene->m_Registry->get<RelationshipComponent>(relationship.FirstChild);
-        //         }
-        //     }
-        //     ImGui::TreePop();
-        // }
-
+        ImGui::PopStyleVar(2);
         ImGui::PopStyleColor(is_selected ? 4 : 3);
 
         if (ImGui::IsItemClicked())
             m_SelectionContext = entity;
 
-        if (ImGui::BeginPopupContextItem())
+        if (is_selected && ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))
+            m_RenamedEntity = entity;
+
+        if (ImGui::BeginPopupContextItem("EntityNodeContextMenu", m_PopupFlags))
         {
             if (ImGui::MenuItem("Rename"))
                 m_RenamedEntity = entity;
 
+            DrawCreateEntityMenu(entity);
+
             if (ImGui::MenuItem("Delete Entity"))
                 should_delete_entity = true;
+
             ImGui::EndPopup();
         }
+
+        if (ImGui::BeginDragDropSource())
+        {
+            ImGui::SetDragDropPayload(
+                "FL_SCENE_HIERARCHY_ENTITY_NODE",
+                &entity,
+                sizeof(entity),
+                ImGuiCond_Once
+            );
+            ImGui::Text("%s", tag.c_str());
+            ImGui::EndDragDropSource();
+        }
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_SCENE_HIERARCHY_ENTITY_NODE"))
+            {
+                const fbentt::entity payloadEntity = *((const fbentt::entity*)payload->Data);
+                ReparentEntity(payloadEntity, entity);
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        ImGui::PopID();
 
         if (is_renamed)
             RenameNode(tag);
 
+        if (open) {
+            if (has_child) {
+                auto child = m_Context->m_Registry->get<RelationshipComponent>(entity).FirstChild;
+                while (child != fbentt::null)
+                {
+                    auto temp = m_Context->m_Registry->get<RelationshipComponent>(child).NextSibling;
+                    DrawEntityNode(child);
+                    child = temp;
+                }
+            }
+            ImGui::TreePop();
+        }
+
         if (should_delete_entity)
+            DestroyEntityTree(entity);
+    }
+
+    void SceneHierarchyPanel::DrawCreateEntityMenu(fbentt::entity parent)
+    {
+        if (ImGui::BeginMenu("Create"))
         {
-            m_Context->m_Registry->destroy(entity);
-            if (is_selected)
+            if (ImGui::MenuItem("Empty"))
             {
-                m_SelectionContext = fbentt::null;
+                auto entity = CreateEntityWithTagAndParent("Empty", parent);
+                m_SelectionContext = entity;
+            }
+            if (ImGui::MenuItem("Mesh"))
+            {
+                auto entity = CreateEntityWithTagAndParent("StaticMesh", parent);
+                m_Context->m_Registry->emplace<MeshComponent>(entity);
+                m_SelectionContext = entity;
+            }
+            if (ImGui::BeginMenu("Light"))
+            {
+                if (ImGui::MenuItem("Point Light"))
+                {
+                    auto entity = CreateEntityWithTagAndParent("Point Light", parent);
+                    m_Context->m_Registry->emplace<LightComponent>(entity);
+                    m_SelectionContext = entity;
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenu();
+        }
+    }
+
+    fbentt::entity SceneHierarchyPanel::CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent)
+    {
+        auto entity = m_Context->m_Registry->create();
+        m_Context->m_Registry->emplace<IDComponent>(entity);
+        m_Context->m_Registry->emplace<TagComponent>(entity).Tag = tag;
+        m_Context->m_Registry->emplace<TransformComponent>(entity);
+
+        if (parent != fbentt::null)
+        {
+            m_Context->m_Registry->emplace<RelationshipComponent>(entity);
+
+            if (!m_Context->m_Registry->has<RelationshipComponent>(parent))
+                m_Context->m_Registry->emplace<RelationshipComponent>(parent);
+
+            auto& relation = m_Context->m_Registry->get<RelationshipComponent>(entity);
+            relation.Parent = parent;
+
+            auto& parentRel = m_Context->m_Registry->get<RelationshipComponent>(parent);
+            if (parentRel.FirstChild == fbentt::null)
+                parentRel.FirstChild = entity;
+            else
+            {
+                auto sibling = parentRel.FirstChild;
+
+                while (m_Context->m_Registry->get<RelationshipComponent>(sibling).NextSibling != fbentt::null)
+                    sibling = m_Context->m_Registry->get<RelationshipComponent>(sibling).NextSibling;
+
+                auto& siblingRel = m_Context->m_Registry->get<RelationshipComponent>(sibling);
+                siblingRel.NextSibling = entity;
+                relation.PrevSibling = sibling;
             }
         }
-        ImGui::PopID();
+        return entity;
+    }
+
+    void SceneHierarchyPanel::DestroyEntityTree(fbentt::entity entity)
+    {
+        if (entity == fbentt::null)
+            return;
+
+        if (m_Context->m_Registry->has<RelationshipComponent>(entity))
+        {
+            auto& relation = m_Context->m_Registry->get<RelationshipComponent>(entity);
+            auto sibling = relation.FirstChild;
+            while (sibling != fbentt::null)
+            {
+                auto temp = m_Context->m_Registry->get<RelationshipComponent>(sibling).NextSibling;
+                DestroyEntityTree(sibling);
+                sibling = temp;
+            }
+
+            if (relation.Parent != fbentt::null)
+            {
+                auto& parentRel = m_Context->m_Registry->get<RelationshipComponent>(relation.Parent);
+                if (parentRel.FirstChild == entity)
+                    parentRel.FirstChild = relation.NextSibling;
+            }
+            if (relation.PrevSibling != fbentt::null)
+                m_Context->m_Registry->get<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
+            if (relation.NextSibling != fbentt::null)
+                m_Context->m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
+        }
+
+        if (m_SelectionContext == entity)
+            m_SelectionContext = fbentt::null;
+
+        m_Context->m_Registry->destroy(entity);
+    }
+
+    void SceneHierarchyPanel::ReparentEntity(fbentt::entity entity, fbentt::entity parent)
+    {
+        if (IsEntityInHierarchy(parent, entity))
+            return;
+
+        if (!m_Context->m_Registry->has<RelationshipComponent>(entity))
+            m_Context->m_Registry->emplace<RelationshipComponent>(entity);
+
+        if (!m_Context->m_Registry->has<RelationshipComponent>(parent))
+            m_Context->m_Registry->emplace<RelationshipComponent>(parent);
+
+        auto& relation = m_Context->m_Registry->get<RelationshipComponent>(entity);
+
+        auto oldParent = relation.Parent;
+        if (oldParent != fbentt::null)
+        {
+            auto& oldParentRel = m_Context->m_Registry->get<RelationshipComponent>(oldParent);
+            if (oldParentRel.FirstChild == entity)
+                oldParentRel.FirstChild = relation.NextSibling;
+        }
+        if (relation.PrevSibling != fbentt::null)
+            m_Context->m_Registry->get<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
+        if (relation.NextSibling != fbentt::null)
+            m_Context->m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
+
+        auto& newParentRel = m_Context->m_Registry->get<RelationshipComponent>(parent);
+        relation.NextSibling = newParentRel.FirstChild;
+        relation.PrevSibling = fbentt::null;
+        relation.Parent = parent;
+
+        if (relation.NextSibling != fbentt::null)
+            m_Context->m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = entity;
+        newParentRel.FirstChild = entity;
+    }
+
+    bool SceneHierarchyPanel::IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
+    {
+        auto* relation = m_Context->m_Registry->try_get<RelationshipComponent>(parent);
+        auto sibling = parent;
+        while (relation && sibling != fbentt::null)
+        {
+            if (sibling == key)
+                return true;
+
+            if (relation->FirstChild != fbentt::null && IsEntityInHierarchy(key, relation->FirstChild))
+                return true;
+
+            sibling = relation->NextSibling;
+            relation = m_Context->m_Registry->try_get<RelationshipComponent>(sibling);
+        }
+        return false;
     }
 }
