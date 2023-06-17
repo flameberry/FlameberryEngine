@@ -51,6 +51,14 @@ namespace Flameberry {
                 }
             }
         );
+
+        glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset)
+            {
+                VulkanWindow* ptr = (VulkanWindow*)glfwGetWindowUserPointer(window);
+                MouseScrollEvent event(xoffset, yoffset);
+                ptr->m_EventCallBack(event);
+            }
+        );
     }
 
     void VulkanWindow::FramebufferResizeCallBack(GLFWwindow* window, int width, int height)

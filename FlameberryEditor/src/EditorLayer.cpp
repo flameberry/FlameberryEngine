@@ -9,8 +9,8 @@ namespace Flameberry {
 
     EditorLayer::EditorLayer(const std::string_view& projectPath)
         : m_ProjectPath(projectPath), m_ActiveCameraController(PerspectiveCameraSpecification{
-            glm::vec3(0.0f, 0.0f, 4.0f),
-            glm::vec3(0.0f, 0.0f, -1.0f),
+            glm::vec3(0.0f, 2.0f, 4.0f),
+            glm::vec3(0.0f, -0.3f, -1.0f),
             (float)Application::Get().GetWindow().GetWidth() / (float)Application::Get().GetWindow().GetHeight(),
             45.0f,
             0.1f,
@@ -358,6 +358,7 @@ namespace Flameberry {
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
         m_IsViewportFocused = ImGui::IsWindowFocused();
+        m_IsViewportHovered = ImGui::IsWindowHovered();
 
         uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
         uint32_t imageIndex = VulkanContext::GetCurrentWindow()->GetImageIndex();
@@ -399,9 +400,7 @@ namespace Flameberry {
             ImGui::EndDragDropTarget();
         }
 
-
         // ImGuizmo
-        // ImGuizmo::DrawGrid(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), glm::value_ptr(glm::mat4(1.0f)), 25.0f);
         const auto& selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
         if (selectedEntity != fbentt::null && m_GizmoType != -1)
         {
@@ -577,9 +576,15 @@ namespace Flameberry {
         case EventType::KEY_PRESSED:
             this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
             break;
+        case EventType::MOUSE_SCROLL:
+            this->OnMouseScrolledEvent(*(MouseScrollEvent*)(&e));
+            break;
         case EventType::NONE:
             break;
         }
+
+        if (m_DidViewportBegin && m_IsViewportHovered)
+            m_ActiveCameraController.OnEvent(e);
     }
 
     void EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
@@ -633,6 +638,10 @@ namespace Flameberry {
         case GLFW_MOUSE_BUTTON_LEFT:
             break;
         }
+    }
+
+    void EditorLayer::OnMouseScrolledEvent(MouseScrollEvent& e)
+    {
     }
 
     void EditorLayer::SaveScene()

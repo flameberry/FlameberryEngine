@@ -22,6 +22,7 @@ namespace Flameberry {
 
         void OnKeyPressedEvent(KeyPressedEvent& e);
         void OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
+        void OnMouseScrolledEvent(MouseScrollEvent& e);
 
         void InvalidateViewportImGuiDescriptorSet(uint32_t index);
         void InvalidateShadowMapImGuiDescriptorSet(uint32_t index);
@@ -36,7 +37,7 @@ namespace Flameberry {
         void CreateShadowMapPipeline();
     private:
         EditorCameraController m_ActiveCameraController;
-        bool m_IsViewportFocused = false;
+        bool m_IsViewportFocused = false, m_IsViewportHovered = false;
 
         std::shared_ptr<DescriptorSetLayout> m_CameraBufferDescSetLayout;
         std::vector<std::shared_ptr<DescriptorSet>> m_CameraBufferDescriptorSets;
