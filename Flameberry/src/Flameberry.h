@@ -35,6 +35,7 @@
 #include "Renderer/SceneRenderer.h"
 #include "Renderer/SkyboxRenderer.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/EditorCameraController.h"
 
 #include "ECS/Component.h"
 #include "ECS/SceneSerializer.h"

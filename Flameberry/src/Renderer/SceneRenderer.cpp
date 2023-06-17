@@ -186,7 +186,7 @@ namespace Flameberry {
 
         // Updating Scene Uniform Buffer
         SceneUniformBufferData sceneUniformBufferData;
-        sceneUniformBufferData.cameraPosition = activeCamera.GetPosition();
+        sceneUniformBufferData.cameraPosition = activeCamera.GetSpecification().Position;
         sceneUniformBufferData.directionalLight = scene->m_SceneData.ActiveEnvironmentMap.DirLight;
         for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
         {

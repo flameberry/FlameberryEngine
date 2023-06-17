@@ -3,13 +3,17 @@
 #include <glm/glm.hpp>
 
 namespace Flameberry {
-    struct PerspectiveCameraInfo
+    struct PerspectiveCameraSpecification
     {
-        glm::vec3 cameraPostion, cameraDirection;
-        float aspectRatio, FOV, zNear, zFar;
+        glm::vec3 Position, Direction;
+        float AspectRatio, FOV, zNear, zFar;
 
-        PerspectiveCameraInfo()
-            : cameraPostion(0, 0, 0), cameraDirection(0, 0, -1), aspectRatio(1280.0f / 720.0f), FOV(45.0f), zNear(0.1f), zFar(1000.0f)
+        PerspectiveCameraSpecification()
+            : Position(0, 0, 0), Direction(0, 0, -1), AspectRatio(1280.0f / 720.0f), FOV(45.0f), zNear(0.1f), zFar(1000.0f)
+        {}
+
+        PerspectiveCameraSpecification(const glm::vec3& position, const glm::vec3& direction, float aspect, float fov, float near, float far)
+            : Position(position), Direction(direction), AspectRatio(aspect), FOV(fov), zNear(near), zFar(far)
         {}
     };
 
@@ -17,21 +21,21 @@ namespace Flameberry {
     {
     public:
         PerspectiveCamera() = default;
-        PerspectiveCamera(const PerspectiveCameraInfo& cameraInfo);
+        PerspectiveCamera(const PerspectiveCameraSpecification& specification);
         ~PerspectiveCamera();
-        bool OnUpdate(float delta);
+
         void OnResize(float aspectRatio);
+        void Invalidate();
+
         const glm::mat4& GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
         const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
         const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
-        void SetAspectRatio(float aspectRatio) { m_AspectRatio = aspectRatio; }
-        glm::vec3 GetPosition() const { return m_CameraPosition; }
+
+        PerspectiveCameraSpecification GetSpecification() const { return m_CameraSpec; }
     private:
-        void Invalidate();
-    private:
+        PerspectiveCameraSpecification m_CameraSpec;
         glm::mat4 m_ProjectionMatrix, m_ViewMatrix, m_ViewProjectionMatrix;
-        glm::vec3 m_CameraPosition, m_CameraDirection, m_RightDirection, m_UpDirection;
-        float m_AspectRatio, m_FOV, m_ZNear, m_ZFar;
-        glm::vec2 m_LastMousePosition;
+
+        friend class EditorCameraController;
     };
 }

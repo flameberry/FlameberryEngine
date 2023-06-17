@@ -41,6 +41,10 @@ namespace Flameberry {
         TagComponent(const std::string& tag = "Default_Entity") : Tag(tag) {}
     };
 
+    struct CameraComponent
+    {
+    };
+
     struct MeshComponent
     {
         UUID MeshUUID;

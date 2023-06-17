@@ -35,7 +35,7 @@ namespace Flameberry {
         void CreateMousePickingPipeline();
         void CreateShadowMapPipeline();
     private:
-        PerspectiveCamera m_ActiveCamera;
+        EditorCameraController m_ActiveCameraController;
         bool m_IsViewportFocused = false;
 
         std::shared_ptr<DescriptorSetLayout> m_CameraBufferDescSetLayout;

@@ -8,7 +8,15 @@ namespace Flameberry {
     struct CameraUniformBufferObject { glm::mat4 ViewProjectionMatrix; glm::mat4 LightViewProjectionMatrix; };
 
     EditorLayer::EditorLayer(const std::string_view& projectPath)
-        : m_ProjectPath(projectPath)
+        : m_ProjectPath(projectPath), m_ActiveCameraController(PerspectiveCameraSpecification{
+            glm::vec3(0.0f, 0.0f, 4.0f),
+            glm::vec3(0.0f, 0.0f, -1.0f),
+            (float)Application::Get().GetWindow().GetWidth() / (float)Application::Get().GetWindow().GetHeight(),
+            45.0f,
+            0.1f,
+            1000.0f
+            }
+        )
     {}
 
     void EditorLayer::OnCreate()
@@ -46,16 +54,6 @@ namespace Flameberry {
         m_RotateIconActive = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/rotate_icon_active.png");
         m_ScaleIcon = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/scale_icon.png");
         m_ScaleIconActive = VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/scale_icon_active.png");
-
-        PerspectiveCameraInfo cameraInfo{};
-        cameraInfo.aspectRatio = Application::Get().GetWindow().GetWidth() / Application::Get().GetWindow().GetHeight();
-        cameraInfo.FOV = 45.0f;
-        cameraInfo.zNear = 0.1f;
-        cameraInfo.zFar = 1000.0f;
-        cameraInfo.cameraPostion = glm::vec3(0.0f, 0.0f, 4.0f);
-        cameraInfo.cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-
-        m_ActiveCamera = PerspectiveCamera(cameraInfo);
 
         // Creating Uniform Buffers
         VkDeviceSize uniformBufferSize = sizeof(CameraUniformBufferObject);
@@ -169,7 +167,7 @@ namespace Flameberry {
             views.push_back(framebuffer->GetAttachmentImageView(0));
         m_SceneRenderer = std::make_unique<SceneRenderer>(m_CameraBufferDescSetLayout->GetLayout(), m_SceneRenderPass, views, m_ShadowMapSampler);
 
-        m_VkTextureSampler = VulkanRenderCommand::CreateDefaultSampler();
+        m_VkTextureSampler = VulkanTexture::GetDefaultSampler();
 
         uint32_t imageCount = swapchain->GetImages().size();
         m_ViewportDescriptorSets.resize(imageCount);
@@ -247,19 +245,19 @@ namespace Flameberry {
             VulkanRenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
             // Update Uniforms
-            m_ActiveCamera.OnResize(m_ViewportSize.x / m_ViewportSize.y);
+            m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
 
             if (m_IsViewportFocused)
-                m_IsCameraMoving = m_ActiveCamera.OnUpdate(delta);
+                m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 
             CameraUniformBufferObject uniformBufferObject{};
-            uniformBufferObject.ViewProjectionMatrix = m_ActiveCamera.GetViewProjectionMatrix();
+            uniformBufferObject.ViewProjectionMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetViewProjectionMatrix();
             uniformBufferObject.LightViewProjectionMatrix = lightViewProjectionMatrix;
 
             m_UniformBuffers[currentFrameIndex]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
             // m_SkyboxRenderer->OnDraw(commandBuffer, currentFrameIndex, m_VkDescriptorSets[currentFrameIndex], m_ActiveCamera, "");
-            m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), m_ActiveCamera, m_ActiveScene, m_ViewportSize, m_SceneHierarchyPanel->GetSelectionContext());
+            m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), *m_ActiveCameraController.GetPerspectiveCamera(), m_ActiveScene, m_ViewportSize, m_SceneHierarchyPanel->GetSelectionContext());
 
             m_SceneRenderPass->End();
         }
@@ -404,9 +402,9 @@ namespace Flameberry {
             float windowHeight = (float)ImGui::GetWindowHeight();
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
 
-            glm::mat4 projectionMatrix = m_ActiveCamera.GetProjectionMatrix();
+            glm::mat4 projectionMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetProjectionMatrix();
             projectionMatrix[1][1] *= -1;
-            const auto& viewMatrix = m_ActiveCamera.GetViewMatrix();
+            const auto& viewMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetViewMatrix();
 
             auto& transformComp = m_Registry->get<TransformComponent>(selectedEntity);
             glm::mat4 transform = transformComp.GetTransform();
