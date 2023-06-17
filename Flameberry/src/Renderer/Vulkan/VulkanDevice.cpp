@@ -21,6 +21,7 @@ namespace Flameberry {
         VkPhysicalDeviceFeatures vk_physical_device_features{};
         vk_physical_device_features.samplerAnisotropy = VK_TRUE;
         vk_physical_device_features.sampleRateShading = VK_TRUE;
+        vk_physical_device_features.fillModeNonSolid = VK_TRUE;
 
         // Creating Vulkan Logical Device
         VkDeviceCreateInfo vk_device_create_info{};

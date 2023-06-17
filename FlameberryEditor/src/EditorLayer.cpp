@@ -189,6 +189,8 @@ namespace Flameberry {
                 VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
             );
         }
+
+        Renderer2D::Init(m_CameraBufferDescSetLayout->GetLayout(), m_SceneRenderPass);
     }
 
     void EditorLayer::OnUpdate(float delta)
@@ -256,8 +258,14 @@ namespace Flameberry {
 
             m_UniformBuffers[currentFrameIndex]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
+            if (m_EnableGrid)
+                Renderer2D::AddGrid(25);
+
+            Renderer2D::Render(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet());
+
             // m_SkyboxRenderer->OnDraw(commandBuffer, currentFrameIndex, m_VkDescriptorSets[currentFrameIndex], m_ActiveCamera, "");
             m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), *m_ActiveCameraController.GetPerspectiveCamera(), m_ActiveScene, m_ViewportSize, m_SceneHierarchyPanel->GetSelectionContext());
+
 
             m_SceneRenderPass->End();
         }
@@ -327,7 +335,7 @@ namespace Flameberry {
     void EditorLayer::OnDestroy()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkDestroySampler(device, m_VkTextureSampler, nullptr);
+        Renderer2D::Destroy();
         vkDestroySampler(device, m_ShadowMapSampler, nullptr);
         vkDestroyPipelineLayout(device, m_ShadowMapPipelineLayout, nullptr);
         vkDestroyPipelineLayout(device, m_MousePickingPipelineLayout, nullptr);
@@ -391,20 +399,22 @@ namespace Flameberry {
             ImGui::EndDragDropTarget();
         }
 
+
         // ImGuizmo
+        // ImGuizmo::DrawGrid(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), glm::value_ptr(glm::mat4(1.0f)), 25.0f);
         const auto& selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
         if (selectedEntity != fbentt::null && m_GizmoType != -1)
         {
+            glm::mat4 projectionMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetProjectionMatrix();
+            projectionMatrix[1][1] *= -1;
+            const auto& viewMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetViewMatrix();
+
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist();
 
             float windowWidth = (float)ImGui::GetWindowWidth();
             float windowHeight = (float)ImGui::GetWindowHeight();
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-
-            glm::mat4 projectionMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetProjectionMatrix();
-            projectionMatrix[1][1] *= -1;
-            const auto& viewMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetViewMatrix();
 
             auto& transformComp = m_Registry->get<TransformComponent>(selectedEntity);
             glm::mat4 transform = transformComp.GetTransform();
@@ -609,6 +619,10 @@ namespace Flameberry {
             if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
                 m_GizmoType = ImGuizmo::OPERATION::SCALE;
             break;
+        case GLFW_KEY_G:
+            if (ctrl_or_cmd)
+                m_EnableGrid = !m_EnableGrid;
+            break;
         }
     }
 
@@ -729,8 +743,8 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_MousePickingPipelineLayout));
 
         PipelineSpecification pipelineSpec{};
-        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_pickingVert.spv";
-        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_pickingFrag.spv";
+        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_picking.vert.spv";
+        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_picking.frag.spv";
 
         pipelineSpec.PipelineLayout = m_MousePickingPipelineLayout;
         pipelineSpec.RenderPass = m_MousePickingRenderPass;
@@ -835,8 +849,8 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_ShadowMapPipelineLayout));
 
         PipelineSpecification pipelineSpec{};
-        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_mapVert.spv";
-        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_mapFrag.spv";
+        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.vert.spv";
+        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.frag.spv";
 
         pipelineSpec.PipelineLayout = m_ShadowMapPipelineLayout;
         pipelineSpec.RenderPass = m_ShadowMapRenderPass;

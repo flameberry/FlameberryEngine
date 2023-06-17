@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vulkan/vulkan.h>
 
 namespace Flameberry {
@@ -29,6 +30,9 @@ namespace Flameberry {
         void DestroyBuffer();
 
         const void* GetMappedMemory() const { return m_VkBufferMappedMemory; };
+
+        template<typename... Args>
+        static std::shared_ptr<Buffer> Create(Args... args) { return std::make_shared<Buffer>(std::forward<Args>(args)...); }
     private:
         VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
     private:

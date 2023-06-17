@@ -113,8 +113,9 @@ namespace Flameberry {
                 && indices.PresentationSupportedQueueFamilyIndex.has_value()
                 && found_required_extensions
                 && is_swap_chain_adequate
-                && supportedFeatures.samplerAnisotropy
-                && supportedFeatures.sampleRateShading;
+                && supportedFeatures.fillModeNonSolid
+                && supportedFeatures.sampleRateShading
+                && supportedFeatures.fillModeNonSolid;
 
             if (is_physical_device_valid)
                 return vk_device;

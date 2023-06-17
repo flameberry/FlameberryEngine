@@ -22,6 +22,9 @@ namespace Flameberry {
         bool BlendingEnable = false, DepthTestEnable = true, StencilTestEnable = false;
         bool DynamicStencilEnable = false, DynamicStencilOp = false;
         VkStencilOpState StencilOpState = {};
+        VkCullModeFlags CullMode = VK_CULL_MODE_BACK_BIT;
+        VkPolygonMode PolygonMode = VK_POLYGON_MODE_FILL;
+        VkPrimitiveTopology PrimitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     };
 
     class Pipeline

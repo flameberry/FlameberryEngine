@@ -34,6 +34,7 @@
 #include "Renderer/Vulkan/RenderPass.h"
 #include "Renderer/SceneRenderer.h"
 #include "Renderer/SkyboxRenderer.h"
+#include "Renderer/Renderer2D.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/EditorCameraController.h"
 

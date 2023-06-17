@@ -16,13 +16,3 @@ target_compile_definitions(SandboxApp PRIVATE ${FL_COMPILE_DEFINITIONS})
 
 target_include_directories(SandboxApp PRIVATE ${FL_GRAPHICS_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src/)
 target_link_libraries(SandboxApp PRIVATE Flameberry ${FL_GRAPHICS_LIBS})
-
-# Compile Vulkan Shaders
-if (FL_GRAPHICS_API STREQUAL "Vulkan")
-    # execute_process(COMMAND ${FL_SOURCE_DIR}/compile_shaders.sh)
-    add_custom_command(
-        TARGET SandboxApp
-        PRE_BUILD
-        COMMAND ${FL_SOURCE_DIR}/compile_shaders.sh
-    )
-endif()

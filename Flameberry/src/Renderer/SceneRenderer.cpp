@@ -29,6 +29,11 @@ namespace Flameberry {
         alignas(4) float NormalMapEnabled = 0.0f;
     };
 
+    struct OutlinePushConstantData {
+        glm::mat4 ModelMatrix;
+        glm::vec2 ScreenSize;
+    };
+
     SceneRenderer::SceneRenderer(VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass, const std::vector<VkImageView>& shadowMapImageViews, VkSampler shadowMapSampler)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -106,8 +111,8 @@ namespace Flameberry {
             VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleVert.spv";
-            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangleFrag.spv";
+            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.frag.spv";
             pipelineSpec.RenderPass = renderPass;
             pipelineSpec.PipelineLayout = m_VkPipelineLayout;
 
@@ -137,7 +142,7 @@ namespace Flameberry {
         {
             VkPushConstantRange vk_push_constant_range{};
             vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-            vk_push_constant_range.size = sizeof(ModelMatrixPushConstantData);
+            vk_push_constant_range.size = sizeof(OutlinePushConstantData);
             vk_push_constant_range.offset = 0;
 
             VkDescriptorSetLayout descriptorSetLayouts[] = { globalDescriptorLayout };
@@ -153,13 +158,14 @@ namespace Flameberry {
             VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_OutlinePipelineLayout));
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/outlineVert.spv";
-            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/outlineFrag.spv";
+            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/outline.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/outline.frag.spv";
             pipelineSpec.RenderPass = renderPass;
             pipelineSpec.PipelineLayout = m_OutlinePipelineLayout;
 
             pipelineSpec.VertexLayout = {
                 VertexInputAttribute::VEC3F, // a_Position
+                VertexInputAttribute::VEC3F  // a_Normal
             };
             pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
             pipelineSpec.Samples = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
@@ -176,6 +182,8 @@ namespace Flameberry {
             pipelineSpec.StencilOpState.writeMask = 1;
 
             m_OutlinePipeline = Pipeline::Create(pipelineSpec);
+
+            VK_DYNAMIC_STATE_VERTEX_INPUT_EXT;
         }
     }
 
@@ -326,13 +334,14 @@ namespace Flameberry {
 
             const auto& outlinePipelineLayout = m_OutlinePipelineLayout;
 
-            const float borderWidth = 3.0f;
+            OutlinePushConstantData pushConstantData;
+            pushConstantData.ModelMatrix = glm::scale(transform.GetTransform(), glm::vec3(1.05f));
+            // pushConstantData.ModelMatrix = transform.GetTransform();
+            pushConstantData.ScreenSize = framebufferSize;
 
-            ModelMatrixPushConstantData pushConstantData;
-            pushConstantData.ModelMatrix = glm::scale(transform.GetTransform(), glm::vec3(1.1f, 1.1f, 1.1f));
             Renderer::Submit([outlinePipelineLayout, globalDescriptorSet, pushConstantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
-                vkCmdPushConstants(cmdBuffer, outlinePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushConstantData);
+                vkCmdPushConstants(cmdBuffer, outlinePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(OutlinePushConstantData), &pushConstantData);
                 }
             );
 

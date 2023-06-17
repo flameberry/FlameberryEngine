@@ -115,6 +115,8 @@ namespace Flameberry {
         bool has_tex_coord = attrib.texcoords.size();
         std::unordered_map<VulkanVertex, uint32_t> uniqueVertices{};
 
+        // std::unordered_map<glm::vec3, uint32_t> uniquePositions{};
+
         std::vector<UUID> materialUUIDs;
 
         for (const auto& mat : materials) {
@@ -134,8 +136,6 @@ namespace Flameberry {
 
             materialUUIDs.emplace_back(materialAsset->GetUUID());
         }
-
-        std::vector<VulkanVertex> tempVertices;
 
         for (const auto& shape : shapes)
         {
@@ -199,19 +199,33 @@ namespace Flameberry {
                     {
                         auto& vertex = triangleVertices[j];
 
+                        // Tangents and Bitangents
                         if (uniqueVertices.count(vertex) == 0) {
                             vertex.Tangent = tangent;
                             vertex.BiTangent = bitangent;
 
                             uniqueVertices[vertex] = static_cast<uint32_t>(m_Vertices.size());
+
+                            // // Smooth Normals
+                            // if (uniquePositions.count(vertex.Position) != 0) {
+                            //     uint32_t index = uniquePositions[vertex.Position];
+                            //     vertex.Normal += m_Vertices[index].Normal;
+                            //     m_Vertices[index].Normal = vertex.Normal;
+                            // }
+                            // else {
+                            //     uniquePositions[vertex.Position] = static_cast<uint32_t>(m_Vertices.size());
+                            // }
+
                             m_Vertices.push_back(vertex);
                         }
                         else
                         {
-                            int index = uniqueVertices[vertex];
-                            m_Vertices[index].Normal += vertex.Normal;
+                            uint32_t index = uniqueVertices[vertex];
                             m_Vertices[index].Tangent += tangent;
                             m_Vertices[index].BiTangent += bitangent;
+
+                            // // Smooth Normals
+                            // m_Vertices[index].Normal += vertex.Normal;
                         }
                         m_Indices.push_back(uniqueVertices[vertex]);
                     }

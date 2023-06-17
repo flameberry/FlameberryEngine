@@ -60,9 +60,9 @@ namespace Flameberry {
         pipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         pipelineRasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
         pipelineRasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-        pipelineRasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+        pipelineRasterizationStateCreateInfo.polygonMode = m_PipelineSpec.PolygonMode;
         pipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
-        pipelineRasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+        pipelineRasterizationStateCreateInfo.cullMode = m_PipelineSpec.CullMode;
         pipelineRasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         pipelineRasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
         pipelineRasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
@@ -103,7 +103,7 @@ namespace Flameberry {
 
         VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo{};
         pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        pipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        pipelineInputAssemblyStateCreateInfo.topology = m_PipelineSpec.PrimitiveTopology;
         pipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo{};
