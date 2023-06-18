@@ -19,10 +19,32 @@ namespace Flameberry {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
-            ImGui::Text("Material");
+            ImGui::Text("Name");
             ImGui::TableNextColumn();
 
-            ImGui::Button(m_EditingContext ? m_EditingContext->Name.c_str() : "Null", ImVec2(-1.0f, 0.0f));
+            if (m_EditingContext && m_ShouldRename)
+            {
+                strcpy(m_RenameBuffer, m_EditingContext->Name.c_str());
+                ImGui::SetKeyboardFocusHere();
+
+                ImGui::PushItemWidth(-1.0f);
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
+                if (ImGui::InputText("###RenameMaterial", m_RenameBuffer, 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    m_EditingContext->Name = std::string(m_RenameBuffer);
+                    m_ShouldRename = false;
+                    isMaterialEdited = true;
+                }
+                ImGui::PopStyleVar();
+                ImGui::PopItemWidth();
+            }
+            else
+            {
+                ImGui::Button(m_EditingContext ? m_EditingContext->Name.c_str() : "Null", ImVec2(-1.0f, 0.0f));
+                if (m_EditingContext && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+                    m_ShouldRename = true;
+            }
+
             if (ImGui::BeginDragDropTarget())
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))

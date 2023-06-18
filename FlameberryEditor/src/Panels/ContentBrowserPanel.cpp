@@ -294,7 +294,7 @@ namespace Flameberry {
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Open In Finder"))
-                platform::OpenInFinder(m_CurrentDirectory.string().c_str());
+                platform::OpenInFinder((m_ProjectDirectory / m_CurrentDirectory).string().c_str());
             ImGui::EndPopup();
         }
         ImGui::PopStyleColor(2);

@@ -25,6 +25,14 @@ Entities:
       Scale: [1, 1, 1]
     MeshComponent:
       MeshUUID: 4474729012079081437
+  - Entity: 14711410567684292755
+    TagComponent: StaticMesh
+    TransformComponent:
+      Translation: [-2.39869261, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshUUID: 11243613095244206381
 Meshes:
   - Mesh: 15427027041819506305
     FilePath: Assets/Meshes/sphere.obj
@@ -35,4 +43,9 @@ Meshes:
     FilePath: Assets/Meshes/cube.obj
     NonDerivedMaterials:
       - FlameberryMaterial: Assets/Materials/BeatenDownBrick.fbmat
+        SubMeshIndex: 0
+  - Mesh: 11243613095244206381
+    FilePath: Assets/Meshes/cylinder.obj
+    NonDerivedMaterials:
+      - FlameberryMaterial: Assets/Materials/NewMaterial.fbmat
         SubMeshIndex: 0
