@@ -8,6 +8,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
+#include <filesystem>
+
 namespace Flameberry {
     std::shared_ptr<DescriptorSetLayout> VulkanTexture::s_DescriptorLayout;
     std::shared_ptr<DescriptorSet> VulkanTexture::s_EmptyDescriptorSet;
@@ -20,13 +22,43 @@ namespace Flameberry {
         : m_FilePath(texturePath)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        int width, height, channels;
-        stbi_uc* pixels = stbi_load(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+        int width, height, channels, bytes_per_channel;
+
+        void* pixels = nullptr;
+        uint32_t mipLevels = 1;
+        VkFormat format = VK_FORMAT_UNDEFINED;
+        VkDeviceSize imageSize = 0;
+
+        auto file = std::filesystem::path(texturePath);
+        if (file.extension() == ".hdr")
+        {
+            pixels = stbi_loadf(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+            mipLevels = 1;
+            format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            bytes_per_channel = 4;
+        }
+        else
+        {
+            pixels = stbi_load(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+            mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
+            format = VK_FORMAT_R8G8B8A8_UNORM;
+            bytes_per_channel = 1;
+        }
+
         FL_ASSERT(pixels, "Texture pixels are empty!");
+        imageSize = 4 * width * height * bytes_per_channel;
 
-        uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
+        m_TextureImageSpecification.Width = width;
+        m_TextureImageSpecification.Height = height;
+        m_TextureImageSpecification.MipLevels = mipLevels;
+        m_TextureImageSpecification.Samples = 1;
+        m_TextureImageSpecification.Format = format;
+        m_TextureImageSpecification.Tiling = VK_IMAGE_TILING_OPTIMAL;
+        m_TextureImageSpecification.Usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        m_TextureImageSpecification.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        m_TextureImageSpecification.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
-        VkDeviceSize imageSize = 4 * width * height;
+        m_TextureImage = Image::Create(m_TextureImageSpecification);
 
         BufferSpecification stagingBufferSpec;
         stagingBufferSpec.InstanceCount = 1;
@@ -42,22 +74,13 @@ namespace Flameberry {
 
         stbi_image_free(pixels);
 
-        m_TextureImageSpecification.Width = width;
-        m_TextureImageSpecification.Height = height;
-        m_TextureImageSpecification.MipLevels = mipLevels;
-        m_TextureImageSpecification.Samples = 1;
-        m_TextureImageSpecification.Format = VK_FORMAT_R8G8B8A8_UNORM;
-        m_TextureImageSpecification.Tiling = VK_IMAGE_TILING_OPTIMAL;
-        m_TextureImageSpecification.Usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        m_TextureImageSpecification.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        m_TextureImageSpecification.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-
-        m_TextureImage = Image::Create(m_TextureImageSpecification);
-
         m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         m_TextureImage->WriteFromBuffer(stagingBuffer.GetBuffer());
-        m_TextureImage->GenerateMipMaps();
-        // m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        if (m_TextureImageSpecification.MipLevels > 1)
+            m_TextureImage->GenerateMipMaps();
+        else
+            m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         if (sampler == VK_NULL_HANDLE)
         {

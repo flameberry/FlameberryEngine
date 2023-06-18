@@ -1,0 +1,38 @@
+Scene: CoolMaterials
+Environment:
+  ClearColor: [0.0500000007, 0.0500000007, 0.0500000007]
+  EnvironmentMap: Assets/Environment/kloppenheim_02_puresky_4k.hdr
+  EnableEnvironmentMap: true
+  Reflections: false
+  DirectionalLight:
+    Direction: [-1, -1.82000005, -1]
+    Color: [1, 1, 1]
+    Intensity: 8
+Entities:
+  - Entity: 10945834263659422250
+    TagComponent: BrickSphere
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshUUID: 15427027041819506305
+  - Entity: 17736961039119441584
+    TagComponent: StaticMesh
+    TransformComponent:
+      Translation: [2.3015914, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshUUID: 4474729012079081437
+Meshes:
+  - Mesh: 15427027041819506305
+    FilePath: Assets/Meshes/sphere.obj
+    NonDerivedMaterials:
+      - FlameberryMaterial: Assets/Materials/WhispyGrass.fbmat
+        SubMeshIndex: 0
+  - Mesh: 4474729012079081437
+    FilePath: Assets/Meshes/cube.obj
+    NonDerivedMaterials:
+      - FlameberryMaterial: Assets/Materials/BeatenDownBrick.fbmat
+        SubMeshIndex: 0

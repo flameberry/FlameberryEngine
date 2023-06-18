@@ -1,6 +1,7 @@
 #include "EnvironmentSettingsPanel.h"
 
 #include "../Utils.h"
+#include <filesystem>
 
 namespace Flameberry {
     EnvironmentSettingsPanel::EnvironmentSettingsPanel(const std::shared_ptr<Scene>& context)
@@ -22,7 +23,49 @@ namespace Flameberry {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
-            auto& environment = m_Context->m_SceneData.ActiveEnvironmentMap;
+            auto& environment = m_Context->m_SceneData.ActiveEnvironment;
+
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Enable EnvMap");
+            ImGui::TableNextColumn();
+
+            FL_REMOVE_LABEL(ImGui::Checkbox("##Enable_EnvMap", &environment.EnableEnvironmentMap));
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            if (environment.EnableEnvironmentMap)
+            {
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Env Map");
+                ImGui::TableNextColumn();
+
+                ImGui::Button(
+                    environment.EnvironmentMap ? std::filesystem::path(environment.EnvironmentMap->GetFilePath()).filename().c_str() : "Null",
+                    ImVec2(-1.0f, 0.0f)
+                );
+
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                    {
+                        const char* path = (const char*)payload->Data;
+                        std::filesystem::path envPath{ path };
+                        const std::string& ext = envPath.extension().string();
+
+                        FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+
+                        if (std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath) && (ext == ".hdr"))
+                            environment.EnvironmentMap = AssetManager::TryGetOrLoadAssetFromFile<VulkanTexture>(envPath);
+                        else
+                            FL_WARN("Bad File given as Environment!");
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+            }
 
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Clear Color");
@@ -32,27 +75,6 @@ namespace Flameberry {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-
-            ImGui::AlignTextToFramePadding();
-            ImGui::Text("Enable Skybox");
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("##Enable_Skybox", &environment.EnableSkybox);
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-
-            if (environment.EnableSkybox)
-            {
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Env Reflections");
-                ImGui::TableNextColumn();
-                ImGui::Checkbox("##Environment_Reflections", &environment.Reflections);
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-            }
-            else
-                environment.Reflections = false;
 
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Directional");

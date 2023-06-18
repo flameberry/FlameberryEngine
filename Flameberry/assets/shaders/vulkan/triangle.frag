@@ -225,7 +225,7 @@ vec3 CalculatePBRPointLight(PointLight light, vec3 normal)
     return finalColor;
 }
 
-vec4 CalculatePBRLighting(vec3 normal)
+vec3 CalculatePBRLighting(vec3 normal)
 {
     vec3 totalLight = vec3(0.0);
 
@@ -236,11 +236,7 @@ vec4 CalculatePBRLighting(vec3 normal)
     
     // Ambient
     totalLight = max(AMBIENT * GetPixelColor(), totalLight);
-    
-    // HDR tone mapping
-    totalLight = totalLight / (totalLight + vec3(1.0));
-    
-    return vec4(totalLight, 1.0);
+    return totalLight;
 }
 
 void main()
@@ -252,5 +248,10 @@ void main()
         normal = normalize(v_TBNMatrix * normalize(rgbNormal));
     }
 
-    o_FragColor = CalculatePBRLighting(normal);
+    vec3 intermediateColor = CalculatePBRLighting(normal);
+
+    // HDR tone mapping
+    intermediateColor = intermediateColor / (intermediateColor + vec3(1.0));
+
+    o_FragColor = vec4(intermediateColor, 1.0);
 }

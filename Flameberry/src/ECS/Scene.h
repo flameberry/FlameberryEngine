@@ -9,24 +9,22 @@
 #include "Renderer/Vulkan/StaticMesh.h"
 
 namespace Flameberry {
-    struct EnvironmentMap
+    struct Environment
     {
         glm::vec3 ClearColor;
-        // std::shared_ptr<Skybox> ActiveSkybox;
-        bool EnableSkybox, Reflections;
+        std::shared_ptr<VulkanTexture> EnvironmentMap;
+        bool EnableEnvironmentMap, Reflections;
         DirectionalLight DirLight;
 
-        EnvironmentMap()
-            : ClearColor(0.05f, 0.05f, 0.05f),
-            EnableSkybox(false),
-            Reflections(false)
+        Environment()
+            : ClearColor(0.05f, 0.05f, 0.05f), EnableEnvironmentMap(false), Reflections(false)
         {}
     };
 
     struct SceneData
     {
         std::string Name = "Untitled";
-        EnvironmentMap ActiveEnvironmentMap;
+        Environment ActiveEnvironment;
     };
 
     class Scene
@@ -36,11 +34,11 @@ namespace Flameberry {
         ~Scene() = default;
 
         void RenderScene(const glm::mat4& cameraMatrix);
-        void SetDirectionalLight(const DirectionalLight& light) { m_SceneData.ActiveEnvironmentMap.DirLight = light; }
+        void SetDirectionalLight(const DirectionalLight& light) { m_SceneData.ActiveEnvironment.DirLight = light; }
 
-        inline glm::vec3 GetClearColor() const { return m_SceneData.ActiveEnvironmentMap.ClearColor; }
+        inline glm::vec3 GetClearColor() const { return m_SceneData.ActiveEnvironment.ClearColor; }
         inline std::string GetName() const { return m_SceneData.Name; }
-        inline DirectionalLight GetDirectionalLight() const { return m_SceneData.ActiveEnvironmentMap.DirLight; }
+        inline DirectionalLight GetDirectionalLight() const { return m_SceneData.ActiveEnvironment.DirLight; }
 
         template<typename... Args>
         static std::shared_ptr<Scene> Create(Args... args) { return std::make_shared<Scene>(std::forward<Args>(args)...); }

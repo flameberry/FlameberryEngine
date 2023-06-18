@@ -34,5 +34,8 @@ namespace Flameberry {
 
         std::shared_ptr<Pipeline> m_OutlinePipeline;
         VkPipelineLayout m_OutlinePipelineLayout;
+
+        std::shared_ptr<Pipeline> m_SkyboxPipeline;
+        VkPipelineLayout m_SkyboxPipelineLayout;
     };
 }

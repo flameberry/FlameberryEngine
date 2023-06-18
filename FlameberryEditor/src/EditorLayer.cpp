@@ -98,8 +98,6 @@ namespace Flameberry {
             m_CameraBufferDescriptorSets[i]->Update();
         }
 
-        // m_SkyboxRenderer = std::make_unique<SkyboxRenderer>(m_VulkanRenderer->GetGlobalDescriptorPool(), m_VulkanDescriptorLayout->GetLayout(), m_VulkanRenderer->GetRenderPass());
-
         m_Registry = std::make_shared<fbentt::registry>();
         m_ActiveScene = Scene::Create(m_Registry);
 
@@ -190,6 +188,8 @@ namespace Flameberry {
             );
         }
 
+        // m_SkyboxRenderer = std::make_unique<SkyboxRenderer>(m_SceneRenderPass);
+
         Renderer2D::Init(m_CameraBufferDescSetLayout->GetLayout(), m_SceneRenderPass);
     }
 
@@ -263,10 +263,8 @@ namespace Flameberry {
 
             Renderer2D::Render(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet());
 
-            // m_SkyboxRenderer->OnDraw(commandBuffer, currentFrameIndex, m_VkDescriptorSets[currentFrameIndex], m_ActiveCamera, "");
+            // m_SkyboxRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), *m_ActiveCameraController.GetPerspectiveCamera());
             m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), *m_ActiveCameraController.GetPerspectiveCamera(), m_ActiveScene, m_ViewportSize, m_SceneHierarchyPanel->GetSelectionContext());
-
-
             m_SceneRenderPass->End();
         }
 
@@ -303,6 +301,8 @@ namespace Flameberry {
             {
                 FL_PROFILE_SCOPE("Last Mouse Picking Pass");
                 m_IsMousePickingBufferReady = true;
+
+                bool shouldResize = m_MousePickingFramebuffer->Resize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
 
                 m_MousePickingRenderPass->Begin(0, { m_MouseX, (int)(m_ViewportSize.y - m_MouseY) }, { 1, 1 });
 

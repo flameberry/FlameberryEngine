@@ -1,0 +1,9 @@
+UUID: 12364069548054299481
+Name: Default_Material
+Albedo: [1, 1, 1]
+Roughness: 0.370000005
+Metallic: false
+TextureMapEnabled: true
+TextureMap: Assets/Textures/whispy-grass-meadow-bl/wispy-grass-meadow_albedo.png
+NormalMapEnabled: true
+NormalMap: Assets/Textures/whispy-grass-meadow-bl/wispy-grass-meadow_normal-ogl.png

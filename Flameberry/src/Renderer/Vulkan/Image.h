@@ -29,6 +29,7 @@ namespace Flameberry {
         VkImageView GetImageView() const { return m_VkImageView; }
 
         ImageSpecification GetSpecification() const { return m_ImageSpec; }
+        VkMemoryRequirements GetMemoryRequirements() const { return m_MemoryRequirements; }
 
         template<typename... Args>
         static std::shared_ptr<Image> Create(Args... args) { return std::make_shared<Image>(std::forward<Args>(args)...); }
@@ -37,6 +38,7 @@ namespace Flameberry {
         VkImageView m_VkImageView;
         VkDeviceMemory m_VkImageDeviceMemory;
 
+        VkMemoryRequirements m_MemoryRequirements;
         ImageSpecification m_ImageSpec;
     };
 }

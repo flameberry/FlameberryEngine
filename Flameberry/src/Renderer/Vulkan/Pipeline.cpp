@@ -83,8 +83,8 @@ namespace Flameberry {
         VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo{};
         pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         pipelineDepthStencilStateCreateInfo.depthTestEnable = (VkBool32)m_PipelineSpec.DepthTestEnable;
-        pipelineDepthStencilStateCreateInfo.depthWriteEnable = (VkBool32)m_PipelineSpec.DepthTestEnable;
-        pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+        pipelineDepthStencilStateCreateInfo.depthWriteEnable = (VkBool32)m_PipelineSpec.DepthWriteEnable;
+        pipelineDepthStencilStateCreateInfo.depthCompareOp = m_PipelineSpec.DepthCompareOp;
         pipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
         pipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
         pipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
@@ -96,7 +96,7 @@ namespace Flameberry {
 
         VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo{};
         pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
+        pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = m_PipelineSpec.VertexInputBindingDescription.stride ? 1 : 0;
         pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = &m_PipelineSpec.VertexInputBindingDescription;
         pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttributeDesc.size());
         pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexAttributeDesc.data();

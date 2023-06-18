@@ -1,49 +1,69 @@
 #version 450
 
-layout (location = 0) in vec3 a_Position;
+layout (location = 0) out vec3 v_Position;
+layout (location = 1) out vec2 v_TextureCoords;
 
-// vec3 skyboxVertices[] = {
-//     //   Coordinates
-//     vec3(-1.0, -1.0,  1.0),//        7--------6
-//     vec3( 1.0, -1.0,  1.0),//       /|       /|
-//     vec3( 1.0, -1.0, -1.0),//      4--------5 |
-//     vec3(-1.0, -1.0, -1.0),//      | |      | |
-//     vec3(-1.0,  1.0,  1.0),//      | 3------|-2
-//     vec3( 1.0,  1.0,  1.0),//      |/       |/
-//     vec3( 1.0,  1.0, -1.0),//      0--------1
-//     vec3(-1.0,  1.0, -1.0)
-// };
-
-// int skyboxIndices[] = {
-//     // Right
-//     1, 2, 6,
-//     6, 5, 1,
-//     // Left
-//     0, 4, 7,
-//     7, 3, 0,
-//     // Top
-//     4, 5, 6,
-//     6, 7, 4,
-//     // Bottom
-//     0, 3, 2,
-//     2, 1, 0,
-//     // Back
-//     0, 1, 5,
-//     5, 4, 0,
-//     // Front
-//     3, 7, 6,
-//     6, 2, 3
-// };
-
-layout (set = 0, binding = 0) uniform UniformBufferObject {
+layout (push_constant) uniform UniformBufferObject {
     mat4 u_ViewProjectionMatrix;
-    mat4 u_LightViewProjectionMatrix;
+};
+
+struct Vertex {
+    vec3 Position;
+    vec2 TextureCoords;
+};
+
+const Vertex vertices[] = {
+    Vertex(vec3(-0.5f, -0.5f, -0.5f), vec2(0.0f, 0.0f)),  // A 0
+    Vertex(vec3(0.5f, -0.5f, -0.5f),  vec2(1.0f, 0.0f)),  // B 1
+    Vertex(vec3(0.5f,  0.5f, -0.5f),  vec2(1.0f, 1.0f)),  // C 2
+    Vertex(vec3(-0.5f,  0.5f, -0.5f), vec2(0.0f, 1.0f)),  // D 3
+    Vertex(vec3(-0.5f, -0.5f,  0.5f), vec2(0.0f, 0.0f)),  // E 4
+    Vertex(vec3(0.5f, -0.5f,  0.5f),  vec2(1.0f, 0.0f)),  // F 5
+    Vertex(vec3(0.5f,  0.5f,  0.5f),  vec2(1.0f, 1.0f)),  // G 6
+    Vertex(vec3(-0.5f,  0.5f,  0.5f), vec2(0.0f, 1.0f)),  // H 7
+
+    Vertex(vec3(-0.5f,  0.5f, -0.5f), vec2(0.0f, 0.0f)),  // D 8
+    Vertex(vec3(-0.5f, -0.5f, -0.5f), vec2(1.0f, 0.0f)),  // A 9
+    Vertex(vec3(-0.5f, -0.5f,  0.5f), vec2(1.0f, 1.0f)),  // E 10
+    Vertex(vec3(-0.5f,  0.5f,  0.5f), vec2(0.0f, 1.0f)),  // H 11
+    Vertex(vec3(0.5f, -0.5f, -0.5f),  vec2(0.0f, 0.0f)),  // B 12
+    Vertex(vec3(0.5f,  0.5f, -0.5f),  vec2(1.0f, 0.0f)),  // C 13
+    Vertex(vec3(0.5f,  0.5f,  0.5f),  vec2(1.0f, 1.0f)),  // G 14
+    Vertex(vec3(0.5f, -0.5f,  0.5f),  vec2(0.0f, 1.0f)),  // F 15
+
+    Vertex(vec3(-0.5f, -0.5f, -0.5f), vec2(0.0f, 0.0f)),  // A 16
+    Vertex(vec3(0.5f, -0.5f, -0.5f),  vec2(1.0f, 0.0f)),  // B 17
+    Vertex(vec3(0.5f, -0.5f,  0.5f),  vec2(1.0f, 1.0f)),  // F 18
+    Vertex(vec3(-0.5f, -0.5f,  0.5f), vec2(0.0f, 1.0f)),  // E 19
+    Vertex(vec3(0.5f,  0.5f, -0.5f),  vec2(0.0f, 0.0f)),  // C 20
+    Vertex(vec3(-0.5f,  0.5f, -0.5f), vec2(1.0f, 0.0f)),  // D 21
+    Vertex(vec3(-0.5f,  0.5f,  0.5f), vec2(1.0f, 1.0f)),  // H 22
+    Vertex(vec3(0.5f,  0.5f,  0.5f),  vec2(0.0f, 1.0f))   // G 23
+};
+
+const uint indices[] = {
+    // front and back
+    0, 3, 2,
+    2, 1, 0,
+    4, 5, 6,
+    6, 7 ,4,
+    // left and right
+    11, 8, 9,
+    9, 10, 11,
+    12, 13, 14,
+    14, 15, 12,
+    // bottom and top
+    16, 17, 18,
+    18, 19, 16,
+    20, 21, 22,
+    22, 23, 20
 };
 
 void main()
 {
-    // vec4 position = u_ViewProjectionMatrix * vec4(skyboxVertices[skyboxIndices[gl_VertexIndex]], 1.0);
-    vec4 position = u_ViewProjectionMatrix * vec4(a_Position, 1.0);
-    // gl_Position = vec4(position.x, position.y, position.w, position.w);
-    gl_Position = position;
+    v_Position = vertices[indices[gl_VertexIndex]].Position;
+    v_TextureCoords = vertices[indices[gl_VertexIndex]].TextureCoords;
+
+    vec4 position = u_ViewProjectionMatrix * vec4(v_Position, 1.0);
+    gl_Position = position.xyww;
 }

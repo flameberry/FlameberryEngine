@@ -34,6 +34,7 @@ namespace Flameberry {
         static VkSampler GetDefaultSampler() { return s_DefaultSampler; }
 
         static std::shared_ptr<VulkanTexture> TryGetOrLoadTexture(const std::string& texturePath);
+        static std::shared_ptr<VulkanTexture> LoadFromFile(const char* path) { return std::make_shared<VulkanTexture>(path); }
     private:
         std::string m_FilePath;
 

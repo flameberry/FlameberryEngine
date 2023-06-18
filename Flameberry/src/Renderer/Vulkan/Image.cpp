@@ -29,13 +29,12 @@ namespace Flameberry {
 
         VK_CHECK_RESULT(vkCreateImage(device, &vk_image_create_info, nullptr, &m_VkImage));
 
-        VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(device, m_VkImage, &memRequirements);
+        vkGetImageMemoryRequirements(device, m_VkImage, &m_MemoryRequirements);
 
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, memRequirements.memoryTypeBits, m_ImageSpec.MemoryProperties);
+        allocInfo.allocationSize = m_MemoryRequirements.size;
+        allocInfo.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, m_MemoryRequirements.memoryTypeBits, m_ImageSpec.MemoryProperties);
 
         VK_CHECK_RESULT(vkAllocateMemory(device, &allocInfo, nullptr, &m_VkImageDeviceMemory));
         vkBindImageMemory(device, m_VkImage, m_VkImageDeviceMemory, 0);

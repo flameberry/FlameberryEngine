@@ -32,12 +32,12 @@ namespace Flameberry {
         out << YAML::Key << "Scene" << YAML::Value << sceneName;
 
         // Environment Map
-        out << YAML::Key << "EnvironmentMap" << YAML::Value << YAML::BeginMap;
+        out << YAML::Key << "Environment" << YAML::Value << YAML::BeginMap;
 
-        auto& env = m_ActiveScene->m_SceneData.ActiveEnvironmentMap;
+        auto& env = m_ActiveScene->m_SceneData.ActiveEnvironment;
         out << YAML::Key << "ClearColor" << YAML::Value << env.ClearColor;
-        // out << YAML::Key << "Skybox" << YAML::Value << env.ActiveSkybox->GetFolderPath();
-        out << YAML::Key << "EnableSkybox" << YAML::Value << env.EnableSkybox;
+        out << YAML::Key << "EnvironmentMap" << YAML::Value << env.EnvironmentMap->GetFilePath();
+        out << YAML::Key << "EnableEnvironmentMap" << YAML::Value << env.EnableEnvironmentMap;
         out << YAML::Key << "Reflections" << YAML::Value << env.Reflections;
 
         out << YAML::Key << "DirectionalLight" << YAML::Value << YAML::BeginMap;
@@ -46,7 +46,7 @@ namespace Flameberry {
         out << YAML::Key << "Intensity" << YAML::Value << env.DirLight.Intensity;
         out << YAML::EndMap; // Directional Light
 
-        out << YAML::EndMap; // EnvironmentMap
+        out << YAML::EndMap; // Environment
 
         out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 
@@ -166,12 +166,15 @@ namespace Flameberry {
         m_ActiveScene->m_Registry->clear();
 
         // Deserialize Environment Map
-        auto& env = m_ActiveScene->m_SceneData.ActiveEnvironmentMap;
+        auto& env = m_ActiveScene->m_SceneData.ActiveEnvironment;
 
-        auto envMapNode = data["EnvironmentMap"];
+        auto envMapNode = data["Environment"];
         env.ClearColor = envMapNode["ClearColor"].as<glm::vec3>();
-        // env.ActiveSkybox = std::make_shared<Skybox>(envMapNode["Skybox"].as<std::string>().c_str());
-        env.EnableSkybox = envMapNode["EnableSkybox"].as<bool>();
+        env.EnableEnvironmentMap = envMapNode["EnableEnvironmentMap"].as<bool>();
+
+        if (auto path = envMapNode["EnvironmentMap"].as<std::string>(); !path.empty())
+            env.EnvironmentMap = AssetManager::TryGetOrLoadAssetFromFile<VulkanTexture>(path.c_str());
+
         env.Reflections = envMapNode["Reflections"].as<bool>();
         env.DirLight.Direction = envMapNode["DirectionalLight"]["Direction"].as<glm::vec3>();
         env.DirLight.Color = envMapNode["DirectionalLight"]["Color"].as<glm::vec3>();

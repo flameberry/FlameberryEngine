@@ -1,7 +1,8 @@
 Scene: test_format
-EnvironmentMap:
+Environment:
   ClearColor: [0.0500000007, 0.0500000007, 0.0500000007]
-  EnableSkybox: false
+  EnableEnvironmentMap: false
+  EnvironmentMap: ""
   Reflections: false
   DirectionalLight:
     Direction: [2.0999999, -3.70000005, 0.74000001]

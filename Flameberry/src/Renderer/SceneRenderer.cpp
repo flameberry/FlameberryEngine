@@ -182,20 +182,79 @@ namespace Flameberry {
             pipelineSpec.StencilOpState.writeMask = 1;
 
             m_OutlinePipeline = Pipeline::Create(pipelineSpec);
+        }
 
-            VK_DYNAMIC_STATE_VERTEX_INPUT_EXT;
+        // Skybox Pipeline
+        {
+            VkDescriptorSetLayout descriptorSetLayouts[] = { VulkanTexture::GetDescriptorLayout()->GetLayout() };
+
+            VkPushConstantRange pushConstantRange{};
+            pushConstantRange.offset = 0;
+            pushConstantRange.size = sizeof(glm::mat4);
+            pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+            VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
+            vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            vk_pipeline_layout_create_info.setLayoutCount = sizeof(descriptorSetLayouts) / sizeof(VkDescriptorSetLayout);
+            vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
+            vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
+            vk_pipeline_layout_create_info.pPushConstantRanges = &pushConstantRange;
+
+            VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_SkyboxPipelineLayout));
+
+            Flameberry::PipelineSpecification pipelineSpec{};
+            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/skybox.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/skybox.frag.spv";
+            pipelineSpec.RenderPass = renderPass;
+            pipelineSpec.PipelineLayout = m_SkyboxPipelineLayout;
+
+            pipelineSpec.VertexLayout = {};
+
+            pipelineSpec.VertexInputBindingDescription.binding = 0;
+            pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            pipelineSpec.VertexInputBindingDescription.stride = 0;
+
+            VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+            pipelineSpec.Samples = sampleCount;
+
+            pipelineSpec.CullMode = VK_CULL_MODE_NONE;
+
+            pipelineSpec.DepthTestEnable = true;
+            pipelineSpec.DepthWriteEnable = false;
+            pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+
+            m_SkyboxPipeline = Pipeline::Create(pipelineSpec);
         }
     }
 
     void SceneRenderer::OnDraw(VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene, const glm::vec2& framebufferSize, const fbentt::entity& selectedEntity)
     {
         uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
+
+        // Skybox Rendering
+        if (scene->m_SceneData.ActiveEnvironment.EnableEnvironmentMap && scene->m_SceneData.ActiveEnvironment.EnvironmentMap)
+        {
+            m_SkyboxPipeline->Bind();
+            glm::mat4 viewProjectionMatrix = activeCamera.GetProjectionMatrix() * glm::mat4(glm::mat3(activeCamera.GetViewMatrix()));
+
+            auto pipelineLayout = m_SkyboxPipelineLayout;
+            auto textureDescSet = scene->m_SceneData.ActiveEnvironment.EnvironmentMap->GetDescriptorSet();
+            Renderer::Submit([pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                {
+                    VkDescriptorSet descSets[] = { textureDescSet };
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
+                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjectionMatrix);
+                    vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
+                }
+            );
+        }
+
         m_MeshPipeline->Bind();
 
         // Updating Scene Uniform Buffer
         SceneUniformBufferData sceneUniformBufferData;
         sceneUniformBufferData.cameraPosition = activeCamera.GetSpecification().Position;
-        sceneUniformBufferData.directionalLight = scene->m_SceneData.ActiveEnvironmentMap.DirLight;
+        sceneUniformBufferData.directionalLight = scene->m_SceneData.ActiveEnvironment.DirLight;
         for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
         {
             const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
@@ -204,10 +263,11 @@ namespace Flameberry {
             sceneUniformBufferData.pointLights[sceneUniformBufferData.lightCount].Intensity = light.Intensity;
             sceneUniformBufferData.lightCount++;
         }
-        // sceneUniformBufferData.EnvironmentMapReflections = scene->m_SceneData.ActiveEnvironmentMap.Reflections;
+        // sceneUniformBufferData.EnvironmentMapReflections = scene->m_SceneData.ActiveEnvironment.Reflections;
 
         m_SceneUniformBuffers[currentFrameIndex]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData), 0);
 
+        // Draw Scene Meshes
         VkDescriptorSet descriptorSets[] = { globalDescriptorSet, m_SceneDataDescriptorSets[currentFrameIndex]->GetDescriptorSet() };
         const auto& pipelineLayout = m_VkPipelineLayout;
 
@@ -400,5 +460,6 @@ namespace Flameberry {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
         vkDestroyPipelineLayout(device, m_OutlinePipelineLayout, nullptr);
+        vkDestroyPipelineLayout(device, m_SkyboxPipelineLayout, nullptr);
     }
 }

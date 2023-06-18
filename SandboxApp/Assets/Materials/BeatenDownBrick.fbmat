@@ -1,0 +1,9 @@
+UUID: 11381945658734869198
+Name: BeatenDownBrick
+Albedo: [1, 1, 1]
+Roughness: 0.540000021
+Metallic: false
+TextureMapEnabled: true
+TextureMap: Assets/Textures/beaten-down-brick-bl/beaten-down-brick_albedo.png
+NormalMapEnabled: true
+NormalMap: Assets/Textures/beaten-down-brick-bl/beaten-down-brick_normal-ogl.png
