@@ -8,7 +8,7 @@
 
 enum FileTypeIndex {
     DEFAULT = 2,
-    FOLDER, BERRY, PNG, JPG, OBJ, FBMAT, MTL, JSON
+    FOLDER, BERRY, PNG, JPG, OBJ, FBMAT, MTL, JSON, HDR
 };
 
 static std::vector<std::string> g_IconPaths = {
@@ -22,7 +22,8 @@ static std::vector<std::string> g_IconPaths = {
     FL_PROJECT_DIR"FlameberryEditor/assets/icons/obj_file_icon.png",
     FL_PROJECT_DIR"FlameberryEditor/assets/icons/fbmat_file_icon.png",
     FL_PROJECT_DIR"FlameberryEditor/assets/icons/mtl_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/json_file_icon.png"
+    FL_PROJECT_DIR"FlameberryEditor/assets/icons/json_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/assets/icons/hdr_file_icon.png"
 };
 
 namespace Flameberry {
@@ -226,6 +227,8 @@ namespace Flameberry {
                 currentIconIndex = FileTypeIndex::FBMAT;
             else if (ext == ".json")
                 currentIconIndex = FileTypeIndex::JSON;
+            else if (ext == ".hdr")
+                currentIconIndex = FileTypeIndex::HDR;
             else {
                 currentIconIndex = FileTypeIndex::DEFAULT;
                 is_file_supported = false;
