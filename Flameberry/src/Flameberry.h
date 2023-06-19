@@ -28,7 +28,7 @@
 #include "Renderer/Vulkan/VulkanRenderCommand.h"
 #include "Renderer/Vulkan/Pipeline.h"
 #include "Renderer/Vulkan/DescriptorSet.h"
-#include "Renderer/Vulkan/VulkanTexture.h"
+#include "Renderer/Vulkan/Texture2D.h"
 #include "Renderer/Vulkan/StaticMesh.h"
 #include "Renderer/Vulkan/VulkanDebug.h"
 #include "Renderer/Vulkan/RenderPass.h"

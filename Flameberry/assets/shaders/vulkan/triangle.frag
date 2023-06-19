@@ -9,12 +9,15 @@ layout (location = 4) in mat3 v_TBNMatrix;
 layout (location = 0) out vec4 o_FragColor;
 
 #define PI 3.1415926535897932384626433832795
-#define AMBIENT 0.02
+#define AMBIENT 0.1
 
 layout (set = 1, binding = 1) uniform sampler2D u_ShadowMapSampler;
 
 layout (set = 2, binding = 0) uniform sampler2D u_TextureMapSampler;
 layout (set = 3, binding = 0) uniform sampler2D u_NormalMapSampler;
+layout (set = 4, binding = 0) uniform sampler2D u_RoughnessMapSampler;
+layout (set = 5, binding = 0) uniform sampler2D u_AmbientOcclusionMapSampler;
+layout (set = 6, binding = 0) uniform sampler2D u_MetallicMapSampler;
 
 struct DirectionalLight {
     vec3  Direction;
@@ -40,8 +43,8 @@ layout (push_constant) uniform MeshData {
     vec3  u_Albedo;
     float u_Roughness;
     float u_Metallic;
-    float u_TextureMapEnabled;
-    float u_NormalMapEnabled;
+
+    float u_TextureMapEnabled, u_NormalMapEnabled, u_RoughnessMapEnabled, u_AmbientOcclusionMapEnabled, u_MetallicMapEnabled;
 };
 
 vec3 CalculateDirectionalLight(vec3 normal, DirectionalLight light)
@@ -55,36 +58,58 @@ vec3 GetPixelColor()
 {
     if (u_TextureMapEnabled == 1.0)
         return texture(u_TextureMapSampler, v_TextureCoords).xyz;
-    else
-        return u_Albedo;
+    return u_Albedo;
 }
 
-// PBR Lighting
+vec3 GetPixelNormal()
+{
+    if (u_NormalMapEnabled == 1.0)
+    {
+        vec3 rgbNormal = texture(u_NormalMapSampler, v_TextureCoords).rgb * 2.0 - 1.003921568627451;
+        return normalize(v_TBNMatrix * normalize(rgbNormal));
+    }
+    return normalize(v_Normal);
+}
+
+float GetPixelRoughness()
+{
+    if (u_RoughnessMapEnabled == 1.0)
+        return texture(u_RoughnessMapSampler, v_TextureCoords).x;
+    return u_Roughness;
+}
+
+float GetAmbientOcclusion()
+{
+    if (u_AmbientOcclusionMapEnabled == 1.0)
+        return texture(u_AmbientOcclusionMapSampler, v_TextureCoords).x;
+    return 1.0;
+}
+
+float GetMetallicFactor()
+{
+    if (u_MetallicMapEnabled == 1.0)
+        return texture(u_MetallicMapSampler, v_TextureCoords).x;
+    return u_Metallic;
+}
+
 vec3 SchlickFresnel(float v_dot_h)
 {
     vec3 F0 = vec3(0.04);
-
-    if (u_Metallic == 1.0) {
-        F0 = GetPixelColor();
-    }
-
-    vec3 ret = F0 + (1 - F0) * pow(clamp(1.0 - v_dot_h, 0.0, 1.0), 5);
-    return ret;
+    F0 = mix(F0, GetPixelColor(), GetMetallicFactor());
+    return F0 + (1 - F0) * pow(clamp(1.0 - v_dot_h, 0.0, 1.0), 5.0);
 }
-
 
 float GeomSmith(float dp)
 {
-    float k = (u_Roughness + 1.0) * (u_Roughness + 1.0) / 8.0;
-    float denom = dp * (1 - k) + k;
+    float k = (GetPixelRoughness() + 1.0) * (GetPixelRoughness() + 1.0) / 8.0;
+    float denom = dp * (1.0 - k) + k;
     return dp / denom;
 }
 
-
 float GGXDistribution(float n_dot_h)
 {
-    float alpha2 = pow(u_Roughness, 4);
-    float d = n_dot_h * n_dot_h * (alpha2 - 1) + 1;
+    float alpha2 = pow(GetPixelRoughness(), 4);
+    float d = n_dot_h * n_dot_h * (alpha2 - 1.0) + 1.0;
     float ggxdistrib = alpha2 / (PI * d * d);
     return ggxdistrib;
 }
@@ -161,27 +186,16 @@ vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
     vec3 fresnelFactor = SchlickFresnel(v_dot_h);
     vec3 kS = fresnelFactor;
     vec3 kD = 1.0 - kS;
+    kD *= 1.0 - GetMetallicFactor();
     
     vec3 specularBRDFNumerator = GGXDistribution(n_dot_h) * fresnelFactor * GeomSmith(n_dot_l) * GeomSmith(n_dot_v);
     float specularBRDFDenominator = 4.0 * n_dot_v * n_dot_l + 0.0001;
     
     vec3 specularBRDF = specularBRDFNumerator / specularBRDFDenominator;
     
-    vec3 fLambert = vec3(0.0);
-    
-    if (u_Metallic == 0.0) {
-        fLambert = GetPixelColor();
-    }
-    
-    vec3 diffuseBRDF = kD * fLambert / PI;
+    vec3 diffuseBRDF = kD * GetPixelColor() / PI;
 
-    // float bias = mix(0.001, 0.0, n_dot_l);
-
-    // vec3 finalColor = CalculateShadowFactor() * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
-    // vec3 finalColor = FilterPCF(/*bias*/) * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
     vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
-
-    finalColor = max(finalColor, AMBIENT * GetPixelColor());
     return finalColor;
 }
 
@@ -207,19 +221,14 @@ vec3 CalculatePBRPointLight(PointLight light, vec3 normal)
     vec3 fresnelFactor = SchlickFresnel(v_dot_h);
     vec3 kS = fresnelFactor;
     vec3 kD = 1.0 - kS;
+    kD *= 1.0 - GetMetallicFactor();
     
     vec3 specularBRDFNumerator = GGXDistribution(n_dot_h) * fresnelFactor * GeomSmith(n_dot_l) * GeomSmith(n_dot_v);
     float specularBRDFDenominator = 4.0 * n_dot_v * n_dot_l + 0.0001;
     
     vec3 specularBRDF = specularBRDFNumerator / specularBRDFDenominator;
     
-    vec3 fLambert = vec3(0.0);
-    
-    if (u_Metallic == 0.0) {
-        fLambert = GetPixelColor();
-    }
-    
-    vec3 diffuseBRDF = kD * fLambert / PI;
+    vec3 diffuseBRDF = kD * GetPixelColor() / PI;
     
     vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
     return finalColor;
@@ -234,20 +243,13 @@ vec3 CalculatePBRLighting(vec3 normal)
     for (int i = 0; i < u_SceneData.lightCount; i++)
         totalLight += CalculatePBRPointLight(u_SceneData.pointLights[i], normal);
     
-    // Ambient
-    totalLight = max(AMBIENT * GetPixelColor(), totalLight);
-    return totalLight;
+    vec3 ambient = AMBIENT * GetAmbientOcclusion() * GetPixelColor();
+    return totalLight + ambient;
 }
 
 void main()
 {
-    vec3 normal = normalize(v_Normal);
-    if (u_NormalMapEnabled == 1.0)
-    {
-        vec3 rgbNormal = texture(u_NormalMapSampler, v_TextureCoords).rgb * 2.0 - 1.003921568627451;
-        normal = normalize(v_TBNMatrix * normalize(rgbNormal));
-    }
-
+    vec3 normal = GetPixelNormal();
     vec3 intermediateColor = CalculatePBRLighting(normal);
 
     // HDR tone mapping

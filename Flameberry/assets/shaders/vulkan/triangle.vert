@@ -21,7 +21,7 @@ layout (push_constant) uniform MeshData {
     mat4  u_ModelMatrix;
     vec3  u_Albdeo;
     float u_Roughness;
-    bool  u_Metallic;
+    float u_Metallic;
 };
 
 mat4 g_BiasMatrix = mat4(

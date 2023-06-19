@@ -22,7 +22,7 @@ namespace Flameberry {
         std::filesystem::path m_CurrentDirectory, m_ProjectDirectory;
 
         VkSampler m_VkTextureSampler;
-        std::vector<std::shared_ptr<VulkanTexture>> m_IconTextures;
+        std::vector<std::shared_ptr<Texture2D>> m_IconTextures;
 
         float m_FirstChildSize = 150.0f, m_SecondChildSize = 0.0f;
         bool m_IsSearchBoxFocused = false;

@@ -6,7 +6,7 @@
 
 #include "ImGui/ImGuiLayer.h"
 #include "Renderer/Renderer.h"
-#include "Renderer/Vulkan/VulkanTexture.h"
+#include "Renderer/Vulkan/Texture2D.h"
 #include "AssetManager/AssetManager.h"
 
 namespace Flameberry {
@@ -27,7 +27,7 @@ namespace Flameberry {
         VulkanContext::GetCurrentDevice()->AllocateCommandBuffers(swapchain->GetSwapChainImageCount());
 
         // Create the generic texture descriptor layout
-        VulkanTexture::InitStaticResources();
+        Texture2D::InitStaticResources();
 
         m_ImGuiLayer = std::make_unique<ImGuiLayer>();
     }
@@ -95,7 +95,7 @@ namespace Flameberry {
 
         m_ImGuiLayer->OnDestroy();
 
-        VulkanTexture::DestroyStaticResources();
+        Texture2D::DestroyStaticResources();
         AssetManager::DestroyAssets();
 
         m_Window->Destroy();

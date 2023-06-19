@@ -29,7 +29,7 @@ namespace Flameberry {
         fbentt::entity m_SelectionContext = {};
         std::shared_ptr<Scene> m_Context;
 
-        std::shared_ptr<VulkanTexture> m_TripleDotsIcon;
+        std::shared_ptr<Texture2D> m_TripleDotsIcon;
 
         template<typename ComponentType, typename Fn>
         friend void DrawComponent(const char* name, InspectorPanel* instance, Fn&& fn);

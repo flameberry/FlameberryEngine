@@ -11,13 +11,13 @@
 namespace Flameberry {
     SkyboxRenderer::SkyboxRenderer(const std::shared_ptr<RenderPass>& renderPass)
     {
-        m_SkyboxTexture = VulkanTexture::TryGetOrLoadTexture("Assets/Environment/kloppenheim_02_puresky_4k.hdr");
-        // m_SkyboxTexture = VulkanTexture::TryGetOrLoadTexture("Assets/Environment/little_paris_under_tower_4k.hdr");
-        // m_SkyboxTexture = VulkanTexture::TryGetOrLoadTexture("Assets/Environment/sunset_fairway_4k.hdr");
+        m_SkyboxTexture = Texture2D::TryGetOrLoadTexture("Assets/Environment/kloppenheim_02_puresky_4k.hdr");
+        // m_SkyboxTexture = Texture2D::TryGetOrLoadTexture("Assets/Environment/little_paris_under_tower_4k.hdr");
+        // m_SkyboxTexture = Texture2D::TryGetOrLoadTexture("Assets/Environment/sunset_fairway_4k.hdr");
 
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-        VkDescriptorSetLayout descriptorSetLayouts[] = { VulkanTexture::GetDescriptorLayout()->GetLayout() };
+        VkDescriptorSetLayout descriptorSetLayouts[] = { Texture2D::GetDescriptorLayout()->GetLayout() };
 
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.offset = 0;

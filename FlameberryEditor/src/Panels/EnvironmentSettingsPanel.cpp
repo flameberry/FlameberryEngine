@@ -29,7 +29,7 @@ namespace Flameberry {
             ImGui::Text("Enable EnvMap");
             ImGui::TableNextColumn();
 
-            FL_REMOVE_LABEL(ImGui::Checkbox("##Enable_EnvMap", &environment.EnableEnvironmentMap));
+            FL_PUSH_WIDTH_MAX(ImGui::Checkbox("##Enable_EnvMap", &environment.EnableEnvironmentMap));
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -56,7 +56,7 @@ namespace Flameberry {
                         FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
 
                         if (std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath) && (ext == ".hdr"))
-                            environment.EnvironmentMap = AssetManager::TryGetOrLoadAssetFromFile<VulkanTexture>(envPath);
+                            environment.EnvironmentMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(envPath);
                         else
                             FL_WARN("Bad File given as Environment!");
                     }
@@ -71,7 +71,7 @@ namespace Flameberry {
             ImGui::Text("Clear Color");
             ImGui::TableNextColumn();
 
-            FL_REMOVE_LABEL(ImGui::ColorEdit3("##Clear_Color", glm::value_ptr(environment.ClearColor)));
+            FL_PUSH_WIDTH_MAX(ImGui::ColorEdit3("##Clear_Color", glm::value_ptr(environment.ClearColor)));
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -89,7 +89,7 @@ namespace Flameberry {
             ImGui::Text("Color");
             ImGui::TableNextColumn();
 
-            FL_REMOVE_LABEL(ImGui::ColorEdit3("##Color", glm::value_ptr(environment.DirLight.Color)));
+            FL_PUSH_WIDTH_MAX(ImGui::ColorEdit3("##Color", glm::value_ptr(environment.DirLight.Color)));
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -97,7 +97,7 @@ namespace Flameberry {
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Intensity");
             ImGui::TableNextColumn();
-            FL_REMOVE_LABEL(ImGui::DragFloat("##Intensity", &environment.DirLight.Intensity, 0.01f));
+            FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Intensity", &environment.DirLight.Intensity, 0.01f));
             ImGui::EndTable();
         }
         ImGui::End();

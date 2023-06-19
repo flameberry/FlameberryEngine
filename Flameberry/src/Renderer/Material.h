@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "Vulkan/VulkanTexture.h"
+#include "Vulkan/Texture2D.h"
 
 #include "Core/UUID.h"
 
@@ -16,9 +16,9 @@ namespace Flameberry {
         // Actual properties
         glm::vec3 Albedo{ 1.0f };
         float Roughness = 0.2f;
-        bool Metallic = false;
-        bool TextureMapEnabled = false, NormalMapEnabled = false;
-        std::shared_ptr<VulkanTexture> TextureMap, NormalMap;
+        float Metallic = 0.0f;
+        bool TextureMapEnabled = false, NormalMapEnabled = false, RoughnessMapEnabled = false, AmbientOcclusionMapEnabled = false, MetallicMapEnabled = false;
+        std::shared_ptr<Texture2D> TextureMap, NormalMap, RoughnessMap, AmbientOcclusionMap, MetallicMap;
     public:
         static std::shared_ptr<Material> LoadFromFile(const char* path);
         UUID GetUUID() const { return m_UUID; }

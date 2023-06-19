@@ -173,7 +173,7 @@ namespace Flameberry {
         env.EnableEnvironmentMap = envMapNode["EnableEnvironmentMap"].as<bool>();
 
         if (auto path = envMapNode["EnvironmentMap"].as<std::string>(); !path.empty())
-            env.EnvironmentMap = AssetManager::TryGetOrLoadAssetFromFile<VulkanTexture>(path.c_str());
+            env.EnvironmentMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(path.c_str());
 
         env.Reflections = envMapNode["Reflections"].as<bool>();
         env.DirLight.Direction = envMapNode["DirectionalLight"]["Direction"].as<glm::vec3>();

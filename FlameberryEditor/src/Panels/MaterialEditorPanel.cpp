@@ -6,7 +6,7 @@
 namespace Flameberry {
     void MaterialEditorPanel::OnUIRender()
     {
-        bool isMaterialEdited = false;
+        m_IsMaterialEdited = false;
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
         ImGui::Begin("Material Editor");
@@ -33,7 +33,7 @@ namespace Flameberry {
                 {
                     m_EditingContext->Name = std::string(m_RenameBuffer);
                     m_ShouldRename = false;
-                    isMaterialEdited = true;
+                    m_IsMaterialEdited = true;
                 }
                 ImGui::PopStyleVar();
                 ImGui::PopItemWidth();
@@ -73,93 +73,11 @@ namespace Flameberry {
                 ImGui::TableNextColumn();
                 ImGui::TextWrapped("%s", m_EditingContext->FilePath.c_str());
 
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Texture Map");
-
-                ImGui::TableNextColumn();
-
-                bool& textureMapEnabled = m_EditingContext->TextureMapEnabled;
-                ImGui::Checkbox("##Texture_Map", &textureMapEnabled);
-
-                isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
-
-                if (textureMapEnabled)
-                {
-                    auto& texture = m_EditingContext->TextureMap;
-                    if (!texture)
-                        texture = VulkanTexture::TryGetOrLoadTexture("Assets/Textures/Checkerboard.png");
-
-                    VulkanTexture& currentTexture = *(texture.get());
-
-                    ImGui::SameLine();
-                    ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetDescriptorSet()), ImVec2{ 70, 70 });
-                    if (ImGui::BeginDragDropTarget())
-                    {
-                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
-                        {
-                            std::string path = (const char*)payload->Data;
-                            std::filesystem::path texturePath{ path };
-                            const std::string& ext = texturePath.extension().string();
-
-                            FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
-
-                            if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
-                            {
-                                texture = VulkanTexture::TryGetOrLoadTexture(texturePath.string());
-                                isMaterialEdited = true;
-                            }
-                            else
-                                FL_WARN("Bad File given as Texture!");
-                        }
-                        ImGui::EndDragDropTarget();
-                    }
-                }
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Normal Map");
-                ImGui::TableNextColumn();
-
-                bool& normalMapEnabled = m_EditingContext->NormalMapEnabled;
-                ImGui::Checkbox("##Normal_Map", &normalMapEnabled);
-                isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
-
-                if (normalMapEnabled)
-                {
-                    auto& texture = m_EditingContext->NormalMap;
-                    if (!texture)
-                        texture = VulkanTexture::TryGetOrLoadTexture("Assets/Textures/Checkerboard.png");
-
-                    VulkanTexture& currentTexture = *(texture.get());
-
-                    ImGui::SameLine();
-                    ImGui::Image(reinterpret_cast<ImTextureID>(currentTexture.GetDescriptorSet()), ImVec2{ 70, 70 });
-                    if (ImGui::BeginDragDropTarget())
-                    {
-                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
-                        {
-                            std::string path = (const char*)payload->Data;
-                            std::filesystem::path texturePath{ path };
-                            const std::string& ext = texturePath.extension().string();
-
-                            FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
-
-                            if (std::filesystem::exists(texturePath) && std::filesystem::is_regular_file(texturePath) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
-                            {
-                                texture = VulkanTexture::TryGetOrLoadTexture(texturePath.string());
-                                isMaterialEdited = true;
-                            }
-                            else
-                                FL_WARN("Bad File given as Texture!");
-                        }
-                        ImGui::EndDragDropTarget();
-                    }
-                }
+                DrawMapControls("Texture Map", m_EditingContext->TextureMapEnabled, m_EditingContext->TextureMap);
+                DrawMapControls("Normal Map", m_EditingContext->NormalMapEnabled, m_EditingContext->NormalMap);
+                DrawMapControls("Roughness Map", m_EditingContext->RoughnessMapEnabled, m_EditingContext->RoughnessMap);
+                DrawMapControls("Ambient Occlusion Map", m_EditingContext->AmbientOcclusionMapEnabled, m_EditingContext->AmbientOcclusionMap);
+                DrawMapControls("Metallic Map", m_EditingContext->MetallicMapEnabled, m_EditingContext->MetallicMap);
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -167,32 +85,75 @@ namespace Flameberry {
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Albedo");
                 ImGui::TableNextColumn();
-                FL_REMOVE_LABEL(ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_EditingContext->Albedo)));
-                isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
+                FL_PUSH_WIDTH_MAX(ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_EditingContext->Albedo)));
+                m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Roughness");
                 ImGui::TableNextColumn();
-                FL_REMOVE_LABEL(ImGui::DragFloat("##Roughness", &m_EditingContext->Roughness, 0.01f, 0.0f, 1.0f));
-                isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
+                FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Roughness", &m_EditingContext->Roughness, 0.01f, 0.0f, 1.0f));
+                m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Metallic");
                 ImGui::TableNextColumn();
-                bool metallic = m_EditingContext->Metallic;
-                ImGui::Checkbox("##Metallic", &metallic);
-                isMaterialEdited = isMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
+                float metallic = m_EditingContext->Metallic;
+                FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Metallic", &metallic, 0.005f, 0.0f, 1.0f));
                 m_EditingContext->Metallic = metallic;
+                m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
             }
             ImGui::EndTable();
         }
         ImGui::End();
 
-        if (isMaterialEdited && !m_EditingContext->IsDerived)
+        if (m_IsMaterialEdited && !m_EditingContext->IsDerived)
             MaterialSerializer::Serialize(m_EditingContext, m_EditingContext->FilePath.c_str());
+    }
+
+    void MaterialEditorPanel::DrawMapControls(const char* label, bool& mapEnabledVar, std::shared_ptr<Texture2D>& map)
+    {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextWrapped(label);
+
+        ImGui::TableNextColumn();
+
+        auto labelStr = "##" + std::string(label);
+        ImGui::Checkbox(labelStr.c_str(), &mapEnabledVar);
+
+        m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
+
+        if (mapEnabledVar)
+        {
+            if (!map)
+                map = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>("Assets/Textures/Checkerboard.png");
+
+            ImGui::SameLine();
+            ImGui::Image(reinterpret_cast<ImTextureID>(map->GetDescriptorSet()), ImVec2{ 70, 70 });
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                {
+                    std::filesystem::path path = (const char*)payload->Data;
+                    const auto& ext = path.extension();
+                    FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+
+                    if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
+                    {
+                        map = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(path.string());
+                        m_IsMaterialEdited = true;
+                    }
+                    else
+                        FL_WARN("Bad File given as {0}!", label);
+                }
+                ImGui::EndDragDropTarget();
+            }
+        }
     }
 }

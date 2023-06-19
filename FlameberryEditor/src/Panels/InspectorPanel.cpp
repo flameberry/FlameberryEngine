@@ -7,7 +7,7 @@ namespace Flameberry {
     InspectorPanel::InspectorPanel()
         : m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_TripleDotsIcon(VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/triple_vertical_dots_icon.png"))
+        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/triple_vertical_dots_icon.png"))
     {
     }
 
@@ -15,7 +15,7 @@ namespace Flameberry {
         : m_Context(context),
         m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_TripleDotsIcon(VulkanTexture::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/triple_vertical_dots_icon.png"))
+        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/triple_vertical_dots_icon.png"))
     {
     }
 
@@ -230,14 +230,14 @@ namespace Flameberry {
 
                         ImGui::Text("Color");
                         ImGui::TableNextColumn();
-                        FL_REMOVE_LABEL(ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
+                        FL_PUSH_WIDTH_MAX(ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
                         ImGui::Text("Intensity");
                         ImGui::TableNextColumn();
-                        FL_REMOVE_LABEL(ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
+                        FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
                         ImGui::EndTable();
                     }
                 }

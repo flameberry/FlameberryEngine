@@ -8,10 +8,11 @@ namespace Flameberry {
     public:
         void SetEditingContext(const std::shared_ptr<Material>& editingContext) { m_EditingContext = editingContext; }
         void OnUIRender();
+        void DrawMapControls(const char* label, bool& mapEnabledVar, std::shared_ptr<Texture2D>& map);
     private:
         ImGuiTableFlags m_TableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
         std::shared_ptr<Material> m_EditingContext;
-        bool m_ShouldRename = false;
+        bool m_IsMaterialEdited = false, m_ShouldRename = false;
         char m_RenameBuffer[256] = { '\0' };
     };
 }

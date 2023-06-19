@@ -25,8 +25,11 @@ namespace Flameberry {
         alignas(16) glm::vec3 Albedo{ 1.0f };
         alignas(4) float Roughness = 0.2f;
         alignas(4) float Metallic = 0.0f;
-        alignas(4) float TextureMapEnabled = 0.0f;
-        alignas(4) float NormalMapEnabled = 0.0f;
+        alignas(4) float TextureMapEnabled = 0.0f,
+            NormalMapEnabled = 0.0f,
+            RoughnessMapEnabled = 0.0f,
+            AmbientOcclusionMapEnabled = 0.0f,
+            MetallicMapEnabled = 0.0f;
     };
 
     struct OutlinePushConstantData {
@@ -98,7 +101,16 @@ namespace Flameberry {
             vk_push_constant_range.size = sizeof(MeshData);
             vk_push_constant_range.offset = 0;
 
-            VkDescriptorSetLayout descriptorSetLayouts[] = { globalDescriptorLayout, m_SceneDescriptorSetLayout->GetLayout(), VulkanTexture::GetDescriptorLayout()->GetLayout(), VulkanTexture::GetDescriptorLayout()->GetLayout() };
+            VkDescriptorSetLayout descriptorSetLayouts[] = {
+                globalDescriptorLayout,
+                m_SceneDescriptorSetLayout->GetLayout(),
+                Texture2D::GetDescriptorLayout()->GetLayout(),
+                Texture2D::GetDescriptorLayout()->GetLayout(),
+                Texture2D::GetDescriptorLayout()->GetLayout(),
+                Texture2D::GetDescriptorLayout()->GetLayout(),
+                Texture2D::GetDescriptorLayout()->GetLayout()
+            };
+
             VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
 
             VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
@@ -186,7 +198,7 @@ namespace Flameberry {
 
         // Skybox Pipeline
         {
-            VkDescriptorSetLayout descriptorSetLayouts[] = { VulkanTexture::GetDescriptorLayout()->GetLayout() };
+            VkDescriptorSetLayout descriptorSetLayouts[] = { Texture2D::GetDescriptorLayout()->GetLayout() };
 
             VkPushConstantRange pushConstantRange{};
             pushConstantRange.offset = 0;
@@ -303,16 +315,25 @@ namespace Flameberry {
                     pushConstantMeshData.Metallic = materialAsset->Metallic;
                     pushConstantMeshData.TextureMapEnabled = materialAsset->TextureMapEnabled;
                     pushConstantMeshData.NormalMapEnabled = materialAsset->NormalMapEnabled;
+                    pushConstantMeshData.RoughnessMapEnabled = materialAsset->RoughnessMapEnabled;
+                    pushConstantMeshData.AmbientOcclusionMapEnabled = materialAsset->AmbientOcclusionMapEnabled;
+                    pushConstantMeshData.MetallicMapEnabled = materialAsset->MetallicMapEnabled;
                 }
 
                 std::vector<VkDescriptorSet> materialDescriptorSets;
-                materialDescriptorSets.resize(2, VulkanTexture::GetEmptyDescriptorSet());
+                materialDescriptorSets.resize(5, Texture2D::GetEmptyDescriptorSet());
 
                 if (isMaterialHandleValid) {
                     if (materialAsset->TextureMapEnabled)
                         materialDescriptorSets[0] = materialAsset->TextureMap->GetDescriptorSet();
                     if (materialAsset->NormalMapEnabled)
                         materialDescriptorSets[1] = materialAsset->NormalMap->GetDescriptorSet();
+                    if (materialAsset->RoughnessMapEnabled)
+                        materialDescriptorSets[2] = materialAsset->RoughnessMap->GetDescriptorSet();
+                    if (materialAsset->AmbientOcclusionMapEnabled)
+                        materialDescriptorSets[3] = materialAsset->AmbientOcclusionMap->GetDescriptorSet();
+                    if (materialAsset->MetallicMapEnabled)
+                        materialDescriptorSets[4] = materialAsset->MetallicMap->GetDescriptorSet();
                 }
 
                 Renderer::Submit([pipelineLayout, materialDescriptorSets, pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
@@ -368,16 +389,25 @@ namespace Flameberry {
                     pushConstantMeshData.Metallic = materialAsset->Metallic;
                     pushConstantMeshData.TextureMapEnabled = materialAsset->TextureMapEnabled;
                     pushConstantMeshData.NormalMapEnabled = materialAsset->NormalMapEnabled;
+                    pushConstantMeshData.RoughnessMapEnabled = materialAsset->RoughnessMapEnabled;
+                    pushConstantMeshData.AmbientOcclusionMapEnabled = materialAsset->AmbientOcclusionMapEnabled;
+                    pushConstantMeshData.MetallicMapEnabled = materialAsset->MetallicMapEnabled;
                 }
 
                 std::vector<VkDescriptorSet> materialDescriptorSets;
-                materialDescriptorSets.resize(2, VulkanTexture::GetEmptyDescriptorSet());
+                materialDescriptorSets.resize(5, Texture2D::GetEmptyDescriptorSet());
 
                 if (isMaterialHandleValid) {
                     if (materialAsset->TextureMapEnabled)
                         materialDescriptorSets[0] = materialAsset->TextureMap->GetDescriptorSet();
                     if (materialAsset->NormalMapEnabled)
                         materialDescriptorSets[1] = materialAsset->NormalMap->GetDescriptorSet();
+                    if (materialAsset->RoughnessMapEnabled)
+                        materialDescriptorSets[2] = materialAsset->RoughnessMap->GetDescriptorSet();
+                    if (materialAsset->AmbientOcclusionMapEnabled)
+                        materialDescriptorSets[3] = materialAsset->AmbientOcclusionMap->GetDescriptorSet();
+                    if (materialAsset->MetallicMapEnabled)
+                        materialDescriptorSets[4] = materialAsset->MetallicMap->GetDescriptorSet();
                 }
 
                 Renderer::Submit([pipelineLayout, materialDescriptorSets, pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {

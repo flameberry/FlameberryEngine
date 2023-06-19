@@ -128,11 +128,11 @@ namespace Flameberry {
 
             materialAsset->TextureMapEnabled = !mat.diffuse_texname.empty();
             if (materialAsset->TextureMapEnabled)
-                materialAsset->TextureMap = VulkanTexture::TryGetOrLoadTexture(mtlBaseDir + "/" + mat.diffuse_texname);
+                materialAsset->TextureMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(mtlBaseDir + "/" + mat.diffuse_texname);
 
             materialAsset->NormalMapEnabled = !mat.displacement_texname.empty();
             if (materialAsset->NormalMapEnabled)
-                materialAsset->NormalMap = VulkanTexture::TryGetOrLoadTexture(mtlBaseDir + "/" + mat.displacement_texname);
+                materialAsset->NormalMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(mtlBaseDir + "/" + mat.displacement_texname);
 
             materialUUIDs.emplace_back(materialAsset->GetUUID());
         }

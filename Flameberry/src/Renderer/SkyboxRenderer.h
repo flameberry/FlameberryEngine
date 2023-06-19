@@ -3,7 +3,7 @@
 #include <string>
 #include "PerspectiveCamera.h"
 
-#include "Vulkan/VulkanTexture.h"
+#include "Vulkan/Texture2D.h"
 #include "Vulkan/Pipeline.h"
 #include "Vulkan/DescriptorSet.h"
 #include "Vulkan/Buffer.h"
@@ -21,7 +21,7 @@ namespace Flameberry {
     private:
         std::string m_FolderPath;
 
-        std::shared_ptr<VulkanTexture> m_SkyboxTexture;
+        std::shared_ptr<Texture2D> m_SkyboxTexture;
         std::shared_ptr<Pipeline> m_SkyboxPipeline;
         VkPipelineLayout m_SkyboxPipelineLayout;
     };

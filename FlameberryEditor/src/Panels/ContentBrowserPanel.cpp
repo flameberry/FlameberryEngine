@@ -30,10 +30,10 @@ namespace Flameberry {
     ContentBrowserPanel::ContentBrowserPanel(const std::filesystem::path& projectDirectory)
         : m_ProjectDirectory(projectDirectory),
         m_CurrentDirectory("Assets"),
-        m_VkTextureSampler(VulkanTexture::GetDefaultSampler())
+        m_VkTextureSampler(Texture2D::GetDefaultSampler())
     {
         for (const auto& path : g_IconPaths)
-            m_IconTextures.emplace_back(std::make_shared<VulkanTexture>(path.c_str(), m_VkTextureSampler));
+            m_IconTextures.emplace_back(std::make_shared<Texture2D>(path.c_str(), m_VkTextureSampler));
     }
 
     ContentBrowserPanel::~ContentBrowserPanel()

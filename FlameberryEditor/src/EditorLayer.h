@@ -78,8 +78,8 @@ namespace Flameberry {
 
         bool m_EnableGrid = true;
 
-        std::shared_ptr<VulkanTexture> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon;
-        std::shared_ptr<VulkanTexture> m_CursorIconActive, m_TranslateIconActive, m_RotateIconActive, m_ScaleIconActive;
+        std::shared_ptr<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon;
+        std::shared_ptr<Texture2D> m_CursorIconActive, m_TranslateIconActive, m_RotateIconActive, m_ScaleIconActive;
 
         // Debug
         glm::vec2 m_ZNearFar{ 0.5f, 50.0f };

@@ -1,9 +1,15 @@
 UUID: 12364069548054299481
 Name: WhispyGrass
 Albedo: [1, 1, 1]
-Roughness: 0.370000005
-Metallic: false
+Roughness: 0.170000002
+Metallic: 0
 TextureMapEnabled: true
 TextureMap: Assets/Textures/whispy-grass-meadow-bl/wispy-grass-meadow_albedo.png
 NormalMapEnabled: true
 NormalMap: Assets/Textures/whispy-grass-meadow-bl/wispy-grass-meadow_normal-ogl.png
+RoughnessMapEnabled: true
+RoughnessMap: Assets/Textures/whispy-grass-meadow-bl/wispy-grass-meadow_roughness.png
+AmbientOcclusionMapEnabled: true
+AmbientOcclusionMap: Assets/Textures/whispy-grass-meadow-bl/wispy-grass-meadow_ao.png
+MetallicMapEnabled: true
+MetallicMap: Assets/Textures/whispy-grass-meadow-bl/wispy-grass-meadow_metallic.png

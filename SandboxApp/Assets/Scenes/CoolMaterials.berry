@@ -10,7 +10,7 @@ Environment:
     Intensity: 8
 Entities:
   - Entity: 10945834263659422250
-    TagComponent: BrickSphere
+    TagComponent: GrassSphere
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
@@ -18,7 +18,7 @@ Entities:
     MeshComponent:
       MeshUUID: 15427027041819506305
   - Entity: 17736961039119441584
-    TagComponent: StaticMesh
+    TagComponent: Cube
     TransformComponent:
       Translation: [2.3015914, 0, 0]
       Rotation: [0, 0, 0]
@@ -26,9 +26,9 @@ Entities:
     MeshComponent:
       MeshUUID: 4474729012079081437
   - Entity: 14711410567684292755
-    TagComponent: StaticMesh
+    TagComponent: Cylinder
     TransformComponent:
-      Translation: [-2.39869261, 0, 0]
+      Translation: [-2.26371527, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
@@ -47,5 +47,5 @@ Meshes:
   - Mesh: 11243613095244206381
     FilePath: Assets/Meshes/cylinder.obj
     NonDerivedMaterials:
-      - FlameberryMaterial: Assets/Materials/NewMaterial.fbmat
+      - FlameberryMaterial: Assets/Materials/SpaceCruiser.fbmat
         SubMeshIndex: 0

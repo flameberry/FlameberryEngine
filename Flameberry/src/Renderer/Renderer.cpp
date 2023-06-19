@@ -2,7 +2,7 @@
 
 #include "Vulkan/VulkanSwapChain.h"
 #include "Vulkan/VulkanContext.h"
-#include "Vulkan/VulkanTexture.h"
+#include "Vulkan/Texture2D.h"
 
 namespace Flameberry {
     std::vector<Renderer::Command> Renderer::s_CommandQueue;

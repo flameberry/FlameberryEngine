@@ -3,6 +3,8 @@
 #include <fstream>
 #include "Core/YamlUtils.h"
 
+#include "AssetManager/AssetManager.h"
+
 namespace Flameberry {
     std::shared_ptr<Material> Material::LoadFromFile(const char* path)
     {
@@ -27,6 +29,12 @@ namespace Flameberry {
         out << YAML::Key << "TextureMap" << YAML::Value << (material->TextureMapEnabled ? material->TextureMap->GetFilePath() : "");
         out << YAML::Key << "NormalMapEnabled" << YAML::Value << material->NormalMapEnabled;
         out << YAML::Key << "NormalMap" << YAML::Value << (material->NormalMapEnabled ? material->NormalMap->GetFilePath() : "");
+        out << YAML::Key << "RoughnessMapEnabled" << YAML::Value << material->RoughnessMapEnabled;
+        out << YAML::Key << "RoughnessMap" << YAML::Value << (material->RoughnessMapEnabled ? material->RoughnessMap->GetFilePath() : "");
+        out << YAML::Key << "AmbientOcclusionMapEnabled" << YAML::Value << material->AmbientOcclusionMapEnabled;
+        out << YAML::Key << "AmbientOcclusionMap" << YAML::Value << (material->AmbientOcclusionMapEnabled ? material->AmbientOcclusionMap->GetFilePath() : "");
+        out << YAML::Key << "MetallicMapEnabled" << YAML::Value << material->MetallicMapEnabled;
+        out << YAML::Key << "MetallicMap" << YAML::Value << (material->MetallicMapEnabled ? material->MetallicMap->GetFilePath() : "");
         out << YAML::EndMap;
 
         std::ofstream fout(path);
@@ -47,15 +55,27 @@ namespace Flameberry {
         material->Name = data["Name"].as<std::string>();
         material->Albedo = data["Albedo"].as<glm::vec3>();
         material->Roughness = data["Roughness"].as<float>();
-        material->Metallic = data["Metallic"].as<bool>();
+        material->Metallic = data["Metallic"].as<float>();
 
         material->TextureMapEnabled = data["TextureMapEnabled"].as<bool>();
-        if (material->TextureMapEnabled)
-            material->TextureMap = VulkanTexture::TryGetOrLoadTexture(data["TextureMap"].as<std::string>());
+        if (auto map = data["TextureMap"].as<std::string>(); !map.empty())
+            material->TextureMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(map);
 
         material->NormalMapEnabled = data["NormalMapEnabled"].as<bool>();
-        if (material->NormalMapEnabled)
-            material->NormalMap = VulkanTexture::TryGetOrLoadTexture(data["NormalMap"].as<std::string>());
+        if (auto map = data["NormalMap"].as<std::string>(); !map.empty())
+            material->NormalMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(map);
+
+        material->RoughnessMapEnabled = data["RoughnessMapEnabled"].as<bool>();
+        if (auto map = data["RoughnessMap"].as<std::string>(); !map.empty())
+            material->RoughnessMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(map);
+
+        material->AmbientOcclusionMapEnabled = data["AmbientOcclusionMapEnabled"].as<bool>();
+        if (auto map = data["AmbientOcclusionMap"].as<std::string>(); !map.empty())
+            material->AmbientOcclusionMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(map);
+
+        material->MetallicMapEnabled = data["MetallicMapEnabled"].as<bool>();
+        if (auto map = data["MetallicMap"].as<std::string>(); !map.empty())
+            material->MetallicMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(map);
 
         return material;
     }

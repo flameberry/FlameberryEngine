@@ -13,7 +13,7 @@ namespace Flameberry {
     enum class AssetType { NONE = 0, TEXTURE, STATIC_MESH, MATERIAL };
 
     template <typename Type> constexpr AssetType GetAssetTypeEnumFromType() {
-        if (std::is_same_v<Type, VulkanTexture>) return AssetType::TEXTURE;
+        if (std::is_same_v<Type, Texture2D>) return AssetType::TEXTURE;
         if (std::is_same_v<Type, StaticMesh>) return AssetType::STATIC_MESH;
         if (std::is_same_v<Type, Material>) return AssetType::MATERIAL;
         return AssetType::NONE;
@@ -28,8 +28,8 @@ namespace Flameberry {
     class AssetManager
     {
     public:
-        template <typename Tp>
-        static std::shared_ptr<Tp> TryGetOrLoadAssetFromFile(const std::string& path)
+        template <typename Tp, typename... Args>
+        static std::shared_ptr<Tp> TryGetOrLoadAssetFromFile(const std::string& path, Args... args)
         {
             constexpr AssetType assetType = GetAssetTypeEnumFromType<Tp>();
             static_assert(assetType != AssetType::NONE, "Cannot load asset of invalid Asset Type from file!");

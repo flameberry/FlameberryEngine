@@ -1,0 +1,15 @@
+UUID: 16309887774883198792
+Name: BricksMortar
+Albedo: [1, 1, 1]
+Roughness: 1
+Metallic: 0
+TextureMapEnabled: true
+TextureMap: Assets/Textures/bricks-mortar-bl/bricks-mortar-albedo.png
+NormalMapEnabled: true
+NormalMap: Assets/Textures/bricks-mortar-bl/bricks-mortar-normal-ogl.png
+RoughnessMapEnabled: true
+RoughnessMap: Assets/Textures/bricks-mortar-bl/bricks-mortar-roughness.png
+AmbientOcclusionMapEnabled: true
+AmbientOcclusionMap: Assets/Textures/bricks-mortar-bl/bricks-mortar-ao.png
+MetallicMapEnabled: true
+MetallicMap: Assets/Textures/bricks-mortar-bl/bricks-mortar-metallic.png

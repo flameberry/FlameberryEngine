@@ -12,7 +12,7 @@ namespace Flameberry {
     struct Environment
     {
         glm::vec3 ClearColor;
-        std::shared_ptr<VulkanTexture> EnvironmentMap;
+        std::shared_ptr<Texture2D> EnvironmentMap;
         bool EnableEnvironmentMap, Reflections;
         DirectionalLight DirLight;
 
