@@ -6,7 +6,7 @@
 #include "Vulkan/VulkanDebug.h"
 #include "Vulkan/VulkanRenderCommand.h"
 
-#define MAX_LINES 100
+#define MAX_LINES 500
 
 namespace Flameberry {
     std::shared_ptr<Pipeline> Renderer2D::s_LinePipeline;
@@ -52,7 +52,7 @@ namespace Flameberry {
             pipelineSpec.VertexInputBindingDescription.stride = sizeof(LineVertex);
             pipelineSpec.Samples = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
-            pipelineSpec.PolygonMode = VK_POLYGON_MODE_FILL;
+            pipelineSpec.PolygonMode = VK_POLYGON_MODE_LINE;
             pipelineSpec.PrimitiveTopology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
             pipelineSpec.CullMode = VK_CULL_MODE_NONE;
 
@@ -92,6 +92,7 @@ namespace Flameberry {
     {
         if (s_LineVertices.size())
         {
+            FL_ASSERT(s_LineVertices.size() <= 2 * MAX_LINES, "MAX_LINES limit reached!");
             s_LineVertexBuffer->WriteToBuffer(s_LineVertices.data(), s_LineVertices.size() * sizeof(LineVertex), 0);
             s_LinePipeline->Bind();
             uint32_t vertexCount = s_LineVertices.size();

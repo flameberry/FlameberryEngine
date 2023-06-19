@@ -23,6 +23,8 @@ namespace Flameberry {
         void OnDraw(VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene, const glm::vec2& framebufferSize, const fbentt::entity& selectedEntity = {});
         void OnDrawForShadowPass(VkPipelineLayout shadowMapPipelineLayout, const std::shared_ptr<Scene>& scene);
         void OnDrawForMousePickingPass(VkPipelineLayout mousePickingPipelineLayout, const std::shared_ptr<Scene>& scene);
+
+        void SubmitMesh(UUID handle, const glm::mat4& transform);
     private:
         std::shared_ptr<Pipeline> m_MeshPipeline;
         VkPipelineLayout m_VkPipelineLayout;

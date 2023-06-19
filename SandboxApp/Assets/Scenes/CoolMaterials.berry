@@ -47,5 +47,5 @@ Meshes:
   - Mesh: 11243613095244206381
     FilePath: Assets/Meshes/cylinder.obj
     NonDerivedMaterials:
-      - FlameberryMaterial: Assets/Materials/SpaceCruiser.fbmat
+      - FlameberryMaterial: Assets/Materials/BricksMortar.fbmat
         SubMeshIndex: 0

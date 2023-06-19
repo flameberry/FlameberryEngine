@@ -10,11 +10,11 @@
 #include "Renderer/Material.h"
 
 namespace Flameberry {
-    enum class AssetType { NONE = 0, TEXTURE, STATIC_MESH, MATERIAL };
+    enum class AssetType { NONE = 0, TEXTURE2D, STATICMESH, MATERIAL };
 
     template <typename Type> constexpr AssetType GetAssetTypeEnumFromType() {
-        if (std::is_same_v<Type, Texture2D>) return AssetType::TEXTURE;
-        if (std::is_same_v<Type, StaticMesh>) return AssetType::STATIC_MESH;
+        if (std::is_same_v<Type, Texture2D>) return AssetType::TEXTURE2D;
+        if (std::is_same_v<Type, StaticMesh>) return AssetType::STATICMESH;
         if (std::is_same_v<Type, Material>) return AssetType::MATERIAL;
         return AssetType::NONE;
     }
