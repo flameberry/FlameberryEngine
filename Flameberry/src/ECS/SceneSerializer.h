@@ -11,14 +11,10 @@ namespace Flameberry {
     class SceneSerializer
     {
     public:
-        SceneSerializer(const std::shared_ptr<Scene>& scene);
-        ~SceneSerializer();
-
-        bool SerializeScene(const std::string& scenePath);
-        bool DeserializeScene(const char* scenePath);
+        // static std::shared_ptr<Scene> DeserializeIntoNewScene(const char* path);
+        static bool DeserializeIntoExistingScene(const char* path, const std::shared_ptr<Scene>& destScene);
+        static void SerializeSceneToFile(const char* path, const std::shared_ptr<Scene>& srcScene);
     private:
-        void SerializeEntity(YAML::Emitter& out, const fbentt::entity& entity, std::vector<UUID>& assetUUIDs);
-    private:
-        std::shared_ptr<Scene> m_ActiveScene;
+        static void SerializeEntity(YAML::Emitter& out, const fbentt::entity& entity, const std::shared_ptr<Scene>& scene, std::vector<UUID>& assetUUIDs);
     };
 }

@@ -641,8 +641,8 @@ namespace Flameberry {
             if (ctrl_or_cmd)
                 m_EnableGrid = !m_EnableGrid;
             break;
-            }
-            }
+        }
+    }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -660,10 +660,7 @@ namespace Flameberry {
     void EditorLayer::SaveScene()
     {
         if (!m_OpenedScenePathIfExists.empty())
-        {
-            SceneSerializer serializer(m_ActiveScene);
-            serializer.SerializeScene(m_OpenedScenePathIfExists.c_str());
-        }
+            SceneSerializer::SerializeSceneToFile(m_OpenedScenePathIfExists.c_str(), m_ActiveScene);
         else
             SaveSceneAs();
     }
@@ -673,8 +670,7 @@ namespace Flameberry {
         std::string savePath = platform::SaveDialog();
         if (savePath != "")
         {
-            SceneSerializer serializer(m_ActiveScene);
-            serializer.SerializeScene(savePath.c_str());
+            SceneSerializer::SerializeSceneToFile(savePath.c_str(), m_ActiveScene);
             FL_LOG("Scene saved to path: {0}", savePath);
             return;
         }
@@ -686,9 +682,7 @@ namespace Flameberry {
         std::string sceneToBeLoaded = platform::OpenDialog();
         if (sceneToBeLoaded != "")
         {
-            SceneSerializer serializer(m_ActiveScene);
-            bool success = serializer.DeserializeScene(sceneToBeLoaded.c_str());
-            if (success)
+            if (SceneSerializer::DeserializeIntoExistingScene(sceneToBeLoaded.c_str(), m_ActiveScene))
             {
                 m_OpenedScenePathIfExists = sceneToBeLoaded;
                 FL_INFO("Loaded Scene: {0}", sceneToBeLoaded);
@@ -702,9 +696,7 @@ namespace Flameberry {
     {
         if (!path.empty())
         {
-            SceneSerializer serializer(m_ActiveScene);
-            bool success = serializer.DeserializeScene(path.c_str());
-            if (success)
+            if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
                 m_OpenedScenePathIfExists = path;
         }
     }
@@ -884,4 +876,4 @@ namespace Flameberry {
 
         m_ShadowMapPipeline = Pipeline::Create(pipelineSpec);
     }
-        }
+}
