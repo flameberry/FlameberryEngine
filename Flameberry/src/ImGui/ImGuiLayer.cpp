@@ -274,6 +274,8 @@ namespace Flameberry {
         style.WindowMenuButtonPosition = ImGuiDir_Right;
         style.FrameRounding = 2.0f;
         style.CellPadding = ImVec2(8, 5);
+        style.ScrollbarSize = 12;
+        style.PopupRounding = 3;
 
         auto& colors = style.Colors;
 

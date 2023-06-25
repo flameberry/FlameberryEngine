@@ -58,6 +58,19 @@ list(APPEND FL_GRAPHICS_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 
 string(APPEND FL_VULKAN_PATH "${Vulkan_INCLUDE_DIRS}")
 
+# Build Shaders
+find_program(GLSL_VALIDATOR glslangValidator HINTS 
+    ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
+    /usr/bin 
+    /usr/local/bin 
+    ${VULKAN_SDK_PATH}/Bin
+    ${VULKAN_SDK_PATH}/Bin32
+    $ENV{VULKAN_SDK}/Bin/ 
+    $ENV{VULKAN_SDK}/Bin32/
+)
+
+message(STATUS "Found GLSL_VALIDATOR at ${GLSL_VALIDATOR}")
+
 if (APPLE)
     string(REGEX REPLACE "/include" "" FL_VULKAN_PATH ${FL_VULKAN_PATH})
 

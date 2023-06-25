@@ -71,13 +71,22 @@ namespace Flameberry {
 
         constexpr glm::vec3 lineColor(0.35f);
         constexpr glm::vec3 boldLineColor(0.7f);
+        // constexpr glm::vec3 redLineColor(0.8f, 0.1f, 0.15f);
+        // constexpr glm::vec3 blueLineColor(0.1f, 0.25f, 0.8f);
+        // constexpr glm::vec3 redLineColor(1, 0, 0);
+        // constexpr glm::vec3 blueLineColor(0, 0, 1);
+        constexpr glm::vec3 redLineColor(1.0f, 0.235f, 0.286f);
+        constexpr glm::vec3 blueLineColor(0.286f, 0.235f, 1.0f);
 
         for (int i = -gridSize; i <= gridSize; i++)
         {
-            bool is_bold = i == 0 || i == start || i == -start;
+            // bool is_bold = i == 0 || i == start || i == -start;
+            bool is_bold = i == 0;
 
-            Renderer2D::AddLine({ current, 0.0f, start }, { current, 0.0f, start + length }, is_bold ? boldLineColor : lineColor);
-            Renderer2D::AddLine({ start, 0.0f, current }, { start + length, 0.0f, current }, is_bold ? boldLineColor : lineColor);
+            Renderer2D::AddLine({ current, 0.0f, start }, { current, 0.0f, start + length }, is_bold ? blueLineColor : lineColor);
+            Renderer2D::AddLine({ start, 0.0f, current }, { start + length, 0.0f, current }, is_bold ? redLineColor : lineColor);
+            // Renderer2D::AddLine({ current, 0.0f, start }, { current, 0.0f, start + length }, is_bold ? boldLineColor : lineColor);
+            // Renderer2D::AddLine({ start, 0.0f, current }, { start + length, 0.0f, current }, is_bold ? boldLineColor : lineColor);
             current += squareSize;
         }
     }

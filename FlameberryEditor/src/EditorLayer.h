@@ -28,8 +28,8 @@ namespace Flameberry {
         void InvalidateShadowMapImGuiDescriptorSet(uint32_t index);
 
         void SaveScene();
+        void SaveSceneAs();
         void OpenScene();
-        void SaveScene(const std::string& path);
         void OpenScene(const std::string& path);
     private:
         void ShowMenuBar();

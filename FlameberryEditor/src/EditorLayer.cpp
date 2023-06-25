@@ -6,7 +6,6 @@
 
 namespace Flameberry {
     struct CameraUniformBufferObject { glm::mat4 ViewProjectionMatrix; glm::mat4 LightViewProjectionMatrix; };
-
     EditorLayer::EditorLayer(const std::string_view& projectPath)
         : m_ProjectPath(projectPath), m_ActiveCameraController(PerspectiveCameraSpecification{
             glm::vec3(0.0f, 2.0f, 4.0f),
@@ -17,7 +16,14 @@ namespace Flameberry {
             1000.0f
             }
         )
-    {}
+    {
+#ifdef __APPLE__
+        platform::SetSaveSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::SaveScene));
+        platform::SetSaveSceneAsCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
+        platform::SetOpenSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::OpenScene));
+        platform::DrawNativeMacOSMenuBar();
+#endif
+    }
 
     void EditorLayer::OnCreate()
     {
@@ -328,6 +334,7 @@ namespace Flameberry {
             OpenScene(m_ScenePathToBeOpened);
             m_ShouldOpenAnotherScene = false;
             m_ScenePathToBeOpened = "";
+            m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
         }
     }
 
@@ -342,7 +349,9 @@ namespace Flameberry {
 
     void EditorLayer::OnUIRender()
     {
-        // ShowMenuBar();
+#ifndef __APPLE__
+        ShowMenuBar();
+#endif
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         m_DidViewportBegin = ImGui::Begin("Viewport");
@@ -594,17 +603,22 @@ namespace Flameberry {
         {
         case GLFW_KEY_O:
             if (ctrl_or_cmd) {
-                m_ShouldOpenAnotherScene = true;
-                m_ScenePathToBeOpened = platform::OpenDialog();
+#ifndef __APPLE__
+                // m_ShouldOpenAnotherScene = true;
+                // m_ScenePathToBeOpened = platform::OpenDialog();
+                OpenScene();
+#endif
             }
             break;
         case GLFW_KEY_S:
             if (ctrl_or_cmd)
             {
+#ifndef __APPLE__
                 if (shift || m_OpenedScenePathIfExists.empty())
                     SaveScene();
                 else
                     SaveScene(m_OpenedScenePathIfExists);
+#endif
             }
             break;
         case GLFW_KEY_Q:
@@ -627,8 +641,8 @@ namespace Flameberry {
             if (ctrl_or_cmd)
                 m_EnableGrid = !m_EnableGrid;
             break;
-        }
-    }
+            }
+            }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -644,6 +658,17 @@ namespace Flameberry {
     }
 
     void EditorLayer::SaveScene()
+    {
+        if (!m_OpenedScenePathIfExists.empty())
+        {
+            SceneSerializer serializer(m_ActiveScene);
+            serializer.SerializeScene(m_OpenedScenePathIfExists.c_str());
+        }
+        else
+            SaveSceneAs();
+    }
+
+    void EditorLayer::SaveSceneAs()
     {
         std::string savePath = platform::SaveDialog();
         if (savePath != "")
@@ -673,15 +698,6 @@ namespace Flameberry {
         FL_ERROR("Failed to load scene!");
     }
 
-    void EditorLayer::SaveScene(const std::string& path)
-    {
-        if (!path.empty())
-        {
-            SceneSerializer serializer(m_ActiveScene);
-            serializer.SerializeScene(path.c_str());
-        }
-    }
-
     void EditorLayer::OpenScene(const std::string& path)
     {
         if (!path.empty())
@@ -701,14 +717,9 @@ namespace Flameberry {
             if (ImGui::BeginMenu("File"))
             {
                 if (ImGui::MenuItem("Save As", "Cmd+Shift+S"))
-                    SaveScene();
+                    SaveSceneAs();
                 if (ImGui::MenuItem("Save", "Cmd+S"))
-                {
-                    if (m_OpenedScenePathIfExists.empty())
-                        SaveScene();
-                    else
-                        SaveScene(m_OpenedScenePathIfExists);
-                }
+                    SaveScene();
                 if (ImGui::MenuItem("Open", "Cmd+O"))
                     OpenScene();
                 ImGui::EndMenu();
@@ -873,4 +884,4 @@ namespace Flameberry {
 
         m_ShadowMapPipeline = Pipeline::Create(pipelineSpec);
     }
-}
+        }

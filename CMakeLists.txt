@@ -20,19 +20,6 @@ set(FL_PROJ_GENERATOR "${CMAKE_GENERATOR}")
 include(CMake/Dependencies.cmake)
 include(CMake/CMakeUtils.cmake)
 
-# Build Shaders
-find_program(GLSL_VALIDATOR glslangValidator HINTS 
-    ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
-    /usr/bin 
-    /usr/local/bin 
-    ${VULKAN_SDK_PATH}/Bin
-    ${VULKAN_SDK_PATH}/Bin32
-    $ENV{VULKAN_SDK}/Bin/ 
-    $ENV{VULKAN_SDK}/Bin32/
-)
-
-message(STATUS "Found GLSL_VALIDATOR at ${GLSL_VALIDATOR}")
- 
 # get all shader files in shaders directory
 file(GLOB_RECURSE GLSL_SOURCE_FILES
     "${FL_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.frag"

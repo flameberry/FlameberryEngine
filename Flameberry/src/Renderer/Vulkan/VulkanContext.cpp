@@ -12,7 +12,7 @@ namespace Flameberry {
     const std::vector<const char*> VulkanContext::s_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
 
 #ifdef __APPLE__
-    std::vector<const char*> VulkanContext::s_VkDeviceExtensions = { "VK_KHR_portability_subset", VK_KHR_SWAPCHAIN_EXTENSION_NAME /*, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME*/ };
+    std::vector<const char*> VulkanContext::s_VkDeviceExtensions = { "VK_KHR_portability_subset", VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 #else
     std::vector<const char*> VulkanContext::s_VkDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 #endif
