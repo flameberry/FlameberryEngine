@@ -29,8 +29,7 @@ namespace Flameberry {
         VkFormat format = VK_FORMAT_UNDEFINED;
         VkDeviceSize imageSize = 0;
 
-        auto file = std::filesystem::path(texturePath);
-        if (file.extension() == ".hdr")
+        if (stbi_is_hdr(texturePath.c_str()))
         {
             pixels = stbi_loadf(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
             mipLevels = 1;
@@ -56,7 +55,7 @@ namespace Flameberry {
         m_TextureImageSpecification.Tiling = VK_IMAGE_TILING_OPTIMAL;
         m_TextureImageSpecification.Usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         m_TextureImageSpecification.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        m_TextureImageSpecification.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+        m_TextureImageSpecification.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
         m_TextureImage = Image::Create(m_TextureImageSpecification);
 
@@ -168,7 +167,7 @@ namespace Flameberry {
         imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
         imageSpec.Usage = VK_IMAGE_USAGE_SAMPLED_BIT;
         imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        imageSpec.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
         s_EmptyImage = Image::Create(imageSpec);
 

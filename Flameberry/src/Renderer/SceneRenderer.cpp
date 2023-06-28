@@ -40,9 +40,8 @@ namespace Flameberry {
     SceneRenderer::SceneRenderer(VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass, const std::vector<VkImageView>& shadowMapImageViews, VkSampler shadowMapSampler)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-
-        // Creating Mesh Pipeline
         {
+            // Creating Mesh Pipeline
             VkDeviceSize uniformBufferSize = sizeof(SceneUniformBufferData);
 
             BufferSpecification bufferSpec;
@@ -137,6 +136,8 @@ namespace Flameberry {
             };
             pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
             pipelineSpec.Samples = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+
+            pipelineSpec.BlendingEnable = true;
 
             pipelineSpec.StencilTestEnable = true;
             pipelineSpec.StencilOpState.failOp = VK_STENCIL_OP_KEEP;

@@ -65,32 +65,4 @@ namespace Flameberry {
         DescriptorSetSpecification m_DescSetSpec;
         VkDescriptorSet m_DescriptorSet;
     };
-
-    // class VulkanDescriptorLayout
-    // {
-    // public:
-    //     VulkanDescriptorLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-    //     ~VulkanDescriptorLayout();
-
-    //     VkDescriptorSetLayout GetLayout() const { return m_VkDescriptorSetLayout; }
-    // private:
-    //     VkDescriptorSetLayout m_VkDescriptorSetLayout;
-    //     std::unordered_map<uint32_t, VkDescriptorType> m_DescriptorTypeMap;
-
-    //     friend class VulkanDescriptorWriter;
-    // };
-
-    // class VulkanDescriptorWriter
-    // {
-    // public:
-    //     VulkanDescriptorWriter(VulkanDescriptorLayout& descriptorLayout);
-    //     ~VulkanDescriptorWriter();
-
-    //     void WriteBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo);
-    //     void WriteImage(uint32_t binding, VkDescriptorImageInfo* imageInfo);
-    //     void Update(VkDescriptorSet& descriptorSet);
-    // private:
-    //     std::vector<VkWriteDescriptorSet> m_VkWrites;
-    //     VulkanDescriptorLayout& m_DescriptorLayout;
-    // };
 }

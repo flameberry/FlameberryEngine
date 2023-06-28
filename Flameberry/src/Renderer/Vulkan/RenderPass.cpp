@@ -3,6 +3,7 @@
 #include <array>
 
 #include "VulkanDebug.h"
+#include "VulkanRenderCommand.h"
 #include "VulkanContext.h"
 #include "Renderer/Renderer.h"
 
@@ -75,7 +76,7 @@ namespace Flameberry {
             attachments[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             attachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-            if (IsDepthAttachment(format))
+            if (VulkanRenderCommand::DoesFormatSupportDepthAttachment(format))
             {
                 attachments[i].loadOp = framebufferSpec.DepthLoadOp;
                 attachments[i].storeOp = framebufferSpec.DepthStoreOp;
@@ -150,7 +151,7 @@ namespace Flameberry {
                 for (uint32_t i = 0; i < framebufferSpec.Attachments.size(); i++)
                 {
                     auto& value = clearValues[i];
-                    if (framebufferSpec.Attachments[i] == VK_FORMAT_D32_SFLOAT || framebufferSpec.Attachments[i] == VK_FORMAT_D32_SFLOAT_S8_UINT || framebufferSpec.Attachments[i] == VK_FORMAT_D24_UNORM_S8_UINT)
+                    if (VulkanRenderCommand::DoesFormatSupportDepthAttachment(framebufferSpec.Attachments[i]))
                         value.depthStencil = framebufferSpec.DepthStencilClearValue;
                     else
                         value.color = framebufferSpec.ClearColorValue;

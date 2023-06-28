@@ -1,11 +1,15 @@
-#include "Utils.h"
+#include "Platform/PlatformUtils.h"
 
 #import <Cocoa/Cocoa.h>
 #import <objc/objc-class.h>
 
 #import <string>
 
+#define GLFW_EXPOSE_NATIVE_COCOA
+#import <GLFW/glfw3native.h>
+
 #include "Core/Core.h"
+#include "Core/Application.h"
 
 static std::function<void()> g_SaveSceneCallback, g_SaveSceneAsCallback, g_OpenSceneCallback;
 
@@ -66,9 +70,67 @@ static std::function<void()> g_SaveSceneCallback, g_SaveSceneAsCallback, g_OpenS
 
 static MenuBar* g_MenuBar;
 
+@interface TitlebarView : NSView
+- (void) drawRect:(NSRect)dirtyRect;
+@end
+
+@implementation TitlebarView
+- (void) drawRect:(NSRect)dirtyRect
+{
+}
+@end
+
 namespace Flameberry {
     namespace platform {
-        void DrawNativeMacOSMenuBar()
+        void CreateCustomTitleBar()
+        {
+            NSWindow* window = glfwGetCocoaWindow(Application::Get().GetWindow().GetGLFWwindow());
+            
+            [window setStyleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView];
+            [window setBackingType:NSBackingStoreBuffered];
+            [window setTitleVisibility:NSWindowTitleHidden];
+//
+//            NSTextField *textField = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 100, 22)];
+//            [textField setStringValue:@"Flameberry Engine"];
+//            [textField setTextColor:[NSColor whiteColor]];
+//            [textField setBordered:NO];
+//            [textField setDrawsBackground:NO];
+//
+//            NSView *accessoryView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, window.contentView.frame.size.width, 36)];
+//            [accessoryView setWantsLayer:YES];
+//            [accessoryView.layer setBackgroundColor:[[NSColor redColor] CGColor]];
+//            [accessoryView addSubview:textField];
+//            [accessoryView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+//
+////            NSViewController *accessoryViewController = [[NSTitlebarAccessoryViewController alloc] init];
+////            [accessoryViewController setView:accessoryView];
+////            accessoryViewController.layoutAttribute = NSLayoutAttributeTop;
+//
+////            [window addTitlebarAccessoryViewController:accessoryViewController];
+//            [window setTitlebarAppearsTransparent:YES];
+//            [window.contentView addSubview:accessoryView];
+//
+//            [window makeKeyAndOrderFront:nil];
+
+            // Create a custom view for the title bar
+            NSView *titleBarView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 22)];
+            [titleBarView setWantsLayer:YES];
+            [titleBarView.layer setBackgroundColor:[[NSColor redColor] CGColor]];
+            
+            // Get the superview of the content view
+            NSView *themeFrame = [[window contentView] superview];
+            
+            // Get the first subview of the superview
+            NSView *firstSubview = [[themeFrame subviews] objectAtIndex:0];
+            
+            // Set the autoresizing mask of the custom view
+            [titleBarView setAutoresizingMask:(NSViewMinYMargin | NSViewWidthSizable)];
+            
+            // Add the custom view to the superview
+            [themeFrame addSubview:titleBarView positioned:NSWindowAbove relativeTo:firstSubview];
+        }
+        
+        void CreateMenuBar()
         {
             g_MenuBar = [[MenuBar alloc]init];
             [g_MenuBar DrawNative];
@@ -89,7 +151,7 @@ namespace Flameberry {
             g_OpenSceneCallback = callback;
         }
 
-        void OpenInFinder(const char* path)
+        void OpenInExplorerOrFinder(const char* path)
         {
             NSString* _NSPath = [NSString stringWithFormat:@"file://%s", path];
             NSURL* url = [NSURL URLWithString:_NSPath];
@@ -97,7 +159,7 @@ namespace Flameberry {
             [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:fileURLs];
         }
 
-        std::string OpenDialog()
+        std::string OpenFile()
         { 
             NSWindow *keyWindow = [NSApp keyWindow];
             NSArray* URLs;
@@ -115,7 +177,7 @@ namespace Flameberry {
             return "";    
         }
 
-        std::string SaveDialog()
+        std::string SaveFile()
         {
             NSSavePanel *panel = [NSSavePanel savePanel];
             NSString *fileName = @"Untitled.berry";

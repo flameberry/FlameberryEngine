@@ -19,6 +19,7 @@ namespace Flameberry {
     class VulkanRenderCommand
     {
     public:
+        static bool DoesFormatSupportDepthAttachment(VkFormat format);
         static void WritePixelFromImageToBuffer(VkBuffer buffer, VkImage image, const glm::vec2& pixelOffset);
         static void SetViewport(float x, float y, float width, float height);
         static void SetScissor(VkOffset2D offset, VkExtent2D extent);

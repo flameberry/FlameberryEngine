@@ -12,6 +12,15 @@
 #include "Renderer/Renderer.h"
 
 namespace Flameberry {
+    bool VulkanRenderCommand::DoesFormatSupportDepthAttachment(VkFormat format)
+    {
+        return format == VK_FORMAT_D32_SFLOAT
+            || format == VK_FORMAT_D16_UNORM
+            || format == VK_FORMAT_D16_UNORM_S8_UINT
+            || format == VK_FORMAT_D24_UNORM_S8_UINT
+            || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
+    }
+
     void VulkanRenderCommand::WritePixelFromImageToBuffer(VkBuffer buffer, VkImage image, const glm::vec2& pixelOffset)
     {
         const auto& device = VulkanContext::GetCurrentDevice();

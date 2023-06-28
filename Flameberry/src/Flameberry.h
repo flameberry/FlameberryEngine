@@ -21,7 +21,7 @@
 #include "Core/Profiler.h"
 #include "Core/PatternMatching.h"
 
-#include "Platform/Utils.h"
+#include "Platform/PlatformUtils.h"
 #include "ImGui/ImGuiLayer.h"
 #include "AssetManager/AssetManager.h"
 
@@ -33,7 +33,6 @@
 #include "Renderer/Vulkan/VulkanDebug.h"
 #include "Renderer/Vulkan/RenderPass.h"
 #include "Renderer/SceneRenderer.h"
-#include "Renderer/SkyboxRenderer.h"
 #include "Renderer/Renderer2D.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/EditorCameraController.h"

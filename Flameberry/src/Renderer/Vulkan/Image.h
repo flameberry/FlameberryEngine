@@ -4,21 +4,28 @@
 #include <vulkan/vulkan.h>
 
 namespace Flameberry {
+    struct ImageViewSpecification
+    {
+        VkImageAspectFlags AspectFlags;
+        uint32_t BaseMipLevel = 0, BaseArrayLayer = 0, LayerCount = 1;
+    };
+
     struct ImageSpecification
     {
         uint32_t Width, Height;
-        uint32_t MipLevels, Samples;
+        uint32_t Samples = 1, MipLevels = 1, ArrayLayers = 1;
         VkFormat Format;
         VkImageTiling Tiling;
         VkImageUsageFlags Usage;
         VkMemoryPropertyFlags MemoryProperties;
-        VkImageAspectFlags ImageAspectFlags;
+        ImageViewSpecification ViewSpecification;
     };
 
     class Image
     {
     public:
         Image(const ImageSpecification& specification);
+        Image(const std::shared_ptr<Image>& image, const ImageViewSpecification& viewSpecification);
         ~Image();
 
         void GenerateMipMaps();
@@ -40,5 +47,7 @@ namespace Flameberry {
 
         VkMemoryRequirements m_MemoryRequirements;
         ImageSpecification m_ImageSpec;
+
+        uint32_t* m_ReferenceCount;
     };
 }

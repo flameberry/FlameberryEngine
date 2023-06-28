@@ -21,12 +21,16 @@ namespace Flameberry {
         platform::SetSaveSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::SaveScene));
         platform::SetSaveSceneAsCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
         platform::SetOpenSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::OpenScene));
-        platform::DrawNativeMacOSMenuBar();
+        platform::CreateMenuBar();
 #endif
     }
 
     void EditorLayer::OnCreate()
     {
+        m_VkTextureSampler = Texture2D::GetDefaultSampler();
+        auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
+        uint32_t imageCount = swapchain->GetSwapChainImageCount();
+
         {
             FramebufferSpecification shadowMapFramebufferSpec;
             shadowMapFramebufferSpec.Width = 2048;
@@ -38,15 +42,10 @@ namespace Flameberry {
 
             RenderPassSpecification shadowMapRenderPassSpec;
 
-            uint32_t imageCount = 3;
-            m_ShadowMapFramebuffers.resize(imageCount);
             shadowMapRenderPassSpec.TargetFramebuffers.resize(imageCount);
 
             for (uint32_t i = 0; i < imageCount; i++)
-            {
-                m_ShadowMapFramebuffers[i] = Framebuffer::Create(shadowMapFramebufferSpec);
-                shadowMapRenderPassSpec.TargetFramebuffers[i] = m_ShadowMapFramebuffers[i];
-            }
+                shadowMapRenderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(shadowMapFramebufferSpec);
 
             m_ShadowMapRenderPass = RenderPass::Create(shadowMapRenderPassSpec);
         }
@@ -119,7 +118,6 @@ namespace Flameberry {
 
         m_MousePickingBuffer = std::make_unique<Buffer>(mousePickingBufferSpec);
 
-        auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
         {
             VkFormat swapChainImageFormat = swapchain->GetSwapChainImageFormat();
             VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
@@ -131,18 +129,14 @@ namespace Flameberry {
             sceneFramebufferSpec.Samples = sampleCount;
             sceneFramebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
             sceneFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+            // Used to not store multisample color attachment
+            sceneFramebufferSpec.ColorStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
             RenderPassSpecification sceneRenderPassSpec;
 
-            uint32_t imageCount = swapchain->GetImages().size();
-            m_SceneFramebuffers.resize(imageCount);
             sceneRenderPassSpec.TargetFramebuffers.resize(imageCount);
-
             for (uint32_t i = 0; i < imageCount; i++)
-            {
-                m_SceneFramebuffers[i] = Framebuffer::Create(sceneFramebufferSpec);
-                sceneRenderPassSpec.TargetFramebuffers[i] = m_SceneFramebuffers[i];
-            }
+                sceneRenderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(sceneFramebufferSpec);
 
             m_SceneRenderPass = RenderPass::Create(sceneRenderPassSpec);
         }
@@ -156,30 +150,26 @@ namespace Flameberry {
             mousePickingFramebufferSpec.ClearColorValue = { .int32 = { -1 } };
             mousePickingFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
 
-            m_MousePickingFramebuffer = Framebuffer::Create(mousePickingFramebufferSpec);
-
             RenderPassSpecification mousePickingRenderPassSpec;
-            mousePickingRenderPassSpec.TargetFramebuffers = { m_MousePickingFramebuffer };
+            mousePickingRenderPassSpec.TargetFramebuffers = { Framebuffer::Create(mousePickingFramebufferSpec) };
 
             m_MousePickingRenderPass = RenderPass::Create(mousePickingRenderPassSpec);
         }
 
         CreateMousePickingPipeline();
+        CreateCompositePipeline();
 
         std::vector<VkImageView> views;
-        for (const auto& framebuffer : m_ShadowMapFramebuffers)
-            views.push_back(framebuffer->GetAttachmentImageView(0));
+        for (const auto& framebuffer : m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers)
+            views.push_back(framebuffer->GetDepthAttachment()->GetImageView());
         m_SceneRenderer = std::make_unique<SceneRenderer>(m_CameraBufferDescSetLayout->GetLayout(), m_SceneRenderPass, views, m_ShadowMapSampler);
 
-        m_VkTextureSampler = Texture2D::GetDefaultSampler();
-
-        uint32_t imageCount = swapchain->GetImages().size();
         m_ViewportDescriptorSets.resize(imageCount);
         for (int i = 0; i < imageCount; i++)
         {
             m_ViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
                 m_VkTextureSampler,
-                m_SceneFramebuffers[i]->GetAttachmentImageView(2),
+                m_SceneRenderPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetImageView(),
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
         }
@@ -189,12 +179,20 @@ namespace Flameberry {
         {
             m_ShadowMapViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
                 m_VkTextureSampler,
-                m_ShadowMapFramebuffers[i]->GetAttachmentImageView(0),
+                m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView(),
                 VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
             );
         }
 
-        // m_SkyboxRenderer = std::make_unique<SkyboxRenderer>(m_SceneRenderPass);
+        m_CompositePassViewportDescriptorSets.resize(imageCount);
+        for (int i = 0; i < imageCount; i++)
+        {
+            m_CompositePassViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
+                m_VkTextureSampler,
+                m_CompositePass->GetSpecification().TargetFramebuffers[i]->GetColorAttachment(0)->GetImageView(),
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+        }
 
         Renderer2D::Init(m_CameraBufferDescSetLayout->GetLayout(), m_SceneRenderPass);
     }
@@ -202,6 +200,37 @@ namespace Flameberry {
     void EditorLayer::OnUpdate(float delta)
     {
         FL_PROFILE_SCOPE("Editor_OnUpdate");
+
+        // Update all image index related descriptors or framebuffers here
+        Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                if (m_SceneRenderPass->GetSpecification().TargetFramebuffers[imageIndex]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_SceneRenderPass->GetRenderPass()))
+                {
+                    InvalidateViewportImGuiDescriptorSet(imageIndex);
+
+                    m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, {
+                         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                         .imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetImageView(),
+                         .sampler = m_VkTextureSampler
+                        }
+                    );
+
+                    m_CompositePassDescriptorSets[imageIndex]->WriteImage(1, {
+                         .imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL,
+                         .imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[imageIndex]->GetDepthAttachment()->GetImageView(),
+                         .sampler = m_VkTextureSampler
+                        }
+                    );
+
+                    m_CompositePassDescriptorSets[imageIndex]->Update();
+                }
+                if (m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass()))
+                    InvalidateCompositePassImGuiDescriptorSet(imageIndex);
+
+                VkClearColorValue clearColor = { m_ActiveScene->GetClearColor().x, m_ActiveScene->GetClearColor().y, m_ActiveScene->GetClearColor().z, 1.0f };
+                m_SceneRenderPass->GetSpecification().TargetFramebuffers[imageIndex]->SetClearColorValue(clearColor);
+            }
+        );
 
         uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
 
@@ -234,17 +263,6 @@ namespace Flameberry {
             m_ShadowMapRenderPass->End();
         }
 
-        for (uint32_t i = 0; i < m_SceneFramebuffers.size(); i++)
-        {
-            bool isFramebufferResized = m_SceneFramebuffers[i]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_SceneRenderPass->GetRenderPass());
-            if (isFramebufferResized)
-            {
-                InvalidateViewportImGuiDescriptorSet(i);
-                InvalidateShadowMapImGuiDescriptorSet(i);
-            }
-            m_SceneFramebuffers[i]->SetClearColorValue({ m_ActiveScene->GetClearColor().x, m_ActiveScene->GetClearColor().y, m_ActiveScene->GetClearColor().z, 1.0f });
-        }
-
         {
             FL_PROFILE_SCOPE("Viewport Render Pass");
             m_SceneRenderPass->Begin();
@@ -273,9 +291,28 @@ namespace Flameberry {
             m_SceneRenderPass->End();
         }
 
+        {
+            // Composite pass
+            m_CompositePass->Begin();
+            m_CompositePipeline->Bind();
+
+            auto pipelineLayout = m_CompositePipelineLayout;
+            std::vector<VkDescriptorSet> descriptorSets(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+            for (uint8_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+                descriptorSets[i] = m_CompositePassDescriptorSets[0]->GetDescriptorSet();
+
+            Renderer::Submit([&, pipelineLayout, descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                {
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[imageIndex], 0, nullptr);
+                    vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+                }
+            );
+            m_CompositePass->End();
+        }
+
         if (m_IsMousePickingBufferReady)
         {
-            VulkanRenderCommand::WritePixelFromImageToBuffer(m_MousePickingBuffer->GetBuffer(), m_MousePickingFramebuffer->GetAttachmentImage(0), { m_MouseX, m_ViewportSize.y - m_MouseY });
+            VulkanRenderCommand::WritePixelFromImageToBuffer(m_MousePickingBuffer->GetBuffer(), m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetImage(), { m_MouseX, m_ViewportSize.y - m_MouseY });
             m_MousePickingBuffer->MapMemory(sizeof(int32_t));
             int32_t* data = (int32_t*)m_MousePickingBuffer->GetMappedMemory();
             int32_t entityIndex = data[0];
@@ -307,7 +344,7 @@ namespace Flameberry {
                 FL_PROFILE_SCOPE("Last Mouse Picking Pass");
                 m_IsMousePickingBufferReady = true;
 
-                bool shouldResize = m_MousePickingFramebuffer->Resize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
+                bool shouldResize = m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
 
                 m_MousePickingRenderPass->Begin(0, { m_MouseX, (int)(m_ViewportSize.y - m_MouseY) }, { 1, 1 });
 
@@ -330,7 +367,6 @@ namespace Flameberry {
 
         if (m_ShouldOpenAnotherScene)
         {
-            VulkanContext::GetCurrentDevice()->WaitIdleGraphicsQueue();
             OpenScene(m_ScenePathToBeOpened);
             m_ShouldOpenAnotherScene = false;
             m_ScenePathToBeOpened = "";
@@ -345,6 +381,7 @@ namespace Flameberry {
         vkDestroySampler(device, m_ShadowMapSampler, nullptr);
         vkDestroyPipelineLayout(device, m_ShadowMapPipelineLayout, nullptr);
         vkDestroyPipelineLayout(device, m_MousePickingPipelineLayout, nullptr);
+        vkDestroyPipelineLayout(device, m_CompositePipelineLayout, nullptr);
     }
 
     void EditorLayer::OnUIRender()
@@ -352,7 +389,6 @@ namespace Flameberry {
 #ifndef __APPLE__
         ShowMenuBar();
 #endif
-
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         m_DidViewportBegin = ImGui::Begin("Viewport");
 
@@ -528,14 +564,26 @@ namespace Flameberry {
             ImGui::PopStyleVar();
 
             ImVec2 shadowMapViewportSize = ImGui::GetContentRegionAvail();
-            m_ShadowMapViewportSize = { shadowMapViewportSize.x, shadowMapViewportSize.y };
 
             ImGui::Image(reinterpret_cast<ImTextureID>(
                 m_ShadowMapViewportDescriptorSets[imageIndex]),
-                ImVec2{ m_ShadowMapViewportSize.x, m_ShadowMapViewportSize.y }
+                ImVec2{ shadowMapViewportSize.x, shadowMapViewportSize.y }
             );
             ImGui::End();
         }
+
+        // Display composited framebuffer
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
+        ImGui::Begin("Composite Result");
+        ImGui::PopStyleVar();
+
+        ImVec2 compositeViewportSize = ImGui::GetContentRegionAvail();
+
+        ImGui::Image(reinterpret_cast<ImTextureID>(
+            m_CompositePassViewportDescriptorSets[imageIndex]),
+            ImVec2{ compositeViewportSize.x, compositeViewportSize.y }
+        );
+        ImGui::End();
 
         m_SceneHierarchyPanel->OnUIRender();
         m_ContentBrowserPanel->OnUIRender();
@@ -546,7 +594,7 @@ namespace Flameberry {
     {
         VkDescriptorImageInfo desc_image[1] = {};
         desc_image[0].sampler = m_VkTextureSampler;
-        desc_image[0].imageView = m_SceneFramebuffers[index]->GetAttachmentImageView(2);
+        desc_image[0].imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[index]->GetColorResolveAttachment(0)->GetImageView();
         desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet write_desc[1] = {};
@@ -562,12 +610,28 @@ namespace Flameberry {
     {
         VkDescriptorImageInfo desc_image[1] = {};
         desc_image[0].sampler = m_VkTextureSampler;
-        desc_image[0].imageView = m_ShadowMapFramebuffers[index]->GetAttachmentImageView(0);
+        desc_image[0].imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[index]->GetDepthAttachment()->GetImageView();
         desc_image[0].imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet write_desc[1] = {};
         write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         write_desc[0].dstSet = m_ShadowMapViewportDescriptorSets[index];
+        write_desc[0].descriptorCount = 1;
+        write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write_desc[0].pImageInfo = desc_image;
+        vkUpdateDescriptorSets(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), 1, write_desc, 0, nullptr);
+    }
+
+    void EditorLayer::InvalidateCompositePassImGuiDescriptorSet(uint32_t index)
+    {
+        VkDescriptorImageInfo desc_image[1] = {};
+        desc_image[0].sampler = m_VkTextureSampler;
+        desc_image[0].imageView = m_CompositePass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetImageView();
+        desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkWriteDescriptorSet write_desc[1] = {};
+        write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_desc[0].dstSet = m_CompositePassViewportDescriptorSets[index];
         write_desc[0].descriptorCount = 1;
         write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         write_desc[0].pImageInfo = desc_image;
@@ -605,7 +669,7 @@ namespace Flameberry {
             if (ctrl_or_cmd) {
 #ifndef __APPLE__
                 // m_ShouldOpenAnotherScene = true;
-                // m_ScenePathToBeOpened = platform::OpenDialog();
+                // m_ScenePathToBeOpened = platform::OpenFile();
                 OpenScene();
 #endif
             }
@@ -667,7 +731,7 @@ namespace Flameberry {
 
     void EditorLayer::SaveSceneAs()
     {
-        std::string savePath = platform::SaveDialog();
+        std::string savePath = platform::SaveFile();
         if (savePath != "")
         {
             SceneSerializer::SerializeSceneToFile(savePath.c_str(), m_ActiveScene);
@@ -679,7 +743,7 @@ namespace Flameberry {
 
     void EditorLayer::OpenScene()
     {
-        std::string sceneToBeLoaded = platform::OpenDialog();
+        std::string sceneToBeLoaded = platform::OpenFile();
         if (sceneToBeLoaded != "")
         {
             if (SceneSerializer::DeserializeIntoExistingScene(sceneToBeLoaded.c_str(), m_ActiveScene))
@@ -699,6 +763,11 @@ namespace Flameberry {
             if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
                 m_OpenedScenePathIfExists = path;
         }
+    }
+
+    void EditorLayer::NewScene()
+    {
+        FL_ASSERT(0, "Not implemented yet!");
     }
 
     void EditorLayer::ShowMenuBar()
@@ -875,5 +944,99 @@ namespace Flameberry {
         pipelineSpec.Scissor = { {0, 0}, {SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT} };
 
         m_ShadowMapPipeline = Pipeline::Create(pipelineSpec);
+    }
+
+    void EditorLayer::CreateCompositePipeline()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
+        auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
+        VkFormat swapChainImageFormat = swapchain->GetSwapChainImageFormat();
+
+        // Create render pass
+        FramebufferSpecification framebufferSpec{};
+        framebufferSpec.Width = m_ViewportSize.x;
+        framebufferSpec.Height = m_ViewportSize.y;
+        framebufferSpec.Attachments = { swapChainImageFormat, VK_FORMAT_D32_SFLOAT };
+        framebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
+        framebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+        framebufferSpec.Samples = 1;
+
+        RenderPassSpecification renderPassSpec{};
+        renderPassSpec.TargetFramebuffers.resize(swapchain->GetSwapChainImageCount());
+        for (uint32_t i = 0; i < renderPassSpec.TargetFramebuffers.size(); i++)
+            renderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(framebufferSpec);
+
+        m_CompositePass = RenderPass::Create(renderPassSpec);
+
+        DescriptorSetLayoutSpecification layoutSpec;
+        layoutSpec.Bindings.resize(2);
+
+        layoutSpec.Bindings[0].binding = 0;
+        layoutSpec.Bindings[0].descriptorCount = 1;
+        layoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        layoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        layoutSpec.Bindings[1].binding = 1;
+        layoutSpec.Bindings[1].descriptorCount = 1;
+        layoutSpec.Bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        layoutSpec.Bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        m_CompositePassDescriptorSetLayout = DescriptorSetLayout::Create(layoutSpec);
+
+        DescriptorSetSpecification setSpec;
+        setSpec.Layout = m_CompositePassDescriptorSetLayout;
+
+        m_CompositePassDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (uint8_t i = 0; i < m_CompositePassDescriptorSets.size(); i++)
+        {
+            m_CompositePassDescriptorSets[i] = DescriptorSet::Create(setSpec);
+
+            m_CompositePassDescriptorSets[i]->WriteImage(0, {
+                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                 .imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetImageView(),
+                 .sampler = m_VkTextureSampler
+                }
+            );
+
+            m_CompositePassDescriptorSets[i]->WriteImage(1, {
+                 .imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL,
+                 .imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView(),
+                 .sampler = m_VkTextureSampler
+                }
+            );
+
+            m_CompositePassDescriptorSets[i]->Update();
+        }
+
+        // Pipeline Creation
+        VkDescriptorSetLayout descriptorSetLayouts[] = { m_CompositePassDescriptorSetLayout->GetLayout() };
+        VkPushConstantRange pushConstantRanges[] = { };
+
+        VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
+        vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        vk_pipeline_layout_create_info.setLayoutCount = 1;
+        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
+        vk_pipeline_layout_create_info.pushConstantRangeCount = 0;
+        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
+
+        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_CompositePipelineLayout));
+
+        PipelineSpecification pipelineSpec{};
+        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.vert.spv";
+        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.frag.spv";
+
+        pipelineSpec.PipelineLayout = m_CompositePipelineLayout;
+        pipelineSpec.RenderPass = m_CompositePass;
+
+        pipelineSpec.VertexLayout = {};
+        pipelineSpec.VertexInputBindingDescription.binding = 0;
+        pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        pipelineSpec.VertexInputBindingDescription.stride = 0;
+
+        pipelineSpec.BlendingEnable = true;
+        pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
+
+        m_CompositePipeline = Pipeline::Create(pipelineSpec);
     }
 }

@@ -1,5 +1,13 @@
 file(GLOB_RECURSE SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm)
 
+if(WIN32)
+    file(GLOB EXCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.mm)
+elseif(APPLE)
+    file(GLOB EXCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Windows/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Windows/*.h)
+endif()
+
+exclude_from_list(SRC_FILES ${EXCLUDE_FILES})
+
 add_library(Flameberry STATIC ${SRC_FILES} ${IMGUI_SRC} ${IMGUIZMO_SRC})
 target_compile_features(Flameberry PUBLIC cxx_std_17)
 

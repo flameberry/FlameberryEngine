@@ -9,6 +9,8 @@
 #include "Renderer/Vulkan/Texture2D.h"
 #include "AssetManager/AssetManager.h"
 
+#include "Platform/PlatformUtils.h"
+
 namespace Flameberry {
     Application* Application::s_Instance;
 

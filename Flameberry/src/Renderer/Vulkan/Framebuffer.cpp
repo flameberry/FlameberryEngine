@@ -2,6 +2,7 @@
 
 #include "VulkanContext.h"
 #include "VulkanDebug.h"
+#include "VulkanRenderCommand.h"
 
 namespace Flameberry {
     Framebuffer::Framebuffer(const FramebufferSpecification& specification)
@@ -67,14 +68,15 @@ namespace Flameberry {
             imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
             imageSpec.Usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT; // TODO: Remove setting usage as VK_IMAGE_USAGE_TRANSFER_SRC_BIT for all
 
-            if (format == VK_FORMAT_D32_SFLOAT || format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT)
+            if (VulkanRenderCommand::DoesFormatSupportDepthAttachment(format))
             {
-                imageSpec.ImageAspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
+                imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
                 imageSpec.Usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+                m_DepthAttachmentIndex = m_FramebufferImages.size();
             }
             else
             {
-                imageSpec.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+                imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
                 imageSpec.Usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
                 colorAttachmentFormats.emplace_back(format);
@@ -95,7 +97,7 @@ namespace Flameberry {
                 imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
                 imageSpec.Usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
                 imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-                imageSpec.ImageAspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+                imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
                 m_FramebufferImages.emplace_back(Image::Create(imageSpec));
             }

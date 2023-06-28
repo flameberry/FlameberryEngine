@@ -6,7 +6,7 @@
 
 namespace Flameberry {
     Image::Image(const ImageSpecification& specification)
-        : m_ImageSpec(specification)
+        : m_ImageSpec(specification), m_ReferenceCount(new uint32_t(1))
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
@@ -45,21 +45,47 @@ namespace Flameberry {
         vk_image_view_create_info.image = m_VkImage;
         vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
         vk_image_view_create_info.format = m_ImageSpec.Format;
-        vk_image_view_create_info.subresourceRange.aspectMask = m_ImageSpec.ImageAspectFlags;
-        vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
+        vk_image_view_create_info.subresourceRange.aspectMask = m_ImageSpec.ViewSpecification.AspectFlags;
+        vk_image_view_create_info.subresourceRange.baseMipLevel = m_ImageSpec.ViewSpecification.BaseMipLevel;
         vk_image_view_create_info.subresourceRange.levelCount = m_ImageSpec.MipLevels;
-        vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
-        vk_image_view_create_info.subresourceRange.layerCount = 1;
+        vk_image_view_create_info.subresourceRange.baseArrayLayer = m_ImageSpec.ViewSpecification.BaseArrayLayer;
+        vk_image_view_create_info.subresourceRange.layerCount = m_ImageSpec.ViewSpecification.LayerCount;
 
         VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView));
+    }
+
+    Image::Image(const std::shared_ptr<Image>& image, const ImageViewSpecification& viewSpecification)
+        : m_VkImage(image->m_VkImage), m_VkImageDeviceMemory(image->m_VkImageDeviceMemory), m_ImageSpec(image->m_ImageSpec), m_ReferenceCount(image->m_ReferenceCount)
+    {
+        m_ImageSpec.ViewSpecification = viewSpecification;
+
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        VkImageViewCreateInfo vk_image_view_create_info{};
+        vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        vk_image_view_create_info.image = m_VkImage;
+        vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        vk_image_view_create_info.format = m_ImageSpec.Format;
+        vk_image_view_create_info.subresourceRange.aspectMask = m_ImageSpec.ViewSpecification.AspectFlags;
+        vk_image_view_create_info.subresourceRange.baseMipLevel = m_ImageSpec.ViewSpecification.BaseMipLevel;
+        vk_image_view_create_info.subresourceRange.levelCount = m_ImageSpec.MipLevels;
+        vk_image_view_create_info.subresourceRange.baseArrayLayer = m_ImageSpec.ViewSpecification.BaseArrayLayer;
+        vk_image_view_create_info.subresourceRange.layerCount = m_ImageSpec.ViewSpecification.LayerCount;
+
+        VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView));
+
+        (*m_ReferenceCount)++;
     }
 
     Image::~Image()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDestroyImageView(device, m_VkImageView, nullptr);
-        vkDestroyImage(device, m_VkImage, nullptr);
-        vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
+        if (--(*m_ReferenceCount) == 0)
+        {
+            vkDestroyImage(device, m_VkImage, nullptr);
+            vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
+            delete m_ReferenceCount;
+        }
     }
 
     void Image::GenerateMipMaps()

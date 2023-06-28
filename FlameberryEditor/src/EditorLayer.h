@@ -26,15 +26,18 @@ namespace Flameberry {
 
         void InvalidateViewportImGuiDescriptorSet(uint32_t index);
         void InvalidateShadowMapImGuiDescriptorSet(uint32_t index);
+        void InvalidateCompositePassImGuiDescriptorSet(uint32_t index);
 
         void SaveScene();
         void SaveSceneAs();
         void OpenScene();
         void OpenScene(const std::string& path);
+        void NewScene();
     private:
         void ShowMenuBar();
         void CreateMousePickingPipeline();
         void CreateShadowMapPipeline();
+        void CreateCompositePipeline();
     private:
         EditorCameraController m_ActiveCameraController;
         bool m_IsViewportFocused = false, m_IsViewportHovered = false;
@@ -47,19 +50,17 @@ namespace Flameberry {
         std::unique_ptr<SceneRenderer> m_SceneRenderer;
         std::vector<std::shared_ptr<StaticMesh>> m_Meshes;
 
-        // std::unique_ptr<SkyboxRenderer> m_SkyboxRenderer;
-
         // ECS
         std::shared_ptr<Scene> m_ActiveScene;
         std::shared_ptr<fbentt::registry> m_Registry;
 
         glm::vec2 m_ViewportSize{ 1280, 720 };
         glm::vec2 m_ViewportBounds[2];
-        glm::vec2 m_ShadowMapViewportSize{ 1280, 720 };
 
         VkSampler m_VkTextureSampler;
         std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
         std::vector<VkDescriptorSet> m_ShadowMapViewportDescriptorSets;
+        std::vector<VkDescriptorSet> m_CompositePassViewportDescriptorSets;
 
         // UI
         std::shared_ptr<SceneHierarchyPanel> m_SceneHierarchyPanel;
@@ -92,13 +93,8 @@ namespace Flameberry {
 
         // Test
         std::shared_ptr<RenderPass> m_SceneRenderPass;
-        std::vector<std::shared_ptr<Framebuffer>> m_SceneFramebuffers;
-
         std::shared_ptr<RenderPass> m_ShadowMapRenderPass;
-        std::vector<std::shared_ptr<Framebuffer>> m_ShadowMapFramebuffers;
-
         std::shared_ptr<RenderPass> m_MousePickingRenderPass;
-        std::shared_ptr<Framebuffer> m_MousePickingFramebuffer;
 
         VkPipelineLayout m_MousePickingPipelineLayout;
         std::shared_ptr<Pipeline> m_MousePickingPipeline;
@@ -114,5 +110,12 @@ namespace Flameberry {
         std::vector<std::unique_ptr<Buffer>> m_ShadowMapUniformBuffers;
 
         const uint32_t SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
+
+        // Post processing resources
+        std::shared_ptr<RenderPass> m_CompositePass;
+        std::shared_ptr<Pipeline> m_CompositePipeline;
+        VkPipelineLayout m_CompositePipelineLayout;
+        std::shared_ptr<DescriptorSetLayout> m_CompositePassDescriptorSetLayout;
+        std::vector<std::shared_ptr<DescriptorSet>> m_CompositePassDescriptorSets;
     };
 }
