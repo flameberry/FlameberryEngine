@@ -110,7 +110,7 @@ namespace Flameberry {
             ImGui::SetNextItemOpen(true, ImGuiCond_Always);
         }
 
-        bool open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, tag.c_str());
+        bool open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s", tag.c_str());
 
         ImGui::PopStyleVar(2);
         ImGui::PopStyleColor(is_selected ? 4 : 3);

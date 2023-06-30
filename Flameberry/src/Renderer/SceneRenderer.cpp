@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Vulkan/VulkanDebug.h"
-#include "Vulkan/VulkanRenderCommand.h"
+#include "Vulkan/RenderCommand.h"
 #include "Vulkan/VulkanContext.h"
 #include "Material.h"
 #include "Renderer.h"
@@ -14,10 +14,12 @@
 
 namespace Flameberry {
     struct SceneUniformBufferData {
-        glm::vec3 cameraPosition;
-        DirectionalLight directionalLight;
-        PointLight pointLights[10];
-        int lightCount = 0;
+        alignas(64) glm::mat4 cascadeViewProjectionMatrix[SHADOW_MAP_CASCADE_COUNT];
+        alignas(16) float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
+        alignas(16) glm::vec3 cameraPosition;
+        alignas(16) DirectionalLight directionalLight;
+        alignas(16) PointLight pointLights[10];
+        alignas(4)  int lightCount = 0;
     };
 
     struct MeshData {
@@ -135,7 +137,7 @@ namespace Flameberry {
                 VertexInputAttribute::VEC3F  // a_BiTangent
             };
             pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
-            pipelineSpec.Samples = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+            pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
             pipelineSpec.BlendingEnable = true;
 
@@ -181,7 +183,7 @@ namespace Flameberry {
                 VertexInputAttribute::VEC3F  // a_Normal
             };
             pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
-            pipelineSpec.Samples = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+            pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
             pipelineSpec.DepthTestEnable = false;
 
@@ -227,7 +229,7 @@ namespace Flameberry {
             pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
             pipelineSpec.VertexInputBindingDescription.stride = 0;
 
-            VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+            VkSampleCountFlagBits sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
             pipelineSpec.Samples = sampleCount;
 
             pipelineSpec.CullMode = VK_CULL_MODE_NONE;
@@ -240,7 +242,15 @@ namespace Flameberry {
         }
     }
 
-    void SceneRenderer::OnDraw(VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene, const glm::vec2& framebufferSize, const fbentt::entity& selectedEntity)
+    void SceneRenderer::OnDraw(
+        VkDescriptorSet globalDescriptorSet,
+        const PerspectiveCamera& activeCamera,
+        const std::shared_ptr<Scene>& scene,
+        const glm::vec2& framebufferSize,
+        const std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT>& cascadeMatrices,
+        const std::array<float, SHADOW_MAP_CASCADE_COUNT>& cascadeSplits,
+        const fbentt::entity& selectedEntity
+    )
     {
         uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
 
@@ -276,6 +286,12 @@ namespace Flameberry {
             sceneUniformBufferData.pointLights[sceneUniformBufferData.lightCount].Intensity = light.Intensity;
             sceneUniformBufferData.lightCount++;
         }
+        for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
+        {
+            sceneUniformBufferData.cascadeViewProjectionMatrix[i] = cascadeMatrices[i];
+            sceneUniformBufferData.cascadeSplits[i] = cascadeSplits[i];
+        }
+
         // sceneUniformBufferData.EnvironmentMapReflections = scene->m_SceneData.ActiveEnvironment.Reflections;
 
         m_SceneUniformBuffers[currentFrameIndex]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData), 0);

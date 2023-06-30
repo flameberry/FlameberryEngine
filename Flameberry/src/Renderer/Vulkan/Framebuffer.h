@@ -6,10 +6,27 @@
 #include "Image.h"
 
 namespace Flameberry {
+    struct FramebufferAttachmentSpecification
+    {
+        VkFormat Format;
+        uint32_t LayerCount;
+
+        FramebufferAttachmentSpecification(VkFormat format) : Format(format), LayerCount(1) {}
+        FramebufferAttachmentSpecification(VkFormat format, uint32_t layerCount) : Format(format), LayerCount(layerCount) {}
+
+        bool operator==(const FramebufferAttachmentSpecification& other) const {
+            return this->Format == other.Format && this->LayerCount == other.LayerCount;
+        }
+
+        bool operator!=(const FramebufferAttachmentSpecification& other) const {
+            return !(*this == other);
+        }
+    };
+
     struct FramebufferSpecification
     {
         uint32_t Width, Height;
-        std::vector<VkFormat> Attachments;
+        std::vector<FramebufferAttachmentSpecification> Attachments;
         uint32_t Samples;
         VkClearColorValue ClearColorValue;
         VkClearDepthStencilValue DepthStencilClearValue;
@@ -41,7 +58,7 @@ namespace Flameberry {
         void Invalidate();
     private:
         std::vector<std::shared_ptr<Image>> m_FramebufferImages;
-        uint32_t m_DepthAttachmentIndex = 0;
+        uint32_t m_DepthAttachmentIndex = -1;
 
         FramebufferSpecification m_FramebufferSpec;
         VkFramebuffer m_VkFramebuffer = VK_NULL_HANDLE;

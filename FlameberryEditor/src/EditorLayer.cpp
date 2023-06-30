@@ -5,7 +5,7 @@
 #include "Utils.h"
 
 namespace Flameberry {
-    struct CameraUniformBufferObject { glm::mat4 ViewProjectionMatrix; glm::mat4 LightViewProjectionMatrix; };
+    struct CameraUniformBufferObject { glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix; };
     EditorLayer::EditorLayer(const std::string_view& projectPath)
         : m_ProjectPath(projectPath), m_ActiveCameraController(PerspectiveCameraSpecification{
             glm::vec3(0.0f, 2.0f, 4.0f),
@@ -27,6 +27,31 @@ namespace Flameberry {
 
     void EditorLayer::OnCreate()
     {
+        // Temp
+        VkPhysicalDeviceFeatures2KHR deviceFeatures2{};
+        VkPhysicalDeviceMultiviewFeaturesKHR extFeatures{};
+        extFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR;
+        deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR;
+        deviceFeatures2.pNext = &extFeatures;
+        PFN_vkGetPhysicalDeviceFeatures2KHR vkGetPhysicalDeviceFeatures2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures2KHR>(vkGetInstanceProcAddr(VulkanContext::GetCurrentInstance()->GetVulkanInstance(), "vkGetPhysicalDeviceFeatures2KHR"));
+        vkGetPhysicalDeviceFeatures2KHR(VulkanContext::GetPhysicalDevice(), &deviceFeatures2);
+        std::cout << "Multiview features:" << std::endl;
+        std::cout << "\tmultiview = " << extFeatures.multiview << std::endl;
+        std::cout << "\tmultiviewGeometryShader = " << extFeatures.multiviewGeometryShader << std::endl;
+        std::cout << "\tmultiviewTessellationShader = " << extFeatures.multiviewTessellationShader << std::endl;
+        std::cout << std::endl;
+
+        VkPhysicalDeviceProperties2KHR deviceProps2{};
+        VkPhysicalDeviceMultiviewPropertiesKHR extProps{};
+        extProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR;
+        deviceProps2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
+        deviceProps2.pNext = &extProps;
+        PFN_vkGetPhysicalDeviceProperties2KHR vkGetPhysicalDeviceProperties2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2KHR>(vkGetInstanceProcAddr(VulkanContext::GetCurrentInstance()->GetVulkanInstance(), "vkGetPhysicalDeviceProperties2KHR"));
+        vkGetPhysicalDeviceProperties2KHR(VulkanContext::GetPhysicalDevice(), &deviceProps2);
+        std::cout << "Multiview properties:" << std::endl;
+        std::cout << "\tmaxMultiviewViewCount = " << extProps.maxMultiviewViewCount << std::endl;
+        std::cout << "\tmaxMultiviewInstanceIndex = " << extProps.maxMultiviewInstanceIndex << std::endl;
+
         m_VkTextureSampler = Texture2D::GetDefaultSampler();
         auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
         uint32_t imageCount = swapchain->GetSwapChainImageCount();
@@ -35,7 +60,7 @@ namespace Flameberry {
             FramebufferSpecification shadowMapFramebufferSpec;
             shadowMapFramebufferSpec.Width = 2048;
             shadowMapFramebufferSpec.Height = 2048;
-            shadowMapFramebufferSpec.Attachments = { VK_FORMAT_D32_SFLOAT };
+            shadowMapFramebufferSpec.Attachments = { { VK_FORMAT_D32_SFLOAT, SHADOW_MAP_CASCADE_COUNT } };
             shadowMapFramebufferSpec.Samples = 1;
             shadowMapFramebufferSpec.DepthStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
             shadowMapFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
@@ -120,7 +145,7 @@ namespace Flameberry {
 
         {
             VkFormat swapChainImageFormat = swapchain->GetSwapChainImageFormat();
-            VkSampleCountFlagBits sampleCount = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+            VkSampleCountFlagBits sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
             FramebufferSpecification sceneFramebufferSpec;
             sceneFramebufferSpec.Width = m_ViewportSize.x;
@@ -174,16 +199,6 @@ namespace Flameberry {
             );
         }
 
-        m_ShadowMapViewportDescriptorSets.resize(imageCount);
-        for (int i = 0; i < imageCount; i++)
-        {
-            m_ShadowMapViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
-                m_VkTextureSampler,
-                m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView(),
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-            );
-        }
-
         m_CompositePassViewportDescriptorSets.resize(imageCount);
         for (int i = 0; i < imageCount; i++)
         {
@@ -216,7 +231,7 @@ namespace Flameberry {
                     );
 
                     m_CompositePassDescriptorSets[imageIndex]->WriteImage(1, {
-                         .imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL,
+                         .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
                          .imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[imageIndex]->GetDepthAttachment()->GetImageView(),
                          .sampler = m_VkTextureSampler
                         }
@@ -234,21 +249,17 @@ namespace Flameberry {
 
         uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
 
-        glm::mat4 lightViewProjectionMatrix;
+        bool didCameraResize = m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
+        if (m_IsViewportFocused)
+            m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
+        UpdateShadowMapCascades();
+
         {
             FL_PROFILE_SCOPE("Shadow Pass");
-            glm::mat4 lightProjectionMatrix = glm::ortho<float>(-40, 40, -40, 40, m_ZNearFar.x, m_ZNearFar.y);
-            glm::mat4 lightViewMatrix = glm::lookAt(
-                -m_ActiveScene->GetDirectionalLight().Direction,
-                glm::vec3(0, 0, 0),
-                glm::vec3(0, 1, 0)
-            );
-            lightViewProjectionMatrix = lightProjectionMatrix * lightViewMatrix;
-
             m_ShadowMapRenderPass->Begin();
-
             m_ShadowMapPipeline->Bind();
-            m_ShadowMapUniformBuffers[currentFrameIndex]->WriteToBuffer(glm::value_ptr(lightViewProjectionMatrix), sizeof(glm::mat4), 0);
+
+            m_ShadowMapUniformBuffers[currentFrameIndex]->WriteToBuffer(m_CascadeMatrices.data(), sizeof(glm::mat4) * SHADOW_MAP_CASCADE_COUNT, 0);
 
             auto shadowMapDesc = m_ShadowMapDescriptorSets[currentFrameIndex]->GetDescriptorSet();
             const auto& shadowMapPipelineLayout = m_ShadowMapPipelineLayout;
@@ -267,18 +278,13 @@ namespace Flameberry {
             FL_PROFILE_SCOPE("Viewport Render Pass");
             m_SceneRenderPass->Begin();
 
-            VulkanRenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
-            VulkanRenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
-
-            // Update Uniforms
-            m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
-
-            if (m_IsViewportFocused)
-                m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
+            RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
+            RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
             CameraUniformBufferObject uniformBufferObject{};
+            uniformBufferObject.ViewMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetViewMatrix();
+            uniformBufferObject.ProjectionMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetProjectionMatrix();
             uniformBufferObject.ViewProjectionMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetViewProjectionMatrix();
-            uniformBufferObject.LightViewProjectionMatrix = lightViewProjectionMatrix;
 
             m_UniformBuffers[currentFrameIndex]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
 
@@ -287,7 +293,7 @@ namespace Flameberry {
 
             Renderer2D::Render(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet());
 
-            m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), *m_ActiveCameraController.GetPerspectiveCamera(), m_ActiveScene, m_ViewportSize, m_SceneHierarchyPanel->GetSelectionContext());
+            m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), *m_ActiveCameraController.GetPerspectiveCamera(), m_ActiveScene, m_ViewportSize, m_CascadeMatrices, m_CascadeDepthSplits, m_SceneHierarchyPanel->GetSelectionContext());
             m_SceneRenderPass->End();
         }
 
@@ -301,7 +307,7 @@ namespace Flameberry {
             for (uint8_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
                 descriptorSets[i] = m_CompositePassDescriptorSets[0]->GetDescriptorSet();
 
-            Renderer::Submit([&, pipelineLayout, descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([pipelineLayout, descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[imageIndex], 0, nullptr);
                     vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
@@ -312,7 +318,13 @@ namespace Flameberry {
 
         if (m_IsMousePickingBufferReady)
         {
-            VulkanRenderCommand::WritePixelFromImageToBuffer(m_MousePickingBuffer->GetBuffer(), m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetImage(), { m_MouseX, m_ViewportSize.y - m_MouseY });
+            RenderCommand::WritePixelFromImageToBuffer(
+                m_MousePickingBuffer->GetBuffer(),
+                m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetImage(),
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                { m_MouseX, m_ViewportSize.y - m_MouseY }
+            );
+
             m_MousePickingBuffer->MapMemory(sizeof(int32_t));
             int32_t* data = (int32_t*)m_MousePickingBuffer->GetMappedMemory();
             int32_t entityIndex = data[0];
@@ -347,19 +359,14 @@ namespace Flameberry {
                 bool shouldResize = m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
 
                 m_MousePickingRenderPass->Begin(0, { m_MouseX, (int)(m_ViewportSize.y - m_MouseY) }, { 1, 1 });
-
-                const auto& device = VulkanContext::GetCurrentDevice();
                 m_MousePickingPipeline->Bind();
-
                 auto descSet = m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet();
                 const auto& mousePickingPipelineLayout = m_MousePickingPipelineLayout;
-
                 Renderer::Submit([descSet, mousePickingPipelineLayout](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                     {
                         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
                     }
                 );
-
                 m_SceneRenderer->OnDrawForMousePickingPass(m_MousePickingPipelineLayout, m_ActiveScene);
                 m_MousePickingRenderPass->End();
             }
@@ -553,25 +560,6 @@ namespace Flameberry {
         ImGui::Separator();
         ImGui::End();
 
-        ImGui::Begin("Settings");
-        ImGui::DragFloat2("zNear, zFar", glm::value_ptr(m_ZNearFar), 0.2f);
-        ImGui::Checkbox("Display Shadow Map", &m_DisplayShadowMap);
-        ImGui::End();
-
-        if (m_DisplayShadowMap) {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-            ImGui::Begin("Shadow Map");
-            ImGui::PopStyleVar();
-
-            ImVec2 shadowMapViewportSize = ImGui::GetContentRegionAvail();
-
-            ImGui::Image(reinterpret_cast<ImTextureID>(
-                m_ShadowMapViewportDescriptorSets[imageIndex]),
-                ImVec2{ shadowMapViewportSize.x, shadowMapViewportSize.y }
-            );
-            ImGui::End();
-        }
-
         // Display composited framebuffer
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Composite Result");
@@ -600,22 +588,6 @@ namespace Flameberry {
         VkWriteDescriptorSet write_desc[1] = {};
         write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         write_desc[0].dstSet = m_ViewportDescriptorSets[index];
-        write_desc[0].descriptorCount = 1;
-        write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        write_desc[0].pImageInfo = desc_image;
-        vkUpdateDescriptorSets(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), 1, write_desc, 0, nullptr);
-    }
-
-    void EditorLayer::InvalidateShadowMapImGuiDescriptorSet(uint32_t index)
-    {
-        VkDescriptorImageInfo desc_image[1] = {};
-        desc_image[0].sampler = m_VkTextureSampler;
-        desc_image[0].imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[index]->GetDepthAttachment()->GetImageView();
-        desc_image[0].imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-
-        VkWriteDescriptorSet write_desc[1] = {};
-        write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_desc[0].dstSet = m_ShadowMapViewportDescriptorSets[index];
         write_desc[0].descriptorCount = 1;
         write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         write_desc[0].pImageInfo = desc_image;
@@ -770,6 +742,92 @@ namespace Flameberry {
         FL_ASSERT(0, "Not implemented yet!");
     }
 
+    void EditorLayer::UpdateShadowMapCascades()
+    {
+        float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
+
+        float nearClip = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zNear;
+        float farClip = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zFar;
+        float clipRange = farClip - nearClip;
+
+        float minZ = nearClip;
+        float maxZ = nearClip + clipRange;
+
+        float range = maxZ - minZ;
+        float ratio = maxZ / minZ;
+
+        const float cascadeSplitLambda = 0.95f;
+
+        // Calculate split depths based on view camera frustum
+        // Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
+        for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
+            float p = (i + 1) / static_cast<float>(SHADOW_MAP_CASCADE_COUNT);
+            float log = minZ * std::pow(ratio, p);
+            float uniform = minZ + range * p;
+            float d = cascadeSplitLambda * (log - uniform) + uniform;
+            cascadeSplits[i] = (d - nearClip) / clipRange;
+        }
+
+        // Calculate orthographic projection matrix for each cascade
+        float lastSplitDist = 0.0;
+
+        // Project frustum corners into world space
+        const glm::mat4 invCam = glm::inverse(m_ActiveCameraController.GetPerspectiveCamera()->GetViewProjectionMatrix());
+
+        for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
+            float splitDist = cascadeSplits[i];
+
+            glm::vec3 frustumCorners[8] = {
+                glm::vec3(-1.0f,  1.0f, 0.0f),
+                glm::vec3(1.0f,   1.0f, 0.0f),
+                glm::vec3(1.0f,  -1.0f, 0.0f),
+                glm::vec3(-1.0f, -1.0f, 0.0f),
+                glm::vec3(-1.0f,  1.0f, 1.0f),
+                glm::vec3(1.0f,   1.0f, 1.0f),
+                glm::vec3(1.0f,  -1.0f, 1.0f),
+                glm::vec3(-1.0f, -1.0f, 1.0f),
+            };
+
+            for (uint32_t i = 0; i < 8; i++) {
+                glm::vec4 invCorner = invCam * glm::vec4(frustumCorners[i], 1.0f);
+                frustumCorners[i] = invCorner / invCorner.w;
+            }
+
+            for (uint32_t i = 0; i < 4; i++) {
+                glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
+                frustumCorners[i + 4] = frustumCorners[i] + (dist * splitDist);
+                frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDist);
+            }
+
+            // Get frustum center
+            glm::vec3 frustumCenter = glm::vec3(0.0f);
+            for (uint32_t i = 0; i < 8; i++) {
+                frustumCenter += frustumCorners[i];
+            }
+            frustumCenter /= 8.0f;
+
+            float radius = 0.0f;
+            for (uint32_t i = 0; i < 8; i++) {
+                float distance = glm::length(frustumCorners[i] - frustumCenter);
+                radius = glm::max(radius, distance);
+            }
+            radius = std::ceil(radius * 16.0f) / 16.0f;
+
+            glm::vec3 maxExtents = glm::vec3(radius);
+            glm::vec3 minExtents = -maxExtents;
+
+            glm::vec3 lightDir = glm::normalize(m_ActiveScene->GetDirectionalLight().Direction);
+            glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+            glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
+
+            // Store split distance and matrix in cascade
+            m_CascadeDepthSplits[i] = (m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zNear + splitDist * clipRange) * -1.0f;
+            m_CascadeMatrices[i] = lightOrthoMatrix * lightViewMatrix;
+
+            lastSplitDist = cascadeSplits[i];
+        }
+    }
+
     void EditorLayer::ShowMenuBar()
     {
         // Main Menu
@@ -870,16 +928,18 @@ namespace Flameberry {
 
         m_ShadowMapUniformBuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
 
+        auto bufferSize = sizeof(glm::mat4) * SHADOW_MAP_CASCADE_COUNT;
+
         BufferSpecification uniformBufferSpec;
         uniformBufferSpec.InstanceCount = 1;
-        uniformBufferSpec.InstanceSize = sizeof(glm::mat4);
+        uniformBufferSpec.InstanceSize = bufferSize;
         uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
         uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
         for (auto& uniformBuffer : m_ShadowMapUniformBuffers)
         {
             uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
-            uniformBuffer->MapMemory(sizeof(glm::mat4));
+            uniformBuffer->MapMemory(bufferSize);
         }
 
         // Creating Descriptors
@@ -905,7 +965,7 @@ namespace Flameberry {
             VkDescriptorBufferInfo vk_descriptor_buffer_info{};
             vk_descriptor_buffer_info.buffer = m_ShadowMapUniformBuffers[i]->GetBuffer();
             vk_descriptor_buffer_info.offset = 0;
-            vk_descriptor_buffer_info.range = sizeof(glm::mat4);
+            vk_descriptor_buffer_info.range = bufferSize;
 
             m_ShadowMapDescriptorSets[i]->WriteBuffer(0, vk_descriptor_buffer_info);
             m_ShadowMapDescriptorSets[i]->Update();
@@ -942,6 +1002,10 @@ namespace Flameberry {
         pipelineSpec.Viewport.height = SHADOW_MAP_HEIGHT;
 
         pipelineSpec.Scissor = { {0, 0}, {SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT} };
+
+        pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
+        pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+        pipelineSpec.DepthClampEnable = true;
 
         m_ShadowMapPipeline = Pipeline::Create(pipelineSpec);
     }
@@ -1000,7 +1064,7 @@ namespace Flameberry {
             );
 
             m_CompositePassDescriptorSets[i]->WriteImage(1, {
-                 .imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL,
+                 .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
                  .imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView(),
                  .sampler = m_VkTextureSampler
                 }
@@ -1011,7 +1075,7 @@ namespace Flameberry {
 
         // Pipeline Creation
         VkDescriptorSetLayout descriptorSetLayouts[] = { m_CompositePassDescriptorSetLayout->GetLayout() };
-        VkPushConstantRange pushConstantRanges[] = { };
+        VkPushConstantRange pushConstantRanges[] = {};
 
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
         vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

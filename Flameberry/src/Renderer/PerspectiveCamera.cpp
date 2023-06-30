@@ -20,13 +20,15 @@ namespace Flameberry {
     {
     }
 
-    void PerspectiveCamera::OnResize(float aspectRatio)
+    bool PerspectiveCamera::OnResize(float aspectRatio)
     {
         if (m_CameraSpec.AspectRatio != aspectRatio)
         {
             m_CameraSpec.AspectRatio = aspectRatio;
             Invalidate();
+            return true;
         }
+        return false;
     }
 
     void PerspectiveCamera::Invalidate()

@@ -1,6 +1,6 @@
 #include "Pipeline.h"
 
-#include "VulkanRenderCommand.h"
+#include "RenderCommand.h"
 #include "VulkanContext.h"
 #include "Renderer/Renderer.h"
 
@@ -12,11 +12,11 @@ namespace Flameberry {
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-        std::vector<char> compiledVertexShader = VulkanRenderCommand::LoadCompiledShaderCode(m_PipelineSpec.VertexShaderFilePath);
-        std::vector<char> compiledFragmentShader = VulkanRenderCommand::LoadCompiledShaderCode(m_PipelineSpec.FragmentShaderFilePath);
+        std::vector<char> compiledVertexShader = RenderCommand::LoadCompiledShaderCode(m_PipelineSpec.VertexShaderFilePath);
+        std::vector<char> compiledFragmentShader = RenderCommand::LoadCompiledShaderCode(m_PipelineSpec.FragmentShaderFilePath);
 
-        VkShaderModule vk_vertex_shader_module = VulkanRenderCommand::CreateShaderModule(device, compiledVertexShader);
-        VkShaderModule vk_fragment_shader_module = VulkanRenderCommand::CreateShaderModule(device, compiledFragmentShader);
+        VkShaderModule vk_vertex_shader_module = RenderCommand::CreateShaderModule(device, compiledVertexShader);
+        VkShaderModule vk_fragment_shader_module = RenderCommand::CreateShaderModule(device, compiledFragmentShader);
 
         VkPipelineShaderStageCreateInfo vk_pipeline_vertex_shader_stage_create_info{};
         vk_pipeline_vertex_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -58,12 +58,12 @@ namespace Flameberry {
 
         VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo{};
         pipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        pipelineRasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
+        pipelineRasterizationStateCreateInfo.depthClampEnable = m_PipelineSpec.DepthClampEnable;
         pipelineRasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
         pipelineRasterizationStateCreateInfo.polygonMode = m_PipelineSpec.PolygonMode;
         pipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
         pipelineRasterizationStateCreateInfo.cullMode = m_PipelineSpec.CullMode;
-        pipelineRasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        pipelineRasterizationStateCreateInfo.frontFace = m_PipelineSpec.FrontFace;
         pipelineRasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
         pipelineRasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
         pipelineRasterizationStateCreateInfo.depthBiasClamp = 0.0f;

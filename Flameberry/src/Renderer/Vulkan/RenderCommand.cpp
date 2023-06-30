@@ -1,4 +1,4 @@
-#include "VulkanRenderCommand.h"
+#include "RenderCommand.h"
 
 #include <fstream>
 #include <unordered_map>
@@ -12,7 +12,7 @@
 #include "Renderer/Renderer.h"
 
 namespace Flameberry {
-    bool VulkanRenderCommand::DoesFormatSupportDepthAttachment(VkFormat format)
+    bool RenderCommand::DoesFormatSupportDepthAttachment(VkFormat format)
     {
         return format == VK_FORMAT_D32_SFLOAT
             || format == VK_FORMAT_D16_UNORM
@@ -21,7 +21,7 @@ namespace Flameberry {
             || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
     }
 
-    void VulkanRenderCommand::WritePixelFromImageToBuffer(VkBuffer buffer, VkImage image, const glm::vec2& pixelOffset)
+    void RenderCommand::WritePixelFromImageToBuffer(VkBuffer buffer, VkImage image, VkImageLayout currentImageLayout, const glm::vec2& pixelOffset)
     {
         const auto& device = VulkanContext::GetCurrentDevice();
 
@@ -40,7 +40,7 @@ namespace Flameberry {
             vk_image_memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
             vk_image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            vk_image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            vk_image_memory_barrier.oldLayout = currentImageLayout;
             vk_image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
             vk_image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             vk_image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -79,7 +79,7 @@ namespace Flameberry {
 
             vk_image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
             vk_image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            vk_image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            vk_image_memory_barrier.newLayout = currentImageLayout;
             vk_image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             vk_image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             vk_image_memory_barrier.image = image;
@@ -94,7 +94,7 @@ namespace Flameberry {
         device->EndSingleTimeCommandBuffer(commandBuffer);
     }
 
-    void VulkanRenderCommand::SetViewport(float x, float y, float width, float height)
+    void RenderCommand::SetViewport(float x, float y, float width, float height)
     {
         Renderer::Submit([x, y, width, height](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
@@ -111,7 +111,7 @@ namespace Flameberry {
         );
     }
 
-    void VulkanRenderCommand::SetScissor(VkOffset2D offset, VkExtent2D extent)
+    void RenderCommand::SetScissor(VkOffset2D offset, VkExtent2D extent)
     {
         Renderer::Submit([offset, extent](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
@@ -124,7 +124,7 @@ namespace Flameberry {
 
     }
 
-    void VulkanRenderCommand::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize)
+    void RenderCommand::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize)
     {
         const auto& device = VulkanContext::GetCurrentDevice();
 
@@ -139,7 +139,7 @@ namespace Flameberry {
         device->EndSingleTimeCommandBuffer(commandBuffer);
     }
 
-    VkShaderModule VulkanRenderCommand::CreateShaderModule(VkDevice device, const std::vector<char>& compiledShaderCode)
+    VkShaderModule RenderCommand::CreateShaderModule(VkDevice device, const std::vector<char>& compiledShaderCode)
     {
         VkShaderModuleCreateInfo vk_shader_module_create_info{};
         vk_shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -151,7 +151,7 @@ namespace Flameberry {
         return shaderModule;
     }
 
-    VkSampleCountFlagBits VulkanRenderCommand::GetMaxUsableSampleCount(VkPhysicalDevice physicalDevice)
+    VkSampleCountFlagBits RenderCommand::GetMaxUsableSampleCount(VkPhysicalDevice physicalDevice)
     {
         VkPhysicalDeviceProperties physicalDeviceProperties;
         vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
@@ -166,7 +166,7 @@ namespace Flameberry {
         return VK_SAMPLE_COUNT_1_BIT;
     }
 
-    uint32_t VulkanRenderCommand::GetValidMemoryTypeIndex(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags vk_memory_property_flags)
+    uint32_t RenderCommand::GetValidMemoryTypeIndex(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags vk_memory_property_flags)
     {
         VkPhysicalDeviceMemoryProperties vk_physical_device_mem_properties;
         vkGetPhysicalDeviceMemoryProperties(physicalDevice, &vk_physical_device_mem_properties);
@@ -180,12 +180,12 @@ namespace Flameberry {
         return -1;
     }
 
-    bool VulkanRenderCommand::HasStencilComponent(VkFormat format)
+    bool RenderCommand::HasStencilComponent(VkFormat format)
     {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
-    VkFormat VulkanRenderCommand::GetSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidateFormats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags)
+    VkFormat RenderCommand::GetSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidateFormats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags)
     {
         for (const auto& format : candidateFormats)
         {
@@ -201,7 +201,7 @@ namespace Flameberry {
         return VK_FORMAT_UNDEFINED;
     }
 
-    bool VulkanRenderCommand::CheckValidationLayerSupport(const std::vector<const char*>& validationLayers)
+    bool RenderCommand::CheckValidationLayerSupport(const std::vector<const char*>& validationLayers)
     {
         uint32_t layerCount = 0;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -239,7 +239,7 @@ namespace Flameberry {
         return true;
     }
 
-    QueueFamilyIndices VulkanRenderCommand::GetQueueFamilyIndices(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+    QueueFamilyIndices RenderCommand::GetQueueFamilyIndices(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
     {
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
@@ -267,7 +267,7 @@ namespace Flameberry {
         return indices;
     }
 
-    SwapChainDetails VulkanRenderCommand::GetSwapChainDetails(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+    SwapChainDetails RenderCommand::GetSwapChainDetails(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
     {
         SwapChainDetails vk_swap_chain_details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &vk_swap_chain_details.SurfaceCapabilities);
@@ -293,7 +293,7 @@ namespace Flameberry {
         return vk_swap_chain_details;
     }
 
-    VkSampler VulkanRenderCommand::CreateDefaultSampler()
+    VkSampler RenderCommand::CreateDefaultSampler()
     {
         VkSampler sampler;
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -319,7 +319,7 @@ namespace Flameberry {
         return sampler;
     }
 
-    std::vector<char> VulkanRenderCommand::LoadCompiledShaderCode(const std::string& filePath)
+    std::vector<char> RenderCommand::LoadCompiledShaderCode(const std::string& filePath)
     {
         std::ifstream stream(filePath, std::ios::ate | std::ios::binary);
         FL_ASSERT(stream.is_open(), "Failed to open the file '{0}'", filePath);

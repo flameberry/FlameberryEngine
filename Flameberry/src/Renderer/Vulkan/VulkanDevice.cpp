@@ -2,14 +2,14 @@
 
 #include "VulkanDebug.h"
 #include "VulkanContext.h"
-#include "VulkanRenderCommand.h"
+#include "RenderCommand.h"
 
 namespace Flameberry {
     VulkanDevice::VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow)
         : m_VkPhysicalDevice(physicalDevice)
     {
         // Getting Queue Family Indices
-        m_QueueFamilyIndices = VulkanRenderCommand::GetQueueFamilyIndices(m_VkPhysicalDevice, pVulkanWindow->GetWindowSurface());
+        m_QueueFamilyIndices = RenderCommand::GetQueueFamilyIndices(m_VkPhysicalDevice, pVulkanWindow->GetWindowSurface());
 
         std::vector<VkDeviceQueueCreateInfo> vk_device_queue_create_infos = CreateDeviceQueueInfos(
             {
@@ -23,6 +23,7 @@ namespace Flameberry {
         vk_physical_device_features.sampleRateShading = VK_TRUE;
         vk_physical_device_features.fillModeNonSolid = VK_TRUE;
         vk_physical_device_features.tessellationShader = VK_TRUE;
+        vk_physical_device_features.depthClamp = VK_TRUE;
 
         // Creating Vulkan Logical Device
         VkDeviceCreateInfo vk_device_create_info{};
@@ -34,6 +35,13 @@ namespace Flameberry {
 
         vk_device_create_info.enabledExtensionCount = static_cast<uint32_t>(m_VkDeviceExtensions.size());
         vk_device_create_info.ppEnabledExtensionNames = m_VkDeviceExtensions.data();
+
+        // Enable multiview
+        VkPhysicalDeviceMultiviewFeaturesKHR physicalDeviceMultiviewFeatures{};
+        physicalDeviceMultiviewFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR;
+        physicalDeviceMultiviewFeatures.multiview = VK_TRUE;
+
+        vk_device_create_info.pNext = &physicalDeviceMultiviewFeatures;
 
         auto validationLayers = VulkanContext::GetValidationLayerNames();
         if (VulkanContext::EnableValidationLayers())

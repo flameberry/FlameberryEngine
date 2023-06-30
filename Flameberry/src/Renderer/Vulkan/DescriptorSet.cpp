@@ -4,7 +4,7 @@
 
 #include "VulkanSwapChain.h"
 #include "VulkanContext.h"
-#include "VulkanRenderCommand.h"
+#include "RenderCommand.h"
 #include "VulkanDebug.h"
 
 namespace Flameberry {

@@ -3,7 +3,7 @@
 #include "Core/Core.h"
 #include "Core/Timer.h"
 
-#include "VulkanRenderCommand.h"
+#include "RenderCommand.h"
 #include "Renderer/Material.h"
 #include "Renderer/Renderer.h"
 #include "AssetManager/AssetManager.h"
@@ -272,7 +272,7 @@ namespace Flameberry {
             vertexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
             m_VertexBuffer = std::make_unique<Buffer>(vertexBufferSpec);
-            VulkanRenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), m_VertexBuffer->GetBuffer(), bufferSize);
+            RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), m_VertexBuffer->GetBuffer(), bufferSize);
         }
 
         {
@@ -298,7 +298,7 @@ namespace Flameberry {
             indexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
             m_IndexBuffer = std::make_unique<Buffer>(indexBufferSpec);
-            VulkanRenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), m_IndexBuffer->GetBuffer(), bufferSize);
+            RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), m_IndexBuffer->GetBuffer(), bufferSize);
         }
     }
 

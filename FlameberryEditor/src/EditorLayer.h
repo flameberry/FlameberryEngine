@@ -25,7 +25,6 @@ namespace Flameberry {
         void OnMouseScrolledEvent(MouseScrollEvent& e);
 
         void InvalidateViewportImGuiDescriptorSet(uint32_t index);
-        void InvalidateShadowMapImGuiDescriptorSet(uint32_t index);
         void InvalidateCompositePassImGuiDescriptorSet(uint32_t index);
 
         void SaveScene();
@@ -34,6 +33,7 @@ namespace Flameberry {
         void OpenScene(const std::string& path);
         void NewScene();
     private:
+        void UpdateShadowMapCascades();
         void ShowMenuBar();
         void CreateMousePickingPipeline();
         void CreateShadowMapPipeline();
@@ -59,7 +59,6 @@ namespace Flameberry {
 
         VkSampler m_VkTextureSampler;
         std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
-        std::vector<VkDescriptorSet> m_ShadowMapViewportDescriptorSets;
         std::vector<VkDescriptorSet> m_CompositePassViewportDescriptorSets;
 
         // UI
@@ -91,7 +90,6 @@ namespace Flameberry {
         std::unique_ptr<Buffer> m_MousePickingBuffer;
         bool m_IsMousePickingBufferReady = false, m_DidViewportBegin = true, m_IsGizmoOverlayHovered = false;
 
-        // Test
         std::shared_ptr<RenderPass> m_SceneRenderPass;
         std::shared_ptr<RenderPass> m_ShadowMapRenderPass;
         std::shared_ptr<RenderPass> m_MousePickingRenderPass;
@@ -102,7 +100,6 @@ namespace Flameberry {
 
         std::shared_ptr<Pipeline> m_ShadowMapPipeline;
         VkPipelineLayout m_ShadowMapPipelineLayout;
-
         VkSampler m_ShadowMapSampler;
 
         std::shared_ptr<DescriptorSetLayout> m_ShadowMapDescriptorSetLayout;
@@ -110,6 +107,8 @@ namespace Flameberry {
         std::vector<std::unique_ptr<Buffer>> m_ShadowMapUniformBuffers;
 
         const uint32_t SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
+        std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT> m_CascadeMatrices;
+        std::array<float, SHADOW_MAP_CASCADE_COUNT> m_CascadeDepthSplits;
 
         // Post processing resources
         std::shared_ptr<RenderPass> m_CompositePass;

@@ -4,7 +4,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
-#include "Renderer/Vulkan/VulkanRenderCommand.h"
+#include "Renderer/Vulkan/RenderCommand.h"
 #include "Renderer/Vulkan/VulkanSwapChain.h"
 #include "Renderer/Vulkan/VulkanDebug.h"
 #include "Renderer/Vulkan/VulkanContext.h"
@@ -52,7 +52,7 @@ namespace Flameberry {
         }
 
         const auto& device = VulkanContext::GetCurrentDevice();
-        SwapChainDetails vk_swap_chain_details = VulkanRenderCommand::GetSwapChainDetails(VulkanContext::GetPhysicalDevice(), VulkanContext::GetCurrentWindow()->GetWindowSurface());
+        SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(VulkanContext::GetPhysicalDevice(), VulkanContext::GetCurrentWindow()->GetWindowSurface());
 
         // Creating ImGui RenderPass
         VkAttachmentDescription attachment{};

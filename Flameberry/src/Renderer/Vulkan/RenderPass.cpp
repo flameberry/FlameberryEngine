@@ -3,7 +3,7 @@
 #include <array>
 
 #include "VulkanDebug.h"
-#include "VulkanRenderCommand.h"
+#include "RenderCommand.h"
 #include "VulkanContext.h"
 #include "Renderer/Renderer.h"
 
@@ -67,16 +67,22 @@ namespace Flameberry {
         VkAttachmentReference depthRef;
         std::vector<VkAttachmentReference> resolveRefs;
 
+        bool useMultiView = false;
+        uint32_t layerCount = framebufferSpec.Attachments[0].LayerCount;
+
         int i = 0;
-        for (const auto& format : framebufferSpec.Attachments)
+        for (const auto& attachment : framebufferSpec.Attachments)
         {
-            attachments[i].format = format;
+            attachments[i].format = attachment.Format;
             attachments[i].samples = samples;
             attachments[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             attachments[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             attachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-            if (VulkanRenderCommand::DoesFormatSupportDepthAttachment(format))
+            useMultiView = useMultiView || attachment.LayerCount > 1;
+            FL_ASSERT(layerCount == attachment.LayerCount, "Different Layers for each attachment are not handled correctly yet!");
+
+            if (RenderCommand::DoesFormatSupportDepthAttachment(attachment.Format))
             {
                 attachments[i].loadOp = framebufferSpec.DepthLoadOp;
                 attachments[i].storeOp = framebufferSpec.DepthStoreOp;
@@ -89,7 +95,7 @@ namespace Flameberry {
             {
                 attachments[i].loadOp = framebufferSpec.ColorLoadOp;
                 attachments[i].storeOp = framebufferSpec.ColorStoreOp;
-                attachments[i].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                attachments[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
                 auto& ref = colorRefs.emplace_back();
                 ref.attachment = i;
@@ -97,7 +103,7 @@ namespace Flameberry {
 
                 if (framebufferSpec.Samples > 1)
                 {
-                    attachments[i + framebufferSpec.Attachments.size()].format = format;
+                    attachments[i + framebufferSpec.Attachments.size()].format = attachment.Format;
                     attachments[i + framebufferSpec.Attachments.size()].samples = VK_SAMPLE_COUNT_1_BIT;
                     attachments[i + framebufferSpec.Attachments.size()].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
                     attachments[i + framebufferSpec.Attachments.size()].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -121,6 +127,27 @@ namespace Flameberry {
         vk_subpass_description.pDepthStencilAttachment = &depthRef;
         vk_subpass_description.pResolveAttachments = resolveRefs.data();
 
+        /*
+            Bit mask that specifies which view rendering is broadcast to
+            0011 = Broadcast to first and second view (layer)
+        */
+        uint32_t viewMask = 0b00000000;
+        for (uint32_t i = 0; i < layerCount; i++)
+            viewMask = (viewMask << 1) + 0b1;
+
+        /*
+            Bit mask that specifies correlation between views
+            An implementation may use this for optimizations (concurrent render)
+        */
+        const uint32_t correlationMask = viewMask;
+
+        VkRenderPassMultiviewCreateInfo multiViewRenderPassCreateInfo{};
+        multiViewRenderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO;
+        multiViewRenderPassCreateInfo.subpassCount = 1;
+        multiViewRenderPassCreateInfo.pViewMasks = &viewMask;
+        multiViewRenderPassCreateInfo.correlationMaskCount = 1;
+        multiViewRenderPassCreateInfo.pCorrelationMasks = &correlationMask;
+
         VkRenderPassCreateInfo vk_render_pass_create_info{};
         vk_render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         vk_render_pass_create_info.attachmentCount = count;
@@ -129,6 +156,9 @@ namespace Flameberry {
         vk_render_pass_create_info.pSubpasses = &vk_subpass_description;
         vk_render_pass_create_info.dependencyCount = (uint32_t)dependencies.size();
         vk_render_pass_create_info.pDependencies = dependencies.data();
+
+        if (useMultiView)
+            vk_render_pass_create_info.pNext = &multiViewRenderPassCreateInfo;
 
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         VK_CHECK_RESULT(vkCreateRenderPass(device, &vk_render_pass_create_info, nullptr, &m_VkRenderPass));
@@ -151,7 +181,7 @@ namespace Flameberry {
                 for (uint32_t i = 0; i < framebufferSpec.Attachments.size(); i++)
                 {
                     auto& value = clearValues[i];
-                    if (VulkanRenderCommand::DoesFormatSupportDepthAttachment(framebufferSpec.Attachments[i]))
+                    if (RenderCommand::DoesFormatSupportDepthAttachment(framebufferSpec.Attachments[i].Format))
                         value.depthStencil = framebufferSpec.DepthStencilClearValue;
                     else
                         value.color = framebufferSpec.ClearColorValue;

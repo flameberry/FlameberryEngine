@@ -10,6 +10,8 @@
 
 #include "ECS/Scene.h"
 
+#define SHADOW_MAP_CASCADE_COUNT 4
+
 namespace Flameberry {
     struct ModelMatrixPushConstantData { glm::mat4 ModelMatrix; };
     struct MousePickingPushConstantData { glm::mat4 ModelMatrix; int EntityIndex; };
@@ -20,7 +22,15 @@ namespace Flameberry {
         SceneRenderer(VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass, const std::vector<VkImageView>& shadowMapImageViews, VkSampler shadowMapSampler);
         ~SceneRenderer();
 
-        void OnDraw(VkDescriptorSet globalDescriptorSet, const PerspectiveCamera& activeCamera, const std::shared_ptr<Scene>& scene, const glm::vec2& framebufferSize, const fbentt::entity& selectedEntity = {});
+        void OnDraw(
+            VkDescriptorSet globalDescriptorSet,
+            const PerspectiveCamera& activeCamera,
+            const std::shared_ptr<Scene>& scene,
+            const glm::vec2& framebufferSize,
+            const std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT>& cascadeMatrices,
+            const std::array<float, SHADOW_MAP_CASCADE_COUNT>& cascadeSplits,
+            const fbentt::entity& selectedEntity = {}
+        );
         void OnDrawForShadowPass(VkPipelineLayout shadowMapPipelineLayout, const std::shared_ptr<Scene>& scene);
         void OnDrawForMousePickingPass(VkPipelineLayout mousePickingPipelineLayout, const std::shared_ptr<Scene>& scene);
 

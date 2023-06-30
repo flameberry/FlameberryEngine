@@ -1,7 +1,7 @@
 #include "Image.h"
 
 #include "VulkanDebug.h"
-#include "VulkanRenderCommand.h"
+#include "RenderCommand.h"
 #include "VulkanContext.h"
 
 namespace Flameberry {
@@ -19,7 +19,7 @@ namespace Flameberry {
         vk_image_create_info.extent.height = m_ImageSpec.Height;
         vk_image_create_info.extent.depth = 1;
         vk_image_create_info.mipLevels = m_ImageSpec.MipLevels;
-        vk_image_create_info.arrayLayers = 1;
+        vk_image_create_info.arrayLayers = m_ImageSpec.ArrayLayers;
         vk_image_create_info.format = m_ImageSpec.Format;
         vk_image_create_info.tiling = m_ImageSpec.Tiling;
         vk_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -34,7 +34,7 @@ namespace Flameberry {
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = m_MemoryRequirements.size;
-        allocInfo.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, m_MemoryRequirements.memoryTypeBits, m_ImageSpec.MemoryProperties);
+        allocInfo.memoryTypeIndex = RenderCommand::GetValidMemoryTypeIndex(physicalDevice, m_MemoryRequirements.memoryTypeBits, m_ImageSpec.MemoryProperties);
 
         VK_CHECK_RESULT(vkAllocateMemory(device, &allocInfo, nullptr, &m_VkImageDeviceMemory));
         vkBindImageMemory(device, m_VkImage, m_VkImageDeviceMemory, 0);
@@ -43,7 +43,7 @@ namespace Flameberry {
         VkImageViewCreateInfo vk_image_view_create_info{};
         vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         vk_image_view_create_info.image = m_VkImage;
-        vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        vk_image_view_create_info.viewType = m_ImageSpec.ViewSpecification.LayerCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
         vk_image_view_create_info.format = m_ImageSpec.Format;
         vk_image_view_create_info.subresourceRange.aspectMask = m_ImageSpec.ViewSpecification.AspectFlags;
         vk_image_view_create_info.subresourceRange.baseMipLevel = m_ImageSpec.ViewSpecification.BaseMipLevel;

@@ -4,7 +4,7 @@
 
 #include "Vulkan/RenderPass.h"
 #include "Vulkan/VulkanDebug.h"
-#include "Vulkan/VulkanRenderCommand.h"
+#include "Vulkan/RenderCommand.h"
 
 #define MAX_LINES 500
 
@@ -50,7 +50,7 @@ namespace Flameberry {
             pipelineSpec.VertexInputBindingDescription.binding = 0;
             pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
             pipelineSpec.VertexInputBindingDescription.stride = sizeof(LineVertex);
-            pipelineSpec.Samples = VulkanRenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+            pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
             pipelineSpec.PolygonMode = VK_POLYGON_MODE_LINE;
             pipelineSpec.PrimitiveTopology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;

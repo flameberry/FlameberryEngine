@@ -2,7 +2,7 @@
 
 #include "VulkanDebug.h"
 
-#include "VulkanRenderCommand.h"
+#include "RenderCommand.h"
 #include "VulkanContext.h"
 #include "Image.h"
 
@@ -19,7 +19,7 @@ namespace Flameberry {
         const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
 
-        SwapChainDetails vk_swap_chain_details = VulkanRenderCommand::GetSwapChainDetails(physicalDevice, m_VkSurface);
+        SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(physicalDevice, m_VkSurface);
         VkSurfaceFormatKHR vk_surface_format = SelectSwapSurfaceFormat(vk_swap_chain_details.SurfaceFormats);
         VkPresentModeKHR vk_presentation_mode = SelectSwapPresentationMode(vk_swap_chain_details.PresentationModes);
         VkExtent2D vk_extent_2d = SelectSwapExtent(vk_swap_chain_details.SurfaceCapabilities);
@@ -131,7 +131,7 @@ namespace Flameberry {
     VkFormat VulkanSwapChain::GetDepthFormat()
     {
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
-        return VulkanRenderCommand::GetSupportedFormat(
+        return RenderCommand::GetSupportedFormat(
             physicalDevice,
             { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT },
             VK_IMAGE_TILING_OPTIMAL,
@@ -196,7 +196,7 @@ namespace Flameberry {
         VulkanContext::GetCurrentDevice()->WaitIdle();
         FL_INFO("Device is idle now...");
 
-        SwapChainDetails vk_swap_chain_details = VulkanRenderCommand::GetSwapChainDetails(physicalDevice, m_VkSurface);
+        SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(physicalDevice, m_VkSurface);
         VkSurfaceFormatKHR vk_surface_format = SelectSwapSurfaceFormat(vk_swap_chain_details.SurfaceFormats);
         VkPresentModeKHR vk_presentation_mode = SelectSwapPresentationMode(vk_swap_chain_details.PresentationModes);
         VkExtent2D vk_extent_2d = SelectSwapExtent(vk_swap_chain_details.SurfaceCapabilities);

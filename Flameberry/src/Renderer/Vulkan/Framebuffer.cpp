@@ -2,7 +2,7 @@
 
 #include "VulkanContext.h"
 #include "VulkanDebug.h"
-#include "VulkanRenderCommand.h"
+#include "RenderCommand.h"
 
 namespace Flameberry {
     Framebuffer::Framebuffer(const FramebufferSpecification& specification)
@@ -13,7 +13,7 @@ namespace Flameberry {
 
     bool Framebuffer::Resize(uint32_t width, uint32_t height, VkRenderPass renderPass)
     {
-        if (width != 0 || height != 0 || m_FramebufferSpec.Width != width || m_FramebufferSpec.Height != height)
+        if (!(width == 0 || height == 0) && (m_FramebufferSpec.Width != width || m_FramebufferSpec.Height != height))
         {
             m_FramebufferSpec.Width = width;
             m_FramebufferSpec.Height = height;
@@ -54,21 +54,24 @@ namespace Flameberry {
             m_FramebufferImages.clear();
         }
 
-        std::vector<VkFormat> colorAttachmentFormats;
+        std::vector<FramebufferAttachmentSpecification> colorAttachments;
 
-        for (const auto& format : m_FramebufferSpec.Attachments)
+        for (const auto& attachment : m_FramebufferSpec.Attachments)
         {
             ImageSpecification imageSpec;
             imageSpec.Width = m_FramebufferSpec.Width;
             imageSpec.Height = m_FramebufferSpec.Height;
             imageSpec.MipLevels = 1;
+            imageSpec.ArrayLayers = attachment.LayerCount;
             imageSpec.Samples = m_FramebufferSpec.Samples;
-            imageSpec.Format = format;
+            imageSpec.Format = attachment.Format;
             imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
             imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
             imageSpec.Usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT; // TODO: Remove setting usage as VK_IMAGE_USAGE_TRANSFER_SRC_BIT for all
 
-            if (VulkanRenderCommand::DoesFormatSupportDepthAttachment(format))
+            imageSpec.ViewSpecification.LayerCount = attachment.LayerCount;
+
+            if (RenderCommand::DoesFormatSupportDepthAttachment(attachment.Format))
             {
                 imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
                 imageSpec.Usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -79,25 +82,28 @@ namespace Flameberry {
                 imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
                 imageSpec.Usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-                colorAttachmentFormats.emplace_back(format);
+                colorAttachments.emplace_back(attachment);
             }
             m_FramebufferImages.emplace_back(Image::Create(imageSpec));
         }
 
         if (m_FramebufferSpec.Samples > 1)
         {
-            for (auto& format : colorAttachmentFormats)
+            for (auto& attachment : colorAttachments)
             {
                 ImageSpecification imageSpec;
                 imageSpec.Width = m_FramebufferSpec.Width;
                 imageSpec.Height = m_FramebufferSpec.Height;
                 imageSpec.MipLevels = 1;
+                imageSpec.ArrayLayers = attachment.LayerCount;
                 imageSpec.Samples = 1;
-                imageSpec.Format = format;
+                imageSpec.Format = attachment.Format;
                 imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
                 imageSpec.Usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
                 imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
                 imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+                imageSpec.ViewSpecification.LayerCount = attachment.LayerCount;
 
                 m_FramebufferImages.emplace_back(Image::Create(imageSpec));
             }

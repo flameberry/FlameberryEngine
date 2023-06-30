@@ -19,11 +19,12 @@ namespace Flameberry {
         uint32_t Samples = 1;
         VkViewport Viewport = { 0, 0, 0, 0, 0.0f, 1.0f };
         VkRect2D Scissor;
-        bool BlendingEnable = false, DepthTestEnable = true, DepthWriteEnable = true, StencilTestEnable = false;
+        bool BlendingEnable = false, DepthTestEnable = true, DepthWriteEnable = true, DepthClampEnable = false, StencilTestEnable = false;
         VkCompareOp DepthCompareOp = VK_COMPARE_OP_LESS;
         bool DynamicStencilEnable = false, DynamicStencilOp = false;
         VkStencilOpState StencilOpState = {};
         VkCullModeFlags CullMode = VK_CULL_MODE_BACK_BIT;
+        VkFrontFace FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         VkPolygonMode PolygonMode = VK_POLYGON_MODE_FILL;
         VkPrimitiveTopology PrimitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     };

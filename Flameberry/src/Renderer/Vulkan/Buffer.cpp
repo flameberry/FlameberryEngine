@@ -1,7 +1,7 @@
 #include "Buffer.h"
 
 #include "VulkanDebug.h"
-#include "VulkanRenderCommand.h"
+#include "RenderCommand.h"
 #include "VulkanContext.h"
 
 namespace Flameberry {
@@ -34,7 +34,7 @@ namespace Flameberry {
         VkMemoryAllocateInfo vk_memory_allocate_info{};
         vk_memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         vk_memory_allocate_info.allocationSize = vk_memory_requirements.size;
-        vk_memory_allocate_info.memoryTypeIndex = VulkanRenderCommand::GetValidMemoryTypeIndex(physicalDevice, vk_memory_requirements.memoryTypeBits, m_BufferSpec.MemoryProperties);
+        vk_memory_allocate_info.memoryTypeIndex = RenderCommand::GetValidMemoryTypeIndex(physicalDevice, vk_memory_requirements.memoryTypeBits, m_BufferSpec.MemoryProperties);
 
         VK_CHECK_RESULT(vkAllocateMemory(device, &vk_memory_allocate_info, nullptr, &m_VkBufferDeviceMemory));
         vkBindBufferMemory(device, m_VkBuffer, m_VkBufferDeviceMemory, 0);

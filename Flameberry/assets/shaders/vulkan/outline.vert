@@ -4,7 +4,7 @@ layout (location = 0) in vec3 a_Position;
 layout (location = 1) in vec3 a_Normal;
 
 layout (set = 0, binding = 0) uniform UniformBufferObject {
-    mat4 u_ViewProjectionMatrix;
+    mat4 u_ViewMatrix, u_ProjectionMatrix, u_ViewProjectionMatrix;
 };
 
 layout (push_constant) uniform ModelMatrix {

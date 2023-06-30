@@ -120,7 +120,7 @@ namespace Flameberry {
         ImGui::TableNextColumn();
 
         ImGui::AlignTextToFramePadding();
-        ImGui::TextWrapped(label);
+        ImGui::TextWrapped("%s", label);
 
         ImGui::TableNextColumn();
 
