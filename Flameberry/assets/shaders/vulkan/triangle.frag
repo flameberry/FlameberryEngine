@@ -1,11 +1,10 @@
 #version 450
 
-layout (location = 0) in vec3 v_ObjectSpacePosition;
-layout (location = 1) in vec3 v_WorldSpacePosition;
-layout (location = 2) in vec3 v_Normal;
-layout (location = 3) in vec2 v_TextureCoords;
-layout (location = 4) in vec3 v_ViewPosition;
-layout (location = 5) in mat3 v_TBNMatrix;
+layout (location = 0) in vec3 v_WorldSpacePosition;
+layout (location = 1) in vec3 v_Normal;
+layout (location = 2) in vec2 v_TextureCoords;
+layout (location = 3) in vec3 v_ViewPosition;
+layout (location = 4) in mat3 v_TBNMatrix;
 
 layout (location = 0) out vec4 o_FragColor;
 
@@ -20,7 +19,7 @@ const mat4 g_BiasMatrix = mat4(
 	0.5, 0.5, 0.0, 1.0
 );
 
-layout (set = 1, binding = 1) uniform sampler2DArray u_ShadowMapSampler;
+layout (set = 1, binding = 1) uniform sampler2DArray u_ShadowMapSamplerArray;
 
 layout (set = 2, binding = 0) uniform sampler2D u_TextureMapSampler;
 layout (set = 3, binding = 0) uniform sampler2D u_NormalMapSampler;
@@ -128,7 +127,7 @@ float CalculateShadowFactor()
     //     return AMBIENT;
 
     // // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    // float closestDepth = texture(u_ShadowMapSampler, vec3(projCoords.xy, 0)).r; 
+    // float closestDepth = texture(u_ShadowMapSamplerArray, vec3(projCoords.xy, 0)).r; 
     // // get depth of current fragment from light's perspective
     // float currentDepth = projCoords.z;
     // // check whether current frag pos is in shadow
@@ -143,7 +142,7 @@ float TextureProj(vec4 shadowCoord, vec2 offset, uint cascadeIndex)
 	float bias = 0.005;
 
 	if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0) {
-		float dist = texture(u_ShadowMapSampler, vec3(shadowCoord.st + offset, cascadeIndex)).r;
+		float dist = texture(u_ShadowMapSamplerArray, vec3(shadowCoord.st + offset, cascadeIndex)).r;
 		if (shadowCoord.w > 0 && dist < shadowCoord.z - bias) {
 			shadow = AMBIENT;
 		}
@@ -153,7 +152,7 @@ float TextureProj(vec4 shadowCoord, vec2 offset, uint cascadeIndex)
 
 float FilterPCF(vec4 sc, uint cascadeIndex)
 {
-    ivec2 texDim = textureSize(u_ShadowMapSampler, 0).xy;
+    ivec2 texDim = textureSize(u_ShadowMapSamplerArray, 0).xy;
 	float scale = 0.75;
 	float dx = scale * 1.0 / float(texDim.x);
 	float dy = scale * 1.0 / float(texDim.y);

@@ -6,12 +6,11 @@ layout (location = 2) in vec2 a_TextureCoords;
 layout (location = 3) in vec3 a_Tangent;
 layout (location = 4) in vec3 a_BiTangent;
 
-layout (location = 0) out vec3 v_ObjectSpacePosition;
-layout (location = 1) out vec3 v_WorldSpacePosition;
-layout (location = 2) out vec3 v_Normal;
-layout (location = 3) out vec2 v_TextureCoords;
-layout (location = 4) out vec3 v_ViewPosition;
-layout (location = 5) out mat3 v_TBNMatrix;
+layout (location = 0) out vec3 v_WorldSpacePosition;
+layout (location = 1) out vec3 v_Normal;
+layout (location = 2) out vec2 v_TextureCoords;
+layout (location = 3) out vec3 v_ViewPosition;
+layout (location = 4) out mat3 v_TBNMatrix;
 
 layout (set = 0, binding = 0) uniform UniformBufferObject {
     mat4 u_ViewMatrix, u_ProjectionMatrix, u_ViewProjectionMatrix;
@@ -29,8 +28,7 @@ void main()
 {
     gl_Position = u_ViewProjectionMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
 
-    v_ObjectSpacePosition = a_Position;
-    v_WorldSpacePosition = vec3(u_ModelMatrix * vec4(v_ObjectSpacePosition, 1.0));
+    v_WorldSpacePosition = vec3(u_ModelMatrix * vec4(a_Position, 1.0));
     v_Normal = normalize(a_Normal);
     v_TextureCoords = a_TextureCoords;
 

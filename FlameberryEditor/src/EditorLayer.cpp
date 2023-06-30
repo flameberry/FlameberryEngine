@@ -28,29 +28,29 @@ namespace Flameberry {
     void EditorLayer::OnCreate()
     {
         // Temp
-        VkPhysicalDeviceFeatures2KHR deviceFeatures2{};
-        VkPhysicalDeviceMultiviewFeaturesKHR extFeatures{};
-        extFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR;
-        deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR;
-        deviceFeatures2.pNext = &extFeatures;
-        PFN_vkGetPhysicalDeviceFeatures2KHR vkGetPhysicalDeviceFeatures2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures2KHR>(vkGetInstanceProcAddr(VulkanContext::GetCurrentInstance()->GetVulkanInstance(), "vkGetPhysicalDeviceFeatures2KHR"));
-        vkGetPhysicalDeviceFeatures2KHR(VulkanContext::GetPhysicalDevice(), &deviceFeatures2);
-        std::cout << "Multiview features:" << std::endl;
-        std::cout << "\tmultiview = " << extFeatures.multiview << std::endl;
-        std::cout << "\tmultiviewGeometryShader = " << extFeatures.multiviewGeometryShader << std::endl;
-        std::cout << "\tmultiviewTessellationShader = " << extFeatures.multiviewTessellationShader << std::endl;
-        std::cout << std::endl;
-
-        VkPhysicalDeviceProperties2KHR deviceProps2{};
-        VkPhysicalDeviceMultiviewPropertiesKHR extProps{};
-        extProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR;
-        deviceProps2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
-        deviceProps2.pNext = &extProps;
-        PFN_vkGetPhysicalDeviceProperties2KHR vkGetPhysicalDeviceProperties2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2KHR>(vkGetInstanceProcAddr(VulkanContext::GetCurrentInstance()->GetVulkanInstance(), "vkGetPhysicalDeviceProperties2KHR"));
-        vkGetPhysicalDeviceProperties2KHR(VulkanContext::GetPhysicalDevice(), &deviceProps2);
-        std::cout << "Multiview properties:" << std::endl;
-        std::cout << "\tmaxMultiviewViewCount = " << extProps.maxMultiviewViewCount << std::endl;
-        std::cout << "\tmaxMultiviewInstanceIndex = " << extProps.maxMultiviewInstanceIndex << std::endl;
+//        VkPhysicalDeviceFeatures2KHR deviceFeatures2{};
+//        VkPhysicalDeviceMultiviewFeaturesKHR extFeatures{};
+//        extFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR;
+//        deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR;
+//        deviceFeatures2.pNext = &extFeatures;
+//        PFN_vkGetPhysicalDeviceFeatures2KHR vkGetPhysicalDeviceFeatures2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures2KHR>(vkGetInstanceProcAddr(VulkanContext::GetCurrentInstance()->GetVulkanInstance(), "vkGetPhysicalDeviceFeatures2KHR"));
+//        vkGetPhysicalDeviceFeatures2KHR(VulkanContext::GetPhysicalDevice(), &deviceFeatures2);
+//        std::cout << "Multiview features:" << std::endl;
+//        std::cout << "\tmultiview = " << extFeatures.multiview << std::endl;
+//        std::cout << "\tmultiviewGeometryShader = " << extFeatures.multiviewGeometryShader << std::endl;
+//        std::cout << "\tmultiviewTessellationShader = " << extFeatures.multiviewTessellationShader << std::endl;
+//        std::cout << std::endl;
+//
+//        VkPhysicalDeviceProperties2KHR deviceProps2{};
+//        VkPhysicalDeviceMultiviewPropertiesKHR extProps{};
+//        extProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR;
+//        deviceProps2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
+//        deviceProps2.pNext = &extProps;
+//        PFN_vkGetPhysicalDeviceProperties2KHR vkGetPhysicalDeviceProperties2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2KHR>(vkGetInstanceProcAddr(VulkanContext::GetCurrentInstance()->GetVulkanInstance(), "vkGetPhysicalDeviceProperties2KHR"));
+//        vkGetPhysicalDeviceProperties2KHR(VulkanContext::GetPhysicalDevice(), &deviceProps2);
+//        std::cout << "Multiview properties:" << std::endl;
+//        std::cout << "\tmaxMultiviewViewCount = " << extProps.maxMultiviewViewCount << std::endl;
+//        std::cout << "\tmaxMultiviewInstanceIndex = " << extProps.maxMultiviewInstanceIndex << std::endl;
 
         m_VkTextureSampler = Texture2D::GetDefaultSampler();
         auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
@@ -904,25 +904,13 @@ namespace Flameberry {
         sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        sampler_info.anisotropyEnable = VK_TRUE;
+        sampler_info.anisotropyEnable = VK_FALSE;
         sampler_info.mipLodBias = 0.0f;
         sampler_info.maxAnisotropy = 1.0f;
         sampler_info.minLod = 0.0f;
         sampler_info.maxLod = 1.0f;
         sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-
-        VkPhysicalDeviceProperties properties;
-        vkGetPhysicalDeviceProperties(VulkanContext::GetPhysicalDevice(), &properties);
-
-        sampler_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-        sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        sampler_info.unnormalizedCoordinates = VK_FALSE;
-        sampler_info.compareEnable = VK_FALSE;
-        sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
         sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        sampler_info.mipLodBias = 0.0f;
-        sampler_info.minLod = 0.0f;
-        sampler_info.maxLod = 1.0f;
 
         VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_ShadowMapSampler));
 
