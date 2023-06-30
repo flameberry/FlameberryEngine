@@ -117,25 +117,6 @@ float GGXDistribution(float n_dot_h)
     return ggxdistrib;
 }
 
-float CalculateShadowFactor()
-{
-    float shadow = 1.0;
-    // perform perspective divide
-    // vec3 projCoords = v_LightFragmentPosition.xyz / v_LightFragmentPosition.w;
-
-    // if (projCoords.z < -1.0 || projCoords.z > 1.0)
-    //     return AMBIENT;
-
-    // // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    // float closestDepth = texture(u_ShadowMapSamplerArray, vec3(projCoords.xy, 0)).r; 
-    // // get depth of current fragment from light's perspective
-    // float currentDepth = projCoords.z;
-    // // check whether current frag pos is in shadow
-    // if (v_LightFragmentPosition.w > 0.0 && currentDepth - closestDepth > 0.0001)
-    //     shadow = AMBIENT;
-    return shadow;
-}
-
 float TextureProj(vec4 shadowCoord, vec2 offset, uint cascadeIndex)
 {
 	float shadow = 1.0;
@@ -208,6 +189,7 @@ vec3 CalculatePBRDirectionalLight(DirectionalLight light, vec3 normal)
 	// Depth compare for shadowing
 	vec4 shadowCoord = (g_BiasMatrix * u_SceneData.cascadeViewProjectionMatrix[cascadeIndex]) * vec4(v_WorldSpacePosition, 1.0);	
 	float shadow = FilterPCF(shadowCoord / shadowCoord.w, cascadeIndex);
+	// float shadow = TextureProj(shadowCoord / shadowCoord.w, vec2(0.0), cascadeIndex);
 
     vec3 finalColor = shadow * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
     // vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
@@ -272,25 +254,25 @@ void main()
 
     o_FragColor = vec4(intermediateColor, 1.0);
 
-    // uint cascadeIndex = 0;
-	// for(uint i = 0; i < CASCADE_COUNT - 1; ++i) {
-	// 	if(v_ViewPosition.z < u_SceneData.cascadeSplits[i]) {	
-	// 		cascadeIndex = i + 1;
-	// 	}
-	// }
+    uint cascadeIndex = 0;
+	for(uint i = 0; i < CASCADE_COUNT - 1; ++i) {
+		if(v_ViewPosition.z < u_SceneData.cascadeSplits[i]) {	
+			cascadeIndex = i + 1;
+		}
+	}
 
-    // switch(cascadeIndex) {
-    //     case 0 : 
-    //         o_FragColor.rgb *= vec3(1.0f, 0.25f, 0.25f);
-    //         break;
-    //     case 1 : 
-    //         o_FragColor.rgb *= vec3(0.25f, 1.0f, 0.25f);
-    //         break;
-    //     case 2 : 
-    //         o_FragColor.rgb *= vec3(0.25f, 0.25f, 1.0f);
-    //         break;
-    //     case 3 : 
-    //         o_FragColor.rgb *= vec3(1.0f, 1.0f, 0.25f);
-    //         break;
-    // }
+    switch(cascadeIndex) {
+        case 0 : 
+            o_FragColor.rgb *= vec3(1.0f, 0.25f, 0.25f);
+            break;
+        case 1 : 
+            o_FragColor.rgb *= vec3(0.25f, 1.0f, 0.25f);
+            break;
+        case 2 : 
+            o_FragColor.rgb *= vec3(0.25f, 0.25f, 1.0f);
+            break;
+        case 3 : 
+            o_FragColor.rgb *= vec3(1.0f, 1.0f, 0.25f);
+            break;
+    }
 }

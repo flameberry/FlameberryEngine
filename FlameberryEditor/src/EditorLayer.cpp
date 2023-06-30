@@ -756,7 +756,7 @@ namespace Flameberry {
         float range = maxZ - minZ;
         float ratio = maxZ / minZ;
 
-        const float cascadeSplitLambda = 0.95f;
+        const float cascadeSplitLambda = 0.91f;
 
         // Calculate split depths based on view camera frustum
         // Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html

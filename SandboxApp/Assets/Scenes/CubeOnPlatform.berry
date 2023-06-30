@@ -28,7 +28,7 @@ Entities:
   - Entity: 13674133330002220613
     TagComponent: StaticMesh
     TransformComponent:
-      Translation: [-6.25415039, 4.52927685, -1.04127157]
+      Translation: [1.27743268, 5.11276484, 0.288362414]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
