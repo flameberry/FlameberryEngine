@@ -24,7 +24,7 @@ namespace Flameberry {
         ~ScopedTimer() {
 #ifdef FL_DEBUG
             FL_WARN("{0}: process took: {1} ms", m_ScopeName, std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_Start).count());
-#elif
+#elif defined(FL_RELEASE)
             std::cout << m_ScopeName << ": process took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_Start).count() << " ms\n";
 #endif
         }

@@ -50,6 +50,10 @@ namespace Flameberry {
         vk_image_view_create_info.subresourceRange.levelCount = m_ImageSpec.MipLevels;
         vk_image_view_create_info.subresourceRange.baseArrayLayer = m_ImageSpec.ViewSpecification.BaseArrayLayer;
         vk_image_view_create_info.subresourceRange.layerCount = m_ImageSpec.ViewSpecification.LayerCount;
+        vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
         VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView));
     }
@@ -63,13 +67,17 @@ namespace Flameberry {
         VkImageViewCreateInfo vk_image_view_create_info{};
         vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         vk_image_view_create_info.image = m_VkImage;
-        vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        vk_image_view_create_info.viewType = m_ImageSpec.ViewSpecification.LayerCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
         vk_image_view_create_info.format = m_ImageSpec.Format;
         vk_image_view_create_info.subresourceRange.aspectMask = m_ImageSpec.ViewSpecification.AspectFlags;
         vk_image_view_create_info.subresourceRange.baseMipLevel = m_ImageSpec.ViewSpecification.BaseMipLevel;
         vk_image_view_create_info.subresourceRange.levelCount = m_ImageSpec.MipLevels;
         vk_image_view_create_info.subresourceRange.baseArrayLayer = m_ImageSpec.ViewSpecification.BaseArrayLayer;
         vk_image_view_create_info.subresourceRange.layerCount = m_ImageSpec.ViewSpecification.LayerCount;
+        vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
         VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView));
 

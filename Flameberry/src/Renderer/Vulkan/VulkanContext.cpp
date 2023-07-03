@@ -16,7 +16,6 @@ namespace Flameberry {
 #ifdef __APPLE__
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 #endif
-        VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME,
         VK_KHR_MULTIVIEW_EXTENSION_NAME
     };
 

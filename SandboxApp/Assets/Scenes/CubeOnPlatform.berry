@@ -12,7 +12,7 @@ Entities:
   - Entity: 8822097923276355982
     TagComponent: Cube
     TransformComponent:
-      Translation: [0, 2.69613075, 0]
+      Translation: [0.494709611, 2.3434329, -1.61660004]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
@@ -28,7 +28,7 @@ Entities:
   - Entity: 13674133330002220613
     TagComponent: StaticMesh
     TransformComponent:
-      Translation: [1.27743268, 5.11276484, 0.288362414]
+      Translation: [0.517340302, 6.70209455, -1.38616633]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:

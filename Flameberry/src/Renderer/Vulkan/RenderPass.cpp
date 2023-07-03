@@ -79,11 +79,17 @@ namespace Flameberry {
             attachments[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             attachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
+            attachments[i].loadOp = framebufferSpec.DepthLoadOp;
+            attachments[i].storeOp = framebufferSpec.DepthStoreOp;
+
             useMultiView = useMultiView || attachment.LayerCount > 1;
             FL_ASSERT(layerCount == attachment.LayerCount, "Different Layers for each attachment are not handled correctly yet!");
 
             if (RenderCommand::DoesFormatSupportDepthAttachment(attachment.Format))
             {
+                attachments[i].stencilLoadOp = framebufferSpec.StencilLoadOp;
+                attachments[i].stencilStoreOp = framebufferSpec.StencilStoreOp;
+
                 attachments[i].loadOp = framebufferSpec.DepthLoadOp;
                 attachments[i].storeOp = framebufferSpec.DepthStoreOp;
                 attachments[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;

@@ -5,7 +5,7 @@ layout (location = 0) out vec4 o_FragColor;
 layout (location = 0) in vec2 v_TextureUV;
 
 layout (set = 0, binding = 0) uniform sampler2D u_ColorSampler;
-layout (set = 0, binding = 1) uniform sampler2D u_StencilSampler;
+layout (set = 0, binding = 1) uniform usampler2DMS u_StencilSampler;
 
 void main()
 {
@@ -26,4 +26,13 @@ void main()
         // result += texture(u_ColorSampler, v_TextureUV - vec2(0.0, tex_offset.y * i)).rgb * weight[i] * 10.0;
 	}
     o_FragColor = vec4(result, 1.0);
+
+	// const ivec2 size = textureSize(u_StencilSampler);
+ 	// const ivec2 pixel_coords = ivec2(v_TextureUV) * size;
+	// uvec4 stencil = texelFetch(u_StencilSampler, pixel_coords, 0);
+	// // float stencil_f = float(stencil.r);
+	// vec4 stencil_f = vec4(stencil);
+	// // o_FragColor = vec4(stencil_f, 0.0, 0.0, 1.0);
+	// o_FragColor = stencil_f;
+	// o_FragColor.a = 1.0;
 }

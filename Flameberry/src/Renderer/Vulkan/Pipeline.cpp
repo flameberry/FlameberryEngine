@@ -41,7 +41,7 @@ namespace Flameberry {
             pipelineColorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
             pipelineColorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
             pipelineColorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-            pipelineColorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+            pipelineColorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
             pipelineColorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
         }
         else
@@ -90,7 +90,7 @@ namespace Flameberry {
         pipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
         pipelineDepthStencilStateCreateInfo.stencilTestEnable = (VkBool32)m_PipelineSpec.StencilTestEnable;
         pipelineDepthStencilStateCreateInfo.front = m_PipelineSpec.StencilOpState;
-        pipelineDepthStencilStateCreateInfo.back = {};
+        pipelineDepthStencilStateCreateInfo.back = m_PipelineSpec.StencilOpState;
 
         const auto& vertexAttributeDesc = m_PipelineSpec.VertexLayout.CreateVertexInputAttributeDescriptions();
 

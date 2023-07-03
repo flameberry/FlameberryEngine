@@ -8,6 +8,7 @@
 #include "Vulkan/VulkanContext.h"
 #include "Material.h"
 #include "Renderer.h"
+#include "Renderer2D.h"
 
 #include "ECS/Component.h"
 #include "AssetManager/AssetManager.h"
@@ -20,6 +21,7 @@ namespace Flameberry {
         alignas(16) DirectionalLight directionalLight;
         alignas(16) PointLight pointLights[10];
         alignas(4)  int lightCount = 0;
+        alignas(4)  int showCascades = 0;
     };
 
     struct MeshData {
@@ -249,6 +251,7 @@ namespace Flameberry {
         const glm::vec2& framebufferSize,
         const std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT>& cascadeMatrices,
         const std::array<float, SHADOW_MAP_CASCADE_COUNT>& cascadeSplits,
+        bool colorCascades,
         const fbentt::entity& selectedEntity
     )
     {
@@ -285,13 +288,15 @@ namespace Flameberry {
             sceneUniformBufferData.pointLights[sceneUniformBufferData.lightCount].Color = light.Color;
             sceneUniformBufferData.pointLights[sceneUniformBufferData.lightCount].Intensity = light.Intensity;
             sceneUniformBufferData.lightCount++;
+
+            Renderer2D::AddBillboard(transform.translation, 0.7f, glm::vec3(1.0f), activeCamera.GetViewMatrix());
         }
         for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
         {
             sceneUniformBufferData.cascadeViewProjectionMatrix[i] = cascadeMatrices[i];
             sceneUniformBufferData.cascadeSplits[i] = cascadeSplits[i];
         }
-
+        sceneUniformBufferData.showCascades = (int)colorCascades;
         // sceneUniformBufferData.EnvironmentMapReflections = scene->m_SceneData.ActiveEnvironment.Reflections;
 
         m_SceneUniformBuffers[currentFrameIndex]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData), 0);
@@ -370,8 +375,9 @@ namespace Flameberry {
 
             ModelMatrixPushConstantData pushContantData;
             pushContantData.ModelMatrix = transform.GetTransform();
-            Renderer::Submit([shadowMapPipelineLayout, pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-                vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
+            Renderer::Submit([shadowMapPipelineLayout, pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                {
+                    vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
                 }
             );
 

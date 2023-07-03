@@ -2,12 +2,36 @@
 
 #include "Vulkan/Pipeline.h"
 #include "Vulkan/Buffer.h"
+#include "Vulkan/Texture2D.h"
 
 namespace Flameberry {
     struct LineVertex
     {
         glm::vec3 Position{ 0.0f };
         glm::vec3 Color{ 1.0f };
+    };
+
+    struct QuadVertex
+    {
+        glm::vec3 Position{ 0.0f };
+        glm::vec3 Color{ 1.0f };
+    };
+
+    struct Renderer2DData {
+        // Lines
+        std::shared_ptr<Pipeline> LinePipeline;
+        VkPipelineLayout LinePipelineLayout;
+        std::shared_ptr<Buffer> LineVertexBuffer;
+        std::vector<LineVertex> LineVertices;
+
+        // Quads
+        std::shared_ptr<Pipeline> QuadPipeline;
+        VkPipelineLayout QuadPipelineLayout;
+        std::shared_ptr<Buffer> QuadVertexBuffer, QuadIndexBuffer;
+        std::vector<QuadVertex> QuadVertices;
+
+        // Temp
+        std::shared_ptr<Texture2D> LightIconTexture;
     };
 
     class Renderer2D
@@ -18,12 +42,10 @@ namespace Flameberry {
 
         static void AddGrid(int gridSize);
         static void AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color);
+        static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix);
+
         static void Render(VkDescriptorSet globalDescriptorSet);
     private:
-        // Lines
-        static std::shared_ptr<Buffer> s_LineVertexBuffer;
-        static std::shared_ptr<Pipeline> s_LinePipeline;
-        static VkPipelineLayout s_LinePipelineLayout;
-        static std::vector<LineVertex> s_LineVertices;
+        static Renderer2DData s_Renderer2DData;
     };
 }

@@ -106,9 +106,11 @@ namespace Flameberry {
         std::vector<std::shared_ptr<DescriptorSet>> m_ShadowMapDescriptorSets;
         std::vector<std::unique_ptr<Buffer>> m_ShadowMapUniformBuffers;
 
-        const uint32_t SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
+        const uint32_t SHADOW_MAP_SIZE = 2048;
         std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT> m_CascadeMatrices;
         std::array<float, SHADOW_MAP_CASCADE_COUNT> m_CascadeDepthSplits;
+        bool m_ColorCascades = false;
+        float m_LambdaSplit = 0.91f;
 
         // Post processing resources
         std::shared_ptr<RenderPass> m_CompositePass;

@@ -27,39 +27,14 @@ namespace Flameberry {
 
     void EditorLayer::OnCreate()
     {
-        // Temp
-//        VkPhysicalDeviceFeatures2KHR deviceFeatures2{};
-//        VkPhysicalDeviceMultiviewFeaturesKHR extFeatures{};
-//        extFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR;
-//        deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR;
-//        deviceFeatures2.pNext = &extFeatures;
-//        PFN_vkGetPhysicalDeviceFeatures2KHR vkGetPhysicalDeviceFeatures2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures2KHR>(vkGetInstanceProcAddr(VulkanContext::GetCurrentInstance()->GetVulkanInstance(), "vkGetPhysicalDeviceFeatures2KHR"));
-//        vkGetPhysicalDeviceFeatures2KHR(VulkanContext::GetPhysicalDevice(), &deviceFeatures2);
-//        std::cout << "Multiview features:" << std::endl;
-//        std::cout << "\tmultiview = " << extFeatures.multiview << std::endl;
-//        std::cout << "\tmultiviewGeometryShader = " << extFeatures.multiviewGeometryShader << std::endl;
-//        std::cout << "\tmultiviewTessellationShader = " << extFeatures.multiviewTessellationShader << std::endl;
-//        std::cout << std::endl;
-//
-//        VkPhysicalDeviceProperties2KHR deviceProps2{};
-//        VkPhysicalDeviceMultiviewPropertiesKHR extProps{};
-//        extProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR;
-//        deviceProps2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
-//        deviceProps2.pNext = &extProps;
-//        PFN_vkGetPhysicalDeviceProperties2KHR vkGetPhysicalDeviceProperties2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2KHR>(vkGetInstanceProcAddr(VulkanContext::GetCurrentInstance()->GetVulkanInstance(), "vkGetPhysicalDeviceProperties2KHR"));
-//        vkGetPhysicalDeviceProperties2KHR(VulkanContext::GetPhysicalDevice(), &deviceProps2);
-//        std::cout << "Multiview properties:" << std::endl;
-//        std::cout << "\tmaxMultiviewViewCount = " << extProps.maxMultiviewViewCount << std::endl;
-//        std::cout << "\tmaxMultiviewInstanceIndex = " << extProps.maxMultiviewInstanceIndex << std::endl;
-
         m_VkTextureSampler = Texture2D::GetDefaultSampler();
         auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
         uint32_t imageCount = swapchain->GetSwapChainImageCount();
 
         {
             FramebufferSpecification shadowMapFramebufferSpec;
-            shadowMapFramebufferSpec.Width = 2048;
-            shadowMapFramebufferSpec.Height = 2048;
+            shadowMapFramebufferSpec.Width = SHADOW_MAP_SIZE;
+            shadowMapFramebufferSpec.Height = SHADOW_MAP_SIZE;
             shadowMapFramebufferSpec.Attachments = { { VK_FORMAT_D32_SFLOAT, SHADOW_MAP_CASCADE_COUNT } };
             shadowMapFramebufferSpec.Samples = 1;
             shadowMapFramebufferSpec.DepthStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -156,6 +131,8 @@ namespace Flameberry {
             sceneFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
             // Used to not store multisample color attachment
             sceneFramebufferSpec.ColorStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            // For outline compositing
+            sceneFramebufferSpec.StencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 
             RenderPassSpecification sceneRenderPassSpec;
 
@@ -230,12 +207,12 @@ namespace Flameberry {
                         }
                     );
 
-                    m_CompositePassDescriptorSets[imageIndex]->WriteImage(1, {
-                         .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-                         .imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[imageIndex]->GetDepthAttachment()->GetImageView(),
-                         .sampler = m_VkTextureSampler
-                        }
-                    );
+                    // m_CompositePassDescriptorSets[imageIndex]->WriteImage(1, {
+                    //      .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+                    //       .imageView = m_StencilImages[imageIndex]->GetImageView(),
+                    //       .sampler = m_ShadowMapSampler
+                    //     }
+                    // );
 
                     m_CompositePassDescriptorSets[imageIndex]->Update();
                 }
@@ -252,7 +229,8 @@ namespace Flameberry {
         bool didCameraResize = m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
         if (m_IsViewportFocused)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
-        UpdateShadowMapCascades();
+
+        UpdateShadowMapCascades(); // TODO: Update only when camera or directional light is updated
 
         {
             FL_PROFILE_SCOPE("Shadow Pass");
@@ -291,9 +269,9 @@ namespace Flameberry {
             if (m_EnableGrid)
                 Renderer2D::AddGrid(25);
 
-            Renderer2D::Render(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet());
+            m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), *m_ActiveCameraController.GetPerspectiveCamera(), m_ActiveScene, m_ViewportSize, m_CascadeMatrices, m_CascadeDepthSplits, m_ColorCascades, m_SceneHierarchyPanel->GetSelectionContext());
 
-            m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), *m_ActiveCameraController.GetPerspectiveCamera(), m_ActiveScene, m_ViewportSize, m_CascadeMatrices, m_CascadeDepthSplits, m_SceneHierarchyPanel->GetSelectionContext());
+            Renderer2D::Render(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet());
             m_SceneRenderPass->End();
         }
 
@@ -305,7 +283,7 @@ namespace Flameberry {
             auto pipelineLayout = m_CompositePipelineLayout;
             std::vector<VkDescriptorSet> descriptorSets(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
             for (uint8_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-                descriptorSets[i] = m_CompositePassDescriptorSets[0]->GetDescriptorSet();
+                descriptorSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
 
             Renderer::Submit([pipelineLayout, descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
@@ -554,10 +532,12 @@ namespace Flameberry {
         }
         ImGui::PopStyleVar();
 
-        ImGui::Begin("Statistics");
+        ImGui::Begin("Settings");
         ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         FL_DISPLAY_SCOPE_DETAILS_IMGUI();
         ImGui::Separator();
+        ImGui::Checkbox("Color Cascades", &m_ColorCascades);
+        ImGui::DragFloat("Lambda Split", &m_LambdaSplit, 0.002f, 0.0f, 1.0f);
         ImGui::End();
 
         // Display composited framebuffer
@@ -746,25 +726,26 @@ namespace Flameberry {
     {
         float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
 
-        float nearClip = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zNear;
-        float farClip = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zFar;
-        float clipRange = farClip - nearClip;
+        const float nearClip = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zNear;
+        const float farClip = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zFar;
+        const float clipRange = farClip - nearClip;
 
-        float minZ = nearClip;
-        float maxZ = nearClip + clipRange;
+        const float minZ = nearClip;
+        const float maxZ = nearClip + clipRange;
 
-        float range = maxZ - minZ;
-        float ratio = maxZ / minZ;
+        const float range = maxZ - minZ;
+        const float ratio = maxZ / minZ;
 
-        const float cascadeSplitLambda = 0.91f;
+        // const float cascadeSplitLambda = 0.91f;
+        const float cascadeSplitLambda = m_LambdaSplit;
 
         // Calculate split depths based on view camera frustum
         // Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
         for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
-            float p = (i + 1) / static_cast<float>(SHADOW_MAP_CASCADE_COUNT);
-            float log = minZ * std::pow(ratio, p);
-            float uniform = minZ + range * p;
-            float d = cascadeSplitLambda * (log - uniform) + uniform;
+            const float p = (i + 1) / static_cast<float>(SHADOW_MAP_CASCADE_COUNT);
+            const float log = minZ * std::pow(ratio, p);
+            const float uniform = minZ + range * p;
+            const float d = cascadeSplitLambda * (log - uniform) + uniform;
             cascadeSplits[i] = (d - nearClip) / clipRange;
         }
 
@@ -775,7 +756,7 @@ namespace Flameberry {
         const glm::mat4 invCam = glm::inverse(m_ActiveCameraController.GetPerspectiveCamera()->GetViewProjectionMatrix());
 
         for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
-            float splitDist = cascadeSplits[i];
+            const float splitDist = cascadeSplits[i];
 
             glm::vec3 frustumCorners[8] = {
                 glm::vec3(-1.0f,  1.0f, 0.0f),
@@ -813,12 +794,12 @@ namespace Flameberry {
             }
             radius = std::ceil(radius * 16.0f) / 16.0f;
 
-            glm::vec3 maxExtents = glm::vec3(radius);
-            glm::vec3 minExtents = -maxExtents;
+            const glm::vec3 maxExtents = glm::vec3(radius);
+            const glm::vec3 minExtents = -maxExtents;
 
-            glm::vec3 lightDir = glm::normalize(m_ActiveScene->GetDirectionalLight().Direction);
-            glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-            glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
+            const glm::vec3 lightDir = glm::normalize(m_ActiveScene->GetDirectionalLight().Direction);
+            const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+            const glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
 
             // Store split distance and matrix in cascade
             m_CascadeDepthSplits[i] = (m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zNear + splitDist * clipRange) * -1.0f;
@@ -986,12 +967,12 @@ namespace Flameberry {
         pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
         pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
 
-        pipelineSpec.Viewport.width = SHADOW_MAP_WIDTH;
-        pipelineSpec.Viewport.height = SHADOW_MAP_HEIGHT;
+        pipelineSpec.Viewport.width = SHADOW_MAP_SIZE;
+        pipelineSpec.Viewport.height = SHADOW_MAP_SIZE;
 
-        pipelineSpec.Scissor = { {0, 0}, {SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT} };
+        pipelineSpec.Scissor = { { 0, 0 }, { SHADOW_MAP_SIZE, SHADOW_MAP_SIZE } };
 
-        pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
+        // pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
         pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
         pipelineSpec.DepthClampEnable = true;
 
@@ -1022,24 +1003,26 @@ namespace Flameberry {
         m_CompositePass = RenderPass::Create(renderPassSpec);
 
         DescriptorSetLayoutSpecification layoutSpec;
-        layoutSpec.Bindings.resize(2);
+        layoutSpec.Bindings.resize(1);
 
         layoutSpec.Bindings[0].binding = 0;
         layoutSpec.Bindings[0].descriptorCount = 1;
         layoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         layoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        layoutSpec.Bindings[1].binding = 1;
-        layoutSpec.Bindings[1].descriptorCount = 1;
-        layoutSpec.Bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        layoutSpec.Bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        // layoutSpec.Bindings[1].binding = 1;
+        // layoutSpec.Bindings[1].descriptorCount = 1;
+        // layoutSpec.Bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        // layoutSpec.Bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         m_CompositePassDescriptorSetLayout = DescriptorSetLayout::Create(layoutSpec);
 
         DescriptorSetSpecification setSpec;
         setSpec.Layout = m_CompositePassDescriptorSetLayout;
 
-        m_CompositePassDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+        auto imageCount = VulkanContext::GetCurrentWindow()->GetSwapChain()->GetSwapChainImageCount();
+
+        m_CompositePassDescriptorSets.resize(imageCount);
         for (uint8_t i = 0; i < m_CompositePassDescriptorSets.size(); i++)
         {
             m_CompositePassDescriptorSets[i] = DescriptorSet::Create(setSpec);
@@ -1051,12 +1034,12 @@ namespace Flameberry {
                 }
             );
 
-            m_CompositePassDescriptorSets[i]->WriteImage(1, {
-                 .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-                 .imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView(),
-                 .sampler = m_VkTextureSampler
-                }
-            );
+            // m_CompositePassDescriptorSets[i]->WriteImage(1, {
+            //     .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+            //      .imageView = m_StencilImages[i]->GetImageView(),
+            //      .sampler = m_ShadowMapSampler
+            //     }
+            // );
 
             m_CompositePassDescriptorSets[i]->Update();
         }

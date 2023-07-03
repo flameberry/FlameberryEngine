@@ -29,6 +29,7 @@ namespace Flameberry {
             const glm::vec2& framebufferSize,
             const std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT>& cascadeMatrices,
             const std::array<float, SHADOW_MAP_CASCADE_COUNT>& cascadeSplits,
+            bool colorCascades,
             const fbentt::entity& selectedEntity = {}
         );
         void OnDrawForShadowPass(VkPipelineLayout shadowMapPipelineLayout, const std::shared_ptr<Scene>& scene);

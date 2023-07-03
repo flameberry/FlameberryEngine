@@ -30,8 +30,8 @@ namespace Flameberry {
         uint32_t Samples;
         VkClearColorValue ClearColorValue;
         VkClearDepthStencilValue DepthStencilClearValue;
-        VkAttachmentLoadOp ColorLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, DepthLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        VkAttachmentStoreOp ColorStoreOp = VK_ATTACHMENT_STORE_OP_STORE, DepthStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        VkAttachmentLoadOp ColorLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, DepthLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        VkAttachmentStoreOp ColorStoreOp = VK_ATTACHMENT_STORE_OP_STORE, DepthStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE, StencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     };
 
     class Framebuffer
