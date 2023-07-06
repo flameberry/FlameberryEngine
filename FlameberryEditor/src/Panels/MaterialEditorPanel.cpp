@@ -56,7 +56,7 @@ namespace Flameberry {
                     FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
 
                     if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
-                        m_EditingContext = AssetManager::TryGetOrLoadAssetFromFile<Material>(matPath);
+                        m_EditingContext = AssetManager::TryGetOrLoadAsset<Material>(matPath);
                     else
                         FL_WARN("Bad File given as Material!");
                 }
@@ -110,7 +110,7 @@ namespace Flameberry {
         }
         ImGui::End();
 
-        if (m_IsMaterialEdited && !m_EditingContext->IsDerived)
+        if (m_IsMaterialEdited && !m_EditingContext->FilePath.empty())
             MaterialSerializer::Serialize(m_EditingContext, m_EditingContext->FilePath.c_str());
     }
 
@@ -132,7 +132,7 @@ namespace Flameberry {
         if (mapEnabledVar)
         {
             if (!map)
-                map = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>("Assets/Textures/Checkerboard.png");
+                map = AssetManager::TryGetOrLoadAsset<Texture2D>("Assets/Textures/Checkerboard.png");
 
             ImGui::SameLine();
             ImGui::Image(reinterpret_cast<ImTextureID>(map->GetDescriptorSet()), ImVec2{ 70, 70 });
@@ -146,7 +146,7 @@ namespace Flameberry {
 
                     if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
                     {
-                        map = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(path.string());
+                        map = AssetManager::TryGetOrLoadAsset<Texture2D>(path.string());
                         m_IsMaterialEdited = true;
                     }
                     else

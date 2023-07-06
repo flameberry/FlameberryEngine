@@ -16,7 +16,10 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      MeshUUID: 17607295310664723591
+      MeshHandle: 17607295310664723591
+      OverridenMaterialTable:
+        - SubmeshIndex: 0
+          Material: Assets/Materials/WhispyGrass.fbmat
   - Entity: 6836258054852658160
     TagComponent: Platform
     TransformComponent:
@@ -24,25 +27,36 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [5.5, 1, 5.5]
     MeshComponent:
-      MeshUUID: 2095293778028230355
+      MeshHandle: 2095293778028230355
+      OverridenMaterialTable:
+        []
   - Entity: 13674133330002220613
-    TagComponent: StaticMesh
+    TagComponent: Sphere
     TransformComponent:
       Translation: [0.517340302, 6.70209455, -1.38616633]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      MeshUUID: 13733160320913040731
+      MeshHandle: 13733160320913040731
+      OverridenMaterialTable:
+        []
+  - Entity: 2570226917321693539
+    TagComponent: CubeDuplicate
+    TransformComponent:
+      Translation: [0, 2.86367321, 2.35985923]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshHandle: 17607295310664723591
+      OverridenMaterialTable:
+        - SubmeshIndex: 0
+          Material: Assets/Materials/BeatenDownBrick.fbmat
 Meshes:
   - Mesh: 17607295310664723591
     FilePath: Assets/Meshes/cube.obj
-    NonDerivedMaterials:
-      []
   - Mesh: 2095293778028230355
     FilePath: Assets/Meshes/platform.obj
-    NonDerivedMaterials:
-      []
   - Mesh: 13733160320913040731
     FilePath: Assets/Meshes/sphere.obj
-    NonDerivedMaterials:
-      []
+  - Mesh: 17607295310664723591
+    FilePath: Assets/Meshes/cube.obj

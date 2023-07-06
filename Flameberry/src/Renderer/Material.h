@@ -6,27 +6,17 @@
 #include "Core/UUID.h"
 
 namespace Flameberry {
-    struct Material
+    class Material : public Asset
     {
     public:
-        // Meta Data
-        std::string Name = "Default_Material", FilePath;
-        bool IsDerived = false;
-
-        // Actual properties
+        std::string Name = "Default_Material";
         glm::vec3 Albedo{ 1.0f };
-        float Roughness = 0.2f;
-        float Metallic = 0.0f;
+        float Roughness = 0.2f, Metallic = 0.0f;
         bool TextureMapEnabled = false, NormalMapEnabled = false, RoughnessMapEnabled = false, AmbientOcclusionMapEnabled = false, MetallicMapEnabled = false;
         std::shared_ptr<Texture2D> TextureMap, NormalMap, RoughnessMap, AmbientOcclusionMap, MetallicMap;
-    public:
-        static std::shared_ptr<Material> LoadFromFile(const char* path);
-        UUID GetUUID() const { return m_UUID; }
 
-        Material() = default;
-        Material(UUID uuid);
-    private:
-        UUID m_UUID;
+        AssetType GetAssetType() const override { return AssetType::Material; }
+        static constexpr AssetType GetStaticAssetType() { return AssetType::Material; }
     };
 
     class MaterialSerializer

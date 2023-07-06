@@ -19,7 +19,6 @@ namespace Flameberry {
     std::unordered_map<std::string, std::shared_ptr<Texture2D>> Texture2D::s_TextureCacheDirectory;
 
     Texture2D::Texture2D(const std::string& texturePath, bool canGenerateMipMaps, VkSampler sampler)
-        : m_FilePath(texturePath)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         int width, height, channels, bytes_per_channel;

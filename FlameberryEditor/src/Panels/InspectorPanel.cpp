@@ -102,7 +102,7 @@ namespace Flameberry {
 
                         ImGui::TableNextColumn();
 
-                        const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
+                        const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
                         ImGui::Button(staticMesh ? staticMesh->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f));
 
                         if (ImGui::BeginDragDropTarget())
@@ -117,8 +117,8 @@ namespace Flameberry {
 
                                 if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
                                 {
-                                    const auto& loadedMesh = AssetManager::TryGetOrLoadAssetFromFile<StaticMesh>(modelPath);
-                                    mesh.MeshUUID = loadedMesh->GetUUID();
+                                    const auto& loadedMesh = AssetManager::TryGetOrLoadAsset<StaticMesh>(modelPath);
+                                    mesh.MeshHandle = loadedMesh->Handle;
                                 }
                                 else
                                     FL_WARN("Bad File given as Model!");
@@ -133,7 +133,7 @@ namespace Flameberry {
                     ImGui::PopStyleVar();
                     if (is_open)
                     {
-                        const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
+                        const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
                         if (staticMesh)
                         {
                             constexpr uint32_t limit = 10;
@@ -146,22 +146,25 @@ namespace Flameberry {
                                 ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 80.0f);
                                 ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
 
-                                int i = 0;
+                                uint32_t submeshIndex = 0;
                                 for (const auto& submesh : staticMesh->GetSubMeshes())
                                 {
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
 
                                     ImGui::AlignTextToFramePadding();
-                                    ImGui::Text("Material %d", i);
+                                    ImGui::Text("Material %d", submeshIndex);
                                     ImGui::TableNextColumn();
 
-                                    auto mat = AssetManager::GetAsset<Material>(submesh.MaterialUUID);
+                                    std::shared_ptr<Material> mat;
+                                    if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
+                                        mat = AssetManager::GetAsset<Material>(it->second);
+                                    else
+                                        mat = AssetManager::GetAsset<Material>(submesh.MaterialHandle);
 
                                     float width = ImGui::GetTextLineHeightWithSpacing() + 2.0f * ImGui::GetStyle().FramePadding.y;
                                     ImGui::Button(
-                                        AssetManager::IsAssetHandleValid(submesh.MaterialUUID) ?
-                                        mat->Name.c_str() : "Null",
+                                        mat ? mat->Name.c_str() : "Null",
                                         ImVec2(ImGui::GetContentRegionAvail().x - width, 0.0f)
                                     );
 
@@ -180,8 +183,8 @@ namespace Flameberry {
 
                                             if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
                                             {
-                                                const auto& loadedMat = AssetManager::TryGetOrLoadAssetFromFile<Material>(matPath);
-                                                staticMesh->SetMaterialToSubMesh(i, loadedMat->GetUUID());
+                                                const auto& loadedMat = AssetManager::TryGetOrLoadAsset<Material>(matPath);
+                                                mesh.OverridenMaterialTable[submeshIndex] = loadedMat->Handle;
                                             }
                                             else
                                                 FL_WARN("Bad File given as Material!");
@@ -200,13 +203,13 @@ namespace Flameberry {
 
                                     if (ImGui::IsItemClicked())
                                     {
-                                        m_MaterialSelectorPanel->OpenPanel([staticMesh, i](const std::shared_ptr<Material>& material)
+                                        m_MaterialSelectorPanel->OpenPanel([mesh, submeshIndex](const std::shared_ptr<Material>& material) mutable
                                             {
-                                                staticMesh->SetMaterialToSubMesh(i, material->GetUUID());
+                                                mesh.OverridenMaterialTable[submeshIndex] = material->Handle;
                                             }
                                         );
                                     }
-                                    i++;
+                                    submeshIndex++;
                                 }
                                 ImGui::EndTable();
                             }
@@ -251,8 +254,6 @@ namespace Flameberry {
             {
                 if (ImGui::MenuItem("Transform Component"))
                     m_Context->m_Registry->emplace<TransformComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Sprite Renderer Component"))
-                    m_Context->m_Registry->emplace<SpriteRendererComponent>(m_SelectionContext);
                 if (ImGui::MenuItem("Mesh Component"))
                     m_Context->m_Registry->emplace<MeshComponent>(m_SelectionContext);
                 if (ImGui::MenuItem("Light Component"))

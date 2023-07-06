@@ -14,9 +14,9 @@ namespace Flameberry {
             ImGui::Begin("Material Finder", &m_Open);
             for (const auto& [uuid, asset] : AssetManager::GetAssetTable())
             {
-                if (asset.Type == AssetType::MATERIAL)
+                if (asset->GetAssetType() == AssetType::Material)
                 {
-                    auto mat = std::static_pointer_cast<Material>(asset.AssetRef);
+                    auto mat = std::static_pointer_cast<Material>(asset);
                     ImGui::Text("%s", mat->Name.c_str());
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     {

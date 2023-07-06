@@ -10,8 +10,7 @@
 #include "Renderer.h"
 #include "Renderer2D.h"
 
-#include "ECS/Component.h"
-#include "AssetManager/AssetManager.h"
+#include "Asset/AssetManager.h"
 
 namespace Flameberry {
     struct SceneUniformBufferData {
@@ -138,7 +137,7 @@ namespace Flameberry {
                 VertexInputAttribute::VEC3F, // a_Tangent
                 VertexInputAttribute::VEC3F  // a_BiTangent
             };
-            pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
+            pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
             pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
             pipelineSpec.BlendingEnable = true;
@@ -184,7 +183,7 @@ namespace Flameberry {
                 VertexInputAttribute::VEC3F, // a_Position
                 VertexInputAttribute::VEC3F  // a_Normal
             };
-            pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
+            pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
             pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
             pipelineSpec.DepthTestEnable = false;
@@ -305,8 +304,9 @@ namespace Flameberry {
         VkDescriptorSet descriptorSets[] = { globalDescriptorSet, m_SceneDataDescriptorSets[currentFrameIndex]->GetDescriptorSet() };
         const auto& pipelineLayout = m_VkPipelineLayout;
 
-        Renderer::Submit([pipelineLayout, descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-            vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+        Renderer::Submit([pipelineLayout, descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
             }
         );
 
@@ -317,7 +317,7 @@ namespace Flameberry {
 
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
-            SubmitMesh(mesh.MeshUUID, transform.GetTransform());
+            SubmitMesh(mesh.MeshHandle, mesh.OverridenMaterialTable, transform.GetTransform());
         }
 
         // Draw Outlined Object
@@ -325,42 +325,43 @@ namespace Flameberry {
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(selectedEntity);
 
-            auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
+            auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
+            if (staticMesh) {
+                Renderer::Submit([framebufferSize](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                    {
+                        VkClearAttachment attachment{};
+                        attachment.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
+                        attachment.clearValue = { 1.0f, 0 };
+                        attachment.colorAttachment = 1;
 
-            Renderer::Submit([framebufferSize](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                {
-                    VkClearAttachment attachment{};
-                    attachment.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
-                    attachment.clearValue = { 1.0f, 0 };
-                    attachment.colorAttachment = 1;
+                        VkClearRect rect{};
+                        rect.baseArrayLayer = 0;
+                        rect.layerCount = 1;
+                        rect.rect = { {0, 0}, { (uint32_t)framebufferSize.x, (uint32_t)framebufferSize.y } };
 
-                    VkClearRect rect{};
-                    rect.baseArrayLayer = 0;
-                    rect.layerCount = 1;
-                    rect.rect = { {0, 0}, { (uint32_t)framebufferSize.x, (uint32_t)framebufferSize.y } };
+                        vkCmdClearAttachments(cmdBuffer, 1, &attachment, 1, &rect);
+                    }
+                );
 
-                    vkCmdClearAttachments(cmdBuffer, 1, &attachment, 1, &rect);
-                }
-            );
+                SubmitMesh(mesh.MeshHandle, mesh.OverridenMaterialTable, transform.GetTransform());
 
-            SubmitMesh(mesh.MeshUUID, transform.GetTransform());
+                m_OutlinePipeline->Bind();
 
-            m_OutlinePipeline->Bind();
+                const auto& outlinePipelineLayout = m_OutlinePipelineLayout;
 
-            const auto& outlinePipelineLayout = m_OutlinePipelineLayout;
+                OutlinePushConstantData pushConstantData;
+                pushConstantData.ModelMatrix = glm::scale(transform.GetTransform(), glm::vec3(1.05f));
+                // pushConstantData.ModelMatrix = transform.GetTransform();
+                pushConstantData.ScreenSize = framebufferSize;
 
-            OutlinePushConstantData pushConstantData;
-            pushConstantData.ModelMatrix = glm::scale(transform.GetTransform(), glm::vec3(1.05f));
-            // pushConstantData.ModelMatrix = transform.GetTransform();
-            pushConstantData.ScreenSize = framebufferSize;
+                Renderer::Submit([outlinePipelineLayout, globalDescriptorSet, pushConstantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
+                    vkCmdPushConstants(cmdBuffer, outlinePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(OutlinePushConstantData), &pushConstantData);
+                    }
+                );
 
-            Renderer::Submit([outlinePipelineLayout, globalDescriptorSet, pushConstantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
-                vkCmdPushConstants(cmdBuffer, outlinePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(OutlinePushConstantData), &pushConstantData);
-                }
-            );
-
-            staticMesh->OnDraw();
+                staticMesh->OnDraw();
+            }
         }
     }
 
@@ -370,20 +371,20 @@ namespace Flameberry {
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
-            if (!mesh.MeshUUID)
-                continue;
+            auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
+            if (staticMesh)
+            {
+                ModelMatrixPushConstantData pushContantData;
+                pushContantData.ModelMatrix = transform.GetTransform();
+                Renderer::Submit([shadowMapPipelineLayout, pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                    {
+                        vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
+                    }
+                );
 
-            ModelMatrixPushConstantData pushContantData;
-            pushContantData.ModelMatrix = transform.GetTransform();
-            Renderer::Submit([shadowMapPipelineLayout, pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                {
-                    vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
-                }
-            );
-
-            const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
-            staticMesh->Bind();
-            staticMesh->OnDraw();
+                staticMesh->Bind();
+                staticMesh->OnDraw();
+            }
         }
     }
 
@@ -393,30 +394,30 @@ namespace Flameberry {
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
-            if (!mesh.MeshUUID)
-                continue;
+            auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
+            if (staticMesh)
+            {
+                MousePickingPushConstantData pushContantData;
+                pushContantData.ModelMatrix = transform.GetTransform();
+                pushContantData.EntityIndex = fbentt::to_index(entity);
 
-            MousePickingPushConstantData pushContantData;
-            pushContantData.ModelMatrix = transform.GetTransform();
-            pushContantData.EntityIndex = fbentt::to_index(entity);
+                Renderer::Submit([mousePickingPipelineLayout, pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+                    vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);
+                    }
+                );
 
-            Renderer::Submit([mousePickingPipelineLayout, pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-                vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);
-                }
-            );
-
-            const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshUUID);
-            staticMesh->Bind();
-            staticMesh->OnDraw();
+                staticMesh->Bind();
+                staticMesh->OnDraw();
+            }
         }
     }
 
-    void SceneRenderer::SubmitMesh(UUID handle, const glm::mat4& transform)
+    void SceneRenderer::SubmitMesh(AssetHandle handle, const MaterialTable& materialTable, const glm::mat4& transform)
     {
-        if (!AssetManager::IsAssetHandleValid(handle))
+        auto staticMesh = AssetManager::GetAsset<StaticMesh>(handle);
+        if (!staticMesh)
             return;
 
-        const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(handle);
         staticMesh->Bind();
 
         int submeshIndex = 0;
@@ -424,10 +425,18 @@ namespace Flameberry {
             MeshData pushConstantMeshData;
             pushConstantMeshData.ModelMatrix = transform;
 
-            bool isMaterialHandleValid = AssetManager::IsAssetHandleValid(submesh.MaterialUUID);
             std::shared_ptr<Material> materialAsset;
-            if (isMaterialHandleValid) {
-                materialAsset = AssetManager::GetAsset<Material>(submesh.MaterialUUID);
+            std::vector<VkDescriptorSet> materialDescriptorSets;
+
+            materialDescriptorSets.resize(5, Texture2D::GetEmptyDescriptorSet());
+
+            if (auto it = materialTable.find(submeshIndex); it != materialTable.end())
+                materialAsset = AssetManager::GetAsset<Material>(it->second);
+            else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
+                materialAsset = AssetManager::GetAsset<Material>(submesh.MaterialHandle);
+
+            if (materialAsset)
+            {
                 pushConstantMeshData.Albedo = materialAsset->Albedo;
                 pushConstantMeshData.Roughness = materialAsset->Roughness;
                 pushConstantMeshData.Metallic = materialAsset->Metallic;
@@ -436,12 +445,7 @@ namespace Flameberry {
                 pushConstantMeshData.RoughnessMapEnabled = materialAsset->RoughnessMapEnabled;
                 pushConstantMeshData.AmbientOcclusionMapEnabled = materialAsset->AmbientOcclusionMapEnabled;
                 pushConstantMeshData.MetallicMapEnabled = materialAsset->MetallicMapEnabled;
-            }
 
-            std::vector<VkDescriptorSet> materialDescriptorSets;
-            materialDescriptorSets.resize(5, Texture2D::GetEmptyDescriptorSet());
-
-            if (isMaterialHandleValid) {
                 if (materialAsset->TextureMapEnabled)
                     materialDescriptorSets[0] = materialAsset->TextureMap->GetDescriptorSet();
                 if (materialAsset->NormalMapEnabled)
@@ -455,9 +459,10 @@ namespace Flameberry {
             }
 
             const auto& pipelineLayout = m_VkPipelineLayout;
-            Renderer::Submit([pipelineLayout, materialDescriptorSets, pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, materialDescriptorSets.size(), materialDescriptorSets.data(), 0, nullptr);
-                vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
+            Renderer::Submit([pipelineLayout, materialDescriptorSets, pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                {
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, materialDescriptorSets.size(), materialDescriptorSets.data(), 0, nullptr);
+                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
                 }
             );
 

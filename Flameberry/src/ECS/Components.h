@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include "Core/UUID.h"
+#include "Asset/Asset.h"
 #include "ecs.hpp"
 
 namespace Flameberry {
@@ -29,12 +29,6 @@ namespace Flameberry {
         }
     };
 
-    struct SpriteRendererComponent
-    {
-        std::string TextureFilePath = "";
-        glm::vec4 Color{ 1.0f };
-    };
-
     struct TagComponent
     {
         std::string Tag;
@@ -45,10 +39,15 @@ namespace Flameberry {
     {
     };
 
+    typedef std::unordered_map<uint32_t, AssetHandle> MaterialTable;
     struct MeshComponent
     {
-        UUID MeshUUID;
-        MeshComponent(UUID meshUUID = 0) : MeshUUID(meshUUID) {}
+        AssetHandle MeshHandle;
+
+        // This stores the materials that are used for rendering instead of the default ones which are loaded from the mesh source file
+        MaterialTable OverridenMaterialTable;
+
+        MeshComponent(AssetHandle meshHandle = 0) : MeshHandle(meshHandle) {}
     };
 
     struct LightComponent

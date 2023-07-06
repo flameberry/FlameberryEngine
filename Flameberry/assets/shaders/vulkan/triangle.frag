@@ -280,7 +280,6 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
     float shadow = FilterPCFRadial_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 1.0f, 32, bias);
 
     vec3 finalColor = shadow * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
-    // vec3 finalColor = (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
     return finalColor;
 }
 

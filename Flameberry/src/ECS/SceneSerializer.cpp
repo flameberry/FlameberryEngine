@@ -4,10 +4,10 @@
 
 #include "Core/YamlUtils.h"
 #include "Core/Timer.h"
-#include "Component.h"
+#include "Components.h"
 
 #include "Renderer/Vulkan/VulkanContext.h"
-#include "AssetManager/AssetManager.h"
+#include "Asset/AssetManager.h"
 
 namespace Flameberry {
     // std::shared_ptr<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
@@ -46,7 +46,7 @@ namespace Flameberry {
         env.EnableEnvironmentMap = envMapNode["EnableEnvironmentMap"].as<bool>();
 
         if (auto path = envMapNode["EnvironmentMap"].as<std::string>(); !path.empty())
-            env.EnvironmentMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(path.c_str());
+            env.EnvironmentMap = AssetManager::TryGetOrLoadAsset<Texture2D>(path.c_str());
 
         env.Reflections = envMapNode["Reflections"].as<bool>();
         env.DirLight.Direction = envMapNode["DirectionalLight"]["Direction"].as<glm::vec3>();
@@ -82,17 +82,16 @@ namespace Flameberry {
                         transformComp.scale = transform["Scale"].as<glm::vec3>();
                     }
 
-                    if (auto sprite = entity["SpriteRendererComponent"]; sprite) // Deserialize entity
-                    {
-                        auto& spriteComp = destScene->m_Registry->emplace<SpriteRendererComponent>(deserializedEntity);
-                        spriteComp.Color = sprite["Color"].as<glm::vec4>();
-                        spriteComp.TextureFilePath = sprite["TextureFilePath"].as<std::string>();
-                    }
-
                     if (auto mesh = entity["MeshComponent"]; mesh)
                     {
                         auto& meshComp = destScene->m_Registry->emplace<MeshComponent>(deserializedEntity, 0);
-                        meshComp.MeshUUID = mesh["MeshUUID"].as<uint64_t>();
+                        meshComp.MeshHandle = mesh["MeshHandle"].as<uint64_t>();
+
+                        for (auto entry : mesh["OverridenMaterialTable"]) // TODO: Update with different format
+                        {
+                            auto mat = AssetManager::TryGetOrLoadAsset<Material>(entry["Material"].as<std::string>());
+                            meshComp.OverridenMaterialTable[entry["SubmeshIndex"].as<uint32_t>()] = mat->Handle;
+                        }
                     }
 
                     if (auto light = entity["LightComponent"]; light)
@@ -110,15 +109,9 @@ namespace Flameberry {
         {
             for (auto mesh : meshes)
             {
-                auto meshAsset = StaticMesh::LoadFromFile(mesh["FilePath"].as<std::string>().c_str());
-                meshAsset->m_UUID = mesh["Mesh"].as<uint64_t>();
-                AssetManager::RegisterAsset<StaticMesh>(meshAsset, mesh["FilePath"].as<std::string>());
-
-                for (auto fbMaterial : mesh["NonDerivedMaterials"])
-                {
-                    auto mat = AssetManager::TryGetOrLoadAssetFromFile<Material>(fbMaterial["FlameberryMaterial"].as<std::string>());
-                    meshAsset->m_SubMeshes[fbMaterial["SubMeshIndex"].as<uint32_t>()].MaterialUUID = mat->GetUUID();
-                }
+                auto meshAsset = AssetLoader::LoadStaticMesh(mesh["FilePath"].as<std::string>().c_str());
+                meshAsset->Handle = mesh["Mesh"].as<uint64_t>();
+                AssetManager::RegisterAsset(meshAsset);
             }
         }
         return true;
@@ -142,7 +135,7 @@ namespace Flameberry {
 
         auto& env = srcScene->m_SceneData.ActiveEnvironment;
         out << YAML::Key << "ClearColor" << YAML::Value << env.ClearColor;
-        out << YAML::Key << "EnvironmentMap" << YAML::Value << (env.EnvironmentMap ? env.EnvironmentMap->GetFilePath() : "");
+        out << YAML::Key << "EnvironmentMap" << YAML::Value << (env.EnvironmentMap ? env.EnvironmentMap->FilePath : "");
         out << YAML::Key << "EnableEnvironmentMap" << YAML::Value << env.EnableEnvironmentMap;
         out << YAML::Key << "Reflections" << YAML::Value << env.Reflections;
 
@@ -156,11 +149,11 @@ namespace Flameberry {
 
         out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 
-        std::vector<UUID> meshUUIDs;
+        std::vector<UUID> meshHandles;
 
         srcScene->m_Registry->each([&](fbentt::entity entity)
             {
-                SerializeEntity(out, entity, srcScene, meshUUIDs);
+                SerializeEntity(out, entity, srcScene, meshHandles);
             }
         );
         out << YAML::EndSeq; // Entities
@@ -168,31 +161,13 @@ namespace Flameberry {
         // Serialize Meshes loaded
         out << YAML::Key << "Meshes" << YAML::Value << YAML::BeginSeq;
 
-        for (const auto& uuid : meshUUIDs)
+        for (const auto& uuid : meshHandles)
         {
             auto mesh = AssetManager::GetAsset<StaticMesh>(uuid);
 
             out << YAML::BeginMap;
-            out << YAML::Key << "Mesh" << YAML::Value << mesh->GetUUID();
-            out << YAML::Key << "FilePath" << YAML::Value << mesh->GetFilePath();
-
-            out << YAML::Key << "NonDerivedMaterials" << YAML::BeginSeq;
-
-            uint32_t i = 0;
-            for (const auto& submesh : mesh->GetSubMeshes())
-            {
-                auto mat = AssetManager::GetAsset<Material>(submesh.MaterialUUID);
-                if (mat && !mat->IsDerived)
-                {
-                    out << YAML::BeginMap;
-                    out << YAML::Key << "FlameberryMaterial" << YAML::Value << mat->FilePath;
-                    out << YAML::Key << "SubMeshIndex" << YAML::Value << i;
-                    out << YAML::EndMap;
-                }
-                i++;
-            }
-
-            out << YAML::EndSeq;
+            out << YAML::Key << "Mesh" << YAML::Value << mesh->Handle;
+            out << YAML::Key << "FilePath" << YAML::Value << mesh->FilePath;
             out << YAML::EndMap; // Mesh
         }
         out << YAML::EndSeq; // Meshes
@@ -219,23 +194,26 @@ namespace Flameberry {
             out << YAML::EndMap; // Transform Component
         }
 
-        if (scene->m_Registry->has<SpriteRendererComponent>(entity))
-        {
-            auto& sprite = scene->m_Registry->get<SpriteRendererComponent>(entity);
-            out << YAML::Key << "SpriteRendererComponent" << YAML::BeginMap;
-            out << YAML::Key << "Color" << YAML::Value << sprite.Color;
-            out << YAML::Key << "TextureFilePath" << YAML::Value << sprite.TextureFilePath;
-            out << YAML::EndMap; // Sprite Renderer Component
-        }
-
         if (scene->m_Registry->has<MeshComponent>(entity))
         {
             auto& mesh = scene->m_Registry->get<MeshComponent>(entity);
             out << YAML::Key << "MeshComponent" << YAML::BeginMap;
-            out << YAML::Key << "MeshUUID" << YAML::Value << (uint64_t)(mesh.MeshUUID);
+            out << YAML::Key << "MeshHandle" << YAML::Value << (uint64_t)(mesh.MeshHandle);
+
+            out << YAML::Key << "OverridenMaterialTable" << YAML::BeginSeq;
+            for (const auto& [submeshIndex, materialHandle] : mesh.OverridenMaterialTable)
+            {
+                out << YAML::BeginMap;
+                out << YAML::Key << "SubmeshIndex" << YAML::Value << submeshIndex;
+
+                auto mat = AssetManager::GetAsset<Material>(materialHandle);
+                out << YAML::Key << "Material" << YAML::Value << mat->FilePath;
+                out << YAML::EndMap;
+            }
+            out << YAML::EndSeq;
             out << YAML::EndMap; // Mesh Component
 
-            meshUUIDs.emplace_back(mesh.MeshUUID);
+            meshUUIDs.emplace_back(mesh.MeshHandle);
         }
 
         if (scene->m_Registry->has<LightComponent>(entity))

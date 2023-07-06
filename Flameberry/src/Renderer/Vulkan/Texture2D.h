@@ -9,21 +9,22 @@
 
 #include "Image.h"
 #include "DescriptorSet.h"
+#include "Asset/Asset.h"
 
 namespace Flameberry {
-    class Texture2D
+    class Texture2D : public Asset
     {
     public:
         Texture2D(const std::string& texturePath, bool canGenerateMipMaps = true, VkSampler sampler = VK_NULL_HANDLE);
         ~Texture2D();
 
-        std::string GetFilePath() const { return m_FilePath; }
-        UUID GetUUID() const { return m_UUID; }
-
         VkImageView GetImageView() const { return m_TextureImage->GetImageView(); }
         VkSampler GetSampler() const { return m_VkTextureSampler; }
         VkDescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
         ImageSpecification GetImageSpecification() const { return m_TextureImageSpecification; }
+
+        AssetType GetAssetType() const override { return AssetType::Texture2D; }
+        static constexpr AssetType GetStaticAssetType() { return AssetType::Texture2D; }
 
         // This function is to be used when initializing the Vulkan Renderer
         static void InitStaticResources();
@@ -37,8 +38,6 @@ namespace Flameberry {
 
         static std::shared_ptr<Texture2D> LoadFromFile(const char* path) { return std::make_shared<Texture2D>(path); }
     private:
-        std::string m_FilePath;
-
         ImageSpecification m_TextureImageSpecification;
 
         std::shared_ptr<Image> m_TextureImage;
@@ -51,8 +50,6 @@ namespace Flameberry {
         static std::shared_ptr<DescriptorSet> s_EmptyDescriptorSet;
         static std::shared_ptr<Image> s_EmptyImage;
         static VkSampler s_DefaultSampler;
-
-        UUID m_UUID;
 
         static std::unordered_map<std::string, std::shared_ptr<Texture2D>> s_TextureCacheDirectory;
     };

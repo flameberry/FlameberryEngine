@@ -414,12 +414,12 @@ namespace Flameberry {
                         m_ScenePathToBeOpened = filePath;
                     }
                     else if (ext == ".obj") {
-                        const auto& staticMesh = AssetManager::TryGetOrLoadAssetFromFile<StaticMesh>(path);
+                        const auto& staticMesh = AssetManager::TryGetOrLoadAsset<StaticMesh>(path);
                         auto entity = m_Registry->create();
                         m_Registry->emplace<IDComponent>(entity);
                         m_Registry->emplace<TagComponent>(entity, "StaticMesh");
                         m_Registry->emplace<TransformComponent>(entity);
-                        m_Registry->emplace<MeshComponent>(entity, staticMesh->GetUUID());
+                        m_Registry->emplace<MeshComponent>(entity, staticMesh->Handle);
                         m_SceneHierarchyPanel->SetSelectionContext(entity);
                     }
                 }
@@ -869,7 +869,7 @@ namespace Flameberry {
         pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
         pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
-        pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
+        pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
 
         m_MousePickingPipeline = Pipeline::Create(pipelineSpec);
     }
@@ -965,7 +965,7 @@ namespace Flameberry {
         pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
         pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
-        pipelineSpec.VertexInputBindingDescription = VulkanVertex::GetBindingDescription();
+        pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
 
         pipelineSpec.Viewport.width = SHADOW_MAP_SIZE;
         pipelineSpec.Viewport.height = SHADOW_MAP_SIZE;

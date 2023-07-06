@@ -1,7 +1,7 @@
 #pragma once
 
 #include <chrono>
-#include "Core/Log.h"
+#include "Core/Core.h"
 
 namespace Flameberry {
     class Timer

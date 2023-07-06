@@ -64,29 +64,29 @@ namespace Flameberry {
         std::vector<VertexInputAttribute> m_VertexInputAttributes;
     };
 
-    struct VulkanVertex
+    struct MeshVertex
     {
         glm::vec3 Position;
         glm::vec3 Normal;
         glm::vec2 TextureUV;
         glm::vec3 Tangent, BiTangent;
 
-        VulkanVertex()
+        MeshVertex()
             : Position(0.0f), Normal(0.0f), TextureUV(0.0f), Tangent(0.0f), BiTangent(0.0f)
         {
         }
 
-        VulkanVertex(const glm::vec3& position, const glm::vec4& color, const glm::vec3& normal, const glm::vec2& textureUV)
+        MeshVertex(const glm::vec3& position, const glm::vec4& color, const glm::vec3& normal, const glm::vec2& textureUV)
             : Position(position), Normal(normal), TextureUV(textureUV)
         {
         }
 
-        bool operator==(const VulkanVertex& vertex) const
+        bool operator==(const MeshVertex& vertex) const
         {
             return this->Position == vertex.Position && this->Normal == vertex.Normal && this->TextureUV == vertex.TextureUV;
         }
 
-        bool operator!=(const VulkanVertex& vertex) const
+        bool operator!=(const MeshVertex& vertex) const
         {
             return !(*this == vertex);
         }
@@ -95,7 +95,7 @@ namespace Flameberry {
         {
             VkVertexInputBindingDescription vk_vertex_input_binding_description{};
             vk_vertex_input_binding_description.binding = 0;
-            vk_vertex_input_binding_description.stride = sizeof(VulkanVertex);
+            vk_vertex_input_binding_description.stride = sizeof(MeshVertex);
             vk_vertex_input_binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
             return vk_vertex_input_binding_description;

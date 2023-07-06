@@ -23,7 +23,7 @@
 
 #include "Platform/PlatformUtils.h"
 #include "ImGui/ImGuiLayer.h"
-#include "AssetManager/AssetManager.h"
+#include "Asset/AssetManager.h"
 
 #include "Renderer/Vulkan/RenderCommand.h"
 #include "Renderer/Vulkan/Pipeline.h"
@@ -37,7 +37,7 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/EditorCameraController.h"
 
-#include "ECS/Component.h"
+#include "ECS/Components.h"
 #include "ECS/SceneSerializer.h"
 #include "ECS/Scene.h"
 #include "ECS/ecs.hpp"

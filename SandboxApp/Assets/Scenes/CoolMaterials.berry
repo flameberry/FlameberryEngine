@@ -16,7 +16,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      MeshUUID: 15427027041819506305
+      MeshHandle: 15427027041819506305
   - Entity: 17736961039119441584
     TagComponent: Cube
     TransformComponent:
@@ -24,7 +24,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      MeshUUID: 4474729012079081437
+      MeshHandle: 4474729012079081437
   - Entity: 14711410567684292755
     TagComponent: Cylinder
     TransformComponent:
@@ -32,7 +32,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      MeshUUID: 11243613095244206381
+      MeshHandle: 11243613095244206381
 Meshes:
   - Mesh: 15427027041819506305
     FilePath: Assets/Meshes/sphere.obj

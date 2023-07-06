@@ -7,7 +7,7 @@
 #include "ImGui/ImGuiLayer.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/Vulkan/Texture2D.h"
-#include "AssetManager/AssetManager.h"
+#include "Asset/AssetManager.h"
 
 #include "Platform/PlatformUtils.h"
 
@@ -98,7 +98,7 @@ namespace Flameberry {
         m_ImGuiLayer->OnDestroy();
 
         Texture2D::DestroyStaticResources();
-        AssetManager::DestroyAssets();
+        AssetManager::Clear();
 
         m_Window->Destroy();
 

@@ -41,7 +41,7 @@ namespace Flameberry {
                 ImGui::TableNextColumn();
 
                 ImGui::Button(
-                    environment.EnvironmentMap ? std::filesystem::path(environment.EnvironmentMap->GetFilePath()).filename().c_str() : "Null",
+                    environment.EnvironmentMap ? environment.EnvironmentMap->FilePath.filename().c_str() : "Null",
                     ImVec2(-1.0f, 0.0f)
                 );
 
@@ -56,7 +56,7 @@ namespace Flameberry {
                         FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
 
                         if (std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath) && (ext == ".hdr"))
-                            environment.EnvironmentMap = AssetManager::TryGetOrLoadAssetFromFile<Texture2D>(envPath);
+                            environment.EnvironmentMap = AssetManager::TryGetOrLoadAsset<Texture2D>(envPath);
                         else
                             FL_WARN("Bad File given as Environment!");
                     }

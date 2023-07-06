@@ -9,6 +9,7 @@
 #include "PerspectiveCamera.h"
 
 #include "ECS/Scene.h"
+#include "ECS/Components.h"
 
 #define SHADOW_MAP_CASCADE_COUNT 4
 
@@ -35,7 +36,7 @@ namespace Flameberry {
         void OnDrawForShadowPass(VkPipelineLayout shadowMapPipelineLayout, const std::shared_ptr<Scene>& scene);
         void OnDrawForMousePickingPass(VkPipelineLayout mousePickingPipelineLayout, const std::shared_ptr<Scene>& scene);
 
-        void SubmitMesh(UUID handle, const glm::mat4& transform);
+        void SubmitMesh(AssetHandle handle, const MaterialTable& materialTable, const glm::mat4& transform);
     private:
         std::shared_ptr<Pipeline> m_MeshPipeline;
         VkPipelineLayout m_VkPipelineLayout;
