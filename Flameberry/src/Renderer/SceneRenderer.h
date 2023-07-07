@@ -11,40 +11,67 @@
 #include "ECS/Scene.h"
 #include "ECS/Components.h"
 
-#define SHADOW_MAP_CASCADE_COUNT 4
-
 namespace Flameberry {
     struct ModelMatrixPushConstantData { glm::mat4 ModelMatrix; };
     struct MousePickingPushConstantData { glm::mat4 ModelMatrix; int EntityIndex; };
 
+    struct SceneRendererSettings {
+        bool EnableShadows = true, ShowCascades = false, SoftShadows = true;
+        float CascadeLambdaSplit = 0.91f;
+        static const uint32_t CascadeCount = 4, CascadeSize = 2048;
+    };
+
+    struct Cascade {
+        glm::mat4 ViewProjectionMatrix;
+        float DepthSplit;
+    };
+
     class SceneRenderer
     {
     public:
-        SceneRenderer(const std::shared_ptr<DescriptorSetLayout>& globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass, const std::vector<VkImageView>& shadowMapImageViews, VkSampler shadowMapSampler);
+        SceneRenderer(const glm::vec2& viewportSize);
         ~SceneRenderer();
 
-        void OnDraw(
-            VkDescriptorSet globalDescriptorSet,
-            const PerspectiveCamera& activeCamera,
-            const std::shared_ptr<Scene>& scene,
-            const glm::vec2& framebufferSize,
-            const std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT>& cascadeMatrices,
-            const std::array<float, SHADOW_MAP_CASCADE_COUNT>& cascadeSplits,
-            bool colorCascades,
-            const fbentt::entity& selectedEntity = {}
-        );
-        void OnDrawForShadowPass(VkPipelineLayout shadowMapPipelineLayout, const std::shared_ptr<Scene>& scene);
-        void OnDrawForMousePickingPass(VkPipelineLayout mousePickingPipelineLayout, const std::shared_ptr<Scene>& scene);
+        void RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const std::shared_ptr<PerspectiveCamera>& camera, fbentt::entity selectedEntity = {});
 
+        VkImageView GetGeometryPassOutputImageView(uint32_t index) const { return m_GeometryPass->GetSpecification().TargetFramebuffers[index]->GetColorResolveAttachment(0)->GetImageView(); }
+        VkImageView GetCompositePassOutputImageView(uint32_t index) const { return m_CompositePass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetImageView(); }
+        VkDescriptorSet GetCameraBufferDescriptorSet(uint32_t index) const { return m_CameraBufferDescriptorSets[index]->GetDescriptorSet(); }
+
+        void RenderSceneForMousePicking(VkPipelineLayout mousePickingPipelineLayout, const std::shared_ptr<Scene>& scene);
+    private:
+        void Init();
+
+        void CalculateShadowMapCascades(const std::shared_ptr<PerspectiveCamera>& camera, const glm::vec3& lightDirection);
         void SubmitMesh(AssetHandle handle, const MaterialTable& materialTable, const glm::mat4& transform);
     private:
-        std::shared_ptr<Pipeline> m_MeshPipeline;
+        glm::vec2 m_ViewportSize;
+
+        // Geometry
+        std::shared_ptr<RenderPass> m_GeometryPass;
+        std::shared_ptr<DescriptorSetLayout> m_CameraBufferDescSetLayout;
+        std::vector<std::shared_ptr<DescriptorSet>> m_CameraBufferDescriptorSets;
+        std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
+        std::shared_ptr<Pipeline> m_MeshPipeline, m_OutlinePipeline, m_SkyboxPipeline;
         std::vector<std::shared_ptr<DescriptorSet>> m_SceneDataDescriptorSets;
         std::shared_ptr<DescriptorSetLayout> m_SceneDescriptorSetLayout;
+        VkSampler m_VkTextureSampler;
 
-        std::unique_ptr<Flameberry::Buffer> m_SceneUniformBuffers[VulkanSwapChain::MAX_FRAMES_IN_FLIGHT];
+        // Shadow Map
+        std::shared_ptr<RenderPass> m_ShadowMapRenderPass;
+        std::shared_ptr<Pipeline> m_ShadowMapPipeline;
+        std::shared_ptr<DescriptorSetLayout> m_ShadowMapDescriptorSetLayout;
+        std::vector<std::shared_ptr<DescriptorSet>> m_ShadowMapDescriptorSets;
+        std::vector<std::unique_ptr<Buffer>> m_ShadowMapUniformBuffers;
+        VkSampler m_ShadowMapSampler;
 
-        std::shared_ptr<Pipeline> m_OutlinePipeline;
-        std::shared_ptr<Pipeline> m_SkyboxPipeline;
+        Cascade m_Cascades[SceneRendererSettings::CascadeCount];
+        SceneRendererSettings m_RendererSettings;
+
+        // Post processing
+        std::shared_ptr<RenderPass> m_CompositePass;
+        std::shared_ptr<Pipeline> m_CompositePipeline;
+        std::shared_ptr<DescriptorSetLayout> m_CompositePassDescriptorSetLayout;
+        std::vector<std::shared_ptr<DescriptorSet>> m_CompositePassDescriptorSets;
     };
 }

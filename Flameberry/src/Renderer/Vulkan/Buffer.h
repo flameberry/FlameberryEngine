@@ -21,7 +21,7 @@ namespace Flameberry {
 
         const VkBuffer& GetBuffer() const { return m_VkBuffer; }
         VkResult MapMemory(VkDeviceSize size, VkDeviceSize offset = 0);
-        void WriteToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset);
+        void WriteToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
         void WriteToIndex(const void* data, uint32_t index);
         VkResult Flush(VkDeviceSize size, VkDeviceSize offset);
         VkResult FlushIndex(int index);

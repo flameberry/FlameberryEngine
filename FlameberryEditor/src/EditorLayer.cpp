@@ -27,30 +27,6 @@ namespace Flameberry {
 
     void EditorLayer::OnCreate()
     {
-        m_VkTextureSampler = Texture2D::GetDefaultSampler();
-        auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
-        uint32_t imageCount = swapchain->GetSwapChainImageCount();
-
-        {
-            FramebufferSpecification shadowMapFramebufferSpec;
-            shadowMapFramebufferSpec.Width = SHADOW_MAP_SIZE;
-            shadowMapFramebufferSpec.Height = SHADOW_MAP_SIZE;
-            shadowMapFramebufferSpec.Attachments = { { VK_FORMAT_D32_SFLOAT, SHADOW_MAP_CASCADE_COUNT } };
-            shadowMapFramebufferSpec.Samples = 1;
-            shadowMapFramebufferSpec.DepthStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-            shadowMapFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
-
-            RenderPassSpecification shadowMapRenderPassSpec;
-
-            shadowMapRenderPassSpec.TargetFramebuffers.resize(imageCount);
-
-            for (uint32_t i = 0; i < imageCount; i++)
-                shadowMapRenderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(shadowMapFramebufferSpec);
-
-            m_ShadowMapRenderPass = RenderPass::Create(shadowMapRenderPassSpec);
-        }
-        CreateShadowMapPipeline();
-
         m_CursorIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon.png");
         m_CursorIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon_active.png");
         m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/translate_icon_2.png");
@@ -60,49 +36,6 @@ namespace Flameberry {
         m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/scale_icon.png");
         m_ScaleIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/scale_icon_active.png");
 
-        // Creating Uniform Buffers
-        VkDeviceSize uniformBufferSize = sizeof(CameraUniformBufferObject);
-
-        BufferSpecification uniformBufferSpec;
-        uniformBufferSpec.InstanceCount = 1;
-        uniformBufferSpec.InstanceSize = uniformBufferSize;
-        uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-        uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-        for (auto& uniformBuffer : m_UniformBuffers)
-        {
-            uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
-            uniformBuffer->MapMemory(uniformBufferSize);
-        }
-
-        // Creating Descriptors
-        DescriptorSetLayoutSpecification cameraBufferDescLayoutSpec;
-        cameraBufferDescLayoutSpec.Bindings.emplace_back();
-
-        cameraBufferDescLayoutSpec.Bindings[0].binding = 0;
-        cameraBufferDescLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cameraBufferDescLayoutSpec.Bindings[0].descriptorCount = 1;
-        cameraBufferDescLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        m_CameraBufferDescSetLayout = DescriptorSetLayout::Create(cameraBufferDescLayoutSpec);
-
-        DescriptorSetSpecification cameraBufferDescSetSpec;
-        cameraBufferDescSetSpec.Layout = m_CameraBufferDescSetLayout;
-
-        m_CameraBufferDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            m_CameraBufferDescriptorSets[i] = DescriptorSet::Create(cameraBufferDescSetSpec);
-
-            VkDescriptorBufferInfo vk_descriptor_buffer_info{};
-            vk_descriptor_buffer_info.buffer = m_UniformBuffers[i]->GetBuffer();
-            vk_descriptor_buffer_info.offset = 0;
-            vk_descriptor_buffer_info.range = sizeof(CameraUniformBufferObject);
-
-            m_CameraBufferDescriptorSets[i]->WriteBuffer(0, vk_descriptor_buffer_info);
-            m_CameraBufferDescriptorSets[i]->Update();
-        }
-
         m_Registry = std::make_shared<fbentt::registry>();
         m_ActiveScene = Scene::Create(m_Registry);
 
@@ -110,6 +43,7 @@ namespace Flameberry {
         m_ContentBrowserPanel = ContentBrowserPanel::Create(m_ProjectPath);
         m_EnvironmentSettingsPanel = EnvironmentSettingsPanel::Create(m_ActiveScene);
 
+#pragma region MousePickingResources
         BufferSpecification mousePickingBufferSpec;
         mousePickingBufferSpec.InstanceCount = 1;
         mousePickingBufferSpec.InstanceSize = sizeof(int32_t);
@@ -118,181 +52,82 @@ namespace Flameberry {
 
         m_MousePickingBuffer = std::make_unique<Buffer>(mousePickingBufferSpec);
 
-        {
-            VkFormat swapChainImageFormat = swapchain->GetSwapChainImageFormat();
-            VkSampleCountFlagBits sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+        FramebufferSpecification mousePickingFramebufferSpec;
+        mousePickingFramebufferSpec.Width = m_ViewportSize.x;
+        mousePickingFramebufferSpec.Height = m_ViewportSize.y;
+        mousePickingFramebufferSpec.Samples = 1;
+        mousePickingFramebufferSpec.Attachments = { VK_FORMAT_R32_SINT, VK_FORMAT_D32_SFLOAT };
+        mousePickingFramebufferSpec.ClearColorValue = { .int32 = { -1 } };
+        mousePickingFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
 
-            FramebufferSpecification sceneFramebufferSpec;
-            sceneFramebufferSpec.Width = m_ViewportSize.x;
-            sceneFramebufferSpec.Height = m_ViewportSize.y;
-            sceneFramebufferSpec.Attachments = { swapChainImageFormat, VulkanSwapChain::GetDepthFormat() };
-            sceneFramebufferSpec.Samples = sampleCount;
-            sceneFramebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
-            sceneFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
-            // Used to not store multisample color attachment
-            sceneFramebufferSpec.ColorStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            // For outline compositing
-            sceneFramebufferSpec.StencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+        RenderPassSpecification mousePickingRenderPassSpec;
+        mousePickingRenderPassSpec.TargetFramebuffers = { Framebuffer::Create(mousePickingFramebufferSpec) };
 
-            RenderPassSpecification sceneRenderPassSpec;
+        m_MousePickingRenderPass = RenderPass::Create(mousePickingRenderPassSpec);
 
-            sceneRenderPassSpec.TargetFramebuffers.resize(imageCount);
-            for (uint32_t i = 0; i < imageCount; i++)
-                sceneRenderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(sceneFramebufferSpec);
+        // Creating Descriptors
+        DescriptorSetLayoutSpecification mousePickingDescSetLayoutSpec;
+        mousePickingDescSetLayoutSpec.Bindings.emplace_back();
+        mousePickingDescSetLayoutSpec.Bindings[0].binding = 0;
+        mousePickingDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        mousePickingDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
+        mousePickingDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        mousePickingDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
 
-            m_SceneRenderPass = RenderPass::Create(sceneRenderPassSpec);
-        }
+        m_MousePickingDescriptorSetLayout = DescriptorSetLayout::Create(mousePickingDescSetLayoutSpec);
 
-        {
-            FramebufferSpecification mousePickingFramebufferSpec;
-            mousePickingFramebufferSpec.Width = m_ViewportSize.x;
-            mousePickingFramebufferSpec.Height = m_ViewportSize.y;
-            mousePickingFramebufferSpec.Samples = 1;
-            mousePickingFramebufferSpec.Attachments = { VK_FORMAT_R32_SINT, VK_FORMAT_D32_SFLOAT };
-            mousePickingFramebufferSpec.ClearColorValue = { .int32 = { -1 } };
-            mousePickingFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+        // Pipeline Creation
+        PipelineSpecification pipelineSpec{};
+        pipelineSpec.PipelineLayout.PushConstants = {
+            { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MousePickingPushConstantData) }
+        };
 
-            RenderPassSpecification mousePickingRenderPassSpec;
-            mousePickingRenderPassSpec.TargetFramebuffers = { Framebuffer::Create(mousePickingFramebufferSpec) };
+        pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
+            m_MousePickingDescriptorSetLayout
+        };
 
-            m_MousePickingRenderPass = RenderPass::Create(mousePickingRenderPassSpec);
-        }
+        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_picking.vert.spv";
+        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_picking.frag.spv";
+        pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
-        CreateMousePickingPipeline();
-        CreateCompositePipeline();
+        pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
+        pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
 
-        std::vector<VkImageView> views;
-        for (const auto& framebuffer : m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers)
-            views.push_back(framebuffer->GetDepthAttachment()->GetImageView());
-        m_SceneRenderer = std::make_unique<SceneRenderer>(m_CameraBufferDescSetLayout, m_SceneRenderPass, views, m_ShadowMapSampler);
+        m_MousePickingPipeline = Pipeline::Create(pipelineSpec);
+#pragma endregion MousePickingResources
+
+        m_SceneRenderer = std::make_unique<SceneRenderer>(m_ViewportSize);
+
+        auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
+        uint32_t imageCount = swapchain->GetSwapChainImageCount();
 
         m_ViewportDescriptorSets.resize(imageCount);
-        for (int i = 0; i < imageCount; i++)
-        {
-            m_ViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
-                m_VkTextureSampler,
-                m_SceneRenderPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetImageView(),
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            );
-        }
-
         m_CompositePassViewportDescriptorSets.resize(imageCount);
         for (int i = 0; i < imageCount; i++)
         {
+            m_ViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
+                Texture2D::GetDefaultSampler(),
+                m_SceneRenderer->GetGeometryPassOutputImageView(i),
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+
             m_CompositePassViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
-                m_VkTextureSampler,
-                m_CompositePass->GetSpecification().TargetFramebuffers[i]->GetColorAttachment(0)->GetImageView(),
+                Texture2D::GetDefaultSampler(),
+                m_SceneRenderer->GetCompositePassOutputImageView(i),
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
         }
-
-        Renderer2D::Init(m_CameraBufferDescSetLayout, m_SceneRenderPass);
     }
 
     void EditorLayer::OnUpdate(float delta)
     {
         FL_PROFILE_SCOPE("Editor_OnUpdate");
 
-        // Update all image index related descriptors or framebuffers here
-        Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                if (m_SceneRenderPass->GetSpecification().TargetFramebuffers[imageIndex]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_SceneRenderPass->GetRenderPass()))
-                {
-                    InvalidateViewportImGuiDescriptorSet(imageIndex);
-
-                    m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, {
-                         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                         .imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetImageView(),
-                         .sampler = m_VkTextureSampler
-                        }
-                    );
-
-                    // m_CompositePassDescriptorSets[imageIndex]->WriteImage(1, {
-                    //      .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-                    //       .imageView = m_StencilImages[imageIndex]->GetImageView(),
-                    //       .sampler = m_ShadowMapSampler
-                    //     }
-                    // );
-
-                    m_CompositePassDescriptorSets[imageIndex]->Update();
-                }
-                if (m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass()))
-                    InvalidateCompositePassImGuiDescriptorSet(imageIndex);
-
-                VkClearColorValue clearColor = { m_ActiveScene->GetClearColor().x, m_ActiveScene->GetClearColor().y, m_ActiveScene->GetClearColor().z, 1.0f };
-                m_SceneRenderPass->GetSpecification().TargetFramebuffers[imageIndex]->SetClearColorValue(clearColor);
-            }
-        );
-
-        uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
-
         bool didCameraResize = m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
         if (m_DidViewportBegin)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 
-        UpdateShadowMapCascades(); // TODO: Update only when camera or directional light is updated
-
-        {
-            FL_PROFILE_SCOPE("Shadow Pass");
-            m_ShadowMapRenderPass->Begin();
-            m_ShadowMapPipeline->Bind();
-
-            m_ShadowMapUniformBuffers[currentFrameIndex]->WriteToBuffer(m_CascadeMatrices.data(), sizeof(glm::mat4) * SHADOW_MAP_CASCADE_COUNT, 0);
-
-            auto shadowMapDesc = m_ShadowMapDescriptorSets[currentFrameIndex]->GetDescriptorSet();
-            const auto& shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout();
-
-            Renderer::Submit([shadowMapDesc, shadowMapPipelineLayout](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                {
-                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDesc, 0, nullptr);
-                }
-            );
-
-            m_SceneRenderer->OnDrawForShadowPass(m_ShadowMapPipeline->GetLayout(), m_ActiveScene);
-            m_ShadowMapRenderPass->End();
-        }
-
-        {
-            FL_PROFILE_SCOPE("Viewport Render Pass");
-            m_SceneRenderPass->Begin();
-
-            RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
-            RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
-
-            CameraUniformBufferObject uniformBufferObject{};
-            uniformBufferObject.ViewMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetViewMatrix();
-            uniformBufferObject.ProjectionMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetProjectionMatrix();
-            uniformBufferObject.ViewProjectionMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetViewProjectionMatrix();
-
-            m_UniformBuffers[currentFrameIndex]->WriteToBuffer(&uniformBufferObject, sizeof(uniformBufferObject), 0);
-
-            if (m_EnableGrid)
-                Renderer2D::AddGrid(25);
-
-            m_SceneRenderer->OnDraw(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet(), *m_ActiveCameraController.GetPerspectiveCamera(), m_ActiveScene, m_ViewportSize, m_CascadeMatrices, m_CascadeDepthSplits, m_ColorCascades, m_SceneHierarchyPanel->GetSelectionContext());
-
-            Renderer2D::Render(m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet());
-            m_SceneRenderPass->End();
-        }
-
-        {
-            // Composite pass
-            m_CompositePass->Begin();
-            m_CompositePipeline->Bind();
-
-            auto pipelineLayout = m_CompositePipeline->GetLayout();
-            std::vector<VkDescriptorSet> descriptorSets(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-            for (uint8_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-                descriptorSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
-
-            Renderer::Submit([pipelineLayout, descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                {
-                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[imageIndex], 0, nullptr);
-                    vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
-                }
-            );
-            m_CompositePass->End();
-        }
+        m_SceneRenderer->RenderScene(m_ViewportSize, m_ActiveScene, m_ActiveCameraController.GetPerspectiveCamera(), m_SceneHierarchyPanel->GetSelectionContext());
 
         if (m_IsMousePickingBufferReady)
         {
@@ -333,21 +168,28 @@ namespace Flameberry {
                 FL_PROFILE_SCOPE("Last Mouse Picking Pass");
                 m_IsMousePickingBufferReady = true;
 
-                bool shouldResize = m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
+                m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
 
                 m_MousePickingRenderPass->Begin(0, { m_MouseX, (int)(m_ViewportSize.y - m_MouseY) }, { 1, 1 });
                 m_MousePickingPipeline->Bind();
-                auto descSet = m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet();
-                const auto& mousePickingPipelineLayout = m_MousePickingPipeline->GetLayout();
-                Renderer::Submit([descSet, mousePickingPipelineLayout](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+
+                Renderer::Submit([descSet = m_SceneRenderer->GetCameraBufferDescriptorSet(Renderer::GetCurrentFrameIndex()), mousePickingPipelineLayout = m_MousePickingPipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                     {
                         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
                     }
                 );
-                m_SceneRenderer->OnDrawForMousePickingPass(m_MousePickingPipeline->GetLayout(), m_ActiveScene);
+                m_SceneRenderer->RenderSceneForMousePicking(m_MousePickingPipeline->GetLayout(), m_ActiveScene);
                 m_MousePickingRenderPass->End();
             }
         }
+
+        // Update all image index related descriptors
+        Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                InvalidateViewportImGuiDescriptorSet(imageIndex);
+                InvalidateCompositePassImGuiDescriptorSet(imageIndex);
+            }
+        );
 
         if (m_ShouldOpenAnotherScene)
         {
@@ -360,9 +202,7 @@ namespace Flameberry {
 
     void EditorLayer::OnDestroy()
     {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         Renderer2D::Destroy();
-        vkDestroySampler(device, m_ShadowMapSampler, nullptr);
     }
 
     void EditorLayer::OnUIRender()
@@ -532,9 +372,6 @@ namespace Flameberry {
         ImGui::Begin("Settings");
         ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         FL_DISPLAY_SCOPE_DETAILS_IMGUI();
-        ImGui::Separator();
-        ImGui::Checkbox("Color Cascades", &m_ColorCascades);
-        ImGui::DragFloat("Lambda Split", &m_LambdaSplit, 0.002f, 0.0f, 1.0f);
         ImGui::End();
 
         // Display composited framebuffer
@@ -558,8 +395,8 @@ namespace Flameberry {
     void EditorLayer::InvalidateViewportImGuiDescriptorSet(uint32_t index)
     {
         VkDescriptorImageInfo desc_image[1] = {};
-        desc_image[0].sampler = m_VkTextureSampler;
-        desc_image[0].imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[index]->GetColorResolveAttachment(0)->GetImageView();
+        desc_image[0].sampler = Texture2D::GetDefaultSampler();
+        desc_image[0].imageView = m_SceneRenderer->GetGeometryPassOutputImageView(index);
         desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet write_desc[1] = {};
@@ -574,8 +411,8 @@ namespace Flameberry {
     void EditorLayer::InvalidateCompositePassImGuiDescriptorSet(uint32_t index)
     {
         VkDescriptorImageInfo desc_image[1] = {};
-        desc_image[0].sampler = m_VkTextureSampler;
-        desc_image[0].imageView = m_CompositePass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetImageView();
+        desc_image[0].sampler = Texture2D::GetDefaultSampler();
+        desc_image[0].imageView = m_SceneRenderer->GetCompositePassOutputImageView(index);
         desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet write_desc[1] = {};
@@ -719,93 +556,6 @@ namespace Flameberry {
         FL_ASSERT(0, "Not implemented yet!");
     }
 
-    void EditorLayer::UpdateShadowMapCascades()
-    {
-        float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
-
-        const float nearClip = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zNear;
-        const float farClip = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zFar;
-        const float clipRange = farClip - nearClip;
-
-        const float minZ = nearClip;
-        const float maxZ = nearClip + clipRange;
-
-        const float range = maxZ - minZ;
-        const float ratio = maxZ / minZ;
-
-        // const float cascadeSplitLambda = 0.91f;
-        const float cascadeSplitLambda = m_LambdaSplit;
-
-        // Calculate split depths based on view camera frustum
-        // Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
-        for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
-            const float p = (i + 1) / static_cast<float>(SHADOW_MAP_CASCADE_COUNT);
-            const float log = minZ * std::pow(ratio, p);
-            const float uniform = minZ + range * p;
-            const float d = cascadeSplitLambda * (log - uniform) + uniform;
-            cascadeSplits[i] = (d - nearClip) / clipRange;
-        }
-
-        // Calculate orthographic projection matrix for each cascade
-        float lastSplitDist = 0.0;
-
-        // Project frustum corners into world space
-        const glm::mat4 invCam = glm::inverse(m_ActiveCameraController.GetPerspectiveCamera()->GetViewProjectionMatrix());
-
-        for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
-            const float splitDist = cascadeSplits[i];
-
-            glm::vec3 frustumCorners[8] = {
-                glm::vec3(-1.0f,  1.0f, 0.0f),
-                glm::vec3(1.0f,   1.0f, 0.0f),
-                glm::vec3(1.0f,  -1.0f, 0.0f),
-                glm::vec3(-1.0f, -1.0f, 0.0f),
-                glm::vec3(-1.0f,  1.0f, 1.0f),
-                glm::vec3(1.0f,   1.0f, 1.0f),
-                glm::vec3(1.0f,  -1.0f, 1.0f),
-                glm::vec3(-1.0f, -1.0f, 1.0f),
-            };
-
-            for (uint32_t i = 0; i < 8; i++) {
-                glm::vec4 invCorner = invCam * glm::vec4(frustumCorners[i], 1.0f);
-                frustumCorners[i] = invCorner / invCorner.w;
-            }
-
-            for (uint32_t i = 0; i < 4; i++) {
-                glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
-                frustumCorners[i + 4] = frustumCorners[i] + (dist * splitDist);
-                frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDist);
-            }
-
-            // Get frustum center
-            glm::vec3 frustumCenter = glm::vec3(0.0f);
-            for (uint32_t i = 0; i < 8; i++) {
-                frustumCenter += frustumCorners[i];
-            }
-            frustumCenter /= 8.0f;
-
-            float radius = 0.0f;
-            for (uint32_t i = 0; i < 8; i++) {
-                float distance = glm::length(frustumCorners[i] - frustumCenter);
-                radius = glm::max(radius, distance);
-            }
-            radius = std::ceil(radius * 16.0f) / 16.0f;
-
-            const glm::vec3 maxExtents = glm::vec3(radius);
-            const glm::vec3 minExtents = -maxExtents;
-
-            const glm::vec3 lightDir = glm::normalize(m_ActiveScene->GetDirectionalLight().Direction);
-            const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-            const glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
-
-            // Store split distance and matrix in cascade
-            m_CascadeDepthSplits[i] = (m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().zNear + splitDist * clipRange) * -1.0f;
-            m_CascadeMatrices[i] = lightOrthoMatrix * lightViewMatrix;
-
-            lastSplitDist = cascadeSplits[i];
-        }
-    }
-
     void EditorLayer::ShowMenuBar()
     {
         // Main Menu
@@ -823,219 +573,5 @@ namespace Flameberry {
             }
             ImGui::EndMainMenuBar();
         }
-    }
-
-    void EditorLayer::CreateMousePickingPipeline()
-    {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-
-        // Creating Descriptors
-        DescriptorSetLayoutSpecification mousePickingDescSetLayoutSpec;
-        mousePickingDescSetLayoutSpec.Bindings.emplace_back();
-        mousePickingDescSetLayoutSpec.Bindings[0].binding = 0;
-        mousePickingDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        mousePickingDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
-        mousePickingDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        mousePickingDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
-
-        m_MousePickingDescriptorSetLayout = DescriptorSetLayout::Create(mousePickingDescSetLayoutSpec);
-
-        // Pipeline Creation
-        PipelineSpecification pipelineSpec{};
-        pipelineSpec.PipelineLayout.PushConstants = {
-            { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MousePickingPushConstantData) }
-        };
-
-        pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
-            m_MousePickingDescriptorSetLayout
-        };
-
-        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_picking.vert.spv";
-        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_picking.frag.spv";
-        pipelineSpec.RenderPass = m_MousePickingRenderPass;
-
-        pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
-        pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
-
-        m_MousePickingPipeline = Pipeline::Create(pipelineSpec);
-    }
-
-    void EditorLayer::CreateShadowMapPipeline()
-    {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-
-        VkSamplerCreateInfo sampler_info{};
-        sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        sampler_info.magFilter = VK_FILTER_LINEAR;
-        sampler_info.minFilter = VK_FILTER_LINEAR;
-        sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        sampler_info.anisotropyEnable = VK_FALSE;
-        sampler_info.mipLodBias = 0.0f;
-        sampler_info.maxAnisotropy = 1.0f;
-        sampler_info.minLod = 0.0f;
-        sampler_info.maxLod = 1.0f;
-        sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-        sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-
-        VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_ShadowMapSampler));
-
-        m_ShadowMapUniformBuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-
-        auto bufferSize = sizeof(glm::mat4) * SHADOW_MAP_CASCADE_COUNT;
-
-        BufferSpecification uniformBufferSpec;
-        uniformBufferSpec.InstanceCount = 1;
-        uniformBufferSpec.InstanceSize = bufferSize;
-        uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-        uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-        for (auto& uniformBuffer : m_ShadowMapUniformBuffers)
-        {
-            uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
-            uniformBuffer->MapMemory(bufferSize);
-        }
-
-        // Creating Descriptors
-        DescriptorSetLayoutSpecification shadowDescSetLayoutSpec;
-        shadowDescSetLayoutSpec.Bindings.emplace_back();
-        shadowDescSetLayoutSpec.Bindings[0].binding = 0;
-        shadowDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        shadowDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
-        shadowDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        shadowDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
-
-        m_ShadowMapDescriptorSetLayout = DescriptorSetLayout::Create(shadowDescSetLayoutSpec);
-
-        m_ShadowMapDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-
-        DescriptorSetSpecification shadowMapDescSetSpec;
-        shadowMapDescSetSpec.Layout = m_ShadowMapDescriptorSetLayout;
-
-        for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            m_ShadowMapDescriptorSets[i] = DescriptorSet::Create(shadowMapDescSetSpec);
-
-            VkDescriptorBufferInfo vk_descriptor_buffer_info{};
-            vk_descriptor_buffer_info.buffer = m_ShadowMapUniformBuffers[i]->GetBuffer();
-            vk_descriptor_buffer_info.offset = 0;
-            vk_descriptor_buffer_info.range = bufferSize;
-
-            m_ShadowMapDescriptorSets[i]->WriteBuffer(0, vk_descriptor_buffer_info);
-            m_ShadowMapDescriptorSets[i]->Update();
-        }
-
-        PipelineSpecification pipelineSpec{};
-        pipelineSpec.PipelineLayout.PushConstants = {
-            { VK_SHADER_STAGE_VERTEX_BIT,   sizeof(ModelMatrixPushConstantData) },
-        };
-
-        pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
-            m_ShadowMapDescriptorSetLayout
-        };
-
-        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.vert.spv";
-        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.frag.spv";
-
-        pipelineSpec.RenderPass = m_ShadowMapRenderPass;
-
-        pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
-        pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
-
-        pipelineSpec.Viewport.width = SHADOW_MAP_SIZE;
-        pipelineSpec.Viewport.height = SHADOW_MAP_SIZE;
-
-        pipelineSpec.Scissor = { { 0, 0 }, { SHADOW_MAP_SIZE, SHADOW_MAP_SIZE } };
-
-        // pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
-        pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-        pipelineSpec.DepthClampEnable = true;
-
-        m_ShadowMapPipeline = Pipeline::Create(pipelineSpec);
-    }
-
-    void EditorLayer::CreateCompositePipeline()
-    {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-
-        auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
-        VkFormat swapChainImageFormat = swapchain->GetSwapChainImageFormat();
-
-        // Create render pass
-        FramebufferSpecification framebufferSpec{};
-        framebufferSpec.Width = m_ViewportSize.x;
-        framebufferSpec.Height = m_ViewportSize.y;
-        framebufferSpec.Attachments = { swapChainImageFormat, VK_FORMAT_D32_SFLOAT };
-        framebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
-        framebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
-        framebufferSpec.Samples = 1;
-
-        RenderPassSpecification renderPassSpec{};
-        renderPassSpec.TargetFramebuffers.resize(swapchain->GetSwapChainImageCount());
-        for (uint32_t i = 0; i < renderPassSpec.TargetFramebuffers.size(); i++)
-            renderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(framebufferSpec);
-
-        m_CompositePass = RenderPass::Create(renderPassSpec);
-
-        DescriptorSetLayoutSpecification layoutSpec;
-        layoutSpec.Bindings.resize(1);
-
-        layoutSpec.Bindings[0].binding = 0;
-        layoutSpec.Bindings[0].descriptorCount = 1;
-        layoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        layoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        // layoutSpec.Bindings[1].binding = 1;
-        // layoutSpec.Bindings[1].descriptorCount = 1;
-        // layoutSpec.Bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        // layoutSpec.Bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        m_CompositePassDescriptorSetLayout = DescriptorSetLayout::Create(layoutSpec);
-
-        DescriptorSetSpecification setSpec;
-        setSpec.Layout = m_CompositePassDescriptorSetLayout;
-
-        auto imageCount = VulkanContext::GetCurrentWindow()->GetSwapChain()->GetSwapChainImageCount();
-
-        m_CompositePassDescriptorSets.resize(imageCount);
-        for (uint8_t i = 0; i < m_CompositePassDescriptorSets.size(); i++)
-        {
-            m_CompositePassDescriptorSets[i] = DescriptorSet::Create(setSpec);
-
-            m_CompositePassDescriptorSets[i]->WriteImage(0, {
-                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                 .imageView = m_SceneRenderPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetImageView(),
-                 .sampler = m_VkTextureSampler
-                }
-            );
-
-            // m_CompositePassDescriptorSets[i]->WriteImage(1, {
-            //     .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-            //      .imageView = m_StencilImages[i]->GetImageView(),
-            //      .sampler = m_ShadowMapSampler
-            //     }
-            // );
-
-            m_CompositePassDescriptorSets[i]->Update();
-        }
-
-        PipelineSpecification pipelineSpec{};
-        pipelineSpec.PipelineLayout.PushConstants = {};
-        pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_CompositePassDescriptorSetLayout };
-
-        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.vert.spv";
-        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.frag.spv";
-        pipelineSpec.RenderPass = m_CompositePass;
-
-        pipelineSpec.VertexLayout = {};
-        pipelineSpec.VertexInputBindingDescription.binding = 0;
-        pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        pipelineSpec.VertexInputBindingDescription.stride = 0;
-
-        pipelineSpec.BlendingEnable = true;
-        pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
-
-        m_CompositePipeline = Pipeline::Create(pipelineSpec);
     }
 }
