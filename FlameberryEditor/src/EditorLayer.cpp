@@ -657,8 +657,8 @@ namespace Flameberry {
             if (ctrl_or_cmd)
                 m_EnableGrid = !m_EnableGrid;
             break;
-        }
-    }
+            }
+            }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -1074,4 +1074,4 @@ namespace Flameberry {
 
         m_CompositePipeline = Pipeline::Create(pipelineSpec);
     }
-}
+        }

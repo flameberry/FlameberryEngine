@@ -118,8 +118,16 @@ namespace Flameberry {
         if (ImGui::IsItemClicked())
             m_SelectionContext = entity;
 
-        if (is_selected && ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))
-            m_RenamedEntity = entity;
+        if (is_selected && ImGui::IsWindowFocused())
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
+                m_RenamedEntity = entity;
+            else if (io.KeySuper && ImGui::IsKeyPressed(ImGuiKey_Backspace))
+                should_delete_entity = true;
+            // else if (io.KeySuper && ImGui::IsKeyPressed(ImGuiKey_D)) // TOOD: Duplicate entity
+                
+        }
 
         if (ImGui::BeginPopupContextItem("EntityNodeContextMenu", m_PopupFlags))
         {

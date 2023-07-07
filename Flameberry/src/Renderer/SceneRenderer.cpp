@@ -420,15 +420,15 @@ namespace Flameberry {
 
         staticMesh->Bind();
 
+        std::vector<VkDescriptorSet> materialDescriptorSets(5);
+
         int submeshIndex = 0;
         for (const auto& submesh : staticMesh->GetSubMeshes()) {
             MeshData pushConstantMeshData;
             pushConstantMeshData.ModelMatrix = transform;
 
             std::shared_ptr<Material> materialAsset;
-            std::vector<VkDescriptorSet> materialDescriptorSets;
-
-            materialDescriptorSets.resize(5, Texture2D::GetEmptyDescriptorSet());
+            std::fill(materialDescriptorSets.begin(), materialDescriptorSets.end(), Texture2D::GetEmptyDescriptorSet());
 
             if (auto it = materialTable.find(submeshIndex); it != materialTable.end())
                 materialAsset = AssetManager::GetAsset<Material>(it->second);
