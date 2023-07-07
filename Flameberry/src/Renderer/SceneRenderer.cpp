@@ -17,6 +17,10 @@ namespace Flameberry {
         glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
     };
 
+    struct SceneRendererSettingsUniform {
+        int EnableShadows = 1, ShowCascades = 0, SoftShadows = 1;
+    };
+
     struct SceneUniformBufferData {
         alignas(64) glm::mat4 CascadeViewProjectionMatrices[SceneRendererSettings::CascadeCount];
         alignas(16) float CascadeDepthSplits[SceneRendererSettings::CascadeCount];
@@ -24,7 +28,7 @@ namespace Flameberry {
         alignas(16) DirectionalLight directionalLight;
         alignas(16) PointLight PointLights[10];
         alignas(4)  int LightCount = 0;
-        alignas(4)  int ShowCascades = 0;
+        alignas(16) SceneRendererSettingsUniform RendererSettings;
     };
 
     struct MeshData {
@@ -497,12 +501,15 @@ namespace Flameberry {
 
         m_CameraUniformBuffers[currentFrame]->WriteToBuffer(&cameraBufferData, sizeof(CameraUniformBufferObject));
 
-        CalculateShadowMapCascades(camera, scene->m_SceneData.ActiveEnvironment.DirLight.Direction);
-        glm::mat4 cascades[SceneRendererSettings::CascadeCount];
-        for (uint8_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
-            cascades[i] = m_Cascades[i].ViewProjectionMatrix;
+        if (m_RendererSettings.EnableShadows)
+        {
+            CalculateShadowMapCascades(camera, scene->m_SceneData.ActiveEnvironment.DirLight.Direction);
+            glm::mat4 cascades[SceneRendererSettings::CascadeCount];
+            for (uint8_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
+                cascades[i] = m_Cascades[i].ViewProjectionMatrix;
 
-        m_ShadowMapUniformBuffers[currentFrame]->WriteToBuffer(cascades, sizeof(glm::mat4) * SceneRendererSettings::CascadeCount);
+            m_ShadowMapUniformBuffers[currentFrame]->WriteToBuffer(cascades, sizeof(glm::mat4) * SceneRendererSettings::CascadeCount);
+        }
 
         SceneUniformBufferData sceneUniformBufferData;
         sceneUniformBufferData.cameraPosition = camera->GetSpecification().Position;
@@ -512,7 +519,9 @@ namespace Flameberry {
             sceneUniformBufferData.CascadeViewProjectionMatrices[i] = m_Cascades[i].ViewProjectionMatrix;
             sceneUniformBufferData.CascadeDepthSplits[i] = m_Cascades[i].DepthSplit;
         }
-        sceneUniformBufferData.ShowCascades = (int)m_RendererSettings.ShowCascades;
+        sceneUniformBufferData.RendererSettings.EnableShadows = (int)m_RendererSettings.EnableShadows;
+        sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
+        sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
 
         sceneUniformBufferData.directionalLight = scene->m_SceneData.ActiveEnvironment.DirLight;
         for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
@@ -528,33 +537,35 @@ namespace Flameberry {
 
         // Render Passes
 #pragma region ShadowPass
-        m_ShadowMapRenderPass->Begin();
-
-        m_ShadowMapPipeline->Bind();
-        Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr);
-            }
-        );
-
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        if (m_RendererSettings.EnableShadows)
         {
-            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
-            auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-            if (staticMesh)
+            m_ShadowMapRenderPass->Begin();
+            m_ShadowMapPipeline->Bind();
+            Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                {
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr);
+                }
+            );
+
+            for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
             {
-                ModelMatrixPushConstantData pushContantData;
-                pushContantData.ModelMatrix = transform.GetTransform();
-                Renderer::Submit([shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                    {
-                        vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
-                    }
-                );
-                staticMesh->Bind();
-                staticMesh->OnDraw();
+                const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+                auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
+                if (staticMesh)
+                {
+                    ModelMatrixPushConstantData pushContantData;
+                    pushContantData.ModelMatrix = transform.GetTransform();
+                    Renderer::Submit([shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                        {
+                            vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
+                        }
+                    );
+                    staticMesh->Bind();
+                    staticMesh->OnDraw();
+                }
             }
+            m_ShadowMapRenderPass->End();
         }
-        m_ShadowMapRenderPass->End();
 #pragma endregion ShadowPass
 
 #pragma region GeometryPass

@@ -41,6 +41,10 @@ struct PointLight {
     float Intensity;
 };
 
+struct SceneRendererSettingsUniform {
+    int EnableShadows, ShowCascades, SoftShadows;
+};
+
 layout (std140, set = 1, binding = 0) uniform SceneData {
     mat4 u_CascadeMatrices[CASCADE_COUNT];
     vec4 u_CascadeDepthSplits;
@@ -48,7 +52,7 @@ layout (std140, set = 1, binding = 0) uniform SceneData {
     DirectionalLight u_DirectionalLight;
     PointLight u_PointLights[10];
     int u_LightCount;
-    int u_ShowCascades;
+    SceneRendererSettingsUniform u_SceneRendererSettings;
 };
 
 layout (push_constant) uniform MeshData {
@@ -262,22 +266,28 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
     float specularBRDFDenominator = 4.0f * n_dot_v * n_dot_l + 0.0001f;
     
     vec3 specularBRDF = specularBRDFNumerator / specularBRDFDenominator;
-    
     vec3 diffuseBRDF = kD * GetPixelColor() / PI;
 
-	// Get cascade index for the current fragment's view position
-	uint cascadeIndex = 0;
-	for(uint i = 0; i < CASCADE_COUNT - 1; ++i) {
-		if (v_ViewPosition.z < u_CascadeDepthSplits[i]) {	
-			cascadeIndex = i + 1;
-		}
-	}
+    float shadow = 1.0f;
+    if (u_SceneRendererSettings.EnableShadows == 1)
+    {
+        // Get cascade index for the current fragment's view position
+        uint cascadeIndex = 0;
+        for (uint i = 0; i < CASCADE_COUNT - 1; i++) {
+            if (v_ViewPosition.z < u_CascadeDepthSplits[i]) {	
+                cascadeIndex = i + 1;
+            }
+        }
 
-	// Depth compare for shadowing
-	vec4 shadowCoord = (g_BiasMatrix * u_CascadeMatrices[cascadeIndex]) * vec4(v_WorldSpacePosition, 1.0f);	
+        // Depth compare for shadowing
+        vec4 shadowCoord = (g_BiasMatrix * u_CascadeMatrices[cascadeIndex]) * vec4(v_WorldSpacePosition, 1.0f);	
 
-    float bias = Bias_DirectionalLight();
-    float shadow = FilterPCFRadial_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 1.0f, 32, bias);
+        float bias = Bias_DirectionalLight();
+        if (u_SceneRendererSettings.SoftShadows == 1)
+            shadow = FilterPCFRadial_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 1.0f, 32, bias);
+        else
+            shadow = TextureProj_DirectionalLight(shadowCoord / shadowCoord.w, vec2(0.0), cascadeIndex, bias);
+    }
 
     vec3 finalColor = shadow * (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
     return finalColor;
@@ -341,7 +351,7 @@ void main()
 
     o_FragColor = vec4(intermediateColor, 1.0f);
 
-    if (u_ShowCascades == 1)
+    if (u_SceneRendererSettings.ShowCascades == 1)
     {
         uint cascadeIndex = 0;
         for(uint i = 0; i < CASCADE_COUNT - 1; ++i) {
@@ -365,5 +375,4 @@ void main()
                 break;
         }
     }
-    float num = g_Infinity;
 }

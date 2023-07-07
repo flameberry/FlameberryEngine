@@ -124,7 +124,7 @@ namespace Flameberry {
         FL_PROFILE_SCOPE("Editor_OnUpdate");
 
         bool didCameraResize = m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
-        if (m_DidViewportBegin)
+        if (m_IsViewportFocused)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 
         m_SceneRenderer->RenderScene(m_ViewportSize, m_ActiveScene, m_ActiveCameraController.GetPerspectiveCamera(), m_SceneHierarchyPanel->GetSelectionContext());
@@ -369,9 +369,19 @@ namespace Flameberry {
         }
         ImGui::PopStyleVar();
 
-        ImGui::Begin("Settings");
+        ImGui::Begin("Renderer Settings");
         ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         FL_DISPLAY_SCOPE_DETAILS_IMGUI();
+        ImGui::Separator();
+
+        if (ImGui::CollapsingHeader("Scene Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
+        {
+            auto& settings = m_SceneRenderer->GetRendererSettingsRef();
+            ImGui::Checkbox("Enable Shadows", &settings.EnableShadows);
+            ImGui::Checkbox("Show Cascades", &settings.ShowCascades);
+            ImGui::Checkbox("Soft Shadows", &settings.SoftShadows);
+            ImGui::DragFloat("Lambda Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f);
+        }
         ImGui::End();
 
         // Display composited framebuffer

@@ -38,6 +38,7 @@ namespace Flameberry {
         VkImageView GetCompositePassOutputImageView(uint32_t index) const { return m_CompositePass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetImageView(); }
         VkDescriptorSet GetCameraBufferDescriptorSet(uint32_t index) const { return m_CameraBufferDescriptorSets[index]->GetDescriptorSet(); }
 
+        SceneRendererSettings& GetRendererSettingsRef() { return m_RendererSettings; }
         void RenderSceneForMousePicking(VkPipelineLayout mousePickingPipelineLayout, const std::shared_ptr<Scene>& scene);
     private:
         void Init();
