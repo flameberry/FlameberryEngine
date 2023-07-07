@@ -10,7 +10,7 @@ namespace Flameberry {
     {
         YAML::Emitter out;
         out << YAML::BeginMap;
-        out << YAML::Key << "UUID" << YAML::Value << material->Handle;
+        out << YAML::Key << "Handle" << YAML::Value << material->Handle;
         out << YAML::Key << "Name" << YAML::Value << material->Name;
         out << YAML::Key << "Albedo" << YAML::Value << material->Albedo;
         out << YAML::Key << "Roughness" << YAML::Value << material->Roughness;

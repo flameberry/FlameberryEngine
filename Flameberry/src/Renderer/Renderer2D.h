@@ -20,13 +20,11 @@ namespace Flameberry {
     struct Renderer2DData {
         // Lines
         std::shared_ptr<Pipeline> LinePipeline;
-        VkPipelineLayout LinePipelineLayout;
         std::shared_ptr<Buffer> LineVertexBuffer;
         std::vector<LineVertex> LineVertices;
 
         // Quads
         std::shared_ptr<Pipeline> QuadPipeline;
-        VkPipelineLayout QuadPipelineLayout;
         std::shared_ptr<Buffer> QuadVertexBuffer, QuadIndexBuffer;
         std::vector<QuadVertex> QuadVertices;
 
@@ -37,7 +35,7 @@ namespace Flameberry {
     class Renderer2D
     {
     public:
-        static void Init(VkDescriptorSetLayout globalDescriptorSetLayout, const std::shared_ptr<RenderPass>& renderPass);
+        static void Init(const std::shared_ptr<DescriptorSetLayout>& globalDescriptorSetLayout, const std::shared_ptr<RenderPass>& renderPass);
         static void Destroy();
 
         static void AddGrid(int gridSize);

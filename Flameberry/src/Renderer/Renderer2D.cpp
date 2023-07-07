@@ -14,7 +14,7 @@
 namespace Flameberry {
     Renderer2DData Renderer2D::s_Renderer2DData;
 
-    void Renderer2D::Init(VkDescriptorSetLayout globalDescriptorSetLayout, const std::shared_ptr<RenderPass>& renderPass)
+    void Renderer2D::Init(const std::shared_ptr<DescriptorSetLayout>& globalDescriptorSetLayout, const std::shared_ptr<RenderPass>& renderPass)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         {
@@ -28,20 +28,13 @@ namespace Flameberry {
             s_Renderer2DData.LineVertexBuffer = Buffer::Create(bufferSpec);
             s_Renderer2DData.LineVertexBuffer->MapMemory(bufferSpec.InstanceSize);
 
-            VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
-            vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            vk_pipeline_layout_create_info.setLayoutCount = 1;
-            vk_pipeline_layout_create_info.pSetLayouts = &globalDescriptorSetLayout;
-            vk_pipeline_layout_create_info.pushConstantRangeCount = 0;
-            vk_pipeline_layout_create_info.pPushConstantRanges = nullptr;
-
-            VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &s_Renderer2DData.LinePipelineLayout));
-
             PipelineSpecification pipelineSpec{};
+            pipelineSpec.PipelineLayout.PushConstants = {};
+            pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout };
+            
             pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/solid_color.vert.spv";
             pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/solid_color.frag.spv";
             pipelineSpec.RenderPass = renderPass;
-            pipelineSpec.PipelineLayout = s_Renderer2DData.LinePipelineLayout;
 
             pipelineSpec.VertexLayout = {
                 VertexInputAttribute::VEC3F, // a_Position
@@ -109,22 +102,13 @@ namespace Flameberry {
 
             delete[] indices;
 
-            VkDescriptorSetLayout descriptorSetLayouts[] = { globalDescriptorSetLayout, Texture2D::GetDescriptorLayout()->GetLayout() };
-
-            VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
-            vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            vk_pipeline_layout_create_info.setLayoutCount = 2;
-            vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
-            vk_pipeline_layout_create_info.pushConstantRangeCount = 0;
-            vk_pipeline_layout_create_info.pPushConstantRanges = nullptr;
-
-            VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &s_Renderer2DData.QuadPipelineLayout));
-
             PipelineSpecification pipelineSpec{};
+            pipelineSpec.PipelineLayout.PushConstants = {};
+            pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout, Texture2D::GetDescriptorLayout() };
+            
             pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/quad.vert.spv";
             pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/quad.frag.spv";
             pipelineSpec.RenderPass = renderPass;
-            pipelineSpec.PipelineLayout = s_Renderer2DData.QuadPipelineLayout;
 
             pipelineSpec.VertexLayout = {
                 VertexInputAttribute::VEC3F, // a_Position
@@ -209,7 +193,7 @@ namespace Flameberry {
 
             uint32_t vertexCount = s_Renderer2DData.LineVertices.size();
             auto vertexBuffer = s_Renderer2DData.LineVertexBuffer->GetBuffer();
-            auto pipelineLayout = s_Renderer2DData.LinePipelineLayout;
+            auto pipelineLayout = s_Renderer2DData.LinePipeline->GetLayout();
 
             Renderer::Submit([pipelineLayout, globalDescriptorSet, vertexBuffer, vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
@@ -232,7 +216,7 @@ namespace Flameberry {
 
             auto vertexBuffer = s_Renderer2DData.QuadVertexBuffer->GetBuffer();
             auto indexBuffer = s_Renderer2DData.QuadIndexBuffer->GetBuffer();
-            auto pipelineLayout = s_Renderer2DData.QuadPipelineLayout;
+            auto pipelineLayout = s_Renderer2DData.QuadPipeline->GetLayout();
             auto indexCount = 6 * (uint32_t)s_Renderer2DData.QuadVertices.size() / 4;
 
             Renderer::Submit([pipelineLayout, globalDescriptorSet, vertexBuffer, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
@@ -252,12 +236,9 @@ namespace Flameberry {
 
     void Renderer2D::Destroy()
     {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkDestroyPipelineLayout(device, s_Renderer2DData.LinePipelineLayout, nullptr);
         s_Renderer2DData.LinePipeline = nullptr;
         s_Renderer2DData.LineVertexBuffer = nullptr;
 
-        vkDestroyPipelineLayout(device, s_Renderer2DData.QuadPipelineLayout, nullptr);
         s_Renderer2DData.QuadPipeline = nullptr;
         s_Renderer2DData.QuadVertexBuffer = nullptr;
         s_Renderer2DData.QuadIndexBuffer = nullptr;

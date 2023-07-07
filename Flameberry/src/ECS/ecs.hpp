@@ -235,12 +235,37 @@ namespace fbentt {
 
         /// @brief: Iterates over all entities in the scene
         /// @param _Fn: A function with a param of type `const ecs::entity&` which represents the current entity being iterated
-        template<typename Fn> void each(Fn&& _Fn) {
+        template<typename Fn> void for_each(Fn&& _Fn) {
             static_assert(std::is_invocable_v<Fn, entity>);
             for (auto entity : entities) {
                 if (is_valid(entity)) {
                     _Fn(entity);
                 }
+            }
+        }
+
+        /// @brief: Iterates over all components in the scene
+        /// @param _Fn: A function with a param of type `void*` which represents the current component being iterated
+        /// And `uint32_t` which gives the typeID of the component
+        template<typename Fn> void for_each_component(entity entity, Fn&& _Fn) {
+            FL_ASSERT(0, "for_each_component() Not Yet Implemented!");
+
+            static_assert(std::is_invocable_v<Fn, void*, uint32_t>);
+
+            FL_ASSERT(entity != null, "Failed to iterate over components of entity: Entity is null!");
+
+            const uint32_t index = to_index(entity);
+            const uint32_t version = to_version(entities[index]);
+
+            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to iterate over components of entity: Invalid handle!");
+
+            uint32_t typeID = 0;
+            for (auto& pool : pools) {
+                if (int set_index = pool.entity_set.find(index); set_index != -1) {
+                    // auto& handler = (*((pool_handler<Type>*)pool.handler.get()));
+                    // _Fn(&handler.get(set_index), typeID);
+                }
+                typeID++;
             }
         }
 

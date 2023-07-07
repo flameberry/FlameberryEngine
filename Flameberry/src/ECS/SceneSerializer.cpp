@@ -151,7 +151,7 @@ namespace Flameberry {
 
         std::vector<UUID> meshHandles;
 
-        srcScene->m_Registry->each([&](fbentt::entity entity)
+        srcScene->m_Registry->for_each([&](fbentt::entity entity)
             {
                 SerializeEntity(out, entity, srcScene, meshHandles);
             }

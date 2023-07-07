@@ -6,11 +6,24 @@
 
 #include "VulkanVertex.h"
 #include "RenderPass.h"
+#include "DescriptorSet.h"
 
 namespace Flameberry {
+
+    struct PushConstantSpecification {
+        VkShaderStageFlags ShaderStage;
+        uint32_t Size;
+    };
+
+    struct PipelineLayoutSpecification
+    {
+        std::vector<PushConstantSpecification> PushConstants;
+        std::vector<std::shared_ptr<DescriptorSetLayout>> DescriptorSetLayouts;
+    };
+
     struct PipelineSpecification
     {
-        VkPipelineLayout PipelineLayout;
+        PipelineLayoutSpecification PipelineLayout;
         std::string VertexShaderFilePath, FragmentShaderFilePath;
         std::shared_ptr<RenderPass> RenderPass;
         uint32_t SubPass = 0;
@@ -36,6 +49,7 @@ namespace Flameberry {
         ~Pipeline();
 
         PipelineSpecification GetSpecification() const { return m_PipelineSpec; }
+        VkPipelineLayout GetLayout() const { return m_VkPipelineLayout; }
 
         void Bind();
 
@@ -44,5 +58,7 @@ namespace Flameberry {
     private:
         PipelineSpecification m_PipelineSpec;
         VkPipeline m_VkGraphicsPipeline;
+        VkPipelineLayout m_VkPipelineLayout;
     };
+
 }

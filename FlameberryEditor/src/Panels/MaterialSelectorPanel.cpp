@@ -12,7 +12,7 @@ namespace Flameberry {
         if (m_Open)
         {
             ImGui::Begin("Material Finder", &m_Open);
-            for (const auto& [uuid, asset] : AssetManager::GetAssetTable())
+            for (const auto& [handle, asset] : AssetManager::GetAssetTable())
             {
                 if (asset->GetAssetType() == AssetType::Material)
                 {

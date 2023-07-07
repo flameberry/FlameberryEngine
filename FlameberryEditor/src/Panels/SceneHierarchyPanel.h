@@ -18,10 +18,12 @@ namespace Flameberry {
 
         void DrawEntityNode(fbentt::entity entity);
         void DrawCreateEntityMenu(fbentt::entity parent = (fbentt::entity)fbentt::null);
+
         fbentt::entity CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent);
         void DestroyEntityTree(fbentt::entity entity);
         void ReparentEntity(fbentt::entity entity, fbentt::entity parent);
         bool IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
+        void DuplicateEntity(fbentt::entity original);
 
         template<typename... Args>
         static std::shared_ptr<SceneHierarchyPanel> Create(Args... args) { return std::make_shared<SceneHierarchyPanel>(std::forward<Args>(args)...); }

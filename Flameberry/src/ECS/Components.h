@@ -39,6 +39,13 @@ namespace Flameberry {
     {
     };
 
+    // struct MaterialTable {
+    //     std::unordered_map<uint32_t, AssetHandle> Table;
+
+    //     // TODO: Use to potentially determine if submesh has an overriden material present in the Table without having to look it up by hashing everytime
+    //     std::vector<uint64_t> SubmeshBitmask;
+    // };
+
     typedef std::unordered_map<uint32_t, AssetHandle> MaterialTable;
     struct MeshComponent
     {

@@ -40,7 +40,7 @@ namespace Flameberry {
         glm::vec2 ScreenSize;
     };
 
-    SceneRenderer::SceneRenderer(VkDescriptorSetLayout globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass, const std::vector<VkImageView>& shadowMapImageViews, VkSampler shadowMapSampler)
+    SceneRenderer::SceneRenderer(const std::shared_ptr<DescriptorSetLayout>& globalDescriptorLayout, const std::shared_ptr<RenderPass>& renderPass, const std::vector<VkImageView>& shadowMapImageViews, VkSampler shadowMapSampler)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         {
@@ -98,37 +98,24 @@ namespace Flameberry {
                 m_SceneDataDescriptorSets[i]->Update();
             }
 
-            VkPushConstantRange vk_push_constant_range{};
-            vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-            vk_push_constant_range.size = sizeof(MeshData);
-            vk_push_constant_range.offset = 0;
-
-            VkDescriptorSetLayout descriptorSetLayouts[] = {
-                globalDescriptorLayout,
-                m_SceneDescriptorSetLayout->GetLayout(),
-                Texture2D::GetDescriptorLayout()->GetLayout(),
-                Texture2D::GetDescriptorLayout()->GetLayout(),
-                Texture2D::GetDescriptorLayout()->GetLayout(),
-                Texture2D::GetDescriptorLayout()->GetLayout(),
-                Texture2D::GetDescriptorLayout()->GetLayout()
+            PipelineSpecification pipelineSpec{};
+            pipelineSpec.PipelineLayout.PushConstants = {
+                { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MeshData) }
             };
 
-            VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
+            pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
+                globalDescriptorLayout,
+                m_SceneDescriptorSetLayout,
+                Texture2D::GetDescriptorLayout(),
+                Texture2D::GetDescriptorLayout(),
+                Texture2D::GetDescriptorLayout(),
+                Texture2D::GetDescriptorLayout(),
+                Texture2D::GetDescriptorLayout()
+            };
 
-            VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
-            vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            vk_pipeline_layout_create_info.setLayoutCount = sizeof(descriptorSetLayouts) / sizeof(VkDescriptorSetLayout);
-            vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
-            vk_pipeline_layout_create_info.pushConstantRangeCount = sizeof(pushConstantRanges) / sizeof(VkPushConstantRange);
-            vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
-
-            VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
-
-            PipelineSpecification pipelineSpec{};
             pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.vert.spv";
             pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.frag.spv";
             pipelineSpec.RenderPass = renderPass;
-            pipelineSpec.PipelineLayout = m_VkPipelineLayout;
 
             pipelineSpec.VertexLayout = {
                 VertexInputAttribute::VEC3F, // a_Position
@@ -156,28 +143,16 @@ namespace Flameberry {
 
         // Outline Resources
         {
-            VkPushConstantRange vk_push_constant_range{};
-            vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-            vk_push_constant_range.size = sizeof(OutlinePushConstantData);
-            vk_push_constant_range.offset = 0;
-
-            VkDescriptorSetLayout descriptorSetLayouts[] = { globalDescriptorLayout };
-            VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
-
-            VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
-            vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            vk_pipeline_layout_create_info.setLayoutCount = sizeof(descriptorSetLayouts) / sizeof(VkDescriptorSetLayout);
-            vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
-            vk_pipeline_layout_create_info.pushConstantRangeCount = sizeof(pushConstantRanges) / sizeof(VkPushConstantRange);
-            vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
-
-            VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_OutlinePipelineLayout));
-
             PipelineSpecification pipelineSpec{};
+            pipelineSpec.PipelineLayout.PushConstants = {
+                { VK_SHADER_STAGE_VERTEX_BIT, sizeof(OutlinePushConstantData) }
+            };
+
+            pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorLayout };
+
             pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/outline.vert.spv";
             pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/outline.frag.spv";
             pipelineSpec.RenderPass = renderPass;
-            pipelineSpec.PipelineLayout = m_OutlinePipelineLayout;
 
             pipelineSpec.VertexLayout = {
                 VertexInputAttribute::VEC3F, // a_Position
@@ -202,27 +177,16 @@ namespace Flameberry {
 
         // Skybox Pipeline
         {
-            VkDescriptorSetLayout descriptorSetLayouts[] = { Texture2D::GetDescriptorLayout()->GetLayout() };
-
-            VkPushConstantRange pushConstantRange{};
-            pushConstantRange.offset = 0;
-            pushConstantRange.size = sizeof(glm::mat4);
-            pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-            VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
-            vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            vk_pipeline_layout_create_info.setLayoutCount = sizeof(descriptorSetLayouts) / sizeof(VkDescriptorSetLayout);
-            vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
-            vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
-            vk_pipeline_layout_create_info.pPushConstantRanges = &pushConstantRange;
-
-            VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_SkyboxPipelineLayout));
-
             Flameberry::PipelineSpecification pipelineSpec{};
+            pipelineSpec.PipelineLayout.PushConstants = {
+                { VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4) }
+            };
+
+            pipelineSpec.PipelineLayout.DescriptorSetLayouts = { Texture2D::GetDescriptorLayout() };
+
             pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/skybox.vert.spv";
             pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/skybox.frag.spv";
             pipelineSpec.RenderPass = renderPass;
-            pipelineSpec.PipelineLayout = m_SkyboxPipelineLayout;
 
             pipelineSpec.VertexLayout = {};
 
@@ -262,7 +226,7 @@ namespace Flameberry {
             m_SkyboxPipeline->Bind();
             glm::mat4 viewProjectionMatrix = activeCamera.GetProjectionMatrix() * glm::mat4(glm::mat3(activeCamera.GetViewMatrix()));
 
-            auto pipelineLayout = m_SkyboxPipelineLayout;
+            auto pipelineLayout = m_SkyboxPipeline->GetLayout();
             auto textureDescSet = scene->m_SceneData.ActiveEnvironment.EnvironmentMap->GetDescriptorSet();
             Renderer::Submit([pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
@@ -302,7 +266,7 @@ namespace Flameberry {
 
         // Draw Scene Meshes
         VkDescriptorSet descriptorSets[] = { globalDescriptorSet, m_SceneDataDescriptorSets[currentFrameIndex]->GetDescriptorSet() };
-        const auto& pipelineLayout = m_VkPipelineLayout;
+        const auto& pipelineLayout = m_MeshPipeline->GetLayout();
 
         Renderer::Submit([pipelineLayout, descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
@@ -347,16 +311,17 @@ namespace Flameberry {
 
                 m_OutlinePipeline->Bind();
 
-                const auto& outlinePipelineLayout = m_OutlinePipelineLayout;
+                const auto& outlinePipelineLayout = m_OutlinePipeline->GetLayout();
 
                 OutlinePushConstantData pushConstantData;
                 pushConstantData.ModelMatrix = glm::scale(transform.GetTransform(), glm::vec3(1.05f));
                 // pushConstantData.ModelMatrix = transform.GetTransform();
                 pushConstantData.ScreenSize = framebufferSize;
 
-                Renderer::Submit([outlinePipelineLayout, globalDescriptorSet, pushConstantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
-                    vkCmdPushConstants(cmdBuffer, outlinePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(OutlinePushConstantData), &pushConstantData);
+                Renderer::Submit([outlinePipelineLayout, globalDescriptorSet, pushConstantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                    {
+                        vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
+                        vkCmdPushConstants(cmdBuffer, outlinePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(OutlinePushConstantData), &pushConstantData);
                     }
                 );
 
@@ -458,7 +423,7 @@ namespace Flameberry {
                     materialDescriptorSets[4] = materialAsset->MetallicMap->GetDescriptorSet();
             }
 
-            const auto& pipelineLayout = m_VkPipelineLayout;
+            const auto& pipelineLayout = m_MeshPipeline->GetLayout();
             Renderer::Submit([pipelineLayout, materialDescriptorSets, pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, materialDescriptorSets.size(), materialDescriptorSets.data(), 0, nullptr);
@@ -473,9 +438,5 @@ namespace Flameberry {
 
     SceneRenderer::~SceneRenderer()
     {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
-        vkDestroyPipelineLayout(device, m_OutlinePipelineLayout, nullptr);
-        vkDestroyPipelineLayout(device, m_SkyboxPipelineLayout, nullptr);
     }
 }

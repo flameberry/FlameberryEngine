@@ -31,7 +31,7 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
 
         m_IsSelectedNodeDisplayed = false;
-        m_Context->m_Registry->each([this](fbentt::entity entity)
+        m_Context->m_Registry->for_each([this](fbentt::entity entity)
             {
                 auto* relation = m_Context->m_Registry->try_get<RelationshipComponent>(entity);
                 if (!relation || relation->Parent == fbentt::null)
@@ -126,7 +126,7 @@ namespace Flameberry {
             else if (io.KeySuper && ImGui::IsKeyPressed(ImGuiKey_Backspace))
                 should_delete_entity = true;
             // else if (io.KeySuper && ImGui::IsKeyPressed(ImGuiKey_D)) // TOOD: Duplicate entity
-                
+
         }
 
         if (ImGui::BeginPopupContextItem("EntityNodeContextMenu", m_PopupFlags))
@@ -335,5 +335,10 @@ namespace Flameberry {
             relation = m_Context->m_Registry->try_get<RelationshipComponent>(sibling);
         }
         return false;
+    }
+
+    void SceneHierarchyPanel::DuplicateEntity(fbentt::entity original)
+    {
+        FL_ASSERT(0, "DuplicateEntity() Not Yet Implemented!");
     }
 }

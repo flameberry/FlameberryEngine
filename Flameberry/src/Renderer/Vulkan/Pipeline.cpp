@@ -12,6 +12,34 @@ namespace Flameberry {
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
+        std::vector<VkPushConstantRange> pushConstantRanges;
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+
+        // Creating Pipeline Layout
+        uint32_t offset = 0;
+        for (const auto& pushConstant : m_PipelineSpec.PipelineLayout.PushConstants)
+        {
+            auto& range = pushConstantRanges.emplace_back();
+            range.offset = offset;
+            range.size = pushConstant.Size;
+            range.stageFlags = pushConstant.ShaderStage;
+
+            offset += pushConstant.Size;
+        }
+
+        for (const auto& layout : m_PipelineSpec.PipelineLayout.DescriptorSetLayouts)
+            descriptorSetLayouts.emplace_back(layout->GetLayout());
+
+        VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
+        vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        vk_pipeline_layout_create_info.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
+        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts.data();
+        vk_pipeline_layout_create_info.pushConstantRangeCount = (uint32_t)pushConstantRanges.size();
+        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges.data();
+
+        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
+
+        // Creating Pipeline
         std::vector<char> compiledVertexShader = RenderCommand::LoadCompiledShaderCode(m_PipelineSpec.VertexShaderFilePath);
         std::vector<char> compiledFragmentShader = RenderCommand::LoadCompiledShaderCode(m_PipelineSpec.FragmentShaderFilePath);
 
@@ -178,7 +206,7 @@ namespace Flameberry {
         vk_graphics_pipeline_create_info.pDepthStencilState = &pipelineDepthStencilStateCreateInfo;
         vk_graphics_pipeline_create_info.pColorBlendState = &pipelineColorBlendStateCreateInfo;
         vk_graphics_pipeline_create_info.pDynamicState = &pipelineDynamicStateCreateInfo;
-        vk_graphics_pipeline_create_info.layout = m_PipelineSpec.PipelineLayout;
+        vk_graphics_pipeline_create_info.layout = m_VkPipelineLayout;
         vk_graphics_pipeline_create_info.renderPass = m_PipelineSpec.RenderPass->GetRenderPass();
         vk_graphics_pipeline_create_info.subpass = m_PipelineSpec.SubPass;
         vk_graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
@@ -195,6 +223,7 @@ namespace Flameberry {
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
     }
 
     void Pipeline::Bind()

@@ -13,9 +13,7 @@ namespace Flameberry {
 
     std::vector<const char*> VulkanContext::s_VkDeviceExtensions = {
         "VK_KHR_portability_subset",
-#ifdef __APPLE__
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-#endif
         VK_KHR_MULTIVIEW_EXTENSION_NAME
     };
 

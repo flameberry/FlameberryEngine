@@ -164,7 +164,7 @@ namespace Flameberry {
         std::vector<VkImageView> views;
         for (const auto& framebuffer : m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers)
             views.push_back(framebuffer->GetDepthAttachment()->GetImageView());
-        m_SceneRenderer = std::make_unique<SceneRenderer>(m_CameraBufferDescSetLayout->GetLayout(), m_SceneRenderPass, views, m_ShadowMapSampler);
+        m_SceneRenderer = std::make_unique<SceneRenderer>(m_CameraBufferDescSetLayout, m_SceneRenderPass, views, m_ShadowMapSampler);
 
         m_ViewportDescriptorSets.resize(imageCount);
         for (int i = 0; i < imageCount; i++)
@@ -186,7 +186,7 @@ namespace Flameberry {
             );
         }
 
-        Renderer2D::Init(m_CameraBufferDescSetLayout->GetLayout(), m_SceneRenderPass);
+        Renderer2D::Init(m_CameraBufferDescSetLayout, m_SceneRenderPass);
     }
 
     void EditorLayer::OnUpdate(float delta)
@@ -227,7 +227,7 @@ namespace Flameberry {
         uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
 
         bool didCameraResize = m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
-        if (m_IsViewportFocused)
+        if (m_DidViewportBegin)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 
         UpdateShadowMapCascades(); // TODO: Update only when camera or directional light is updated
@@ -240,7 +240,7 @@ namespace Flameberry {
             m_ShadowMapUniformBuffers[currentFrameIndex]->WriteToBuffer(m_CascadeMatrices.data(), sizeof(glm::mat4) * SHADOW_MAP_CASCADE_COUNT, 0);
 
             auto shadowMapDesc = m_ShadowMapDescriptorSets[currentFrameIndex]->GetDescriptorSet();
-            const auto& shadowMapPipelineLayout = m_ShadowMapPipelineLayout;
+            const auto& shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout();
 
             Renderer::Submit([shadowMapDesc, shadowMapPipelineLayout](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
@@ -248,7 +248,7 @@ namespace Flameberry {
                 }
             );
 
-            m_SceneRenderer->OnDrawForShadowPass(m_ShadowMapPipelineLayout, m_ActiveScene);
+            m_SceneRenderer->OnDrawForShadowPass(m_ShadowMapPipeline->GetLayout(), m_ActiveScene);
             m_ShadowMapRenderPass->End();
         }
 
@@ -280,7 +280,7 @@ namespace Flameberry {
             m_CompositePass->Begin();
             m_CompositePipeline->Bind();
 
-            auto pipelineLayout = m_CompositePipelineLayout;
+            auto pipelineLayout = m_CompositePipeline->GetLayout();
             std::vector<VkDescriptorSet> descriptorSets(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
             for (uint8_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
                 descriptorSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
@@ -315,7 +315,6 @@ namespace Flameberry {
         // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
         bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left)
             && m_DidViewportBegin
-            && m_IsViewportFocused
             && !m_IsGizmoOverlayHovered
             && !m_IsGizmoActive;
 
@@ -339,13 +338,13 @@ namespace Flameberry {
                 m_MousePickingRenderPass->Begin(0, { m_MouseX, (int)(m_ViewportSize.y - m_MouseY) }, { 1, 1 });
                 m_MousePickingPipeline->Bind();
                 auto descSet = m_CameraBufferDescriptorSets[currentFrameIndex]->GetDescriptorSet();
-                const auto& mousePickingPipelineLayout = m_MousePickingPipelineLayout;
+                const auto& mousePickingPipelineLayout = m_MousePickingPipeline->GetLayout();
                 Renderer::Submit([descSet, mousePickingPipelineLayout](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                     {
                         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
                     }
                 );
-                m_SceneRenderer->OnDrawForMousePickingPass(m_MousePickingPipelineLayout, m_ActiveScene);
+                m_SceneRenderer->OnDrawForMousePickingPass(m_MousePickingPipeline->GetLayout(), m_ActiveScene);
                 m_MousePickingRenderPass->End();
             }
         }
@@ -364,9 +363,6 @@ namespace Flameberry {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         Renderer2D::Destroy();
         vkDestroySampler(device, m_ShadowMapSampler, nullptr);
-        vkDestroyPipelineLayout(device, m_ShadowMapPipelineLayout, nullptr);
-        vkDestroyPipelineLayout(device, m_MousePickingPipelineLayout, nullptr);
-        vkDestroyPipelineLayout(device, m_CompositePipelineLayout, nullptr);
     }
 
     void EditorLayer::OnUIRender()
@@ -374,6 +370,7 @@ namespace Flameberry {
 #ifndef __APPLE__
         ShowMenuBar();
 #endif
+
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         m_DidViewportBegin = ImGui::Begin("Viewport");
 
@@ -657,8 +654,8 @@ namespace Flameberry {
             if (ctrl_or_cmd)
                 m_EnableGrid = !m_EnableGrid;
             break;
-            }
-            }
+        }
+    }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -844,28 +841,17 @@ namespace Flameberry {
         m_MousePickingDescriptorSetLayout = DescriptorSetLayout::Create(mousePickingDescSetLayoutSpec);
 
         // Pipeline Creation
-        VkPushConstantRange vk_push_constant_range{};
-        vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-        vk_push_constant_range.size = sizeof(MousePickingPushConstantData);
-        vk_push_constant_range.offset = 0;
-
-        VkDescriptorSetLayout descriptorSetLayouts[] = { m_MousePickingDescriptorSetLayout->GetLayout() };
-        VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
-
-        VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
-        vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        vk_pipeline_layout_create_info.setLayoutCount = 1;
-        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
-        vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
-        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
-
-        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_MousePickingPipelineLayout));
-
         PipelineSpecification pipelineSpec{};
+        pipelineSpec.PipelineLayout.PushConstants = {
+            { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MousePickingPushConstantData) }
+        };
+
+        pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
+            m_MousePickingDescriptorSetLayout
+        };
+
         pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_picking.vert.spv";
         pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_picking.frag.spv";
-
-        pipelineSpec.PipelineLayout = m_MousePickingPipelineLayout;
         pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
         pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
@@ -940,28 +926,18 @@ namespace Flameberry {
             m_ShadowMapDescriptorSets[i]->Update();
         }
 
-        VkPushConstantRange vk_push_constant_range{};
-        vk_push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        vk_push_constant_range.size = sizeof(ModelMatrixPushConstantData);
-        vk_push_constant_range.offset = 0;
-
-        VkDescriptorSetLayout descriptorSetLayouts[] = { m_ShadowMapDescriptorSetLayout->GetLayout() };
-        VkPushConstantRange pushConstantRanges[] = { vk_push_constant_range };
-
-        VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
-        vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        vk_pipeline_layout_create_info.setLayoutCount = 1;
-        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
-        vk_pipeline_layout_create_info.pushConstantRangeCount = 1;
-        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
-
-        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_ShadowMapPipelineLayout));
-
         PipelineSpecification pipelineSpec{};
+        pipelineSpec.PipelineLayout.PushConstants = {
+            { VK_SHADER_STAGE_VERTEX_BIT,   sizeof(ModelMatrixPushConstantData) },
+        };
+
+        pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
+            m_ShadowMapDescriptorSetLayout
+        };
+
         pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.vert.spv";
         pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.frag.spv";
 
-        pipelineSpec.PipelineLayout = m_ShadowMapPipelineLayout;
         pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
         pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
@@ -1044,24 +1020,12 @@ namespace Flameberry {
             m_CompositePassDescriptorSets[i]->Update();
         }
 
-        // Pipeline Creation
-        VkDescriptorSetLayout descriptorSetLayouts[] = { m_CompositePassDescriptorSetLayout->GetLayout() };
-        VkPushConstantRange pushConstantRanges[] = {};
-
-        VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
-        vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        vk_pipeline_layout_create_info.setLayoutCount = 1;
-        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts;
-        vk_pipeline_layout_create_info.pushConstantRangeCount = 0;
-        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges;
-
-        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_CompositePipelineLayout));
-
         PipelineSpecification pipelineSpec{};
+        pipelineSpec.PipelineLayout.PushConstants = {};
+        pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_CompositePassDescriptorSetLayout };
+
         pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.vert.spv";
         pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.frag.spv";
-
-        pipelineSpec.PipelineLayout = m_CompositePipelineLayout;
         pipelineSpec.RenderPass = m_CompositePass;
 
         pipelineSpec.VertexLayout = {};
@@ -1074,4 +1038,4 @@ namespace Flameberry {
 
         m_CompositePipeline = Pipeline::Create(pipelineSpec);
     }
-        }
+}

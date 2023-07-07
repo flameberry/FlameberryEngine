@@ -94,12 +94,10 @@ namespace Flameberry {
         std::shared_ptr<RenderPass> m_ShadowMapRenderPass;
         std::shared_ptr<RenderPass> m_MousePickingRenderPass;
 
-        VkPipelineLayout m_MousePickingPipelineLayout;
         std::shared_ptr<Pipeline> m_MousePickingPipeline;
         std::shared_ptr<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
 
         std::shared_ptr<Pipeline> m_ShadowMapPipeline;
-        VkPipelineLayout m_ShadowMapPipelineLayout;
         VkSampler m_ShadowMapSampler;
 
         std::shared_ptr<DescriptorSetLayout> m_ShadowMapDescriptorSetLayout;
@@ -115,7 +113,6 @@ namespace Flameberry {
         // Post processing resources
         std::shared_ptr<RenderPass> m_CompositePass;
         std::shared_ptr<Pipeline> m_CompositePipeline;
-        VkPipelineLayout m_CompositePipelineLayout;
         std::shared_ptr<DescriptorSetLayout> m_CompositePassDescriptorSetLayout;
         std::vector<std::shared_ptr<DescriptorSet>> m_CompositePassDescriptorSets;
     };
