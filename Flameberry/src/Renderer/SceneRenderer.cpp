@@ -88,7 +88,7 @@ namespace Flameberry {
             uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
             uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-            m_ShadowMapUniformBuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+            m_ShadowMapUniformBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
             for (auto& uniformBuffer : m_ShadowMapUniformBuffers)
             {
                 uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
@@ -108,8 +108,8 @@ namespace Flameberry {
             DescriptorSetSpecification shadowMapDescSetSpec;
             shadowMapDescSetSpec.Layout = m_ShadowMapDescriptorSetLayout;
 
-            m_ShadowMapDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-            for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+            m_ShadowMapDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+            for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
             {
                 m_ShadowMapDescriptorSets[i] = DescriptorSet::Create(shadowMapDescSetSpec);
 
@@ -176,7 +176,7 @@ namespace Flameberry {
             uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
             uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-            m_CameraUniformBuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+            m_CameraUniformBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
             for (auto& uniformBuffer : m_CameraUniformBuffers)
             {
                 uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
@@ -197,8 +197,8 @@ namespace Flameberry {
             DescriptorSetSpecification cameraBufferDescSetSpec;
             cameraBufferDescSetSpec.Layout = m_CameraBufferDescSetLayout;
 
-            m_CameraBufferDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-            for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+            m_CameraBufferDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+            for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
             {
                 m_CameraBufferDescriptorSets[i] = DescriptorSet::Create(cameraBufferDescSetSpec);
 
@@ -214,7 +214,7 @@ namespace Flameberry {
             FramebufferSpecification sceneFramebufferSpec;
             sceneFramebufferSpec.Width = m_ViewportSize.x;
             sceneFramebufferSpec.Height = m_ViewportSize.y;
-            sceneFramebufferSpec.Attachments = { swapchainImageFormat, VulkanSwapChain::GetDepthFormat() };
+            sceneFramebufferSpec.Attachments = { swapchainImageFormat, SwapChain::GetDepthFormat() };
             sceneFramebufferSpec.Samples = sampleCount;
             sceneFramebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
             sceneFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
@@ -241,7 +241,7 @@ namespace Flameberry {
                 bufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
                 bufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-                m_SceneUniformBuffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+                m_SceneUniformBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
                 for (auto& uniformBuffer : m_SceneUniformBuffers)
                 {
                     uniformBuffer = std::make_unique<Buffer>(bufferSpec);
@@ -265,8 +265,8 @@ namespace Flameberry {
                 DescriptorSetSpecification sceneDescSetSpec;
                 sceneDescSetSpec.Layout = m_SceneDescriptorSetLayout;
 
-                m_SceneDataDescriptorSets.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-                for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+                m_SceneDataDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+                for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
                 {
                     m_SceneDataDescriptorSets[i] = DescriptorSet::Create(sceneDescSetSpec);
 
@@ -467,7 +467,7 @@ namespace Flameberry {
         Renderer2D::Init(m_CameraBufferDescSetLayout, m_GeometryPass);
     }
 
-    void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const std::shared_ptr<PerspectiveCamera>& camera, fbentt::entity selectedEntity)
+    void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const std::shared_ptr<PerspectiveCamera>& camera, fbentt::entity selectedEntity, bool renderGrid)
     {
         uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
         m_ViewportSize = viewportSize;
@@ -662,6 +662,10 @@ namespace Flameberry {
         for (uint32_t i = 0; i < sceneUniformBufferData.LightCount; i++)
             Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, camera->GetViewMatrix());
 
+        // Should make editor only (Not Runtime)
+        if (renderGrid)
+            Renderer2D::AddGrid(25);
+
         Renderer2D::Render(m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet());
 
         m_GeometryPass->End();
@@ -671,8 +675,8 @@ namespace Flameberry {
         m_CompositePass->Begin();
         m_CompositePipeline->Bind();
 
-        std::vector<VkDescriptorSet> descSets(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (uint8_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
             descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
 
         Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)

@@ -24,7 +24,7 @@ namespace Flameberry {
         uint32_t GetHeight() const override { return m_Height; }
         uint32_t GetImageIndex() const override { return m_ImageIndex; }
         uint32_t GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
-        std::shared_ptr<VulkanSwapChain> GetSwapChain() const { return m_SwapChain; }
+        std::shared_ptr<SwapChain> GetSwapChain() const { return m_SwapChain; }
 
         bool IsRunning() override { return !glfwWindowShouldClose(m_Window); }
         void CreateVulkanWindowSurface(VkInstance instance);
@@ -41,7 +41,7 @@ namespace Flameberry {
         uint32_t m_Width, m_Height;
         const char* m_Title;
 
-        std::shared_ptr<VulkanSwapChain> m_SwapChain;
+        std::shared_ptr<SwapChain> m_SwapChain;
         uint32_t m_CurrentFrameIndex = 0, m_ImageIndex = 0;
 
         std::function<void(Event&)> m_EventCallBack;

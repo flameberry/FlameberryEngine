@@ -21,7 +21,7 @@ namespace Flameberry {
         for (auto& cmd : s_CommandQueue)
             cmd(commandBuffer, imageIndex);
 
-        s_CurrentFrameIndex = (s_CurrentFrameIndex + 1) % VulkanSwapChain::MAX_FRAMES_IN_FLIGHT;
+        s_CurrentFrameIndex = (s_CurrentFrameIndex + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 
     void Renderer::ClearCommandQueue()

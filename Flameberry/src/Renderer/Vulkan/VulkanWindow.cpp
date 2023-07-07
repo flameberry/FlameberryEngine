@@ -27,7 +27,7 @@ namespace Flameberry {
 
     void VulkanWindow::Init()
     {
-        m_SwapChain = std::make_shared<VulkanSwapChain>(m_WindowSurface);
+        m_SwapChain = std::make_shared<SwapChain>(m_WindowSurface);
     }
 
     void VulkanWindow::Destroy()
@@ -108,6 +108,6 @@ namespace Flameberry {
         if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR || IsWindowResized())
             m_SwapChain->Invalidate(m_SwapChain->GetVulkanSwapChain());
 
-        m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % VulkanSwapChain::MAX_FRAMES_IN_FLIGHT;
+        m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 }

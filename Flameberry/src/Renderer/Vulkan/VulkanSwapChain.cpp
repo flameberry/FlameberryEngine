@@ -7,13 +7,13 @@
 #include "Image.h"
 
 namespace Flameberry {
-    VulkanSwapChain::VulkanSwapChain(VkSurfaceKHR surface, const std::shared_ptr<VulkanSwapChain>& oldSwapChain)
+    SwapChain::SwapChain(VkSurfaceKHR surface, const std::shared_ptr<SwapChain>& oldSwapChain)
         : m_VkSurface(surface)
     {
         CreateSwapChain(oldSwapChain);
     }
 
-    void VulkanSwapChain::CreateSwapChain(const std::shared_ptr<VulkanSwapChain>& oldSwapChain)
+    void SwapChain::CreateSwapChain(const std::shared_ptr<SwapChain>& oldSwapChain)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();
@@ -73,7 +73,7 @@ namespace Flameberry {
         CreateSyncObjects();
     }
 
-    VkResult VulkanSwapChain::AcquireNextImage()
+    VkResult SwapChain::AcquireNextImage()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkWaitForFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex], VK_TRUE, UINT64_MAX);
@@ -82,7 +82,7 @@ namespace Flameberry {
         return imageAcquireStatus;
     }
 
-    VkResult VulkanSwapChain::SubmitCommandBuffer(VkCommandBuffer commandBuffer)
+    VkResult SwapChain::SubmitCommandBuffer(VkCommandBuffer commandBuffer)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& graphicsQueue = VulkanContext::GetCurrentDevice()->GetGraphicsQueue();
@@ -128,7 +128,7 @@ namespace Flameberry {
         return queuePresentStatus;
     }
 
-    VkFormat VulkanSwapChain::GetDepthFormat()
+    VkFormat SwapChain::GetDepthFormat()
     {
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
         return RenderCommand::GetSupportedFormat(
@@ -139,7 +139,7 @@ namespace Flameberry {
         );
     }
 
-    void VulkanSwapChain::CreateSyncObjects()
+    void SwapChain::CreateSyncObjects()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
@@ -164,7 +164,7 @@ namespace Flameberry {
         FL_INFO("Created {0} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
     }
 
-    VulkanSwapChain::~VulkanSwapChain()
+    SwapChain::~SwapChain()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDeviceWaitIdle(device);
@@ -180,7 +180,7 @@ namespace Flameberry {
         vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
     }
 
-    void VulkanSwapChain::Invalidate(VkSwapchainKHR oldSwapChain)
+    void SwapChain::Invalidate(VkSwapchainKHR oldSwapChain)
     {
         FL_INFO("Invalidating SwapChain...");
         int width = 0, height = 0;
@@ -251,7 +251,7 @@ namespace Flameberry {
         vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, m_VkSwapChainImages.data());
     }
 
-    VkSurfaceFormatKHR VulkanSwapChain::SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats)
+    VkSurfaceFormatKHR SwapChain::SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats)
     {
         for (const auto& format : available_formats)
         {
@@ -262,7 +262,7 @@ namespace Flameberry {
         return available_formats[0];
     }
 
-    VkPresentModeKHR VulkanSwapChain::SelectSwapPresentationMode(const std::vector<VkPresentModeKHR>& available_presentation_modes)
+    VkPresentModeKHR SwapChain::SelectSwapPresentationMode(const std::vector<VkPresentModeKHR>& available_presentation_modes)
     {
         for (const auto& mode : available_presentation_modes)
         {
@@ -272,7 +272,7 @@ namespace Flameberry {
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
-    VkExtent2D VulkanSwapChain::SelectSwapExtent(const VkSurfaceCapabilitiesKHR& surface_capabilities)
+    VkExtent2D SwapChain::SelectSwapExtent(const VkSurfaceCapabilitiesKHR& surface_capabilities)
     {
         if (surface_capabilities.currentExtent.width != UINT32_MAX)
             return surface_capabilities.currentExtent;

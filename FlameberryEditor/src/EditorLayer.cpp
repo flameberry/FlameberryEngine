@@ -127,7 +127,7 @@ namespace Flameberry {
         if (m_IsViewportFocused)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 
-        m_SceneRenderer->RenderScene(m_ViewportSize, m_ActiveScene, m_ActiveCameraController.GetPerspectiveCamera(), m_SceneHierarchyPanel->GetSelectionContext());
+        m_SceneRenderer->RenderScene(m_ViewportSize, m_ActiveScene, m_ActiveCameraController.GetPerspectiveCamera(), m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
 
         if (m_IsMousePickingBufferReady)
         {
@@ -186,6 +186,7 @@ namespace Flameberry {
         // Update all image index related descriptors
         Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
+                // TODO: Update these descriptors only when there corresponding framebuffer is updated
                 InvalidateViewportImGuiDescriptorSet(imageIndex);
                 InvalidateCompositePassImGuiDescriptorSet(imageIndex);
             }
@@ -372,6 +373,7 @@ namespace Flameberry {
         ImGui::Begin("Renderer Settings");
         ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         FL_DISPLAY_SCOPE_DETAILS_IMGUI();
+
         ImGui::Separator();
 
         if (ImGui::CollapsingHeader("Scene Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))

@@ -7,11 +7,11 @@
 #include "Image.h"
 
 namespace Flameberry {
-    class VulkanSwapChain
+    class SwapChain
     {
     public:
-        VulkanSwapChain(VkSurfaceKHR surface, const std::shared_ptr<VulkanSwapChain>& oldSwapChain = nullptr);
-        ~VulkanSwapChain();
+        SwapChain(VkSurfaceKHR surface, const std::shared_ptr<SwapChain>& oldSwapChain = nullptr);
+        ~SwapChain();
 
         VkExtent2D GetExtent2D() const { return m_VkSwapChainExtent2D; }
         uint32_t GetAcquiredImageIndex() const { return m_ImageIndex; }
@@ -30,7 +30,7 @@ namespace Flameberry {
         static VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR& surface_capabilities);
         static VkFormat GetDepthFormat();
     private:
-        void CreateSwapChain(const std::shared_ptr<VulkanSwapChain>& oldSwapChain);
+        void CreateSwapChain(const std::shared_ptr<SwapChain>& oldSwapChain);
         void CreateSyncObjects();
     private:
         VkSwapchainKHR m_VkSwapChain;
