@@ -773,8 +773,17 @@ namespace Flameberry {
         }
     }
 
-    void SceneRenderer::RenderSceneForMousePicking(VkPipelineLayout mousePickingPipelineLayout, const std::shared_ptr<Scene>& scene)
+    void SceneRenderer::RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Pipeline>& pipeline, const glm::vec2& mousePos)
     {
+        renderPass->Begin(0, { (int)mousePos.x, (int)mousePos.y }, { 1, 1 });
+        pipeline->Bind();
+
+        Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetDescriptorSet(), mousePickingPipelineLayout = pipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
+            }
+        );
+
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
@@ -785,7 +794,7 @@ namespace Flameberry {
                 pushContantData.ModelMatrix = transform.GetTransform();
                 pushContantData.EntityIndex = fbentt::to_index(entity);
 
-                Renderer::Submit([mousePickingPipelineLayout, pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                Renderer::Submit([mousePickingPipelineLayout = pipeline->GetLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                     {
                         vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);
                     }
@@ -795,6 +804,7 @@ namespace Flameberry {
                 staticMesh->OnDraw();
             }
         }
+        renderPass->End();
     }
 
     void SceneRenderer::SubmitMesh(AssetHandle handle, const MaterialTable& materialTable, const glm::mat4& transform)

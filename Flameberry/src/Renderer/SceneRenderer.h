@@ -39,7 +39,7 @@ namespace Flameberry {
         VkDescriptorSet GetCameraBufferDescriptorSet(uint32_t index) const { return m_CameraBufferDescriptorSets[index]->GetDescriptorSet(); }
 
         SceneRendererSettings& GetRendererSettingsRef() { return m_RendererSettings; }
-        void RenderSceneForMousePicking(VkPipelineLayout mousePickingPipelineLayout, const std::shared_ptr<Scene>& scene);
+        void RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Pipeline>& pipeline, const glm::vec2& mousePos);
     private:
         void Init();
 

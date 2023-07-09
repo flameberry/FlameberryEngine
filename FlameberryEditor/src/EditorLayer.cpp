@@ -170,17 +170,7 @@ namespace Flameberry {
                 m_IsMousePickingBufferReady = true;
 
                 m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
-
-                m_MousePickingRenderPass->Begin(0, { m_MouseX, (int)(m_ViewportSize.y - m_MouseY) }, { 1, 1 });
-                m_MousePickingPipeline->Bind();
-
-                Renderer::Submit([descSet = m_SceneRenderer->GetCameraBufferDescriptorSet(Renderer::GetCurrentFrameIndex()), mousePickingPipelineLayout = m_MousePickingPipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                    {
-                        vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
-                    }
-                );
-                m_SceneRenderer->RenderSceneForMousePicking(m_MousePickingPipeline->GetLayout(), m_ActiveScene);
-                m_MousePickingRenderPass->End();
+                m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingRenderPass, m_MousePickingPipeline, glm::vec2(m_MouseX, (int)(m_ViewportSize.y - m_MouseY)));
             }
         }
 
@@ -441,17 +431,17 @@ namespace Flameberry {
     {
         switch (e.GetType())
         {
-        case EventType::MOUSEBUTTON_PRESSED:
-            this->OnMouseButtonPressedEvent(*(MouseButtonPressedEvent*)(&e));
-            break;
-        case EventType::KEY_PRESSED:
-            this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
-            break;
-        case EventType::MOUSE_SCROLL:
-            this->OnMouseScrolledEvent(*(MouseScrollEvent*)(&e));
-            break;
-        case EventType::NONE:
-            break;
+            case EventType::MOUSEBUTTON_PRESSED:
+                this->OnMouseButtonPressedEvent(*(MouseButtonPressedEvent*)(&e));
+                break;
+            case EventType::KEY_PRESSED:
+                this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
+                break;
+            case EventType::MOUSE_SCROLL:
+                this->OnMouseScrolledEvent(*(MouseScrollEvent*)(&e));
+                break;
+            case EventType::NONE:
+                break;
         }
 
         if (m_DidViewportBegin && m_IsViewportHovered)
@@ -464,46 +454,46 @@ namespace Flameberry {
         bool shift = Input::IsKey(GLFW_KEY_LEFT_SHIFT, GLFW_PRESS) || Input::IsKey(GLFW_KEY_RIGHT_SHIFT, GLFW_PRESS);
         switch (e.KeyCode)
         {
-        case GLFW_KEY_O:
-            if (ctrl_or_cmd) {
+            case GLFW_KEY_O:
+                if (ctrl_or_cmd) {
 #ifndef __APPLE__
-                // m_ShouldOpenAnotherScene = true;
-                // m_ScenePathToBeOpened = platform::OpenFile();
-                OpenScene();
+                    // m_ShouldOpenAnotherScene = true;
+                    // m_ScenePathToBeOpened = platform::OpenFile();
+                    OpenScene();
 #endif
-            }
-            break;
-        case GLFW_KEY_S:
-            if (ctrl_or_cmd)
-            {
+                }
+                break;
+            case GLFW_KEY_S:
+                if (ctrl_or_cmd)
+                {
 #ifndef __APPLE__
-                if (shift || m_OpenedScenePathIfExists.empty())
-                    SaveScene();
-                else
-                    SaveScene(m_OpenedScenePathIfExists);
+                    if (shift || m_OpenedScenePathIfExists.empty())
+                        SaveScene();
+                    else
+                        SaveScene(m_OpenedScenePathIfExists);
 #endif
-            }
-            break;
-        case GLFW_KEY_Q:
-            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-                m_GizmoType = -1;
-            break;
-        case GLFW_KEY_W:
-            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-                m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-            break;
-        case GLFW_KEY_E:
-            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-                m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-            break;
-        case GLFW_KEY_R:
-            if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
-                m_GizmoType = ImGuizmo::OPERATION::SCALE;
-            break;
-        case GLFW_KEY_G:
-            if (ctrl_or_cmd)
-                m_EnableGrid = !m_EnableGrid;
-            break;
+                }
+                break;
+            case GLFW_KEY_Q:
+                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                    m_GizmoType = -1;
+                break;
+            case GLFW_KEY_W:
+                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                    m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                break;
+            case GLFW_KEY_E:
+                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                    m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+                break;
+            case GLFW_KEY_R:
+                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                    m_GizmoType = ImGuizmo::OPERATION::SCALE;
+                break;
+            case GLFW_KEY_G:
+                if (ctrl_or_cmd)
+                    m_EnableGrid = !m_EnableGrid;
+                break;
         }
     }
 
@@ -511,8 +501,8 @@ namespace Flameberry {
     {
         switch (e.KeyCode)
         {
-        case GLFW_MOUSE_BUTTON_LEFT:
-            break;
+            case GLFW_MOUSE_BUTTON_LEFT:
+                break;
         }
     }
 

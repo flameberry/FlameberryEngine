@@ -60,12 +60,12 @@ namespace Flameberry {
         vkGetDeviceQueue(m_VkDevice, m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex, 0, &m_PresentationQueue);
 
         // Creating Command Pool
-        VkCommandPoolCreateInfo vk_command_pool_create_info{};
-        vk_command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        vk_command_pool_create_info.queueFamilyIndex = m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex;
-        vk_command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        VkCommandPoolCreateInfo commandPoolCreateInfo{};
+        commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        commandPoolCreateInfo.queueFamilyIndex = m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex;
+        commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-        VK_CHECK_RESULT(vkCreateCommandPool(m_VkDevice, &vk_command_pool_create_info, nullptr, &m_VkCommandPool));
+        VK_CHECK_RESULT(vkCreateCommandPool(m_VkDevice, &commandPoolCreateInfo, nullptr, &m_VkCommandPool));
     }
 
     void VulkanDevice::AllocateCommandBuffers(uint32_t bufferCount)
