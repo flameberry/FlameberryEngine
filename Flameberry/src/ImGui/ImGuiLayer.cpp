@@ -5,7 +5,7 @@
 #include <backends/imgui_impl_vulkan.h>
 
 #include "Renderer/Vulkan/RenderCommand.h"
-#include "Renderer/Vulkan/VulkanSwapChain.h"
+#include "Renderer/Vulkan/SwapChain.h"
 #include "Renderer/Vulkan/VulkanDebug.h"
 #include "Renderer/Vulkan/VulkanContext.h"
 #include "Renderer/Renderer.h"
@@ -102,7 +102,7 @@ namespace Flameberry {
         init_info.Instance = VulkanContext::GetCurrentInstance()->GetVulkanInstance();
         init_info.PhysicalDevice = VulkanContext::GetPhysicalDevice();
         init_info.Device = device->GetVulkanDevice();
-        init_info.QueueFamily = device->GetQueueFamilyIndices().GraphicsSupportedQueueFamilyIndex;
+        init_info.QueueFamily = device->GetQueueFamilyIndices().GraphicsAndComputeSupportedQueueFamilyIndex;
         init_info.Queue = device->GetGraphicsQueue();
         init_info.PipelineCache = VK_NULL_HANDLE;
         init_info.DescriptorPool = VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool();

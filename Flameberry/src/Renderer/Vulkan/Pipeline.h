@@ -61,4 +61,28 @@ namespace Flameberry {
         VkPipelineLayout m_VkPipelineLayout;
     };
 
+    struct ComputePipelineSpecification {
+        std::string ComputeShaderFilePath;
+        PipelineLayoutSpecification PipelineLayout;
+    };
+
+    class ComputePipeline
+    {
+    public:
+        ComputePipeline(const ComputePipelineSpecification& pipelineSpec);
+        ~ComputePipeline();
+
+        ComputePipelineSpecification GetSpecification() const { return m_PipelineSpec; }
+        VkPipelineLayout GetLayout() const { return m_VkPipelineLayout; }
+
+        void Bind();
+
+        template<typename... Args>
+        static std::shared_ptr<ComputePipeline> Create(Args... args) { return std::make_shared<ComputePipeline>(std::forward<Args>(args)...); }
+    private:
+        ComputePipelineSpecification m_PipelineSpec;
+        VkPipeline m_VkComputePipeline;
+        VkPipelineLayout m_VkPipelineLayout;
+    };
+
 }

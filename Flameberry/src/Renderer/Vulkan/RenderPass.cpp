@@ -47,14 +47,14 @@ namespace Flameberry {
 
         switch (framebufferSpec.Samples)
         {
-        case 1:  samples = VK_SAMPLE_COUNT_1_BIT;  break;
-        case 2:  samples = VK_SAMPLE_COUNT_2_BIT;  break;
-        case 4:  samples = VK_SAMPLE_COUNT_4_BIT;  break;
-        case 8:  samples = VK_SAMPLE_COUNT_8_BIT;  break;
-        case 16: samples = VK_SAMPLE_COUNT_16_BIT; break;
-        case 32: samples = VK_SAMPLE_COUNT_32_BIT; break;
-        case 64: samples = VK_SAMPLE_COUNT_64_BIT; break;
-        default: samples = VK_SAMPLE_COUNT_1_BIT;  break;
+            case 1:  samples = VK_SAMPLE_COUNT_1_BIT;  break;
+            case 2:  samples = VK_SAMPLE_COUNT_2_BIT;  break;
+            case 4:  samples = VK_SAMPLE_COUNT_4_BIT;  break;
+            case 8:  samples = VK_SAMPLE_COUNT_8_BIT;  break;
+            case 16: samples = VK_SAMPLE_COUNT_16_BIT; break;
+            case 32: samples = VK_SAMPLE_COUNT_32_BIT; break;
+            case 64: samples = VK_SAMPLE_COUNT_64_BIT; break;
+            default: samples = VK_SAMPLE_COUNT_1_BIT;  break;
         }
 
         const uint32_t count = framebufferSpec.Samples > 1 ?

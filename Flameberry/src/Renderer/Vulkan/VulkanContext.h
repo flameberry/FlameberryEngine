@@ -31,7 +31,7 @@ namespace Flameberry {
         static std::shared_ptr<DescriptorPool> GetCurrentGlobalDescriptorPool() { return GetCurrentContext()->m_GlobalDescriptorPool; }
         static bool EnableValidationLayers() { return s_EnableValidationLayers; }
 
-        static VkPhysicalDevice GetValidVkPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices, VkSurfaceKHR surface);
+        static VkPhysicalDevice GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices, VkSurfaceKHR surface);
         static std::vector<const char*> GetValidationLayerNames() { return s_ValidationLayers; }
 
         static void SetCurrentContext(VulkanContext* pContext) { s_CurrentContext = pContext; }

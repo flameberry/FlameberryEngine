@@ -1,6 +1,6 @@
 #include "Renderer.h"
 
-#include "Vulkan/VulkanSwapChain.h"
+#include "Vulkan/SwapChain.h"
 #include "Vulkan/VulkanContext.h"
 #include "Vulkan/Texture2D.h"
 

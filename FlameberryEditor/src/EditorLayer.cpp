@@ -127,6 +127,7 @@ namespace Flameberry {
         if (m_IsViewportFocused)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 
+        // Actual Rendering (All scene related render passes)
         m_SceneRenderer->RenderScene(m_ViewportSize, m_ActiveScene, m_ActiveCameraController.GetPerspectiveCamera(), m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
 
         if (m_IsMousePickingBufferReady)

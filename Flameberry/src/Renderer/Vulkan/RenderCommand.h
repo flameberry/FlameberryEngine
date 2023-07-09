@@ -24,7 +24,7 @@ namespace Flameberry {
         static void SetViewport(float x, float y, float width, float height);
         static void SetScissor(VkOffset2D offset, VkExtent2D extent);
         static void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);
-        static VkShaderModule CreateShaderModule(VkDevice device, const std::vector<char>& compiledShaderCode);
+        static VkShaderModule CreateShaderModule(const std::vector<char>& compiledShaderCode);
         static VkSampleCountFlagBits GetMaxUsableSampleCount(VkPhysicalDevice physicalDevice);
         static uint32_t GetValidMemoryTypeIndex(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags vk_memory_property_flags);
         static bool HasStencilComponent(VkFormat format);

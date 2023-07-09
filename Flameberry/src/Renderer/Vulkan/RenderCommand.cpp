@@ -139,8 +139,10 @@ namespace Flameberry {
         device->EndSingleTimeCommandBuffer(commandBuffer);
     }
 
-    VkShaderModule RenderCommand::CreateShaderModule(VkDevice device, const std::vector<char>& compiledShaderCode)
+    VkShaderModule RenderCommand::CreateShaderModule(const std::vector<char>& compiledShaderCode)
     {
+        const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
         VkShaderModuleCreateInfo vk_shader_module_create_info{};
         vk_shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         vk_shader_module_create_info.codeSize = compiledShaderCode.size();
@@ -244,15 +246,16 @@ namespace Flameberry {
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
 
-        std::vector<VkQueueFamilyProperties> vk_queue_family_props(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, vk_queue_family_props.data());
+        std::vector<VkQueueFamilyProperties> queueFamilyProps(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProps.data());
 
         uint32_t index = 0;
         QueueFamilyIndices indices;
-        for (const auto& vk_queue : vk_queue_family_props)
+        for (const auto& queue : queueFamilyProps)
         {
-            if (vk_queue.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-                indices.GraphicsSupportedQueueFamilyIndex = index;
+            // TOOD: Check for separate compute device available
+            if ((queue.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queue.queueFlags & VK_QUEUE_COMPUTE_BIT))
+                indices.GraphicsAndComputeSupportedQueueFamilyIndex = index;
 
             VkBool32 is_presentation_supported = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, index, surface, &is_presentation_supported);
@@ -260,7 +263,7 @@ namespace Flameberry {
             if (is_presentation_supported)
                 indices.PresentationSupportedQueueFamilyIndex = index;
 
-            if (indices.GraphicsSupportedQueueFamilyIndex.has_value() && indices.PresentationSupportedQueueFamilyIndex.has_value())
+            if (indices.GraphicsAndComputeSupportedQueueFamilyIndex.has_value() && indices.PresentationSupportedQueueFamilyIndex.has_value())
                 break;
             index++;
         }

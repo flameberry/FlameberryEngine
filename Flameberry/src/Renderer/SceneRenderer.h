@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Vulkan/Pipeline.h"
-#include "Vulkan/VulkanSwapChain.h"
+#include "Vulkan/SwapChain.h"
 #include "Vulkan/StaticMesh.h"
 #include "Vulkan/DescriptorSet.h"
 

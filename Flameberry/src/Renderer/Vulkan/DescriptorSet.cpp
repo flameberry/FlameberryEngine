@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "VulkanSwapChain.h"
+#include "SwapChain.h"
 #include "VulkanContext.h"
 #include "RenderCommand.h"
 #include "VulkanDebug.h"

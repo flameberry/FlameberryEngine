@@ -1,4 +1,4 @@
-#include "VulkanSwapChain.h"
+#include "SwapChain.h"
 
 #include "VulkanDebug.h"
 
@@ -42,9 +42,9 @@ namespace Flameberry {
         vk_swap_chain_create_info.imageArrayLayers = 1;
         vk_swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
+        uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
-        if (queueFamilyIndices.GraphicsSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
+        if (queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
         {
             vk_swap_chain_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
             vk_swap_chain_create_info.queueFamilyIndexCount = 2;
@@ -92,34 +92,35 @@ namespace Flameberry {
             vkWaitForFences(device, 1, &m_ImagesInFlight[m_ImageIndex], VK_TRUE, UINT64_MAX);
         m_ImagesInFlight[m_ImageIndex] = m_InFlightFences[m_CurrentFrameIndex]; // Mark the image as now being in use by this frame
 
+        VkSemaphore waitSemaphores[] = { m_ImageAvailableSemaphores[m_CurrentFrameIndex] };
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        VkSemaphore signalSemaphores[] = { m_RenderFinishedSemaphores[m_CurrentFrameIndex] };
+
         // Submit Queue
-        VkSubmitInfo vk_submit_info{};
-        vk_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
 
-        VkSemaphore wait_semaphores[] = { m_ImageAvailableSemaphores[m_CurrentFrameIndex] };
-        VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        vk_submit_info.waitSemaphoreCount = 1;
-        vk_submit_info.pWaitSemaphores = wait_semaphores;
-        vk_submit_info.pWaitDstStageMask = wait_stages;
-        vk_submit_info.commandBufferCount = 1;
-        vk_submit_info.pCommandBuffers = &commandBuffer;
-
-        VkSemaphore signal_semaphores[] = { m_RenderFinishedSemaphores[m_CurrentFrameIndex] };
-        vk_submit_info.signalSemaphoreCount = 1;
-        vk_submit_info.pSignalSemaphores = signal_semaphores;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
 
         vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex]);
-        VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &vk_submit_info, m_InFlightFences[m_CurrentFrameIndex]));
+        VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrameIndex]));
+
+        VkSwapchainKHR swapchains[] = { m_VkSwapChain };
 
         VkPresentInfoKHR vk_present_info{};
         vk_present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         vk_present_info.waitSemaphoreCount = 1;
-        vk_present_info.pWaitSemaphores = signal_semaphores;
+        vk_present_info.pWaitSemaphores = signalSemaphores;
         vk_present_info.pResults = nullptr;
 
-        VkSwapchainKHR vk_swap_chains[] = { m_VkSwapChain };
         vk_present_info.swapchainCount = 1;
-        vk_present_info.pSwapchains = vk_swap_chains;
+        vk_present_info.pSwapchains = swapchains;
         vk_present_info.pImageIndices = &m_ImageIndex;
         vk_present_info.pResults = nullptr;
 
@@ -219,9 +220,9 @@ namespace Flameberry {
         vk_swap_chain_create_info.imageArrayLayers = 1;
         vk_swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
+        uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
-        if (queueFamilyIndices.GraphicsSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
+        if (queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
         {
             vk_swap_chain_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
             vk_swap_chain_create_info.queueFamilyIndexCount = 2;

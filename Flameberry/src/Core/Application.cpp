@@ -71,9 +71,9 @@ namespace Flameberry {
     void Application::OnEvent(Event& e)
     {
         switch (e.GetType()) {
-        case EventType::KEY_PRESSED:
-            this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
-            break;
+            case EventType::KEY_PRESSED:
+                this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
+                break;
         }
 
         m_ImGuiLayer->OnEvent(e);

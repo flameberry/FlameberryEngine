@@ -10,7 +10,7 @@
 namespace Flameberry {
     struct QueueFamilyIndices
     {
-        flame::optional<uint32_t> GraphicsSupportedQueueFamilyIndex;
+        flame::optional<uint32_t> GraphicsAndComputeSupportedQueueFamilyIndex;
         flame::optional<uint32_t> PresentationSupportedQueueFamilyIndex;
     };
 
@@ -21,8 +21,8 @@ namespace Flameberry {
         ~VulkanDevice();
 
         VkDevice GetVulkanDevice() const { return m_VkDevice; }
-        VkQueue GetGraphicsQueue() const { return m_VkGraphicsQueue; }
-        VkQueue GetPresentationQueue() const { return m_VkPresentationQueue; }
+        VkQueue GetGraphicsQueue() const { return m_GraphicsAndComputeQueue; }
+        VkQueue GetPresentationQueue() const { return m_PresentationQueue; }
         QueueFamilyIndices GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
 
         void AllocateCommandBuffers(uint32_t bufferCount);
@@ -40,7 +40,7 @@ namespace Flameberry {
         std::vector<VkDeviceQueueCreateInfo> CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices);
     private:
         VkDevice m_VkDevice;
-        VkQueue m_VkGraphicsQueue, m_VkPresentationQueue;
+        VkQueue m_GraphicsAndComputeQueue, m_PresentationQueue;
         QueueFamilyIndices m_QueueFamilyIndices;
 
         VkCommandPool m_VkCommandPool;

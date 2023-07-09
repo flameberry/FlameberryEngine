@@ -13,7 +13,7 @@ namespace Flameberry {
 
         std::vector<VkDeviceQueueCreateInfo> vk_device_queue_create_infos = CreateDeviceQueueInfos(
             {
-                m_QueueFamilyIndices.GraphicsSupportedQueueFamilyIndex,
+                m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex,
                 m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex
             }
         );
@@ -56,13 +56,13 @@ namespace Flameberry {
 
         VK_CHECK_RESULT(vkCreateDevice(m_VkPhysicalDevice, &vk_device_create_info, nullptr, &m_VkDevice));
 
-        vkGetDeviceQueue(m_VkDevice, m_QueueFamilyIndices.GraphicsSupportedQueueFamilyIndex, 0, &m_VkGraphicsQueue);
-        vkGetDeviceQueue(m_VkDevice, m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex, 0, &m_VkPresentationQueue);
+        vkGetDeviceQueue(m_VkDevice, m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex, 0, &m_GraphicsAndComputeQueue);
+        vkGetDeviceQueue(m_VkDevice, m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex, 0, &m_PresentationQueue);
 
         // Creating Command Pool
         VkCommandPoolCreateInfo vk_command_pool_create_info{};
         vk_command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        vk_command_pool_create_info.queueFamilyIndex = m_QueueFamilyIndices.GraphicsSupportedQueueFamilyIndex;
+        vk_command_pool_create_info.queueFamilyIndex = m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex;
         vk_command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
         VK_CHECK_RESULT(vkCreateCommandPool(m_VkDevice, &vk_command_pool_create_info, nullptr, &m_VkCommandPool));
@@ -127,8 +127,8 @@ namespace Flameberry {
         vk_submit_info.commandBufferCount = 1;
         vk_submit_info.pCommandBuffers = &commandBuffer;
 
-        vkQueueSubmit(m_VkGraphicsQueue, 1, &vk_submit_info, VK_NULL_HANDLE);
-        vkQueueWaitIdle(m_VkGraphicsQueue);
+        vkQueueSubmit(m_GraphicsAndComputeQueue, 1, &vk_submit_info, VK_NULL_HANDLE);
+        vkQueueWaitIdle(m_GraphicsAndComputeQueue);
 
         vkFreeCommandBuffers(m_VkDevice, m_VkCommandPool, 1, &commandBuffer);
     }
@@ -162,6 +162,6 @@ namespace Flameberry {
 
     void VulkanDevice::WaitIdleGraphicsQueue()
     {
-        vkQueueWaitIdle(m_VkGraphicsQueue);
+        vkQueueWaitIdle(m_GraphicsAndComputeQueue);
     }
 }

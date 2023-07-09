@@ -43,8 +43,8 @@ namespace Flameberry {
         std::vector<char> compiledVertexShader = RenderCommand::LoadCompiledShaderCode(m_PipelineSpec.VertexShaderFilePath);
         std::vector<char> compiledFragmentShader = RenderCommand::LoadCompiledShaderCode(m_PipelineSpec.FragmentShaderFilePath);
 
-        VkShaderModule vk_vertex_shader_module = RenderCommand::CreateShaderModule(device, compiledVertexShader);
-        VkShaderModule vk_fragment_shader_module = RenderCommand::CreateShaderModule(device, compiledFragmentShader);
+        VkShaderModule vk_vertex_shader_module = RenderCommand::CreateShaderModule(compiledVertexShader);
+        VkShaderModule vk_fragment_shader_module = RenderCommand::CreateShaderModule(compiledFragmentShader);
 
         VkPipelineShaderStageCreateInfo vk_pipeline_vertex_shader_stage_create_info{};
         vk_pipeline_vertex_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -228,10 +228,74 @@ namespace Flameberry {
 
     void Pipeline::Bind()
     {
-        const auto& pipeline = m_VkGraphicsPipeline;
-        Renderer::Submit([pipeline](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([pipeline = m_VkGraphicsPipeline](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
                 vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+            }
+        );
+    }
+
+    ComputePipeline::ComputePipeline(const ComputePipelineSpecification& pipelineSpec)
+        : m_PipelineSpec(pipelineSpec)
+    {
+        const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        std::vector<VkPushConstantRange> pushConstantRanges;
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+
+        // Creating Pipeline Layout
+        uint32_t offset = 0;
+        for (const auto& pushConstant : m_PipelineSpec.PipelineLayout.PushConstants)
+        {
+            auto& range = pushConstantRanges.emplace_back();
+            range.offset = offset;
+            range.size = pushConstant.Size;
+            range.stageFlags = pushConstant.ShaderStage;
+
+            offset += pushConstant.Size;
+        }
+
+        for (const auto& layout : m_PipelineSpec.PipelineLayout.DescriptorSetLayouts)
+            descriptorSetLayouts.emplace_back(layout->GetLayout());
+
+        VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
+        vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        vk_pipeline_layout_create_info.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
+        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts.data();
+        vk_pipeline_layout_create_info.pushConstantRangeCount = (uint32_t)pushConstantRanges.size();
+        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges.data();
+
+        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
+
+        std::vector<char> compiledComputeShader = RenderCommand::LoadCompiledShaderCode(m_PipelineSpec.ComputeShaderFilePath);
+        VkShaderModule computeShaderModule = RenderCommand::CreateShaderModule(compiledComputeShader);
+
+        VkPipelineShaderStageCreateInfo pipelineComputeShaderStageCreateInfo{};
+        pipelineComputeShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        pipelineComputeShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        pipelineComputeShaderStageCreateInfo.module = computeShaderModule;
+        pipelineComputeShaderStageCreateInfo.pName = "main";
+
+        VkComputePipelineCreateInfo computePipelineCreateInfo{};
+        computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+        computePipelineCreateInfo.layout = m_VkPipelineLayout;
+        computePipelineCreateInfo.stage = pipelineComputeShaderStageCreateInfo;
+
+        VK_CHECK_RESULT(vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_VkComputePipeline));
+        vkDestroyShaderModule(device, computeShaderModule, nullptr);
+    }
+
+    ComputePipeline::~ComputePipeline()
+    {
+        const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyPipeline(device, m_VkComputePipeline, nullptr);
+        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
+    }
+
+    void ComputePipeline::Bind()
+    {
+        Renderer::Submit([pipeline = m_VkComputePipeline](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
             }
         );
     }

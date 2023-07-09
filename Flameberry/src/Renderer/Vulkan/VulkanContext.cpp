@@ -6,7 +6,7 @@
 #include "Core/Core.h"
 
 #include "RenderCommand.h"
-#include "VulkanSwapChain.h"
+#include "SwapChain.h"
 
 namespace Flameberry {
     const std::vector<const char*> VulkanContext::s_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
@@ -58,7 +58,7 @@ namespace Flameberry {
         FL_TRACE("{0} Physical devices found: {1}", deviceCount, physical_device_list);
 
         // Accessing the actual physical device
-        m_VkPhysicalDevice = GetValidVkPhysicalDevice(vk_physical_devices, pWindow->GetWindowSurface());
+        m_VkPhysicalDevice = GetValidPhysicalDevice(vk_physical_devices, pWindow->GetWindowSurface());
         FL_ASSERT(m_VkPhysicalDevice != VK_NULL_HANDLE, "Vulkan physical device is null!");
 
         VkPhysicalDeviceProperties vk_physical_device_props;
@@ -81,7 +81,7 @@ namespace Flameberry {
         m_Window->DestroyVulkanWindowSurface(m_VulkanInstance->GetVulkanInstance());
     }
 
-    VkPhysicalDevice VulkanContext::GetValidVkPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices, VkSurfaceKHR surface)
+    VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices, VkSurfaceKHR surface)
     {
         for (auto vk_device : vk_physical_devices)
         {
@@ -111,7 +111,7 @@ namespace Flameberry {
             VkPhysicalDeviceFeatures supportedFeatures;
             vkGetPhysicalDeviceFeatures(vk_device, &supportedFeatures);
 
-            bool is_physical_device_valid = indices.GraphicsSupportedQueueFamilyIndex.has_value()
+            bool is_physical_device_valid = indices.GraphicsAndComputeSupportedQueueFamilyIndex.has_value()
                 && indices.PresentationSupportedQueueFamilyIndex.has_value()
                 && found_required_extensions
                 && is_swap_chain_adequate
