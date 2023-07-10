@@ -27,12 +27,14 @@ def build_project():
         f"[FLAMEBERRY]: {cmake_build_type} configuration selected for building Flameberry Engine.")
     print("[FLAMEBERRY]: Starting CMake Project Generation...")
 
+    build_directory = 'build/'
+
     # Generating project files using CMake
     subprocess.run(
-        [f"{cmake_path}", f"-DCMAKE_BUILD_TYPE={cmake_build_type}", "-Wno-dev", "-S.", "-Bbuild/"])
+        [f"{cmake_path}", f"-DCMAKE_BUILD_TYPE={cmake_build_type}", "-Wno-dev", "-S.", f"-B{build_directory}"])
 
     # Building the project using make
-    os.chdir(fl_project_dir / 'build/mingw')
+    os.chdir(fl_project_dir / build_directory)
 
     print("[FLAMEBERRY]: Building Flameberry Engine project.")
     subprocess.run([f"{cmake_path}", '--build', '.'])
