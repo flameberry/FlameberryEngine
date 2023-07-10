@@ -12,7 +12,14 @@ ENDIF()
 
 IF(WIN32)
 	IF (NOT Vulkan_FOUND)
-		find_library(Vulkan_LIBRARY NAMES vulkan-1 PATHS "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/x64" "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/x86" REQUIRED)
+        # If 64 bit compiler then use 64 bit version of vulkan library
+        if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(VULKAN_LIB_PATH "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/x64")
+        else()
+            set(VULKAN_LIB_PATH "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/x86")
+        endif()
+
+		find_library(Vulkan_LIBRARY NAMES vulkan-1 PATHS ${VULKAN_LIB_PATH} REQUIRED)
 		IF (Vulkan_LIBRARY)
 			set(Vulkan_FOUND ON)
 			MESSAGE(STATUS "Using bundled Vulkan library version")
