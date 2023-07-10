@@ -7,6 +7,8 @@ build_makefiles/
 build_xcode/
 build/
 
+!Flameberry/assets/shaders/vulkan/bin
+
 # Ignore CMake Instance downloaded by python scripts
 vendor/cmake/
 
