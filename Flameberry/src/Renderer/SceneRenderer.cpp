@@ -62,6 +62,13 @@ namespace Flameberry {
         auto sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
         auto swapchainImageFormat = swapchain->GetSwapChainImageFormat();
 
+        // CommandBufferSpecification commandBufferSpec{};
+
+        // m_CommandBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        // for (auto& commandBuffer : m_CommandBuffers)
+        // {
+        // }
+
 #pragma region ShadowMapResources
         {
             FramebufferSpecification shadowMapFramebufferSpec;

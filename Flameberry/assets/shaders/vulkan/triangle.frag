@@ -140,7 +140,7 @@ float Random_Float(inout uint seed)
 float Bias_DirectionalLight()
 {
     // return 0.004f;
-    const float depthBias = 0.0001f;
+    const float depthBias = 0.001f;
     return max(depthBias * (1.0f - dot(GetPixelNormal(), u_DirectionalLight.Direction.xyz)), depthBias);
 }
 

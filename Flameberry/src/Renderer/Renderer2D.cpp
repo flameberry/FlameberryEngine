@@ -125,7 +125,7 @@ namespace Flameberry {
             s_Renderer2DData.QuadPipeline = Pipeline::Create(pipelineSpec);
         }
 
-        s_Renderer2DData.LightIconTexture = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/bulb_icon_v4.png");
+        s_Renderer2DData.LightIconTexture = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/bulb_icon_v4.png");
     }
 
     void Renderer2D::AddGrid(int gridSize)

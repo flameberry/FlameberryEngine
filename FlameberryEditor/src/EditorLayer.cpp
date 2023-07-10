@@ -27,14 +27,14 @@ namespace Flameberry {
 
     void EditorLayer::OnCreate()
     {
-        m_CursorIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon.png");
-        m_CursorIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/cursor_icon_active.png");
-        m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/translate_icon_2.png");
-        m_TranslateIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/translate_icon_2_active.png");
-        m_RotateIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/rotate_icon.png");
-        m_RotateIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/rotate_icon_active.png");
-        m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/scale_icon.png");
-        m_ScaleIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/scale_icon_active.png");
+        m_CursorIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/cursor_icon.png");
+        m_CursorIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/cursor_icon_active.png");
+        m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/translate_icon_2.png");
+        m_TranslateIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/translate_icon_2_active.png");
+        m_RotateIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/rotate_icon.png");
+        m_RotateIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/rotate_icon_active.png");
+        m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
+        m_ScaleIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/scale_icon_active.png");
 
         m_Registry = std::make_shared<fbentt::registry>();
         m_ActiveScene = Scene::Create(m_Registry);
@@ -458,7 +458,7 @@ namespace Flameberry {
                 if (ctrl_or_cmd) {
 #ifndef __APPLE__
                     // m_ShouldOpenAnotherScene = true;
-                    // m_ScenePathToBeOpened = platform::OpenFile();
+                    // m_ScenePathToBeOpened = platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
                     OpenScene();
 #endif
                 }
@@ -467,10 +467,10 @@ namespace Flameberry {
                 if (ctrl_or_cmd)
                 {
 #ifndef __APPLE__
-                    if (shift || m_OpenedScenePathIfExists.empty())
-                        SaveScene();
+                    if (shift)
+                        SaveSceneAs();
                     else
-                        SaveScene(m_OpenedScenePathIfExists);
+                        SaveScene();
 #endif
                 }
                 break;
@@ -520,7 +520,7 @@ namespace Flameberry {
 
     void EditorLayer::SaveSceneAs()
     {
-        std::string savePath = platform::SaveFile();
+        std::string savePath = platform::SaveFile("Flameberry Scene File (*.berry)\0.berry\0");
         if (savePath != "")
         {
             SceneSerializer::SerializeSceneToFile(savePath.c_str(), m_ActiveScene);
@@ -532,7 +532,7 @@ namespace Flameberry {
 
     void EditorLayer::OpenScene()
     {
-        std::string sceneToBeLoaded = platform::OpenFile();
+        std::string sceneToBeLoaded = platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
         if (sceneToBeLoaded != "")
         {
             if (SceneSerializer::DeserializeIntoExistingScene(sceneToBeLoaded.c_str(), m_ActiveScene))

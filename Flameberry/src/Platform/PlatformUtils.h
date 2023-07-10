@@ -14,7 +14,9 @@ namespace Flameberry {
         void SetOpenSceneCallbackMenuBar(const std::function<void()>& callback);
 
         void OpenInExplorerOrFinder(const char* path);
-        std::string OpenFile();
-        std::string SaveFile();
+
+        // Currently filter only works for windows 
+        std::string OpenFile(const char* filter);
+        std::string SaveFile(const char* filter);
     }
 }

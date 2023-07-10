@@ -12,18 +12,18 @@ enum FileTypeIndex {
 };
 
 static std::vector<std::string> g_IconPaths = {
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/arrow_back.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/arrow_forward.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/default_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/folder_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/berry_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/png_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/jpg_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/obj_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/fbmat_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/mtl_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/json_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/assets/icons/hdr_file_icon.png"
+    FL_PROJECT_DIR"FlameberryEditor/icons/arrow_back.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/arrow_forward.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/default_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/folder_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/berry_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/png_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/jpg_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/obj_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/fbmat_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/mtl_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/json_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/hdr_file_icon.png"
 };
 
 namespace Flameberry {

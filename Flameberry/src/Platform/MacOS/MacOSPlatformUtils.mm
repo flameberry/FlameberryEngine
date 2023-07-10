@@ -159,7 +159,7 @@ namespace Flameberry {
             [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:fileURLs];
         }
 
-        std::string OpenFile()
+        std::string OpenFile(const char* filter)
         { 
             NSWindow *keyWindow = [NSApp keyWindow];
             NSArray* URLs;
@@ -177,7 +177,7 @@ namespace Flameberry {
             return "";    
         }
 
-        std::string SaveFile()
+        std::string SaveFile(const char* filter)
         {
             NSSavePanel *panel = [NSSavePanel savePanel];
             NSString *fileName = @"Untitled.berry";

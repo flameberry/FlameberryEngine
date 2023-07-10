@@ -26,14 +26,14 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
     "${FL_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.vert"
     "${FL_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.comp"
 )
- 
+
 foreach(GLSL ${GLSL_SOURCE_FILES})
     get_filename_component(FILE_NAME ${GLSL} NAME)
     message(STATUS "Adding ${FILE_NAME}.spv shader to compile target...")
     set(SPIRV "${FL_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/bin/${FILE_NAME}.spv")
     add_custom_command(
         OUTPUT ${SPIRV}
-        COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
+        COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} -V ${GLSL} -o ${SPIRV}
         DEPENDS ${GLSL}
     )
     list(APPEND SPIRV_BINARY_FILES ${SPIRV})

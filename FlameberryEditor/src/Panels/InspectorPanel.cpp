@@ -7,7 +7,7 @@ namespace Flameberry {
     InspectorPanel::InspectorPanel()
         : m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/triple_vertical_dots_icon.png"))
+        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/triple_dots_icon.png"))
     {
     }
 
@@ -15,7 +15,7 @@ namespace Flameberry {
         : m_Context(context),
         m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/assets/icons/triple_vertical_dots_icon.png"))
+        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/triple_dots_icon.png"))
     {
     }
 

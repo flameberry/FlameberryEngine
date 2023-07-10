@@ -4,6 +4,7 @@
 #include "Vulkan/SwapChain.h"
 #include "Vulkan/StaticMesh.h"
 #include "Vulkan/DescriptorSet.h"
+#include "Vulkan/CommandBuffer.h"
 
 #include "Light.h"
 #include "PerspectiveCamera.h"
@@ -47,6 +48,9 @@ namespace Flameberry {
         void SubmitMesh(AssetHandle handle, const MaterialTable& materialTable, const glm::mat4& transform);
     private:
         glm::vec2 m_ViewportSize;
+
+        // Command Buffers
+        std::vector<std::shared_ptr<CommandBuffer>> m_CommandBuffers;
 
         // Geometry
         std::shared_ptr<RenderPass> m_GeometryPass;
