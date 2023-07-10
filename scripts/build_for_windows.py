@@ -29,7 +29,7 @@ def build_project():
 
     # Generating project files using CMake
     subprocess.run(
-        [f"{cmake_path}", f"-DCMAKE_BUILD_TYPE={cmake_build_type}", "-Wno-dev", "-S.", "-Bbuild/mingw", '-G"MinGW Makefiles"'])
+        [f"{cmake_path}", f"-DCMAKE_BUILD_TYPE={cmake_build_type}", "-Wno-dev", "-S.", "-Bbuild/"])
 
     # Building the project using make
     os.chdir(fl_project_dir / 'build/mingw')
