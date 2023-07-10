@@ -30,9 +30,6 @@ __pycache__/
 # Prerequisites
 *.d
 
-# Shader binaries
-*.spv
-
 # Compiled Object files
 *.slo
 *.lo
@@ -60,6 +57,7 @@ __pycache__/
 
 !Flameberry/vendor/vulkan/lib/*.dll
 !Flameberry/vendor/vulkan/lib/*.dylib
+!Flameberry/vendor/vulkan/lib/*.lib
 
 # Executables
 *.exe
