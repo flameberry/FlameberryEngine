@@ -41,6 +41,8 @@ namespace Flameberry {
 
         SceneRendererSettings& GetRendererSettingsRef() { return m_RendererSettings; }
         void RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Pipeline>& pipeline, const glm::vec2& mousePos);
+
+        void ReloadMeshShaders();
     private:
         void Init();
 

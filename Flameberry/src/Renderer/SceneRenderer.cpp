@@ -814,6 +814,11 @@ namespace Flameberry {
         renderPass->End();
     }
 
+    void SceneRenderer::ReloadMeshShaders()
+    {
+        m_MeshPipeline->ReloadShaders();
+    }
+
     void SceneRenderer::SubmitMesh(AssetHandle handle, const MaterialTable& materialTable, const glm::mat4& transform)
     {
         auto staticMesh = AssetManager::GetAsset<StaticMesh>(handle);

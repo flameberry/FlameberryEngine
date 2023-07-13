@@ -51,10 +51,13 @@ namespace Flameberry {
         PipelineSpecification GetSpecification() const { return m_PipelineSpec; }
         VkPipelineLayout GetLayout() const { return m_VkPipelineLayout; }
 
+        void ReloadShaders();
         void Bind();
 
         template<typename... Args>
         static std::shared_ptr<Pipeline> Create(Args... args) { return std::make_shared<Pipeline>(std::forward<Args>(args)...); }
+    private:
+        void CreatePipeline();
     private:
         PipelineSpecification m_PipelineSpec;
         VkPipeline m_VkGraphicsPipeline;

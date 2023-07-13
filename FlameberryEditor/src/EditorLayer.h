@@ -37,6 +37,9 @@ namespace Flameberry {
     private:
         EditorCameraController m_ActiveCameraController;
 
+        // Test
+        bool m_ShouldReloadMeshShaders = false;
+
         // Scalars
         int m_MouseX = 0, m_MouseY = 0;
         int m_GizmoType = -1;

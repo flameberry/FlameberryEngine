@@ -25,7 +25,7 @@ Entities:
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [5.5, 1, 5.5]
+      Scale: [8.25, 1, 11]
     MeshComponent:
       MeshHandle: 2095293778028230355
       OverridenMaterialTable:
@@ -40,17 +40,16 @@ Entities:
       MeshHandle: 13733160320913040731
       OverridenMaterialTable:
         []
-  - Entity: 2570226917321693539
-    TagComponent: CubeDuplicate
+  - Entity: 11164783180477916989
+    TagComponent: PalmTree
     TransformComponent:
-      Translation: [0, 2.86367321, 2.35985923]
+      Translation: [-3.08459687, 0, 5.72575903]
       Rotation: [0, 0, 0]
-      Scale: [1, 10.6107616, 1]
+      Scale: [30.4352837, 30.4352837, 30.4352837]
     MeshComponent:
-      MeshHandle: 17607295310664723591
+      MeshHandle: 17699714755812074374
       OverridenMaterialTable:
-        - SubmeshIndex: 0
-          Material: Assets/Materials/BeatenDownBrick.fbmat
+        []
 Meshes:
   - Mesh: 17607295310664723591
     FilePath: Assets/Meshes/cube.obj
@@ -58,5 +57,5 @@ Meshes:
     FilePath: Assets/Meshes/platform.obj
   - Mesh: 13733160320913040731
     FilePath: Assets/Meshes/sphere.obj
-  - Mesh: 17607295310664723591
-    FilePath: Assets/Meshes/cube.obj
+  - Mesh: 17699714755812074374
+    FilePath: Assets/Meshes/PalmTree.obj

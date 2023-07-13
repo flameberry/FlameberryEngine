@@ -1,10 +1,11 @@
 #version 450
 
 layout (location = 0) in vec3 v_WorldSpacePosition;
-layout (location = 1) in vec3 v_Normal;
-layout (location = 2) in vec2 v_TextureCoords;
-layout (location = 3) in vec3 v_ViewPosition;
-layout (location = 4) in mat3 v_TBNMatrix;
+layout (location = 1) in vec3 v_ClipSpacePosition;
+layout (location = 2) in vec3 v_Normal;
+layout (location = 3) in vec2 v_TextureCoords;
+layout (location = 4) in vec3 v_ViewSpacePosition;
+layout (location = 5) in mat3 v_TBNMatrix;
 
 layout (location = 0) out vec4 o_FragColor;
 
@@ -14,7 +15,7 @@ layout (location = 0) out vec4 o_FragColor;
 
 #extension GL_GOOGLE_include_directive : enable
 
-#include "include/poisson.h"
+#include "include/poisson.glsl"
 
 const mat4 g_BiasMatrix = mat4(
     0.5, 0.0, 0.0, 0.0,
@@ -141,6 +142,34 @@ float Random_Float(inout uint seed)
     return (float(seed) / float(0x7f800000u)) * 2.0f - 1.0f;
 }
 
+vec2 VogelDiskSample(uint sampleIndex, uint samplesCount, float phi)
+{
+    float GoldenAngle = 2.4f;
+
+    float r = sqrt(sampleIndex + 0.5f) / sqrt(samplesCount);
+    float theta = sampleIndex * GoldenAngle + phi;
+
+    float sine = sin(theta), cosine = cos(theta);
+    return vec2(r * cosine, r * sine);
+}
+
+float InterleavedGradientNoise(vec2 position)
+{
+    vec3 magic = vec3(0.06711056f, 0.00583715f, 52.9829189f);
+    return fract(magic.z * fract(dot(position, magic.xy)));
+}
+
+float Noise(vec2 position)
+{
+	const vec3 magic = vec3(12.9898f, 78.233f, 43758.5453123f);
+    return fract(magic.z * sin(dot(position.xy, magic.xy)));
+}
+
+float AlchemyNoise(ivec2 position_screen)
+{
+	return 30.0f*(position_screen.x^position_screen.y) + 10.0f*(position_screen.x*position_screen.y);
+}
+
 float Bias_DirectionalLight()
 {
     // return 0.004f;
@@ -182,10 +211,15 @@ float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius,
     const float scale = 1.0f + u_CascadeDepthSplits[cascadeIndex] / 1000.0f;
     const vec2 texelSize = scale / textureSize(u_ShadowMapSamplerArray, 0).xy;
 
+    float interleavedNoise = 2.0 * PI * Noise(v_ClipSpacePosition.xy);
+    // float interleavedNoise = 2.0 * PI * InterleavedGradientNoise();
+
     float shadowFactor = 0.0f;
-	for (int x = 0; x < sampleCount; x++) 
+	for (uint x = 0; x < sampleCount; x++) 
     {
-        vec2 offset = vec2(g_PoissonSamples[x]);
+        // vec2 offset = vec2(g_PoissonSamples[x]);
+        vec2 offset = VogelDiskSample(x, sampleCount, interleavedNoise);
+
         shadowFactor += TextureProj_DirectionalLight(sc, radius * texelSize * offset, cascadeIndex, bias);
 	}
 	return shadowFactor / sampleCount;
@@ -198,16 +232,20 @@ float PCSS_SearchWidth(float lightSize, float receiverDistance, uint cascadeInde
 
 vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex)
 {
-    const int blockerSearch_SampleCount = POISSON_SAMPLE_COUNT;
+    const uint blockerSearch_SampleCount = 32;
 
     // Perform N samples with pre-defined offset and random rotation, scale by input search size
 	int blockers = 0;
 	float avgBlockerDepth = 0.0f;
     const vec2 texelSize = 0.75f / textureSize(u_ShadowMapSamplerArray, 0).xy;
 
-    for (int i = 0; i < blockerSearch_SampleCount; i++)
+    float interleavedNoise = 2.0 * PI * Noise(v_ClipSpacePosition.xy);
+
+    for (uint i = 0; i < blockerSearch_SampleCount; i++)
     {
-        vec2 offset = vec2(g_PoissonSamples[i]) * searchUV * texelSize;
+        // vec2 offset = vec2(g_PoissonSamples[i]) * searchUV * texelSize;
+        vec2 offset = VogelDiskSample(i, blockerSearch_SampleCount, interleavedNoise) * searchUV * texelSize;
+
         float randomlySampledZ = texture(u_ShadowMapSamplerArray, vec3(projCoords.xy + offset, cascadeIndex)).r;
 
         if (randomlySampledZ < projCoords.z)
@@ -237,7 +275,6 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex)
     if (blockerInfo.y == 0.0f)
         return 1.0f;
 
-    // float penumbraSize = PCSS_PenumbraSize(receiverDepth, blockerInfo.x, lightSize);
     float penumbraSize = receiverDepth - blockerInfo.x;
     if (penumbraSize == 0.0f)
         return 1.0f;
@@ -245,7 +282,6 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex)
     float softnessFallOff = 1.0f;
     penumbraSize = 1.0 - pow(1.0 - penumbraSize, softnessFallOff);
 
-    // float filterRadius = penumbraSize * -(u_CascadeDepthSplits[cascadeIndex] / 1000.0f) / shadowCoord.z;
     float filterRadius = penumbraSize * lightSize;
     return FilterPCFRadial_DirectionalLight(shadowCoord, cascadeIndex, abs(filterRadius), POISSON_SAMPLE_COUNT, 0.002f);
 }
@@ -282,7 +318,7 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
         // Get cascade index for the current fragment's view position
         uint cascadeIndex = 0;
         for (uint i = 0; i < CASCADE_COUNT - 1; i++) {
-            if (v_ViewPosition.z < u_CascadeDepthSplits[i]) {	
+            if (v_ViewSpacePosition.z < u_CascadeDepthSplits[i]) {	
                 cascadeIndex = i + 1;
             }
         }
@@ -292,7 +328,7 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
 
         float bias = Bias_DirectionalLight();
         if (u_SceneRendererSettings.SoftShadows == 1) {
-            // shadow = FilterPCFRadial_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 1.0f, 32, bias);
+            // shadow = FilterPCFRadial_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 5.0f, 16, bias);
             shadow = PCSS_Shadow_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex);
         }
         else
@@ -365,7 +401,7 @@ void main()
     {
         uint cascadeIndex = 0;
         for(uint i = 0; i < CASCADE_COUNT - 1; ++i) {
-            if (v_ViewPosition.z < u_CascadeDepthSplits[i]) {	
+            if (v_ViewSpacePosition.z < u_CascadeDepthSplits[i]) {	
                 cascadeIndex = i + 1;
             }
         }

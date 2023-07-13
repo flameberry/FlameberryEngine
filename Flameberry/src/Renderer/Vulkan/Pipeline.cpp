@@ -10,6 +10,36 @@ namespace Flameberry {
     Pipeline::Pipeline(const PipelineSpecification& pipelineSpec)
         : m_PipelineSpec(pipelineSpec)
     {
+        CreatePipeline();
+    }
+
+    Pipeline::~Pipeline()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
+    }
+
+    void Pipeline::ReloadShaders()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
+
+        CreatePipeline();
+    }
+
+    void Pipeline::Bind()
+    {
+        Renderer::Submit([pipeline = m_VkGraphicsPipeline](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+            }
+        );
+    }
+
+    void Pipeline::CreatePipeline()
+    {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
         std::vector<VkPushConstantRange> pushConstantRanges;
@@ -217,22 +247,6 @@ namespace Flameberry {
         // Destroying Shader Modules
         vkDestroyShaderModule(device, vk_vertex_shader_module, nullptr);
         vkDestroyShaderModule(device, vk_fragment_shader_module, nullptr);
-    }
-
-    Pipeline::~Pipeline()
-    {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
-    }
-
-    void Pipeline::Bind()
-    {
-        Renderer::Submit([pipeline = m_VkGraphicsPipeline](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-            }
-        );
     }
 
     ComputePipeline::ComputePipeline(const ComputePipelineSpecification& pipelineSpec)

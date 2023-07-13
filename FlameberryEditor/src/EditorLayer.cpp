@@ -127,6 +127,12 @@ namespace Flameberry {
         if (m_IsViewportFocused)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 
+        if (m_ShouldReloadMeshShaders) {
+            VulkanContext::GetCurrentDevice()->WaitIdle();
+            m_SceneRenderer->ReloadMeshShaders();
+            m_ShouldReloadMeshShaders = false;
+        }
+
         // Actual Rendering (All scene related render passes)
         m_SceneRenderer->RenderScene(m_ViewportSize, m_ActiveScene, m_ActiveCameraController.GetPerspectiveCamera(), m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
 
@@ -370,6 +376,11 @@ namespace Flameberry {
         if (ImGui::CollapsingHeader("Scene Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
         {
             auto& settings = m_SceneRenderer->GetRendererSettingsRef();
+
+            ImGui::Button("Reload Mesh Shader");
+            if (ImGui::IsItemClicked())
+                m_ShouldReloadMeshShaders = true;
+
             ImGui::Checkbox("Enable Shadows", &settings.EnableShadows);
             ImGui::Checkbox("Show Cascades", &settings.ShowCascades);
             ImGui::Checkbox("Soft Shadows", &settings.SoftShadows);
