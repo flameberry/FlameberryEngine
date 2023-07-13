@@ -165,11 +165,6 @@ float Noise(vec2 position)
     return fract(magic.z * sin(dot(position.xy, magic.xy)));
 }
 
-float AlchemyNoise(ivec2 position_screen)
-{
-	return 30.0f*(position_screen.x^position_screen.y) + 10.0f*(position_screen.x*position_screen.y);
-}
-
 float Bias_DirectionalLight()
 {
     // return 0.004f;
@@ -206,13 +201,10 @@ float FilterPCF_DirectionalLight(vec4 sc, uint cascadeIndex, float pixelSize, in
 	return shadowFactor / count;
 }
 
-float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius, uint sampleCount, float bias)
+float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius, uint sampleCount, float bias, float interleavedNoise)
 {
-    const float scale = 1.0f + u_CascadeDepthSplits[cascadeIndex] / 1000.0f;
+    const float scale = 1.0f + u_CascadeDepthSplits[cascadeIndex] / 1000.01f;
     const vec2 texelSize = scale / textureSize(u_ShadowMapSamplerArray, 0).xy;
-
-    float interleavedNoise = 2.0 * PI * Noise(v_ClipSpacePosition.xy);
-    // float interleavedNoise = 2.0 * PI * InterleavedGradientNoise();
 
     float shadowFactor = 0.0f;
 	for (uint x = 0; x < sampleCount; x++) 
@@ -230,16 +222,16 @@ float PCSS_SearchWidth(float lightSize, float receiverDistance, uint cascadeInde
 	return lightSize * (receiverDistance + u_CascadeDepthSplits[cascadeIndex] / 1000.0f) / receiverDistance;
 }
 
-vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex)
+vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, float interleavedNoise, float bias)
 {
     const uint blockerSearch_SampleCount = 32;
 
     // Perform N samples with pre-defined offset and random rotation, scale by input search size
 	int blockers = 0;
 	float avgBlockerDepth = 0.0f;
-    const vec2 texelSize = 0.75f / textureSize(u_ShadowMapSamplerArray, 0).xy;
 
-    float interleavedNoise = 2.0 * PI * Noise(v_ClipSpacePosition.xy);
+    const float scale = 1.0f + u_CascadeDepthSplits[cascadeIndex] / 1000.01f;
+    const vec2 texelSize = scale / textureSize(u_ShadowMapSamplerArray, 0).xy;
 
     for (uint i = 0; i < blockerSearch_SampleCount; i++)
     {
@@ -248,7 +240,7 @@ vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex)
 
         float randomlySampledZ = texture(u_ShadowMapSamplerArray, vec3(projCoords.xy + offset, cascadeIndex)).r;
 
-        if (randomlySampledZ < projCoords.z)
+        if (randomlySampledZ < projCoords.z - bias)
 		{
 			blockers++;
 			avgBlockerDepth += randomlySampledZ;
@@ -259,18 +251,13 @@ vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex)
     return vec2(avgBlockerDepth, blockers);
 }
 
-float PCSS_PenumbraSize(float receiverDepth, float avgBlockerDepth, float lightSize)
-{
-    return lightSize * (receiverDepth - avgBlockerDepth) / avgBlockerDepth;
-}
-
-float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex)
+float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float interleavedNoise, float bias)
 {
     const float lightSize = 20.0f;
 
     float receiverDepth = shadowCoord.z;
     float searchWidth = PCSS_SearchWidth(lightSize, receiverDepth, cascadeIndex);
-    const vec2 blockerInfo = PCSS_BlockerDistance(shadowCoord.xyz, searchWidth, cascadeIndex);
+    const vec2 blockerInfo = PCSS_BlockerDistance(shadowCoord.xyz, searchWidth, cascadeIndex, interleavedNoise, bias);
     
     if (blockerInfo.y == 0.0f)
         return 1.0f;
@@ -279,11 +266,11 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex)
     if (penumbraSize == 0.0f)
         return 1.0f;
     
-    float softnessFallOff = 1.0f;
-    penumbraSize = 1.0 - pow(1.0 - penumbraSize, softnessFallOff);
+    // float softnessFallOff = 1.0f;
+    // penumbraSize = 1.0 - pow(1.0 - penumbraSize, softnessFallOff);
 
     float filterRadius = penumbraSize * lightSize;
-    return FilterPCFRadial_DirectionalLight(shadowCoord, cascadeIndex, abs(filterRadius), POISSON_SAMPLE_COUNT, 0.002f);
+    return FilterPCFRadial_DirectionalLight(shadowCoord, cascadeIndex, filterRadius, 64, bias, interleavedNoise);
 }
 
 vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
@@ -323,13 +310,18 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
             }
         }
 
+        float bias = max(0.05f * (1.0f - dot(normal, -l)), 0.001f);
+        const float biasModifier = 0.8f;
+        bias *= 1.0f / (-u_CascadeDepthSplits[cascadeIndex] * biasModifier);
+
         // Depth compare for shadowing
         vec4 shadowCoord = (g_BiasMatrix * u_CascadeMatrices[cascadeIndex]) * vec4(v_WorldSpacePosition, 1.0f);	
 
-        float bias = Bias_DirectionalLight();
         if (u_SceneRendererSettings.SoftShadows == 1) {
+            float interleavedNoise = 2.0 * PI * Noise(v_ClipSpacePosition.xy);
+            shadow = PCSS_Shadow_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, interleavedNoise, bias);
+
             // shadow = FilterPCFRadial_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 5.0f, 16, bias);
-            shadow = PCSS_Shadow_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex);
         }
         else
             shadow = TextureProj_DirectionalLight(shadowCoord / shadowCoord.w, vec2(0.0), cascadeIndex, bias);

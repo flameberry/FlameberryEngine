@@ -147,7 +147,7 @@ namespace Flameberry {
             pipelineSpec.Viewport.height = SceneRendererSettings::CascadeSize;
             pipelineSpec.Scissor = { { 0, 0 }, { SceneRendererSettings::CascadeSize, SceneRendererSettings::CascadeSize } };
 
-            // pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
+            pipelineSpec.CullMode = VK_CULL_MODE_NONE;
             pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
             pipelineSpec.DepthClampEnable = true;
 
