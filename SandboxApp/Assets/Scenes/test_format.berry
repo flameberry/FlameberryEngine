@@ -5,7 +5,7 @@ Environment:
   EnableEnvironmentMap: false
   Reflections: false
   DirectionalLight:
-    Direction: [-1.24000001, -6.17999983, -3.3599999]
+    Direction: [0.50999999, -2, -0.529999971]
     Color: [1, 1, 1]
     Intensity: 8
 Entities:

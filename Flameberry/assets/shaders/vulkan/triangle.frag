@@ -12,6 +12,10 @@ layout (location = 0) out vec4 o_FragColor;
 #define AMBIENT 0.1f
 #define CASCADE_COUNT 4
 
+#extension GL_GOOGLE_include_directive : enable
+
+#include "include/poisson.h"
+
 const mat4 g_BiasMatrix = mat4(
     0.5, 0.0, 0.0, 0.0,
 	0.0, 0.5, 0.0, 0.0,
@@ -178,11 +182,11 @@ float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius,
     const float scale = 1.0f + u_CascadeDepthSplits[cascadeIndex] / 1000.0f;
     const vec2 texelSize = scale / textureSize(u_ShadowMapSamplerArray, 0).xy;
 
-    uint seed = uint(radius * float(sampleCount) * 4682820396.0);
-
     float shadowFactor = 0.0f;
-	for (int x = 0; x < sampleCount; x++) {
-        shadowFactor += TextureProj_DirectionalLight(sc, radius * texelSize * vec2(Random_Float(seed), Random_Float(seed)), cascadeIndex, bias);
+	for (int x = 0; x < sampleCount; x++) 
+    {
+        vec2 offset = vec2(g_PoissonSamples[x]);
+        shadowFactor += TextureProj_DirectionalLight(sc, radius * texelSize * offset, cascadeIndex, bias);
 	}
 	return shadowFactor / sampleCount;
 }
@@ -194,18 +198,17 @@ float PCSS_SearchWidth(float lightSize, float receiverDistance, uint cascadeInde
 
 vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex)
 {
-    const int PCSS_SampleCount = 64;
+    const int blockerSearch_SampleCount = POISSON_SAMPLE_COUNT;
 
     // Perform N samples with pre-defined offset and random rotation, scale by input search size
 	int blockers = 0;
 	float avgBlockerDepth = 0.0f;
-
-    uint seed = uint(projCoords.x * projCoords.y * 4682820396.0f);
     const vec2 texelSize = 0.75f / textureSize(u_ShadowMapSamplerArray, 0).xy;
-    for (int i = 0; i < PCSS_SampleCount; i++)
+
+    for (int i = 0; i < blockerSearch_SampleCount; i++)
     {
-        vec2 offset = vec2(Random_Float(seed), Random_Float(seed)) * searchUV;
-        float randomlySampledZ = texture(u_ShadowMapSamplerArray, vec3(projCoords.xy + offset * texelSize, cascadeIndex)).r;
+        vec2 offset = vec2(g_PoissonSamples[i]) * searchUV * texelSize;
+        float randomlySampledZ = texture(u_ShadowMapSamplerArray, vec3(projCoords.xy + offset, cascadeIndex)).r;
 
         if (randomlySampledZ < projCoords.z)
 		{
@@ -225,7 +228,7 @@ float PCSS_PenumbraSize(float receiverDepth, float avgBlockerDepth, float lightS
 
 float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex)
 {
-    const float lightSize = 30.0f;
+    const float lightSize = 20.0f;
 
     float receiverDepth = shadowCoord.z;
     float searchWidth = PCSS_SearchWidth(lightSize, receiverDepth, cascadeIndex);
@@ -234,12 +237,17 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex)
     if (blockerInfo.y == 0.0f)
         return 1.0f;
 
-    float penumbraSize = PCSS_PenumbraSize(receiverDepth, blockerInfo.x, lightSize);
+    // float penumbraSize = PCSS_PenumbraSize(receiverDepth, blockerInfo.x, lightSize);
+    float penumbraSize = receiverDepth - blockerInfo.x;
     if (penumbraSize == 0.0f)
         return 1.0f;
+    
+    float softnessFallOff = 1.0f;
+    penumbraSize = 1.0 - pow(1.0 - penumbraSize, softnessFallOff);
 
-    float filterRadius = penumbraSize * -(u_CascadeDepthSplits[cascadeIndex] / 1000.0f) / shadowCoord.z;
-    return FilterPCFRadial_DirectionalLight(shadowCoord, cascadeIndex, abs(filterRadius), 128, 0.002f);
+    // float filterRadius = penumbraSize * -(u_CascadeDepthSplits[cascadeIndex] / 1000.0f) / shadowCoord.z;
+    float filterRadius = penumbraSize * lightSize;
+    return FilterPCFRadial_DirectionalLight(shadowCoord, cascadeIndex, abs(filterRadius), POISSON_SAMPLE_COUNT, 0.002f);
 }
 
 vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
@@ -283,8 +291,10 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
         vec4 shadowCoord = (g_BiasMatrix * u_CascadeMatrices[cascadeIndex]) * vec4(v_WorldSpacePosition, 1.0f);	
 
         float bias = Bias_DirectionalLight();
-        if (u_SceneRendererSettings.SoftShadows == 1)
-            shadow = FilterPCFRadial_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 1.0f, 32, bias);
+        if (u_SceneRendererSettings.SoftShadows == 1) {
+            // shadow = FilterPCFRadial_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 1.0f, 32, bias);
+            shadow = PCSS_Shadow_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex);
+        }
         else
             shadow = TextureProj_DirectionalLight(shadowCoord / shadowCoord.w, vec2(0.0), cascadeIndex, bias);
     }

@@ -45,7 +45,7 @@ Entities:
     TransformComponent:
       Translation: [0, 2.86367321, 2.35985923]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Scale: [1, 10.6107616, 1]
     MeshComponent:
       MeshHandle: 17607295310664723591
       OverridenMaterialTable:
