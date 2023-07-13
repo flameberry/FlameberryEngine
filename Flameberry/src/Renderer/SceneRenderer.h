@@ -19,7 +19,7 @@ namespace Flameberry {
     struct SceneRendererSettings {
         bool EnableShadows = true, ShowCascades = false, SoftShadows = true;
         float CascadeLambdaSplit = 0.91f;
-        static const uint32_t CascadeCount = 4, CascadeSize = 2048;
+        static const uint32_t CascadeCount = 4, CascadeSize = 2048 * 2; // TODO: Make this a renderer startup setting
     };
 
     struct Cascade {

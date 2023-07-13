@@ -142,14 +142,14 @@ float Random_Float(inout uint seed)
     return (float(seed) / float(0x7f800000u)) * 2.0f - 1.0f;
 }
 
-vec2 VogelDiskSample(uint sampleIndex, uint samplesCount, float phi)
+vec2 VogelDiskSample(uint sampleIndex, uint sampleCount, float phi)
 {
-    float GoldenAngle = 2.4f;
+    const float goldenAngle = 2.4f;
 
-    float r = sqrt(sampleIndex + 0.5f) / sqrt(samplesCount);
-    float theta = sampleIndex * GoldenAngle + phi;
+    const float r = sqrt(sampleIndex + 0.5f) / sqrt(sampleCount);
+    const float theta = sampleIndex * goldenAngle + phi;
 
-    float sine = sin(theta), cosine = cos(theta);
+    const float sine = sin(theta), cosine = cos(theta);
     return vec2(r * cosine, r * sine);
 }
 
@@ -163,13 +163,6 @@ float Noise(vec2 position)
 {
 	const vec3 magic = vec3(12.9898f, 78.233f, 43758.5453123f);
     return fract(magic.z * sin(dot(position.xy, magic.xy)));
-}
-
-float Bias_DirectionalLight()
-{
-    // return 0.004f;
-    const float depthBias = 0.001f;
-    return max(depthBias * (1.0f - dot(GetPixelNormal(), u_DirectionalLight.Direction.xyz)), depthBias);
 }
 
 float TextureProj_DirectionalLight(vec4 shadowCoord, vec2 offset, uint cascadeIndex, float bias)
@@ -237,7 +230,6 @@ vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, fl
     {
         // vec2 offset = vec2(g_PoissonSamples[i]) * searchUV * texelSize;
         vec2 offset = VogelDiskSample(i, blockerSearch_SampleCount, interleavedNoise) * searchUV * texelSize;
-
         float randomlySampledZ = texture(u_ShadowMapSamplerArray, vec3(projCoords.xy + offset, cascadeIndex)).r;
 
         if (randomlySampledZ < projCoords.z - bias)
@@ -310,7 +302,7 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
             }
         }
 
-        float bias = max(0.05f * (1.0f - dot(normal, -l)), 0.001f);
+        float bias = max(0.05f * (1.0f - dot(normal, -l)), 0.002f);
         const float biasModifier = 0.8f;
         bias *= 1.0f / (-u_CascadeDepthSplits[cascadeIndex] * biasModifier);
 
