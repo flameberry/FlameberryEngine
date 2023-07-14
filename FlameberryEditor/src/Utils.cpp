@@ -39,7 +39,7 @@ void Utils::DrawVec3Control(const std::string& str_id, glm::vec3& value, float d
 {
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 
-    float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+    float lineHeight = ImGui::GetTextLineHeight() + 2.0f * ImGui::GetStyle().FramePadding.y;
     ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
 
     ImGuiIO& io = ImGui::GetIO();

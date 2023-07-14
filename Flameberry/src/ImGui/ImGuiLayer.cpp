@@ -4,10 +4,10 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
-#include "Renderer/Vulkan/RenderCommand.h"
-#include "Renderer/Vulkan/SwapChain.h"
-#include "Renderer/Vulkan/VulkanDebug.h"
-#include "Renderer/Vulkan/VulkanContext.h"
+#include "Renderer/RenderCommand.h"
+#include "Renderer/SwapChain.h"
+#include "Renderer/VulkanDebug.h"
+#include "Renderer/VulkanContext.h"
 #include "Renderer/Renderer.h"
 
 namespace Flameberry {
@@ -25,23 +25,34 @@ namespace Flameberry {
         //io.ConfigViewportsNoTaskBarIcon = true;
 
         ImFontConfig config{};
+
+#ifdef __APPLE__
+        constexpr float DPI_SCALE = 2.0f;
+
         config.OversampleH = 3;
-        config.GlyphExtraSpacing = ImVec2(0.62f, 0.62f);
-        config.RasterizerMultiply = 1.12f;
+        config.GlyphExtraSpacing = ImVec2(1.4f, 0.62f);
+        config.RasterizerMultiply = 1.1f;
         config.OversampleV = 3;
+#else
+        constexpr float DPI_SCALE = 1.0f;
+        config.GlyphExtraSpacing = ImVec2(0.65f, 0.62f);
+#endif
 
-        // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 16, &config);
-        // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", 13, &config);
+        constexpr float fontSize = 14.0f * DPI_SCALE;
+        constexpr float bigFontSize = 16.0f * DPI_SCALE;
 
-        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", 16, &config);
-        io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", 14, &config);
+        // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", bigFontSize, &config);
+        // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", fontSize, &config);
+
+        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", bigFontSize, &config);
+        io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", fontSize, &config);
+        io.FontGlobalScale = 1 / DPI_SCALE;
 
         io.IniFilename = NULL;
         ImGui::LoadIniSettingsFromDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
 
         // Setup Dear ImGui style
-        // ImGui::StyleColorsDark();
-        //ImGui::StyleColorsLight();
+        SetupImGuiStyle();
 
         // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
         ImGuiStyle& style = ImGui::GetStyle();
@@ -93,8 +104,6 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreateRenderPass(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiLayerRenderPass));
 
         CreateResources();
-
-        SetupImGuiStyle();
 
         // Setup Platform/Renderer backends
         ImGui_ImplGlfw_InitForVulkan(VulkanContext::GetCurrentWindow()->GetGLFWwindow(), true);

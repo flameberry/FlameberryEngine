@@ -245,7 +245,7 @@ vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, fl
 
 float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float interleavedNoise, float bias)
 {
-    const float lightSize = 20.0f;
+    const float lightSize = 22.0f;
 
     float receiverDepth = shadowCoord.z;
     float searchWidth = PCSS_SearchWidth(lightSize, receiverDepth, cascadeIndex);

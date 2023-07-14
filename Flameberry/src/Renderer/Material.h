@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "Vulkan/Texture2D.h"
+#include "Texture2D.h"
 
 #include "Core/UUID.h"
 

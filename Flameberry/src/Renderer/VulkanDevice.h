@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.h>
 
 #include "Core/optional.h"
-#include "Renderer/Vulkan/VulkanWindow.h"
+#include "Renderer/VulkanWindow.h"
 
 namespace Flameberry {
     struct QueueFamilyIndices

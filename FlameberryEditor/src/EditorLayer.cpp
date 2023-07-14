@@ -1,7 +1,7 @@
 #include "EditorLayer.h"
 
 #include "ImGuizmo/ImGuizmo.h"
-#include "Renderer/Vulkan/Framebuffer.h"
+#include "Renderer/Framebuffer.h"
 #include "Utils.h"
 
 namespace Flameberry {

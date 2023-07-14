@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Vulkan/Pipeline.h"
-#include "Vulkan/Buffer.h"
-#include "Vulkan/Texture2D.h"
+#include "Pipeline.h"
+#include "Buffer.h"
+#include "Texture2D.h"
 
 namespace Flameberry {
     struct LineVertex

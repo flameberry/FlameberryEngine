@@ -3,7 +3,7 @@
 #include <functional>
 #include <vulkan/vulkan.h>
 
-#include "Vulkan/VulkanContext.h"
+#include "VulkanContext.h"
 
 namespace Flameberry {
     class Renderer

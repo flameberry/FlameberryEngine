@@ -3,7 +3,7 @@
 #include "Core/Window.h"
 #include <vulkan/vulkan.h>
 
-#include "Renderer/Vulkan/SwapChain.h"
+#include "Renderer/SwapChain.h"
 
 namespace Flameberry {
     class VulkanWindow : public Window

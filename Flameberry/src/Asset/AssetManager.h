@@ -7,7 +7,7 @@
 #include "Core/UUID.h"
 #include "Core/Core.h"
 
-#include "Renderer/Vulkan/StaticMesh.h"
+#include "Renderer/StaticMesh.h"
 #include "Renderer/Material.h"
 
 #include "AssetLoader.h"
@@ -34,6 +34,8 @@ namespace Flameberry {
             }
 
             auto asset = AssetLoader::LoadAsset(path);
+            FL_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
+
             s_AssetTable[asset->Handle] = asset;
             s_AssetFilePathToUUIDTable[path] = asset->Handle;
 

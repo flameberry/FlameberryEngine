@@ -6,8 +6,9 @@
 #include "Core/Timer.h"
 #include "Components.h"
 
-#include "Renderer/Vulkan/VulkanContext.h"
+#include "Renderer/VulkanContext.h"
 #include "Asset/AssetManager.h"
+#include "Asset/MeshLoader.h"
 
 namespace Flameberry {
     // std::shared_ptr<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
@@ -109,7 +110,7 @@ namespace Flameberry {
         {
             for (auto mesh : meshes)
             {
-                auto meshAsset = AssetLoader::LoadStaticMesh(mesh["FilePath"].as<std::string>().c_str());
+                auto meshAsset = MeshLoader::LoadMesh(mesh["FilePath"].as<std::string>().c_str());
                 meshAsset->Handle = mesh["Mesh"].as<uint64_t>();
                 AssetManager::RegisterAsset(meshAsset);
             }

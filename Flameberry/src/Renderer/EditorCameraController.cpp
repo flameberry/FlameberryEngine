@@ -32,8 +32,11 @@ namespace Flameberry {
 
         Input::SetCursorMode(GLFW_CURSOR_DISABLED);
 
+        float speed = 10.5f, rotationSpeed = 0.6f;
+        if (Input::IsKey(GLFW_KEY_LEFT_SHIFT, GLFW_PRESS) || Input::IsKey(GLFW_KEY_RIGHT_SHIFT, GLFW_PRESS))
+            speed *= 2.0f;
+
         bool moved = false;
-        constexpr float speed = 10.5f, rotationSpeed = 0.6f;
         auto& cameraSpec = m_Camera->m_CameraSpec;
         if (Input::IsMouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS))
         {
@@ -97,13 +100,13 @@ namespace Flameberry {
     void EditorCameraController::OnEvent(const Event& e)
     {
         switch (e.GetType()) {
-        case EventType::MOUSE_SCROLL: {
-            // auto event = *(MouseScrollEvent*)(&e);
+            case EventType::MOUSE_SCROLL: {
+                    // auto event = *(MouseScrollEvent*)(&e);
 
-            // auto& cameraSpec = m_Camera->m_CameraSpec;
-            // glm::vec2 delta(event.OffsetX, event.OffsetY);
-            break;
-        }
+                    // auto& cameraSpec = m_Camera->m_CameraSpec;
+                    // glm::vec2 delta(event.OffsetX, event.OffsetY);
+                    break;
+                }
         }
     }
 }

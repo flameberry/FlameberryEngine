@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Vulkan/Pipeline.h"
-#include "Vulkan/SwapChain.h"
-#include "Vulkan/StaticMesh.h"
-#include "Vulkan/DescriptorSet.h"
-#include "Vulkan/CommandBuffer.h"
+#include "Pipeline.h"
+#include "SwapChain.h"
+#include "StaticMesh.h"
+#include "DescriptorSet.h"
+#include "CommandBuffer.h"
 
 #include "Light.h"
 #include "PerspectiveCamera.h"
@@ -19,7 +19,7 @@ namespace Flameberry {
     struct SceneRendererSettings {
         bool EnableShadows = true, ShowCascades = false, SoftShadows = true;
         float CascadeLambdaSplit = 0.91f;
-        static const uint32_t CascadeCount = 4, CascadeSize = 2048 * 2; // TODO: Make this a renderer startup setting
+        static const uint32_t CascadeCount = 4, CascadeSize = 1028 * 3; // TODO: Make this a renderer startup setting
     };
 
     struct Cascade {

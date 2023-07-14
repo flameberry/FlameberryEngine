@@ -2,9 +2,9 @@
 
 #include "Renderer.h"
 
-#include "Vulkan/RenderPass.h"
-#include "Vulkan/VulkanDebug.h"
-#include "Vulkan/RenderCommand.h"
+#include "RenderPass.h"
+#include "VulkanDebug.h"
+#include "RenderCommand.h"
 
 #define MAX_LINES 500
 #define MAX_QUADS 100

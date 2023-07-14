@@ -6,7 +6,7 @@
 
 #include "ImGui/ImGuiLayer.h"
 #include "Renderer/Renderer.h"
-#include "Renderer/Vulkan/Texture2D.h"
+#include "Renderer/Texture2D.h"
 #include "Asset/AssetManager.h"
 
 #include "Platform/PlatformUtils.h"
@@ -56,11 +56,12 @@ namespace Flameberry {
                 m_ImGuiLayer->End();
 
                 m_Window->SwapBuffers();
-                if (m_Window->IsWindowResized())
-                {
-                    m_ImGuiLayer->InvalidateResources();
-                    m_Window->ResetWindowResizedFlag();
-                }
+            }
+            
+            if (m_Window->IsWindowResized())
+            {
+                m_ImGuiLayer->InvalidateResources();
+                m_Window->ResetWindowResizedFlag();
             }
 
             Renderer::ClearCommandQueue();

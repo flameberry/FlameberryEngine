@@ -3,9 +3,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Vulkan/VulkanDebug.h"
-#include "Vulkan/RenderCommand.h"
-#include "Vulkan/VulkanContext.h"
+#include "VulkanDebug.h"
+#include "RenderCommand.h"
+#include "VulkanContext.h"
 #include "Material.h"
 #include "Renderer.h"
 #include "Renderer2D.h"
@@ -510,6 +510,7 @@ namespace Flameberry {
 
         if (m_RendererSettings.EnableShadows)
         {
+            // TODO: Calculate these only when camera or directional light is updated
             CalculateShadowMapCascades(camera, scene->m_SceneData.ActiveEnvironment.DirLight.Direction);
             glm::mat4 cascades[SceneRendererSettings::CascadeCount];
             for (uint8_t i = 0; i < SceneRendererSettings::CascadeCount; i++)

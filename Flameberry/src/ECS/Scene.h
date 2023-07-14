@@ -6,7 +6,7 @@
 #include "ecs.hpp"
 #include "Renderer/Light.h"
 #include "Renderer/Material.h"
-#include "Renderer/Vulkan/StaticMesh.h"
+#include "Renderer/StaticMesh.h"
 
 namespace Flameberry {
     struct Environment

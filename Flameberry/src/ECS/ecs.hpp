@@ -175,16 +175,16 @@ namespace fbentt {
     public:
         template<typename... Type> class registry_view {
         public:
-            template<typename... i_Type> class iterator {
+            template<typename... iter_type> class iterator {
             public:
                 iterator(const registry* reg, const pool_data* pool, uint32_t index) : ref_registry(reg), ref_pool(pool), index(index) {}
 
-                iterator<i_Type...>& operator++() {
-                    while (++index < ref_pool->entity_set.size() && !ref_registry->has<i_Type...>(ref_registry->entities[ref_pool->entity_set[index]]));
+                iterator<iter_type...>& operator++() {
+                    while (++index < ref_pool->entity_set.size() && !ref_registry->has<iter_type...>(ref_registry->entities[ref_pool->entity_set[index]]));
                     return *this;
                 }
 
-                iterator<i_Type...> operator++(int) {
+                iterator<iter_type...> operator++(int) {
                     auto it = *this;
                     ++(*this);
                     return it;
@@ -194,11 +194,11 @@ namespace fbentt {
                     return ref_registry->entities[ref_pool->entity_set[index]];
                 }
 
-                bool operator==(const iterator<i_Type...>& it) {
+                bool operator==(const iterator<iter_type...>& it) {
                     return this->index == it.index;
                 }
 
-                bool operator!=(const iterator<i_Type...>& it) {
+                bool operator!=(const iterator<iter_type...>& it) {
                     return !(*this == it);
                 }
             private:

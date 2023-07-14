@@ -6,7 +6,7 @@
 #include "Layer.h"
 #include "ImGui/ImGuiLayer.h"
 
-#include "Renderer/Vulkan/VulkanContext.h"
+#include "Renderer/VulkanContext.h"
 
 namespace Flameberry {
     class Application

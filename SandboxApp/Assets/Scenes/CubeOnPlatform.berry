@@ -7,7 +7,7 @@ Environment:
   DirectionalLight:
     Direction: [-1, -1, -1]
     Color: [1, 1, 1]
-    Intensity: 8
+    Intensity: 7
 Entities:
   - Entity: 8822097923276355982
     TagComponent: Cube

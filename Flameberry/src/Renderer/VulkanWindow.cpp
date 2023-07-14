@@ -1,7 +1,7 @@
 #include "VulkanWindow.h"
 
-#include "Renderer/Vulkan/VulkanDebug.h"
-#include "Renderer/Vulkan/VulkanContext.h"
+#include "Renderer/VulkanDebug.h"
+#include "Renderer/VulkanContext.h"
 
 namespace Flameberry {
     std::shared_ptr<Window> Window::Create(int width, int height, const char* title)
