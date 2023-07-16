@@ -23,7 +23,7 @@ namespace Flameberry {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
-            auto& environment = m_Context->m_SceneData.ActiveEnvironment;
+            auto& environment = m_Context->m_Environment;
 
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Enable EnvMap");

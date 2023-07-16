@@ -8,7 +8,7 @@ set_custom_build_properties(FlameberryEditor)
 # Defines "FL_DEBUG" for Debug build, and "FL_RELEASE" for Release build
 set_build_config_macro_for_target(FlameberryEditor)
 
-if(${FL_PROJ_GENERATOR} STREQUAL "Xcode")
+if(XCODE)
     target_compile_definitions(Flameberry PRIVATE FL_XCODE_PROJ)
 endif()
 

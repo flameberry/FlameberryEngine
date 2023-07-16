@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <any>
 
 #include "Core/Core.h"
 
@@ -169,6 +170,18 @@ namespace fbentt {
         sparse_set<uint32_t> entity_set;
         std::shared_ptr<void> handler{ nullptr };
         void (*remove)(const pool_data& pool, uint32_t index);
+        void (*copy_handler_data)(const pool_data& src, pool_data& dest);
+
+        pool_data() = default;
+        explicit pool_data(const pool_data& pool)
+            : entity_set(pool.entity_set), remove(pool.remove)
+        {
+            if (pool.copy_handler_data != NULL) {
+                // TODO: Check if this needs optimisation, currently the handler data is only copied upon loading the first scene and pressing the play button
+                pool.copy_handler_data(pool, *this);
+                FL_LOG("Copied ecs component pool handler data!");
+            }
+        }
     };
 
     class registry {
@@ -324,7 +337,7 @@ namespace fbentt {
             const uint32_t version = to_version(entities[index]);
             FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to emplace component: Invalid/Outdated handle!");
 
-            uint32_t typeID = type_id<Type>();
+            const uint32_t typeID = type_id<Type>();
             if (pools.size() <= typeID) {
                 pools.resize(typeID + 1);
                 auto& pool = pools.back();
@@ -338,10 +351,26 @@ namespace fbentt {
                 FL_DEBUGBREAK();
             }
             pools[typeID].entity_set.add(index);
-            pools[typeID].remove = [](const pool_data& pool, uint32_t index) {
-                auto& handler = (*((pool_handler<Type>*)pool.handler.get()));
-                handler.remove(index);
-                };
+
+            if (pools[typeID].remove == NULL) {
+                pools[typeID].remove = [](const pool_data& pool, uint32_t index)
+                    {
+                        auto& handler = (*((pool_handler<Type>*)pool.handler.get()));
+                        handler.remove(index);
+                    };
+            }
+
+            if (pools[typeID].copy_handler_data == NULL) {
+                pools[typeID].copy_handler_data = [](const pool_data& src, pool_data& dest)
+                    {
+                        if (src.handler != nullptr)
+                        {
+                            auto& handler = (*((pool_handler<Type>*)src.handler.get()));
+                            dest.handler = std::make_shared<pool_handler<Type>>(handler);
+                        }
+                    };
+            }
+
             auto& handler = (*((pool_handler<Type>*)pools[typeID].handler.get()));
             return handler.emplace(std::forward<Args>(args)...);
         }

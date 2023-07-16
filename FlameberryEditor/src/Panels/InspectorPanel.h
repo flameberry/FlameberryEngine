@@ -41,7 +41,7 @@ namespace Flameberry {
         static_assert(std::is_invocable_v<Fn>);
         if (instance->GetContextRegistry()->has<ComponentType>(instance->m_SelectionContext))
         {
-            ImGui::PushID(fbentt::type_id<ComponentType>());
+            ImGui::PushID(name);
 
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 4.0f });
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));

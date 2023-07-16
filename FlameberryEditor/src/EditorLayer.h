@@ -8,6 +8,10 @@
 #include "Panels/EnvironmentSettingsPanel.h"
 
 namespace Flameberry {
+    enum class EditorState : uint8_t {
+        Edit = 0, Play = 1
+    };
+
     class EditorLayer : public Layer
     {
     public:
@@ -33,7 +37,11 @@ namespace Flameberry {
         void OpenScene(const std::string& path);
         void NewScene();
 
+        void OnSceneEdit();
+        void OnScenePlay();
+
         void ShowMenuBar();
+        void ShowToolBar();
     private:
         EditorCameraController m_ActiveCameraController;
 
@@ -41,6 +49,7 @@ namespace Flameberry {
         bool m_ShouldReloadMeshShaders = false;
 
         // Scalars
+        EditorState m_EditorState = EditorState::Edit;
         int m_MouseX = 0, m_MouseY = 0;
         int m_GizmoType = -1;
         bool m_IsViewportFocused = false, m_IsViewportHovered = false, m_IsClickedInsideViewport = false;
@@ -49,6 +58,7 @@ namespace Flameberry {
         bool m_EnableGrid = true;
 
         glm::vec2 m_ViewportSize{ 1280, 720 };
+        glm::vec2 m_RenderViewportSize{ 1280, 720 }; // This is to store the viewport size to be rendered to for high dpi/retina displays
         glm::vec2 m_ViewportBounds[2];
 
         std::string m_OpenedScenePathIfExists = "", m_ScenePathToBeOpened = "";
@@ -56,16 +66,14 @@ namespace Flameberry {
         std::filesystem::path m_ProjectPath;
 
         // Texture Icons
-        std::shared_ptr<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon;
+        std::shared_ptr<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayIcon, m_StopIcon;
         std::shared_ptr<Texture2D> m_CursorIconActive, m_TranslateIconActive, m_RotateIconActive, m_ScaleIconActive;
 
         // Renderer
         std::unique_ptr<SceneRenderer> m_SceneRenderer;
 
         // ECS
-        std::shared_ptr<Scene> m_ActiveScene;
-        std::shared_ptr<fbentt::registry> m_Registry;
-
+        std::shared_ptr<Scene> m_ActiveScene, m_ActiveSceneBackUpCopy;
 
         std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
         std::vector<VkDescriptorSet> m_CompositePassViewportDescriptorSets;

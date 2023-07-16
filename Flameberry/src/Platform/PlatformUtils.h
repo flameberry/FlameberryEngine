@@ -9,6 +9,7 @@ namespace Flameberry {
         void CreateMenuBar();
         void CreateCustomTitleBar();
 
+        void SetNewSceneCallbackMenuBar(const std::function<void()>& callback);
         void SetSaveSceneCallbackMenuBar(const std::function<void()>& callback);
         void SetSaveSceneAsCallbackMenuBar(const std::function<void()>& callback);
         void SetOpenSceneCallbackMenuBar(const std::function<void()>& callback);

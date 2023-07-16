@@ -511,7 +511,7 @@ namespace Flameberry {
         if (m_RendererSettings.EnableShadows)
         {
             // TODO: Calculate these only when camera or directional light is updated
-            CalculateShadowMapCascades(camera, scene->m_SceneData.ActiveEnvironment.DirLight.Direction);
+            CalculateShadowMapCascades(camera, scene->m_Environment.DirLight.Direction);
             glm::mat4 cascades[SceneRendererSettings::CascadeCount];
             for (uint8_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
                 cascades[i] = m_Cascades[i].ViewProjectionMatrix;
@@ -531,7 +531,7 @@ namespace Flameberry {
         sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
         sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
 
-        sceneUniformBufferData.directionalLight = scene->m_SceneData.ActiveEnvironment.DirLight;
+        sceneUniformBufferData.directionalLight = scene->m_Environment.DirLight;
         for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
         {
             const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
@@ -583,13 +583,13 @@ namespace Flameberry {
         RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
         // Skybox Rendering
-        if (scene->m_SceneData.ActiveEnvironment.EnableEnvironmentMap && scene->m_SceneData.ActiveEnvironment.EnvironmentMap)
+        if (scene->m_Environment.EnableEnvironmentMap && scene->m_Environment.EnvironmentMap)
         {
             m_SkyboxPipeline->Bind();
 
             glm::mat4 viewProjectionMatrix = camera->GetProjectionMatrix() * glm::mat4(glm::mat3(camera->GetViewMatrix()));
             auto pipelineLayout = m_SkyboxPipeline->GetLayout();
-            auto textureDescSet = scene->m_SceneData.ActiveEnvironment.EnvironmentMap->GetDescriptorSet();
+            auto textureDescSet = scene->m_Environment.EnvironmentMap->GetDescriptorSet();
 
             Renderer::Submit([pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {

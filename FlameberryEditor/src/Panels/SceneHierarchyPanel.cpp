@@ -67,6 +67,12 @@ namespace Flameberry {
         ImGui::PopItemWidth();
     }
 
+    void SceneHierarchyPanel::SetContext(const std::shared_ptr<Scene>& context)
+    {
+        m_Context = context;
+        m_InspectorPanel->SetContext(m_Context);
+    }
+
     void SceneHierarchyPanel::DrawEntityNode(fbentt::entity entity)
     {
         auto& tag = m_Context->m_Registry->get<TagComponent>(entity).Tag;

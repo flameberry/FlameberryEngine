@@ -37,6 +37,8 @@ namespace Flameberry {
 
     struct CameraComponent
     {
+        bool Perspective = true;
+        float AspectRatio, VerticalFOV, ZNear, ZFar;
     };
 
     // struct MaterialTable {

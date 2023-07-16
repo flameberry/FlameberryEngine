@@ -13,6 +13,7 @@ namespace Flameberry {
         void OnUIRender();
 
         void RenameNode(std::string& tag);
+        void SetContext(const std::shared_ptr<Scene>& context);
         void SetSelectionContext(fbentt::entity entity) { m_SelectionContext = entity; }
         fbentt::entity GetSelectionContext() const { return m_SelectionContext; }
 

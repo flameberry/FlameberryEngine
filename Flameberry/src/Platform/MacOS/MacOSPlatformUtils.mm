@@ -11,7 +11,7 @@
 #include "Core/Core.h"
 #include "Core/Application.h"
 
-static std::function<void()> g_SaveSceneCallback, g_SaveSceneAsCallback, g_OpenSceneCallback;
+static std::function<void()> g_NewSceneCallback, g_SaveSceneCallback, g_SaveSceneAsCallback, g_OpenSceneCallback;
 
 @interface MenuBar : NSObject
 - (void) SaveSceneCallback;
@@ -23,6 +23,7 @@ static std::function<void()> g_SaveSceneCallback, g_SaveSceneAsCallback, g_OpenS
 
 @implementation MenuBar
 
+- (void) NewSceneCallback { g_NewSceneCallback(); }
 - (void) SaveSceneCallback { g_SaveSceneCallback(); }
 - (void) SaveSceneAsCallback { g_SaveSceneAsCallback(); }
 - (void) OpenSceneCallback { g_OpenSceneCallback(); }
@@ -50,6 +51,9 @@ static std::function<void()> g_SaveSceneCallback, g_SaveSceneAsCallback, g_OpenS
     
     [mainMenuBar addItem:fileMenu];
     
+    NSMenuItem* newItem = [[NSMenuItem alloc] initWithTitle:@"New Scene" action:@selector(NewSceneCallback) keyEquivalent:@"n"];
+    [newItem setTarget:self];
+
     NSMenuItem* saveItem = [[NSMenuItem alloc] initWithTitle:@"Save Scene" action:@selector(SaveSceneCallback) keyEquivalent:@"s"];
     [saveItem setTarget:self];
     
@@ -59,6 +63,7 @@ static std::function<void()> g_SaveSceneCallback, g_SaveSceneAsCallback, g_OpenS
     NSMenuItem* loadItem = [[NSMenuItem alloc] initWithTitle:@"Load Scene" action:@selector(OpenSceneCallback) keyEquivalent:@"o"];
     [loadItem setTarget:self];
     
+    [fileSubMenu addItem:newItem];
     [fileSubMenu addItem:saveItem];
     [fileSubMenu addItem:saveAsItem];
     [fileSubMenu addItem:loadItem];
@@ -136,6 +141,11 @@ namespace Flameberry {
             [g_MenuBar DrawNative];
         }
         
+        void SetNewSceneCallbackMenuBar(const std::function<void()>& callback)
+        {
+            g_NewSceneCallback = callback;
+        }
+
         void SetSaveSceneCallbackMenuBar(const std::function<void()>& callback)
         {
             g_SaveSceneCallback = callback;

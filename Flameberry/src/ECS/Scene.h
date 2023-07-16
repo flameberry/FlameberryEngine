@@ -21,30 +21,29 @@ namespace Flameberry {
         {}
     };
 
-    struct SceneData
-    {
-        std::string Name = "Untitled";
-        Environment ActiveEnvironment;
-    };
-
     class Scene
     {
     public:
-        Scene(const std::shared_ptr<fbentt::registry>& reg);
-        ~Scene() = default;
+        Scene();
+        explicit Scene(const std::shared_ptr<Scene>& other);
+        ~Scene();
 
+        void OnUpdateRuntime(float delta);
         void RenderScene(const glm::mat4& cameraMatrix);
-        void SetDirectionalLight(const DirectionalLight& light) { m_SceneData.ActiveEnvironment.DirLight = light; }
+        void SetDirectionalLight(const DirectionalLight& light) { m_Environment.DirLight = light; }
 
-        inline glm::vec3 GetClearColor() const { return m_SceneData.ActiveEnvironment.ClearColor; }
-        inline std::string GetName() const { return m_SceneData.Name; }
-        inline DirectionalLight GetDirectionalLight() const { return m_SceneData.ActiveEnvironment.DirLight; }
+        inline std::shared_ptr<fbentt::registry> GetRegistry() const { return m_Registry; }
+        inline glm::vec3 GetClearColor() const { return m_Environment.ClearColor; }
+        inline std::string GetName() const { return m_Name; }
+        inline DirectionalLight GetDirectionalLight() const { return m_Environment.DirLight; }
 
         template<typename... Args>
         static std::shared_ptr<Scene> Create(Args... args) { return std::make_shared<Scene>(std::forward<Args>(args)...); }
     private:
         std::shared_ptr<fbentt::registry> m_Registry;
-        SceneData m_SceneData;
+
+        std::string m_Name = "Untitled";
+        Flameberry::Environment m_Environment;
 
         friend class SceneHierarchyPanel;
         friend class InspectorPanel;

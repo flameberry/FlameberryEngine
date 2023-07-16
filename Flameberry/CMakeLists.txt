@@ -1,4 +1,13 @@
-file(GLOB_RECURSE SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm)
+file(GLOB_RECURSE SRC_FILES 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+)
+
+if(MSVC OR XCODE)
+    list(APPEND SRC_FILES ${GLSL_SOURCE_FILES})
+endif()
 
 if(WIN32)
     file(GLOB EXCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.mm)
@@ -18,7 +27,7 @@ set_custom_build_properties(Flameberry)
 # Defines "FL_DEBUG" for Debug build, and "FL_RELEASE" for Release build
 set_build_config_macro_for_target(Flameberry)
 
-if(${FL_PROJ_GENERATOR} STREQUAL "Xcode")
+if(XCODE)
     target_compile_definitions(Flameberry PRIVATE FL_XCODE_PROJ)
 endif()
 

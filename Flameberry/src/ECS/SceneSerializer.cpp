@@ -34,13 +34,13 @@ namespace Flameberry {
             return false;
         };
 
-        destScene->m_SceneData.Name = data["Scene"].as<std::string>();
+        destScene->m_Name = data["Scene"].as<std::string>();
 
-        destScene->m_SceneData.ActiveEnvironment.EnvironmentMap = nullptr;
+        destScene->m_Environment.EnvironmentMap = nullptr;
         destScene->m_Registry->clear();
 
         // Deserialize Environment Map
-        auto& env = destScene->m_SceneData.ActiveEnvironment;
+        auto& env = destScene->m_Environment;
 
         auto envMapNode = data["Environment"];
         env.ClearColor = envMapNode["ClearColor"].as<glm::vec3>();
@@ -134,7 +134,7 @@ namespace Flameberry {
         // Environment Map
         out << YAML::Key << "Environment" << YAML::Value << YAML::BeginMap;
 
-        auto& env = srcScene->m_SceneData.ActiveEnvironment;
+        auto& env = srcScene->m_Environment;
         out << YAML::Key << "ClearColor" << YAML::Value << env.ClearColor;
         out << YAML::Key << "EnvironmentMap" << YAML::Value << (env.EnvironmentMap ? env.EnvironmentMap->FilePath : "");
         out << YAML::Key << "EnableEnvironmentMap" << YAML::Value << env.EnableEnvironmentMap;
