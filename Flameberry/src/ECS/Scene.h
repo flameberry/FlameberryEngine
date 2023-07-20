@@ -8,6 +8,8 @@
 #include "Renderer/Material.h"
 #include "Renderer/StaticMesh.h"
 
+namespace physx { class PxScene; }
+
 namespace Flameberry {
     struct Environment
     {
@@ -28,6 +30,9 @@ namespace Flameberry {
         explicit Scene(const std::shared_ptr<Scene>& other);
         ~Scene();
 
+        void OnStartRuntime();
+        void OnStopRuntime();
+
         void OnUpdateRuntime(float delta);
         void RenderScene(const glm::mat4& cameraMatrix);
         void SetDirectionalLight(const DirectionalLight& light) { m_Environment.DirLight = light; }
@@ -44,6 +49,8 @@ namespace Flameberry {
 
         std::string m_Name = "Untitled";
         Flameberry::Environment m_Environment;
+
+        physx::PxScene* m_PxScene;
 
         friend class SceneHierarchyPanel;
         friend class InspectorPanel;

@@ -19,13 +19,13 @@ namespace Flameberry {
 
     struct TransformComponent
     {
-        glm::vec3 translation, rotation, scale;
-        TransformComponent() : translation(0.0f), rotation(0.0f), scale(1.0f) {};
+        glm::vec3 Translation, Rotation, Scale;
+        TransformComponent() : Translation(0.0f), Rotation(0.0f), Scale(1.0f) {};
         glm::mat4 GetTransform() const
         {
-            return glm::translate(glm::mat4(1.0f), translation)
-                * glm::toMat4(glm::quat(rotation))
-                * glm::scale(glm::mat4(1.0f), scale);
+            return glm::translate(glm::mat4(1.0f), Translation)
+                * glm::toMat4(glm::quat(Rotation))
+                * glm::scale(glm::mat4(1.0f), Scale);
         }
     };
 
@@ -83,5 +83,23 @@ namespace Flameberry {
             : Parent(dest.Parent), FirstChild(dest.FirstChild), PrevSibling(dest.PrevSibling), NextSibling(dest.NextSibling)
         {
         }
+    };
+
+    struct RigidBodyComponent
+    {
+        enum class RigidBodyType : uint8_t { Static = 0, Dynamic };
+        RigidBodyType Type = RigidBodyType::Static;
+
+        float Density = 10.0f;
+        float StaticFriction = 0.5f, DynamicFriction = 0.7f, Restitution = 0.1f;
+
+        void* RuntimeRigidBody = nullptr;
+    };
+
+    struct BoxColliderComponent
+    {
+        glm::vec3 Size{ 1.0f };
+
+        void* RuntimeShape = nullptr;
     };
 }

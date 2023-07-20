@@ -11,6 +11,23 @@
 #include "Asset/MeshLoader.h"
 
 namespace Flameberry {
+    static std::string RigidBodyTypeEnumToString(RigidBodyComponent::RigidBodyType type)
+    {
+        switch (type)
+        {
+            case RigidBodyComponent::RigidBodyType::Static: return "Static";
+            case RigidBodyComponent::RigidBodyType::Dynamic: return "Dynamic";
+        }
+    }
+
+    static RigidBodyComponent::RigidBodyType RigidBodyTypeStringToEnum(const std::string& type)
+    {
+        if (type == "Static")
+            return RigidBodyComponent::RigidBodyType::Static;
+        else if (type == "Dynamic")
+            return RigidBodyComponent::RigidBodyType::Dynamic;
+    }
+
     // std::shared_ptr<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
     // {
     //     std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
@@ -78,9 +95,9 @@ namespace Flameberry {
                     if (auto transform = entity["TransformComponent"]; transform) // Deserialize entity
                     {
                         auto& transformComp = destScene->m_Registry->emplace<TransformComponent>(deserializedEntity);
-                        transformComp.translation = transform["Translation"].as<glm::vec3>();
-                        transformComp.rotation = transform["Rotation"].as<glm::vec3>();
-                        transformComp.scale = transform["Scale"].as<glm::vec3>();
+                        transformComp.Translation = transform["Translation"].as<glm::vec3>();
+                        transformComp.Rotation = transform["Rotation"].as<glm::vec3>();
+                        transformComp.Scale = transform["Scale"].as<glm::vec3>();
                     }
 
                     if (auto mesh = entity["MeshComponent"]; mesh)
@@ -100,6 +117,22 @@ namespace Flameberry {
                         auto& lightComp = destScene->m_Registry->emplace<LightComponent>(deserializedEntity);
                         lightComp.Color = light["Color"].as<glm::vec3>();
                         lightComp.Intensity = light["Intensity"].as<float>();
+                    }
+
+                    if (auto rigidBody = entity["RigidBodyComponent"]; rigidBody)
+                    {
+                        auto& rbComp = destScene->m_Registry->emplace<RigidBodyComponent>(deserializedEntity);
+                        rbComp.Type = RigidBodyTypeStringToEnum(rigidBody["Type"].as<std::string>());
+                        rbComp.Density = rigidBody["Density"].as<float>();
+                        rbComp.StaticFriction = rigidBody["StaticFriction"].as<float>();
+                        rbComp.DynamicFriction = rigidBody["DynamicFriction"].as<float>();
+                        rbComp.Restitution = rigidBody["Restitution"].as<float>();
+                    }
+
+                    if (auto boxCollider = entity["BoxColliderComponent"]; boxCollider)
+                    {
+                        auto& bcComp = destScene->m_Registry->emplace<BoxColliderComponent>(deserializedEntity);
+                        bcComp.Size = boxCollider["Size"].as<glm::vec3>();
                     }
                 }
             }
@@ -189,9 +222,9 @@ namespace Flameberry {
         {
             auto& transform = scene->m_Registry->get<TransformComponent>(entity);
             out << YAML::Key << "TransformComponent" << YAML::BeginMap;
-            out << YAML::Key << "Translation" << YAML::Value << transform.translation;
-            out << YAML::Key << "Rotation" << YAML::Value << transform.rotation;
-            out << YAML::Key << "Scale" << YAML::Value << transform.scale;
+            out << YAML::Key << "Translation" << YAML::Value << transform.Translation;
+            out << YAML::Key << "Rotation" << YAML::Value << transform.Rotation;
+            out << YAML::Key << "Scale" << YAML::Value << transform.Scale;
             out << YAML::EndMap; // Transform Component
         }
 
@@ -224,6 +257,26 @@ namespace Flameberry {
             out << YAML::Key << "Color" << YAML::Value << light.Color;
             out << YAML::Key << "Intensity" << YAML::Value << light.Intensity;
             out << YAML::EndMap; // Light Component
+        }
+
+        if (scene->m_Registry->has<RigidBodyComponent>(entity))
+        {
+            auto& rigidBody = scene->m_Registry->get<RigidBodyComponent>(entity);
+            out << YAML::Key << "RigidBodyComponent" << YAML::BeginMap;
+            out << YAML::Key << "Type" << YAML::Value << RigidBodyTypeEnumToString(rigidBody.Type);
+            out << YAML::Key << "Density" << YAML::Value << rigidBody.Density;
+            out << YAML::Key << "StaticFriction" << YAML::Value << rigidBody.StaticFriction;
+            out << YAML::Key << "DynamicFriction" << YAML::Value << rigidBody.DynamicFriction;
+            out << YAML::Key << "Restitution" << YAML::Value << rigidBody.Restitution;
+            out << YAML::Key << YAML::EndMap; // Rigid Body Component
+        }
+
+        if (scene->m_Registry->has<BoxColliderComponent>(entity))
+        {
+            auto& boxCollider = scene->m_Registry->get<BoxColliderComponent>(entity);
+            out << YAML::Key << "BoxColliderComponent" << YAML::BeginMap;
+            out << YAML::Key << "Size" << YAML::Value << boxCollider.Size;
+            out << YAML::Key << YAML::EndMap; // Box Collider Component
         }
 
         out << YAML::EndMap; // Entity

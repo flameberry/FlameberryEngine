@@ -11,6 +11,9 @@
 
 #include "Platform/PlatformUtils.h"
 
+// TODO: Find a better place for this
+#include "Physics/Physics.h"
+
 namespace Flameberry {
     Application* Application::s_Instance;
 
@@ -32,6 +35,8 @@ namespace Flameberry {
         Texture2D::InitStaticResources();
 
         m_ImGuiLayer = std::make_unique<ImGuiLayer>();
+        
+        PhysicsContext::Init();
     }
 
     void Application::Run()
@@ -96,6 +101,7 @@ namespace Flameberry {
         for (auto& layer : m_LayerStack)
             layer->OnDestroy();
 
+        PhysicsContext::Release();
         m_ImGuiLayer->OnDestroy();
 
         Texture2D::DestroyStaticResources();

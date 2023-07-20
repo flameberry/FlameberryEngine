@@ -398,7 +398,7 @@ namespace fbentt {
                 }
             }
             else {
-                return std::make_tuple(get<Type>(entity)...);
+                return std::forward_as_tuple(try_get<Type>(entity)...);
             }
         }
 
@@ -426,7 +426,7 @@ namespace fbentt {
                 }
             }
             else {
-                return std::make_tuple(get<Type>(entity)...);
+                return std::forward_as_tuple(get<Type>(entity)...);
             }
         }
 

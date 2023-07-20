@@ -2,56 +2,55 @@ import glob
 import os
 import pathlib
 import platform
-from utils import fl_project_dir, download_file, unzip_file
-
-cmake_found_dirs = []
+from utils import get_project_dir, download_file, unzip_file
 
 
-def setup_cmake() -> bool:
-    global cmake_found_dirs
-    cmake_search_dirs = [fl_project_dir / 'vendor/cmake']
+def setup_cmake() -> list[str]:
+    cmake_search_dirs = [get_project_dir() / 'vendor/cmake']
 
     if platform.system() == "Darwin":
-        cmake_search_dirs.append(pathlib.Path('/usr'))
         cmake_search_dirs.append(pathlib.Path('/Applications'))
+        cmake_search_dirs.append(pathlib.Path('/usr/local'))
     elif platform.system() == "Windows":
-        cmake_search_dirs.append(pathlib.Path(f'{os.environ["ProgramFiles"]}'))
+        cmake_search_dirs.append(pathlib.Path(f'{os.environ["LOCALAPPDATA"]}'))
+        cmake_search_dirs.append(pathlib.Path(f'{os.environ["PROGRAMFILES"]}'))
 
     # Setting CMake executable name based on platform
     cmake_exe_name = 'cmake.exe' if platform.system() == 'Windows' else 'cmake'
 
     print("[FLAMEBERRY]: Searching for CMake...")
+
+    cmake_search_results = []
+
     # Searching for CMake locally in vendor/cmake
     for search_dir in cmake_search_dirs:
         # This is the search pattern required by the glob.glob function to search for cmake file
-        cmake_path_pattern = str(
-            (search_dir / '**' / cmake_exe_name).resolve())
+        cmake_path_pattern = str((search_dir / '**' / cmake_exe_name).resolve())
 
         # found_list is a list of str where cmake is located within the search dir
         found_list = glob.glob(cmake_path_pattern, recursive=True)
 
-        # Appending the paths to cmake_found_dirs after checking if the path points to a valid executable file
-        cmake_found_dirs += filter_cmake_paths(found_list)
+        # Appending the paths to cmake_search_results after checking if the path points to a valid executable file
+        cmake_search_results += filter_cmake_paths(found_list)
 
-    if not cmake_found_dirs:
-        print('[FLAMEBERRY]: CMake not found. Do you wish to download CMake?(y/n)')
+    for path in cmake_search_results:
+        print('[FLAMEBERRY]: ' + path + ' - Found')
+    
+    if not cmake_search_results:
+        print('[FLAMEBERRY]: CMake not found. Do you wish to download CMake? (y/n)')
         ans = input('[FLAMEBERRY]: ')
         if ans.lower() == 'y':
-            cmake_found_dirs.append(download_cmake())
+            downloaded_path = download_cmake()
+            cmake_search_results.append(downloaded_path)
         else:
-            print(
-                "[FLAMEBERRY]: That's a No then! Anyways you can manually download CMake from https://cmake.org/download/")
-            return False
+            print("[FLAMEBERRY]: That's a No then! Anyways you can manually download CMake from https://cmake.org/download/")
 
-    for path in cmake_found_dirs:
-        print(path + ' - Found')
-    return True
+    return cmake_search_results
 
 
 def filter_cmake_paths(path_list) -> list[str]:
     if type(path_list) is not list:
-        print("[FLAMEBERRY]: Path list must be of type: list and not " +
-              str(type(path_list)))
+        print("[FLAMEBERRY]: ERROR: Path list must be of type: list and not " + str(type(path_list)))
         return []
 
     filtered_list = []
@@ -90,20 +89,26 @@ def download_cmake() -> str:
     url = f'https://github.com/Kitware/CMake/releases/download/v{cmake_version}/cmake-{cmake_version}-{systemOS}-{mach}.{file_extension}'
     print(f'[FLAMEBERRY]: CMake will be downloaded from the URL: {url}')
 
-    download_path = pathlib.Path(fl_project_dir / 'vendor/cmake')
+    download_path = pathlib.Path(get_project_dir() / 'vendor/cmake')
     file_name = str(url.split('/')[-1])
 
     download_file(url, str(download_path.resolve()))
 
-    src = pathlib.Path(download_path / f'{file_name}')
+    downloaded_file = pathlib.Path(download_path / f'{file_name}')
     pure_filename = file_name.replace(f'.{file_extension}', '')
     dest = download_path
 
-    unzip_file(file_extension, str(src.resolve()), str(dest.resolve()))
+    print(f"Extracting {downloaded_file}...")
+    unzip_file(file_extension, str(downloaded_file.resolve()), str(dest.resolve()))
 
-    if os.path.exists(str(src.resolve())):
-        os.remove(str(src.resolve()))
+    if os.path.exists(downloaded_file):
+        os.remove(downloaded_file)
 
-    cmake_path = str(pathlib.Path(
-        dest / f'{pure_filename}/CMake.app/Contents/bin/cmake').resolve()) if systemOS == 'macos' else str(pathlib.Path(dest / f'{pure_filename}/bin/cmake.exe').resolve()) if systemOS == 'windows' else ''
+    cmake_path = ''
+    if systemOS == 'macos':
+        cmake_path = str(pathlib.Path(dest / f'{pure_filename}/CMake.app/Contents/bin/cmake').resolve())
+    elif systemOS == 'windows':
+        cmake_path = str(pathlib.Path(dest / f'{pure_filename}/bin/cmake.exe').resolve())
+    elif systemOS == 'linux':
+        cmake_path = str(pathlib.Path(dest / f'{pure_filename}/bin/cmake').resolve())
     return cmake_path

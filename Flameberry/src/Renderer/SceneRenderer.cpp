@@ -535,7 +535,7 @@ namespace Flameberry {
         for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
         {
             const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
-            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform.translation;
+            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform.Translation;
             sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Color = light.Color;
             sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Intensity = light.Intensity;
             sceneUniformBufferData.LightCount++;

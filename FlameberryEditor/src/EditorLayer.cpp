@@ -312,11 +312,11 @@ namespace Flameberry {
                 glm::vec3 translation, rotation, scale;
                 DecomposeTransform(transform, translation, rotation, scale);
 
-                transformComp.translation = translation;
+                transformComp.Translation = translation;
 
-                glm::vec3 deltaRotation = rotation - transformComp.rotation;
-                transformComp.rotation += deltaRotation;
-                transformComp.scale = scale;
+                glm::vec3 deltaRotation = rotation - transformComp.Rotation;
+                transformComp.Rotation += deltaRotation;
+                transformComp.Scale = scale;
             }
         }
         ImVec2 work_pos = ImGui::GetWindowContentRegionMin();
@@ -585,6 +585,7 @@ namespace Flameberry {
         m_ActiveScene = Scene::Create();
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
         m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
+        m_EnvironmentSettingsPanel->SetContext(m_ActiveScene);
 
         if (m_EditorState == EditorState::Play)
             m_ActiveSceneBackUpCopy = nullptr;
@@ -658,6 +659,8 @@ namespace Flameberry {
     {
         m_EditorState = EditorState::Edit;
 
+        m_ActiveScene->OnStopRuntime();
+
         // Delete the m_RuntimeScene
         std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
@@ -670,10 +673,12 @@ namespace Flameberry {
         m_EditorState = EditorState::Play;
 
         std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
-        // Copy m_ActiveScene to m_RuntimeScene
+        // Copy m_ActiveSceneBackUpCopy to m_ActiveScene
         m_ActiveScene = Scene::Create(m_ActiveSceneBackUpCopy);
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
         m_EnvironmentSettingsPanel->SetContext(m_ActiveScene);
+        
+        m_ActiveScene->OnStartRuntime();
     }
 
 }

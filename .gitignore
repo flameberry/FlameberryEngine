@@ -59,6 +59,8 @@ __pycache__/
 !Flameberry/vendor/vulkan/lib/*.dylib
 !Flameberry/vendor/vulkan/lib/*.lib
 
+Flameberry/vendor/PhysX/**
+
 # Executables
 *.exe
 *.out

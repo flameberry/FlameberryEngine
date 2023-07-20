@@ -1,0 +1,72 @@
+Scene: Physics
+Environment:
+  ClearColor: [0.0500000007, 0.0500000007, 0.0500000007]
+  EnvironmentMap: ""
+  EnableEnvironmentMap: false
+  Reflections: false
+  DirectionalLight:
+    Direction: [-1, -1.25999999, -1.74000001]
+    Color: [1, 1, 1]
+    Intensity: 8
+Entities:
+  - Entity: 4120930434127762760
+    TagComponent: Cube
+    TransformComponent:
+      Translation: [0, 5, 0]
+      Rotation: [-0.222340882, -0.239390612, -0.741825044]
+      Scale: [0.999999881, 1, 1]
+    MeshComponent:
+      MeshHandle: 3080484242586179439
+      OverridenMaterialTable:
+        []
+    RigidBodyComponent:
+      Type: Dynamic
+      Density: 10
+      StaticFriction: 0.5
+      DynamicFriction: 0.699999988
+      Restitution: 0.100000001
+    BoxColliderComponent:
+      Size: [1, 1, 1]
+  - Entity: 1229989244204702972
+    TagComponent: Platform
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [19, 0.18139711, 18.7814045]
+    MeshComponent:
+      MeshHandle: 3080484242586179439
+      OverridenMaterialTable:
+        []
+    RigidBodyComponent:
+      Type: Static
+      Density: 10
+      StaticFriction: 0.5
+      DynamicFriction: 0.699999988
+      Restitution: 0.100000001
+    BoxColliderComponent:
+      Size: [1, 1, 1]
+  - Entity: 9936571991432726459
+    TagComponent: Cube-001
+    TransformComponent:
+      Translation: [0.155832827, 6.69540358, 0]
+      Rotation: [-1.32709161e-07, -0.45496881, 0.719030499]
+      Scale: [0.999999523, 0.999999881, 1]
+    MeshComponent:
+      MeshHandle: 3080484242586179439
+      OverridenMaterialTable:
+        []
+    RigidBodyComponent:
+      Type: Dynamic
+      Density: 10
+      StaticFriction: 0.5
+      DynamicFriction: 0.699999988
+      Restitution: 0.100000001
+    BoxColliderComponent:
+      Size: [1, 1, 1]
+Meshes:
+  - Mesh: 3080484242586179439
+    FilePath: Assets/Meshes/cube.obj
+  - Mesh: 3080484242586179439
+    FilePath: Assets/Meshes/cube.obj
+  - Mesh: 3080484242586179439
+    FilePath: Assets/Meshes/cube.obj

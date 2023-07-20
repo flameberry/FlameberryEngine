@@ -67,7 +67,7 @@ list(APPEND FL_GRAPHICS_LIBS ${Vulkan_LIBRARY})
 list(APPEND FL_GRAPHICS_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 
 # Setting All the required compile definitions
-set(FL_COMPILE_DEFINITIONS FL_PROJECT_DIR="${FL_SOURCE_DIR}" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
+set(FL_COMPILE_DEFINITIONS FL_PROJECT_DIR="${FL_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 # Setting the paths we require irrespective of the Graphics API
 list(APPEND FL_GRAPHICS_LIBS glfw yaml-cpp)
@@ -79,14 +79,46 @@ list(APPEND FL_GRAPHICS_INCLUDE_DIRS
     ${FL_SOURCE_DIR}/Flameberry/vendor/yaml-cpp/include
 )
 
+# Nvidia PhysX
+include(CMake/envPhysX.cmake)
+
+add_library(PhysX_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysX_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysX_static_64.a)
+set_target_properties(PhysX_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysX_static_64.a)
+
+add_library(PhysXFoundation_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysXFoundation_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXFoundation_static_64.a)
+set_target_properties(PhysXFoundation_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXFoundation_static_64.a)
+
+add_library(PhysXCommon_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysXCommon_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXCommon_static_64.a)
+set_target_properties(PhysXCommon_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXCommon_static_64.a)
+
+add_library(PhysXCooking_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysXCooking_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXCooking_static_64.a)
+set_target_properties(PhysXCooking_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXCooking_static_64.a)
+
+add_library(PhysXExtensions_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysXExtensions_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXExtensions_static_64.a)
+set_target_properties(PhysXExtensions_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXExtensions_static_64.a)
+
+# TODO: Should not be needed
+add_library(PhysXPvdSDK_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysXPvdSDK_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXPvdSDK_static_64.a)
+set_target_properties(PhysXPvdSDK_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXPvdSDK_static_64.a)
+
+list(APPEND FL_GRAPHICS_LIBS PhysX_LIBRARY PhysXFoundation_LIBRARY PhysXCommon_LIBRARY PhysXCooking_LIBRARY PhysXExtensions_LIBRARY PhysXPvdSDK_LIBRARY)
+list(APPEND FL_GRAPHICS_INCLUDE_DIRS ${PHYSX_INCLUDE_DIR})
+list(APPEND FL_COMPILE_DEFINITIONS ${PHYSX_COMPILE_DEFINITIONS})
+
 # ImGui paths and source
 file(GLOB IMGUI_SRC ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.cpp ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.h)
 
 list(APPEND IMGUI_SRC
-${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp
-${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.h
-${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
-${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.h
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
 )
 
 # ImGuizmo paths and source

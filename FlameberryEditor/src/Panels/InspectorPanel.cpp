@@ -64,7 +64,7 @@ namespace Flameberry {
                         ImGui::TableNextColumn();
 
                         float colWidth = ImGui::GetColumnWidth();
-                        Utils::DrawVec3Control("Translation", transform.translation, 0.0f, 0.01f, colWidth);
+                        Utils::DrawVec3Control("Translation", transform.Translation, 0.0f, 0.01f, colWidth);
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -72,7 +72,7 @@ namespace Flameberry {
                         ImGui::AlignTextToFramePadding();
                         ImGui::Text("Rotation");
                         ImGui::TableNextColumn();
-                        Utils::DrawVec3Control("Rotation", transform.rotation, 0.0f, 0.01f, colWidth);
+                        Utils::DrawVec3Control("Rotation", transform.Rotation, 0.0f, 0.01f, colWidth);
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -80,7 +80,7 @@ namespace Flameberry {
                         ImGui::AlignTextToFramePadding();
                         ImGui::Text("Scale");
                         ImGui::TableNextColumn();
-                        Utils::DrawVec3Control("Scale", transform.scale, 1.0f, 0.01f, colWidth);
+                        Utils::DrawVec3Control("Scale", transform.Scale, 1.0f, 0.01f, colWidth);
                         ImGui::EndTable();
                     }
                 }
@@ -246,6 +246,102 @@ namespace Flameberry {
                 }
             );
 
+            DrawComponent<RigidBodyComponent>("RigidBody Component", this, [&]()
+                {
+                    auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);
+
+                    if (ImGui::BeginTable("RigidBodyComponentAttributes", 2, m_TableFlags))
+                    {
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                        ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Type");
+                        ImGui::TableNextColumn();
+
+                        const char* rigidBodyTypeStrings[] = { "Static", "Dynamic" };
+                        uint8_t currentRigidBodyTypeIndex = (uint8_t)rigidBody.Type;
+
+                        if (ImGui::BeginCombo("##RigidBodyType", rigidBodyTypeStrings[currentRigidBodyTypeIndex]))
+                        {
+                            for (int i = 0; i < 2; i++)
+                            {
+                                bool isSelected = (i == (uint8_t)rigidBody.Type);
+                                if (ImGui::Selectable(rigidBodyTypeStrings[i], &isSelected))
+                                {
+                                    currentRigidBodyTypeIndex = i;
+                                    rigidBody.Type = (RigidBodyComponent::RigidBodyType)i;
+                                }
+
+                                if (isSelected)
+                                    ImGui::SetItemDefaultFocus();
+                            }
+                            ImGui::EndCombo();
+                        }
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Density");
+                        ImGui::TableNextColumn();
+                        ImGui::DragFloat("##Density", &rigidBody.Density, 0.0f, 1000.0f, 0.1f);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Static Friction");
+                        ImGui::TableNextColumn();
+                        ImGui::DragFloat("##Static_Friction", &rigidBody.StaticFriction, 0.0f, 1.0f, 0.01f);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Dynamic Friction");
+                        ImGui::TableNextColumn();
+                        ImGui::DragFloat("##Dynamic_Friction", &rigidBody.DynamicFriction, 0.0f, 1.0f, 0.01f);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Restitution");
+                        ImGui::TableNextColumn();
+                        ImGui::DragFloat("##Restitution", &rigidBody.Restitution, 0.0f, 1.0f, 0.01f);
+
+                        ImGui::EndTable();
+                    }
+                }
+            );
+
+            DrawComponent<BoxColliderComponent>("Box Collider Component", this, [&]()
+                {
+                    auto& boxCollider = m_Context->m_Registry->get<BoxColliderComponent>(m_SelectionContext);
+
+                    if (ImGui::BeginTable("BoxColliderComponentAttributes", 2, m_TableFlags))
+                    {
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                        ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Collider Size");
+                        ImGui::TableNextColumn();
+
+                        Utils::DrawVec3Control("BoxColliderSize", boxCollider.Size, 1.0f, 0.01f, ImGui::GetColumnWidth());
+
+                        ImGui::EndTable();
+                    }
+                }
+            );
+
             ImGui::Separator();
             if (Utils::ButtonCenteredOnLine("Add Component"))
                 ImGui::OpenPopup("AddComponentPopUp");
@@ -258,6 +354,10 @@ namespace Flameberry {
                     m_Context->m_Registry->emplace<MeshComponent>(m_SelectionContext);
                 if (ImGui::MenuItem("Light Component"))
                     m_Context->m_Registry->emplace<LightComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("RigidBody Component"))
+                    m_Context->m_Registry->emplace<RigidBodyComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Box Colllider Component"))
+                    m_Context->m_Registry->emplace<BoxColliderComponent>(m_SelectionContext);
                 ImGui::EndPopup();
             }
         }
