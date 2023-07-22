@@ -17,7 +17,7 @@ namespace Flameberry {
 
         if (ImGui::BeginTable("Environment_Attributes", 2, m_TableFlags))
         {
-            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 90.0f);
+            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
             ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
             ImGui::TableNextRow();

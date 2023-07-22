@@ -102,4 +102,11 @@ namespace Flameberry {
 
         void* RuntimeShape = nullptr;
     };
+
+    struct SphereColliderComponent
+    {
+        float Radius = 1.0f;
+
+        void* RuntimeShape = nullptr;
+    };
 }

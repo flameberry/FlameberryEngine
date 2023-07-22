@@ -174,7 +174,7 @@ namespace fbentt {
 
         pool_data() = default;
         explicit pool_data(const pool_data& pool)
-            : entity_set(pool.entity_set), remove(pool.remove)
+            : entity_set(pool.entity_set), copy_handler_data(pool.copy_handler_data), remove(pool.remove)
         {
             if (pool.copy_handler_data != NULL) {
                 // TODO: Check if this needs optimisation, currently the handler data is only copied upon loading the first scene and pressing the play button
@@ -363,7 +363,7 @@ namespace fbentt {
             if (pools[typeID].copy_handler_data == NULL) {
                 pools[typeID].copy_handler_data = [](const pool_data& src, pool_data& dest)
                     {
-                        if (src.handler != nullptr)
+                        if (src.handler)
                         {
                             auto& handler = (*((pool_handler<Type>*)src.handler.get()));
                             dest.handler = std::make_shared<pool_handler<Type>>(handler);
@@ -389,12 +389,12 @@ namespace fbentt {
                     || pools[typeID].entity_set.empty()
                     || pools[typeID].entity_set.find(index) == -1
                     ) {
-                    return (ComponentType*)nullptr;
+                    return static_cast<ComponentType*>(nullptr);
                 }
                 else {
                     int set_index = pools[typeID].entity_set.find(index);
                     auto& handler = (*((pool_handler<ComponentType>*)pools[typeID].handler.get()));
-                    return &handler.get(set_index);
+                    return static_cast<ComponentType*>(&handler.get(set_index));
                 }
             }
             else {

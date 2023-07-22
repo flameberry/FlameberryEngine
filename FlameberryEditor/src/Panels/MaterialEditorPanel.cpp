@@ -14,7 +14,7 @@ namespace Flameberry {
 
         if (ImGui::BeginTable("MaterialAttributeTable", 2, m_TableFlags))
         {
-            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
             ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -85,7 +85,8 @@ namespace Flameberry {
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Albedo");
                 ImGui::TableNextColumn();
-                FL_PUSH_WIDTH_MAX(ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_EditingContext->Albedo)));
+                ImGui::PushItemWidth(-1.0f);
+                ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_EditingContext->Albedo));
                 m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -93,7 +94,7 @@ namespace Flameberry {
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Roughness");
                 ImGui::TableNextColumn();
-                FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Roughness", &m_EditingContext->Roughness, 0.01f, 0.0f, 1.0f));
+                ImGui::DragFloat("##Roughness", &m_EditingContext->Roughness, 0.01f, 0.0f, 1.0f);
                 m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -102,7 +103,8 @@ namespace Flameberry {
                 ImGui::Text("Metallic");
                 ImGui::TableNextColumn();
                 float metallic = m_EditingContext->Metallic;
-                FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Metallic", &metallic, 0.005f, 0.0f, 1.0f));
+                ImGui::DragFloat("##Metallic", &metallic, 0.005f, 0.0f, 1.0f);
+                ImGui::PopItemWidth();
                 m_EditingContext->Metallic = metallic;
                 m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
             }

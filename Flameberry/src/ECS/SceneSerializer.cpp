@@ -134,6 +134,12 @@ namespace Flameberry {
                         auto& bcComp = destScene->m_Registry->emplace<BoxColliderComponent>(deserializedEntity);
                         bcComp.Size = boxCollider["Size"].as<glm::vec3>();
                     }
+
+                    if (auto sphereCollider = entity["SphereColliderComponent"]; sphereCollider)
+                    {
+                        auto& scComp = destScene->m_Registry->emplace<SphereColliderComponent>(deserializedEntity);
+                        scComp.Radius = sphereCollider["Radius"].as<float>();
+                    }
                 }
             }
         }
@@ -277,6 +283,14 @@ namespace Flameberry {
             out << YAML::Key << "BoxColliderComponent" << YAML::BeginMap;
             out << YAML::Key << "Size" << YAML::Value << boxCollider.Size;
             out << YAML::Key << YAML::EndMap; // Box Collider Component
+        }
+
+        if (scene->m_Registry->has<SphereColliderComponent>(entity))
+        {
+            auto& sphereCollider = scene->m_Registry->get<SphereColliderComponent>(entity);
+            out << YAML::Key << "SphereColliderComponent" << YAML::BeginMap;
+            out << YAML::Key << "Radius" << YAML::Value << sphereCollider.Radius;
+            out << YAML::Key << YAML::EndMap; // Sphere Collider Component
         }
 
         out << YAML::EndMap; // Entity

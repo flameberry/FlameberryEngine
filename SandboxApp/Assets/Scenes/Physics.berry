@@ -12,9 +12,9 @@ Entities:
   - Entity: 4120930434127762760
     TagComponent: Cube
     TransformComponent:
-      Translation: [0, 5, 0]
-      Rotation: [-0.222340882, -0.239390612, -0.741825044]
-      Scale: [0.999999881, 1, 1]
+      Translation: [0.00150349352, 3.54748058, -0.245371297]
+      Rotation: [-0.222340301, -0.239388689, -0.74182415]
+      Scale: [1.58810019, 2.81607628, 1]
     MeshComponent:
       MeshHandle: 3080484242586179439
       OverridenMaterialTable:
@@ -63,6 +63,25 @@ Entities:
       Restitution: 0.100000001
     BoxColliderComponent:
       Size: [1, 1, 1]
+  - Entity: 1701966284920448526
+    TagComponent: Sphere
+    TransformComponent:
+      Translation: [-0.186144769, 9.11029148, -6.10351562e-05]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshHandle: 13647174849615807360
+      OverridenMaterialTable:
+        - SubmeshIndex: 0
+          Material: Assets/Materials/WhispyGrass.fbmat
+    RigidBodyComponent:
+      Type: Dynamic
+      Density: 10
+      StaticFriction: 0.5
+      DynamicFriction: 0.699999988
+      Restitution: 0.100000001
+    SphereColliderComponent:
+      Radius: 1
 Meshes:
   - Mesh: 3080484242586179439
     FilePath: Assets/Meshes/cube.obj
@@ -70,3 +89,5 @@ Meshes:
     FilePath: Assets/Meshes/cube.obj
   - Mesh: 3080484242586179439
     FilePath: Assets/Meshes/cube.obj
+  - Mesh: 13647174849615807360
+    FilePath: Assets/Meshes/sphere.obj

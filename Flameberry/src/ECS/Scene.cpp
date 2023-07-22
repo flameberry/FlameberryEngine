@@ -35,7 +35,7 @@ namespace Flameberry {
         m_PxScene = PhysicsContext::GetPhysics()->createScene(sceneDesc);
 
         // Create Actors
-        for (auto entity : m_Registry->view<RigidBodyComponent>())
+        for (auto entity : m_Registry->view<TransformComponent, RigidBodyComponent>())
         {
             auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
 
@@ -62,8 +62,7 @@ namespace Flameberry {
 
             physx::PxShape* shape = nullptr;
 
-            auto* boxCollider = m_Registry->try_get<BoxColliderComponent>(entity);
-            if (boxCollider)
+            if (auto* boxCollider = m_Registry->try_get<BoxColliderComponent>(entity); boxCollider)
             {
                 auto geometry = physx::PxBoxGeometry(
                     0.5f * boxCollider->Size.x * transform.Scale.x,
@@ -73,6 +72,14 @@ namespace Flameberry {
                 auto* material = PhysicsContext::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
                 shape = PhysicsContext::GetPhysics()->createShape(geometry, *material);
                 boxCollider->RuntimeShape = shape;
+            }
+
+            if (auto* sphereCollider = m_Registry->try_get<SphereColliderComponent>(entity); sphereCollider)
+            {
+                auto geometry = physx::PxSphereGeometry(sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z));
+                auto* material = PhysicsContext::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
+                shape = PhysicsContext::GetPhysics()->createShape(geometry, *material);
+                sphereCollider->RuntimeShape = shape;
             }
 
             if (shape)

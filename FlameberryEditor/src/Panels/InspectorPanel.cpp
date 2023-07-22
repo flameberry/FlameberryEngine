@@ -21,6 +21,8 @@ namespace Flameberry {
 
     void InspectorPanel::OnUIRender()
     {
+        ImGui::PushStyleColor(ImGuiCol_Header, { 0.15f, 0.1505f, 0.151f, 1.0f });
+
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
         ImGui::Begin("Inspector");
         ImGui::PopStyleVar();
@@ -33,7 +35,7 @@ namespace Flameberry {
                     auto& ID = m_Context->m_Registry->get<IDComponent>(m_SelectionContext).ID;
                     if (ImGui::BeginTable("TransformComponentAttributes", 2, m_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
@@ -53,7 +55,7 @@ namespace Flameberry {
 
                     if (ImGui::BeginTable("TransformComponentAttributes", 2, m_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
@@ -92,7 +94,7 @@ namespace Flameberry {
 
                     if (ImGui::BeginTable("MeshComponentAttributes", 2, m_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -136,14 +138,19 @@ namespace Flameberry {
                         const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
                         if (staticMesh)
                         {
-                            constexpr uint32_t limit = 10;
-                            ImGui::SetNextWindowSizeConstraints(ImVec2(-1.0f, 10.0f), ImVec2(-1.0f, ImGui::GetTextLineHeightWithSpacing() * limit));
+                            const uint32_t limit = glm::min<uint32_t>(staticMesh->GetSubMeshes().size(), 8);
+                            float verticalLength = ImGui::GetTextLineHeightWithSpacing() + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
+                            ImGui::SetNextWindowSizeConstraints(ImVec2(-1.0f, verticalLength), ImVec2(-1.0f, verticalLength * limit));
 
                             ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
-                            ImGui::BeginChild("MaterialList", ImVec2(ImGui::GetContentRegionAvail().x, 0), false, window_flags);
+
+                            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+                            ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), false, window_flags);
+                            ImGui::PopStyleVar();
+
                             if (ImGui::BeginTable("MaterialTable", 2, m_TableFlags))
                             {
-                                ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                                ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
                                 ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
 
                                 uint32_t submeshIndex = 0;
@@ -162,10 +169,9 @@ namespace Flameberry {
                                     else
                                         mat = AssetManager::GetAsset<Material>(submesh.MaterialHandle);
 
-                                    float width = ImGui::GetTextLineHeightWithSpacing() + 2.0f * ImGui::GetStyle().FramePadding.y;
                                     ImGui::Button(
                                         mat ? mat->Name.c_str() : "Null",
-                                        ImVec2(ImGui::GetContentRegionAvail().x - width, 0.0f)
+                                        ImVec2(ImGui::GetContentRegionAvail().x - verticalLength, 0.0f)
                                     );
 
                                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
@@ -197,7 +203,7 @@ namespace Flameberry {
 
                                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
                                     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
-                                    ImGui::Button("O", ImVec2(width, 0.0f));
+                                    ImGui::Button("O", ImVec2(verticalLength, 0.0f));
                                     ImGui::PopStyleColor();
                                     ImGui::PopStyleVar();
 
@@ -225,22 +231,25 @@ namespace Flameberry {
 
                     if (ImGui::BeginTable("LightComponentAttributes", 2, m_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
+                        ImGui::PushItemWidth(-1.0f);
                         ImGui::Text("Color");
                         ImGui::TableNextColumn();
-                        FL_PUSH_WIDTH_MAX(ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
+                        ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color));
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
                         ImGui::Text("Intensity");
                         ImGui::TableNextColumn();
-                        FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
+                        ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f);
+                        ImGui::PopItemWidth();
+
                         ImGui::EndTable();
                     }
                 }
@@ -252,7 +261,7 @@ namespace Flameberry {
 
                     if (ImGui::BeginTable("RigidBodyComponentAttributes", 2, m_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
@@ -265,6 +274,7 @@ namespace Flameberry {
                         const char* rigidBodyTypeStrings[] = { "Static", "Dynamic" };
                         uint8_t currentRigidBodyTypeIndex = (uint8_t)rigidBody.Type;
 
+                        ImGui::PushItemWidth(-1.0f);
                         if (ImGui::BeginCombo("##RigidBodyType", rigidBodyTypeStrings[currentRigidBodyTypeIndex]))
                         {
                             for (int i = 0; i < 2; i++)
@@ -288,7 +298,7 @@ namespace Flameberry {
                         ImGui::AlignTextToFramePadding();
                         ImGui::Text("Density");
                         ImGui::TableNextColumn();
-                        ImGui::DragFloat("##Density", &rigidBody.Density, 0.0f, 1000.0f, 0.1f);
+                        ImGui::DragFloat("##Density", &rigidBody.Density, 0.01f, 0.0f, 1000.0f);
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -296,7 +306,7 @@ namespace Flameberry {
                         ImGui::AlignTextToFramePadding();
                         ImGui::Text("Static Friction");
                         ImGui::TableNextColumn();
-                        ImGui::DragFloat("##Static_Friction", &rigidBody.StaticFriction, 0.0f, 1.0f, 0.01f);
+                        ImGui::DragFloat("##Static_Friction", &rigidBody.StaticFriction, 0.005, 0.0f, 1.0f);
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -304,7 +314,7 @@ namespace Flameberry {
                         ImGui::AlignTextToFramePadding();
                         ImGui::Text("Dynamic Friction");
                         ImGui::TableNextColumn();
-                        ImGui::DragFloat("##Dynamic_Friction", &rigidBody.DynamicFriction, 0.0f, 1.0f, 0.01f);
+                        ImGui::DragFloat("##Dynamic_Friction", &rigidBody.DynamicFriction, 0.005, 0.0f, 1.0f);
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -312,7 +322,8 @@ namespace Flameberry {
                         ImGui::AlignTextToFramePadding();
                         ImGui::Text("Restitution");
                         ImGui::TableNextColumn();
-                        ImGui::DragFloat("##Restitution", &rigidBody.Restitution, 0.0f, 1.0f, 0.01f);
+                        ImGui::DragFloat("##Restitution", &rigidBody.Restitution, 0.005f, 0.0f, 1.0f);
+                        ImGui::PopItemWidth();
 
                         ImGui::EndTable();
                     }
@@ -325,7 +336,7 @@ namespace Flameberry {
 
                     if (ImGui::BeginTable("BoxColliderComponentAttributes", 2, m_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
@@ -336,6 +347,29 @@ namespace Flameberry {
                         ImGui::TableNextColumn();
 
                         Utils::DrawVec3Control("BoxColliderSize", boxCollider.Size, 1.0f, 0.01f, ImGui::GetColumnWidth());
+
+                        ImGui::EndTable();
+                    }
+                }
+            );
+
+            DrawComponent<SphereColliderComponent>("Sphere Collider Component", this, [&]()
+                {
+                    auto& sphereCollider = m_Context->m_Registry->get<SphereColliderComponent>(m_SelectionContext);
+
+                    if (ImGui::BeginTable("SphereColliderComponentAttributes", 2, m_TableFlags))
+                    {
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Radius");
+                        ImGui::TableNextColumn();
+
+                        FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Radius", &sphereCollider.Radius, 0.01f, 0.0f, 0.0f));
 
                         ImGui::EndTable();
                     }
@@ -358,8 +392,12 @@ namespace Flameberry {
                     m_Context->m_Registry->emplace<RigidBodyComponent>(m_SelectionContext);
                 if (ImGui::MenuItem("Box Colllider Component"))
                     m_Context->m_Registry->emplace<BoxColliderComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Sphere Colllider Component"))
+                    m_Context->m_Registry->emplace<SphereColliderComponent>(m_SelectionContext);
                 ImGui::EndPopup();
             }
+
+            ImGui::PopStyleColor();
         }
 
         ImGui::End();

@@ -664,6 +664,47 @@ namespace Flameberry {
                 );
                 staticMesh->OnDraw();
             }
+
+            // Render Physics Colliders
+            auto* boxCollider = scene->m_Registry->try_get<BoxColliderComponent>(selectedEntity);
+            if (boxCollider)
+            {
+                constexpr glm::vec3 greenColor(0.2f, 1.0f, 0.2f);
+                constexpr glm::vec3 bias(0.001f);
+                const glm::vec3 halfExtent = transform.Scale * boxCollider->Size * 0.5f + bias;
+                const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
+
+                // Calculate the positions of the vertices of the collider
+                glm::vec3 vertex1 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, -halfExtent.y, -halfExtent.z));
+                glm::vec3 vertex2 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, -halfExtent.y, -halfExtent.z));
+                glm::vec3 vertex3 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, halfExtent.y, -halfExtent.z));
+                glm::vec3 vertex4 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, halfExtent.y, -halfExtent.z));
+                glm::vec3 vertex5 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, -halfExtent.y, halfExtent.z));
+                glm::vec3 vertex6 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, -halfExtent.y, halfExtent.z));
+                glm::vec3 vertex7 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, halfExtent.y, halfExtent.z));
+                glm::vec3 vertex8 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, halfExtent.y, halfExtent.z));
+
+                Renderer2D::AddLine(vertex1, vertex2, greenColor); // Edge 1
+                Renderer2D::AddLine(vertex2, vertex3, greenColor); // Edge 2
+                Renderer2D::AddLine(vertex3, vertex4, greenColor); // Edge 3
+                Renderer2D::AddLine(vertex4, vertex1, greenColor); // Edge 4
+                Renderer2D::AddLine(vertex5, vertex6, greenColor); // Edge 5
+                Renderer2D::AddLine(vertex6, vertex7, greenColor); // Edge 6
+                Renderer2D::AddLine(vertex7, vertex8, greenColor); // Edge 7
+                Renderer2D::AddLine(vertex8, vertex5, greenColor); // Edge 8
+                Renderer2D::AddLine(vertex1, vertex5, greenColor); // Edge 9
+                Renderer2D::AddLine(vertex2, vertex6, greenColor); // Edge 10
+                Renderer2D::AddLine(vertex3, vertex7, greenColor); // Edge 11
+                Renderer2D::AddLine(vertex4, vertex8, greenColor); // Edge 12
+
+                // Diagonals
+                Renderer2D::AddLine(vertex1, vertex6, greenColor);
+                Renderer2D::AddLine(vertex2, vertex7, greenColor);
+                Renderer2D::AddLine(vertex3, vertex8, greenColor);
+                Renderer2D::AddLine(vertex4, vertex5, greenColor);
+                Renderer2D::AddLine(vertex3, vertex1, greenColor);
+                Renderer2D::AddLine(vertex7, vertex5, greenColor);
+            }
         }
 
         // Render Point Lights
