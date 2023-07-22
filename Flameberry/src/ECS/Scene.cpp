@@ -19,6 +19,11 @@ namespace Flameberry {
         FL_LOG("Copying Scene...");
     }
 
+    Scene::Scene(const Scene& other)
+        : m_Registry(std::make_shared<fbentt::registry>(*other.m_Registry)), m_Name(other.m_Name), m_Environment(other.m_Environment)
+    {
+    }
+
     Scene::~Scene()
     {
         FL_LOG("Deleting Scene...");
@@ -82,6 +87,32 @@ namespace Flameberry {
                 sphereCollider->RuntimeShape = shape;
             }
 
+            if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
+            {
+                auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
+                auto* material = PhysicsContext::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
+                shape = PhysicsContext::GetPhysics()->createShape(geometry, *material);
+
+                switch (capsuleCollider->Axis)
+                {
+                    case CapsuleColliderComponent::AxisType::X:
+                        break;
+                    case CapsuleColliderComponent::AxisType::Y:
+                        {
+                            physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1)));
+                            shape->setLocalPose(relativePose);
+                            break;
+                        }
+                    case CapsuleColliderComponent::AxisType::Z:
+                        {
+                            physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(1, 0, 0)));
+                            shape->setLocalPose(relativePose);
+                            break;
+                        }
+                }
+                capsuleCollider->RuntimeShape = shape;
+            }
+
             if (shape)
             {
                 physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
@@ -124,5 +155,206 @@ namespace Flameberry {
 
     void Scene::RenderScene(const glm::mat4& cameraMatrix)
     {
+    }
+
+    fbentt::entity Scene::CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent)
+    {
+        auto entity = m_Registry->create();
+        m_Registry->emplace<IDComponent>(entity);
+        m_Registry->emplace<TagComponent>(entity).Tag = tag;
+        m_Registry->emplace<TransformComponent>(entity);
+
+        if (parent != fbentt::null)
+        {
+            m_Registry->emplace<RelationshipComponent>(entity);
+
+            if (!m_Registry->has<RelationshipComponent>(parent))
+                m_Registry->emplace<RelationshipComponent>(parent);
+
+            auto& relation = m_Registry->get<RelationshipComponent>(entity);
+            relation.Parent = parent;
+
+            auto& parentRel = m_Registry->get<RelationshipComponent>(parent);
+            if (parentRel.FirstChild == fbentt::null)
+                parentRel.FirstChild = entity;
+            else
+            {
+                auto sibling = parentRel.FirstChild;
+
+                while (m_Registry->get<RelationshipComponent>(sibling).NextSibling != fbentt::null)
+                    sibling = m_Registry->get<RelationshipComponent>(sibling).NextSibling;
+
+                auto& siblingRel = m_Registry->get<RelationshipComponent>(sibling);
+                siblingRel.NextSibling = entity;
+                relation.PrevSibling = sibling;
+            }
+        }
+        return entity;
+    }
+
+    void Scene::DestroyEntityTree(fbentt::entity entity)
+    {
+        if (entity == fbentt::null)
+            return;
+
+        if (m_Registry->has<RelationshipComponent>(entity))
+        {
+            auto& relation = m_Registry->get<RelationshipComponent>(entity);
+            auto sibling = relation.FirstChild;
+            while (sibling != fbentt::null)
+            {
+                auto temp = m_Registry->get<RelationshipComponent>(sibling).NextSibling;
+                DestroyEntityTree(sibling);
+                sibling = temp;
+            }
+
+            if (relation.Parent != fbentt::null)
+            {
+                auto& parentRel = m_Registry->get<RelationshipComponent>(relation.Parent);
+                if (parentRel.FirstChild == entity)
+                    parentRel.FirstChild = relation.NextSibling;
+            }
+            if (relation.PrevSibling != fbentt::null)
+                m_Registry->get<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
+            if (relation.NextSibling != fbentt::null)
+                m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
+        }
+        m_Registry->destroy(entity);
+    }
+
+    void Scene::ReparentEntity(fbentt::entity entity, fbentt::entity parent)
+    {
+        if (IsEntityInHierarchy(parent, entity))
+            return;
+
+        if (!m_Registry->has<RelationshipComponent>(entity))
+            m_Registry->emplace<RelationshipComponent>(entity);
+
+        if (!m_Registry->has<RelationshipComponent>(parent))
+            m_Registry->emplace<RelationshipComponent>(parent);
+
+        auto& relation = m_Registry->get<RelationshipComponent>(entity);
+
+        auto oldParent = relation.Parent;
+        if (oldParent != fbentt::null)
+        {
+            auto& oldParentRel = m_Registry->get<RelationshipComponent>(oldParent);
+            if (oldParentRel.FirstChild == entity)
+                oldParentRel.FirstChild = relation.NextSibling;
+        }
+        if (relation.PrevSibling != fbentt::null)
+            m_Registry->get<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
+        if (relation.NextSibling != fbentt::null)
+            m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
+
+        auto& newParentRel = m_Registry->get<RelationshipComponent>(parent);
+        relation.NextSibling = newParentRel.FirstChild;
+        relation.PrevSibling = fbentt::null;
+        relation.Parent = parent;
+
+        if (relation.NextSibling != fbentt::null)
+            m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = entity;
+        newParentRel.FirstChild = entity;
+    }
+
+    bool Scene::IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
+    {
+        auto* relation = m_Registry->try_get<RelationshipComponent>(parent);
+        auto sibling = parent;
+        while (relation && sibling != fbentt::null)
+        {
+            if (sibling == key)
+                return true;
+
+            if (relation->FirstChild != fbentt::null && IsEntityInHierarchy(key, relation->FirstChild))
+                return true;
+
+            sibling = relation->NextSibling;
+            relation = m_Registry->try_get<RelationshipComponent>(sibling);
+        }
+        return false;
+    }
+
+    fbentt::entity Scene::DuplicateEntity(fbentt::entity src)
+    {
+        FL_WARN("DuplicateEntity() Not Yet Implemented For Entities with Hierarchies!");
+        const auto destEntity = m_Registry->create();
+        // auto& duplicateRelation = m_Registry->emplace<RelationshipComponent>(entity);
+
+        // Copy Each Component
+        static uint32_t i = 0;
+        std::string tag = m_Registry->get<TagComponent>(src).Tag + " - Duplicate " + std::to_string(i);
+        i++;
+
+        m_Registry->emplace<IDComponent>(destEntity);
+        m_Registry->emplace<TagComponent>(destEntity, tag);
+        m_Registry->emplace<TransformComponent>(destEntity, m_Registry->get<TransformComponent>(src));
+
+        if (auto* comp = m_Registry->try_get<CameraComponent>(src); comp)
+            m_Registry->emplace<CameraComponent>(destEntity, *comp);
+        if (auto* comp = m_Registry->try_get<MeshComponent>(src); comp)
+            m_Registry->emplace<MeshComponent>(destEntity, *comp);
+        if (auto* comp = m_Registry->try_get<LightComponent>(src); comp)
+            m_Registry->emplace<LightComponent>(destEntity, *comp);
+        if (auto* comp = m_Registry->try_get<RigidBodyComponent>(src); comp)
+            m_Registry->emplace<RigidBodyComponent>(destEntity, *comp);
+        if (auto* comp = m_Registry->try_get<BoxColliderComponent>(src); comp)
+            m_Registry->emplace<BoxColliderComponent>(destEntity, *comp);
+        if (auto* comp = m_Registry->try_get<SphereColliderComponent>(src); comp)
+            m_Registry->emplace<SphereColliderComponent>(destEntity, *comp);
+        if (auto* comp = m_Registry->try_get<CapsuleColliderComponent>(src); comp)
+            m_Registry->emplace<CapsuleColliderComponent>(destEntity, *comp);
+
+        // auto* relation = m_Registry->try_get<RelationshipComponent>(src);
+        // if (relation && relation->Parent != fbentt::null)
+        // {
+        // }
+
+        return destEntity;
+    }
+
+    fbentt::entity Scene::CopyEntityTree(fbentt::entity src)
+    {
+        FL_ASSERT(0, "CopyEntityTree() Not Yet Implemented!");
+        const auto destEntity = m_Registry->create();
+
+        auto* srcRel = m_Registry->try_get<RelationshipComponent>(src);
+        fbentt::entity srcChild = srcRel->FirstChild;
+        if (srcRel && srcChild != fbentt::null)
+        {
+            auto& destRel = m_Registry->emplace<RelationshipComponent>(destEntity);
+
+            // Copy Each Component
+            m_Registry->emplace<IDComponent>(destEntity);
+            m_Registry->emplace<TagComponent>(destEntity, m_Registry->get<TagComponent>(src));
+            m_Registry->emplace<TransformComponent>(destEntity, m_Registry->get<TransformComponent>(src));
+
+            if (auto* comp = m_Registry->try_get<CameraComponent>(src); comp)
+                m_Registry->emplace<CameraComponent>(destEntity, *comp);
+            if (auto* comp = m_Registry->try_get<MeshComponent>(src); comp)
+                m_Registry->emplace<MeshComponent>(destEntity, *comp);
+            if (auto* comp = m_Registry->try_get<LightComponent>(src); comp)
+                m_Registry->emplace<LightComponent>(destEntity, *comp);
+            if (auto* comp = m_Registry->try_get<RigidBodyComponent>(src); comp)
+                m_Registry->emplace<RigidBodyComponent>(destEntity, *comp);
+            if (auto* comp = m_Registry->try_get<BoxColliderComponent>(src); comp)
+                m_Registry->emplace<BoxColliderComponent>(destEntity, *comp);
+            if (auto* comp = m_Registry->try_get<SphereColliderComponent>(src); comp)
+                m_Registry->emplace<SphereColliderComponent>(destEntity, *comp);
+            if (auto* comp = m_Registry->try_get<CapsuleColliderComponent>(src); comp)
+                m_Registry->emplace<CapsuleColliderComponent>(destEntity, *comp);
+
+            fbentt::entity sibling = srcChild;
+            while (sibling != fbentt::null)
+            {
+                const auto childCopy = CopyEntityTree(srcChild);
+                auto* rel = m_Registry->try_get<RelationshipComponent>(childCopy);
+                if (!rel)
+                    rel = &m_Registry->emplace<RelationshipComponent>(childCopy);
+
+                auto& siblingRel = m_Registry->get<RelationshipComponent>(sibling);
+                sibling = siblingRel.NextSibling;
+            }
+        }
     }
 }

@@ -109,4 +109,13 @@ namespace Flameberry {
 
         void* RuntimeShape = nullptr;
     };
+
+    struct CapsuleColliderComponent
+    {
+        enum class AxisType : uint8_t { X = 0, Y, Z };
+        AxisType Axis = AxisType::Y;
+        float Radius = 0.5f, Height = 1.0f;
+
+        void* RuntimeShape = nullptr;
+    };
 }

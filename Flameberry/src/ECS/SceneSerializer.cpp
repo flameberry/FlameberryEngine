@@ -28,6 +28,26 @@ namespace Flameberry {
             return RigidBodyComponent::RigidBodyType::Dynamic;
     }
 
+    static std::string AxisTypeEnumToString(CapsuleColliderComponent::AxisType type)
+    {
+        switch (type)
+        {
+            case CapsuleColliderComponent::AxisType::X: return "X";
+            case CapsuleColliderComponent::AxisType::Y: return "Y";
+            case CapsuleColliderComponent::AxisType::Z: return "Z";
+        }
+    }
+
+    static CapsuleColliderComponent::AxisType AxisTypeStringToEnum(const std::string& type)
+    {
+        if (type == "X")
+            return CapsuleColliderComponent::AxisType::X;
+        else if (type == "Y")
+            return CapsuleColliderComponent::AxisType::Y;
+        else if (type == "Z")
+            return CapsuleColliderComponent::AxisType::Z;
+    }
+
     // std::shared_ptr<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
     // {
     //     std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
@@ -139,6 +159,14 @@ namespace Flameberry {
                     {
                         auto& scComp = destScene->m_Registry->emplace<SphereColliderComponent>(deserializedEntity);
                         scComp.Radius = sphereCollider["Radius"].as<float>();
+                    }
+
+                    if (auto capsuleCollider = entity["CapsuleColliderComponent"]; capsuleCollider)
+                    {
+                        auto& ccComp = destScene->m_Registry->emplace<CapsuleColliderComponent>(deserializedEntity);
+                        ccComp.Axis = AxisTypeStringToEnum(capsuleCollider["Axis"].as<std::string>());
+                        ccComp.Radius = capsuleCollider["Radius"].as<float>();
+                        ccComp.Height = capsuleCollider["Height"].as<float>();
                     }
                 }
             }
@@ -291,6 +319,16 @@ namespace Flameberry {
             out << YAML::Key << "SphereColliderComponent" << YAML::BeginMap;
             out << YAML::Key << "Radius" << YAML::Value << sphereCollider.Radius;
             out << YAML::Key << YAML::EndMap; // Sphere Collider Component
+        }
+
+        if (scene->m_Registry->has<CapsuleColliderComponent>(entity))
+        {
+            auto& capsuleCollider = scene->m_Registry->get<CapsuleColliderComponent>(entity);
+            out << YAML::Key << "CapsuleColliderComponent" << YAML::BeginMap;
+            out << YAML::Key << "Axis" << YAML::Value << AxisTypeEnumToString(capsuleCollider.Axis);
+            out << YAML::Key << "Radius" << YAML::Value << capsuleCollider.Radius;
+            out << YAML::Key << "Height" << YAML::Value << capsuleCollider.Height;
+            out << YAML::Key << YAML::EndMap; // Capsule Collider Component
         }
 
         out << YAML::EndMap; // Entity

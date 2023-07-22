@@ -28,7 +28,7 @@ namespace Flameberry {
         s_Cooking = PxCreateCooking(PX_PHYSICS_VERSION, *s_Foundation, physx::PxCookingParams(s_TolerancesScale));
         FL_ASSERT(s_Cooking, "Failed to create PxCooking object!");
 
-        s_CPUDispatcher = physx::PxDefaultCpuDispatcherCreate(4);
+        s_CPUDispatcher = physx::PxDefaultCpuDispatcherCreate(2);
         FL_ASSERT(s_CPUDispatcher, "Failed to create PxCpuDispatcher object!");
     }
 

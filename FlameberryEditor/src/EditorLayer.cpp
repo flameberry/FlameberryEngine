@@ -36,8 +36,8 @@ namespace Flameberry {
         m_RotateIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/rotate_icon_active.png");
         m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
         m_ScaleIconActive = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/scale_icon_active.png");
-        m_PlayIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/play_button_icon.png");
-        m_StopIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/stop_button_icon.png");
+        m_PlayIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/play_button_icons.png");
+        m_StopIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/stop_button_icons.png");
 
         m_ActiveScene = Scene::Create();
         m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
@@ -476,10 +476,22 @@ namespace Flameberry {
 
     void EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
     {
-        bool ctrl_or_cmd = Input::IsKey(GLFW_KEY_LEFT_SUPER, GLFW_PRESS);
+        bool ctrl_or_cmd = Input::IsKey(GLFW_KEY_LEFT_SUPER, GLFW_PRESS) || Input::IsKey(GLFW_KEY_RIGHT_SUPER, GLFW_PRESS);
         bool shift = Input::IsKey(GLFW_KEY_LEFT_SHIFT, GLFW_PRESS) || Input::IsKey(GLFW_KEY_RIGHT_SHIFT, GLFW_PRESS);
         switch (e.KeyCode)
         {
+            case GLFW_KEY_D:
+                // Duplicate Entity
+                if (ctrl_or_cmd && m_EditorState == EditorState::Edit)
+                {
+                    const auto selectionContext = m_SceneHierarchyPanel->GetSelectionContext();
+                    if (selectionContext != fbentt::null)
+                    {
+                        const auto duplicateEntity = m_ActiveScene->DuplicateEntity(selectionContext);
+                        m_SceneHierarchyPanel->SetSelectionContext(duplicateEntity);
+                    }
+                    break;
+                }
             case GLFW_KEY_O:
                 if (ctrl_or_cmd) {
 #ifndef __APPLE__
@@ -638,13 +650,30 @@ namespace Flameberry {
         ImGui::SetCursorPosX(ImGui::GetContentRegionMax().x * 0.5f - 2.0f * buttonSize);
         ImGui::SetCursorPosY(4.0f);
 
-        ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_PlayIcon->GetDescriptorSet()), ImVec2(buttonSize, buttonSize));
+        switch (m_EditorState)
+        {
+            case EditorState::Edit:
+                ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_PlayIcon->GetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(0.5f, 1.0f));
+                break;
+            case EditorState::Play:
+                ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_PlayIcon->GetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0.5f, 0), ImVec2(1, 1));
+                break;
+        }
 
         if (ImGui::IsItemClicked() && m_EditorState == EditorState::Edit)
             OnScenePlay();
 
         ImGui::SameLine();
-        ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_StopIcon->GetDescriptorSet()), ImVec2(buttonSize, buttonSize));
+
+        switch (m_EditorState)
+        {
+            case EditorState::Edit:
+                ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_StopIcon->GetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(0.5f, 1.0f));
+                break;
+            case EditorState::Play:
+                ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_StopIcon->GetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0.5f, 0), ImVec2(1, 1));
+                break;
+        }
 
         if (ImGui::IsItemClicked() && m_EditorState == EditorState::Play)
             OnSceneEdit();
@@ -677,7 +706,7 @@ namespace Flameberry {
         m_ActiveScene = Scene::Create(m_ActiveSceneBackUpCopy);
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
         m_EnvironmentSettingsPanel->SetContext(m_ActiveScene);
-        
+
         m_ActiveScene->OnStartRuntime();
     }
 

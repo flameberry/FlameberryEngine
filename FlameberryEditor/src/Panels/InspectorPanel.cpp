@@ -376,6 +376,67 @@ namespace Flameberry {
                 }
             );
 
+            DrawComponent<CapsuleColliderComponent>("Capsule Collider Component", this, [&]()
+                {
+                    auto& capsuleCollider = m_Context->m_Registry->get<CapsuleColliderComponent>(m_SelectionContext);
+
+                    if (ImGui::BeginTable("CapsuleColliderComponentAttributes", 2, m_TableFlags))
+                    {
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Axis");
+                        ImGui::TableNextColumn();
+
+                        const char* axisTypeStrings[] = { "X", "Y", "Z" };
+                        uint8_t currentAxisType = (uint8_t)capsuleCollider.Axis;
+
+                        ImGui::PushItemWidth(-1.0f);
+                        if (ImGui::BeginCombo("##AxisType", axisTypeStrings[currentAxisType]))
+                        {
+                            for (int i = 0; i < 3; i++)
+                            {
+                                bool isSelected = (i == (uint8_t)capsuleCollider.Axis);
+                                if (ImGui::Selectable(axisTypeStrings[i], &isSelected))
+                                {
+                                    currentAxisType = i;
+                                    capsuleCollider.Axis = (CapsuleColliderComponent::AxisType)i;
+                                }
+
+                                if (isSelected)
+                                    ImGui::SetItemDefaultFocus();
+                            }
+                            ImGui::EndCombo();
+                        }
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Radius");
+                        ImGui::TableNextColumn();
+
+                        ImGui::DragFloat("##Radius", &capsuleCollider.Radius, 0.01f, 0.0f, 0.0f);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Height");
+                        ImGui::TableNextColumn();
+                        ImGui::DragFloat("##Height", &capsuleCollider.Height, 0.01f, 0.0f, 0.0f);
+
+                        ImGui::PopItemWidth();
+
+                        ImGui::EndTable();
+                    }
+                }
+            );
+
             ImGui::Separator();
             if (Utils::ButtonCenteredOnLine("Add Component"))
                 ImGui::OpenPopup("AddComponentPopUp");
@@ -394,6 +455,8 @@ namespace Flameberry {
                     m_Context->m_Registry->emplace<BoxColliderComponent>(m_SelectionContext);
                 if (ImGui::MenuItem("Sphere Colllider Component"))
                     m_Context->m_Registry->emplace<SphereColliderComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Capsule Colllider Component"))
+                    m_Context->m_Registry->emplace<CapsuleColliderComponent>(m_SelectionContext);
                 ImGui::EndPopup();
             }
 

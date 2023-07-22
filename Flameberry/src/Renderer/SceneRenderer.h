@@ -48,6 +48,7 @@ namespace Flameberry {
 
         void CalculateShadowMapCascades(const std::shared_ptr<PerspectiveCamera>& camera, const glm::vec3& lightDirection);
         void SubmitMesh(AssetHandle handle, const MaterialTable& materialTable, const glm::mat4& transform);
+        void SubmitPhysicsCollider(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform);
     private:
         glm::vec2 m_ViewportSize;
 
