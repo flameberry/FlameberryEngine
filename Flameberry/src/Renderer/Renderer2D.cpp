@@ -31,7 +31,7 @@ namespace Flameberry {
             PipelineSpecification pipelineSpec{};
             pipelineSpec.PipelineLayout.PushConstants = {};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout };
-            
+
             pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/solid_color.vert.spv";
             pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/solid_color.frag.spv";
             pipelineSpec.RenderPass = renderPass;
@@ -105,7 +105,7 @@ namespace Flameberry {
             PipelineSpecification pipelineSpec{};
             pipelineSpec.PipelineLayout.PushConstants = {};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout, Texture2D::GetDescriptorLayout() };
-            
+
             pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/quad.vert.spv";
             pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/quad.frag.spv";
             pipelineSpec.RenderPass = renderPass;
@@ -124,8 +124,6 @@ namespace Flameberry {
 
             s_Renderer2DData.QuadPipeline = Pipeline::Create(pipelineSpec);
         }
-
-        s_Renderer2DData.LightIconTexture = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/bulb_icon_v4.png");
     }
 
     void Renderer2D::AddGrid(int gridSize)
@@ -183,31 +181,14 @@ namespace Flameberry {
         }
     }
 
-    void Renderer2D::Render(VkDescriptorSet globalDescriptorSet)
+    void Renderer2D::BeginScene(VkDescriptorSet globalDescriptorSet)
     {
-        if (s_Renderer2DData.LineVertices.size())
-        {
-            FL_ASSERT(s_Renderer2DData.LineVertices.size() <= 2 * MAX_LINES, "MAX_LINES limit reached!");
-            s_Renderer2DData.LineVertexBuffer->WriteToBuffer(s_Renderer2DData.LineVertices.data(), s_Renderer2DData.LineVertices.size() * sizeof(LineVertex), 0);
-            s_Renderer2DData.LinePipeline->Bind();
+        s_GlobalDescriptorSet = globalDescriptorSet;
+    }
 
-            uint32_t vertexCount = s_Renderer2DData.LineVertices.size();
-            auto vertexBuffer = s_Renderer2DData.LineVertexBuffer->GetBuffer();
-            auto pipelineLayout = s_Renderer2DData.LinePipeline->GetLayout();
-
-            Renderer::Submit([pipelineLayout, globalDescriptorSet, vertexBuffer, vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                {
-                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
-
-                    VkDeviceSize offsets[] = { 0 };
-                    vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
-
-                    vkCmdDraw(cmdBuffer, vertexCount, 1, 0, 0);
-                }
-            );
-            s_Renderer2DData.LineVertices.clear();
-        }
-
+    // Make sure to call this when you have accumulated all the quads having the same texture map or none
+    void Renderer2D::FlushQuads()
+    {
         if (s_Renderer2DData.QuadVertices.size())
         {
             FL_ASSERT(s_Renderer2DData.QuadVertices.size() <= MAX_QUAD_VERTICES, "MAX_QUAD_VERTICES limit reached!");
@@ -219,9 +200,9 @@ namespace Flameberry {
             auto pipelineLayout = s_Renderer2DData.QuadPipeline->GetLayout();
             auto indexCount = 6 * (uint32_t)s_Renderer2DData.QuadVertices.size() / 4;
 
-            Renderer::Submit([pipelineLayout, globalDescriptorSet, vertexBuffer, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, textureMap = s_Renderer2DData.TextureMap, vertexBuffer, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
-                    VkDescriptorSet descriptorSets[] = { globalDescriptorSet, s_Renderer2DData.LightIconTexture->GetDescriptorSet() };
+                    VkDescriptorSet descriptorSets[] = { globalDescriptorSet, textureMap->GetDescriptorSet() };
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
                     VkDeviceSize offsets[] = { 0 };
@@ -234,6 +215,36 @@ namespace Flameberry {
         }
     }
 
+    void Renderer2D::EndScene()
+    {
+        if (s_Renderer2DData.LineVertices.size())
+        {
+            FL_ASSERT(s_Renderer2DData.LineVertices.size() <= 2 * MAX_LINES, "MAX_LINES limit reached!");
+            s_Renderer2DData.LineVertexBuffer->WriteToBuffer(s_Renderer2DData.LineVertices.data(), s_Renderer2DData.LineVertices.size() * sizeof(LineVertex), 0);
+            s_Renderer2DData.LinePipeline->Bind();
+
+            uint32_t vertexCount = s_Renderer2DData.LineVertices.size();
+            auto vertexBuffer = s_Renderer2DData.LineVertexBuffer->GetBuffer();
+            auto pipelineLayout = s_Renderer2DData.LinePipeline->GetLayout();
+
+            Renderer::Submit([pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, vertexBuffer, vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                {
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
+
+                    VkDeviceSize offsets[] = { 0 };
+                    vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+
+                    vkCmdDraw(cmdBuffer, vertexCount, 1, 0, 0);
+                }
+            );
+            s_Renderer2DData.LineVertices.clear();
+        }
+
+        FlushQuads();
+
+        s_GlobalDescriptorSet = VK_NULL_HANDLE;
+    }
+
     void Renderer2D::Destroy()
     {
         s_Renderer2DData.LinePipeline = nullptr;
@@ -242,8 +253,6 @@ namespace Flameberry {
         s_Renderer2DData.QuadPipeline = nullptr;
         s_Renderer2DData.QuadVertexBuffer = nullptr;
         s_Renderer2DData.QuadIndexBuffer = nullptr;
-
-        // Temp
-        s_Renderer2DData.LightIconTexture = nullptr;
+        s_Renderer2DData.TextureMap = nullptr;
     }
 }

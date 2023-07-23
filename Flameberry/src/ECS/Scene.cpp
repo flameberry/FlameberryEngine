@@ -14,13 +14,13 @@ namespace Flameberry {
     }
 
     Scene::Scene(const std::shared_ptr<Scene>& other)
-        : m_Registry(std::make_shared<fbentt::registry>(*other->m_Registry)), m_Name(other->m_Name), m_Environment(other->m_Environment)
+        : m_Registry(std::make_shared<fbentt::registry>(*other->m_Registry)), m_Name(other->m_Name), m_Environment(other->m_Environment), m_ViewportSize(other->m_ViewportSize)
     {
         FL_LOG("Copying Scene...");
     }
 
     Scene::Scene(const Scene& other)
-        : m_Registry(std::make_shared<fbentt::registry>(*other.m_Registry)), m_Name(other.m_Name), m_Environment(other.m_Environment)
+        : m_Registry(std::make_shared<fbentt::registry>(*other.m_Registry)), m_Name(other.m_Name), m_Environment(other.m_Environment), m_ViewportSize(other.m_ViewportSize)
     {
     }
 
@@ -31,6 +31,14 @@ namespace Flameberry {
 
     void Scene::OnStartRuntime()
     {
+        // Update Cameras
+        for (auto entity : m_Registry->view<CameraComponent>())
+        {
+            auto& cameraComp = m_Registry->get<CameraComponent>(entity);
+            cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
+        }
+
+        // Update Physics
         physx::PxSceneDesc sceneDesc(PhysicsContext::GetTolerancesScale());
         sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
         sceneDesc.cpuDispatcher = PhysicsContext::GetCPUDispatcher();
@@ -52,15 +60,15 @@ namespace Flameberry {
             switch (rigidBody.Type)
             {
                 case RigidBodyComponent::RigidBodyType::Static: {
-                        physx::PxRigidStatic* staticBody = PhysicsContext::GetPhysics()->createRigidStatic(transformMat);
-                        rigidBody.RuntimeRigidBody = staticBody;
-                        break;
-                    }
+                    physx::PxRigidStatic* staticBody = PhysicsContext::GetPhysics()->createRigidStatic(transformMat);
+                    rigidBody.RuntimeRigidBody = staticBody;
+                    break;
+                }
                 case RigidBodyComponent::RigidBodyType::Dynamic: {
-                        physx::PxRigidDynamic* dynamicBody = PhysicsContext::GetPhysics()->createRigidDynamic(transformMat);
-                        rigidBody.RuntimeRigidBody = dynamicBody;
-                        break;
-                    }
+                    physx::PxRigidDynamic* dynamicBody = PhysicsContext::GetPhysics()->createRigidDynamic(transformMat);
+                    rigidBody.RuntimeRigidBody = dynamicBody;
+                    break;
+                }
             }
 
             FL_ASSERT(rigidBody.RuntimeRigidBody, "Failed to create RigidBody!");
@@ -98,17 +106,17 @@ namespace Flameberry {
                     case CapsuleColliderComponent::AxisType::X:
                         break;
                     case CapsuleColliderComponent::AxisType::Y:
-                        {
-                            physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1)));
-                            shape->setLocalPose(relativePose);
-                            break;
-                        }
+                    {
+                        physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1)));
+                        shape->setLocalPose(relativePose);
+                        break;
+                    }
                     case CapsuleColliderComponent::AxisType::Z:
-                        {
-                            physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(1, 0, 0)));
-                            shape->setLocalPose(relativePose);
-                            break;
-                        }
+                    {
+                        physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(1, 0, 0)));
+                        shape->setLocalPose(relativePose);
+                        break;
+                    }
                 }
                 capsuleCollider->RuntimeShape = shape;
             }
@@ -132,10 +140,6 @@ namespace Flameberry {
 
     void Scene::OnUpdateRuntime(float delta)
     {
-        // for (auto entity : m_Registry->view<TransformComponent>()) {
-        //     m_Registry->get<TransformComponent>(entity).Rotation.y += 2.0f * delta;
-        // }
-
         FL_PROFILE_SCOPE("Scene::OnUpdateRuntime");
 
         // Update Physics
@@ -151,6 +155,30 @@ namespace Flameberry {
             transform.Translation = { globalTransform.p.x, globalTransform.p.y , globalTransform.p.z };
             transform.Rotation = glm::eulerAngles(glm::quat(globalTransform.q.w, globalTransform.q.x, globalTransform.q.y, globalTransform.q.z));
         }
+    }
+
+    void Scene::OnViewportResize(const glm::vec2& viewportSize)
+    {
+        m_ViewportSize = viewportSize;
+
+        // TODO: ECS: Implement iterating over single pool without having the knowledge of entity
+        for (auto entity : m_Registry->view<CameraComponent>())
+        {
+            auto& cameraComp = m_Registry->get<CameraComponent>(entity);
+            // TODO: This is fishy, maybe update this only when runtime is started
+            cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
+        }
+    }
+
+    fbentt::entity Scene::GetPrimaryCameraEntity() const
+    {
+        for (auto entity : m_Registry->view<CameraComponent>())
+        {
+            auto& cameraComp = m_Registry->get<CameraComponent>(entity);
+            if (cameraComp.IsPrimary)
+                return entity;
+        }
+        return {};
     }
 
     void Scene::RenderScene(const glm::mat4& cameraMatrix)
@@ -357,4 +385,5 @@ namespace Flameberry {
             }
         }
     }
+
 }

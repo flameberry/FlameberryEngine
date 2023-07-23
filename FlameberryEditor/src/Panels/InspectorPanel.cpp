@@ -88,6 +88,91 @@ namespace Flameberry {
                 }
             );
 
+            DrawComponent<CameraComponent>("Camera Component", this, [&]()
+                {
+                    auto& cameraComp = m_Context->m_Registry->get<CameraComponent>(m_SelectionContext);
+
+                    if (ImGui::BeginTable("CameraComponentAttributes", 2, m_TableFlags))
+                    {
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Is Primary");
+
+                        ImGui::TableNextColumn();
+                        ImGui::Checkbox("##IsPrimary", &cameraComp.IsPrimary);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Projection Type");
+
+                        ImGui::TableNextColumn();
+
+                        const char* projectionTypeStrings[] = { "Orthographic", "Perspective" };
+                        uint8_t currentProjectionTypeIndex = (uint8_t)cameraComp.Camera.GetSettings().ProjectionType;
+
+                        ImGui::PushItemWidth(-1.0f);
+                        if (ImGui::BeginCombo("##ProjectionType", projectionTypeStrings[currentProjectionTypeIndex]))
+                        {
+                            for (int i = 0; i < 2; i++)
+                            {
+                                bool isSelected = (i == (uint8_t)cameraComp.Camera.GetSettings().ProjectionType);
+                                if (ImGui::Selectable(projectionTypeStrings[i], &isSelected))
+                                {
+                                    currentProjectionTypeIndex = i;
+                                    cameraComp.Camera.SetProjectionType((ProjectionType)i);
+                                }
+
+                                if (isSelected)
+                                    ImGui::SetItemDefaultFocus();
+                            }
+                            ImGui::EndCombo();
+                        }
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("FOV");
+
+                        ImGui::TableNextColumn();
+                        float FOV = cameraComp.Camera.GetSettings().FOV;
+                        if (ImGui::DragFloat("##FOV", &FOV, 0.01f, 0.0f, 180.0f))
+                            cameraComp.Camera.UpdateWithFOV(FOV);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Near");
+
+                        ImGui::TableNextColumn();
+                        float near = cameraComp.Camera.GetSettings().Near;
+                        if (ImGui::DragFloat("##Near", &near, 0.01f, 0.0f, 2000.0f))
+                            cameraComp.Camera.UpdateWithNear(near);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Far");
+
+                        ImGui::TableNextColumn();
+                        float far = cameraComp.Camera.GetSettings().Far;
+                        if (ImGui::DragFloat("##Far", &far, 0.01f, 0.0f, 2000.0f))
+                            cameraComp.Camera.UpdateWithFar(far);
+
+                        ImGui::PopItemWidth();
+                        ImGui::EndTable();
+                    }
+                }
+            );
+
             DrawComponent<MeshComponent>("Mesh Component", this, [&]()
                 {
                     auto& mesh = m_Context->m_Registry->get<MeshComponent>(m_SelectionContext);
@@ -445,6 +530,8 @@ namespace Flameberry {
             {
                 if (ImGui::MenuItem("Transform Component"))
                     m_Context->m_Registry->emplace<TransformComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Camera Component"))
+                    m_Context->m_Registry->emplace<CameraComponent>(m_SelectionContext);
                 if (ImGui::MenuItem("Mesh Component"))
                     m_Context->m_Registry->emplace<MeshComponent>(m_SelectionContext);
                 if (ImGui::MenuItem("Light Component"))

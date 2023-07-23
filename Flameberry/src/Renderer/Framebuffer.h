@@ -41,7 +41,7 @@ namespace Flameberry {
         ~Framebuffer();
 
         void CreateVulkanFramebuffer(VkRenderPass renderPass);
-        bool Resize(uint32_t width, uint32_t height, VkRenderPass renderPass);
+        void OnResize(uint32_t width, uint32_t height, VkRenderPass renderPass);
 
         FramebufferSpecification GetSpecification() const { return m_FramebufferSpec; }
         VkFramebuffer GetVulkanFramebuffer() const { return m_VkFramebuffer; }

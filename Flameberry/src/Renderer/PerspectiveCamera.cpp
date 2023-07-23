@@ -1,13 +1,6 @@
 #include "PerspectiveCamera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <GLFW/glfw3.h> 
-
-#include "Core/Input.h"
-#include "Core/Core.h"
 
 namespace Flameberry {
     PerspectiveCamera::PerspectiveCamera(const PerspectiveCameraSpecification& specification)
@@ -20,15 +13,10 @@ namespace Flameberry {
     {
     }
 
-    bool PerspectiveCamera::OnResize(float aspectRatio)
+    void PerspectiveCamera::OnResize(float aspectRatio)
     {
-        if (m_CameraSpec.AspectRatio != aspectRatio)
-        {
-            m_CameraSpec.AspectRatio = aspectRatio;
-            Invalidate();
-            return true;
-        }
-        return false;
+        m_CameraSpec.AspectRatio = aspectRatio;
+        Invalidate();
     }
 
     void PerspectiveCamera::Invalidate()

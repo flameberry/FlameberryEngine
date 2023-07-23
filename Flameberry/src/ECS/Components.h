@@ -6,8 +6,9 @@
 
 #include <string>
 
-#include "Asset/Asset.h"
 #include "ecs.hpp"
+#include "Asset/Asset.h"
+#include "Renderer/GenericCamera.h"
 
 namespace Flameberry {
     struct IDComponent
@@ -37,8 +38,8 @@ namespace Flameberry {
 
     struct CameraComponent
     {
-        bool Perspective = true;
-        float AspectRatio, VerticalFOV, ZNear, ZFar;
+        GenericCamera Camera;
+        bool IsPrimary = false;
     };
 
     // struct MaterialTable {

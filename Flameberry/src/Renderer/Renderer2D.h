@@ -28,8 +28,8 @@ namespace Flameberry {
         std::shared_ptr<Buffer> QuadVertexBuffer, QuadIndexBuffer;
         std::vector<QuadVertex> QuadVertices;
 
-        // Temp
-        std::shared_ptr<Texture2D> LightIconTexture;
+        // TODO: Find a better way to do this
+        std::shared_ptr<Texture2D> TextureMap;
     };
 
     class Renderer2D
@@ -42,8 +42,14 @@ namespace Flameberry {
         static void AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color);
         static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix);
 
-        static void Render(VkDescriptorSet globalDescriptorSet);
+        static void BeginScene(VkDescriptorSet globalDescriptorSet);
+        static void EndScene();
+
+        static void SetActiveTexture(const std::shared_ptr<Texture2D>& texture) { s_Renderer2DData.TextureMap = texture; }
+        static void FlushQuads();
     private:
         static Renderer2DData s_Renderer2DData;
+
+        inline static VkDescriptorSet s_GlobalDescriptorSet = VK_NULL_HANDLE;
     };
 }

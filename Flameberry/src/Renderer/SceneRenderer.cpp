@@ -13,6 +13,7 @@
 #include "Asset/AssetManager.h"
 
 namespace Flameberry {
+
     struct CameraUniformBufferObject {
         glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
     };
@@ -472,18 +473,26 @@ namespace Flameberry {
 #pragma endregion CompositionResources
 
         Renderer2D::Init(m_CameraBufferDescSetLayout, m_GeometryPass);
+
+        // Textures
+        m_LightIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/bulb_icon_v4.png");
+        m_CameraIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/camera_icon.png");
     }
 
-    void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const std::shared_ptr<PerspectiveCamera>& camera, fbentt::entity selectedEntity, bool renderGrid)
+    void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid)
     {
         uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
+
         m_ViewportSize = viewportSize;
 
         // Resize Framebuffers
         Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
-                if (m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass()))
+                const auto& framebufferSpec = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification();
+                if (!(m_ViewportSize.x == 0 || m_ViewportSize.y == 0) && (framebufferSpec.Width != m_ViewportSize.x || framebufferSpec.Height != m_ViewportSize.y))
                 {
+                    m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass());
+
                     m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, {
                             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                             .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetImageView(),
@@ -492,26 +501,26 @@ namespace Flameberry {
                     );
 
                     m_CompositePassDescriptorSets[imageIndex]->Update();
+                    m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass());
                 }
-                m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->Resize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass());
 
-                VkClearColorValue clearColor = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
-                m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->SetClearColorValue(clearColor);
+                VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
+                m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->SetClearColorValue(color);
             }
         );
 
         // Update uniform buffers
         CameraUniformBufferObject cameraBufferData;
-        cameraBufferData.ViewMatrix = camera->GetViewMatrix();
-        cameraBufferData.ProjectionMatrix = camera->GetProjectionMatrix();
-        cameraBufferData.ViewProjectionMatrix = camera->GetViewProjectionMatrix();
+        cameraBufferData.ViewMatrix = viewMatrix;
+        cameraBufferData.ProjectionMatrix = projectionMatrix;
+        cameraBufferData.ViewProjectionMatrix = projectionMatrix * viewMatrix;
 
         m_CameraUniformBuffers[currentFrame]->WriteToBuffer(&cameraBufferData, sizeof(CameraUniformBufferObject));
 
         if (m_RendererSettings.EnableShadows)
         {
             // TODO: Calculate these only when camera or directional light is updated
-            CalculateShadowMapCascades(camera, scene->m_Environment.DirLight.Direction);
+            CalculateShadowMapCascades(cameraBufferData.ViewProjectionMatrix, cameraNear, cameraFar, scene->m_Environment.DirLight.Direction);
             glm::mat4 cascades[SceneRendererSettings::CascadeCount];
             for (uint8_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
                 cascades[i] = m_Cascades[i].ViewProjectionMatrix;
@@ -520,7 +529,7 @@ namespace Flameberry {
         }
 
         SceneUniformBufferData sceneUniformBufferData;
-        sceneUniformBufferData.cameraPosition = camera->GetSpecification().Position;
+        sceneUniformBufferData.cameraPosition = cameraPosition;
 
         for (uint32_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
         {
@@ -587,7 +596,7 @@ namespace Flameberry {
         {
             m_SkyboxPipeline->Bind();
 
-            glm::mat4 viewProjectionMatrix = camera->GetProjectionMatrix() * glm::mat4(glm::mat3(camera->GetViewMatrix()));
+            glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
             auto pipelineLayout = m_SkyboxPipeline->GetLayout();
             auto textureDescSet = scene->m_Environment.EnvironmentMap->GetDescriptorSet();
 
@@ -625,59 +634,81 @@ namespace Flameberry {
         }
 
         // Render Outlined Object
-        if (selectedEntity != fbentt::null && scene->m_Registry->has<MeshComponent>(selectedEntity))
+        if (selectedEntity != fbentt::null)
         {
-            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(selectedEntity);
-            auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-            if (staticMesh)
+            auto& transform = scene->m_Registry->get<TransformComponent>(selectedEntity);
+            if (scene->m_Registry->has<MeshComponent>(selectedEntity))
             {
-                Renderer::Submit([framebufferSize = m_ViewportSize](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                    {
-                        VkClearAttachment attachment{};
-                        attachment.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
-                        attachment.clearValue = { 1.0f, 0 };
-                        attachment.colorAttachment = 1;
+                auto& mesh = scene->m_Registry->get<MeshComponent>(selectedEntity);
+                auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
+                if (staticMesh)
+                {
+                    Renderer::Submit([framebufferSize = m_ViewportSize](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                        {
+                            VkClearAttachment attachment{};
+                            attachment.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
+                            attachment.clearValue = { 1.0f, 0 };
+                            attachment.colorAttachment = 1;
 
-                        VkClearRect rect{};
-                        rect.baseArrayLayer = 0;
-                        rect.layerCount = 1;
-                        rect.rect = { {0, 0}, { (uint32_t)framebufferSize.x, (uint32_t)framebufferSize.y } };
+                            VkClearRect rect{};
+                            rect.baseArrayLayer = 0;
+                            rect.layerCount = 1;
+                            rect.rect = { {0, 0}, { (uint32_t)framebufferSize.x, (uint32_t)framebufferSize.y } };
 
-                        vkCmdClearAttachments(cmdBuffer, 1, &attachment, 1, &rect);
-                    }
-                );
-                // Draw outlined object normally first
-                SubmitMesh(mesh.MeshHandle, mesh.OverridenMaterialTable, transform.GetTransform());
+                            vkCmdClearAttachments(cmdBuffer, 1, &attachment, 1, &rect);
+                        }
+                    );
+                    // Draw outlined object normally first
+                    SubmitMesh(mesh.MeshHandle, mesh.OverridenMaterialTable, transform.GetTransform());
 
-                // Render Mesh Outline
-                m_OutlinePipeline->Bind();
+                    // Render Mesh Outline
+                    m_OutlinePipeline->Bind();
 
-                OutlinePushConstantData pushConstantData;
-                pushConstantData.ModelMatrix = glm::scale(transform.GetTransform(), glm::vec3(1.05f));
-                pushConstantData.ScreenSize = m_ViewportSize;
+                    OutlinePushConstantData pushConstantData;
+                    pushConstantData.ModelMatrix = glm::scale(transform.GetTransform(), glm::vec3(1.05f));
+                    pushConstantData.ScreenSize = m_ViewportSize;
 
-                Renderer::Submit([outlinePipelineLayout = m_OutlinePipeline->GetLayout(), globalDescriptorSet = m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet(), pushConstantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                    {
-                        vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
-                        vkCmdPushConstants(cmdBuffer, outlinePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(OutlinePushConstantData), &pushConstantData);
-                    }
-                );
-                staticMesh->OnDraw();
+                    Renderer::Submit([outlinePipelineLayout = m_OutlinePipeline->GetLayout(), globalDescriptorSet = m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet(), pushConstantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                        {
+                            vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
+                            vkCmdPushConstants(cmdBuffer, outlinePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(OutlinePushConstantData), &pushConstantData);
+                        }
+                    );
+                    staticMesh->OnDraw();
+                }
             }
+        }
+
+        Renderer2D::BeginScene(m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet());
+
+        Renderer2D::SetActiveTexture(m_CameraIcon);
+        for (auto entity : scene->m_Registry->view<TransformComponent, CameraComponent>())
+        {
+            auto& transform = scene->m_Registry->get<TransformComponent>(entity);
+            Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix);
+        }
+        Renderer2D::FlushQuads();
+
+        if (selectedEntity != fbentt::null)
+        {
+            auto& transform = scene->m_Registry->get<TransformComponent>(selectedEntity);
 
             // Draw Physics Collider
-            SubmitPhysicsCollider(scene, selectedEntity, transform);
+            SubmitPhysicsColliderGeometry(scene, selectedEntity, transform); // NOTE: This function will check if any of the colliders is present
+            SubmitCameraViewGeometry(scene, selectedEntity, transform);
         }
 
         // Render Point Lights
+        Renderer2D::SetActiveTexture(m_LightIcon);
         for (uint32_t i = 0; i < sceneUniformBufferData.LightCount; i++)
-            Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, camera->GetViewMatrix());
+            Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix);
+        Renderer2D::FlushQuads();
 
         // Should make editor only (Not Runtime)
         if (renderGrid)
             Renderer2D::AddGrid(25);
 
-        Renderer2D::Render(m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet());
+        Renderer2D::EndScene();
 
         m_GeometryPass->End();
 #pragma endregion GeometryPass
@@ -700,12 +731,184 @@ namespace Flameberry {
 #pragma endregion CompositePass
     }
 
-    void SceneRenderer::CalculateShadowMapCascades(const std::shared_ptr<PerspectiveCamera>& camera, const glm::vec3& lightDirection)
+    void SceneRenderer::RenderSceneRuntime(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar)
+    {
+        // TODO: This code is almost repeated, make it not do that
+        uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
+
+        m_ViewportSize = viewportSize;
+
+        // Resize Framebuffers
+        Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                const auto& framebufferSpec = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification();
+                if (!(m_ViewportSize.x == 0 || m_ViewportSize.y == 0) && (framebufferSpec.Width != m_ViewportSize.x || framebufferSpec.Height != m_ViewportSize.y))
+                {
+                    m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass());
+
+                    m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, {
+                            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                            .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetImageView(),
+                            .sampler = m_VkTextureSampler
+                        }
+                    );
+
+                    m_CompositePassDescriptorSets[imageIndex]->Update();
+                    m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass());
+                }
+
+                VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
+                m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->SetClearColorValue(color);
+            }
+        );
+
+        // Update uniform buffers
+        CameraUniformBufferObject cameraBufferData;
+        cameraBufferData.ViewMatrix = viewMatrix;
+        cameraBufferData.ProjectionMatrix = projectionMatrix;
+        cameraBufferData.ViewProjectionMatrix = projectionMatrix * viewMatrix;
+
+        m_CameraUniformBuffers[currentFrame]->WriteToBuffer(&cameraBufferData, sizeof(CameraUniformBufferObject));
+
+        if (m_RendererSettings.EnableShadows)
+        {
+            // TODO: Calculate these only when camera or directional light is updated
+            CalculateShadowMapCascades(cameraBufferData.ViewProjectionMatrix, cameraNear, cameraFar, scene->m_Environment.DirLight.Direction);
+            glm::mat4 cascades[SceneRendererSettings::CascadeCount];
+            for (uint8_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
+                cascades[i] = m_Cascades[i].ViewProjectionMatrix;
+
+            m_ShadowMapUniformBuffers[currentFrame]->WriteToBuffer(cascades, sizeof(glm::mat4) * SceneRendererSettings::CascadeCount);
+        }
+
+        SceneUniformBufferData sceneUniformBufferData;
+        sceneUniformBufferData.cameraPosition = cameraPosition;
+
+        for (uint32_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
+        {
+            sceneUniformBufferData.CascadeViewProjectionMatrices[i] = m_Cascades[i].ViewProjectionMatrix;
+            sceneUniformBufferData.CascadeDepthSplits[i] = m_Cascades[i].DepthSplit;
+        }
+        sceneUniformBufferData.RendererSettings.EnableShadows = (int)m_RendererSettings.EnableShadows;
+        sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
+        sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
+
+        sceneUniformBufferData.directionalLight = scene->m_Environment.DirLight;
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
+        {
+            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
+            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform.Translation;
+            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Color = light.Color;
+            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Intensity = light.Intensity;
+            sceneUniformBufferData.LightCount++;
+        }
+
+        m_SceneUniformBuffers[currentFrame]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData));
+
+        // Render Passes
+#pragma region ShadowPass
+        if (m_RendererSettings.EnableShadows)
+        {
+            m_ShadowMapRenderPass->Begin();
+            m_ShadowMapPipeline->Bind();
+            Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                {
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr);
+                }
+            );
+
+            for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+            {
+                const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+                auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
+                if (staticMesh)
+                {
+                    ModelMatrixPushConstantData pushContantData;
+                    pushContantData.ModelMatrix = transform.GetTransform();
+                    Renderer::Submit([shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                        {
+                            vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
+                        }
+                    );
+                    staticMesh->Bind();
+                    staticMesh->OnDraw();
+                }
+            }
+            m_ShadowMapRenderPass->End();
+        }
+#pragma endregion ShadowPass
+
+#pragma region GeometryPass
+        m_GeometryPass->Begin();
+
+        RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
+        RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
+
+        // Skybox Rendering
+        if (scene->m_Environment.EnableEnvironmentMap && scene->m_Environment.EnvironmentMap)
+        {
+            m_SkyboxPipeline->Bind();
+
+            glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
+            auto pipelineLayout = m_SkyboxPipeline->GetLayout();
+            auto textureDescSet = scene->m_Environment.EnvironmentMap->GetDescriptorSet();
+
+            Renderer::Submit([pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                {
+                    VkDescriptorSet descSets[] = { textureDescSet };
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
+                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjectionMatrix);
+                    vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
+                }
+            );
+        }
+
+        // Mesh Rendering
+        m_MeshPipeline->Bind();
+
+        VkDescriptorSet descriptorSets[] = {
+            m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet(),
+            m_SceneDataDescriptorSets[currentFrame]->GetDescriptorSet()
+        };
+        Renderer::Submit([pipelineLayout = m_MeshPipeline->GetLayout(), descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+            }
+        );
+
+        // Render All Scene Meshes
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        {
+            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+            SubmitMesh(mesh.MeshHandle, mesh.OverridenMaterialTable, transform.GetTransform());
+        }
+        m_GeometryPass->End();
+#pragma endregion GeometryPass
+
+#pragma region CompositePass
+        m_CompositePass->Begin();
+        m_CompositePipeline->Bind();
+
+        std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+            descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
+
+        Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
+                vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+            }
+        );
+        m_CompositePass->End();
+#pragma endregion CompositePass
+    }
+
+    void SceneRenderer::CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection)
     {
         float cascadeSplits[SceneRendererSettings::CascadeCount];
 
-        const float nearClip = camera->GetSpecification().zNear;
-        const float farClip = camera->GetSpecification().zFar;
+        const float nearClip = cameraNear;
+        const float farClip = cameraFar;
         const float clipRange = farClip - nearClip;
 
         const float minZ = nearClip;
@@ -728,7 +931,7 @@ namespace Flameberry {
         float lastSplitDist = 0.0;
 
         // Project frustum corners into world space
-        const glm::mat4 invCam = glm::inverse(camera->GetViewProjectionMatrix());
+        const glm::mat4 invCam = glm::inverse(viewProjectionMatrix);
 
         for (uint32_t i = 0; i < SceneRendererSettings::CascadeCount; i++) {
             const float splitDist = cascadeSplits[i];
@@ -741,7 +944,7 @@ namespace Flameberry {
                 glm::vec3(-1.0f,  1.0f, 1.0f),
                 glm::vec3(1.0f,   1.0f, 1.0f),
                 glm::vec3(1.0f,  -1.0f, 1.0f),
-                glm::vec3(-1.0f, -1.0f, 1.0f),
+                glm::vec3(-1.0f, -1.0f, 1.0f)
             };
 
             for (uint32_t i = 0; i < 8; i++) {
@@ -777,7 +980,7 @@ namespace Flameberry {
             const glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
 
             // Store split distance and matrix in cascade
-            m_Cascades[i].DepthSplit = (camera->GetSpecification().zNear + splitDist * clipRange) * -1.0f;
+            m_Cascades[i].DepthSplit = (cameraNear + splitDist * clipRange) * -1.0f;
             m_Cascades[i].ViewProjectionMatrix = lightOrthoMatrix * lightViewMatrix;
 
             lastSplitDist = cascadeSplits[i];
@@ -880,7 +1083,7 @@ namespace Flameberry {
         }
     }
 
-    void SceneRenderer::SubmitPhysicsCollider(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
+    void SceneRenderer::SubmitPhysicsColliderGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
     {
         // TODO: Optimise this function (maybe embed the vertices (?))
         constexpr glm::vec3 greenColor(0.2f, 1.0f, 0.2f);
@@ -1024,9 +1227,57 @@ namespace Flameberry {
         }
     }
 
+    void SceneRenderer::SubmitCameraViewGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
+    {
+        constexpr glm::vec3 color(1);
+        auto* cameraComp = scene->m_Registry->try_get<CameraComponent>(entity);
+        if (cameraComp)
+        {
+            const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
+            const auto& settings = cameraComp->Camera.GetSettings();
+            float aspectRatio = m_ViewportSize.x / m_ViewportSize.y;
+            float tanTheta = glm::tan(glm::radians(settings.FOV / 2.0f));
+            float nearViewHalfHeight = tanTheta * settings.Near;
+            float nearViewHalfWidth = nearViewHalfHeight * aspectRatio;
+            float farViewHalfHeight = tanTheta * settings.Far;
+            float farViewHalfWidth = farViewHalfHeight * aspectRatio;
+
+            // Submit Frustum Geometry
+            glm::vec3 frustumCorners[8] = {
+                glm::vec3(-nearViewHalfWidth, nearViewHalfHeight, -settings.Near),
+                glm::vec3(nearViewHalfWidth,  nearViewHalfHeight, -settings.Near),
+                glm::vec3(nearViewHalfWidth,  -nearViewHalfHeight, -settings.Near),
+                glm::vec3(-nearViewHalfWidth, -nearViewHalfHeight, -settings.Near),
+                glm::vec3(-farViewHalfWidth,  farViewHalfHeight, -settings.Far),
+                glm::vec3(farViewHalfWidth,   farViewHalfHeight, -settings.Far),
+                glm::vec3(farViewHalfWidth,  -farViewHalfHeight, -settings.Far),
+                glm::vec3(-farViewHalfWidth, -farViewHalfHeight, -settings.Far)
+            };
+
+            for (uint8_t i = 0; i < 8; i++)
+                frustumCorners[i] = rotationMatrix * frustumCorners[i] + transform.Translation;
+
+            Renderer2D::AddLine(frustumCorners[0], frustumCorners[1], color);
+            Renderer2D::AddLine(frustumCorners[1], frustumCorners[2], color);
+            Renderer2D::AddLine(frustumCorners[2], frustumCorners[3], color);
+            Renderer2D::AddLine(frustumCorners[3], frustumCorners[0], color);
+
+            Renderer2D::AddLine(frustumCorners[4], frustumCorners[5], color);
+            Renderer2D::AddLine(frustumCorners[5], frustumCorners[6], color);
+            Renderer2D::AddLine(frustumCorners[6], frustumCorners[7], color);
+            Renderer2D::AddLine(frustumCorners[7], frustumCorners[4], color);
+
+            Renderer2D::AddLine(frustumCorners[0], frustumCorners[4], color);
+            Renderer2D::AddLine(frustumCorners[1], frustumCorners[5], color);
+            Renderer2D::AddLine(frustumCorners[2], frustumCorners[6], color);
+            Renderer2D::AddLine(frustumCorners[3], frustumCorners[7], color);
+        }
+    }
+
     SceneRenderer::~SceneRenderer()
     {
         auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDestroySampler(device, m_ShadowMapSampler, nullptr);
     }
+
 }

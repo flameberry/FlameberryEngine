@@ -175,8 +175,7 @@ namespace Flameberry {
 
     void RenderPass::Begin(uint32_t framebufferInstance, VkOffset2D renderAreaOffset, VkExtent2D renderAreaExtent)
     {
-        auto renderPass = this;
-        Renderer::Submit([renderPass, framebufferInstance, renderAreaOffset, renderAreaExtent](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([renderPass = this, framebufferInstance, renderAreaOffset, renderAreaExtent](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
                 uint32_t index = (framebufferInstance == -1) ? imageIndex : framebufferInstance;
                 const auto& framebufferSpec = renderPass->m_RenderPassSpec.TargetFramebuffers[index]->GetSpecification();

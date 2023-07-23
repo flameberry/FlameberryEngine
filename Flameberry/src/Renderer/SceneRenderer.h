@@ -33,11 +33,11 @@ namespace Flameberry {
         SceneRenderer(const glm::vec2& viewportSize);
         ~SceneRenderer();
 
-        void RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const std::shared_ptr<PerspectiveCamera>& camera, fbentt::entity selectedEntity, bool renderGrid = true);
+        void RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid = true);
+        void RenderSceneRuntime(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar);
 
         VkImageView GetGeometryPassOutputImageView(uint32_t index) const { return m_GeometryPass->GetSpecification().TargetFramebuffers[index]->GetColorResolveAttachment(0)->GetImageView(); }
         VkImageView GetCompositePassOutputImageView(uint32_t index) const { return m_CompositePass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetImageView(); }
-        VkDescriptorSet GetCameraBufferDescriptorSet(uint32_t index) const { return m_CameraBufferDescriptorSets[index]->GetDescriptorSet(); }
 
         SceneRendererSettings& GetRendererSettingsRef() { return m_RendererSettings; }
         void RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Pipeline>& pipeline, const glm::vec2& mousePos);
@@ -46,9 +46,10 @@ namespace Flameberry {
     private:
         void Init();
 
-        void CalculateShadowMapCascades(const std::shared_ptr<PerspectiveCamera>& camera, const glm::vec3& lightDirection);
+        void CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection);
         void SubmitMesh(AssetHandle handle, const MaterialTable& materialTable, const glm::mat4& transform);
-        void SubmitPhysicsCollider(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform);
+        void SubmitPhysicsColliderGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform);
+        void SubmitCameraViewGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform);
     private:
         glm::vec2 m_ViewportSize;
 
@@ -81,5 +82,8 @@ namespace Flameberry {
         std::shared_ptr<Pipeline> m_CompositePipeline;
         std::shared_ptr<DescriptorSetLayout> m_CompositePassDescriptorSetLayout;
         std::vector<std::shared_ptr<DescriptorSet>> m_CompositePassDescriptorSets;
+
+        // Textures
+        std::shared_ptr<Texture2D> m_LightIcon, m_CameraIcon;
     };
 }

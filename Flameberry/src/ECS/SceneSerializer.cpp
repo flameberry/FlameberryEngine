@@ -11,6 +11,23 @@
 #include "Asset/MeshLoader.h"
 
 namespace Flameberry {
+    static std::string ProjectionTypeEnumToString(ProjectionType type)
+    {
+        switch (type)
+        {
+            case ProjectionType::Orthographic: return "Orthographic";
+            case ProjectionType::Perspective: return "Perspective";
+        }
+    }
+
+    static ProjectionType ProjectionTypeStringToEnum(const std::string& type)
+    {
+        if (type == "Orthographic")
+            return ProjectionType::Orthographic;
+        else if (type == "Perspective")
+            return ProjectionType::Perspective;
+    }
+
     static std::string RigidBodyTypeEnumToString(RigidBodyComponent::RigidBodyType type)
     {
         switch (type)
@@ -112,12 +129,34 @@ namespace Flameberry {
                         tagComp.Tag = tag.as<std::string>();
                     }
 
-                    if (auto transform = entity["TransformComponent"]; transform) // Deserialize entity
+                    if (auto transform = entity["TransformComponent"]; transform)
                     {
                         auto& transformComp = destScene->m_Registry->emplace<TransformComponent>(deserializedEntity);
                         transformComp.Translation = transform["Translation"].as<glm::vec3>();
                         transformComp.Rotation = transform["Rotation"].as<glm::vec3>();
                         transformComp.Scale = transform["Scale"].as<glm::vec3>();
+                    }
+
+                    if (auto camera = entity["CameraComponent"]; camera)
+                    {
+                        auto& cameraComp = destScene->m_Registry->emplace<CameraComponent>(deserializedEntity);
+                        cameraComp.IsPrimary = camera["IsPrimary"].as<bool>();
+
+                        ProjectionType type = ProjectionTypeStringToEnum(camera["ProjectionType"].as<std::string>());
+                        float aspectRatio = camera["AspectRatio"].as<float>();
+                        float FOV_or_Zoom = camera["FOV/Zoom"].as<float>();
+                        float near = camera["Near"].as<float>();
+                        float far = camera["Far"].as<float>();
+
+                        switch (type)
+                        {
+                            case ProjectionType::Orthographic:
+                                cameraComp.Camera.SetOrthographic(aspectRatio, FOV_or_Zoom, near, far);
+                                break;
+                            case ProjectionType::Perspective:
+                                cameraComp.Camera.SetPerspective(aspectRatio, FOV_or_Zoom, near, far);
+                                break;
+                        }
                     }
 
                     if (auto mesh = entity["MeshComponent"]; mesh)
@@ -260,6 +299,20 @@ namespace Flameberry {
             out << YAML::Key << "Rotation" << YAML::Value << transform.Rotation;
             out << YAML::Key << "Scale" << YAML::Value << transform.Scale;
             out << YAML::EndMap; // Transform Component
+        }
+
+        if (scene->m_Registry->has<CameraComponent>(entity))
+        {
+            auto& cameraComp = scene->m_Registry->get<CameraComponent>(entity);
+            const auto& settings = cameraComp.Camera.GetSettings();
+            out << YAML::Key << "CameraComponent" << YAML::BeginMap;
+            out << YAML::Key << "IsPrimary" << YAML::Value << cameraComp.IsPrimary;
+            out << YAML::Key << "ProjectionType" << YAML::Value << ProjectionTypeEnumToString(settings.ProjectionType);
+            out << YAML::Key << "AspectRatio" << YAML::Value << settings.AspectRatio;
+            out << YAML::Key << "FOV/Zoom" << YAML::Value << settings.FOV;
+            out << YAML::Key << "Near" << YAML::Value << settings.Near;
+            out << YAML::Key << "Far" << YAML::Value << settings.Far;
+            out << YAML::EndMap; // Camera Component
         }
 
         if (scene->m_Registry->has<MeshComponent>(entity))

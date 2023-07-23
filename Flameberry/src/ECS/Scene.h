@@ -38,6 +38,7 @@ namespace Flameberry {
 
         void OnUpdateRuntime(float delta);
         void RenderScene(const glm::mat4& cameraMatrix);
+        void OnViewportResize(const glm::vec2& viewportSize);
 
         fbentt::entity CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent);
         void DestroyEntityTree(fbentt::entity entity);
@@ -45,6 +46,8 @@ namespace Flameberry {
         bool IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
         fbentt::entity DuplicateEntity(fbentt::entity src);
         fbentt::entity CopyEntityTree(fbentt::entity src);
+
+        fbentt::entity GetPrimaryCameraEntity() const;
 
         inline std::shared_ptr<fbentt::registry> GetRegistry() const { return m_Registry; }
         inline glm::vec3 GetClearColor() const { return m_Environment.ClearColor; }
@@ -61,6 +64,8 @@ namespace Flameberry {
         Flameberry::Environment m_Environment;
 
         physx::PxScene* m_PxScene;
+
+        glm::vec2 m_ViewportSize = { 1280, 720 };
 
         friend class SceneHierarchyPanel;
         friend class InspectorPanel;

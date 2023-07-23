@@ -82,6 +82,19 @@ Entities:
       Restitution: 0.100000001
     SphereColliderComponent:
       Radius: 1
+  - Entity: 4147114364792774612
+    TagComponent: MainCamera
+    TransformComponent:
+      Translation: [0, 3.17561436, 12.143548]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      IsPrimary: true
+      ProjectionType: Perspective
+      AspectRatio: 0
+      FOV/Zoom: 45
+      Near: 0.100000001
+      Far: 400
 Meshes:
   - Mesh: 3080484242586179439
     FilePath: Assets/Meshes/cube.obj

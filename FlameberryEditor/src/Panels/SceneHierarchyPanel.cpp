@@ -21,6 +21,8 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 5 });
         ImGui::Begin("Scene Hierarchy");
         ImGui::PopStyleVar();
+        
+        m_IsFocused = ImGui::IsWindowFocused();
 
         if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))
         {
@@ -135,8 +137,6 @@ namespace Flameberry {
             ImGuiIO& io = ImGui::GetIO();
             if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
                 m_RenamedEntity = entity;
-            else if (io.KeySuper && ImGui::IsKeyPressed(ImGuiKey_Backspace))
-                should_delete_entity = true;
         }
 
         if (ImGui::BeginPopupContextItem("EntityNodeContextMenu", m_PopupFlags))

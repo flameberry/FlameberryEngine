@@ -11,17 +11,12 @@ namespace Flameberry {
         Invalidate();
     }
 
-    bool Framebuffer::Resize(uint32_t width, uint32_t height, VkRenderPass renderPass)
+    void Framebuffer::OnResize(uint32_t width, uint32_t height, VkRenderPass renderPass)
     {
-        if (!(width == 0 || height == 0) && (m_FramebufferSpec.Width != width || m_FramebufferSpec.Height != height))
-        {
-            m_FramebufferSpec.Width = width;
-            m_FramebufferSpec.Height = height;
-            Invalidate();
-            CreateVulkanFramebuffer(renderPass);
-            return true;
-        }
-        return false;
+        m_FramebufferSpec.Width = width;
+        m_FramebufferSpec.Height = height;
+        Invalidate();
+        CreateVulkanFramebuffer(renderPass);
     }
 
     void Framebuffer::CreateVulkanFramebuffer(VkRenderPass renderPass)
