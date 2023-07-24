@@ -3,7 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
 
-#include "../Utils.h"
+#include "../UI.h"
 
 namespace Flameberry {
     SceneHierarchyPanel::SceneHierarchyPanel(const std::shared_ptr<Scene>& context)
@@ -18,11 +18,59 @@ namespace Flameberry {
 
     void SceneHierarchyPanel::OnUIRender()
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 5 });
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
         ImGui::Begin("Scene Hierarchy");
+        ImGui::PopStyleColor();
         ImGui::PopStyleVar();
-        
-        m_IsFocused = ImGui::IsWindowFocused();
+
+        m_IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+
+        const float padding = 15.0f;
+        const float width = ImGui::GetContentRegionAvail().x - 2.0f * padding;
+        ImGui::SetCursorPos(ImVec2(padding, 4 + ImGui::GetCursorPosY()));
+
+        if (m_IsSearchBarFocused)
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+            ImGui::PushStyleColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        }
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
+
+        UI::SearchBar("##SceneHierarchySearchBar", width, m_SearchInputBuffer, 256, "Search...");
+
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
+
+        if (m_IsSearchBarFocused)
+        {
+            ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
+        }
+
+        m_IsSearchBarFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
+
+        // Type bar
+        ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_TableBorderLight, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
+        if (ImGui::BeginTable("TypeBar", 2, ImGuiTableFlags_Borders))
+        {
+            ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, ImGui::GetWindowWidth() / 4.0f);
+            ImGui::TableHeadersRow();
+            ImGui::EndTable();
+        }
+        ImGui::PopStyleColor(2);
+
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 4));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.09f, 0.09f, 0.09f, 1.00f));
+        ImGui::BeginChild("##EntityList", ImVec2(-1, -1), false, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysUseWindowPadding);
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
 
         if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))
         {
@@ -31,7 +79,6 @@ namespace Flameberry {
         }
 
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
-
         m_IsSelectedNodeDisplayed = false;
         m_Context->m_Registry->for_each([this](fbentt::entity entity)
             {
@@ -40,11 +87,12 @@ namespace Flameberry {
                     DrawEntityNode(entity);
             }
         );
+        ImGui::PopStyleVar();
 
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
             m_SelectionContext = fbentt::null;
 
-        ImGui::PopStyleVar();
+        ImGui::EndChild();
         ImGui::End();
 
         m_InspectorPanel->SetSelectionContext(m_SelectionContext);
@@ -85,6 +133,14 @@ namespace Flameberry {
     {
         auto& tag = m_Context->m_Registry->get<TagComponent>(entity).Tag;
 
+        bool highlight = false;
+
+        if (m_SearchInputBuffer[0] != '\0') {
+            // TODO: Maybe some optimisation to not search again if the input string is same
+            if (kmpSearch(tag.c_str(), m_SearchInputBuffer, true) != -1)
+                highlight = true;
+        }
+
         bool is_renamed = m_RenamedEntity == entity;
         bool is_selected = m_SelectionContext == entity;
         m_IsSelectedNodeDisplayed = m_IsSelectedNodeDisplayed || is_selected;
@@ -110,9 +166,9 @@ namespace Flameberry {
 
         ImGui::PushID((const void*)(uint64_t)entity);
 
-        float textColor = is_selected ? 0.0f : 1.0f;
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
-        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        const float textColor = is_selected ? 0.0f : 1.0f;
+        ImGui::PushStyleColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
         if (is_selected)
             ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
@@ -120,11 +176,16 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 
-        if (!m_IsSelectedNodeDisplayed) {
+        if (!m_IsSelectedNodeDisplayed)
             ImGui::SetNextItemOpen(true, ImGuiCond_Always);
-        }
+
+        if (highlight)
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f });
 
         bool open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s", tag.c_str());
+
+        if (highlight)
+            ImGui::PopStyleColor();
 
         ImGui::PopStyleVar(2);
         ImGui::PopStyleColor(is_selected ? 4 : 3);

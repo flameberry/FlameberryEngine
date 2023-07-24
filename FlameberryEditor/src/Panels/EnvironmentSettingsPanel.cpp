@@ -1,6 +1,6 @@
 #include "EnvironmentSettingsPanel.h"
 
-#include "../Utils.h"
+#include "../UI.h"
 #include <filesystem>
 
 namespace Flameberry {
@@ -80,7 +80,7 @@ namespace Flameberry {
             ImGui::Text("Directional");
             ImGui::TableNextColumn();
             float colWidth = ImGui::GetColumnWidth();
-            Utils::DrawVec3Control("##Directional_Light", environment.DirLight.Direction, 0.0f, 0.01f, colWidth);
+            UI::Vec3Control("##Directional_Light", environment.DirLight.Direction, 0.0f, 0.01f, colWidth);
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();

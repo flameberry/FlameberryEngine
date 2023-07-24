@@ -184,6 +184,7 @@ namespace Flameberry {
     void Renderer2D::BeginScene(VkDescriptorSet globalDescriptorSet)
     {
         s_GlobalDescriptorSet = globalDescriptorSet;
+        s_Renderer2DData.VertexBufferOffset = 0;
     }
 
     // Make sure to call this when you have accumulated all the quads having the same texture map or none
@@ -192,7 +193,7 @@ namespace Flameberry {
         if (s_Renderer2DData.QuadVertices.size())
         {
             FL_ASSERT(s_Renderer2DData.QuadVertices.size() <= MAX_QUAD_VERTICES, "MAX_QUAD_VERTICES limit reached!");
-            s_Renderer2DData.QuadVertexBuffer->WriteToBuffer(s_Renderer2DData.QuadVertices.data(), s_Renderer2DData.QuadVertices.size() * sizeof(QuadVertex), 0);
+            s_Renderer2DData.QuadVertexBuffer->WriteToBuffer(s_Renderer2DData.QuadVertices.data(), s_Renderer2DData.QuadVertices.size() * sizeof(QuadVertex), s_Renderer2DData.VertexBufferOffset);
             s_Renderer2DData.QuadPipeline->Bind();
 
             auto vertexBuffer = s_Renderer2DData.QuadVertexBuffer->GetBuffer();
@@ -200,17 +201,18 @@ namespace Flameberry {
             auto pipelineLayout = s_Renderer2DData.QuadPipeline->GetLayout();
             auto indexCount = 6 * (uint32_t)s_Renderer2DData.QuadVertices.size() / 4;
 
-            Renderer::Submit([pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, textureMap = s_Renderer2DData.TextureMap, vertexBuffer, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.TextureMap->GetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.VertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
-                    VkDescriptorSet descriptorSets[] = { globalDescriptorSet, textureMap->GetDescriptorSet() };
+                    VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
-                    VkDeviceSize offsets[] = { 0 };
+                    VkDeviceSize offsets[] = { offset };
                     vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
                     vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
                     vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
                 }
             );
+            s_Renderer2DData.VertexBufferOffset += s_Renderer2DData.QuadVertices.size() * sizeof(QuadVertex);
             s_Renderer2DData.QuadVertices.clear();
         }
     }

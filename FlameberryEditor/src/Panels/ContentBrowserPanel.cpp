@@ -1,7 +1,7 @@
 #include "ContentBrowserPanel.h"
 
 #include "Flameberry.h"
-#include "../Utils.h"
+#include "../UI.h"
 
 #define FL_BACK_ARROW_ICON 0
 #define FL_FORWARD_ARROW_ICON 1
@@ -57,8 +57,8 @@ namespace Flameberry {
         ImGui::PushID(parent.path().filename().c_str());
 
         float textColor = is_selected ? 0.0f : 1.0f;
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4{ 1.0f, 197.0f / 255.0f, 86.0f / 255.0f, 1.0f });
-        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_Header, Theme::AccentColor);
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
         if (is_selected)
             ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
@@ -120,7 +120,7 @@ namespace Flameberry {
 
         m_SecondChildSize = ImGui::GetWindowContentRegionWidth() - m_FirstChildSize - 8.0f;
 
-        Utils::Splitter(true, 3.0f, &m_FirstChildSize, &m_SecondChildSize, 10.0f, 80.0f);
+        UI::Splitter(true, 3.0f, &m_FirstChildSize, &m_SecondChildSize, 10.0f, 80.0f);
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 7 });
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
@@ -151,22 +151,21 @@ namespace Flameberry {
         if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FORWARD_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
-
-        ImGui::PushItemWidth(150.0f);
         if (m_IsSearchBoxFocused)
         {
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
             ImGui::PushStyleColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
         }
 
-        ImGui::InputTextWithHint("##search", "Search...", m_SearchInputBuffer, 256);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
+        UI::SearchBar("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, "Search...");
+        ImGui::PopStyleVar();
 
         if (m_IsSearchBoxFocused)
         {
             ImGui::PopStyleColor();
             ImGui::PopStyleVar();
         }
-        ImGui::PopItemWidth();
         m_IsSearchBoxFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
 
         ImGui::SameLine();

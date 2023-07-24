@@ -1,7 +1,7 @@
 #include "MaterialEditorPanel.h"
 
 #include <filesystem>
-#include "../Utils.h"
+#include "../UI.h"
 
 namespace Flameberry {
     void MaterialEditorPanel::OnUIRender()

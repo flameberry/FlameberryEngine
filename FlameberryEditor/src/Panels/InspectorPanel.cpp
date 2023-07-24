@@ -1,7 +1,7 @@
 #include "InspectorPanel.h"
 
 #include <filesystem>
-#include "../Utils.h"
+#include "../UI.h"
 
 namespace Flameberry {
     InspectorPanel::InspectorPanel()
@@ -66,7 +66,7 @@ namespace Flameberry {
                         ImGui::TableNextColumn();
 
                         float colWidth = ImGui::GetColumnWidth();
-                        Utils::DrawVec3Control("Translation", transform.Translation, 0.0f, 0.01f, colWidth);
+                        UI::Vec3Control("Translation", transform.Translation, 0.0f, 0.01f, colWidth);
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -74,7 +74,7 @@ namespace Flameberry {
                         ImGui::AlignTextToFramePadding();
                         ImGui::Text("Rotation");
                         ImGui::TableNextColumn();
-                        Utils::DrawVec3Control("Rotation", transform.Rotation, 0.0f, 0.01f, colWidth);
+                        UI::Vec3Control("Rotation", transform.Rotation, 0.0f, 0.01f, colWidth);
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -82,7 +82,7 @@ namespace Flameberry {
                         ImGui::AlignTextToFramePadding();
                         ImGui::Text("Scale");
                         ImGui::TableNextColumn();
-                        Utils::DrawVec3Control("Scale", transform.Scale, 1.0f, 0.01f, colWidth);
+                        UI::Vec3Control("Scale", transform.Scale, 1.0f, 0.01f, colWidth);
                         ImGui::EndTable();
                     }
                 }
@@ -322,14 +322,17 @@ namespace Flameberry {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        ImGui::PushItemWidth(-1.0f);
+                        ImGui::AlignTextToFramePadding();
                         ImGui::Text("Color");
                         ImGui::TableNextColumn();
+
+                        ImGui::PushItemWidth(-1.0f);
                         ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color));
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
+                        ImGui::AlignTextToFramePadding();
                         ImGui::Text("Intensity");
                         ImGui::TableNextColumn();
                         ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f);
@@ -431,7 +434,7 @@ namespace Flameberry {
                         ImGui::Text("Collider Size");
                         ImGui::TableNextColumn();
 
-                        Utils::DrawVec3Control("BoxColliderSize", boxCollider.Size, 1.0f, 0.01f, ImGui::GetColumnWidth());
+                        UI::Vec3Control("BoxColliderSize", boxCollider.Size, 1.0f, 0.01f, ImGui::GetColumnWidth());
 
                         ImGui::EndTable();
                     }
@@ -523,7 +526,7 @@ namespace Flameberry {
             );
 
             ImGui::Separator();
-            if (Utils::ButtonCenteredOnLine("Add Component"))
+            if (UI::CenteredButton("Add Component"))
                 ImGui::OpenPopup("AddComponentPopUp");
 
             if (ImGui::BeginPopup("AddComponentPopUp"))

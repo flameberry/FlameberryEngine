@@ -27,6 +27,7 @@ namespace Flameberry {
         std::shared_ptr<Pipeline> QuadPipeline;
         std::shared_ptr<Buffer> QuadVertexBuffer, QuadIndexBuffer;
         std::vector<QuadVertex> QuadVertices;
+        uint32_t VertexBufferOffset = 0;
 
         // TODO: Find a better way to do this
         std::shared_ptr<Texture2D> TextureMap;

@@ -681,6 +681,12 @@ namespace Flameberry {
 
         Renderer2D::BeginScene(m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet());
 
+        // Render Point Lights
+        Renderer2D::SetActiveTexture(m_LightIcon);
+        for (uint32_t i = 0; i < sceneUniformBufferData.LightCount; i++)
+            Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix);
+        Renderer2D::FlushQuads();
+
         Renderer2D::SetActiveTexture(m_CameraIcon);
         for (auto entity : scene->m_Registry->view<TransformComponent, CameraComponent>())
         {
@@ -698,12 +704,6 @@ namespace Flameberry {
             SubmitCameraViewGeometry(scene, selectedEntity, transform);
         }
 
-        // Render Point Lights
-        Renderer2D::SetActiveTexture(m_LightIcon);
-        for (uint32_t i = 0; i < sceneUniformBufferData.LightCount; i++)
-            Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix);
-        Renderer2D::FlushQuads();
-
         // Should make editor only (Not Runtime)
         if (renderGrid)
             Renderer2D::AddGrid(25);
@@ -714,20 +714,20 @@ namespace Flameberry {
 #pragma endregion GeometryPass
 
 #pragma region CompositePass
-        m_CompositePass->Begin();
-        m_CompositePipeline->Bind();
+        // m_CompositePass->Begin();
+        // m_CompositePipeline->Bind();
 
-        std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-            descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
+        // std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        // for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        //     descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
 
-        Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
-                vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
-            }
-        );
-        m_CompositePass->End();
+        // Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        //     {
+        //         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
+        //         vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+        //     }
+        // );
+        // m_CompositePass->End();
 #pragma endregion CompositePass
     }
 
@@ -886,20 +886,20 @@ namespace Flameberry {
 #pragma endregion GeometryPass
 
 #pragma region CompositePass
-        m_CompositePass->Begin();
-        m_CompositePipeline->Bind();
+        // m_CompositePass->Begin();
+        // m_CompositePipeline->Bind();
 
-        std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-            descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
+        // std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        // for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+        //     descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
 
-        Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
-                vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
-            }
-        );
-        m_CompositePass->End();
+        // Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        //     {
+        //         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
+        //         vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+        //     }
+        // );
+        // m_CompositePass->End();
 #pragma endregion CompositePass
     }
 

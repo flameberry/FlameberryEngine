@@ -42,6 +42,15 @@ namespace Flameberry {
         bool IsPrimary = false;
     };
 
+    // struct SkyLightComponent
+    // {
+    //     glm::vec3 Color{ 0.0f };
+    //     float Intensity = 5.0f;
+
+    //     bool EnableEnvironmentMap = false, EnableReflections = false;
+    //     AssetHandle EnvironmentMap;
+    // };
+
     // struct MaterialTable {
     //     std::unordered_map<uint32_t, AssetHandle> Table;
 

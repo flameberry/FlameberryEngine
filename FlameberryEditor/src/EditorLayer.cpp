@@ -2,7 +2,7 @@
 
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
-#include "Utils.h"
+#include "UI.h"
 
 namespace Flameberry {
     struct CameraUniformBufferObject { glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix; };
@@ -188,7 +188,7 @@ namespace Flameberry {
                 m_MousePickingBuffer->GetBuffer(),
                 m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetImage(),
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                { m_MouseX, m_ViewportSize.y - m_MouseY }
+                { m_MouseX, m_ViewportSize.y - m_MouseY - 1 }
             );
 
             m_MousePickingBuffer->MapMemory(sizeof(int32_t));
@@ -221,12 +221,15 @@ namespace Flameberry {
                 FL_PROFILE_SCOPE("Last Mouse Picking Pass");
                 m_IsMousePickingBufferReady = true;
 
+                if (m_MouseY == 0)
+                    FL_LOG("Yes");
+
                 auto framebuffer = m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0];
                 if (framebuffer->GetSpecification().Width != m_ViewportSize.x || framebuffer->GetSpecification().Height != m_ViewportSize.y)
                     framebuffer->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
 
                 RenderCommand::SetViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
-                m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingRenderPass, m_MousePickingPipeline, glm::vec2(m_MouseX, (int)(m_ViewportSize.y - m_MouseY)));
+                m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingRenderPass, m_MousePickingPipeline, glm::vec2(m_MouseX, (int)(m_ViewportSize.y - m_MouseY - 1)));
             }
         }
 
@@ -357,7 +360,7 @@ namespace Flameberry {
 
         UI_GizmoOverlay(work_pos);
         UI_RendererSettings();
-        UI_CompositeView();
+        // UI_CompositeView();
 
         m_SceneHierarchyPanel->OnUIRender();
         m_ContentBrowserPanel->OnUIRender();
