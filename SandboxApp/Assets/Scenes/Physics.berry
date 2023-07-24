@@ -1,7 +1,7 @@
 Scene: Physics
 Environment:
   ClearColor: [0.0500000007, 0.0500000007, 0.0500000007]
-  EnvironmentMap: ""
+  EnvironmentMap: Assets/Environment/kloppenheim_02_puresky_4k.hdr
   EnableEnvironmentMap: false
   Reflections: false
   DirectionalLight:
@@ -54,7 +54,8 @@ Entities:
     MeshComponent:
       MeshHandle: 3080484242586179439
       OverridenMaterialTable:
-        []
+        - SubmeshIndex: 0
+          Material: Assets/Materials/SpaceCruiser.fbmat
     RigidBodyComponent:
       Type: Dynamic
       Density: 10
@@ -94,7 +95,16 @@ Entities:
       AspectRatio: 0
       FOV/Zoom: 45
       Near: 0.100000001
-      Far: 400
+      Far: 200
+  - Entity: 18199620809156557055
+    TagComponent: Point Light
+    TransformComponent:
+      Translation: [-5.60108042, 3.27979016, 4.78280449]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    LightComponent:
+      Color: [1, 1, 1]
+      Intensity: 100
 Meshes:
   - Mesh: 3080484242586179439
     FilePath: Assets/Meshes/cube.obj

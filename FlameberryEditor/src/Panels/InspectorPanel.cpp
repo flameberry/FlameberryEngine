@@ -21,7 +21,8 @@ namespace Flameberry {
 
     void InspectorPanel::OnUIRender()
     {
-        ImGui::PushStyleColor(ImGuiCol_Header, { 0.15f, 0.1505f, 0.151f, 1.0f });
+        // ImGui::PushStyleColor(ImGuiCol_Header, { 0.15f, 0.1505f, 0.151f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_Header, { 0.18f, 0.18f, 0.18f, 1.0f });
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
         ImGui::Begin("Inspector");
@@ -30,6 +31,7 @@ namespace Flameberry {
         if (m_SelectionContext != fbentt::null)
         {
             // ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4{});
+#if 0
             DrawComponent<IDComponent>("ID Component", this, [&]()
                 {
                     auto& ID = m_Context->m_Registry->get<IDComponent>(m_SelectionContext).ID;
@@ -48,8 +50,9 @@ namespace Flameberry {
                     }
                 }
             );
+#endif
 
-            DrawComponent<TransformComponent>("Transform Component", this, [&]()
+            DrawComponent<TransformComponent>("Transform", this, [&]()
                 {
                     auto& transform = m_Context->m_Registry->get<TransformComponent>(m_SelectionContext);
 
@@ -88,7 +91,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<CameraComponent>("Camera Component", this, [&]()
+            DrawComponent<CameraComponent>("Camera", this, [&]()
                 {
                     auto& cameraComp = m_Context->m_Registry->get<CameraComponent>(m_SelectionContext);
 
@@ -173,7 +176,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<MeshComponent>("Mesh Component", this, [&]()
+            DrawComponent<MeshComponent>("Mesh", this, [&]()
                 {
                     auto& mesh = m_Context->m_Registry->get<MeshComponent>(m_SelectionContext);
 
@@ -224,7 +227,8 @@ namespace Flameberry {
                         if (staticMesh)
                         {
                             const uint32_t limit = glm::min<uint32_t>(staticMesh->GetSubMeshes().size(), 8);
-                            float verticalLength = ImGui::GetTextLineHeightWithSpacing() + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
+                            const float textLineHeightWithSpacing = ImGui::GetTextLineHeightWithSpacing() + 2.0f;
+                            const float verticalLength = textLineHeightWithSpacing + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
                             ImGui::SetNextWindowSizeConstraints(ImVec2(-1.0f, verticalLength), ImVec2(-1.0f, verticalLength * limit));
 
                             ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
@@ -245,7 +249,7 @@ namespace Flameberry {
                                     ImGui::TableNextColumn();
 
                                     ImGui::AlignTextToFramePadding();
-                                    ImGui::Text("Material %d", submeshIndex);
+                                    ImGui::Text("Element %d", submeshIndex);
                                     ImGui::TableNextColumn();
 
                                     std::shared_ptr<Material> mat;
@@ -256,7 +260,7 @@ namespace Flameberry {
 
                                     ImGui::Button(
                                         mat ? mat->Name.c_str() : "Null",
-                                        ImVec2(ImGui::GetContentRegionAvail().x - verticalLength, 0.0f)
+                                        ImVec2(ImGui::GetContentRegionAvail().x - textLineHeightWithSpacing, 0.0f)
                                     );
 
                                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
@@ -288,7 +292,7 @@ namespace Flameberry {
 
                                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
                                     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
-                                    ImGui::Button("O", ImVec2(verticalLength, 0.0f));
+                                    ImGui::Button("O", ImVec2(0.0f, 0.0f));
                                     ImGui::PopStyleColor();
                                     ImGui::PopStyleVar();
 
@@ -310,7 +314,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<LightComponent>("Light Component", this, [&]()
+            DrawComponent<LightComponent>("Light", this, [&]()
                 {
                     auto& light = m_Context->m_Registry->get<LightComponent>(m_SelectionContext);
 
@@ -343,7 +347,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<RigidBodyComponent>("RigidBody Component", this, [&]()
+            DrawComponent<RigidBodyComponent>("RigidBody", this, [&]()
                 {
                     auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);
 
@@ -418,7 +422,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<BoxColliderComponent>("Box Collider Component", this, [&]()
+            DrawComponent<BoxColliderComponent>("Box Collider", this, [&]()
                 {
                     auto& boxCollider = m_Context->m_Registry->get<BoxColliderComponent>(m_SelectionContext);
 
@@ -441,7 +445,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<SphereColliderComponent>("Sphere Collider Component", this, [&]()
+            DrawComponent<SphereColliderComponent>("Sphere Collider", this, [&]()
                 {
                     auto& sphereCollider = m_Context->m_Registry->get<SphereColliderComponent>(m_SelectionContext);
 
@@ -464,7 +468,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<CapsuleColliderComponent>("Capsule Collider Component", this, [&]()
+            DrawComponent<CapsuleColliderComponent>("Capsule Collider", this, [&]()
                 {
                     auto& capsuleCollider = m_Context->m_Registry->get<CapsuleColliderComponent>(m_SelectionContext);
 

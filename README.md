@@ -1,6 +1,6 @@
 # Flameberry Engine
 
-<img src="screenshots/FlameberryEditor_Debug_SS.png">
+<img src="screenshots/Flameberry_SS.png">
 
 ***
 

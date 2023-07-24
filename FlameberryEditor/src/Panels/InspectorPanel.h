@@ -52,7 +52,7 @@ namespace Flameberry {
         {
             ImGui::PushID(name);
 
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 3.0f });
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 4.0f });
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
             bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_FramePadding);
             ImGui::PopStyleVar(2);

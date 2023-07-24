@@ -51,9 +51,6 @@ namespace Flameberry {
         float lineHeight = ImGui::GetTextLineHeight() + 2.0f * ImGui::GetStyle().FramePadding.y;
         ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
 
-        ImGuiIO& io = ImGui::GetIO();
-        // auto boldFont = io.Fonts->Fonts[0];
-
         ImGui::PushID(str_id.c_str());
 
         ImGui::PushMultiItemsWidths(3, ceil(availWidth + 7.0f - 3 * buttonSize.x));
@@ -63,10 +60,8 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
 
-        // ImGui::PushFont(boldFont);
         if (ImGui::Button("X", buttonSize))
             value.x = defaultValue;
-        // ImGui::PopFont();
         ImGui::PopStyleColor(3);
 
         ImGui::SameLine();
@@ -78,10 +73,8 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
 
-        // ImGui::PushFont(boldFont);
         if (ImGui::Button("Y", buttonSize))
             value.y = defaultValue;
-        // ImGui::PopFont();
         ImGui::PopStyleColor(3);
 
         ImGui::SameLine();
@@ -93,10 +86,8 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
 
-        // ImGui::PushFont(boldFont);
         if (ImGui::Button("Z", buttonSize))
             value.z = defaultValue;
-        // ImGui::PopFont();
         ImGui::PopStyleColor(3);
 
         ImGui::SameLine();

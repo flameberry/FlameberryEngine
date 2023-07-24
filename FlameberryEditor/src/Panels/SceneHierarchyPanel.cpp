@@ -26,7 +26,7 @@ namespace Flameberry {
 
         m_IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 
-        const float padding = 15.0f;
+        const float padding = 12.0f;
         const float width = ImGui::GetContentRegionAvail().x - 2.0f * padding;
         ImGui::SetCursorPos(ImVec2(padding, 4 + ImGui::GetCursorPosY()));
 

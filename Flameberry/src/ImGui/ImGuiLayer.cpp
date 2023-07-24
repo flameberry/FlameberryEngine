@@ -38,13 +38,14 @@ namespace Flameberry {
         config.GlyphExtraSpacing = ImVec2(0.65f, 0.62f);
 #endif
 
+        constexpr float smallFontSize = 13.0f * DPI_SCALE;
         constexpr float fontSize = 14.0f * DPI_SCALE;
         constexpr float bigFontSize = 16.0f * DPI_SCALE;
 
         // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", bigFontSize, &config);
         // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", fontSize, &config);
 
-        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", bigFontSize, &config);
+        // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", smallFontSize, &config);
         io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", fontSize, &config);
         io.FontGlobalScale = 1 / DPI_SCALE;
 
