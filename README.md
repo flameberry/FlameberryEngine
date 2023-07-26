@@ -1,5 +1,7 @@
 # Flameberry Engine
 
+Flameberry Engine is a C++ Game Engine based upon the Vulkan Graphics API and is currently under development. My goal is to build a capable fast and efficient 3D game engine which can ship games on platforms like macOS, Windows, and Linux, and maybe Consoles, PlayStations, Android and iOS in the future!
+
 <img src="screenshots/Flameberry_SS.png">
 
 ***

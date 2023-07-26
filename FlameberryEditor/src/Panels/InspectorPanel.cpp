@@ -22,7 +22,7 @@ namespace Flameberry {
     void InspectorPanel::OnUIRender()
     {
         // ImGui::PushStyleColor(ImGuiCol_Header, { 0.15f, 0.1505f, 0.151f, 1.0f });
-        ImGui::PushStyleColor(ImGuiCol_Header, { 0.18f, 0.18f, 0.18f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_Header, { 0.16f, 0.16f, 0.16f, 1.0f });
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
         ImGui::Begin("Inspector");
@@ -556,7 +556,6 @@ namespace Flameberry {
 
             ImGui::PopStyleColor();
         }
-
         ImGui::End();
 
         m_MaterialSelectorPanel->OnUIRender();
