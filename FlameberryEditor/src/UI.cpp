@@ -46,10 +46,10 @@ namespace Flameberry {
 
     void UI::Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
 
         float lineHeight = ImGui::GetTextLineHeight() + 2.0f * ImGui::GetStyle().FramePadding.y;
-        ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
+        ImVec2 buttonSize = { 5.0f, lineHeight };
 
         ImGui::PushID(str_id.c_str());
 
@@ -60,7 +60,7 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
 
-        if (ImGui::Button("X", buttonSize))
+        if (ImGui::Button("##X_Button", buttonSize))
             value.x = defaultValue;
         ImGui::PopStyleColor(3);
 
@@ -73,7 +73,7 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
 
-        if (ImGui::Button("Y", buttonSize))
+        if (ImGui::Button("##Y_Button", buttonSize))
             value.y = defaultValue;
         ImGui::PopStyleColor(3);
 
@@ -86,7 +86,7 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
 
-        if (ImGui::Button("Z", buttonSize))
+        if (ImGui::Button("##Z_Button", buttonSize))
             value.z = defaultValue;
         ImGui::PopStyleColor(3);
 

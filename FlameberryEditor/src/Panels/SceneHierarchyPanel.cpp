@@ -19,7 +19,7 @@ namespace Flameberry {
     void SceneHierarchyPanel::OnUIRender()
     {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, Theme::WindowBgGrey);
         ImGui::Begin("Scene Hierarchy");
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
@@ -67,7 +67,7 @@ namespace Flameberry {
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y);
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 4));
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.09f, 0.09f, 0.09f, 1.00f));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBg);
         ImGui::BeginChild("##EntityList", ImVec2(-1, -1), false, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysUseWindowPadding);
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();

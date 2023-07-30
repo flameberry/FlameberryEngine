@@ -21,15 +21,56 @@ namespace Flameberry {
 
     void InspectorPanel::OnUIRender()
     {
-        // ImGui::PushStyleColor(ImGuiCol_Header, { 0.15f, 0.1505f, 0.151f, 1.0f });
-        ImGui::PushStyleColor(ImGuiCol_Header, { 0.16f, 0.16f, 0.16f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_Header, { 0.19f, 0.19f, 0.19f, 1.0f });
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, Theme::WindowBgGrey);
         ImGui::Begin("Inspector");
+        ImGui::PopStyleColor();
         ImGui::PopStyleVar();
 
         if (m_SelectionContext != fbentt::null)
         {
+            auto& tag = m_Context->m_Registry->get<TagComponent>(m_SelectionContext);
+            auto bigFont = ImGui::GetIO().Fonts->Fonts[0];
+
+            const auto& windowPadding = ImGui::GetStyle().WindowPadding;
+            ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPos().x + windowPadding.x, ImGui::GetCursorPos().y + windowPadding.y));
+
+            ImGui::PushFont(bigFont);
+            ImGui::Text("%s", tag.Tag.c_str());
+            ImGui::PopFont();
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("+ Add"))
+                ImGui::OpenPopup("AddComponentPopUp");
+
+            if (ImGui::BeginPopup("AddComponentPopUp"))
+            {
+                if (ImGui::MenuItem("Transform Component"))
+                    m_Context->m_Registry->emplace<TransformComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Camera Component"))
+                    m_Context->m_Registry->emplace<CameraComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Mesh Component"))
+                    m_Context->m_Registry->emplace<MeshComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Light Component"))
+                    m_Context->m_Registry->emplace<LightComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("RigidBody Component"))
+                    m_Context->m_Registry->emplace<RigidBodyComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Box Colllider Component"))
+                    m_Context->m_Registry->emplace<BoxColliderComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Sphere Colllider Component"))
+                    m_Context->m_Registry->emplace<SphereColliderComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Capsule Colllider Component"))
+                    m_Context->m_Registry->emplace<CapsuleColliderComponent>(m_SelectionContext);
+                ImGui::EndPopup();
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_Border, Theme::TableBorder);
+            ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), true, ImGuiWindowFlags_AlwaysAutoResize);
+            ImGui::PopStyleColor();
 #if 0
             DrawComponent<IDComponent>("ID Component", this, [&]()
                 {
@@ -55,9 +96,9 @@ namespace Flameberry {
                 {
                     auto& transform = m_Context->m_Registry->get<TransformComponent>(m_SelectionContext);
 
-                    if (ImGui::BeginTable("TransformComponentAttributes", 2, m_TableFlags))
+                    if (ImGui::BeginTable("TransformComponentAttributes", 2, s_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
@@ -94,9 +135,9 @@ namespace Flameberry {
                 {
                     auto& cameraComp = m_Context->m_Registry->get<CameraComponent>(m_SelectionContext);
 
-                    if (ImGui::BeginTable("CameraComponentAttributes", 2, m_TableFlags))
+                    if (ImGui::BeginTable("CameraComponentAttributes", 2, s_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -179,9 +220,9 @@ namespace Flameberry {
                 {
                     auto& mesh = m_Context->m_Registry->get<MeshComponent>(m_SelectionContext);
 
-                    if (ImGui::BeginTable("MeshComponentAttributes", 2, m_TableFlags))
+                    if (ImGui::BeginTable("MeshComponentAttributes", 2, s_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -236,9 +277,9 @@ namespace Flameberry {
                             ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), false, window_flags);
                             ImGui::PopStyleVar();
 
-                            if (ImGui::BeginTable("MaterialTable", 2, m_TableFlags))
+                            if (ImGui::BeginTable("MaterialTable", 2, s_TableFlags))
                             {
-                                ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                                ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
                                 ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
 
                                 uint32_t submeshIndex = 0;
@@ -317,9 +358,9 @@ namespace Flameberry {
                 {
                     auto& light = m_Context->m_Registry->get<LightComponent>(m_SelectionContext);
 
-                    if (ImGui::BeginTable("LightComponentAttributes", 2, m_TableFlags))
+                    if (ImGui::BeginTable("LightComponentAttributes", 2, s_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
@@ -350,9 +391,9 @@ namespace Flameberry {
                 {
                     auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);
 
-                    if (ImGui::BeginTable("RigidBodyComponentAttributes", 2, m_TableFlags))
+                    if (ImGui::BeginTable("RigidBodyComponentAttributes", 2, s_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
@@ -425,9 +466,9 @@ namespace Flameberry {
                 {
                     auto& boxCollider = m_Context->m_Registry->get<BoxColliderComponent>(m_SelectionContext);
 
-                    if (ImGui::BeginTable("BoxColliderComponentAttributes", 2, m_TableFlags))
+                    if (ImGui::BeginTable("BoxColliderComponentAttributes", 2, s_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
@@ -448,9 +489,9 @@ namespace Flameberry {
                 {
                     auto& sphereCollider = m_Context->m_Registry->get<SphereColliderComponent>(m_SelectionContext);
 
-                    if (ImGui::BeginTable("SphereColliderComponentAttributes", 2, m_TableFlags))
+                    if (ImGui::BeginTable("SphereColliderComponentAttributes", 2, s_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
@@ -471,9 +512,9 @@ namespace Flameberry {
                 {
                     auto& capsuleCollider = m_Context->m_Registry->get<CapsuleColliderComponent>(m_SelectionContext);
 
-                    if (ImGui::BeginTable("CapsuleColliderComponentAttributes", 2, m_TableFlags))
+                    if (ImGui::BeginTable("CapsuleColliderComponentAttributes", 2, s_TableFlags))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
                         ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
                         ImGui::TableNextRow();
@@ -527,37 +568,14 @@ namespace Flameberry {
                     }
                 }
             );
-
-            ImGui::Separator();
-            if (UI::CenteredButton("Add Component"))
-                ImGui::OpenPopup("AddComponentPopUp");
-
-            if (ImGui::BeginPopup("AddComponentPopUp"))
-            {
-                if (ImGui::MenuItem("Transform Component"))
-                    m_Context->m_Registry->emplace<TransformComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Camera Component"))
-                    m_Context->m_Registry->emplace<CameraComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Mesh Component"))
-                    m_Context->m_Registry->emplace<MeshComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Light Component"))
-                    m_Context->m_Registry->emplace<LightComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("RigidBody Component"))
-                    m_Context->m_Registry->emplace<RigidBodyComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Box Colllider Component"))
-                    m_Context->m_Registry->emplace<BoxColliderComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Sphere Colllider Component"))
-                    m_Context->m_Registry->emplace<SphereColliderComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Capsule Colllider Component"))
-                    m_Context->m_Registry->emplace<CapsuleColliderComponent>(m_SelectionContext);
-                ImGui::EndPopup();
-            }
-
             ImGui::PopStyleColor();
-        }
+                }
+        ImGui::EndChild();
         ImGui::End();
+
+        ImGui::PopStyleVar();
 
         m_MaterialSelectorPanel->OnUIRender();
         m_MaterialEditorPanel->OnUIRender();
+        }
     }
-}

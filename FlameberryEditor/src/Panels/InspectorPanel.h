@@ -29,8 +29,8 @@ namespace Flameberry {
     private:
         std::shared_ptr<fbentt::registry> GetContextRegistry() const { return m_Context->m_Registry; }
     private:
-        const ImGuiTableFlags m_TableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
-        const float m_LabelWidth = 100.0f;
+        static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible;
+        static constexpr float s_LabelWidth = 100.0f;
 
         std::shared_ptr<MaterialEditorPanel> m_MaterialEditorPanel;
         std::shared_ptr<MaterialSelectorPanel> m_MaterialSelectorPanel;
