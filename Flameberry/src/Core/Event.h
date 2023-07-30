@@ -5,11 +5,11 @@
 #include <functional>
 
 namespace Flameberry {
-    enum class EventType {
-        NONE = 0,
-        KEY_PRESSED,
-        MOUSEBUTTON_PRESSED,
-        MOUSE_SCROLL
+    enum class EventType : uint8_t {
+        None = 0,
+        KeyPressed,
+        MouseButtonPressed,
+        MouseScrolled
     };
 
     struct Event {
@@ -24,7 +24,7 @@ namespace Flameberry {
         uint32_t KeyCode;
 
         KeyPressedEvent(uint32_t keyCode) : KeyCode(keyCode) {}
-        EventType GetType() const override { return EventType::KEY_PRESSED; }
+        EventType GetType() const override { return EventType::KeyPressed; }
         std::string ToString() const override { return "KeyPressedEvent: " + std::to_string(KeyCode); }
     };
 
@@ -32,7 +32,7 @@ namespace Flameberry {
         uint32_t KeyCode;
 
         MouseButtonPressedEvent(uint32_t keyCode) : KeyCode(keyCode) {}
-        EventType GetType() const override { return EventType::MOUSEBUTTON_PRESSED; }
+        EventType GetType() const override { return EventType::MouseButtonPressed; }
         std::string ToString() const override { return "MouseButtonPressedEvent: " + std::to_string(KeyCode); }
     };
 
@@ -40,7 +40,7 @@ namespace Flameberry {
         double OffsetX, OffsetY;
 
         MouseScrollEvent(double X, double Y) : OffsetX(X), OffsetY(Y) {}
-        EventType GetType() const override { return EventType::MOUSE_SCROLL; }
+        EventType GetType() const override { return EventType::MouseScrolled; }
         std::string ToString() const override { return "MouseScrollEvent: X: " + std::to_string(OffsetX) + "Y: " + std::to_string(OffsetY); }
     };
 }

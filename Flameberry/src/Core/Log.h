@@ -5,7 +5,7 @@
 namespace Flameberry {
     struct Logger {
         static void Init(const char* name);
-        static std::shared_ptr<flamelogger::FLLoggerInstance> CoreLogger;
+        static std::shared_ptr<flamelogger::Logger> CoreLogger;
     };
 }
 

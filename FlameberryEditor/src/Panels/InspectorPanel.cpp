@@ -30,7 +30,6 @@ namespace Flameberry {
 
         if (m_SelectionContext != fbentt::null)
         {
-            // ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4{});
 #if 0
             DrawComponent<IDComponent>("ID Component", this, [&]()
                 {

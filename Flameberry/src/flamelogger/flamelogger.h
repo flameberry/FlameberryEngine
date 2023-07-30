@@ -46,7 +46,7 @@
 
 namespace flamelogger {
     /// This enum class is currently only used for adding log level prefix to all logger messages
-    enum class LogLevel { TRACE = 0, LOG, INFO, WARNING, ERROR, CRITICAL };
+    enum class LogLevel : uint8_t { TRACE = 0, LOG, INFO, WARNING, ERROR, CRITICAL };
 
     std::string get_current_time_string();
 
@@ -134,13 +134,13 @@ namespace flamelogger {
         return msg;
     }
 
-    class FLLoggerInstance
+    class Logger
     {
     public:
         /// Instance Name should be set at the beginning of the program,
         /// which will be used as a prefix to all the log messages during runtime
-        FLLoggerInstance(const char* instanceName);
-        static std::shared_ptr<FLLoggerInstance> Create(const char* instanceName);
+        Logger(const char* instanceName);
+        static std::shared_ptr<Logger> Create(const char* instanceName);
         void SetLogLevel(const LogLevel& logLevel);
 
         /// Logs the message in CYAN color in the terminal

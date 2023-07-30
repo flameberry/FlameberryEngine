@@ -77,7 +77,7 @@ namespace Flameberry {
     void Application::OnEvent(Event& e)
     {
         switch (e.GetType()) {
-            case EventType::KEY_PRESSED:
+            case EventType::KeyPressed:
                 this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
                 break;
         }

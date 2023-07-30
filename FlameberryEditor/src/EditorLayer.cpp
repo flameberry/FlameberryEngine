@@ -403,16 +403,16 @@ namespace Flameberry {
     {
         switch (e.GetType())
         {
-            case EventType::MOUSEBUTTON_PRESSED:
+            case EventType::MouseButtonPressed:
                 this->OnMouseButtonPressedEvent(*(MouseButtonPressedEvent*)(&e));
                 break;
-            case EventType::KEY_PRESSED:
+            case EventType::KeyPressed:
                 this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
                 break;
-            case EventType::MOUSE_SCROLL:
+            case EventType::MouseScrolled:
                 this->OnMouseScrolledEvent(*(MouseScrollEvent*)(&e));
                 break;
-            case EventType::NONE:
+            case EventType::None:
                 break;
         }
 

@@ -43,7 +43,12 @@ if __name__ == '__main__':
     project_dir = get_project_dir()
     os.chdir(project_dir)
     search_results = setup_cmake()
+    if not len(search_results):
+        raise Exception("[FLAMEBERRY]: Failed to setup CMake! Stopping now...")
 
+    cmake_path = pathlib.Path(search_results[0])
+    os.environ['PATH'] += f';{str(cmake_path.parent)}'
+    
     # Setup Nvidia PhysX
     print("[FLAMEBERRY]: Setting up Nvidia PhysX...")
 
@@ -113,24 +118,21 @@ if __name__ == '__main__':
     physX_env_cmake_file.write(physX_env_cmake_string)
     physX_env_cmake_file.close()
 
-    if len(search_results):
-        cmake_path = search_results[0]
-        cmake_build_type = "Release"
+    cmake_build_type = "Release"
+    if len(sys.argv):
+        argumentList = sys.argv[1:]
 
-        if len(sys.argv):
-            argumentList = sys.argv[1:]
- 
-            options = ":"
-            long_options = ["config"]
-            arguments, values = getopt.getopt(argumentList, options, long_options)
-     
-            for arg, val in arguments:
-                if arg in "--config":
-                    cmake_build_type = str(val)
-             
-        cmake_params = [cmake_path, f"-DCMAKE_BUILD_TYPE={cmake_build_type}", "-Wno-dev", "-S.", f"-Bbuild/"]
-        cmake_process = subprocess.run(cmake_params)
-        if cmake_process.returncode == 0:
-            print(f'[FLAMEBERRY]: Flameberry project files are generated at the path: {project_dir}/build/')
-        else:
-            print("[FLAMEBERRY]: ERROR: Failed to generate project files!")
+        options = ":"
+        long_options = ["config"]
+        arguments, values = getopt.getopt(argumentList, options, long_options)
+    
+        for arg, val in arguments:
+            if arg in "--config":
+                cmake_build_type = str(val)
+            
+    cmake_params = ["cmake", f"-DCMAKE_BUILD_TYPE={cmake_build_type}", "-Wno-dev", "-S.", f"-Bbuild/"]
+    cmake_process = subprocess.run(cmake_params)
+    if cmake_process.returncode == 0:
+        print(f'[FLAMEBERRY]: Flameberry project files are generated at the path: {project_dir}/build/')
+    else:
+        print("[FLAMEBERRY]: ERROR: Failed to generate project files!")

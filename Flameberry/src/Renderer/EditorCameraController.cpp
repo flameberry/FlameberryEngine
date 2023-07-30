@@ -100,7 +100,7 @@ namespace Flameberry {
     void EditorCameraController::OnEvent(const Event& e)
     {
         switch (e.GetType()) {
-            case EventType::MOUSE_SCROLL: {
+            case EventType::MouseScrolled: {
                     // auto event = *(MouseScrollEvent*)(&e);
 
                     // auto& cameraSpec = m_Camera->m_CameraSpec;
