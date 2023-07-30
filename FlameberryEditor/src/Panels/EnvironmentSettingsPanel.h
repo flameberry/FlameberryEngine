@@ -18,7 +18,7 @@ namespace Flameberry {
     private:
         std::shared_ptr<Scene> m_Context;
 
-        const ImGuiTableFlags m_TableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
-        const float m_LabelWidth = 100.0f;
+        static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible;
+        static constexpr float s_LabelWidth = 100.0f;
     };
 }

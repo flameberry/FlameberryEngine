@@ -10,8 +10,8 @@ namespace Flameberry {
         void OnUIRender();
         void DrawMapControls(const char* label, bool& mapEnabledVar, std::shared_ptr<Texture2D>& map);
     private:
-        const ImGuiTableFlags m_TableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
-        const float m_LabelWidth = 100.0f;
+        static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible;
+        static constexpr float s_LabelWidth = 100.0f;
 
         std::shared_ptr<Material> m_EditingContext;
         bool m_IsMaterialEdited = false, m_ShouldRename = false;

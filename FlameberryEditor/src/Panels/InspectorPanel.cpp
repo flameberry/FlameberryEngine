@@ -21,17 +21,16 @@ namespace Flameberry {
 
     void InspectorPanel::OnUIRender()
     {
-        ImGui::PushStyleColor(ImGuiCol_Header, { 0.19f, 0.19f, 0.19f, 1.0f });
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, Theme::WindowBgGrey);
         ImGui::Begin("Inspector");
-        ImGui::PopStyleColor();
         ImGui::PopStyleVar();
 
         if (m_SelectionContext != fbentt::null)
         {
+            ImGui::PushStyleColor(ImGuiCol_Border, Theme::FrameBorder);
+
             auto& tag = m_Context->m_Registry->get<TagComponent>(m_SelectionContext);
             auto bigFont = ImGui::GetIO().Fonts->Fonts[0];
 
@@ -68,7 +67,7 @@ namespace Flameberry {
                 ImGui::EndPopup();
             }
 
-            ImGui::PushStyleColor(ImGuiCol_Border, Theme::TableBorder);
+            ImGui::PushStyleColor(ImGuiCol_Border, Theme::WindowBorder);
             ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), true, ImGuiWindowFlags_AlwaysAutoResize);
             ImGui::PopStyleColor();
 #if 0
@@ -569,7 +568,7 @@ namespace Flameberry {
                 }
             );
             ImGui::PopStyleColor();
-                }
+        }
         ImGui::EndChild();
         ImGui::End();
 
@@ -577,5 +576,5 @@ namespace Flameberry {
 
         m_MaterialSelectorPanel->OnUIRender();
         m_MaterialEditorPanel->OnUIRender();
-        }
     }
+}

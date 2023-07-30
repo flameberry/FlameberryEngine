@@ -1,7 +1,7 @@
 Handle: 17476932118098485954
 Name: SpaceCruiser
 Albedo: [1, 1, 1]
-Roughness: 0.200000003
+Roughness: 0.639999986
 Metallic: 0
 TextureMapEnabled: true
 TextureMap: Assets/Textures/space-cruiser-panels2-bl/space-cruiser-panels2_albedo.png

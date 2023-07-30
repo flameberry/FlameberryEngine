@@ -120,11 +120,14 @@ namespace Flameberry {
 
         m_SecondChildSize = ImGui::GetWindowContentRegionWidth() - m_FirstChildSize - 8.0f;
 
-        UI::Splitter(true, 3.0f, &m_FirstChildSize, &m_SecondChildSize, 10.0f, 80.0f);
+        UI::Splitter(true, 1.0f, &m_FirstChildSize, &m_SecondChildSize, 10.0f, 80.0f);
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 7 });
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBg);
         ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::PopStyleColor();
 
         for (auto& directory : std::filesystem::directory_iterator("Assets")) {
             if (directory.is_directory()) {
@@ -136,9 +139,6 @@ namespace Flameberry {
         ImGui::PopStyleVar();
 
         ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 
         float topChildHeight = 38.0f;
         float bottomChildHeight = ImGui::GetContentRegionAvail().y - topChildHeight;
@@ -158,8 +158,9 @@ namespace Flameberry {
         }
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
         UI::SearchBar("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, "Search...");
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar(2);
 
         if (m_IsSearchBoxFocused)
         {
@@ -176,7 +177,7 @@ namespace Flameberry {
         ImGui::PopFont();
 
         ImVec2 pos = ImVec2(ImGui::GetWindowPos().x, ImGui::GetWindowHeight() + ImGui::GetWindowPos().y);
-        ImGui::GetWindowDrawList()->AddLine(pos, ImVec2{ pos.x + ImGui::GetWindowWidth() - 5.0f, pos.y }, 0xff646161, 4.0f);
+        ImGui::GetWindowDrawList()->AddLine(pos, ImVec2{ pos.x + ImGui::GetWindowWidth(), pos.y }, 0xff101010, 4.0f);
         ImGui::EndChild();
 
         ImGui::SetNextWindowPos(pos);
@@ -184,13 +185,13 @@ namespace Flameberry {
         ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, bottomChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleVar();
 
-        float iconWidth = 75.0f, padding = 15.0f;
-
+        float iconWidth = 80.0f, padding = 12.0f;
         float cellSize = iconWidth + padding;
         uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize;
         columns = columns >= 1 ? columns : 1;
         ImGui::Columns(columns, (const char*)__null, false);
 
+        ImVec2 itemSize;
         for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory })
         {
             const std::filesystem::path& filePath = directory.path();
@@ -208,9 +209,9 @@ namespace Flameberry {
             ImGui::PushID(filePath.filename().c_str());
             std::string ext = filePath.extension().string();
             int currentIconIndex;
-            bool is_file_supported = true;
+            bool isFileSupported = true, isDirectory = directory.is_directory();
 
-            if (directory.is_directory())
+            if (isDirectory)
                 currentIconIndex = FileTypeIndex::FOLDER;
             else if (ext == ".berry")
                 currentIconIndex = FileTypeIndex::BERRY;
@@ -230,56 +231,23 @@ namespace Flameberry {
                 currentIconIndex = FileTypeIndex::HDR;
             else {
                 currentIconIndex = FileTypeIndex::DEFAULT;
-                is_file_supported = false;
+                isFileSupported = false;
             }
 
-            // TODO: Precalculate iconWidths for all
-            // float iconHeight = iconWidth * m_IconTextures[currentIconIndex]->GetImageSpecification().Height / m_IconTextures[currentIconIndex]->GetImageSpecification().Width;
+            itemSize = UI::ContentBrowserItem(filePath, iconWidth, iconWidth, m_IconTextures[currentIconIndex]->GetDescriptorSet());
 
-            ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[currentIconIndex]->GetDescriptorSet()), ImVec2{ iconWidth, iconWidth });
-
-            const auto& filename = is_file_supported ? directory.path().stem() : directory.path().filename();
-
-            if (ImGui::BeginPopupContextItem())
-            {
-                if (ImGui::MenuItem("Delete"))
-                    FL_LOG("Delete");
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginDragDropSource())
-            {
-                ImGui::SetDragDropPayload(
-                    "FL_CONTENT_BROWSER_ITEM",
-                    filePath.c_str(),
-                    (strlen(filePath.c_str()) + 1) * sizeof(char),
-                    ImGuiCond_Once
-                );
-                ImGui::Text("%s", filePath.c_str());
-                ImGui::EndDragDropSource();
-            }
-
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && directory.is_directory())
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
                 m_CurrentDirectory = directory.path();
 
-            auto columnWidth = ImGui::GetColumnWidth();
-            auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
-            const auto aSize = ImGui::CalcTextSize("A");
-
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 5.0f, 20.0f });
-            if (textWidth > columnWidth) {
-                uint32_t characters = columnWidth / aSize.x - 3;
-                ImGui::Text("%.*s%s", characters, filename.c_str(), "...");
-            }
-            else {
-                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (columnWidth - textWidth) * 0.5f - ImGui::GetScrollX() - 1 * ImGui::GetStyle().ItemSpacing.x);
-                ImGui::Text("%s", filename.c_str());
-            }
-            ImGui::PopStyleVar();
+            if (ImGui::GetColumnIndex() == columns - 1)
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20.0f);
 
             ImGui::NextColumn();
             ImGui::PopID();
         }
+
+        if (ImGui::GetColumnIndex() != 0)
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + itemSize.y + 10.0f);
 
         if (ImGui::BeginPopupContextWindow())
         {
@@ -296,9 +264,7 @@ namespace Flameberry {
                 platform::OpenInExplorerOrFinder((m_ProjectDirectory / m_CurrentDirectory).string().c_str());
             ImGui::EndPopup();
         }
-        ImGui::PopStyleColor(2);
         ImGui::EndChild();
-
         ImGui::End();
     }
 }

@@ -586,6 +586,7 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
         ImGui::PushStyleColor(ImGuiCol_Button, 0x0);
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, Theme::WindowBg);
 
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
             | ImGuiWindowFlags_NoResize
@@ -636,7 +637,7 @@ namespace Flameberry {
 
         ImGui::End();
 
-        ImGui::PopStyleColor();
+        ImGui::PopStyleColor(2);
         ImGui::PopStyleVar(2);
     }
 

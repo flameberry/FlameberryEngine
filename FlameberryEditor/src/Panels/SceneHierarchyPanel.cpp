@@ -285,6 +285,12 @@ namespace Flameberry {
                 m_Context->m_Registry->emplace<MeshComponent>(entity);
                 m_SelectionContext = entity;
             }
+            if (ImGui::MenuItem("Camera"))
+            {
+                auto entity = m_Context->CreateEntityWithTagAndParent("Camera", parent);
+                m_Context->m_Registry->emplace<CameraComponent>(entity);
+                m_SelectionContext = entity;
+            }
             if (ImGui::BeginMenu("Light"))
             {
                 if (ImGui::MenuItem("Point Light"))

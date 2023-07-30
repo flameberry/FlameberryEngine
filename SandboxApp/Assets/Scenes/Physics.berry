@@ -67,7 +67,7 @@ Entities:
   - Entity: 1701966284920448526
     TagComponent: Sphere
     TransformComponent:
-      Translation: [-0.186144769, 9.11029148, -6.10351562e-05]
+      Translation: [-0.186144769, 9.11029148, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
@@ -92,7 +92,7 @@ Entities:
     CameraComponent:
       IsPrimary: true
       ProjectionType: Perspective
-      AspectRatio: 0
+      AspectRatio: 1.50772631
       FOV/Zoom: 45
       Near: 0.100000001
       Far: 200

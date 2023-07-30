@@ -11,13 +11,16 @@ namespace Flameberry {
 
     void EnvironmentSettingsPanel::OnUIRender()
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 0));
         ImGui::Begin("Environment");
         ImGui::PopStyleVar();
 
-        if (ImGui::BeginTable("Environment_Attributes", 2, m_TableFlags))
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+        ImGui::PushStyleColor(ImGuiCol_Border, Theme::FrameBorder);
+
+        if (ImGui::BeginTable("Environment_Attributes", 2, s_TableFlags))
         {
-            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
             ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
             ImGui::TableNextRow();
@@ -100,6 +103,8 @@ namespace Flameberry {
             FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Intensity", &environment.DirLight.Intensity, 0.01f));
             ImGui::EndTable();
         }
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
         ImGui::End();
     }
 }

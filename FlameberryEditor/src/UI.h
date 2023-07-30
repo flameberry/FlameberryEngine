@@ -3,6 +3,7 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <imgui/imgui.h>
+#include <filesystem>
 
 #define FL_PUSH_WIDTH_MAX(imgui_widget) { ImGui::PushItemWidth(-1); imgui_widget; ImGui::PopItemWidth(); }
 
@@ -15,6 +16,9 @@ namespace Flameberry {
         static void Vec3Control(const std::string& label, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth);
         static bool CenteredButton(const char* label, float alignment = 0.5f);
         static void SearchBar(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint = (const char*)__null);
+
+        // Returns full width and height of the group including text and file icon
+        static ImVec2 ContentBrowserItem(const std::filesystem::path& filepath, float width, float height, ImTextureID icon);
     };
 
     class Theme
@@ -26,6 +30,8 @@ namespace Flameberry {
         static constexpr ImVec4 WindowBgGrey = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
         static constexpr ImVec4 TableBorder = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
         static constexpr ImVec4 FrameBg = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
+        static constexpr ImVec4 WindowBorder = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
+        static constexpr ImVec4 FrameBorder = ImVec4(0.24f, 0.24f, 0.24f, 1.0f);
     };
 
 }

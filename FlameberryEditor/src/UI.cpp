@@ -20,7 +20,7 @@ namespace Flameberry {
         ImRect bb;
         bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
         bb.Max = bb.Min + CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness), 0.0f, 0.0f);
-        return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f);
+        return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f, 0.0f, 0xFF000000);
     }
 
     bool UI::CenteredButton(const char* label, float alignment)
@@ -42,6 +42,82 @@ namespace Flameberry {
         ImGui::PushItemWidth(width);
         ImGui::InputTextWithHint(label, inputHint, inputBuffer, inputLength);
         ImGui::PopItemWidth();
+    }
+
+    ImVec2 UI::ContentBrowserItem(const std::filesystem::path& filepath, float width, float height, ImTextureID icon)
+    {
+        bool isDirectory = std::filesystem::is_directory(filepath);
+
+        ImGuiStyle& style = ImGui::GetStyle();
+
+        const auto& framePadding = style.FramePadding;
+        height += 2 * framePadding.y;
+
+        const float textHeight = ImGui::GetTextLineHeightWithSpacing();
+        const float fullWidth = width + 3.0f * framePadding.x;
+        const float fullHeight = height + 2 * textHeight;
+
+        if (!isDirectory)
+        {
+            const auto& cursorPos = ImGui::GetCursorScreenPos();
+            ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, ImVec2(cursorPos.x + fullWidth, cursorPos.y + height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
+            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), ImVec2(cursorPos.x + fullWidth, cursorPos.y + fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
+            ImGui::GetWindowDrawList()->AddRect(cursorPos, ImVec2(cursorPos.x + fullWidth, cursorPos.y + fullHeight), 0xff000000, 3, 0, 1.5f);
+        }
+
+        ImGui::BeginGroup();
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+
+        ImGui::ImageButton(filepath.c_str(), reinterpret_cast<ImTextureID>(icon), ImVec2(width, height));
+
+        ImGui::PopStyleColor(3);
+
+        const auto& filename = filepath.stem();
+        const auto cursorPosX = ImGui::GetCursorPosX();
+        ImGui::SetCursorPosX(cursorPosX + framePadding.x);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 1.5f * style.ItemSpacing.y);
+        if (isDirectory)
+        {
+            const auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
+            const auto aWidth = ImGui::CalcTextSize("a").x;
+            if (textWidth > fullWidth)
+            {
+                uint32_t characters = width / aWidth;
+                ImGui::Text("%.*s%s", characters, filename.c_str(), "...");
+            }
+            else
+            {
+                ImGui::SetCursorPosX(glm::max(cursorPosX + framePadding.x, cursorPosX + (fullWidth - textWidth) * 0.5f));
+                ImGui::Text("%s", filename.c_str());
+            }
+        }
+        else
+        {
+            ImGui::TextWrapped("%s", filename.c_str());
+        }
+        ImGui::EndGroup();
+
+        if (ImGui::BeginPopupContextItem())
+        {
+            if (ImGui::MenuItem("Delete"))
+                FL_LOG("Delete");
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginDragDropSource())
+        {
+            ImGui::SetDragDropPayload(
+                "FL_CONTENT_BROWSER_ITEM",
+                filepath.c_str(),
+                (strlen(filepath.c_str()) + 1) * sizeof(char),
+                ImGuiCond_Once
+            );
+            ImGui::Text("%s", filepath.c_str());
+            ImGui::EndDragDropSource();
+        }
+        return ImVec2(fullWidth, fullHeight);
     }
 
     void UI::Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)

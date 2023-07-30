@@ -7,14 +7,16 @@ namespace Flameberry {
     void MaterialEditorPanel::OnUIRender()
     {
         m_IsMaterialEdited = false;
-
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 0));
         ImGui::Begin("Material Editor");
         ImGui::PopStyleVar();
 
-        if (ImGui::BeginTable("MaterialAttributeTable", 2, m_TableFlags))
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+        ImGui::PushStyleColor(ImGuiCol_Border, Theme::FrameBorder);
+
+        if (ImGui::BeginTable("MaterialAttributeTable", 2, s_TableFlags))
         {
-            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
+            ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
             ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -24,6 +26,7 @@ namespace Flameberry {
 
             if (m_EditingContext && m_ShouldRename)
             {
+
                 strcpy(m_RenameBuffer, m_EditingContext->Name.c_str());
                 ImGui::SetKeyboardFocusHere();
 
@@ -109,7 +112,11 @@ namespace Flameberry {
                 m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
             }
             ImGui::EndTable();
+
         }
+
+        ImGui::PopStyleColor(); // Frame Border Color
+        ImGui::PopStyleVar(); // Frame Border Size
         ImGui::End();
 
         if (m_IsMaterialEdited && !m_EditingContext->FilePath.empty())
