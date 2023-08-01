@@ -720,6 +720,8 @@ namespace Flameberry {
 
     void EditorLayer::UI_RendererSettings()
     {
+        constexpr ImGuiTableFlags flags = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible;
+
         ImGui::Begin("Renderer Settings");
         ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         FL_DISPLAY_SCOPE_DETAILS_IMGUI();
@@ -728,16 +730,54 @@ namespace Flameberry {
 
         if (ImGui::CollapsingHeader("Scene Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
         {
-            auto& settings = m_SceneRenderer->GetRendererSettingsRef();
+            if (ImGui::BeginTable("RendererSettings_Attributes", 2, flags))
+            {
+                ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 100);
+                ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
-            ImGui::Button("Reload Mesh Shader");
-            if (ImGui::IsItemClicked())
-                m_ShouldReloadMeshShaders = true;
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
 
-            ImGui::Checkbox("Enable Shadows", &settings.EnableShadows);
-            ImGui::Checkbox("Show Cascades", &settings.ShowCascades);
-            ImGui::Checkbox("Soft Shadows", &settings.SoftShadows);
-            ImGui::DragFloat("Lambda Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f);
+                auto& settings = m_SceneRenderer->GetRendererSettingsRef();
+
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Mesh Shader");
+                ImGui::TableNextColumn();
+
+                ImGui::Button("Reload");
+                if (ImGui::IsItemClicked())
+                    m_ShouldReloadMeshShaders = true;
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Enable Shadows");
+                ImGui::TableNextColumn();
+                ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Show Cascades");
+                ImGui::TableNextColumn();
+                ImGui::Checkbox("##Show_Cascades", &settings.ShowCascades);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Soft Shadows");
+                ImGui::TableNextColumn();
+                ImGui::Checkbox("##Soft_Shadows", &settings.SoftShadows);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Lambda Split");
+                ImGui::TableNextColumn();
+                FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
+                ImGui::EndTable();
+            }
         }
         ImGui::End();
     }

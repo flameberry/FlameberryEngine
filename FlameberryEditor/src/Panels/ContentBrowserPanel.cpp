@@ -233,7 +233,7 @@ namespace Flameberry {
                 currentIconIndex = FileTypeIndex::DEFAULT;
                 isFileSupported = false;
             }
-
+            
             itemSize = UI::ContentBrowserItem(filePath, iconWidth, iconWidth, m_IconTextures[currentIconIndex]->GetDescriptorSet());
 
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
