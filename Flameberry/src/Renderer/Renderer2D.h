@@ -37,7 +37,7 @@ namespace Flameberry {
     {
     public:
         static void Init(const std::shared_ptr<DescriptorSetLayout>& globalDescriptorSetLayout, const std::shared_ptr<RenderPass>& renderPass);
-        static void Destroy();
+        static void Shutdown();
 
         static void AddGrid(int gridSize);
         static void AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color);

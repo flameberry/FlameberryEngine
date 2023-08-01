@@ -1,4 +1,4 @@
-#include "Physics.h"
+#include "PhysicsEngine.h"
 
 #include "Core/Core.h"
 #include "PxPhysicsAPI.h"
@@ -6,16 +6,16 @@
 
 namespace Flameberry {
 
-    physx::PxDefaultErrorCallback PhysicsContext::s_DefaultErrorCallback;
-    physx::PxDefaultAllocator PhysicsContext::s_DefaultAllocatorCallback;
-    physx::PxFoundation* PhysicsContext::s_Foundation;
-    physx::PxPhysics* PhysicsContext::s_Physics;
-    physx::PxCooking* PhysicsContext::s_Cooking;
-    physx::PxCpuDispatcher* PhysicsContext::s_CPUDispatcher;
+    physx::PxDefaultErrorCallback PhysicsEngine::s_DefaultErrorCallback;
+    physx::PxDefaultAllocator PhysicsEngine::s_DefaultAllocatorCallback;
+    physx::PxFoundation* PhysicsEngine::s_Foundation;
+    physx::PxPhysics* PhysicsEngine::s_Physics;
+    physx::PxCooking* PhysicsEngine::s_Cooking;
+    physx::PxCpuDispatcher* PhysicsEngine::s_CPUDispatcher;
 
-    physx::PxTolerancesScale PhysicsContext::s_TolerancesScale;
+    physx::PxTolerancesScale PhysicsEngine::s_TolerancesScale;
 
-    void PhysicsContext::Init()
+    void PhysicsEngine::Init()
     {
         s_Foundation = PxCreateFoundation(PX_PHYSICS_VERSION, s_DefaultAllocatorCallback, s_DefaultErrorCallback);
         FL_ASSERT(s_Foundation, "Failed to create PxFoundation object!");
@@ -32,7 +32,7 @@ namespace Flameberry {
         FL_ASSERT(s_CPUDispatcher, "Failed to create PxCpuDispatcher object!");
     }
 
-    void PhysicsContext::Release()
+    void PhysicsEngine::Shutdown()
     {
         s_Cooking->release();
         s_Physics->release();

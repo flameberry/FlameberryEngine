@@ -247,7 +247,7 @@ namespace Flameberry {
         s_GlobalDescriptorSet = VK_NULL_HANDLE;
     }
 
-    void Renderer2D::Destroy()
+    void Renderer2D::Shutdown()
     {
         s_Renderer2DData.LinePipeline = nullptr;
         s_Renderer2DData.LineVertexBuffer = nullptr;

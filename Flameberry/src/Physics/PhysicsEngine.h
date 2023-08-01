@@ -4,11 +4,11 @@
 
 namespace Flameberry {
 
-    class PhysicsContext
+    class PhysicsEngine
     {
     public:
         static void Init();
-        static void Release();
+        static void Shutdown();
 
         static physx::PxPhysics* GetPhysics() { return s_Physics; }
         static physx::PxTolerancesScale GetTolerancesScale() { return s_TolerancesScale; }

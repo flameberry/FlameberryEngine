@@ -30,7 +30,7 @@ namespace Flameberry {
         m_SwapChain = std::make_shared<SwapChain>(m_WindowSurface);
     }
 
-    void VulkanWindow::Destroy()
+    void VulkanWindow::Shutdown()
     {
         m_SwapChain = nullptr;
         glfwDestroyWindow(m_Window);

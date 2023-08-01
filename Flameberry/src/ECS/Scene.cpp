@@ -4,7 +4,7 @@
 #include "Core/Profiler.h"
 #include "Components.h"
 
-#include "Physics/Physics.h"
+#include "Physics/PhysicsEngine.h"
 #include "PxPhysicsAPI.h"
 
 namespace Flameberry {
@@ -39,13 +39,13 @@ namespace Flameberry {
         }
 
         // Update Physics
-        physx::PxSceneDesc sceneDesc(PhysicsContext::GetTolerancesScale());
+        physx::PxSceneDesc sceneDesc(PhysicsEngine::GetTolerancesScale());
         sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
-        sceneDesc.cpuDispatcher = PhysicsContext::GetCPUDispatcher();
+        sceneDesc.cpuDispatcher = PhysicsEngine::GetCPUDispatcher();
         sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
 
         // Create Scene
-        m_PxScene = PhysicsContext::GetPhysics()->createScene(sceneDesc);
+        m_PxScene = PhysicsEngine::GetPhysics()->createScene(sceneDesc);
 
         // Create Actors
         for (auto entity : m_Registry->view<TransformComponent, RigidBodyComponent>())
@@ -60,12 +60,12 @@ namespace Flameberry {
             switch (rigidBody.Type)
             {
                 case RigidBodyComponent::RigidBodyType::Static: {
-                    physx::PxRigidStatic* staticBody = PhysicsContext::GetPhysics()->createRigidStatic(transformMat);
+                    physx::PxRigidStatic* staticBody = PhysicsEngine::GetPhysics()->createRigidStatic(transformMat);
                     rigidBody.RuntimeRigidBody = staticBody;
                     break;
                 }
                 case RigidBodyComponent::RigidBodyType::Dynamic: {
-                    physx::PxRigidDynamic* dynamicBody = PhysicsContext::GetPhysics()->createRigidDynamic(transformMat);
+                    physx::PxRigidDynamic* dynamicBody = PhysicsEngine::GetPhysics()->createRigidDynamic(transformMat);
                     rigidBody.RuntimeRigidBody = dynamicBody;
                     break;
                 }
@@ -82,24 +82,24 @@ namespace Flameberry {
                     0.5f * boxCollider->Size.y * transform.Scale.y,
                     0.5f * boxCollider->Size.z * transform.Scale.z
                 );
-                auto* material = PhysicsContext::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
-                shape = PhysicsContext::GetPhysics()->createShape(geometry, *material);
+                auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
+                shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
                 boxCollider->RuntimeShape = shape;
             }
 
             if (auto* sphereCollider = m_Registry->try_get<SphereColliderComponent>(entity); sphereCollider)
             {
                 auto geometry = physx::PxSphereGeometry(sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z));
-                auto* material = PhysicsContext::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
-                shape = PhysicsContext::GetPhysics()->createShape(geometry, *material);
+                auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
+                shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
                 sphereCollider->RuntimeShape = shape;
             }
 
             if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
             {
                 auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
-                auto* material = PhysicsContext::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
-                shape = PhysicsContext::GetPhysics()->createShape(geometry, *material);
+                auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
+                shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
 
                 switch (capsuleCollider->Axis)
                 {

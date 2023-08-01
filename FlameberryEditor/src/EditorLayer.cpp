@@ -244,7 +244,7 @@ namespace Flameberry {
 
     void EditorLayer::OnDestroy()
     {
-        Renderer2D::Destroy();
+        Renderer2D::Shutdown();
     }
 
     void EditorLayer::OnUIRender()

@@ -13,7 +13,7 @@ namespace Flameberry {
         ~VulkanWindow();
 
         void Init() override;
-        void Destroy() override;
+        void Shutdown() override;
 
         bool BeginFrame() override;
         void SwapBuffers() override;

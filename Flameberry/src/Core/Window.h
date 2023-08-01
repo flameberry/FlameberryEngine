@@ -24,7 +24,7 @@ namespace Flameberry {
 
         virtual void SetEventCallBack(const std::function<void(Event&)>& fn) = 0;
         virtual void Init() = 0;
-        virtual void Destroy() = 0;
+        virtual void Shutdown() = 0;
     };
 
 }

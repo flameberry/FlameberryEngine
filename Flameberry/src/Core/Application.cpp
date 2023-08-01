@@ -12,7 +12,7 @@
 #include "Platform/PlatformUtils.h"
 
 // TODO: Find a better place for this
-#include "Physics/Physics.h"
+#include "Physics/PhysicsEngine.h"
 
 namespace Flameberry {
     Application* Application::s_Instance;
@@ -36,7 +36,7 @@ namespace Flameberry {
 
         m_ImGuiLayer = std::make_unique<ImGuiLayer>();
         
-        PhysicsContext::Init();
+        PhysicsEngine::Init();
     }
 
     void Application::Run()
@@ -101,13 +101,13 @@ namespace Flameberry {
         for (auto& layer : m_LayerStack)
             layer->OnDestroy();
 
-        PhysicsContext::Release();
+        PhysicsEngine::Shutdown();
         m_ImGuiLayer->OnDestroy();
 
         Texture2D::DestroyStaticResources();
         AssetManager::Clear();
 
-        m_Window->Destroy();
+        m_Window->Shutdown();
 
         glfwTerminate();
         FL_INFO("Ended Application!");
