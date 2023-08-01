@@ -180,12 +180,12 @@ namespace Flameberry {
                         ImGui::TableNextColumn();
 
                         ImGui::AlignTextToFramePadding();
-                        ImGui::Text("FOV");
+                        ImGui::Text(currentProjectionTypeIndex == (uint8_t)ProjectionType::Perspective ? "FOV" : "Zoom");
 
                         ImGui::TableNextColumn();
                         float FOV = cameraComp.Camera.GetSettings().FOV;
                         if (ImGui::DragFloat("##FOV", &FOV, 0.01f, 0.0f, 180.0f))
-                            cameraComp.Camera.UpdateWithFOV(FOV);
+                            cameraComp.Camera.UpdateWithFOVorZoom(FOV);
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();

@@ -36,7 +36,7 @@ namespace Flameberry {
 
     void GenericCamera::SetView(const glm::vec3& position, const glm::vec3& rotation)
     {
-        glm::vec3 cameraDirection = glm::rotate(glm::quat(rotation), glm::vec3(0, 0, 1));
+        glm::vec3 cameraDirection = glm::rotate(glm::quat(rotation), glm::vec3(0, 0, -1));
         m_ViewMatrix = glm::lookAt(position + cameraDirection, position, glm::vec3(0, 1, 0));
     }
 
@@ -47,7 +47,7 @@ namespace Flameberry {
         RecalculateProjectionMatrix();
     }
 
-    void GenericCamera::UpdateWithFOV(float FOV)
+    void GenericCamera::UpdateWithFOVorZoom(float FOV)
     {
         m_CameraSettings.FOV = FOV;
 

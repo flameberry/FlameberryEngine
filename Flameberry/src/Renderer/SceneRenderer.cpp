@@ -1236,41 +1236,72 @@ namespace Flameberry {
             const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
             const auto& settings = cameraComp->Camera.GetSettings();
             float aspectRatio = m_ViewportSize.x / m_ViewportSize.y;
-            float tanTheta = glm::tan(glm::radians(settings.FOV / 2.0f));
-            float nearViewHalfHeight = tanTheta * settings.Near;
-            float nearViewHalfWidth = nearViewHalfHeight * aspectRatio;
-            float farViewHalfHeight = tanTheta * settings.Far;
-            float farViewHalfWidth = farViewHalfHeight * aspectRatio;
 
-            // Submit Frustum Geometry
-            glm::vec3 frustumCorners[8] = {
-                glm::vec3(-nearViewHalfWidth, nearViewHalfHeight, -settings.Near),
-                glm::vec3(nearViewHalfWidth,  nearViewHalfHeight, -settings.Near),
-                glm::vec3(nearViewHalfWidth,  -nearViewHalfHeight, -settings.Near),
-                glm::vec3(-nearViewHalfWidth, -nearViewHalfHeight, -settings.Near),
-                glm::vec3(-farViewHalfWidth,  farViewHalfHeight, -settings.Far),
-                glm::vec3(farViewHalfWidth,   farViewHalfHeight, -settings.Far),
-                glm::vec3(farViewHalfWidth,  -farViewHalfHeight, -settings.Far),
-                glm::vec3(-farViewHalfWidth, -farViewHalfHeight, -settings.Far)
-            };
+            switch (settings.ProjectionType)
+            {
+                case ProjectionType::Orthographic:
+                {
+                    const float left = -settings.AspectRatio * settings.Zoom;
+                    const float right = -left;
+                    const float bottom = -settings.Zoom;
+                    const float top = settings.Zoom;
 
-            for (uint8_t i = 0; i < 8; i++)
-                frustumCorners[i] = rotationMatrix * frustumCorners[i] + transform.Translation;
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(left, bottom, settings.Near) + transform.Translation, rotationMatrix * glm::vec3(left, top, settings.Near) + transform.Translation, color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(left, top, settings.Near) + transform.Translation, rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation, color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation, rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation, color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation, rotationMatrix * glm::vec3(left, bottom, settings.Near) + transform.Translation, color);
 
-            Renderer2D::AddLine(frustumCorners[0], frustumCorners[1], color);
-            Renderer2D::AddLine(frustumCorners[1], frustumCorners[2], color);
-            Renderer2D::AddLine(frustumCorners[2], frustumCorners[3], color);
-            Renderer2D::AddLine(frustumCorners[3], frustumCorners[0], color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(left, bottom, settings.Far) + transform.Translation, rotationMatrix * glm::vec3(left, top, settings.Far) + transform.Translation, color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(left, top, settings.Far) + transform.Translation, rotationMatrix * glm::vec3(right, top, settings.Far) + transform.Translation, color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(right, top, settings.Far) + transform.Translation, rotationMatrix * glm::vec3(right, bottom, settings.Far) + transform.Translation, color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(right, bottom, settings.Far) + transform.Translation, rotationMatrix * glm::vec3(left, bottom, settings.Far) + transform.Translation, color);
 
-            Renderer2D::AddLine(frustumCorners[4], frustumCorners[5], color);
-            Renderer2D::AddLine(frustumCorners[5], frustumCorners[6], color);
-            Renderer2D::AddLine(frustumCorners[6], frustumCorners[7], color);
-            Renderer2D::AddLine(frustumCorners[7], frustumCorners[4], color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(left, bottom, settings.Near) + transform.Translation, rotationMatrix * glm::vec3(left, bottom, settings.Far) + transform.Translation, color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(left, top, settings.Near) + transform.Translation, rotationMatrix * glm::vec3(left, top, settings.Far) + transform.Translation, color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation, rotationMatrix * glm::vec3(right, top, settings.Far) + transform.Translation, color);
+                    Renderer2D::AddLine(rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation, rotationMatrix * glm::vec3(right, bottom, settings.Far) + transform.Translation, color);
+                    break;
+                }
+                case ProjectionType::Perspective:
+                {
+                    float tanTheta = glm::tan(glm::radians(settings.FOV / 2.0f));
+                    float nearViewHalfHeight = tanTheta * settings.Near;
+                    float nearViewHalfWidth = nearViewHalfHeight * aspectRatio;
+                    float farViewHalfHeight = tanTheta * settings.Far;
+                    float farViewHalfWidth = farViewHalfHeight * aspectRatio;
 
-            Renderer2D::AddLine(frustumCorners[0], frustumCorners[4], color);
-            Renderer2D::AddLine(frustumCorners[1], frustumCorners[5], color);
-            Renderer2D::AddLine(frustumCorners[2], frustumCorners[6], color);
-            Renderer2D::AddLine(frustumCorners[3], frustumCorners[7], color);
+                    // Submit Frustum Geometry
+                    glm::vec3 frustumCorners[8] = {
+                        glm::vec3(-nearViewHalfWidth, nearViewHalfHeight, settings.Near),
+                        glm::vec3(nearViewHalfWidth,  nearViewHalfHeight, settings.Near),
+                        glm::vec3(nearViewHalfWidth,  -nearViewHalfHeight, settings.Near),
+                        glm::vec3(-nearViewHalfWidth, -nearViewHalfHeight, settings.Near),
+                        glm::vec3(-farViewHalfWidth,  farViewHalfHeight, settings.Far),
+                        glm::vec3(farViewHalfWidth,   farViewHalfHeight, settings.Far),
+                        glm::vec3(farViewHalfWidth,  -farViewHalfHeight, settings.Far),
+                        glm::vec3(-farViewHalfWidth, -farViewHalfHeight, settings.Far)
+                    };
+
+                    for (uint8_t i = 0; i < 8; i++)
+                        frustumCorners[i] = rotationMatrix * frustumCorners[i] + transform.Translation;
+
+                    Renderer2D::AddLine(frustumCorners[0], frustumCorners[1], color);
+                    Renderer2D::AddLine(frustumCorners[1], frustumCorners[2], color);
+                    Renderer2D::AddLine(frustumCorners[2], frustumCorners[3], color);
+                    Renderer2D::AddLine(frustumCorners[3], frustumCorners[0], color);
+
+                    Renderer2D::AddLine(frustumCorners[4], frustumCorners[5], color);
+                    Renderer2D::AddLine(frustumCorners[5], frustumCorners[6], color);
+                    Renderer2D::AddLine(frustumCorners[6], frustumCorners[7], color);
+                    Renderer2D::AddLine(frustumCorners[7], frustumCorners[4], color);
+
+                    Renderer2D::AddLine(frustumCorners[0], frustumCorners[4], color);
+                    Renderer2D::AddLine(frustumCorners[1], frustumCorners[5], color);
+                    Renderer2D::AddLine(frustumCorners[2], frustumCorners[6], color);
+                    Renderer2D::AddLine(frustumCorners[3], frustumCorners[7], color);
+                    break;
+                }
+            }
         }
     }
 

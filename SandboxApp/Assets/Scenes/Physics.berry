@@ -86,9 +86,9 @@ Entities:
   - Entity: 4147114364792774612
     TagComponent: MainCamera
     TransformComponent:
-      Translation: [0, 3.17561436, 12.143548]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Translation: [-4.1629869e-07, 2.83999777, 13.4721489]
+      Rotation: [3.14159203, 6.3573026e-08, -3.1415925]
+      Scale: [1.00000012, 1, 1]
     CameraComponent:
       IsPrimary: true
       ProjectionType: Perspective
