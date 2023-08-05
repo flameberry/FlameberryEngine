@@ -71,7 +71,7 @@ def filter_cmake_paths(path_list) -> list[str]:
 
 
 def download_cmake() -> str:
-    cmake_version = '3.24.3'
+    cmake_version = '3.27.1'
 
     systemOS = 'macos' if platform.system() == 'Darwin' else platform.system().lower()
     mach = ''

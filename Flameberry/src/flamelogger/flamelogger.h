@@ -205,7 +205,7 @@ namespace flamelogger {
             if (m_CurrentLogLevel <= LogLevel::CRITICAL)
             {
                 std::string output_message = format_string(message, args...);
-                std::cout << FL_BG_COLOR_RED << get_prefix(LogLevel::ERROR) << output_message << FL_COLOR_DEFAULT << std::endl;
+                std::cout << FL_BG_COLOR_RED << get_prefix(LogLevel::CRITICAL) << output_message << FL_COLOR_DEFAULT << std::endl;
             }
         }
 

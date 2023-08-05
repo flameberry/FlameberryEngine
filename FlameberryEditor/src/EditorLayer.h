@@ -69,8 +69,7 @@ namespace Flameberry {
         std::filesystem::path m_ProjectPath;
 
         // Texture Icons
-        std::shared_ptr<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayIcon, m_StopIcon;
-        std::shared_ptr<Texture2D> m_CursorIconActive, m_TranslateIconActive, m_RotateIconActive, m_ScaleIconActive;
+        std::shared_ptr<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon;
 
         // Renderer
         std::unique_ptr<SceneRenderer> m_SceneRenderer;

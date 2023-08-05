@@ -11,7 +11,7 @@ namespace Flameberry {
     class SceneSerializer
     {
     public:
-        // static std::shared_ptr<Scene> DeserializeIntoNewScene(const char* path);
+        static std::shared_ptr<Scene> DeserializeIntoNewScene(const char* path);
         static bool DeserializeIntoExistingScene(const char* path, const std::shared_ptr<Scene>& destScene);
         static void SerializeSceneToFile(const char* path, const std::shared_ptr<Scene>& srcScene);
     private:

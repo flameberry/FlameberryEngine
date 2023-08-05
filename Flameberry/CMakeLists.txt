@@ -17,7 +17,7 @@ endif()
 
 exclude_from_list(SRC_FILES ${EXCLUDE_FILES})
 
-add_library(Flameberry STATIC ${SRC_FILES} ${IMGUI_SRC} ${IMGUIZMO_SRC})
+add_library(Flameberry STATIC ${SRC_FILES} ${FL_DEPENDENCY_SOURCE})
 target_compile_features(Flameberry PUBLIC cxx_std_17)
 
 add_dependencies(Flameberry CompileShadersTarget)
@@ -31,7 +31,7 @@ if(XCODE)
     target_compile_definitions(Flameberry PRIVATE FL_XCODE_PROJ)
 endif()
 
-target_include_directories(Flameberry PRIVATE ${FL_GRAPHICS_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src)
+target_include_directories(Flameberry PRIVATE ${FL_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src)
 
 # Add Dependencies
 add_subdirectory(vendor/GLFW)
@@ -39,5 +39,5 @@ add_subdirectory(vendor/yaml-cpp)
 
 target_compile_definitions(Flameberry PRIVATE ${FL_COMPILE_DEFINITIONS})
 
-# "FL_GRAPHICS_LIBS" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
-target_link_libraries(Flameberry PRIVATE ${FL_GRAPHICS_LIBS})
+# "FL_LIBRARY_DEPENDENCIES" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
+target_link_libraries(Flameberry PRIVATE ${FL_LIBRARY_DEPENDENCIES})

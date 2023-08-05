@@ -14,5 +14,5 @@ endif()
 
 target_compile_definitions(SandboxApp PRIVATE ${FL_COMPILE_DEFINITIONS})
 
-target_include_directories(SandboxApp PRIVATE ${FL_GRAPHICS_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src/)
-target_link_libraries(SandboxApp PRIVATE Flameberry ${FL_GRAPHICS_LIBS})
+target_include_directories(SandboxApp PRIVATE ${FL_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src/)
+target_link_libraries(SandboxApp PRIVATE Flameberry ${FL_LIBRARY_DEPENDENCIES})

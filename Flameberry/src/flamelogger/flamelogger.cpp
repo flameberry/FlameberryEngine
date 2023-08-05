@@ -41,26 +41,25 @@ namespace flamelogger {
 
         switch (level)
         {
-        case LogLevel::LOG:
-            prefix << "LOG: ";
-            break;
-        case LogLevel::TRACE:
-            prefix << "TRACE: ";
-            break;
-        case LogLevel::INFO:
-            prefix << "INFO: ";
-            break;
-        case LogLevel::WARNING:
-            prefix << "WARNING: ";
-            break;
-        case LogLevel::ERROR:
-            prefix << "ERROR: ";
-            break;
-        case LogLevel::CRITICAL:
-            prefix << "CRITICAL: ";
-            break;
+            case LogLevel::LOG:
+                prefix << "LOG: ";
+                break;
+            case LogLevel::TRACE:
+                prefix << "TRACE: ";
+                break;
+            case LogLevel::INFO:
+                prefix << "INFO: ";
+                break;
+            case LogLevel::WARNING:
+                prefix << "WARNING: ";
+                break;
+            case LogLevel::ERROR:
+                prefix << "ERROR: ";
+                break;
+            case LogLevel::CRITICAL:
+                prefix << "CRITICAL: ";
+                break;
         }
-
         return prefix.str();
     }
 }

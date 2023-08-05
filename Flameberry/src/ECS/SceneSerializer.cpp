@@ -65,13 +65,13 @@ namespace Flameberry {
             return CapsuleColliderComponent::AxisType::Z;
     }
 
-    // std::shared_ptr<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
-    // {
-    //     std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
-    //     if (DeserializeIntoExistingScene(path, newScene))
-    //         return newScene;
-    //     return nullptr;
-    // }
+    std::shared_ptr<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
+    {
+        std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
+        if (DeserializeIntoExistingScene(path, newScene))
+            return newScene;
+        return nullptr;
+    }
 
     bool SceneSerializer::DeserializeIntoExistingScene(const char* path, const std::shared_ptr<Scene>& destScene)
     {

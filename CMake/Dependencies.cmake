@@ -1,7 +1,7 @@
 # Set Global Variables
 set(FL_GRAPHICS_API "Vulkan")
-set(FL_GRAPHICS_LIBS)
-set(FL_GRAPHICS_INCLUDE_DIRS)
+set(FL_LIBRARY_DEPENDENCIES)
+set(FL_INCLUDE_DIRS)
 
 # Vulkan Helper Libs
 find_package(Vulkan)
@@ -63,15 +63,15 @@ else()
 endif()
 
 # Now that every package required is found, setup the build environment
-list(APPEND FL_GRAPHICS_LIBS ${Vulkan_LIBRARY})
-list(APPEND FL_GRAPHICS_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
+list(APPEND FL_LIBRARY_DEPENDENCIES ${Vulkan_LIBRARY})
+list(APPEND FL_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 
 # Setting All the required compile definitions
 set(FL_COMPILE_DEFINITIONS FL_PROJECT_DIR="${FL_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 # Setting the paths we require irrespective of the Graphics API
-list(APPEND FL_GRAPHICS_LIBS glfw yaml-cpp)
-list(APPEND FL_GRAPHICS_INCLUDE_DIRS 
+list(APPEND FL_LIBRARY_DEPENDENCIES glfw yaml-cpp)
+list(APPEND FL_INCLUDE_DIRS 
     ${FL_SOURCE_DIR}/Flameberry/vendor
     ${FL_SOURCE_DIR}/Flameberry/vendor/GLFW/include
     ${FL_SOURCE_DIR}/Flameberry/vendor/glm
@@ -107,22 +107,22 @@ add_library(PhysXPvdSDK_LIBRARY STATIC IMPORTED)
 set_target_properties(PhysXPvdSDK_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXPvdSDK_static_64.a)
 set_target_properties(PhysXPvdSDK_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXPvdSDK_static_64.a)
 
-list(APPEND FL_GRAPHICS_LIBS PhysX_LIBRARY PhysXFoundation_LIBRARY PhysXCommon_LIBRARY PhysXCooking_LIBRARY PhysXExtensions_LIBRARY PhysXPvdSDK_LIBRARY)
-list(APPEND FL_GRAPHICS_INCLUDE_DIRS ${PHYSX_INCLUDE_DIR})
+list(APPEND FL_LIBRARY_DEPENDENCIES PhysX_LIBRARY PhysXFoundation_LIBRARY PhysXCommon_LIBRARY PhysXCooking_LIBRARY PhysXExtensions_LIBRARY PhysXPvdSDK_LIBRARY)
+list(APPEND FL_INCLUDE_DIRS ${PHYSX_INCLUDE_DIR})
 list(APPEND FL_COMPILE_DEFINITIONS ${PHYSX_COMPILE_DEFINITIONS})
 
 # ImGui paths and source
 file(GLOB IMGUI_SRC ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.cpp ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.h)
 
-list(APPEND IMGUI_SRC
+set(FL_DEPENDENCY_SOURCE
+    # ImGui
+    ${IMGUI_SRC}
     ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp
     ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.h
     ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
     ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
-)
 
-# ImGuizmo paths and source
-list(APPEND IMGUIZMO_SRC
+    # ImGuizmo
     ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/GraphEditor.cpp
     ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/GraphEditor.h
     ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImCurveEdit.cpp
@@ -134,4 +134,10 @@ list(APPEND IMGUIZMO_SRC
     ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.cpp
     ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.h
     ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImZoomSlider.h
+
+    # OpenFBX
+    ${FL_SOURCE_DIR}/Flameberry/vendor/openfbx/ofbx.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/openfbx/ofbx.cpp
+    ${FL_SOURCE_DIR}/Flameberry/vendor/openfbx/miniz.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/openfbx/miniz.c
 )
