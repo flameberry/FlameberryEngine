@@ -134,10 +134,4 @@ set(FL_DEPENDENCY_SOURCE
     ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.cpp
     ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.h
     ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImZoomSlider.h
-
-    # OpenFBX
-    ${FL_SOURCE_DIR}/Flameberry/vendor/openfbx/ofbx.h
-    ${FL_SOURCE_DIR}/Flameberry/vendor/openfbx/ofbx.cpp
-    ${FL_SOURCE_DIR}/Flameberry/vendor/openfbx/miniz.h
-    ${FL_SOURCE_DIR}/Flameberry/vendor/openfbx/miniz.c
 )
