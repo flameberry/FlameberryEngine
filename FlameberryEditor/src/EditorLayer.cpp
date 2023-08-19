@@ -157,7 +157,7 @@ namespace Flameberry {
                     auto [transform, cameraComp] = m_ActiveScene->GetRegistry()->get<TransformComponent, CameraComponent>(cameraEntity);
                     auto& camera = cameraComp.Camera;
                     camera.SetView(transform.Translation, transform.Rotation);
-                    m_SceneRenderer->RenderSceneRuntime(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), transform.Translation, camera.GetSettings().Near, camera.GetSettings().Far);
+                    m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), transform.Translation, camera.GetSettings().Near, camera.GetSettings().Far, fbentt::null, false, false, false, false);
                 }
                 else
                 {

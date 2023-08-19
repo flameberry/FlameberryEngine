@@ -479,7 +479,7 @@ namespace Flameberry {
         m_CameraIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/camera_icon.png");
     }
 
-    void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid)
+    void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
     {
         uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
 
@@ -634,7 +634,7 @@ namespace Flameberry {
         }
 
         // Render Outlined Object
-        if (selectedEntity != fbentt::null)
+        if (renderOutline && selectedEntity != fbentt::null)
         {
             auto& transform = scene->m_Registry->get<TransformComponent>(selectedEntity);
             if (scene->m_Registry->has<MeshComponent>(selectedEntity))
@@ -681,21 +681,24 @@ namespace Flameberry {
 
         Renderer2D::BeginScene(m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet());
 
-        // Render Point Lights
-        Renderer2D::SetActiveTexture(m_LightIcon);
-        for (uint32_t i = 0; i < sceneUniformBufferData.LightCount; i++)
-            Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix);
-        Renderer2D::FlushQuads();
-
-        Renderer2D::SetActiveTexture(m_CameraIcon);
-        for (auto entity : scene->m_Registry->view<TransformComponent, CameraComponent>())
+        if (renderDebugIcons)
         {
-            auto& transform = scene->m_Registry->get<TransformComponent>(entity);
-            Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix);
-        }
-        Renderer2D::FlushQuads();
+            // Render Point Lights
+            Renderer2D::SetActiveTexture(m_LightIcon);
+            for (uint32_t i = 0; i < sceneUniformBufferData.LightCount; i++)
+                Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix);
+            Renderer2D::FlushQuads();
 
-        if (selectedEntity != fbentt::null)
+            Renderer2D::SetActiveTexture(m_CameraIcon);
+            for (auto entity : scene->m_Registry->view<TransformComponent, CameraComponent>())
+            {
+                auto& transform = scene->m_Registry->get<TransformComponent>(entity);
+                Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix);
+            }
+            Renderer2D::FlushQuads();
+        }
+
+        if (renderPhysicsCollider && selectedEntity != fbentt::null)
         {
             auto& transform = scene->m_Registry->get<TransformComponent>(selectedEntity);
 
@@ -710,178 +713,6 @@ namespace Flameberry {
 
         Renderer2D::EndScene();
 
-        m_GeometryPass->End();
-#pragma endregion GeometryPass
-
-#pragma region CompositePass
-        // m_CompositePass->Begin();
-        // m_CompositePipeline->Bind();
-
-        // std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
-        // for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-        //     descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
-
-        // Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-        //     {
-        //         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
-        //         vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
-        //     }
-        // );
-        // m_CompositePass->End();
-#pragma endregion CompositePass
-    }
-
-    void SceneRenderer::RenderSceneRuntime(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar)
-    {
-        // TODO: This code is almost repeated, make it not do that
-        uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
-
-        m_ViewportSize = viewportSize;
-
-        // Resize Framebuffers
-        Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                const auto& framebufferSpec = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification();
-                if (!(m_ViewportSize.x == 0 || m_ViewportSize.y == 0) && (framebufferSpec.Width != m_ViewportSize.x || framebufferSpec.Height != m_ViewportSize.y))
-                {
-                    m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass());
-
-                    m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, {
-                            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                            .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetImageView(),
-                            .sampler = m_VkTextureSampler
-                        }
-                    );
-
-                    m_CompositePassDescriptorSets[imageIndex]->Update();
-                    m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass());
-                }
-
-                VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
-                m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->SetClearColorValue(color);
-            }
-        );
-
-        // Update uniform buffers
-        CameraUniformBufferObject cameraBufferData;
-        cameraBufferData.ViewMatrix = viewMatrix;
-        cameraBufferData.ProjectionMatrix = projectionMatrix;
-        cameraBufferData.ViewProjectionMatrix = projectionMatrix * viewMatrix;
-
-        m_CameraUniformBuffers[currentFrame]->WriteToBuffer(&cameraBufferData, sizeof(CameraUniformBufferObject));
-
-        if (m_RendererSettings.EnableShadows)
-        {
-            // TODO: Calculate these only when camera or directional light is updated
-            CalculateShadowMapCascades(cameraBufferData.ViewProjectionMatrix, cameraNear, cameraFar, scene->m_Environment.DirLight.Direction);
-            glm::mat4 cascades[SceneRendererSettings::CascadeCount];
-            for (uint8_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
-                cascades[i] = m_Cascades[i].ViewProjectionMatrix;
-
-            m_ShadowMapUniformBuffers[currentFrame]->WriteToBuffer(cascades, sizeof(glm::mat4) * SceneRendererSettings::CascadeCount);
-        }
-
-        SceneUniformBufferData sceneUniformBufferData;
-        sceneUniformBufferData.cameraPosition = cameraPosition;
-
-        for (uint32_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
-        {
-            sceneUniformBufferData.CascadeViewProjectionMatrices[i] = m_Cascades[i].ViewProjectionMatrix;
-            sceneUniformBufferData.CascadeDepthSplits[i] = m_Cascades[i].DepthSplit;
-        }
-        sceneUniformBufferData.RendererSettings.EnableShadows = (int)m_RendererSettings.EnableShadows;
-        sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
-        sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
-
-        sceneUniformBufferData.directionalLight = scene->m_Environment.DirLight;
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
-        {
-            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
-            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform.Translation;
-            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Color = light.Color;
-            sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Intensity = light.Intensity;
-            sceneUniformBufferData.LightCount++;
-        }
-
-        m_SceneUniformBuffers[currentFrame]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData));
-
-        // Render Passes
-#pragma region ShadowPass
-        if (m_RendererSettings.EnableShadows)
-        {
-            m_ShadowMapRenderPass->Begin();
-            m_ShadowMapPipeline->Bind();
-            Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                {
-                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr);
-                }
-            );
-
-            for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
-            {
-                const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
-                auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-                if (staticMesh)
-                {
-                    ModelMatrixPushConstantData pushContantData;
-                    pushContantData.ModelMatrix = transform.GetTransform();
-                    Renderer::Submit([shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                        {
-                            vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
-                        }
-                    );
-                    staticMesh->Bind();
-                    staticMesh->OnDraw();
-                }
-            }
-            m_ShadowMapRenderPass->End();
-        }
-#pragma endregion ShadowPass
-
-#pragma region GeometryPass
-        m_GeometryPass->Begin();
-
-        RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
-        RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
-
-        // Skybox Rendering
-        if (scene->m_Environment.EnableEnvironmentMap && scene->m_Environment.EnvironmentMap)
-        {
-            m_SkyboxPipeline->Bind();
-
-            glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
-            auto pipelineLayout = m_SkyboxPipeline->GetLayout();
-            auto textureDescSet = scene->m_Environment.EnvironmentMap->GetDescriptorSet();
-
-            Renderer::Submit([pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                {
-                    VkDescriptorSet descSets[] = { textureDescSet };
-                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
-                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjectionMatrix);
-                    vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
-                }
-            );
-        }
-
-        // Mesh Rendering
-        m_MeshPipeline->Bind();
-
-        VkDescriptorSet descriptorSets[] = {
-            m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet(),
-            m_SceneDataDescriptorSets[currentFrame]->GetDescriptorSet()
-        };
-        Renderer::Submit([pipelineLayout = m_MeshPipeline->GetLayout(), descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
-            }
-        );
-
-        // Render All Scene Meshes
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
-        {
-            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
-            SubmitMesh(mesh.MeshHandle, mesh.OverridenMaterialTable, transform.GetTransform());
-        }
         m_GeometryPass->End();
 #pragma endregion GeometryPass
 
