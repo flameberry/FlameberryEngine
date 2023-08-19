@@ -5,6 +5,31 @@
 #include "UI.h"
 
 namespace Flameberry {
+
+    class MovingActor : public Flameberry::Actor {
+    public:
+        void OnInstanceCreated() override {
+            FL_LOG("Created MovingActor!");
+        }
+        void OnInstanceDeleted() override {
+            FL_LOG("Deleted MovingActor!");
+        }
+        void OnUpdate(float delta) override {
+            auto& transform = GetComponent<TransformComponent>();
+
+            float speed = 10.0f;
+
+            if (Input::IsKeyPressed(GLFW_KEY_W))
+                transform.Translation.z -= speed * delta;
+            if (Input::IsKeyPressed(GLFW_KEY_S))
+                transform.Translation.z += speed * delta;
+            if (Input::IsKeyPressed(GLFW_KEY_A))
+                transform.Translation.x -= speed * delta;
+            if (Input::IsKeyPressed(GLFW_KEY_D))
+                transform.Translation.x += speed * delta;
+        }
+    };
+
     struct CameraUniformBufferObject { glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix; };
     EditorLayer::EditorLayer(const std::string_view& projectPath)
         : m_ProjectPath(projectPath), m_ActiveCameraController(PerspectiveCameraSpecification{
@@ -113,6 +138,14 @@ namespace Flameberry {
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
         }
+
+        auto cubeEntity = m_ActiveScene->GetRegistry()->create();
+        m_ActiveScene->GetRegistry()->emplace<IDComponent>(cubeEntity);
+        m_ActiveScene->GetRegistry()->emplace<TagComponent>(cubeEntity).Tag = "PaidActor";
+        m_ActiveScene->GetRegistry()->emplace<TransformComponent>(cubeEntity);
+        auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
+        mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Assets/Meshes/cube.obj")->Handle;
+        m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
     }
 
     void EditorLayer::OnUpdate(float delta)
@@ -326,7 +359,7 @@ namespace Flameberry {
             auto& transformComp = m_ActiveScene->GetRegistry()->get<TransformComponent>(selectedEntity);
             glm::mat4 transform = transformComp.GetTransform();
 
-            bool snap = Input::IsKey(GLFW_KEY_LEFT_CONTROL, GLFW_PRESS);
+            bool snap = Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
             float snapValue = 0.5f;
             if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
                 snapValue = 45.0f;
@@ -417,8 +450,8 @@ namespace Flameberry {
 
     void EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
     {
-        bool ctrl_or_cmd = Input::IsKey(GLFW_KEY_LEFT_SUPER, GLFW_PRESS) || Input::IsKey(GLFW_KEY_RIGHT_SUPER, GLFW_PRESS);
-        bool shift = Input::IsKey(GLFW_KEY_LEFT_SHIFT, GLFW_PRESS) || Input::IsKey(GLFW_KEY_RIGHT_SHIFT, GLFW_PRESS);
+        bool ctrl_or_cmd = Input::IsKeyPressed(GLFW_KEY_LEFT_SUPER) || Input::IsKeyPressed(GLFW_KEY_RIGHT_SUPER);
+        bool shift = Input::IsKeyPressed(GLFW_KEY_LEFT_SHIFT) || Input::IsKeyPressed(GLFW_KEY_RIGHT_SHIFT);
         switch (e.KeyCode)
         {
             case GLFW_KEY_D:

@@ -38,16 +38,27 @@ namespace Flameberry {
             cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
         }
 
-        // Update Physics
+        // Create Script Actors
+        for (auto entity : m_Registry->view<NativeScriptComponent>())
+        {
+            auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
+            nsc.Actor = nsc.InitScript();
+            nsc.Actor->m_SceneRef = this;
+            nsc.Actor->m_Entity = entity;
+
+            nsc.Actor->OnInstanceCreated();
+        }
+
+        // Create Physics Context
         physx::PxSceneDesc sceneDesc(PhysicsEngine::GetTolerancesScale());
         sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
         sceneDesc.cpuDispatcher = PhysicsEngine::GetCPUDispatcher();
         sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
 
-        // Create Scene
+        // Create Physics Scene
         m_PxScene = PhysicsEngine::GetPhysics()->createScene(sceneDesc);
 
-        // Create Actors
+        // Create Physics Actors
         for (auto entity : m_Registry->view<TransformComponent, RigidBodyComponent>())
         {
             auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
@@ -136,11 +147,26 @@ namespace Flameberry {
     void Scene::OnStopRuntime()
     {
         m_PxScene->release();
+
+        // Delete Script Actors
+        for (auto entity : m_Registry->view<NativeScriptComponent>())
+        {
+            auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
+            nsc.Actor->OnInstanceDeleted();
+            nsc.DestroyScript(&nsc);
+        }
     }
 
     void Scene::OnUpdateRuntime(float delta)
     {
         FL_PROFILE_SCOPE("Scene::OnUpdateRuntime");
+
+        // Update Native Scripts
+        for (auto entity : m_Registry->view<NativeScriptComponent>())
+        {
+            auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
+            nsc.Actor->OnUpdate(delta);
+        }
 
         // Update Physics
         m_PxScene->simulate(delta);

@@ -1,14 +1,15 @@
 #pragma once
 
+#include <string>
+
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <string>
-
 #include "ecs.hpp"
 #include "Asset/Asset.h"
 #include "Renderer/GenericCamera.h"
+#include "Actor.h"
 
 namespace Flameberry {
     struct IDComponent
@@ -92,6 +93,21 @@ namespace Flameberry {
         RelationshipComponent(const RelationshipComponent& dest)
             : Parent(dest.Parent), FirstChild(dest.FirstChild), PrevSibling(dest.PrevSibling), NextSibling(dest.NextSibling)
         {
+        }
+    };
+
+    struct NativeScriptComponent
+    {
+        Flameberry::Actor* Actor;
+
+        Flameberry::Actor* (*InitScript)();
+        void (*DestroyScript)(NativeScriptComponent*);
+
+        template<typename T>
+        void Bind()
+        {
+            InitScript = []() { return static_cast<Flameberry::Actor*>(new T()); };
+            DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Actor; nsc->Actor = nullptr; };
         }
     };
 

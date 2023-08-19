@@ -2,16 +2,16 @@
 #include "Core/Application.h"
 
 namespace Flameberry {
-    bool Input::IsKey(uint16_t key, uint16_t action)
+    bool Input::IsKeyPressed(uint16_t key)
     {
         GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
-        return glfwGetKey(window, key) == action;
+        return glfwGetKey(window, key) == GLFW_PRESS;
     }
 
-    bool Input::IsMouseButton(uint16_t button, uint16_t action)
+    bool Input::IsMouseButtonPressed(uint16_t button)
     {
         GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
-        return glfwGetMouseButton(window, button) == action;
+        return glfwGetMouseButton(window, button) == GLFW_PRESS;
     }
 
     glm::vec2 Input::GetCursorPosition()
