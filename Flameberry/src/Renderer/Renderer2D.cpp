@@ -156,9 +156,9 @@ namespace Flameberry {
         s_Renderer2DData.LineVertices.push_back(LineVertex{ end, color });
     }
 
-    void Renderer2D::AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix)
+    void Renderer2D::AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex)
     {
-        constexpr glm::vec2 m_GenericVertexOffsets[] = {
+        constexpr glm::mat4x2 genericVertexOffsets = {
             {-1.0f, -1.0f},
             { 1.0f, -1.0f},
             { 1.0f,  1.0f},
@@ -173,9 +173,10 @@ namespace Flameberry {
             s_Renderer2DData.QuadVertices.push_back(
                 QuadVertex{
                     .Position = glm::vec3(position
-                    + size * m_GenericVertexOffsets[i].x * right
-                    - size * m_GenericVertexOffsets[i].y * up),
-                    .Color = color
+                    + size * genericVertexOffsets[i].x * right
+                    - size * genericVertexOffsets[i].y * up),
+                    .Color = color,
+                    .EntityIndex = entityIndex
                 }
             );
         }
@@ -241,9 +242,6 @@ namespace Flameberry {
             );
             s_Renderer2DData.LineVertices.clear();
         }
-
-        FlushQuads();
-
         s_GlobalDescriptorSet = VK_NULL_HANDLE;
     }
 

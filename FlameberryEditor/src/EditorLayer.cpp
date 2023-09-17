@@ -97,24 +97,46 @@ namespace Flameberry {
 
         m_MousePickingDescriptorSetLayout = DescriptorSetLayout::Create(mousePickingDescSetLayoutSpec);
 
-        // Pipeline Creation
-        PipelineSpecification pipelineSpec{};
-        pipelineSpec.PipelineLayout.PushConstants = {
-            { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MousePickingPushConstantData) }
-        };
+        {
+            // Pipeline Creation
+            PipelineSpecification pipelineSpec{};
+            pipelineSpec.PipelineLayout.PushConstants = {
+                { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MousePickingPushConstantData) }
+            };
 
-        pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
-            m_MousePickingDescriptorSetLayout
-        };
+            pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
+                m_MousePickingDescriptorSetLayout
+            };
 
-        pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_picking.vert.spv";
-        pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mouse_picking.frag.spv";
-        pipelineSpec.RenderPass = m_MousePickingRenderPass;
+            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.frag.spv";
+            pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
-        pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
-        pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
+            pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
+            pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
 
-        m_MousePickingPipeline = Pipeline::Create(pipelineSpec);
+            m_MousePickingPipeline = Pipeline::Create(pipelineSpec);
+        }
+
+        {
+            // Pipeline Creation
+            PipelineSpecification pipelineSpec{};
+            pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
+                m_MousePickingDescriptorSetLayout
+            };
+
+            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.frag.spv";
+            pipelineSpec.RenderPass = m_MousePickingRenderPass;
+
+            pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F, VertexInputAttribute::VEC3F, VertexInputAttribute::INT };
+            pipelineSpec.VertexInputBindingDescription.binding = 0;
+            pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            pipelineSpec.VertexInputBindingDescription.stride = sizeof(QuadVertex);
+            pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
+
+            m_MousePicking2DPipeline = Pipeline::Create(pipelineSpec);
+        }
 #pragma endregion MousePickingResources
 
         m_SceneRenderer = std::make_unique<SceneRenderer>(m_RenderViewportSize);
@@ -139,13 +161,14 @@ namespace Flameberry {
             );
         }
 
-        auto cubeEntity = m_ActiveScene->GetRegistry()->create();
-        m_ActiveScene->GetRegistry()->emplace<IDComponent>(cubeEntity);
-        m_ActiveScene->GetRegistry()->emplace<TagComponent>(cubeEntity).Tag = "PaidActor";
-        m_ActiveScene->GetRegistry()->emplace<TransformComponent>(cubeEntity);
-        auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
-        mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Assets/Meshes/cube.obj")->Handle;
-        m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
+        // Test
+        // auto cubeEntity = m_ActiveScene->GetRegistry()->create();
+        // m_ActiveScene->GetRegistry()->emplace<IDComponent>(cubeEntity);
+        // m_ActiveScene->GetRegistry()->emplace<TagComponent>(cubeEntity).Tag = "PaidActor";
+        // m_ActiveScene->GetRegistry()->emplace<TransformComponent>(cubeEntity);
+        // auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
+        // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Assets/Meshes/cube.obj")->Handle;
+        // m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
     }
 
     void EditorLayer::OnUpdate(float delta)
@@ -257,7 +280,7 @@ namespace Flameberry {
                     framebuffer->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
 
                 RenderCommand::SetViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
-                m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingRenderPass, m_MousePickingPipeline, glm::vec2(m_MouseX, (int)(m_ViewportSize.y - m_MouseY - 1)));
+                m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingRenderPass, m_MousePickingPipeline, m_MousePicking2DPipeline, glm::vec2(m_MouseX, (int)(m_ViewportSize.y - m_MouseY - 1)));
             }
         }
 

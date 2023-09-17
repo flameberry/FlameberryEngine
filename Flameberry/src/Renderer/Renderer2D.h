@@ -15,6 +15,7 @@ namespace Flameberry {
     {
         glm::vec3 Position{ 0.0f };
         glm::vec3 Color{ 1.0f };
+        int EntityIndex = -1;
     };
 
     struct Renderer2DData {
@@ -41,13 +42,15 @@ namespace Flameberry {
 
         static void AddGrid(int gridSize);
         static void AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color);
-        static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix);
+        static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex = -1);
 
         static void BeginScene(VkDescriptorSet globalDescriptorSet);
         static void EndScene();
 
         static void SetActiveTexture(const std::shared_ptr<Texture2D>& texture) { s_Renderer2DData.TextureMap = texture; }
         static void FlushQuads();
+
+        static const Renderer2DData& GetRendererData() { return s_Renderer2DData; }
     private:
         static Renderer2DData s_Renderer2DData;
 

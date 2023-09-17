@@ -29,7 +29,9 @@ namespace Flameberry {
 
         void DestroyBuffer();
 
-        const void* GetMappedMemory() const { return m_VkBufferMappedMemory; };
+        const void* GetMappedMemory() const { return m_VkBufferMappedMemory; }
+
+        BufferSpecification GetSpecification() const { return m_BufferSpec; }
 
         template<typename... Args>
         static std::shared_ptr<Buffer> Create(Args... args) { return std::make_shared<Buffer>(std::forward<Args>(args)...); }

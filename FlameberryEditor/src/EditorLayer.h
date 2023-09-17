@@ -89,7 +89,7 @@ namespace Flameberry {
         std::unique_ptr<Buffer> m_MousePickingBuffer;
         std::shared_ptr<RenderPass> m_MousePickingRenderPass;
 
-        std::shared_ptr<Pipeline> m_MousePickingPipeline;
+        std::shared_ptr<Pipeline> m_MousePickingPipeline, m_MousePicking2DPipeline;
         std::shared_ptr<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
     };
 }

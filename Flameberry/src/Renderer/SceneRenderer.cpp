@@ -482,6 +482,7 @@ namespace Flameberry {
     void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
     {
         uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
+        std::vector<fbentt::entity> lightEntityHandles;
 
         m_ViewportSize = viewportSize;
 
@@ -548,6 +549,8 @@ namespace Flameberry {
             sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Color = light.Color;
             sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Intensity = light.Intensity;
             sceneUniformBufferData.LightCount++;
+
+            lightEntityHandles.emplace_back(entity);
         }
 
         m_SceneUniformBuffers[currentFrame]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData));
@@ -686,14 +689,14 @@ namespace Flameberry {
             // Render Point Lights
             Renderer2D::SetActiveTexture(m_LightIcon);
             for (uint32_t i = 0; i < sceneUniformBufferData.LightCount; i++)
-                Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix);
+                Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix, fbentt::to_index(lightEntityHandles[i]));
             Renderer2D::FlushQuads();
 
             Renderer2D::SetActiveTexture(m_CameraIcon);
             for (auto entity : scene->m_Registry->view<TransformComponent, CameraComponent>())
             {
                 auto& transform = scene->m_Registry->get<TransformComponent>(entity);
-                Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix);
+                Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
             }
             Renderer2D::FlushQuads();
         }
@@ -818,7 +821,7 @@ namespace Flameberry {
         }
     }
 
-    void SceneRenderer::RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Pipeline>& pipeline, const glm::vec2& mousePos)
+    void SceneRenderer::RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Pipeline>& pipeline, const std::shared_ptr<Pipeline>& pipeline2D, const glm::vec2& mousePos)
     {
         renderPass->Begin(0, { (int)mousePos.x, (int)mousePos.y }, { 1, 1 });
         pipeline->Bind();
@@ -849,6 +852,28 @@ namespace Flameberry {
                 staticMesh->OnDraw();
             }
         }
+
+        pipeline2D->Bind();
+
+        uint32_t indexCount = 6 * Renderer2D::GetRendererData().VertexBufferOffset / (4 * sizeof(QuadVertex));
+        FL_LOG(indexCount);
+
+        Renderer::Submit([
+            descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetDescriptorSet(),
+                mousePicking2DPipelineLayout = pipeline2D->GetLayout(),
+                vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetBuffer(),
+                indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetBuffer(),
+                indexCount]
+                (VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePicking2DPipelineLayout, 0, 1, &descSet, 0, nullptr);
+
+                VkDeviceSize offsets[] = { 0 };
+                vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+                vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+            }
+        );
         renderPass->End();
     }
 

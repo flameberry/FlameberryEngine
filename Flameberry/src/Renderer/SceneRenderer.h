@@ -40,7 +40,7 @@ namespace Flameberry {
         VkImageView GetCompositePassOutputImageView(uint32_t index) const { return m_CompositePass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetImageView(); }
 
         SceneRendererSettings& GetRendererSettingsRef() { return m_RendererSettings; }
-        void RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Pipeline>& pipeline, const glm::vec2& mousePos);
+        void RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Pipeline>& pipeline, const std::shared_ptr<Pipeline>& pipeline2D, const glm::vec2& mousePos);
 
         void ReloadMeshShaders();
     private:
