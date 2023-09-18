@@ -108,9 +108,5 @@ Entities:
 Meshes:
   - Mesh: 3080484242586179439
     FilePath: Assets/Meshes/cube.obj
-  - Mesh: 3080484242586179439
-    FilePath: Assets/Meshes/cube.obj
-  - Mesh: 3080484242586179439
-    FilePath: Assets/Meshes/cube.obj
   - Mesh: 13647174849615807360
     FilePath: Assets/Meshes/sphere.obj

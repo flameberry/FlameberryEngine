@@ -856,8 +856,6 @@ namespace Flameberry {
         pipeline2D->Bind();
 
         uint32_t indexCount = 6 * Renderer2D::GetRendererData().VertexBufferOffset / (4 * sizeof(QuadVertex));
-        FL_LOG(indexCount);
-
         Renderer::Submit([
             descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetDescriptorSet(),
                 mousePicking2DPipelineLayout = pipeline2D->GetLayout(),

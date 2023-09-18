@@ -32,5 +32,3 @@ Entities:
 Meshes:
   - Mesh: 7752911774450168600
     FilePath: Assets/Meshes/cube.obj
-  - Mesh: 7752911774450168600
-    FilePath: Assets/Meshes/cube.obj

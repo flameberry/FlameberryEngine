@@ -256,7 +256,7 @@ namespace Flameberry {
 
         out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 
-        std::vector<UUID> meshHandles;
+        std::set<UUID> meshHandles;
 
         srcScene->m_Registry->for_each([&](fbentt::entity entity)
             {
@@ -284,7 +284,7 @@ namespace Flameberry {
         fout << out.c_str();
     }
 
-    void SceneSerializer::SerializeEntity(YAML::Emitter& out, const fbentt::entity& entity, const std::shared_ptr<Scene>& scene, std::vector<UUID>& meshUUIDs)
+    void SceneSerializer::SerializeEntity(YAML::Emitter& out, const fbentt::entity& entity, const std::shared_ptr<Scene>& scene, std::set<UUID>& meshUUIDs)
     {
         out << YAML::BeginMap;
         out << YAML::Key << "Entity" << YAML::Value << scene->m_Registry->get<IDComponent>(entity).ID;
@@ -334,7 +334,7 @@ namespace Flameberry {
             out << YAML::EndSeq;
             out << YAML::EndMap; // Mesh Component
 
-            meshUUIDs.emplace_back(mesh.MeshHandle);
+            meshUUIDs.insert(mesh.MeshHandle);
         }
 
         if (scene->m_Registry->has<LightComponent>(entity))

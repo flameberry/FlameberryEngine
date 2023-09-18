@@ -51,11 +51,11 @@ Entities:
       OverridenMaterialTable:
         []
 Meshes:
-  - Mesh: 17607295310664723591
-    FilePath: Assets/Meshes/cube.obj
   - Mesh: 2095293778028230355
     FilePath: Assets/Meshes/platform.obj
   - Mesh: 13733160320913040731
     FilePath: Assets/Meshes/sphere.obj
+  - Mesh: 17607295310664723591
+    FilePath: Assets/Meshes/cube.obj
   - Mesh: 17699714755812074374
     FilePath: Assets/Meshes/PalmTree.obj
