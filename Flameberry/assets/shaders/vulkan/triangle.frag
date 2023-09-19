@@ -15,7 +15,8 @@ layout (location = 0) out vec4 o_FragColor;
 
 #extension GL_GOOGLE_include_directive : enable
 
-#include "include/poisson.glsl"
+// #define POISSON_PROVIDE_32_SAMPLES
+// #include "include/poisson.glsl"
 
 const mat4 g_BiasMatrix = mat4(
     0.5, 0.0, 0.0, 0.0,
@@ -23,8 +24,6 @@ const mat4 g_BiasMatrix = mat4(
 	0.0, 0.0, 1.0, 0.0,
 	0.5, 0.5, 0.0, 1.0
 );
-
-const float g_Infinity = 1.0f / 0.0f;
 
 layout (set = 1, binding = 1) uniform sampler2DArray u_ShadowMapSamplerArray;
 
@@ -129,19 +128,6 @@ float GGXDistribution(float n_dot_h)
     return ggxdistrib;
 }
 
-uint PCG_Hash(uint inputVal)
-{
-    uint state = inputVal * 747796405u + 2891336453u;
-    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
-    return (word >> 22u) ^ word;
-}
-
-float Random_Float(inout uint seed)
-{
-    seed = PCG_Hash(seed);
-    return (float(seed) / float(0x7f800000u)) * 2.0f - 1.0f;
-}
-
 vec2 VogelDiskSample(uint sampleIndex, uint sampleCount, float phi)
 {
     const float goldenAngle = 2.4f;
@@ -200,10 +186,10 @@ float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius,
     const vec2 texelSize = scale / textureSize(u_ShadowMapSamplerArray, 0).xy;
 
     float shadowFactor = 0.0f;
-	for (uint x = 0; x < sampleCount; x++) 
+	for (uint i = 0; i < sampleCount; i++) 
     {
-        // vec2 offset = vec2(g_PoissonSamples[x]);
-        vec2 offset = VogelDiskSample(x, sampleCount, interleavedNoise);
+        // vec2 offset = vec2(g_PoissonSamples[i]);
+        vec2 offset = VogelDiskSample(i, sampleCount, interleavedNoise);
 
         shadowFactor += TextureProj_DirectionalLight(sc, radius * texelSize * offset, cascadeIndex, bias);
 	}
@@ -217,7 +203,7 @@ float PCSS_SearchWidth(float lightSize, float receiverDistance, uint cascadeInde
 
 vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, float interleavedNoise, float bias)
 {
-    const uint blockerSearch_SampleCount = 32;
+    const uint blockerSearch_SampleCount = 16;
 
     // Perform N samples with pre-defined offset and random rotation, scale by input search size
 	int blockers = 0;
@@ -262,7 +248,7 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float in
     // penumbraSize = 1.0 - pow(1.0 - penumbraSize, softnessFallOff);
 
     float filterRadius = penumbraSize * lightSize;
-    return FilterPCFRadial_DirectionalLight(shadowCoord, cascadeIndex, filterRadius, 64, bias, interleavedNoise);
+    return FilterPCFRadial_DirectionalLight(shadowCoord, cascadeIndex, filterRadius, 16, bias, interleavedNoise);
 }
 
 vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)

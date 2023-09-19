@@ -1,18 +1,18 @@
 #include "Application.h"
 
-#include "Timer.h"
 #include "Core.h"
 #include "Layer.h"
+#include "Timer.h"
 
 #include "ImGui/ImGuiLayer.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/Texture2D.h"
 #include "Asset/AssetManager.h"
 
-#include "Platform/PlatformUtils.h"
-
 // TODO: Find a better place for this
 #include "Physics/PhysicsEngine.h"
+
+#include "Platform/PlatformUtils.h"
 
 namespace Flameberry {
     Application* Application::s_Instance;

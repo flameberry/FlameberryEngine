@@ -5,7 +5,7 @@ Environment:
   EnableEnvironmentMap: false
   Reflections: false
   DirectionalLight:
-    Direction: [-1.19000006, -0.889999986, -0.939999998]
+    Direction: [-1.19000006, -0.5, -0.469999999]
     Color: [1, 1, 1]
     Intensity: 8
 Entities:
@@ -22,7 +22,7 @@ Entities:
   - Entity: 3115599607799245099
     TagComponent: Sphere
     TransformComponent:
-      Translation: [0, 2.37446737, 0]
+      Translation: [0, 3.93639851, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
