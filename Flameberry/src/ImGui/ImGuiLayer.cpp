@@ -185,7 +185,7 @@ namespace Flameberry {
         imgui_render_pass_begin_info.clearValueCount = 1;
         imgui_render_pass_begin_info.pClearValues = &clear_value;
 
-        uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
+        uint32_t currentFrameIndex = Renderer::RT_GetCurrentFrameIndex();
         VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(currentFrameIndex);
         vkCmdBeginRenderPass(commandBuffer, &imgui_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 

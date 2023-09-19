@@ -7,6 +7,7 @@
 namespace Flameberry {
     enum class EventType : uint8_t {
         None = 0,
+        WindowResized,
         KeyPressed,
         MouseButtonPressed,
         MouseScrolled
@@ -18,6 +19,14 @@ namespace Flameberry {
         virtual ~Event() = default;
         virtual EventType GetType() const = 0;
         virtual std::string ToString() const = 0;
+    };
+
+    struct WindowResizedEvent : public Event {
+        uint32_t Width, Height;
+
+        WindowResizedEvent(uint32_t width, uint32_t height) : Width(width), Height(height) {}
+        EventType GetType() const override { return EventType::WindowResized; }
+        std::string ToString() const override { return "WindowResizedEvent: " + std::to_string(Width) + ", " + std::to_string(Height); }
     };
 
     struct KeyPressedEvent : public Event {

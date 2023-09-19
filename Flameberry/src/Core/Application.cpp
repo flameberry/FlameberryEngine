@@ -35,13 +35,15 @@ namespace Flameberry {
         Texture2D::InitStaticResources();
 
         m_ImGuiLayer = std::make_unique<ImGuiLayer>();
-        
+
         PhysicsEngine::Init();
     }
 
     void Application::Run()
     {
         float last = 0.0f;
+
+        Renderer::Init();
         while (m_Window->IsRunning())
         {
             float now = glfwGetTime();
@@ -51,32 +53,26 @@ namespace Flameberry {
             for (auto& layer : m_LayerStack)
                 layer->OnUpdate(delta);
 
-            if (m_Window->BeginFrame())
-            {
-                Renderer::Render();
+            Renderer::Submit([app = this](VkCommandBuffer, uint32_t)
+                {
+                    app->m_ImGuiLayer->Begin();
+                    for (auto& layer : app->m_LayerStack)
+                        layer->OnUIRender();
+                    app->m_ImGuiLayer->End();
+                });
 
-                m_ImGuiLayer->Begin();
-                for (auto& layer : m_LayerStack)
-                    layer->OnUIRender();
-                m_ImGuiLayer->End();
-
-                m_Window->SwapBuffers();
-            }
-            
-            if (m_Window->IsWindowResized())
-            {
-                m_ImGuiLayer->InvalidateResources();
-                m_Window->ResetWindowResizedFlag();
-            }
-
-            Renderer::ClearCommandQueue();
+            Renderer::WaitAndRender();
             glfwPollEvents();
         }
+        Renderer::Shutdown();
     }
 
     void Application::OnEvent(Event& e)
     {
         switch (e.GetType()) {
+            case EventType::WindowResized:
+                this->OnWindowResizedEvent(*(WindowResizedEvent*)(&e));
+                break;
             case EventType::KeyPressed:
                 this->OnKeyPressedEvent(*(KeyPressedEvent*)(&e));
                 break;
@@ -93,6 +89,12 @@ namespace Flameberry {
 
     void Application::OnKeyPressedEvent(KeyPressedEvent& e)
     {
+    }
+
+    void Application::OnWindowResizedEvent(WindowResizedEvent& e)
+    {
+        // TODO: Wait for Render Thread to finish Rendering
+        m_ImGuiLayer->InvalidateResources();
     }
 
     Application::~Application()

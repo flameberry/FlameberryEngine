@@ -22,6 +22,7 @@ namespace Flameberry {
 
         void OnEvent(Event& e);
         void OnKeyPressedEvent(KeyPressedEvent& e);
+        void OnWindowResizedEvent(WindowResizedEvent& e);
 
         template<typename T, typename... Args> void PushLayer(Args... args) {
             auto& layer = m_LayerStack.emplace_back(std::make_shared<T>(std::forward<Args>(args)...));

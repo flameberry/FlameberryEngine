@@ -3,6 +3,8 @@
 #include "Renderer/VulkanDebug.h"
 #include "Renderer/VulkanContext.h"
 
+#include "Renderer/Renderer.h"
+
 namespace Flameberry {
     std::shared_ptr<Window> Window::Create(int width, int height, const char* title)
     {
@@ -20,9 +22,6 @@ namespace Flameberry {
         m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, NULL, NULL);
         FL_ASSERT(m_Window, "GLFW window is null!");
         FL_INFO("Created GLFW window of title '{0}' and dimensions ({1}, {2})", m_Title, m_Width, m_Height);
-
-        glfwSetWindowUserPointer(m_Window, this);
-        glfwSetFramebufferSizeCallback(m_Window, FramebufferResizeCallBack);
     }
 
     void VulkanWindow::Init()
@@ -40,6 +39,18 @@ namespace Flameberry {
     {
         m_EventCallBack = fn;
         glfwSetWindowUserPointer(m_Window, this);
+
+        glfwSetFramebufferSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
+            {
+                VulkanWindow* pWindow = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
+                pWindow->m_Width = width;
+                pWindow->m_Height = height;
+            
+                pWindow->m_WindowResizedFlag = true;
+
+                WindowResizedEvent event(width, height);
+                pWindow->m_EventCallBack(event);
+            });
 
         glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
             {
@@ -59,14 +70,6 @@ namespace Flameberry {
                 ptr->m_EventCallBack(event);
             }
         );
-    }
-
-    void VulkanWindow::FramebufferResizeCallBack(GLFWwindow* window, int width, int height)
-    {
-        VulkanWindow* pWindow = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
-        pWindow->m_Width = width;
-        pWindow->m_Height = height;
-        pWindow->m_FramebufferResized = true;
     }
 
     void VulkanWindow::CreateVulkanWindowSurface(VkInstance instance)
@@ -92,22 +95,14 @@ namespace Flameberry {
             return false;
         }
         m_ImageIndex = m_SwapChain->GetAcquiredImageIndex();
-
-        const auto& device = VulkanContext::GetCurrentDevice();
-        device->ResetCommandBuffer(m_CurrentFrameIndex);
-        device->BeginCommandBuffer(m_CurrentFrameIndex);
         return true;
     }
 
     void VulkanWindow::SwapBuffers()
     {
         const auto& device = VulkanContext::GetCurrentDevice();
-        device->EndCommandBuffer(m_CurrentFrameIndex);
-
-        VkResult queuePresentStatus = m_SwapChain->SubmitCommandBuffer(device->GetCommandBuffer(m_CurrentFrameIndex));
-        if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR || IsWindowResized())
+        VkResult queuePresentStatus = m_SwapChain->SubmitCommandBuffer(device->GetCommandBuffer(Renderer::RT_GetCurrentFrameIndex()));
+        if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR || m_WindowResizedFlag)
             m_SwapChain->Invalidate(m_SwapChain->GetVulkanSwapChain());
-
-        m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 }

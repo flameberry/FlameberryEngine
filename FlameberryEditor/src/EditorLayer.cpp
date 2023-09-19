@@ -324,7 +324,6 @@ namespace Flameberry {
         m_IsViewportFocused = ImGui::IsWindowFocused();
         m_IsViewportHovered = ImGui::IsWindowHovered();
 
-        uint32_t currentFrameIndex = Renderer::GetCurrentFrameIndex();
         uint32_t imageIndex = VulkanContext::GetCurrentWindow()->GetImageIndex();
 
         ImGui::Image(reinterpret_cast<ImTextureID>(
