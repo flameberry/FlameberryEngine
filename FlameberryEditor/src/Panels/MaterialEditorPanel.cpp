@@ -27,14 +27,14 @@ namespace Flameberry {
             if (m_EditingContext && m_ShouldRename)
             {
 
-                strcpy(m_RenameBuffer, m_EditingContext->Name.c_str());
+                strcpy(m_RenameBuffer, m_EditingContext->GetName().c_str());
                 ImGui::SetKeyboardFocusHere();
 
                 ImGui::PushItemWidth(-1.0f);
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
                 if (ImGui::InputText("###RenameMaterial", m_RenameBuffer, 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
                 {
-                    m_EditingContext->Name = std::string(m_RenameBuffer);
+                    m_EditingContext->SetName(std::string(m_RenameBuffer).c_str());
                     m_ShouldRename = false;
                     m_IsMaterialEdited = true;
                 }
@@ -43,7 +43,7 @@ namespace Flameberry {
             }
             else
             {
-                ImGui::Button(m_EditingContext ? m_EditingContext->Name.c_str() : "Null", ImVec2(-1.0f, 0.0f));
+                ImGui::Button(m_EditingContext ? m_EditingContext->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f));
                 if (m_EditingContext && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
                     m_ShouldRename = true;
             }
@@ -76,11 +76,11 @@ namespace Flameberry {
                 ImGui::TableNextColumn();
                 ImGui::TextWrapped("%s", m_EditingContext->FilePath.c_str());
 
-                DrawMapControls("Texture Map", m_EditingContext->TextureMapEnabled, m_EditingContext->TextureMap);
-                DrawMapControls("Normal Map", m_EditingContext->NormalMapEnabled, m_EditingContext->NormalMap);
-                DrawMapControls("Roughness Map", m_EditingContext->RoughnessMapEnabled, m_EditingContext->RoughnessMap);
-                DrawMapControls("Ambient Occlusion Map", m_EditingContext->AmbientOcclusionMapEnabled, m_EditingContext->AmbientOcclusionMap);
-                DrawMapControls("Metallic Map", m_EditingContext->MetallicMapEnabled, m_EditingContext->MetallicMap);
+                DrawMapControls("Texture Map", m_EditingContext->m_AlbedoMapEnabled, m_EditingContext->m_AlbedoMap);
+                DrawMapControls("Normal Map", m_EditingContext->m_NormalMapEnabled, m_EditingContext->m_NormalMap);
+                DrawMapControls("Roughness Map", m_EditingContext->m_RoughnessMapEnabled, m_EditingContext->m_RoughnessMap);
+                DrawMapControls("Ambient Occlusion Map", m_EditingContext->m_AmbientOcclusionMapEnabled, m_EditingContext->m_AmbientOcclusionMap);
+                DrawMapControls("Metallic Map", m_EditingContext->m_MetallicMapEnabled, m_EditingContext->m_MetallicMap);
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -89,7 +89,7 @@ namespace Flameberry {
                 ImGui::Text("Albedo");
                 ImGui::TableNextColumn();
                 ImGui::PushItemWidth(-1.0f);
-                ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_EditingContext->Albedo));
+                ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_EditingContext->m_Albedo));
                 m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -97,7 +97,7 @@ namespace Flameberry {
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Roughness");
                 ImGui::TableNextColumn();
-                ImGui::DragFloat("##Roughness", &m_EditingContext->Roughness, 0.01f, 0.0f, 1.0f);
+                ImGui::DragFloat("##Roughness", &m_EditingContext->m_Roughness, 0.01f, 0.0f, 1.0f);
                 m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -105,10 +105,8 @@ namespace Flameberry {
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Metallic");
                 ImGui::TableNextColumn();
-                float metallic = m_EditingContext->Metallic;
-                ImGui::DragFloat("##Metallic", &metallic, 0.005f, 0.0f, 1.0f);
+                ImGui::DragFloat("##Metallic", &m_EditingContext->m_Metallic, 0.005f, 0.0f, 1.0f);
                 ImGui::PopItemWidth();
-                m_EditingContext->Metallic = metallic;
                 m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
             }
             ImGui::EndTable();
@@ -156,6 +154,7 @@ namespace Flameberry {
                     if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
                     {
                         map = AssetManager::TryGetOrLoadAsset<Texture2D>(path.string());
+                        m_EditingContext->Update();
                         m_IsMaterialEdited = true;
                     }
                     else

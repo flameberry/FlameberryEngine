@@ -52,30 +52,32 @@ namespace Flameberry {
 
         for (const auto& mat : materials) {
             auto materialAsset = std::make_shared<Material>();
-            materialAsset->Name = mat.name;
-            materialAsset->Albedo = { mat.diffuse[0], mat.diffuse[1], mat.diffuse[2] };
-            materialAsset->Roughness = mat.roughness;
-            materialAsset->Metallic = mat.metallic;
+            materialAsset->SetName(mat.name.c_str());
+            materialAsset->SetAlbedo({ mat.diffuse[0], mat.diffuse[1], mat.diffuse[2] });
+            materialAsset->SetRoughness(mat.roughness);
+            materialAsset->SetMetallic(mat.metallic);
 
-            materialAsset->TextureMapEnabled = !mat.diffuse_texname.empty();
-            if (materialAsset->TextureMapEnabled)
-                materialAsset->TextureMap = AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.diffuse_texname);
+            materialAsset->SetAlbedoMapEnabled(!mat.diffuse_texname.empty());
+            if (materialAsset->IsAlbedoMapEnabled())
+                materialAsset->SetAlbedoMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.diffuse_texname));
 
-            materialAsset->NormalMapEnabled = !mat.displacement_texname.empty();
-            if (materialAsset->NormalMapEnabled)
-                materialAsset->NormalMap = AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.displacement_texname);
+            materialAsset->SetNormalMapEnabled(!mat.displacement_texname.empty());
+            if (materialAsset->IsNormalMapEnabled())
+                materialAsset->SetNormalMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.displacement_texname));
 
-            materialAsset->RoughnessMapEnabled = !mat.roughness_texname.empty();
-            if (materialAsset->RoughnessMapEnabled)
-                materialAsset->RoughnessMap = AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.roughness_texname);
+            materialAsset->SetRoughnessMapEnabled(!mat.roughness_texname.empty());
+            if (materialAsset->IsRoughnessMapEnabled())
+                materialAsset->SetRoughnessMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.roughness_texname));
 
-            materialAsset->MetallicMapEnabled = !mat.metallic_texname.empty();
-            if (materialAsset->MetallicMapEnabled)
-                materialAsset->MetallicMap = AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.metallic_texname);
+            materialAsset->SetMetallicMapEnabled(!mat.metallic_texname.empty());
+            if (materialAsset->IsMetallicMapEnabled())
+                materialAsset->SetMetallicMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.metallic_texname));
 
-            materialAsset->AmbientOcclusionMapEnabled = !mat.ambient_texname.empty();
-            if (materialAsset->AmbientOcclusionMapEnabled)
-                materialAsset->AmbientOcclusionMap = AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.ambient_texname);
+            materialAsset->SetAmbientOcclusionMapEnabled(!mat.ambient_texname.empty());
+            if (materialAsset->IsAmbientOcclusionMapEnabled())
+                materialAsset->SetAmbientOcclusionMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.ambient_texname));
+
+            materialAsset->Update();
 
             AssetManager::RegisterAsset(materialAsset);
             materialHandles.emplace_back(materialAsset->Handle);

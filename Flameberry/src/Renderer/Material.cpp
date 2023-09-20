@@ -6,25 +6,117 @@
 #include "Asset/AssetManager.h"
 
 namespace Flameberry {
+    std::shared_ptr<DescriptorSetLayout> Material::s_CommonDescSetLayout;
+    std::unique_ptr<DescriptorSet> Material::s_EmptyMaterialDescSet;
+
+    Material::Material()
+    {
+        if (!s_CommonDescSetLayout)
+            CreateLayout();
+
+        if (!s_EmptyMaterialDescSet)
+        {
+            DescriptorSetSpecification descSetSpec;
+            descSetSpec.Layout = s_CommonDescSetLayout;
+
+            s_EmptyMaterialDescSet = std::make_unique<DescriptorSet>(descSetSpec);
+
+            for (uint8_t i = 0; i < 5; i++)
+                s_EmptyMaterialDescSet->WriteImage(i, VkDescriptorImageInfo{ .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, .sampler = Texture2D::GetDefaultSampler(), .imageView = Texture2D::GetEmptyImageView() });
+            s_EmptyMaterialDescSet->Update();
+        }
+
+        DescriptorSetSpecification descSetSpec;
+        descSetSpec.Layout = s_CommonDescSetLayout;
+        m_TextureMapSet = std::make_unique<DescriptorSet>(descSetSpec);
+
+        for (uint8_t i = 0; i < 5; i++)
+            m_TextureMapSet->WriteImage(i, VkDescriptorImageInfo{ .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, .sampler = Texture2D::GetDefaultSampler(), .imageView = Texture2D::GetEmptyImageView() });
+        m_TextureMapSet->Update();
+    }
+
+    void Material::Update()
+    {
+        VkDescriptorImageInfo imageInfos[5] = {};
+
+        for (uint32_t i = 0; i < 5; i++)
+        {
+            imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        }
+
+        if (m_AlbedoMap)
+        {
+            imageInfos[0].imageView = m_AlbedoMap->GetImageView();
+            imageInfos[0].sampler = m_AlbedoMap->GetSampler();
+            m_TextureMapSet->WriteImage(0, imageInfos[0]);
+        }
+
+        if (m_NormalMap)
+        {
+            imageInfos[1].imageView = m_NormalMap->GetImageView();
+            imageInfos[1].sampler = m_NormalMap->GetSampler();
+            m_TextureMapSet->WriteImage(1, imageInfos[1]);
+        }
+
+        if (m_RoughnessMap)
+        {
+            imageInfos[2].imageView = m_RoughnessMap->GetImageView();
+            imageInfos[2].sampler = m_RoughnessMap->GetSampler();
+            m_TextureMapSet->WriteImage(2, imageInfos[2]);
+        }
+
+        if (m_AmbientOcclusionMap)
+        {
+            imageInfos[3].imageView = m_AmbientOcclusionMap->GetImageView();
+            imageInfos[3].sampler = m_AmbientOcclusionMap->GetSampler();
+            m_TextureMapSet->WriteImage(3, imageInfos[3]);
+        }
+
+        if (m_MetallicMap)
+        {
+            imageInfos[4].imageView = m_MetallicMap->GetImageView();
+            imageInfos[4].sampler = m_MetallicMap->GetSampler();
+            m_TextureMapSet->WriteImage(4, imageInfos[4]);
+        }
+
+        m_TextureMapSet->Update();
+    }
+
+    void Material::CreateLayout()
+    {
+        DescriptorSetLayoutSpecification layoutSpec;
+        layoutSpec.Bindings.resize(5);
+
+        for (uint8_t i = 0; i < 5; i++)
+        {
+            layoutSpec.Bindings[i].binding = i;
+            layoutSpec.Bindings[i].descriptorCount = 1;
+            layoutSpec.Bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            layoutSpec.Bindings[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        }
+
+        s_CommonDescSetLayout = DescriptorSetLayout::Create(layoutSpec);
+    }
+
     void MaterialSerializer::Serialize(const std::shared_ptr<Material>& material, const char* path)
     {
         YAML::Emitter out;
         out << YAML::BeginMap;
         out << YAML::Key << "Handle" << YAML::Value << material->Handle;
-        out << YAML::Key << "Name" << YAML::Value << material->Name;
-        out << YAML::Key << "Albedo" << YAML::Value << material->Albedo;
-        out << YAML::Key << "Roughness" << YAML::Value << material->Roughness;
-        out << YAML::Key << "Metallic" << YAML::Value << material->Metallic;
-        out << YAML::Key << "TextureMapEnabled" << YAML::Value << material->TextureMapEnabled;
-        out << YAML::Key << "TextureMap" << YAML::Value << (material->TextureMapEnabled ? material->TextureMap->FilePath : "");
-        out << YAML::Key << "NormalMapEnabled" << YAML::Value << material->NormalMapEnabled;
-        out << YAML::Key << "NormalMap" << YAML::Value << (material->NormalMapEnabled ? material->NormalMap->FilePath : "");
-        out << YAML::Key << "RoughnessMapEnabled" << YAML::Value << material->RoughnessMapEnabled;
-        out << YAML::Key << "RoughnessMap" << YAML::Value << (material->RoughnessMapEnabled ? material->RoughnessMap->FilePath : "");
-        out << YAML::Key << "AmbientOcclusionMapEnabled" << YAML::Value << material->AmbientOcclusionMapEnabled;
-        out << YAML::Key << "AmbientOcclusionMap" << YAML::Value << (material->AmbientOcclusionMapEnabled ? material->AmbientOcclusionMap->FilePath : "");
-        out << YAML::Key << "MetallicMapEnabled" << YAML::Value << material->MetallicMapEnabled;
-        out << YAML::Key << "MetallicMap" << YAML::Value << (material->MetallicMapEnabled ? material->MetallicMap->FilePath : "");
+        out << YAML::Key << "Name" << YAML::Value << material->m_Name;
+        out << YAML::Key << "Albedo" << YAML::Value << material->m_Albedo;
+        out << YAML::Key << "Roughness" << YAML::Value << material->m_Roughness;
+        out << YAML::Key << "Metallic" << YAML::Value << material->m_Metallic;
+        out << YAML::Key << "TextureMapEnabled" << YAML::Value << material->m_AlbedoMapEnabled;
+        out << YAML::Key << "TextureMap" << YAML::Value << (material->m_AlbedoMapEnabled ? material->m_AlbedoMap->FilePath : "");
+        out << YAML::Key << "NormalMapEnabled" << YAML::Value << material->m_NormalMapEnabled;
+        out << YAML::Key << "NormalMap" << YAML::Value << (material->m_NormalMapEnabled ? material->m_NormalMap->FilePath : "");
+        out << YAML::Key << "RoughnessMapEnabled" << YAML::Value << material->m_RoughnessMapEnabled;
+        out << YAML::Key << "RoughnessMap" << YAML::Value << (material->m_RoughnessMapEnabled ? material->m_RoughnessMap->FilePath : "");
+        out << YAML::Key << "AmbientOcclusionMapEnabled" << YAML::Value << material->m_AmbientOcclusionMapEnabled;
+        out << YAML::Key << "AmbientOcclusionMap" << YAML::Value << (material->m_AmbientOcclusionMapEnabled ? material->m_AmbientOcclusionMap->FilePath : "");
+        out << YAML::Key << "MetallicMapEnabled" << YAML::Value << material->m_MetallicMapEnabled;
+        out << YAML::Key << "MetallicMap" << YAML::Value << (material->m_MetallicMapEnabled ? material->m_MetallicMap->FilePath : "");
         out << YAML::EndMap;
 
         std::ofstream fout(path);
@@ -42,31 +134,32 @@ namespace Flameberry {
         std::shared_ptr<Material> material = std::make_shared<Material>();
         material->Handle = data["Handle"].as<uint64_t>();
 
-        material->Name = data["Name"].as<std::string>();
-        material->Albedo = data["Albedo"].as<glm::vec3>();
-        material->Roughness = data["Roughness"].as<float>();
-        material->Metallic = data["Metallic"].as<float>();
+        material->m_Name = data["Name"].as<std::string>();
+        material->m_Albedo = data["Albedo"].as<glm::vec3>();
+        material->m_Roughness = data["Roughness"].as<float>();
+        material->m_Metallic = data["Metallic"].as<float>();
 
-        material->TextureMapEnabled = data["TextureMapEnabled"].as<bool>();
+        material->m_AlbedoMapEnabled = data["TextureMapEnabled"].as<bool>();
         if (auto map = data["TextureMap"].as<std::string>(); !map.empty())
-            material->TextureMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
+            material->m_AlbedoMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
 
-        material->NormalMapEnabled = data["NormalMapEnabled"].as<bool>();
+        material->m_NormalMapEnabled = data["NormalMapEnabled"].as<bool>();
         if (auto map = data["NormalMap"].as<std::string>(); !map.empty())
-            material->NormalMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
+            material->m_NormalMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
 
-        material->RoughnessMapEnabled = data["RoughnessMapEnabled"].as<bool>();
+        material->m_RoughnessMapEnabled = data["RoughnessMapEnabled"].as<bool>();
         if (auto map = data["RoughnessMap"].as<std::string>(); !map.empty())
-            material->RoughnessMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
+            material->m_RoughnessMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
 
-        material->AmbientOcclusionMapEnabled = data["AmbientOcclusionMapEnabled"].as<bool>();
+        material->m_AmbientOcclusionMapEnabled = data["AmbientOcclusionMapEnabled"].as<bool>();
         if (auto map = data["AmbientOcclusionMap"].as<std::string>(); !map.empty())
-            material->AmbientOcclusionMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
+            material->m_AmbientOcclusionMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
 
-        material->MetallicMapEnabled = data["MetallicMapEnabled"].as<bool>();
+        material->m_MetallicMapEnabled = data["MetallicMapEnabled"].as<bool>();
         if (auto map = data["MetallicMap"].as<std::string>(); !map.empty())
-            material->MetallicMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
+            material->m_MetallicMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
 
+        material->Update();
         return material;
     }
 }

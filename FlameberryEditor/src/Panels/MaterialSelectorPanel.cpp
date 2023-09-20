@@ -17,7 +17,7 @@ namespace Flameberry {
                 if (asset->GetAssetType() == AssetType::Material)
                 {
                     auto mat = std::static_pointer_cast<Material>(asset);
-                    ImGui::Text("%s", mat->Name.c_str());
+                    ImGui::Text("%s", mat->GetName().c_str());
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     {
                         m_Open = false;

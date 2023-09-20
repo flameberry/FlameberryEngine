@@ -33,6 +33,7 @@ namespace Flameberry {
         static std::shared_ptr<DescriptorSetLayout> GetDescriptorLayout() { return s_DescriptorLayout; }
         static VkDescriptorSet GetEmptyDescriptorSet() { return s_EmptyDescriptorSet->GetDescriptorSet(); }
         static VkSampler GetDefaultSampler() { return s_DefaultSampler; }
+        static VkImageView GetEmptyImageView() { return s_EmptyImage->GetImageView(); }
 
         static std::shared_ptr<Texture2D> TryGetOrLoadTexture(const std::string& texturePath);
 

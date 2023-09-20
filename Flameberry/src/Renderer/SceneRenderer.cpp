@@ -37,7 +37,7 @@ namespace Flameberry {
         glm::vec3 Albedo{ 1.0f };
         float Roughness = 0.2f;
         float Metallic = 0.0f;
-        float TextureMapEnabled = 0.0f,
+        float AlbedoMapEnabled = 0.0f,
             NormalMapEnabled = 0.0f,
             RoughnessMapEnabled = 0.0f,
             AmbientOcclusionMapEnabled = 0.0f,
@@ -300,14 +300,14 @@ namespace Flameberry {
                     { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MeshData) }
                 };
 
+
+                // Temp
+                Material::CreateLayout();
+
                 pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
                     m_CameraBufferDescSetLayout,
                     m_SceneDescriptorSetLayout,
-                    Texture2D::GetDescriptorLayout(),
-                    Texture2D::GetDescriptorLayout(),
-                    Texture2D::GetDescriptorLayout(),
-                    Texture2D::GetDescriptorLayout(),
-                    Texture2D::GetDescriptorLayout()
+                    Material::GetLayout()
                 };
 
                 pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.vert.spv";
@@ -886,8 +886,6 @@ namespace Flameberry {
         if (!staticMesh)
             return;
 
-        std::vector<VkDescriptorSet> materialDescriptorSets(5);
-
         staticMesh->Bind();
 
         int submeshIndex = 0;
@@ -896,8 +894,6 @@ namespace Flameberry {
             pushConstantMeshData.ModelMatrix = transform;
 
             std::shared_ptr<Material> materialAsset;
-            std::fill(materialDescriptorSets.begin(), materialDescriptorSets.end(), Texture2D::GetEmptyDescriptorSet());
-
             if (auto it = materialTable.find(submeshIndex); it != materialTable.end())
                 materialAsset = AssetManager::GetAsset<Material>(it->second);
             else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
@@ -905,30 +901,19 @@ namespace Flameberry {
 
             if (materialAsset)
             {
-                pushConstantMeshData.Albedo = materialAsset->Albedo;
-                pushConstantMeshData.Roughness = materialAsset->Roughness;
-                pushConstantMeshData.Metallic = materialAsset->Metallic;
-                pushConstantMeshData.TextureMapEnabled = materialAsset->TextureMapEnabled;
-                pushConstantMeshData.NormalMapEnabled = materialAsset->NormalMapEnabled;
-                pushConstantMeshData.RoughnessMapEnabled = materialAsset->RoughnessMapEnabled;
-                pushConstantMeshData.AmbientOcclusionMapEnabled = materialAsset->AmbientOcclusionMapEnabled;
-                pushConstantMeshData.MetallicMapEnabled = materialAsset->MetallicMapEnabled;
-
-                if (materialAsset->TextureMapEnabled)
-                    materialDescriptorSets[0] = materialAsset->TextureMap->GetDescriptorSet();
-                if (materialAsset->NormalMapEnabled)
-                    materialDescriptorSets[1] = materialAsset->NormalMap->GetDescriptorSet();
-                if (materialAsset->RoughnessMapEnabled)
-                    materialDescriptorSets[2] = materialAsset->RoughnessMap->GetDescriptorSet();
-                if (materialAsset->AmbientOcclusionMapEnabled)
-                    materialDescriptorSets[3] = materialAsset->AmbientOcclusionMap->GetDescriptorSet();
-                if (materialAsset->MetallicMapEnabled)
-                    materialDescriptorSets[4] = materialAsset->MetallicMap->GetDescriptorSet();
+                pushConstantMeshData.Albedo = materialAsset->GetAlbedo();
+                pushConstantMeshData.Roughness = materialAsset->GetRoughness();
+                pushConstantMeshData.Metallic = materialAsset->GetMetallic();
+                pushConstantMeshData.AlbedoMapEnabled = materialAsset->IsAlbedoMapEnabled();
+                pushConstantMeshData.NormalMapEnabled = materialAsset->IsNormalMapEnabled();
+                pushConstantMeshData.RoughnessMapEnabled = materialAsset->IsRoughnessMapEnabled();
+                pushConstantMeshData.AmbientOcclusionMapEnabled = materialAsset->IsAmbientOcclusionMapEnabled();
+                pushConstantMeshData.MetallicMapEnabled = materialAsset->IsMetallicMapEnabled();
             }
 
-            Renderer::Submit([pipelineLayout = m_MeshPipeline->GetLayout(), materialDescriptorSets, pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([pipelineLayout = m_MeshPipeline->GetLayout(), descSet = materialAsset ? materialAsset->GetDescriptorSet() : Material::GetEmptyDesciptorSet(), pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
-                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, materialDescriptorSets.size(), materialDescriptorSets.data(), 0, nullptr);
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, 1, &descSet, 0, nullptr);
                     vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
                 }
             );

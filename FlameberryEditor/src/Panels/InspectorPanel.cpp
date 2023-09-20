@@ -298,7 +298,7 @@ namespace Flameberry {
                                         mat = AssetManager::GetAsset<Material>(submesh.MaterialHandle);
 
                                     ImGui::Button(
-                                        mat ? mat->Name.c_str() : "Null",
+                                        mat ? mat->GetName().c_str() : "Null",
                                         ImVec2(ImGui::GetContentRegionAvail().x - textLineHeightWithSpacing, 0.0f)
                                     );
 
