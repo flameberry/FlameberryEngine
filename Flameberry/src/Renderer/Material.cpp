@@ -11,20 +11,8 @@ namespace Flameberry {
 
     Material::Material()
     {
-        if (!s_CommonDescSetLayout)
-            CreateLayout();
-
-        if (!s_EmptyMaterialDescSet)
-        {
-            DescriptorSetSpecification descSetSpec;
-            descSetSpec.Layout = s_CommonDescSetLayout;
-
-            s_EmptyMaterialDescSet = std::make_unique<DescriptorSet>(descSetSpec);
-
-            for (uint8_t i = 0; i < 5; i++)
-                s_EmptyMaterialDescSet->WriteImage(i, VkDescriptorImageInfo{ .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, .sampler = Texture2D::GetDefaultSampler(), .imageView = Texture2D::GetEmptyImageView() });
-            s_EmptyMaterialDescSet->Update();
-        }
+        if (!s_CommonDescSetLayout || !s_EmptyMaterialDescSet)
+            Init();
 
         DescriptorSetSpecification descSetSpec;
         descSetSpec.Layout = s_CommonDescSetLayout;
@@ -82,7 +70,7 @@ namespace Flameberry {
         m_TextureMapSet->Update();
     }
 
-    void Material::CreateLayout()
+    void Material::Init()
     {
         DescriptorSetLayoutSpecification layoutSpec;
         layoutSpec.Bindings.resize(5);
@@ -96,6 +84,21 @@ namespace Flameberry {
         }
 
         s_CommonDescSetLayout = DescriptorSetLayout::Create(layoutSpec);
+
+        DescriptorSetSpecification descSetSpec;
+        descSetSpec.Layout = s_CommonDescSetLayout;
+
+        s_EmptyMaterialDescSet = std::make_unique<DescriptorSet>(descSetSpec);
+
+        for (uint8_t i = 0; i < 5; i++)
+            s_EmptyMaterialDescSet->WriteImage(i, VkDescriptorImageInfo{ .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, .sampler = Texture2D::GetDefaultSampler(), .imageView = Texture2D::GetEmptyImageView() });
+        s_EmptyMaterialDescSet->Update();
+    }
+
+    void Material::Shutdown()
+    {
+        s_EmptyMaterialDescSet.release();
+        s_CommonDescSetLayout = nullptr;
     }
 
     void MaterialSerializer::Serialize(const std::shared_ptr<Material>& material, const char* path)

@@ -27,7 +27,7 @@ namespace Flameberry {
 #define FL_ERROR(...) Flameberry::Logger::CoreLogger->error(__VA_ARGS__)
 #define FL_CRITICAL(...) Flameberry::Logger::CoreLogger->critical(__VA_ARGS__)
 
-#elif defined(FL_RELEASE)
+#else
 
 #define FL_LOGGER_INIT(project_name)
 #define FL_SET_LOG_LEVEL(level)

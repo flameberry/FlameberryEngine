@@ -34,7 +34,6 @@ namespace Flameberry {
         ~SceneRenderer();
 
         void RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true, bool renderOutline = true, bool renderPhysicsCollider = true);
-        void RenderSceneRuntime(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar);
 
         VkImageView GetGeometryPassOutputImageView(uint32_t index) const { return m_GeometryPass->GetSpecification().TargetFramebuffers[index]->GetColorResolveAttachment(0)->GetImageView(); }
         VkImageView GetCompositePassOutputImageView(uint32_t index) const { return m_CompositePass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetImageView(); }

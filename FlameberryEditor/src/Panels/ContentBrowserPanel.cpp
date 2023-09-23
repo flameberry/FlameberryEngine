@@ -78,7 +78,7 @@ namespace Flameberry {
             m_CurrentDirectory = parent.path();
 
         ImGui::SameLine();
-        ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FileTypeIndex::FOLDER]->GetDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight() + framePaddingY, ImGui::GetTextLineHeight() + framePaddingY });
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FileTypeIndex::FOLDER]->CreateOrGetDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight() + framePaddingY, ImGui::GetTextLineHeight() + framePaddingY });
         ImGui::SameLine();
         ImGui::Text("%s", parent.path().filename().c_str());
         ImGui::PopStyleColor(is_selected ? 4 : 3);
@@ -145,10 +145,10 @@ namespace Flameberry {
 
         ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         float arrowSize = 18.0f;
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_BACK_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FORWARD_ARROW_ICON]->GetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
         if (m_IsSearchBoxFocused)
@@ -234,7 +234,7 @@ namespace Flameberry {
                 isFileSupported = false;
             }
             
-            itemSize = UI::ContentBrowserItem(filePath, iconWidth, iconWidth, m_IconTextures[currentIconIndex]->GetDescriptorSet());
+            itemSize = UI::ContentBrowserItem(filePath, iconWidth, iconWidth, m_IconTextures[currentIconIndex]->CreateOrGetDescriptorSet());
 
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
                 m_CurrentDirectory = directory.path();

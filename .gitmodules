@@ -13,3 +13,6 @@
 [submodule "Flameberry/vendor/ImGuizmo"]
 	path = Flameberry/vendor/ImGuizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo
+[submodule "Flameberry/vendor/Assimp"]
+	path = Flameberry/vendor/Assimp
+	url = https://github.com/assimp/assimp

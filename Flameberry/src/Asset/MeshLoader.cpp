@@ -7,6 +7,10 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
@@ -31,9 +35,9 @@ namespace std {
 
 namespace Flameberry {
 
-    std::shared_ptr<Asset> MeshLoader::LoadMesh(const std::filesystem::path& path)
+    std::shared_ptr<Asset> MeshLoader::LoadMeshOBJ(const std::filesystem::path& path)
     {
-        FL_SCOPED_TIMER("Load_Model");
+        FL_SCOPED_TIMER("Load_Model_TinyOBJ");
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
@@ -171,6 +175,229 @@ namespace Flameberry {
             if (shape.mesh.material_ids[0] != -1)
                 submesh.MaterialHandle = materialHandles[shape.mesh.material_ids[0]];
         }
+
+        std::shared_ptr<Buffer> vertexBuffer, indexBuffer;
+
+        {
+            // Creating Vertex Buffer
+            VkDeviceSize bufferSize = sizeof(MeshVertex) * vertices.size();
+
+            BufferSpecification stagingBufferSpec;
+            stagingBufferSpec.InstanceCount = 1;
+            stagingBufferSpec.InstanceSize = bufferSize;
+            stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+            Buffer stagingBuffer(stagingBufferSpec);
+
+            stagingBuffer.MapMemory(bufferSize);
+            stagingBuffer.WriteToBuffer(vertices.data(), bufferSize, 0);
+            stagingBuffer.UnmapMemory();
+
+            BufferSpecification vertexBufferSpec;
+            vertexBufferSpec.InstanceCount = 1;
+            vertexBufferSpec.InstanceSize = bufferSize;
+            vertexBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+            vertexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+            vertexBuffer = std::make_unique<Buffer>(vertexBufferSpec);
+            RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), vertexBuffer->GetBuffer(), bufferSize);
+        }
+
+        {
+            // Creating Index Buffer
+            VkDeviceSize bufferSize = sizeof(uint32_t) * indices.size();
+            BufferSpecification stagingBufferSpec;
+
+            stagingBufferSpec.InstanceCount = 1;
+            stagingBufferSpec.InstanceSize = bufferSize;
+            stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+            Buffer stagingBuffer(stagingBufferSpec);
+
+            stagingBuffer.MapMemory(bufferSize);
+            stagingBuffer.WriteToBuffer(indices.data(), bufferSize, 0);
+            stagingBuffer.UnmapMemory();
+
+            BufferSpecification indexBufferSpec;
+            indexBufferSpec.InstanceCount = 1;
+            indexBufferSpec.InstanceSize = bufferSize;
+            indexBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+            indexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+            indexBuffer = std::make_unique<Buffer>(indexBufferSpec);
+            RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), indexBuffer->GetBuffer(), bufferSize);
+        }
+
+        auto meshAsset = std::make_shared<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
+
+        // Set Asset Class Variables
+        meshAsset->FilePath = path;
+        meshAsset->SizeInBytesOnCPU = sizeof(StaticMesh);
+        meshAsset->SizeInBytesOnGPU = vertices.size() * sizeof(MeshVertex) + indices.size() * sizeof(uint32_t);
+
+        FL_INFO("Loaded Model: '{0}': Vertices: {1}, Indices: {2}", path, vertices.size(), indices.size());
+        return meshAsset;
+    }
+
+    // Returns Flameberry Material Asset Handle
+    static AssetHandle ProcessAndLoadMaterial(aiMaterial* material, const std::filesystem::path& path)
+    {
+        auto materialAsset = std::make_shared<Material>();
+
+        aiString name;
+        material->Get(AI_MATKEY_NAME, name);
+        aiColor3D albedo;
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, albedo);
+        float roughness, metallic;
+        material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
+        material->Get(AI_MATKEY_METALLIC_FACTOR, metallic);
+
+        materialAsset->SetName(name.C_Str());
+        materialAsset->SetAlbedo({ albedo.r, albedo.g, albedo.b });
+        materialAsset->SetRoughness(roughness);
+        materialAsset->SetMetallic(metallic);
+
+        aiString albedoMap, normalMap, roughnessMap, ambientMap, metallicMap;
+        aiReturn result;
+        result = material->Get(AI_MATKEY_TEXTURE_DIFFUSE(0), albedoMap);
+        materialAsset->SetAlbedoMapEnabled(result == AI_SUCCESS);
+
+        if (path.extension().string() == ".obj")
+            result = material->Get(AI_MATKEY_TEXTURE_DISPLACEMENT(0), normalMap);
+        else
+            result = material->Get(AI_MATKEY_TEXTURE_NORMALS(0), normalMap);
+        materialAsset->SetNormalMapEnabled(result == AI_SUCCESS);
+
+        result = material->GetTexture(AI_MATKEY_ROUGHNESS_TEXTURE, &roughnessMap);
+        materialAsset->SetRoughnessMapEnabled(result == AI_SUCCESS);
+
+        result = material->Get(AI_MATKEY_TEXTURE_AMBIENT(0), ambientMap);
+        materialAsset->SetAmbientOcclusionMapEnabled(result == AI_SUCCESS);
+
+        result = material->GetTexture(AI_MATKEY_METALLIC_TEXTURE, &metallicMap);
+        materialAsset->SetMetallicMapEnabled(result == AI_SUCCESS);
+
+        std::string albedoStr(albedoMap.C_Str()), normalStr(normalMap.C_Str()), roughnessStr(roughnessMap.C_Str()), ambientStr(ambientMap.C_Str()), metallicStr(metallicMap.C_Str());
+
+        if (materialAsset->IsAlbedoMapEnabled())
+        {
+            std::replace(albedoStr.begin(), albedoStr.end(), '\\', '/');
+            materialAsset->SetAlbedoMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / albedoStr));
+        }
+
+        if (materialAsset->IsNormalMapEnabled())
+        {
+            std::replace(normalStr.begin(), normalStr.end(), '\\', '/');
+            materialAsset->SetNormalMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / normalStr));
+        }
+
+        if (materialAsset->IsRoughnessMapEnabled())
+        {
+            std::replace(roughnessStr.begin(), roughnessStr.end(), '\\', '/');
+            materialAsset->SetRoughnessMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / roughnessStr));
+        }
+
+        if (materialAsset->IsMetallicMapEnabled())
+        {
+            std::replace(metallicStr.begin(), metallicStr.end(), '\\', '/');
+            materialAsset->SetMetallicMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / metallicStr));
+        }
+
+        if (materialAsset->IsAmbientOcclusionMapEnabled())
+        {
+            std::replace(ambientStr.begin(), ambientStr.end(), '\\', '/');
+            materialAsset->SetAmbientOcclusionMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / ambientStr));
+        }
+
+        materialAsset->Update();
+
+        AssetManager::RegisterAsset(materialAsset);
+        return materialAsset->Handle;
+    }
+
+    static void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles)
+    {
+        uint32_t indexBase = refVertices.size();
+
+        for (uint32_t i = 0; i < mesh->mNumVertices; i++)
+        {
+            glm::vec2 textureCoords = mesh->HasTextureCoords(0) ? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y) : glm::vec2(0.0f);
+            glm::vec3 tangent = mesh->HasTangentsAndBitangents() ? glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z) : glm::vec3(0.0f);
+            glm::vec3 bitangent = mesh->HasTangentsAndBitangents() ? glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z) : glm::vec3(0.0f);
+            refVertices.emplace_back(
+                glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z), // Position
+                glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z),    // Normals
+                textureCoords,                                                               // TextureCoords
+                tangent,                                                                     // Tangent
+                bitangent                                                                    // BiTangent
+            );
+        }
+
+        uint32_t indexOffset = refIndices.size();
+        for (uint32_t i = 0; i < mesh->mNumFaces; i++)
+        {
+            aiFace face = mesh->mFaces[i];
+            for (uint32_t j = 0; j < face.mNumIndices; j++)
+                refIndices.push_back(indexBase + face.mIndices[j]); // TODO: Make this efficient
+        }
+
+        // Add submesh
+        refSubMeshes.emplace_back(SubMesh{
+            .IndexOffset = indexOffset,
+            .IndexCount = (uint32_t)refIndices.size() - indexOffset,
+            .MaterialHandle = refMatHandles[mesh->mMaterialIndex]
+        });
+    }
+
+    static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles)
+    {
+        // Process all the node's meshes (if any)
+        for (uint32_t i = 0; i < node->mNumMeshes; i++)
+        {
+            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+            ProcessMesh(mesh, scene, refVertices, refIndices, refSubMeshes, refMatHandles);
+        }
+
+        // Then do the same for each of its children
+        for (uint32_t i = 0; i < node->mNumChildren; i++)
+            ProcessNode(node->mChildren[i], scene, refVertices, refIndices, refSubMeshes, refMatHandles);
+    }
+
+    std::shared_ptr<Asset> MeshLoader::LoadMesh(const std::filesystem::path& path)
+    {
+        FL_SCOPED_TIMER("Load_Model_Assimp");
+        // Create an instance of the Importer class
+        Assimp::Importer importer;
+
+        // And have it read the given file with some example postprocessing
+        // Usually - if speed is not the most important aspect for you - you'll
+        // probably to request more postprocessing than we do in this example.
+        const aiScene* scene = importer.ReadFile(path,
+            // aiProcessPreset_TargetRealtime_Fast
+            aiProcessPreset_TargetRealtime_Quality
+            | aiProcess_FlipUVs
+        );
+
+        // If the import failed, report it
+        FL_ASSERT(scene && !(scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE), importer.GetErrorString());
+
+        // Process Scene
+        std::vector<MeshVertex> vertices;
+        std::vector<uint32_t> indices;
+        std::vector<SubMesh> submeshes;
+        std::vector<AssetHandle> materialHandles;
+
+        // Load Materials
+        for (uint32_t i = 0; i < scene->mNumMaterials; i++)
+        {
+            auto* mat = scene->mMaterials[i];
+            materialHandles.emplace_back(ProcessAndLoadMaterial(mat, path));
+        }
+
+        // Load Meshes
+        ProcessNode(scene->mRootNode, scene, vertices, indices, submeshes, materialHandles);
 
         std::shared_ptr<Buffer> vertexBuffer, indexBuffer;
 

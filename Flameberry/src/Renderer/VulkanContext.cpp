@@ -67,7 +67,8 @@ namespace Flameberry {
 
         m_VulkanDevice = VulkanDevice::Create(m_VkPhysicalDevice, pWindow);
 
-        const uint32_t maxDescSets = 300;
+        // const uint32_t maxDescSets = 300;
+        const uint32_t maxDescSets = 500;
 
         std::vector<VkDescriptorPoolSize> poolSizes = {
             { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 * 8 },

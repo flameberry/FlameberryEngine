@@ -38,12 +38,9 @@ namespace Flameberry {
         config.GlyphExtraSpacing = ImVec2(0.65f, 0.62f);
 #endif
 
-        constexpr float smallFontSize = 13.0f * DPI_SCALE;
-        constexpr float fontSize = 14.0f * DPI_SCALE;
+        constexpr float smallFontSize = 12.0f * DPI_SCALE;
+        constexpr float fontSize = 13.5f * DPI_SCALE;
         constexpr float bigFontSize = 18.0f * DPI_SCALE;
-
-        // io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", bigFontSize, &config);
-        // io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/helvetica/Helvetica.ttc", fontSize, &config);
 
         io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", bigFontSize, &config);
         io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", fontSize, &config);
@@ -313,7 +310,7 @@ namespace Flameberry {
         colors[ImGuiCol_FrameBgActive] = ImVec4{ 0.08f, 0.08f, 0.08f, 1.0f };
 
         // colors[ImGuiCol_TitleBg] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
-        colors[ImGuiCol_TitleBg] = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
+        colors[ImGuiCol_TitleBg] = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
         colors[ImGuiCol_TitleBgActive] = colors[ImGuiCol_TitleBg];
         colors[ImGuiCol_TitleBgCollapsed] = colors[ImGuiCol_TitleBg];
 
@@ -328,5 +325,6 @@ namespace Flameberry {
         colors[ImGuiCol_ButtonActive] = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
 
         colors[ImGuiCol_CheckMark] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
+        colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
     }
 }

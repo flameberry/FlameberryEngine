@@ -110,8 +110,20 @@ namespace Flameberry {
         }
         else
             m_VkTextureSampler = sampler;
+    }
 
-        // Create Descriptor Set for the Texture
+    Texture2D::~Texture2D()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        if (m_DescriptorSet != VK_NULL_HANDLE)
+            vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
+        if (m_DidCreateSampler)
+            vkDestroySampler(device, m_VkTextureSampler, nullptr);
+    }
+
+    VkDescriptorSet Texture2D::CreateOrGetDescriptorSet()
+    {
+        if (m_DescriptorSet == VK_NULL_HANDLE)
         {
             VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_DescriptorSet, s_DescriptorLayout->GetLayout());
 
@@ -127,16 +139,11 @@ namespace Flameberry {
             write_desc[0].descriptorCount = 1;
             write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             write_desc[0].pImageInfo = desc_image;
+
+            const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
             vkUpdateDescriptorSets(device, 1, write_desc, 0, nullptr);
         }
-    }
-
-    Texture2D::~Texture2D()
-    {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
-        if (m_DidCreateSampler)
-            vkDestroySampler(device, m_VkTextureSampler, nullptr);
+        return m_DescriptorSet;
     }
 
     std::shared_ptr<Texture2D> Texture2D::TryGetOrLoadTexture(const std::string& texturePath)

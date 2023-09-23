@@ -84,8 +84,13 @@ namespace Flameberry {
         {
         }
 
-        MeshVertex(const glm::vec3& position, const glm::vec4& color, const glm::vec3& normal, const glm::vec2& textureUV)
+        MeshVertex(const glm::vec3& position, const glm::vec3& normal, const glm::vec2& textureUV)
             : Position(position), Normal(normal), TextureUV(textureUV)
+        {
+        }
+
+        MeshVertex(const glm::vec3& position, const glm::vec3& normal, const glm::vec2& textureUV, const glm::vec3& tangent, const glm::vec3& bitangent)
+            : Position(position), Normal(normal), TextureUV(textureUV), Tangent(tangent), BiTangent(bitangent)
         {
         }
 

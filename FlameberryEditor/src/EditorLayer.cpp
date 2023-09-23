@@ -48,6 +48,7 @@ namespace Flameberry {
         platform::SetSaveSceneAsCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
         platform::SetOpenSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::OpenScene));
         platform::CreateMenuBar();
+        platform::UI_CustomTitleBar();
 #endif
     }
 
@@ -272,9 +273,6 @@ namespace Flameberry {
                 FL_PROFILE_SCOPE("Last Mouse Picking Pass");
                 m_IsMousePickingBufferReady = true;
 
-                if (m_MouseY == 0)
-                    FL_LOG("Yes");
-
                 auto framebuffer = m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0];
                 if (framebuffer->GetSpecification().Width != m_ViewportSize.x || framebuffer->GetSpecification().Height != m_ViewportSize.y)
                     framebuffer->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
@@ -347,7 +345,7 @@ namespace Flameberry {
                         m_ShouldOpenAnotherScene = true;
                         m_ScenePathToBeOpened = filePath;
                     }
-                    else if (ext == ".obj") {
+                    else if (ext == ".obj" || ext == ".fbx" || ext == ".gltf") { // TODO: Don't limit this
                         const auto& staticMesh = AssetManager::TryGetOrLoadAsset<StaticMesh>(path);
                         auto entity = m_ActiveScene->GetRegistry()->create();
                         m_ActiveScene->GetRegistry()->emplace<IDComponent>(entity);
@@ -660,10 +658,10 @@ namespace Flameberry {
         switch (m_EditorState)
         {
             case EditorState::Edit:
-                ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->GetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(0.5f, 1.0f));
+                ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(0.5f, 1.0f));
                 break;
             case EditorState::Play:
-                ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->GetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor);
+                ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor);
                 break;
         }
 
@@ -675,10 +673,10 @@ namespace Flameberry {
         switch (m_EditorState)
         {
             case EditorState::Edit:
-                ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->GetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f));
+                ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f));
                 break;
             case EditorState::Play:
-                ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->GetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1));
+                ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1));
                 break;
         }
 
@@ -722,25 +720,25 @@ namespace Flameberry {
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-            if (ImGui::ImageButton("SelectModeButton", reinterpret_cast<ImTextureID>(m_CursorIcon->GetDescriptorSet()), overlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == -1 ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+            if (ImGui::ImageButton("SelectModeButton", reinterpret_cast<ImTextureID>(m_CursorIcon->CreateOrGetDescriptorSet()), overlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == -1 ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
             {
                 m_GizmoType = -1;
                 ImGui::SetWindowFocus("Viewport");
             }
             ImGui::SameLine();
-            if (ImGui::ImageButton("TranslateModeButton", reinterpret_cast<ImTextureID>(m_TranslateIcon->GetDescriptorSet()), overlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::TRANSLATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+            if (ImGui::ImageButton("TranslateModeButton", reinterpret_cast<ImTextureID>(m_TranslateIcon->CreateOrGetDescriptorSet()), overlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::TRANSLATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
             {
                 m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
                 ImGui::SetWindowFocus("Viewport");
             }
             ImGui::SameLine();
-            if (ImGui::ImageButton("RotateModeButton", reinterpret_cast<ImTextureID>(m_RotateIcon->GetDescriptorSet()), overlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::ROTATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+            if (ImGui::ImageButton("RotateModeButton", reinterpret_cast<ImTextureID>(m_RotateIcon->CreateOrGetDescriptorSet()), overlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::ROTATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
             {
                 m_GizmoType = ImGuizmo::OPERATION::ROTATE;
                 ImGui::SetWindowFocus("Viewport");
             }
             ImGui::SameLine();
-            if (ImGui::ImageButton("ScaleModeButton", reinterpret_cast<ImTextureID>(m_ScaleIcon->GetDescriptorSet()), overlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::SCALE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+            if (ImGui::ImageButton("ScaleModeButton", reinterpret_cast<ImTextureID>(m_ScaleIcon->CreateOrGetDescriptorSet()), overlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::SCALE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
             {
                 m_GizmoType = ImGuizmo::OPERATION::SCALE;
                 ImGui::SetWindowFocus("Viewport");

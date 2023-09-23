@@ -77,6 +77,8 @@ list(APPEND FL_INCLUDE_DIRS
     ${FL_SOURCE_DIR}/Flameberry/vendor/glm
     ${FL_SOURCE_DIR}/Flameberry/vendor/imgui
     ${FL_SOURCE_DIR}/Flameberry/vendor/yaml-cpp/include
+    ${FL_SOURCE_DIR}/Flameberry/vendor/Assimp/include
+    ${FL_SOURCE_DIR}/Flameberry/vendor/Assimp/build/include
 )
 
 # Nvidia PhysX
@@ -110,6 +112,10 @@ set_target_properties(PhysXPvdSDK_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE $
 list(APPEND FL_LIBRARY_DEPENDENCIES PhysX_LIBRARY PhysXFoundation_LIBRARY PhysXCommon_LIBRARY PhysXCooking_LIBRARY PhysXExtensions_LIBRARY PhysXPvdSDK_LIBRARY)
 list(APPEND FL_INCLUDE_DIRS ${PHYSX_INCLUDE_DIR})
 list(APPEND FL_COMPILE_DEFINITIONS ${PHYSX_COMPILE_DEFINITIONS})
+
+# Assimp
+find_library(Assimp_LIBRARY NAMES assimp HINTS "${FL_SOURCE_DIR}/Flameberry/vendor/Assimp/build/bin" REQUIRED)
+list(APPEND FL_LIBRARY_DEPENDENCIES ${Assimp_LIBRARY})
 
 # ImGui paths and source
 file(GLOB IMGUI_SRC ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.cpp ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.h)

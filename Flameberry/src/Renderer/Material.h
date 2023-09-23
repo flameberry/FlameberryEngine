@@ -48,7 +48,8 @@ namespace Flameberry {
 
         void Update();
 
-        static void CreateLayout(); // TODO: Make this private
+        static void Init(); // TODO: Make this private
+        static void Shutdown(); // TODO: Make this private
     private:
         std::string m_Name = "Default_Material";
         glm::vec3 m_Albedo{ 1.0f };

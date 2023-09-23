@@ -33,7 +33,7 @@ namespace Flameberry {
                 return std::static_pointer_cast<Type>(asset);
             }
 
-            auto asset = AssetLoader::LoadAsset(path);
+            auto asset = AssetLoader::LoadAsset(path, Type::GetStaticAssetType());
             FL_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
 
             s_AssetTable[asset->Handle] = asset;

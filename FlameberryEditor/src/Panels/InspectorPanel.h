@@ -51,7 +51,6 @@ namespace Flameberry {
         if (instance->GetContextRegistry()->has<ComponentType>(instance->m_SelectionContext))
         {
             ImGui::PushID(name);
-
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 4.0f });
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
             bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_FramePadding);
@@ -71,7 +70,6 @@ namespace Flameberry {
 
             if (open)
                 fn();
-
             ImGui::PopID();
 
             // if (should_remove_comp)

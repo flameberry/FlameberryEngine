@@ -265,7 +265,6 @@ namespace Flameberry {
 
     VkPresentModeKHR SwapChain::SelectSwapPresentationMode(const std::vector<VkPresentModeKHR>& available_presentation_modes)
     {
-        return VK_PRESENT_MODE_IMMEDIATE_KHR;
         for (const auto& mode : available_presentation_modes)
         {
             if (mode == VK_PRESENT_MODE_MAILBOX_KHR)

@@ -202,7 +202,7 @@ namespace Flameberry {
             auto pipelineLayout = s_Renderer2DData.QuadPipeline->GetLayout();
             auto indexCount = 6 * (uint32_t)s_Renderer2DData.QuadVertices.size() / 4;
 
-            Renderer::Submit([pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.TextureMap->GetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.VertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.TextureMap->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.VertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
                     VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);

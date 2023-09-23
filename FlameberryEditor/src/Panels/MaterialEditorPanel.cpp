@@ -142,7 +142,7 @@ namespace Flameberry {
                 map = AssetManager::TryGetOrLoadAsset<Texture2D>("Assets/Textures/Checkerboard.png");
 
             ImGui::SameLine();
-            ImGui::Image(reinterpret_cast<ImTextureID>(map->GetDescriptorSet()), ImVec2{ 70, 70 });
+            ImGui::Image(reinterpret_cast<ImTextureID>(map->CreateOrGetDescriptorSet()), ImVec2{ 70, 70 });
             if (ImGui::BeginDragDropTarget())
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))

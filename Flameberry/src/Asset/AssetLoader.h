@@ -7,6 +7,6 @@ namespace Flameberry {
     class AssetLoader
     {
     public:
-        static std::shared_ptr<Asset> LoadAsset(const std::filesystem::path& path);
+        static std::shared_ptr<Asset> LoadAsset(const std::filesystem::path& path, AssetType type);
     };
 }

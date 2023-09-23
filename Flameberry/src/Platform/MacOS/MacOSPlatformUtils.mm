@@ -87,6 +87,13 @@ static MenuBar* g_MenuBar;
 
 namespace Flameberry {
     namespace platform {
+        void UI_CustomTitleBar()
+        {
+            NSWindow* window = glfwGetCocoaWindow(Application::Get().GetWindow().GetGLFWwindow());
+            window.titlebarAppearsTransparent = true; // gives it "flat" look
+            window.backgroundColor = [NSColor colorWithRed:0.15f green:0.15f blue:0.15f alpha:1.0f]; // set the background color
+        }
+        
         void CreateCustomTitleBar()
         {
             NSWindow* window = glfwGetCocoaWindow(Application::Get().GetWindow().GetGLFWwindow());

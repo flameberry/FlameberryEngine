@@ -231,7 +231,7 @@ vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, fl
 
 float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float interleavedNoise, float bias)
 {
-    const float lightSize = 22.0f;
+    const float lightSize = 20.0f;
 
     float receiverDepth = shadowCoord.z;
     float searchWidth = PCSS_SearchWidth(lightSize, receiverDepth, cascadeIndex);
@@ -244,7 +244,7 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float in
     if (penumbraSize == 0.0f)
         return 1.0f;
     
-    // float softnessFallOff = 1.0f;
+    // float softnessFallOff = 2.0f;
     // penumbraSize = 1.0 - pow(1.0 - penumbraSize, softnessFallOff);
 
     float filterRadius = penumbraSize * lightSize;
@@ -289,7 +289,7 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
         }
 
         float bias = max(0.05f * (1.0f - dot(normal, -l)), 0.002f);
-        const float biasModifier = 0.8f;
+        const float biasModifier = 0.5f;
         bias *= 1.0f / (-u_CascadeDepthSplits[cascadeIndex] * biasModifier);
 
         // Depth compare for shadowing

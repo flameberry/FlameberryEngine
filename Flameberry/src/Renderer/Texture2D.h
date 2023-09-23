@@ -18,9 +18,9 @@ namespace Flameberry {
         Texture2D(const std::string& texturePath, bool canGenerateMipMaps = true, VkSampler sampler = VK_NULL_HANDLE);
         ~Texture2D();
 
+        VkDescriptorSet CreateOrGetDescriptorSet();
         VkImageView GetImageView() const { return m_TextureImage->GetImageView(); }
         VkSampler GetSampler() const { return m_VkTextureSampler; }
-        VkDescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
         ImageSpecification GetImageSpecification() const { return m_TextureImageSpecification; }
 
         AssetType GetAssetType() const override { return AssetType::Texture2D; }
@@ -43,7 +43,7 @@ namespace Flameberry {
 
         std::shared_ptr<Image> m_TextureImage;
         VkSampler m_VkTextureSampler;
-        VkDescriptorSet m_DescriptorSet;
+        VkDescriptorSet m_DescriptorSet = VK_NULL_HANDLE;
 
         bool m_DidCreateSampler = false;
 

@@ -148,7 +148,7 @@ namespace Flameberry {
             pipelineSpec.Viewport.height = SceneRendererSettings::CascadeSize;
             pipelineSpec.Scissor = { { 0, 0 }, { SceneRendererSettings::CascadeSize, SceneRendererSettings::CascadeSize } };
 
-            pipelineSpec.CullMode = VK_CULL_MODE_NONE;
+            pipelineSpec.CullMode = VK_CULL_MODE_NONE; // TODO: This is ineffecient
             pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
             pipelineSpec.DepthClampEnable = true;
 
@@ -300,9 +300,8 @@ namespace Flameberry {
                     { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MeshData) }
                 };
 
-
                 // Temp
-                Material::CreateLayout();
+                Material::Init();
 
                 pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
                     m_CameraBufferDescSetLayout,
@@ -601,7 +600,7 @@ namespace Flameberry {
 
             glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
             auto pipelineLayout = m_SkyboxPipeline->GetLayout();
-            auto textureDescSet = scene->m_Environment.EnvironmentMap->GetDescriptorSet();
+            auto textureDescSet = scene->m_Environment.EnvironmentMap->CreateOrGetDescriptorSet();
 
             Renderer::Submit([pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
@@ -804,13 +803,23 @@ namespace Flameberry {
                 float distance = glm::length(frustumCorners[i] - frustumCenter);
                 radius = glm::max(radius, distance);
             }
-            radius = std::ceil(radius * 16.0f) / 16.0f;
+            //            radius = std::ceil(radius * 16.0f) / 16.0f;
 
-            const glm::vec3 maxExtents = glm::vec3(radius);
-            const glm::vec3 minExtents = -maxExtents;
+            const float width = frustumCorners[5].x - frustumCorners[4].x;
+            const float height = frustumCorners[7].y - frustumCorners[5].y;
+
+            //            const float fWorldUnitsPerTexel = 2.0f * radius * 0.70710678118f / (float)SceneRendererSettings::CascadeSize;
+            //            const float fInvWorldUnitsPerTexel = 1.0f / fWorldUnitsPerTexel;
+
+            const glm::vec3 vWorldUnitsPerTexel(width / (float)SceneRendererSettings::CascadeSize, height / (float)SceneRendererSettings::CascadeSize, 1.0f);
+            const glm::vec3 vInvWorldUnitsPerTexel = 1.0f / vWorldUnitsPerTexel;
+
+            glm::vec3 maxExtents = (glm::floor(glm::vec3(radius)) * vInvWorldUnitsPerTexel) * vWorldUnitsPerTexel;
+            frustumCenter = (glm::floor(frustumCenter) * vInvWorldUnitsPerTexel) * vWorldUnitsPerTexel;
+            glm::vec3 minExtents = -maxExtents;
 
             const glm::vec3 lightDir = glm::normalize(lightDirection);
-            const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+            const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter + lightDir * minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
             const glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
 
             // Store split distance and matrix in cascade
@@ -1148,6 +1157,8 @@ namespace Flameberry {
     {
         auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDestroySampler(device, m_ShadowMapSampler, nullptr);
+
+        Material::Shutdown();
     }
 
 }
