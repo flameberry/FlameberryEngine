@@ -64,7 +64,7 @@ namespace Flameberry {
         glm::vec2 m_RenderViewportSize{ 1280, 720 }; // This is to store the viewport size to be rendered to for high dpi/retina displays
         glm::vec2 m_ViewportBounds[2];
 
-        std::string m_OpenedScenePathIfExists = "", m_ScenePathToBeOpened = "";
+        std::string m_EditorScenePath = "", m_ScenePathToBeOpened = "";
         bool m_ShouldOpenAnotherScene = false;
         std::filesystem::path m_ProjectPath;
 

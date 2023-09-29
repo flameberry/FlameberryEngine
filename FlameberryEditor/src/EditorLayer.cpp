@@ -554,8 +554,8 @@ namespace Flameberry {
 
     void EditorLayer::SaveScene()
     {
-        if (!m_OpenedScenePathIfExists.empty())
-            SceneSerializer::SerializeSceneToFile(m_OpenedScenePathIfExists.c_str(), m_ActiveScene);
+        if (!m_EditorScenePath.empty())
+            SceneSerializer::SerializeSceneToFile(m_EditorScenePath.c_str(), m_ActiveScene);
         else
             SaveSceneAs();
     }
@@ -566,6 +566,7 @@ namespace Flameberry {
         if (savePath != "")
         {
             SceneSerializer::SerializeSceneToFile(savePath.c_str(), m_ActiveScene);
+            m_EditorScenePath = savePath;
             FL_LOG("Scene saved to path: {0}", savePath);
             return;
         }
@@ -579,7 +580,7 @@ namespace Flameberry {
         {
             if (SceneSerializer::DeserializeIntoExistingScene(sceneToBeLoaded.c_str(), m_ActiveScene))
             {
-                m_OpenedScenePathIfExists = sceneToBeLoaded;
+                m_EditorScenePath = sceneToBeLoaded;
                 FL_INFO("Loaded Scene: {0}", sceneToBeLoaded);
                 return;
             }
@@ -592,7 +593,7 @@ namespace Flameberry {
         if (!path.empty())
         {
             if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
-                m_OpenedScenePathIfExists = path;
+                m_EditorScenePath = path;
         }
     }
 
