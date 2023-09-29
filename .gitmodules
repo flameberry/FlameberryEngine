@@ -16,3 +16,6 @@
 [submodule "Flameberry/vendor/Assimp"]
 	path = Flameberry/vendor/Assimp
 	url = https://github.com/assimp/assimp
+[submodule "Flameberry/vendor/PhysX"]
+	path = Flameberry/vendor/PhysX
+	url = https://github.com/flameberry/PhysX
