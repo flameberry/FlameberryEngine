@@ -17,17 +17,16 @@ namespace Flameberry {
     VkSampler Texture2D::s_DefaultSampler;
 
     std::unordered_map<std::string, std::shared_ptr<Texture2D>> Texture2D::s_TextureCacheDirectory;
-
+    
     Texture2D::Texture2D(const std::string& texturePath, bool canGenerateMipMaps, VkSampler sampler)
     {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         int width, height, channels, bytes_per_channel;
 
         void* pixels = nullptr;
         uint32_t mipLevels = 1;
         VkFormat format = VK_FORMAT_UNDEFINED;
         VkDeviceSize imageSize = 0;
-
+        
         if (stbi_is_hdr(texturePath.c_str()))
         {
             pixels = stbi_loadf(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
@@ -45,45 +44,60 @@ namespace Flameberry {
 
         FL_ASSERT(pixels, "Texture pixels are empty!");
         imageSize = 4 * width * height * bytes_per_channel;
-
+        
+        SetupTexture(pixels, width, height, imageSize, canGenerateMipMaps ? mipLevels : 1, format, sampler);
+        stbi_image_free(pixels);
+    }
+    
+    Texture2D::Texture2D(const void* data, const float width, const float height, const uint8_t bytesPerChannel, VkFormat format, bool canGenerateMipMaps, VkSampler sampler)
+    {
+        FL_ASSERT(data, "Texture pixels are empty!");
+        
+        uint32_t mipLevels = canGenerateMipMaps ? static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1 : 1;
+        VkDeviceSize imageSize = 4 * width * height * bytesPerChannel;
+        SetupTexture(data, width, height, imageSize, mipLevels, format, sampler);
+    }
+    
+    void Texture2D::SetupTexture(const void* data, const float width, const float height, const float imageSize, const uint16_t mipLevels, const VkFormat format, const VkSampler sampler)
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        
         m_TextureImageSpecification.Width = width;
         m_TextureImageSpecification.Height = height;
-        m_TextureImageSpecification.MipLevels = canGenerateMipMaps ? mipLevels : 1;
+        m_TextureImageSpecification.MipLevels = mipLevels;
         m_TextureImageSpecification.Samples = 1;
         m_TextureImageSpecification.Format = format;
         m_TextureImageSpecification.Tiling = VK_IMAGE_TILING_OPTIMAL;
         m_TextureImageSpecification.Usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         m_TextureImageSpecification.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         m_TextureImageSpecification.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-
+        
         m_TextureImage = Image::Create(m_TextureImageSpecification);
-
+        
         BufferSpecification stagingBufferSpec;
         stagingBufferSpec.InstanceCount = 1;
         stagingBufferSpec.InstanceSize = imageSize;
         stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
+        
         Buffer stagingBuffer(stagingBufferSpec);
-
+        
         stagingBuffer.MapMemory(imageSize);
-        stagingBuffer.WriteToBuffer(pixels, imageSize, 0);
+        stagingBuffer.WriteToBuffer(data, imageSize, 0);
         stagingBuffer.UnmapMemory();
-
-        stbi_image_free(pixels);
-
+        
         m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         m_TextureImage->WriteFromBuffer(stagingBuffer.GetBuffer());
-
+        
         if (m_TextureImageSpecification.MipLevels > 1)
             m_TextureImage->GenerateMipMaps();
         else
             m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
+        
         if (sampler == VK_NULL_HANDLE)
         {
             m_DidCreateSampler = true;
-
+            
             VkSamplerCreateInfo sampler_info{};
             sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
             sampler_info.magFilter = VK_FILTER_LINEAR;
@@ -92,10 +106,10 @@ namespace Flameberry {
             sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
             sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
             sampler_info.anisotropyEnable = VK_TRUE;
-
+            
             VkPhysicalDeviceProperties properties;
             vkGetPhysicalDeviceProperties(VulkanContext::GetPhysicalDevice(), &properties);
-
+            
             sampler_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
             sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
             sampler_info.unnormalizedCoordinates = VK_FALSE;
@@ -105,7 +119,7 @@ namespace Flameberry {
             sampler_info.mipLodBias = 0.0f;
             sampler_info.minLod = 0.0f;
             sampler_info.maxLod = (float)m_TextureImageSpecification.MipLevels;
-
+            
             VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_VkTextureSampler));
         }
         else
@@ -269,4 +283,5 @@ namespace Flameberry {
 
         s_TextureCacheDirectory.clear();
     }
+    
 }

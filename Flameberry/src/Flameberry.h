@@ -41,3 +41,5 @@
 #include "ECS/SceneSerializer.h"
 #include "ECS/Scene.h"
 #include "ECS/ecs.hpp"
+
+#include "Project/Project.h"

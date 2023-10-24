@@ -49,6 +49,3 @@ add_subdirectory(Flameberry)
 
 # The Game Editor App
 add_subdirectory(FlameberryEditor)
-
-# SandboxApp
-# add_subdirectory(SandboxApp)

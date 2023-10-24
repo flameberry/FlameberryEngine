@@ -27,9 +27,9 @@ static std::vector<std::string> g_IconPaths = {
 };
 
 namespace Flameberry {
-    ContentBrowserPanel::ContentBrowserPanel(const std::filesystem::path& projectDirectory)
-        : m_ProjectDirectory(projectDirectory),
-        m_CurrentDirectory("Assets"),
+    ContentBrowserPanel::ContentBrowserPanel()
+        : m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory), // Getting Asset Directory via this method to get the relative path only
+        m_ThumbnailCache(std::make_shared<ThumbnailCache>(Project::GetActiveProject())),
         m_VkTextureSampler(Texture2D::GetDefaultSampler())
     {
         for (const auto& path : g_IconPaths)
@@ -112,8 +112,6 @@ namespace Flameberry {
 
     void ContentBrowserPanel::OnUIRender()
     {
-        FL_ASSERT(std::filesystem::exists(m_ProjectDirectory / "Assets"), "Failed to find Assets directory!");
-
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Content Browser");
         ImGui::PopStyleVar();
@@ -185,13 +183,16 @@ namespace Flameberry {
         ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, bottomChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleVar();
 
-        float iconWidth = 80.0f, padding = 12.0f;
+        float iconWidth = 90.0f, padding = 12.0f;
         float cellSize = iconWidth + padding;
-        uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize;
+        uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize, rowIndex = 0;
         columns = columns >= 1 ? columns : 1;
         ImGui::Columns(columns, (const char*)__null, false);
 
         ImVec2 itemSize;
+        
+        m_ThumbnailCache->ResetThumbnailLoadedCounter();
+        
         for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory })
         {
             const std::filesystem::path& filePath = directory.path();
@@ -210,37 +211,48 @@ namespace Flameberry {
             std::string ext = filePath.extension().string();
             int currentIconIndex;
             bool isFileSupported = true, isDirectory = directory.is_directory();
-
-            if (isDirectory)
-                currentIconIndex = FileTypeIndex::FOLDER;
-            else if (ext == ".berry")
-                currentIconIndex = FileTypeIndex::BERRY;
-            else if (ext == ".png")
-                currentIconIndex = FileTypeIndex::PNG;
-            else if (ext == ".jpg")
-                currentIconIndex = FileTypeIndex::JPG;
-            else if (ext == ".obj")
-                currentIconIndex = FileTypeIndex::OBJ;
-            else if (ext == ".mtl")
-                currentIconIndex = FileTypeIndex::MTL;
-            else if (ext == ".fbmat")
-                currentIconIndex = FileTypeIndex::FBMAT;
-            else if (ext == ".json")
-                currentIconIndex = FileTypeIndex::JSON;
-            else if (ext == ".hdr")
-                currentIconIndex = FileTypeIndex::HDR;
-            else {
-                currentIconIndex = FileTypeIndex::DEFAULT;
-                isFileSupported = false;
-            }
             
-            itemSize = UI::ContentBrowserItem(filePath, iconWidth, iconWidth, m_IconTextures[currentIconIndex]->CreateOrGetDescriptorSet());
+            std::shared_ptr<Texture2D> thumbnail;
+            if (!isDirectory)
+                thumbnail = m_ThumbnailCache->TryGetOrCreateThumbnail(filePath);
+            if (!thumbnail)
+            {
+                if (isDirectory)
+                    currentIconIndex = FileTypeIndex::FOLDER;
+                else if (ext == ".berry")
+                    currentIconIndex = FileTypeIndex::BERRY;
+                else if (ext == ".png")
+                    currentIconIndex = FileTypeIndex::PNG;
+                else if (ext == ".jpg")
+                    currentIconIndex = FileTypeIndex::JPG;
+                else if (ext == ".obj")
+                    currentIconIndex = FileTypeIndex::OBJ;
+                else if (ext == ".mtl")
+                    currentIconIndex = FileTypeIndex::MTL;
+                else if (ext == ".fbmat")
+                    currentIconIndex = FileTypeIndex::FBMAT;
+                else if (ext == ".json")
+                    currentIconIndex = FileTypeIndex::JSON;
+                else if (ext == ".hdr")
+                    currentIconIndex = FileTypeIndex::HDR;
+                else {
+                    currentIconIndex = FileTypeIndex::DEFAULT;
+                    isFileSupported = false;
+                }
+                thumbnail = m_IconTextures[currentIconIndex];
+            }
+
+            itemSize = UI::ContentBrowserItem(filePath, iconWidth, thumbnail);
 
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
                 m_CurrentDirectory = directory.path();
 
             if (ImGui::GetColumnIndex() == columns - 1)
-                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20.0f);
+            {
+                rowIndex++;
+                constexpr float paddingY = 20.0f;
+                ImGui::SetCursorPosY(rowIndex * (itemSize.y + paddingY));
+            }
 
             ImGui::NextColumn();
             ImGui::PopID();
@@ -261,7 +273,7 @@ namespace Flameberry {
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Open In Finder"))
-                platform::OpenInExplorerOrFinder((m_ProjectDirectory / m_CurrentDirectory).string().c_str());
+                platform::OpenInExplorerOrFinder((Project::GetActiveProjectDirectory() / m_CurrentDirectory).string().c_str());
             ImGui::EndPopup();
         }
         ImGui::EndChild();

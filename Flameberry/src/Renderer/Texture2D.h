@@ -16,6 +16,7 @@ namespace Flameberry {
     {
     public:
         Texture2D(const std::string& texturePath, bool canGenerateMipMaps = true, VkSampler sampler = VK_NULL_HANDLE);
+        Texture2D(const void* data, const float width, const float height, const uint8_t bytesPerChannel, VkFormat format, bool canGenerateMipMaps = true, VkSampler sampler = VK_NULL_HANDLE);
         ~Texture2D();
 
         VkDescriptorSet CreateOrGetDescriptorSet();
@@ -38,6 +39,8 @@ namespace Flameberry {
         static std::shared_ptr<Texture2D> TryGetOrLoadTexture(const std::string& texturePath);
 
         static std::shared_ptr<Texture2D> LoadFromFile(const char* path) { return std::make_shared<Texture2D>(path); }
+    private:
+        void SetupTexture(const void* data, const float width, const float height, const float imageSize, const uint16_t mipLevels, const VkFormat format, const VkSampler sampler);
     private:
         ImageSpecification m_TextureImageSpecification;
 

@@ -10,7 +10,7 @@ layout (location = 5) in mat3 v_TBNMatrix;
 layout (location = 0) out vec4 o_FragColor;
 
 #define PI 3.1415926535897932384626433832795
-#define AMBIENT 0.1f
+#define AMBIENT 0.2f
 #define CASCADE_COUNT 4
 
 #extension GL_GOOGLE_include_directive : enable

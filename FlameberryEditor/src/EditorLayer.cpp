@@ -31,8 +31,8 @@ namespace Flameberry {
     };
 
     struct CameraUniformBufferObject { glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix; };
-    EditorLayer::EditorLayer(const std::string_view& projectPath)
-        : m_ProjectPath(projectPath), m_ActiveCameraController(PerspectiveCameraSpecification{
+    EditorLayer::EditorLayer(const std::shared_ptr<Project>& project)
+        : m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{
             glm::vec3(0.0f, 2.0f, 4.0f),
             glm::vec3(0.0f, -0.3f, -1.0f),
             (float)Application::Get().GetWindow().GetWidth() / (float)Application::Get().GetWindow().GetHeight(),
@@ -62,7 +62,7 @@ namespace Flameberry {
 
         m_ActiveScene = Scene::Create();
         m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
-        m_ContentBrowserPanel = ContentBrowserPanel::Create(m_ProjectPath);
+        m_ContentBrowserPanel = ContentBrowserPanel::Create();
         m_EnvironmentSettingsPanel = EnvironmentSettingsPanel::Create(m_ActiveScene);
 
 #pragma region MousePickingResources

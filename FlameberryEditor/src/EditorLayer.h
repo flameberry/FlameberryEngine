@@ -15,7 +15,7 @@ namespace Flameberry {
     class EditorLayer : public Layer
     {
     public:
-        EditorLayer(const std::string_view& projectPath);
+        EditorLayer(const std::shared_ptr<Project>& project);
         virtual ~EditorLayer() = default;
 
         void OnCreate() override;
@@ -66,7 +66,6 @@ namespace Flameberry {
 
         std::string m_EditorScenePath = "", m_ScenePathToBeOpened = "";
         bool m_ShouldOpenAnotherScene = false;
-        std::filesystem::path m_ProjectPath;
 
         // Texture Icons
         std::shared_ptr<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon;
@@ -91,5 +90,7 @@ namespace Flameberry {
 
         std::shared_ptr<Pipeline> m_MousePickingPipeline, m_MousePicking2DPipeline;
         std::shared_ptr<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
+        
+        std::shared_ptr<Project> m_Project;
     };
 }

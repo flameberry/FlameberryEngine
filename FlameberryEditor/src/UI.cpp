@@ -3,7 +3,7 @@
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
-#include "Flameberry.h"
+#include "Core/Core.h"
 
 namespace Flameberry {
 
@@ -44,17 +44,25 @@ namespace Flameberry {
         ImGui::PopItemWidth();
     }
 
-    ImVec2 UI::ContentBrowserItem(const std::filesystem::path& filepath, float width, float height, ImTextureID icon)
+    // TODO: Call one of 2 functions one for Folder Thumbnail and other for file
+    ImVec2 UI::ContentBrowserItem(const std::filesystem::path& filepath, float size, const std::shared_ptr<Texture2D>& thumbnail)
     {
         bool isDirectory = std::filesystem::is_directory(filepath);
 
         ImGuiStyle& style = ImGui::GetStyle();
+        
+        const float width = size;
+        float height = size;
+        
+        const float borderThickness = 1.5f;
+        const float thumbnailWidth = size - 2.0f * borderThickness;
+        const float thumbnailHeight = width * thumbnail->GetImageSpecification().Height / thumbnail->GetImageSpecification().Width;
 
         const auto& framePadding = style.FramePadding;
-        height += 2 * framePadding.y;
+        height += framePadding.y;
 
         const float textHeight = ImGui::GetTextLineHeightWithSpacing();
-        const float fullWidth = width + 3.0f * framePadding.x;
+        const float fullWidth = width;
         const float fullHeight = height + 2 * textHeight;
 
         if (!isDirectory)
@@ -62,31 +70,37 @@ namespace Flameberry {
             const auto& cursorPos = ImGui::GetCursorScreenPos();
             ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, ImVec2(cursorPos.x + fullWidth, cursorPos.y + height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
             ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), ImVec2(cursorPos.x + fullWidth, cursorPos.y + fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
-            ImGui::GetWindowDrawList()->AddRect(cursorPos, ImVec2(cursorPos.x + fullWidth, cursorPos.y + fullHeight), 0xff000000, 3, 0, 1.5f);
+            ImGui::GetWindowDrawList()->AddRect(cursorPos, ImVec2(cursorPos.x + fullWidth, cursorPos.y + fullHeight), 0xff000000, 3, 0, borderThickness);
         }
 
         ImGui::BeginGroup();
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+        
+        float centerTranslationHeight = height / 2.0f - thumbnailHeight / 2.0f;
+        
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() - framePadding.x + borderThickness);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + centerTranslationHeight - framePadding.y);
 
-        ImGui::ImageButton(filepath.c_str(), reinterpret_cast<ImTextureID>(icon), ImVec2(width, height));
+        ImGui::ImageButton(filepath.c_str(), reinterpret_cast<ImTextureID>(thumbnail->CreateOrGetDescriptorSet()), ImVec2(thumbnailWidth, thumbnailHeight));
 
         ImGui::PopStyleColor(3);
 
         const auto& filename = filepath.stem();
         const auto cursorPosX = ImGui::GetCursorPosX();
         ImGui::SetCursorPosX(cursorPosX + framePadding.x);
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 1.5f * style.ItemSpacing.y);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y + centerTranslationHeight);
+        
+        const auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
+        const auto aWidth = ImGui::CalcTextSize("a").x;
+        const uint32_t characters = fullWidth / aWidth;
+        
+        // Format and align text based on whether the item is a directory or a file
         if (isDirectory)
         {
-            const auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
-            const auto aWidth = ImGui::CalcTextSize("a").x;
             if (textWidth > fullWidth)
-            {
-                uint32_t characters = width / aWidth;
                 ImGui::Text("%.*s%s", characters, filename.c_str(), "...");
-            }
             else
             {
                 ImGui::SetCursorPosX(glm::max(cursorPosX + framePadding.x, cursorPosX + (fullWidth - textWidth) * 0.5f));
@@ -95,8 +109,12 @@ namespace Flameberry {
         }
         else
         {
-            ImGui::TextWrapped("%s", filename.c_str());
+            if (textWidth > 2.0f * fullWidth)
+                ImGui::TextWrapped("%.*s%s", 2 * characters, filename.c_str(), "...");
+            else
+                ImGui::TextWrapped("%s", filename.c_str());
         }
+        
         ImGui::EndGroup();
 
         if (ImGui::BeginPopupContextItem())
