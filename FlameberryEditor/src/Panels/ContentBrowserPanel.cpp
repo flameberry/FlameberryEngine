@@ -8,7 +8,7 @@
 
 enum FileTypeIndex {
     DEFAULT = 2,
-    FOLDER, BERRY, PNG, JPG, OBJ, FBMAT, MTL, JSON, HDR
+    FOLDER, BERRY, OBJ, FBMAT, MTL, JSON, HDR
 };
 
 static std::vector<std::string> g_IconPaths = {
@@ -17,8 +17,6 @@ static std::vector<std::string> g_IconPaths = {
     FL_PROJECT_DIR"FlameberryEditor/icons/default_file_icon.png",
     FL_PROJECT_DIR"FlameberryEditor/icons/folder_icon.png",
     FL_PROJECT_DIR"FlameberryEditor/icons/berry_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/png_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/jpg_file_icon.png",
     FL_PROJECT_DIR"FlameberryEditor/icons/obj_file_icon.png",
     FL_PROJECT_DIR"FlameberryEditor/icons/fbmat_file_icon.png",
     FL_PROJECT_DIR"FlameberryEditor/icons/mtl_file_icon.png",
@@ -118,7 +116,7 @@ namespace Flameberry {
 
         m_SecondChildSize = ImGui::GetWindowContentRegionWidth() - m_FirstChildSize - 8.0f;
 
-        UI::Splitter(true, 1.0f, &m_FirstChildSize, &m_SecondChildSize, 10.0f, 80.0f);
+        UI::Splitter(true, 1.2f, &m_FirstChildSize, &m_SecondChildSize, 10.0f, 80.0f);
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 7 });
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
@@ -134,13 +132,13 @@ namespace Flameberry {
         }
 
         // Add Shadow Effect
-        constexpr float shadowWidth = 16.0f;
+        constexpr float shadowWidth = 18.0f;
         const float shadowXMax = ImGui::GetWindowPos().x + ImGui::GetWindowWidth();
         const float shadowYMax = ImGui::GetWindowPos().y;
         ImVec2 pMin(shadowXMax - shadowWidth, shadowYMax + ImGui::GetWindowHeight());
         ImVec2 pMax(shadowXMax, shadowYMax);
         
-        ImGui::GetWindowDrawList()->AddRectFilledMultiColor(pMin, pMax, IM_COL32(5, 5, 5, 0), IM_COL32(5, 5, 5, 150), IM_COL32(5, 5, 5, 150), IM_COL32(5, 5, 5, 0));
+        ImGui::GetWindowDrawList()->AddRectFilledMultiColor(pMin, pMax, IM_COL32(5, 5, 5, 0), IM_COL32(5, 5, 5, 140), IM_COL32(5, 5, 5, 140), IM_COL32(5, 5, 5, 0));
         
         ImGui::EndChild();
         ImGui::PopStyleVar();
@@ -228,10 +226,6 @@ namespace Flameberry {
                     currentIconIndex = FileTypeIndex::FOLDER;
                 else if (ext == ".berry")
                     currentIconIndex = FileTypeIndex::BERRY;
-                else if (ext == ".png")
-                    currentIconIndex = FileTypeIndex::PNG;
-                else if (ext == ".jpg")
-                    currentIconIndex = FileTypeIndex::JPG;
                 else if (ext == ".obj")
                     currentIconIndex = FileTypeIndex::OBJ;
                 else if (ext == ".mtl")

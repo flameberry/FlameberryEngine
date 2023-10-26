@@ -10,7 +10,6 @@ namespace Flameberry {
     std::shared_ptr<Asset> TextureLoader::LoadTexture2D(const std::filesystem::path& path)
     {
         int width, height, channels, bytesPerChannel;
-        
         void* pixels = nullptr;
         VkFormat format = VK_FORMAT_UNDEFINED;
         
@@ -38,11 +37,12 @@ namespace Flameberry {
         return asset;
     }
     
+    // TODO: Needs work quality wise
     std::shared_ptr<Texture2D> TextureLoader::LoadTexture2DThumbnail(const std::filesystem::path &path, int newWidth, int newHeight)
     {
         auto calcWidthHeight = [](const int width, const int height, int& newWidth, int& newHeight)
         {
-            if (newWidth > newHeight)
+            if (width >= height)
             {
                 newWidth = width > newWidth ? newWidth : width;
                 newHeight = height > newHeight ? (newWidth * height / width) : height;

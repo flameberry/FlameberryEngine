@@ -766,7 +766,7 @@ namespace Flameberry {
     {
         if (m_DidViewportBegin)
         {
-            ImVec2 overlayButtonSize = { 20, 20 };
+            ImVec2 overlayButtonSize = { 18, 18 };
             
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
             | ImGuiWindowFlags_AlwaysAutoResize

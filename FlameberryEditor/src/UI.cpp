@@ -57,7 +57,7 @@ namespace Flameberry {
         const float borderThickness = 1.5f;
         const float thumbnailWidth = size - 2.0f * borderThickness;
         const float thumbnailHeight = width * thumbnail->GetImageSpecification().Height / thumbnail->GetImageSpecification().Width;
-
+        
         const auto& framePadding = style.FramePadding;
         height += framePadding.y;
 

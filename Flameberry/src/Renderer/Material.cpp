@@ -98,7 +98,7 @@ namespace Flameberry {
     void Material::Shutdown()
     {
         s_EmptyMaterialDescSet.release();
-        s_CommonDescSetLayout = nullptr;
+        s_CommonDescSetLayout = nullptr; // TODO: This is the current cause of the VK_ERROR
     }
 
     void MaterialSerializer::Serialize(const std::shared_ptr<Material>& material, const char* path)
