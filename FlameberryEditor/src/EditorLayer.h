@@ -45,6 +45,7 @@ namespace Flameberry {
         void UI_CompositeView();
         void UI_RendererSettings();
         void UI_GizmoOverlay(const ImVec2& workPos);
+        void UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize);
     private:
         EditorCameraController m_ActiveCameraController;
 
@@ -57,7 +58,7 @@ namespace Flameberry {
         int m_GizmoType = -1;
         bool m_IsViewportFocused = false, m_IsViewportHovered = false, m_IsClickedInsideViewport = false, m_HasViewportSizeChanged = false;
         bool m_IsCameraMoving = false, m_IsGizmoActive = false;
-        bool m_IsMousePickingBufferReady = false, m_DidViewportBegin = true, m_IsGizmoOverlayHovered = false;
+        bool m_IsMousePickingBufferReady = false, m_DidViewportBegin = true, m_IsAnyOverlayHovered = false;
         bool m_EnableGrid = true;
 
         glm::vec2 m_ViewportSize{ 1280, 720 };

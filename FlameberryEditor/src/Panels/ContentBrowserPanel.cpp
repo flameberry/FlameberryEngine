@@ -102,7 +102,7 @@ namespace Flameberry {
         if (keystr.size() <= parentstr.size())
             return false;
 
-        for (int i = parentstr.size() - 1; i >= 0; i--)
+        for (int32_t i = int32_t(parentstr.size() - 1); i >= 0; i--)
         {
             if (keystr[i] != parentstr[i])
                 return false;
@@ -123,7 +123,7 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 7 });
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
 
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBg);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBgGrey);
         ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleColor();
 
@@ -133,8 +133,18 @@ namespace Flameberry {
             }
         }
 
+        // Add Shadow Effect
+        constexpr float shadowWidth = 16.0f;
+        const float shadowXMax = ImGui::GetWindowPos().x + ImGui::GetWindowWidth();
+        const float shadowYMax = ImGui::GetWindowPos().y;
+        ImVec2 pMin(shadowXMax - shadowWidth, shadowYMax + ImGui::GetWindowHeight());
+        ImVec2 pMax(shadowXMax, shadowYMax);
+        
+        ImGui::GetWindowDrawList()->AddRectFilledMultiColor(pMin, pMax, IM_COL32(5, 5, 5, 0), IM_COL32(5, 5, 5, 150), IM_COL32(5, 5, 5, 150), IM_COL32(5, 5, 5, 0));
+        
         ImGui::EndChild();
         ImGui::PopStyleVar();
+        
 
         ImGui::SameLine();
 
@@ -169,10 +179,7 @@ namespace Flameberry {
 
         ImGui::SameLine();
 
-        auto bigFont = ImGui::GetIO().Fonts->Fonts[0];
-        ImGui::PushFont(bigFont);
         ImGui::Text("%s", m_CurrentDirectory.c_str());
-        ImGui::PopFont();
 
         ImVec2 pos = ImVec2(ImGui::GetWindowPos().x, ImGui::GetWindowHeight() + ImGui::GetWindowPos().y);
         ImGui::GetWindowDrawList()->AddLine(pos, ImVec2{ pos.x + ImGui::GetWindowWidth(), pos.y }, 0xff101010, 4.0f);
@@ -261,7 +268,7 @@ namespace Flameberry {
         if (ImGui::GetColumnIndex() != 0)
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + itemSize.y + 10.0f);
 
-        if (ImGui::BeginPopupContextWindow())
+        if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))
         {
             if (ImGui::BeginMenu("Create"))
             {

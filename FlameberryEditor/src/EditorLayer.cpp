@@ -255,7 +255,7 @@ namespace Flameberry {
         // bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
         bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left)
             && m_DidViewportBegin
-            && !m_IsGizmoOverlayHovered
+            && !m_IsAnyOverlayHovered
             && !m_IsGizmoActive;
 
         if (attemptedToSelect)
@@ -301,7 +301,7 @@ namespace Flameberry {
 #ifndef __APPLE__
         UI_Menubar();
 #endif
-        UI_Toolbar();
+//        UI_Toolbar();
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         m_DidViewportBegin = ImGui::Begin("Viewport");
@@ -401,12 +401,18 @@ namespace Flameberry {
                 transformComp.Scale = scale;
             }
         }
-        ImVec2 work_pos = ImGui::GetWindowContentRegionMin();
-        work_pos.x += ImGui::GetWindowPos().x;
-        work_pos.y += ImGui::GetWindowPos().y;
+        ImVec2 workPos = ImGui::GetWindowContentRegionMin();
+        workPos.x += ImGui::GetWindowPos().x;
+        workPos.y += ImGui::GetWindowPos().y;
+        ImVec2 workSize = ImGui::GetWindowSize();
         ImGui::End();
 
-        UI_GizmoOverlay(work_pos);
+        m_IsAnyOverlayHovered = false;
+        UI_GizmoOverlay(workPos);
+        UI_ToolbarOverlay(workPos, workSize);
+        
+        ImGui::PopStyleVar();
+        
         UI_RendererSettings();
         // UI_CompositeView();
 
@@ -648,7 +654,7 @@ namespace Flameberry {
         ImGuiWindowClass windowClass;
         windowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
         ImGui::SetNextWindowClass(&windowClass);
-
+        
         ImGui::Begin("##Toolbar", nullptr, windowFlags);
         float buttonSize = ImGui::GetContentRegionAvail().y - 8.0f;
 
@@ -710,12 +716,18 @@ namespace Flameberry {
 
             ImGui::SetNextWindowBgAlpha(0.45f); // Transparent background
             ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, overlayButtonSize);
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.5f);
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 3.0f });
+            
+            // TODO: This seems to have no effect
+            ImGuiWindowClass windowClass;
+            windowClass.ViewportFlagsOverrideSet = ImGuiViewportFlags_TopMost;
+            ImGui::SetNextWindowClass(&windowClass);
+            
             ImGui::Begin("##GizmoOverlay", __null, window_flags);
 
-            m_IsGizmoOverlayHovered = ImGui::IsWindowHovered();
+            m_IsAnyOverlayHovered = m_IsAnyOverlayHovered || ImGui::IsWindowHovered();
 
             ImGui::PopStyleVar(4);
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
@@ -748,7 +760,79 @@ namespace Flameberry {
             ImGui::PopStyleVar();
             ImGui::End();
         }
-        ImGui::PopStyleVar();
+    }
+    
+    void EditorLayer::UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize)
+    {
+        if (m_DidViewportBegin)
+        {
+            ImVec2 overlayButtonSize = { 20, 20 };
+            
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
+            | ImGuiWindowFlags_AlwaysAutoResize
+            | ImGuiWindowFlags_NoSavedSettings
+            | ImGuiWindowFlags_NoFocusOnAppearing
+            | ImGuiWindowFlags_NoNav;
+            
+            const float PAD = 10.0f;
+            ImVec2 window_pos;
+            window_pos.x = workPos.x + workSize.x / 2.0f - 2 * overlayButtonSize.x;
+            window_pos.y = workPos.y + PAD;
+            ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always);
+            window_flags |= ImGuiWindowFlags_NoMove;
+            
+            ImGui::SetNextWindowBgAlpha(0.45f); // Transparent background
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, overlayButtonSize);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 3.0f });
+            
+            // TODO: This seems to have no effect
+            ImGuiWindowClass windowClass;
+            windowClass.ViewportFlagsOverrideSet = ImGuiViewportFlags_TopMost;
+            ImGui::SetNextWindowClass(&windowClass);
+            
+            ImGui::Begin("##ToolbarOverlay", __null, window_flags);
+            
+            m_IsAnyOverlayHovered = m_IsAnyOverlayHovered || ImGui::IsWindowHovered();
+            
+            ImGui::PopStyleVar(4);
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+            
+            switch (m_EditorState)
+            {
+                case EditorState::Edit:
+                    ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), overlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f));
+                    break;
+                case EditorState::Play:
+                    ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), overlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor);
+                    break;
+            }
+            
+            if (ImGui::IsItemClicked() && m_EditorState == EditorState::Edit)
+                OnScenePlay();
+            
+            ImGui::SameLine();
+            
+            switch (m_EditorState)
+            {
+                case EditorState::Edit:
+                    ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), overlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f));
+                    break;
+                case EditorState::Play:
+                    ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), overlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1));
+                    break;
+            }
+            
+            if (ImGui::IsItemClicked() && m_EditorState == EditorState::Play)
+                OnSceneEdit();
+            
+            ImGui::PopStyleColor(2);
+            ImGui::PopStyleVar();
+            ImGui::End();
+        }
     }
 
     void EditorLayer::UI_CompositeView()
@@ -856,5 +940,5 @@ namespace Flameberry {
 
         m_ActiveScene->OnStartRuntime();
     }
-
+    
 }

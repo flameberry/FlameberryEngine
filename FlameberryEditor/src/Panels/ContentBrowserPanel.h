@@ -27,6 +27,8 @@ namespace Flameberry {
         std::vector<std::shared_ptr<Texture2D>> m_IconTextures;
         
         std::shared_ptr<ThumbnailCache> m_ThumbnailCache;
+        
+        static constexpr ImGuiPopupFlags m_PopupFlags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
 
         float m_FirstChildSize = 150.0f, m_SecondChildSize = 0.0f;
         bool m_IsSearchBoxFocused = false;

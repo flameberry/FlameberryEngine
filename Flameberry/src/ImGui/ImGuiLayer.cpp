@@ -326,5 +326,10 @@ namespace Flameberry {
 
         colors[ImGuiCol_CheckMark] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
         colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
+        colors[ImGuiCol_ResizeGripActive] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
+        
+        colors[ImGuiCol_Separator] = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
+        colors[ImGuiCol_SeparatorHovered] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
+        colors[ImGuiCol_SeparatorActive] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
     }
 }
