@@ -53,8 +53,8 @@ namespace Flameberry {
         DescriptorSetSpecification GetSpecification() const { return m_DescSetSpec; }
         VkDescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
 
-        void WriteBuffer(uint32_t binding, const VkDescriptorBufferInfo& bufferInfo);
-        void WriteImage(uint32_t binding, const VkDescriptorImageInfo& imageInfo);
+        void WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo);
+        void WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo);
         void Update();
 
         template<typename... Args>

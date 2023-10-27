@@ -21,7 +21,7 @@ namespace Flameberry {
 #ifdef FL_DEBUG
     bool VulkanContext::s_EnableValidationLayers = true;
 #else
-    bool VulkanContext::s_EnableValidationLayers = false;
+    bool VulkanContext::s_EnableValidationLayers = true;
 #endif
 
     VulkanContext::VulkanContext(VulkanWindow* pWindow)

@@ -107,8 +107,10 @@ namespace Flameberry {
 
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
+        
 
         vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex]);
+        
         VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrameIndex]));
 
         VkSwapchainKHR swapchains[] = { m_VkSwapChain };

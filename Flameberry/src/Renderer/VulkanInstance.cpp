@@ -15,6 +15,7 @@ namespace Flameberry {
         void* userData
     )
     {
+#if 1
         switch (messageSeverity)
         {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
@@ -33,6 +34,26 @@ namespace Flameberry {
             FL_TRACE("{0}", pCallbackData->pMessage);
             break;
         }
+#else
+        switch (messageSeverity)
+        {
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+                std::cout << "TRACE: " << pCallbackData->pMessage << std::endl;
+                break;
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+                std::cout << "INFO: " << pCallbackData->pMessage << std::endl;
+                break;
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+                std::cout << "WARNING: " << pCallbackData->pMessage << std::endl;
+                break;
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+                std::cout << "ERROR: " << pCallbackData->pMessage << std::endl;
+                break;
+            default:
+                std::cout << "TRACE: " << pCallbackData->pMessage << std::endl;
+                break;
+        }
+#endif
         return VK_FALSE;
     }
 

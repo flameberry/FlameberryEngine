@@ -188,7 +188,7 @@ namespace Flameberry {
         ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, bottomChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleVar();
 
-        float iconWidth = 90.0f, padding = 12.0f;
+        float iconWidth = 90.0f, padding = 0.0f;
         float cellSize = iconWidth + padding;
         uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize, rowIndex = 0;
         columns = columns >= 1 ? columns : 1;

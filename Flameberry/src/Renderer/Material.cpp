@@ -17,9 +17,15 @@ namespace Flameberry {
         DescriptorSetSpecification descSetSpec;
         descSetSpec.Layout = s_CommonDescSetLayout;
         m_TextureMapSet = std::make_unique<DescriptorSet>(descSetSpec);
+        
+        VkDescriptorImageInfo imageInfo{
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            .sampler = Texture2D::GetDefaultSampler(),
+            .imageView = Texture2D::GetEmptyImageView()
+        };
 
         for (uint8_t i = 0; i < 5; i++)
-            m_TextureMapSet->WriteImage(i, VkDescriptorImageInfo{ .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, .sampler = Texture2D::GetDefaultSampler(), .imageView = Texture2D::GetEmptyImageView() });
+            m_TextureMapSet->WriteImage(i, imageInfo);
         m_TextureMapSet->Update();
     }
 
@@ -89,9 +95,15 @@ namespace Flameberry {
         descSetSpec.Layout = s_CommonDescSetLayout;
 
         s_EmptyMaterialDescSet = std::make_unique<DescriptorSet>(descSetSpec);
+        
+        VkDescriptorImageInfo imageInfo{
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            .sampler = Texture2D::GetDefaultSampler(),
+            .imageView = Texture2D::GetEmptyImageView()
+        };
 
         for (uint8_t i = 0; i < 5; i++)
-            s_EmptyMaterialDescSet->WriteImage(i, VkDescriptorImageInfo{ .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, .sampler = Texture2D::GetDefaultSampler(), .imageView = Texture2D::GetEmptyImageView() });
+            s_EmptyMaterialDescSet->WriteImage(i, imageInfo);
         s_EmptyMaterialDescSet->Update();
     }
 

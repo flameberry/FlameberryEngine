@@ -121,14 +121,14 @@ namespace Flameberry {
             for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
             {
                 m_ShadowMapDescriptorSets[i] = DescriptorSet::Create(shadowMapDescSetSpec);
+                
+                VkDescriptorBufferInfo bufferInfo{};
+                bufferInfo.buffer = m_ShadowMapUniformBuffers[i]->GetBuffer();
+                bufferInfo.range = bufferSize;
+                bufferInfo.offset = 0;
 
-                m_ShadowMapDescriptorSets[i]->WriteBuffer(0, {
-                        .buffer = m_ShadowMapUniformBuffers[i]->GetBuffer(),
-                        .range = bufferSize,
-                        .offset = 0
-                    }
-                );
-
+                m_ShadowMapDescriptorSets[i]->WriteBuffer(0, bufferInfo);
+                
                 m_ShadowMapDescriptorSets[i]->Update();
             }
 
@@ -214,7 +214,7 @@ namespace Flameberry {
                 VkDescriptorBufferInfo vk_descriptor_buffer_info{};
                 vk_descriptor_buffer_info.buffer = m_CameraUniformBuffers[i]->GetBuffer();
                 vk_descriptor_buffer_info.offset = 0;
-                vk_descriptor_buffer_info.range = sizeof(CameraUniformBufferObject);
+                vk_descriptor_buffer_info.range = uniformBufferSize;
 
                 m_CameraBufferDescriptorSets[i]->WriteBuffer(0, vk_descriptor_buffer_info);
                 m_CameraBufferDescriptorSets[i]->Update();
@@ -256,6 +256,7 @@ namespace Flameberry {
                     uniformBuffer = std::make_unique<Buffer>(bufferSpec);
                     uniformBuffer->MapMemory(uniformBufferSize);
                 }
+                
 
                 DescriptorSetLayoutSpecification sceneDescSetLayoutSpec;
                 sceneDescSetLayoutSpec.Bindings.resize(2);
@@ -278,20 +279,28 @@ namespace Flameberry {
                 for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
                 {
                     m_SceneDataDescriptorSets[i] = DescriptorSet::Create(sceneDescSetSpec);
+                    
+                    VkDescriptorBufferInfo bufferInfo{};
+                    bufferInfo.range = sizeof(SceneUniformBufferData);
+                    bufferInfo.offset=0;
+                    bufferInfo.buffer = m_SceneUniformBuffers[i]->GetBuffer();
 
-                    m_SceneDataDescriptorSets[i]->WriteBuffer(0, {
-                            .buffer = m_SceneUniformBuffers[i]->GetBuffer(),
-                            .range = sizeof(SceneUniformBufferData),
-                            .offset = 0
-                        }
-                    );
-
-                    m_SceneDataDescriptorSets[i]->WriteImage(1, {
-                            .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-                            .imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView(),
-                            .sampler = m_ShadowMapSampler
-                        }
-                    );
+//                    m_SceneDataDescriptorSets[i]->WriteBuffer(0, {
+//                            .buffer = m_SceneUniformBuffers[i]->GetBuffer(),
+//                            .range = sizeof(SceneUniformBufferData),
+//                            .offset = 0
+//                        }
+//                    );
+                    m_SceneDataDescriptorSets[i]->WriteBuffer(0, bufferInfo);
+                    
+                    VkDescriptorImageInfo imageInfo{};
+                    imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                    imageInfo.imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView();
+                    imageInfo.sampler = m_ShadowMapSampler;
+                    
+                    m_SceneDataDescriptorSets[i]->WriteImage(1, imageInfo);
+                    
+                    FL_LOG(m_SceneUniformBuffers[i]->GetBuffer());
 
                     m_SceneDataDescriptorSets[i]->Update();
                 }
@@ -441,13 +450,14 @@ namespace Flameberry {
             for (uint8_t i = 0; i < m_CompositePassDescriptorSets.size(); i++)
             {
                 m_CompositePassDescriptorSets[i] = DescriptorSet::Create(setSpec);
-
-                m_CompositePassDescriptorSets[i]->WriteImage(0, {
-                     .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                     .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetImageView(),
-                     .sampler = m_VkTextureSampler
-                    }
-                );
+                
+                VkDescriptorImageInfo imageInfo{
+                    .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                    .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetImageView(),
+                    .sampler = m_VkTextureSampler
+                };
+                
+                m_CompositePassDescriptorSets[i]->WriteImage(0, imageInfo);
 
                 m_CompositePassDescriptorSets[i]->Update();
             }
@@ -494,12 +504,13 @@ namespace Flameberry {
                 {
                     m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass());
 
-                    m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, {
-                            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                            .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetImageView(),
-                            .sampler = m_VkTextureSampler
-                        }
-                    );
+                    VkDescriptorImageInfo imageInfo{
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                        .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetImageView(),
+                        .sampler = m_VkTextureSampler
+                    };
+                    
+                    m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, imageInfo);
 
                     m_CompositePassDescriptorSets[imageIndex]->Update();
                     m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass());
@@ -552,7 +563,7 @@ namespace Flameberry {
 
             lightEntityHandles.emplace_back(entity);
         }
-
+        
         m_SceneUniformBuffers[currentFrame]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData));
 
         // Render Passes

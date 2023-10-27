@@ -76,7 +76,7 @@ namespace Flameberry {
     {
     }
 
-    void DescriptorSet::WriteBuffer(uint32_t binding, const VkDescriptorBufferInfo& bufferInfo)
+    void DescriptorSet::WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo)
     {
         VkWriteDescriptorSet vk_write_descriptor_set{};
         vk_write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -92,7 +92,7 @@ namespace Flameberry {
         m_WriteInfos.push_back(vk_write_descriptor_set);
     }
 
-    void DescriptorSet::WriteImage(uint32_t binding, const VkDescriptorImageInfo& imageInfo)
+    void DescriptorSet::WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo)
     {
         VkWriteDescriptorSet vk_write_descriptor_set{};
         vk_write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -112,6 +112,14 @@ namespace Flameberry {
     {
         if (m_WriteInfos.size())
         {
+            FL_LOG("Size of Write Infos: {0}", m_WriteInfos.size());
+            for (auto& info : m_WriteInfos)
+            {
+                if (info.pBufferInfo)
+                    FL_LOG("Buffer: {0}", info.pBufferInfo->buffer);
+                else if (info.pImageInfo)
+                    FL_LOG("Image: {0}", info.pImageInfo->imageView);
+            }
             const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(m_WriteInfos.size()), m_WriteInfos.data(), 0, nullptr);
             m_WriteInfos.clear();

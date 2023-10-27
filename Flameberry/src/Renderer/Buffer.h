@@ -42,7 +42,7 @@ namespace Flameberry {
         VkDeviceMemory m_VkBufferDeviceMemory = VK_NULL_HANDLE;
         void* m_VkBufferMappedMemory = nullptr;
 
-        uint32_t m_AlignmentSize;
+        VkDeviceSize m_AlignmentSize;
 
         BufferSpecification m_BufferSpec;
     };

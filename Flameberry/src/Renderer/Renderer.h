@@ -23,18 +23,9 @@ namespace Flameberry {
         static uint32_t RT_GetCurrentFrameIndex() { return s_RT_FrameIndex; }
         static void RT_Render();
     private:
-        // THE RENDER THREAD
-        static std::thread s_RenderThread;
-
         static uint32_t s_RT_FrameIndex, s_FrameIndex;
 
         // Critical Variables
-        static std::vector<Command> s_CommandQueues[2];
-        static inline std::atomic<uint8_t> s_ExecutingCmdQueueIndex = 0;
-
-        // Synchronisation
-        static std::mutex s_UpdateReadyMutex, s_RenderFinishedMutex;
-        static std::condition_variable s_UpdateCV, s_RenderCV;
-        static std::atomic<bool> s_UpdateReady, s_RenderFinished;
+        static std::vector<Command> s_CommandQueue;
     };
 }
