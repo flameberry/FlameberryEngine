@@ -112,14 +112,6 @@ namespace Flameberry {
     {
         if (m_WriteInfos.size())
         {
-            FL_LOG("Size of Write Infos: {0}", m_WriteInfos.size());
-            for (auto& info : m_WriteInfos)
-            {
-                if (info.pBufferInfo)
-                    FL_LOG("Buffer: {0}", info.pBufferInfo->buffer);
-                else if (info.pImageInfo)
-                    FL_LOG("Image: {0}", info.pImageInfo->imageView);
-            }
             const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(m_WriteInfos.size()), m_WriteInfos.data(), 0, nullptr);
             m_WriteInfos.clear();
