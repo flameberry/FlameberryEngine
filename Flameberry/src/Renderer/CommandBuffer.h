@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vulkan/vulkan.h>
 
 namespace Flameberry {
@@ -20,6 +21,9 @@ namespace Flameberry {
 
         void Reset();
         VkCommandBuffer GetCommandBuffer() const { return m_CommandBuffer; }
+        
+        template <typename ...Args>
+        static std::shared_ptr<CommandBuffer> Create(Args... args) { return std::make_shared<CommandBuffer>(std::forward<Args>(args)...); }
     private:
         CommandBufferSpecification m_CommandBufferSpec;
 

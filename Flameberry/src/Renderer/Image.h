@@ -30,7 +30,7 @@ namespace Flameberry {
 
         void GenerateMipMaps();
         void WriteFromBuffer(VkBuffer srcBuffer);
-        void TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
+        void TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
 
         VkImage GetImage() const { return m_VkImage; }
         VkImageView GetImageView() const { return m_VkImageView; }
