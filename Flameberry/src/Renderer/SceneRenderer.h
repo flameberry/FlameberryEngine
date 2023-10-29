@@ -83,6 +83,6 @@ namespace Flameberry {
         std::vector<std::shared_ptr<DescriptorSet>> m_CompositePassDescriptorSets;
 
         // Textures
-        std::shared_ptr<Texture2D> m_LightIcon, m_CameraIcon;
+        std::shared_ptr<Texture2D> m_LightIcon, m_CameraIcon, m_DirectionalLightIcon;
     };
 }

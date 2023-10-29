@@ -285,12 +285,6 @@ namespace Flameberry {
                     bufferInfo.offset=0;
                     bufferInfo.buffer = m_SceneUniformBuffers[i]->GetBuffer();
 
-//                    m_SceneDataDescriptorSets[i]->WriteBuffer(0, {
-//                            .buffer = m_SceneUniformBuffers[i]->GetBuffer(),
-//                            .range = sizeof(SceneUniformBufferData),
-//                            .offset = 0
-//                        }
-//                    );
                     m_SceneDataDescriptorSets[i]->WriteBuffer(0, bufferInfo);
                     
                     VkDescriptorImageInfo imageInfo{};
@@ -487,6 +481,7 @@ namespace Flameberry {
         // Textures
         m_LightIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/bulb_icon_v4.png");
         m_CameraIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/camera_icon.png");
+        m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/DirectionalLightIcon.png");
     }
 
     void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
@@ -535,7 +530,7 @@ namespace Flameberry {
             auto [transform, dirLight] = scene->m_Registry->get<TransformComponent, DirectionalLightComponent>(entity);
             sceneUniformBufferData.directionalLight.Color = dirLight.Color;
             sceneUniformBufferData.directionalLight.Intensity = dirLight.Intensity;
-            sceneUniformBufferData.directionalLight.Direction = -transform.Translation;
+            sceneUniformBufferData.directionalLight.Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.0f, -1.0f, 0.0f)); // TODO: Idk why the shadows disappear when rotation is 0, 0, 0
         }
 
         if (m_RendererSettings.EnableShadows)
@@ -719,6 +714,14 @@ namespace Flameberry {
             {
                 auto& transform = scene->m_Registry->get<TransformComponent>(entity);
                 Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
+            }
+            Renderer2D::FlushQuads();
+            
+            Renderer2D::SetActiveTexture(m_DirectionalLightIcon);
+            for (auto entity : scene->m_Registry->view<TransformComponent, DirectionalLightComponent>())
+            {
+                auto& transform = scene->m_Registry->get<TransformComponent>(entity);
+                Renderer2D::AddBillboard(transform.Translation, 1.2f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
             }
             Renderer2D::FlushQuads();
         }
