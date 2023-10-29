@@ -530,7 +530,7 @@ namespace Flameberry {
             auto [transform, dirLight] = scene->m_Registry->get<TransformComponent, DirectionalLightComponent>(entity);
             sceneUniformBufferData.directionalLight.Color = dirLight.Color;
             sceneUniformBufferData.directionalLight.Intensity = dirLight.Intensity;
-            sceneUniformBufferData.directionalLight.Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.0f, -1.0f, 0.0f)); // TODO: Idk why the shadows disappear when rotation is 0, 0, 0
+            sceneUniformBufferData.directionalLight.Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f)); // NOTE: X direction is 0.000001f to avoid shadows being not rendered when directional light perspective camera is looking directly downwards
         }
 
         if (m_RendererSettings.EnableShadows)
@@ -845,7 +845,7 @@ namespace Flameberry {
             glm::vec3 minExtents = -maxExtents;
 
             const glm::vec3 lightDir = glm::normalize(lightDirection);
-            const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter + lightDir * minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+            const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter + lightDir * minExtents, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
             const glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
 
             // Store split distance and matrix in cascade
