@@ -45,7 +45,7 @@ namespace Flameberry {
     }
 
     // TODO: Call one of 2 functions one for Folder Thumbnail and other for file
-    ImVec2 UI::ContentBrowserItem(const std::filesystem::path& filepath, float size, const std::shared_ptr<Texture2D>& thumbnail)
+    ImVec2 UI::ContentBrowserItem(const std::filesystem::path& filepath, float size, const std::shared_ptr<Texture2D>& thumbnail, bool keepExtension)
     {
         bool isDirectory = std::filesystem::is_directory(filepath);
 
@@ -87,7 +87,7 @@ namespace Flameberry {
 
         ImGui::PopStyleColor(3);
 
-        const auto& filename = filepath.stem();
+        const auto& filename = keepExtension ? filepath.filename() : filepath.stem();
         const auto cursorPosX = ImGui::GetCursorPosX();
         ImGui::SetCursorPosX(cursorPosX + framePadding.x);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y + centerTranslationHeight);
