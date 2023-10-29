@@ -1,16 +1,29 @@
 #pragma once
 
+#include <vulkan/vulkan.h>
+#include <vector>
+
+#include "Core/Layer.h"
+
 namespace Flameberry {
     class ImGuiLayer
     {
     public:
         ImGuiLayer();
-        ~ImGuiLayer();
-        static void OnAttach();
-        static void OnDetach();
-        static void Begin();
-        static void End();
+        ~ImGuiLayer() = default;
+
+        void OnDestroy();
+        void Begin();
+        void End();
+
+        void OnEvent(Event& e);
+        void InvalidateResources();
     private:
-        static void SetupImGuiStyle();
+        void SetupImGuiStyle();
+        void CreateResources();
+    private:
+        VkRenderPass m_ImGuiLayerRenderPass;
+        std::vector<VkFramebuffer> m_ImGuiFramebuffers;
+        std::vector<VkImageView> m_ImGuiImageViews;
     };
 }

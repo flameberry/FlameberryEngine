@@ -70,7 +70,7 @@ void main()
         //     case 14: index = 14; break;
         //     case 15: index = 15; break;
         // }
-
+        
         float threshold = 1.0 - u_Strength;
         vec2 msdfUnit = u_PixelRange/vec2(textureSize(u_TextureSamplers[index], 0));
         vec3 s = texture(u_TextureSamplers[index], v_Texture_UV).rgb;

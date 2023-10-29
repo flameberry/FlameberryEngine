@@ -1,89 +1,143 @@
 # Set Global Variables
+set(FL_GRAPHICS_API "Vulkan")
+set(FL_LIBRARY_DEPENDENCIES)
+set(FL_INCLUDE_DIRS)
 
-# Configure the API used  to build the app [Uses OpenGL if not specified in CMake Generation process
-set(FL_GRAPHICS_API "OpenGL")
-# set(FL_GRAPHICS_API "Vulkan")
+# Vulkan Helper Libs
+find_package(Vulkan)
 
-# Vulkan path remains empty if Opengl is selected as the Graphics API
-set(VULKAN_PATH "")
+IF(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+ENDIF()
 
-# ImGui paths and source, this will be modified depending on the Graphics API
-file(GLOB IMGUI_SRC ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.cpp ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.h)
+IF(WIN32)
+	IF (NOT Vulkan_FOUND)
+        # If 64 bit compiler then use 64 bit version of vulkan library
+        if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(VULKAN_LIB_PATH "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/x64")
+        else()
+            set(VULKAN_LIB_PATH "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/x86")
+        endif()
+
+		find_library(Vulkan_LIBRARY NAMES vulkan-1 PATHS ${VULKAN_LIB_PATH} REQUIRED)
+		IF (Vulkan_LIBRARY)
+			set(Vulkan_FOUND ON)
+			MESSAGE(STATUS "Using bundled Vulkan library version")
+		ENDIF()
+	ENDIF()
+ELSEIF(LINUX)
+	IF (NOT Vulkan_FOUND)
+		find_library(Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/linux" REQUIRED)
+		IF (Vulkan_LIBRARY)
+			set(Vulkan_FOUND ON)
+			MESSAGE(STATUS "Using bundled Vulkan library version")
+		ENDIF()
+	ENDIF()
+ELSEIF(APPLE)
+    IF (NOT Vulkan_FOUND)
+		find_library(Vulkan_LIBRARY NAMES vulkan HINTS "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/macOS" REQUIRED)
+		IF (Vulkan_LIBRARY)
+			set(Vulkan_FOUND ON)
+			MESSAGE(STATUS "Using bundled Vulkan library version")
+		ENDIF()
+	ENDIF()
+ENDIF(WIN32)
+
+if (NOT Vulkan_FOUND)
+    message(FATAL_ERROR "Vulkan not found!")
+endif()
+
+message(STATUS "Found vulkan library at ${Vulkan_LIBRARY}")
+
+if (NOT Vulkan_INCLUDE_DIRS)
+    set(Vulkan_INCLUDE_DIRS "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/include")
+    set(Vulkan_INCLUDE_DIR "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/include")
+    message(STATUS "Using bundled Vulkan Include Headers!")
+endif()
+
+# Find GLSL Language Validator
+if (NOT Vulkan_glslangValidator_FOUND)
+    message(WARNING "GLSL Language Validator not found!")
+else()
+    message(STATUS "Found GLSL_VALIDATOR at ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE}")
+endif()
+
+# Now that every package required is found, setup the build environment
+list(APPEND FL_LIBRARY_DEPENDENCIES ${Vulkan_LIBRARY})
+list(APPEND FL_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
+
+# Setting All the required compile definitions
+set(FL_COMPILE_DEFINITIONS FL_PROJECT_DIR="${FL_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 # Setting the paths we require irrespective of the Graphics API
-set(FL_GRAPHICS_LIBS glfw)
-set(FL_GRAPHICS_INCLUDE_DIRS 
+list(APPEND FL_LIBRARY_DEPENDENCIES glfw yaml-cpp)
+list(APPEND FL_INCLUDE_DIRS 
     ${FL_SOURCE_DIR}/Flameberry/vendor
     ${FL_SOURCE_DIR}/Flameberry/vendor/GLFW/include
     ${FL_SOURCE_DIR}/Flameberry/vendor/glm
     ${FL_SOURCE_DIR}/Flameberry/vendor/imgui
+    ${FL_SOURCE_DIR}/Flameberry/vendor/yaml-cpp/include
+    ${FL_SOURCE_DIR}/Flameberry/vendor/Assimp/include
+    ${FL_SOURCE_DIR}/Flameberry/vendor/Assimp/build/include
 )
 
-set(FL_COMPILE_DEFINITIONS FL_PROJECT_DIR="${FL_SOURCE_DIR}" GLFW_INCLUDE_NONE)
+# Nvidia PhysX
+include(CMake/envPhysX.cmake)
 
-# Graphics API dependent changes begin here
-if (FL_GRAPHICS_API STREQUAL "Vulkan")
-    message("-- Using Vulkan Graphics API")
+add_library(PhysX_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysX_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysX_static_64.a)
+set_target_properties(PhysX_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysX_static_64.a)
 
-    # Vulkan Helper Libs
-    find_package(Vulkan REQUIRED)
+add_library(PhysXFoundation_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysXFoundation_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXFoundation_static_64.a)
+set_target_properties(PhysXFoundation_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXFoundation_static_64.a)
 
-    if(NOT Vulkan_FOUND)
-    message(FATAL_ERROR "-- Vulkan not found!")
-    endif()
+add_library(PhysXCommon_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysXCommon_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXCommon_static_64.a)
+set_target_properties(PhysXCommon_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXCommon_static_64.a)
 
-    if (${Vulkan_INCLUDE_DIRS} STREQUAL "")
-    message(FATAL_ERROR "-- Vulkan include directories are empty!")
-    endif()
+add_library(PhysXCooking_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysXCooking_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXCooking_static_64.a)
+set_target_properties(PhysXCooking_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXCooking_static_64.a)
 
-    list(APPEND FL_GRAPHICS_LIBS Vulkan::Vulkan)
-    list(APPEND FL_GRAPHICS_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
+add_library(PhysXExtensions_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysXExtensions_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXExtensions_static_64.a)
+set_target_properties(PhysXExtensions_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXExtensions_static_64.a)
 
-    string(APPEND FL_VULKAN_PATH "${Vulkan_INCLUDE_DIRS}")
+# TODO: Should not be needed
+add_library(PhysXPvdSDK_LIBRARY STATIC IMPORTED)
+set_target_properties(PhysXPvdSDK_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXPvdSDK_static_64.a)
+set_target_properties(PhysXPvdSDK_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXPvdSDK_static_64.a)
 
-    if (APPLE)
-        string(REGEX REPLACE "/include" "" FL_VULKAN_PATH ${FL_VULKAN_PATH})
+list(APPEND FL_LIBRARY_DEPENDENCIES PhysX_LIBRARY PhysXFoundation_LIBRARY PhysXCommon_LIBRARY PhysXCooking_LIBRARY PhysXExtensions_LIBRARY PhysXPvdSDK_LIBRARY)
+list(APPEND FL_INCLUDE_DIRS ${PHYSX_INCLUDE_DIR})
+list(APPEND FL_COMPILE_DEFINITIONS ${PHYSX_COMPILE_DEFINITIONS})
 
-        set(CMAKE_XCODE_SCHEME_ENVIRONMENT VK_ICD_FILENAMES="${FL_VULKAN_PATH}/share/vulkan/icd.d/MoltenVK_icd.json")
-        set(CMAKE_XCODE_SCHEME_ENVIRONMENT VK_LAYER_PATH="${FL_VULKAN_PATH}/share/vulkan/explicit_layer.d")
-    elseif(WIN32)
-        string(REGEX REPLACE "/Include" "" FL_VULKAN_PATH ${FL_VULKAN_PATH})
-    endif()
+# Assimp
+find_library(Assimp_LIBRARY NAMES assimp HINTS "${FL_SOURCE_DIR}/Flameberry/vendor/Assimp/build/bin" REQUIRED)
+list(APPEND FL_LIBRARY_DEPENDENCIES ${Assimp_LIBRARY})
 
-    list(APPEND FL_COMPILE_DEFINITIONS FL_USE_VULKAN_API GLFW_INCLUDE_VULKAN)
-    
-    list(APPEND IMGUI_SRC
-        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp
-        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.h
-        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
-        ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
-    )
-    elseif(FL_GRAPHICS_API STREQUAL "OpenGL")
-    # OpenGL Helper Libs
-    message("-- Using OpenGL Graphics API")
-    list(APPEND FL_GRAPHICS_LIBS Glad)
-    
-    if(APPLE)
-    # Inbuilt mac frameworks required for GLFW
-    list(APPEND FL_GRAPHICS_LIBS 
-    "-framework Cocoa"
-    "-framework OpenGL"
-    "-framework IOKit"
-    "-framework CoreFoundation"
-    )
-    elseif(WIN32)
-    list(APPEND FL_GRAPHICS_LIBS opengl32.lib)
-    endif()
-    
-    list(APPEND FL_GRAPHICS_INCLUDE_DIRS ${FL_SOURCE_DIR}/Flameberry/vendor/Glad/include)
-    
-    list(APPEND FL_COMPILE_DEFINITIONS FL_USE_OPENGL_API GLFW_INCLUDE_NONE IMGUI_IMPL_OPENGL_LOADER_GLAD)
+# ImGui paths and source
+file(GLOB IMGUI_SRC ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.cpp ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.h)
 
-    list(APPEND IMGUI_SRC
-        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
-        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
-        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.cpp
-        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3.h
-        ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_opengl3_loader.h
-    )
-    endif()
+set(FL_DEPENDENCY_SOURCE
+    # ImGui
+    ${IMGUI_SRC}
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.h
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
+    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
+
+    # ImGuizmo
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/GraphEditor.cpp
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/GraphEditor.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImCurveEdit.cpp
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImCurveEdit.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGradient.cpp
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGradient.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGuizmo.cpp
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGuizmo.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.cpp
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.h
+    ${FL_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImZoomSlider.h
+)

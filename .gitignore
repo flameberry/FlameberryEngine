@@ -1,3 +1,5 @@
+SandboxProject/Assets/**
+
 # Mac Specific
 .DS_Store
 
@@ -6,6 +8,8 @@ bin/
 build_makefiles/
 build_xcode/
 build/
+
+!Flameberry/assets/shaders/vulkan/bin
 
 # Ignore CMake Instance downloaded by python scripts
 vendor/cmake/
@@ -27,9 +31,6 @@ __pycache__/
 
 # Prerequisites
 *.d
-
-# Shader binaries
-*.spv
 
 # Compiled Object files
 *.slo
@@ -55,6 +56,12 @@ __pycache__/
 *.la
 *.a
 *.lib
+
+!Flameberry/vendor/vulkan/lib/*.dll
+!Flameberry/vendor/vulkan/lib/*.dylib
+!Flameberry/vendor/vulkan/lib/*.lib
+
+Flameberry/vendor/PhysX/**
 
 # Executables
 *.exe

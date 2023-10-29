@@ -7,3 +7,15 @@
 [submodule "Flameberry/vendor/imgui"]
 	path = Flameberry/vendor/imgui
 	url = https://github.com/ocornut/imgui
+[submodule "Flameberry/vendor/yaml-cpp"]
+	path = Flameberry/vendor/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp
+[submodule "Flameberry/vendor/ImGuizmo"]
+	path = Flameberry/vendor/ImGuizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo
+[submodule "Flameberry/vendor/Assimp"]
+	path = Flameberry/vendor/Assimp
+	url = https://github.com/assimp/assimp
+[submodule "Flameberry/vendor/PhysX"]
+	path = Flameberry/vendor/PhysX
+	url = https://github.com/flameberry/PhysX

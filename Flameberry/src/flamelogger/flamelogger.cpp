@@ -13,24 +13,24 @@ namespace flamelogger {
         return prefix.str();
     }
 
-    FLLoggerInstance::FLLoggerInstance(const char* instanceName)
+    Logger::Logger(const char* instanceName)
         : m_CurrentLogLevel(LogLevel::TRACE)
     {
         if (strcmp(instanceName, ""))
             m_InstanceName = instanceName;
     }
 
-    std::shared_ptr<FLLoggerInstance> FLLoggerInstance::Create(const char* instanceName)
+    std::shared_ptr<Logger> Logger::Create(const char* instanceName)
     {
-        return std::make_shared<FLLoggerInstance>(instanceName);
+        return std::make_shared<Logger>(instanceName);
     }
 
-    void FLLoggerInstance::SetLogLevel(const LogLevel& logLevel)
+    void Logger::SetLogLevel(const LogLevel& logLevel)
     {
         m_CurrentLogLevel = logLevel;
     }
 
-    std::string FLLoggerInstance::get_prefix(const LogLevel& level)
+    std::string Logger::get_prefix(const LogLevel& level)
     {
         std::stringstream prefix("");
         std::time_t now = std::time(0);
@@ -41,26 +41,25 @@ namespace flamelogger {
 
         switch (level)
         {
-        case LogLevel::LOG:
-            prefix << "LOG: ";
-            break;
-        case LogLevel::TRACE:
-            prefix << "TRACE: ";
-            break;
-        case LogLevel::INFO:
-            prefix << "INFO: ";
-            break;
-        case LogLevel::WARNING:
-            prefix << "WARNING: ";
-            break;
-        case LogLevel::ERROR:
-            prefix << "ERROR: ";
-            break;
-        case LogLevel::CRITICAL:
-            prefix << "CRITICAL: ";
-            break;
+            case LogLevel::LOG:
+                prefix << "LOG: ";
+                break;
+            case LogLevel::TRACE:
+                prefix << "TRACE: ";
+                break;
+            case LogLevel::INFO:
+                prefix << "INFO: ";
+                break;
+            case LogLevel::WARNING:
+                prefix << "WARNING: ";
+                break;
+            case LogLevel::ERROR:
+                prefix << "ERROR: ";
+                break;
+            case LogLevel::CRITICAL:
+                prefix << "CRITICAL: ";
+                break;
         }
-
         return prefix.str();
     }
 }

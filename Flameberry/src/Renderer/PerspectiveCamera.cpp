@@ -1,25 +1,29 @@
 #include "PerspectiveCamera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 namespace Flameberry {
-    PerspectiveCamera::PerspectiveCamera(const PerspectiveCameraInfo& cameraInfo)
-        : m_AspectRatio(cameraInfo.aspectRatio), m_FOV(cameraInfo.FOV), m_ZNear(cameraInfo.zNear), m_ZFar(cameraInfo.zFar), m_CameraPosition(cameraInfo.cameraPostion), m_CameraDirection(cameraInfo.cameraDirection)
+    PerspectiveCamera::PerspectiveCamera(const PerspectiveCameraSpecification& specification)
+        : m_CameraSpec(specification)
     {
-        m_ViewMatrix = glm::lookAt(m_CameraPosition, m_CameraPosition + m_CameraDirection, glm::vec3(0, 1, 0));
-        m_ProjectionMatrix = glm::perspective(glm::radians(m_FOV), m_AspectRatio, m_ZNear, m_ZFar);
-        m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+        Invalidate();
     }
 
     PerspectiveCamera::~PerspectiveCamera()
     {
     }
 
-    void PerspectiveCamera::OnUpdate()
+    void PerspectiveCamera::OnResize(float aspectRatio)
     {
-        m_ViewMatrix = glm::lookAt(m_CameraPosition, m_CameraPosition + m_CameraDirection, glm::vec3(0, 1, 0));
-        m_ProjectionMatrix = glm::perspective(glm::radians(m_FOV), m_AspectRatio, 0.1f, 100.0f);
+        m_CameraSpec.AspectRatio = aspectRatio;
+        Invalidate();
+    }
+
+    void PerspectiveCamera::Invalidate()
+    {
+        m_ViewMatrix = glm::lookAt(m_CameraSpec.Position, m_CameraSpec.Position + m_CameraSpec.Direction, glm::vec3(0, 1, 0));
+        m_ProjectionMatrix = glm::perspective(glm::radians(m_CameraSpec.FOV), m_CameraSpec.AspectRatio, m_CameraSpec.zNear, m_CameraSpec.zFar);
+        m_ProjectionMatrix[1][1] *= -1;
         m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
     }
 }
