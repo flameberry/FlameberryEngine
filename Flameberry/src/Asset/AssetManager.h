@@ -58,7 +58,7 @@ namespace Flameberry {
 
                 return std::static_pointer_cast<Type>(asset);
             }
-            FL_WARN("Failed to find the asset with handle: {0}", handle);
+//            FL_WARN("Failed to find the asset with handle: {0}", handle);
             return nullptr;
         }
 

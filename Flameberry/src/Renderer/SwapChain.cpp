@@ -107,7 +107,6 @@ namespace Flameberry {
 
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
-        
 
         vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex]);
         

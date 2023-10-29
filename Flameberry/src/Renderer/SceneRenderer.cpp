@@ -516,8 +516,8 @@ namespace Flameberry {
                     m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass());
                 }
 
-                VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
-                m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->SetClearColorValue(color);
+//                VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
+//                m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->SetClearColorValue(color);
             }
         );
 
@@ -528,11 +528,20 @@ namespace Flameberry {
         cameraBufferData.ViewProjectionMatrix = projectionMatrix * viewMatrix;
 
         m_CameraUniformBuffers[currentFrame]->WriteToBuffer(&cameraBufferData, sizeof(CameraUniformBufferObject));
+        
+        SceneUniformBufferData sceneUniformBufferData;
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, DirectionalLightComponent>())
+        {
+            auto [transform, dirLight] = scene->m_Registry->get<TransformComponent, DirectionalLightComponent>(entity);
+            sceneUniformBufferData.directionalLight.Color = dirLight.Color;
+            sceneUniformBufferData.directionalLight.Intensity = dirLight.Intensity;
+            sceneUniformBufferData.directionalLight.Direction = -transform.Translation;
+        }
 
         if (m_RendererSettings.EnableShadows)
         {
             // TODO: Calculate these only when camera or directional light is updated
-            CalculateShadowMapCascades(cameraBufferData.ViewProjectionMatrix, cameraNear, cameraFar, scene->m_Environment.DirLight.Direction);
+            CalculateShadowMapCascades(cameraBufferData.ViewProjectionMatrix, cameraNear, cameraFar, sceneUniformBufferData.directionalLight.Direction);
             glm::mat4 cascades[SceneRendererSettings::CascadeCount];
             for (uint8_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
                 cascades[i] = m_Cascades[i].ViewProjectionMatrix;
@@ -540,7 +549,6 @@ namespace Flameberry {
             m_ShadowMapUniformBuffers[currentFrame]->WriteToBuffer(cascades, sizeof(glm::mat4) * SceneRendererSettings::CascadeCount);
         }
 
-        SceneUniformBufferData sceneUniformBufferData;
         sceneUniformBufferData.cameraPosition = cameraPosition;
 
         for (uint32_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
@@ -552,10 +560,9 @@ namespace Flameberry {
         sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
         sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
 
-        sceneUniformBufferData.directionalLight = scene->m_Environment.DirLight;
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, LightComponent>())
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, PointLightComponent>())
         {
-            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, LightComponent>(entity);
+            const auto& [transform, light] = scene->m_Registry->get<TransformComponent, PointLightComponent>(entity);
             sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform.Translation;
             sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Color = light.Color;
             sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Intensity = light.Intensity;
@@ -605,14 +612,18 @@ namespace Flameberry {
         RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
         RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
+        SkyLightComponent* skyMap = nullptr;
+        for (const auto entity : scene->m_Registry->view<TransformComponent, SkyLightComponent>())
+            skyMap = scene->m_Registry->try_get<SkyLightComponent>(entity);
+        
         // Skybox Rendering
-        if (scene->m_Environment.EnableEnvironmentMap && scene->m_Environment.EnvironmentMap)
+        if (skyMap && skyMap->EnableSkyMap && skyMap->SkyMap)
         {
             m_SkyboxPipeline->Bind();
 
             glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
             auto pipelineLayout = m_SkyboxPipeline->GetLayout();
-            auto textureDescSet = scene->m_Environment.EnvironmentMap->CreateOrGetDescriptorSet();
+            auto textureDescSet = AssetManager::GetAsset<Texture2D>(skyMap->SkyMap)->CreateOrGetDescriptorSet();
 
             Renderer::Submit([pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {

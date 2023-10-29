@@ -63,7 +63,6 @@ namespace Flameberry {
         m_ActiveScene = Scene::Create();
         m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
         m_ContentBrowserPanel = ContentBrowserPanel::Create();
-        m_EnvironmentSettingsPanel = EnvironmentSettingsPanel::Create(m_ActiveScene);
 
 #pragma region MousePickingResources
         BufferSpecification mousePickingBufferSpec;
@@ -418,7 +417,6 @@ namespace Flameberry {
 
         m_SceneHierarchyPanel->OnUIRender();
         m_ContentBrowserPanel->OnUIRender();
-        m_EnvironmentSettingsPanel->OnUIRender();
     }
 
     void EditorLayer::InvalidateViewportImGuiDescriptorSet(uint32_t index)
@@ -608,7 +606,6 @@ namespace Flameberry {
         m_ActiveScene = Scene::Create();
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
         m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
-        m_EnvironmentSettingsPanel->SetContext(m_ActiveScene);
 
         if (m_EditorState == EditorState::Play)
             m_ActiveSceneBackUpCopy = nullptr;
@@ -924,7 +921,6 @@ namespace Flameberry {
         // Delete the m_RuntimeScene
         std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
-        m_EnvironmentSettingsPanel->SetContext(m_ActiveScene); // Should hopefully remove the only reference to the copied scene
         m_ActiveSceneBackUpCopy = nullptr;
     }
 
@@ -936,7 +932,6 @@ namespace Flameberry {
         // Copy m_ActiveSceneBackUpCopy to m_ActiveScene
         m_ActiveScene = Scene::Create(m_ActiveSceneBackUpCopy);
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
-        m_EnvironmentSettingsPanel->SetContext(m_ActiveScene);
 
         m_ActiveScene->OnStartRuntime();
     }

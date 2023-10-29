@@ -5,7 +5,6 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/InspectorPanel.h"
-#include "Panels/EnvironmentSettingsPanel.h"
 
 namespace Flameberry {
     enum class EditorState : uint8_t {
@@ -83,7 +82,6 @@ namespace Flameberry {
         // UI
         std::shared_ptr<SceneHierarchyPanel> m_SceneHierarchyPanel;
         std::shared_ptr<ContentBrowserPanel> m_ContentBrowserPanel;
-        std::shared_ptr<EnvironmentSettingsPanel> m_EnvironmentSettingsPanel;
 
         // Mouse Picking
         std::unique_ptr<Buffer> m_MousePickingBuffer;

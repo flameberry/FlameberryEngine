@@ -96,11 +96,11 @@ namespace Flameberry {
         
         void CreateCustomTitleBar()
         {
-            NSWindow* window = glfwGetCocoaWindow(Application::Get().GetWindow().GetGLFWwindow());
-            
-            [window setStyleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView];
-            [window setBackingType:NSBackingStoreBuffered];
-            [window setTitleVisibility:NSWindowTitleHidden];
+//            NSWindow* window = glfwGetCocoaWindow(Application::Get().GetWindow().GetGLFWwindow());
+//            
+//            [window setStyleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView];
+//            [window setBackingType:NSBackingStoreBuffered];
+//            [window setTitleVisibility:NSWindowTitleHidden];
 //
 //            NSTextField *textField = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 100, 22)];
 //            [textField setStringValue:@"Flameberry Engine"];
@@ -114,32 +114,32 @@ namespace Flameberry {
 //            [accessoryView addSubview:textField];
 //            [accessoryView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
 //
-////            NSViewController *accessoryViewController = [[NSTitlebarAccessoryViewController alloc] init];
-////            [accessoryViewController setView:accessoryView];
-////            accessoryViewController.layoutAttribute = NSLayoutAttributeTop;
+//            NSViewController *accessoryViewController = [[NSTitlebarAccessoryViewController alloc] init];
+//            [accessoryViewController setView:accessoryView];
+//            accessoryViewController.layoutAttribute = NSLayoutAttributeTop;
 //
-////            [window addTitlebarAccessoryViewController:accessoryViewController];
+//            [window addTitlebarAccessoryViewController:accessoryViewController];
 //            [window setTitlebarAppearsTransparent:YES];
 //            [window.contentView addSubview:accessoryView];
 //
 //            [window makeKeyAndOrderFront:nil];
 
             // Create a custom view for the title bar
-            NSView *titleBarView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 22)];
-            [titleBarView setWantsLayer:YES];
-            [titleBarView.layer setBackgroundColor:[[NSColor redColor] CGColor]];
-            
-            // Get the superview of the content view
-            NSView *themeFrame = [[window contentView] superview];
-            
-            // Get the first subview of the superview
-            NSView *firstSubview = [[themeFrame subviews] objectAtIndex:0];
-            
-            // Set the autoresizing mask of the custom view
-            [titleBarView setAutoresizingMask:(NSViewMinYMargin | NSViewWidthSizable)];
-            
-            // Add the custom view to the superview
-            [themeFrame addSubview:titleBarView positioned:NSWindowAbove relativeTo:firstSubview];
+//            NSView *titleBarView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 22)];
+//            [titleBarView setWantsLayer:YES];
+//            [titleBarView.layer setBackgroundColor:[[NSColor redColor] CGColor]];
+//            
+//            // Get the superview of the content view
+//            NSView *themeFrame = [[window contentView] superview];
+//            
+//            // Get the first subview of the superview
+//            NSView *firstSubview = [[themeFrame subviews] objectAtIndex:0];
+//            
+//            // Set the autoresizing mask of the custom view
+//            [titleBarView setAutoresizingMask:(NSViewMinYMargin | NSViewWidthSizable)];
+//            
+//            // Add the custom view to the superview
+//            [themeFrame addSubview:titleBarView positioned:NSWindowAbove relativeTo:firstSubview];
         }
         
         void CreateMenuBar()
