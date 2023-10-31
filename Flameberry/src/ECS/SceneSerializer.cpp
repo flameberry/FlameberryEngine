@@ -89,6 +89,8 @@ namespace Flameberry {
         };
 
         destScene->m_Name = data["Scene"].as<std::string>();
+        
+        destScene->m_Registry->clear();
 
         auto entities = data["Entities"];
         if (entities)

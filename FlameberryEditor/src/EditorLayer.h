@@ -45,6 +45,11 @@ namespace Flameberry {
         void UI_RendererSettings();
         void UI_GizmoOverlay(const ImVec2& workPos);
         void UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize);
+        void UI_ViewportSettingsOverlay(const ImVec2& workPos, const ImVec2& workSize);
+
+        // static_assert(std::is_invocable_v<Fn>);
+        template<typename Fn>
+        void UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func);
     private:
         EditorCameraController m_ActiveCameraController;
 
@@ -68,7 +73,9 @@ namespace Flameberry {
         bool m_ShouldOpenAnotherScene = false;
 
         // Texture Icons
-        std::shared_ptr<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon;
+        std::shared_ptr<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon;
+        static constexpr ImVec2 s_OverlayButtonSize = ImVec2(16, 16);
+        static constexpr float s_OverlayPadding = 6.0f;
 
         // Renderer
         std::unique_ptr<SceneRenderer> m_SceneRenderer;
@@ -92,4 +99,46 @@ namespace Flameberry {
         
         std::shared_ptr<Project> m_Project;
     };
+    
+    template<typename Fn>
+    void EditorLayer::UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func) {
+        if (m_DidViewportBegin)
+        {
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
+            | ImGuiWindowFlags_AlwaysAutoResize
+            | ImGuiWindowFlags_NoSavedSettings
+            | ImGuiWindowFlags_NoFocusOnAppearing
+            | ImGuiWindowFlags_NoNav;
+            
+            ImGui::SetNextWindowPos(position, ImGuiCond_Always);
+            window_flags |= ImGuiWindowFlags_NoMove;
+            
+            ImGui::SetNextWindowBgAlpha(0.45f); // Transparent background
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(20, 20));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 3.0f });
+            
+            // TODO: This seems to have no effect
+            ImGuiWindowClass windowClass;
+            windowClass.ViewportFlagsOverrideSet = ImGuiViewportFlags_TopMost;
+            ImGui::SetNextWindowClass(&windowClass);
+            
+            ImGui::Begin(str_id, __null, window_flags);
+            
+            m_IsAnyOverlayHovered = m_IsAnyOverlayHovered || ImGui::IsWindowHovered();
+            
+            ImGui::PopStyleVar(4);
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+            
+            func();
+            
+            ImGui::PopStyleColor(2);
+            ImGui::PopStyleVar();
+            ImGui::End();
+        }
+    }
+    
 }
