@@ -23,7 +23,7 @@ namespace Flameberry {
 
         VkResult AcquireNextImage();
         VkResult SubmitCommandBuffer(VkCommandBuffer commandBuffer);
-        void Invalidate(VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
+        void Invalidate();
 
         static VkSurfaceFormatKHR SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats);
         static VkPresentModeKHR SelectSwapPresentationMode(const std::vector<VkPresentModeKHR>& available_presentation_modes);

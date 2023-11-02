@@ -19,6 +19,7 @@ namespace Flameberry {
         virtual void SwapBuffers() = 0;
         virtual bool BeginFrame() = 0;
 
+        virtual void Resize() = 0;
         virtual void SetEventCallBack(const std::function<void(Event&)>& fn) = 0;
         virtual void Init() = 0;
         virtual void Shutdown() = 0;

@@ -182,21 +182,18 @@ namespace Flameberry {
         vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
     }
 
-    void SwapChain::Invalidate(VkSwapchainKHR oldSwapChain)
+    void SwapChain::Invalidate()
     {
         FL_INFO("Invalidating SwapChain...");
-        int width = 0, height = 0;
-        while (width == 0 || height == 0) {
-            glfwGetFramebufferSize(VulkanContext::GetCurrentWindow()->GetGLFWwindow(), &width, &height);
-            glfwWaitEvents();
-        }
-
+        
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
         const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();
 
         VulkanContext::GetCurrentDevice()->WaitIdle();
-        FL_INFO("Device is idle now...");
+        VulkanContext::GetCurrentDevice()->WaitIdleGraphicsQueue();
+        
+        vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
 
         SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(physicalDevice, m_VkSurface);
         VkSurfaceFormatKHR vk_surface_format = SelectSwapSurfaceFormat(vk_swap_chain_details.SurfaceFormats);
@@ -240,12 +237,10 @@ namespace Flameberry {
         vk_swap_chain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         vk_swap_chain_create_info.presentMode = vk_presentation_mode;
         vk_swap_chain_create_info.clipped = VK_TRUE;
-        vk_swap_chain_create_info.oldSwapchain = oldSwapChain; // TODO
+        vk_swap_chain_create_info.oldSwapchain = VK_NULL_HANDLE;
 
         VK_CHECK_RESULT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain));
         FL_INFO("Created Vulkan Swap Chain!");
-
-        vkDestroySwapchainKHR(device, oldSwapChain, nullptr);
 
         uint32_t vk_swap_chain_image_count = 0;
         vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, nullptr);

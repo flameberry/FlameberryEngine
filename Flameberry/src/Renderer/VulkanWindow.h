@@ -30,6 +30,7 @@ namespace Flameberry {
         void DestroyVulkanWindowSurface(VkInstance instance);
 
         void SetEventCallBack(const std::function<void(Event&)>& fn) override;
+        void Resize() override;
     private:
         GLFWwindow* m_Window;
         VkSurfaceKHR m_WindowSurface = VK_NULL_HANDLE;

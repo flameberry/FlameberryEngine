@@ -38,38 +38,35 @@ namespace Flameberry {
 
         bool moved = false;
         auto& cameraSpec = m_Camera->m_CameraSpec;
-        if (Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+        if (Input::IsKeyPressed(GLFW_KEY_W))
         {
-            if (Input::IsKeyPressed(GLFW_KEY_W))
-            {
-                cameraSpec.Position += cameraSpec.Direction * speed * delta;
-                moved = true;
-            }
-            if (Input::IsKeyPressed(GLFW_KEY_S))
-            {
-                cameraSpec.Position -= cameraSpec.Direction * speed * delta;
-                moved = true;
-            }
-            if (Input::IsKeyPressed(GLFW_KEY_A))
-            {
-                cameraSpec.Position -= m_RightDirection * speed * delta;
-                moved = true;
-            }
-            if (Input::IsKeyPressed(GLFW_KEY_D))
-            {
-                cameraSpec.Position += m_RightDirection * speed * delta;
-                moved = true;
-            }
-            if (Input::IsKeyPressed(GLFW_KEY_Q))
-            {
-                cameraSpec.Position -= m_UpDirection * speed * delta;
-                moved = true;
-            }
-            if (Input::IsKeyPressed(GLFW_KEY_E))
-            {
-                cameraSpec.Position += m_UpDirection * speed * delta;
-                moved = true;
-            }
+            cameraSpec.Position += cameraSpec.Direction * speed * delta;
+            moved = true;
+        }
+        if (Input::IsKeyPressed(GLFW_KEY_S))
+        {
+            cameraSpec.Position -= cameraSpec.Direction * speed * delta;
+            moved = true;
+        }
+        if (Input::IsKeyPressed(GLFW_KEY_A))
+        {
+            cameraSpec.Position -= m_RightDirection * speed * delta;
+            moved = true;
+        }
+        if (Input::IsKeyPressed(GLFW_KEY_D))
+        {
+            cameraSpec.Position += m_RightDirection * speed * delta;
+            moved = true;
+        }
+        if (Input::IsKeyPressed(GLFW_KEY_Q))
+        {
+            cameraSpec.Position -= m_UpDirection * speed * delta;
+            moved = true;
+        }
+        if (Input::IsKeyPressed(GLFW_KEY_E))
+        {
+            cameraSpec.Position += m_UpDirection * speed * delta;
+            moved = true;
         }
 
         if (rotationDelta.x != 0.0f || rotationDelta.y != 0.0f)
@@ -93,7 +90,6 @@ namespace Flameberry {
             m_RightDirection = glm::cross(m_UpDirection, -cameraSpec.Direction);
             m_Camera->Invalidate();
         }
-
         return true;
     }
 
