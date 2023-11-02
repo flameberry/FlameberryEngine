@@ -161,7 +161,9 @@ namespace Flameberry {
                         skyLightComp.Color = skyLight["Color"].as<glm::vec3>();
                         skyLightComp.Intensity = skyLight["Intensity"].as<float>();
                         skyLightComp.EnableSkyMap = skyLight["EnableSkyMap"].as<bool>();
-                        skyLightComp.SkyMap = AssetManager::TryGetOrLoadAsset<Texture2D>(skyLight["SkyMap"].as<std::string>())->Handle;
+                        
+                        std::string skymapPath = skyLight["SkyMap"].as<std::string>();
+                        skyLightComp.SkyMap = ((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Texture2D>(skyLight["SkyMap"].as<std::string>())->Handle : AssetHandle(0));
                     }
                     
                     if (auto light = entity["DirectionalLightComponent"]; light)
