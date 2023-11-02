@@ -24,12 +24,13 @@ namespace Flameberry {
     };
 
     struct SceneUniformBufferData {
-        alignas(64) glm::mat4 CascadeViewProjectionMatrices[SceneRendererSettings::CascadeCount];
+        alignas(16) glm::mat4 CascadeViewProjectionMatrices[SceneRendererSettings::CascadeCount];
         alignas(16) float CascadeDepthSplits[SceneRendererSettings::CascadeCount];
         alignas(16) glm::vec3 cameraPosition;
         alignas(16) DirectionalLight directionalLight;
         alignas(16) PointLight PointLights[10];
         alignas(4)  int LightCount = 0;
+        alignas(4)  float SkyLightIntensity = 0.0f;
         alignas(16) SceneRendererSettingsUniform RendererSettings;
     };
 
@@ -525,6 +526,16 @@ namespace Flameberry {
         m_CameraUniformBuffers[currentFrame]->WriteToBuffer(&cameraBufferData, sizeof(CameraUniformBufferObject));
         
         SceneUniformBufferData sceneUniformBufferData;
+        
+        // Keep the skylight ready
+        SkyLightComponent* skyMap = nullptr;
+        for (const auto entity : scene->m_Registry->view<TransformComponent, SkyLightComponent>())
+        {
+            skyMap = scene->m_Registry->try_get<SkyLightComponent>(entity);
+            sceneUniformBufferData.SkyLightIntensity = skyMap->Intensity;
+        }
+        
+        // Update Directional Lights
         for (const auto& entity : scene->m_Registry->view<TransformComponent, DirectionalLightComponent>())
         {
             auto [transform, dirLight] = scene->m_Registry->get<TransformComponent, DirectionalLightComponent>(entity);
@@ -607,10 +618,6 @@ namespace Flameberry {
         RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
         RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
-        SkyLightComponent* skyMap = nullptr;
-        for (const auto entity : scene->m_Registry->view<TransformComponent, SkyLightComponent>())
-            skyMap = scene->m_Registry->try_get<SkyLightComponent>(entity);
-        
         // Skybox Rendering
         if (skyMap && skyMap->EnableSkyMap && skyMap->SkyMap)
         {

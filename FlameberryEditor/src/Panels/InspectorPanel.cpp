@@ -155,7 +155,7 @@ namespace Flameberry {
                     ImGui::AlignTextToFramePadding();
                     ImGui::Text("Intensity");
                     ImGui::TableNextColumn();
-                    ImGui::DragFloat("##Intensity", &skyLightComp.Intensity, 0.1f);
+                    ImGui::DragFloat("##Intensity", &skyLightComp.Intensity, 0.01f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
                     ImGui::PopItemWidth();
                     
                     ImGui::TableNextRow();

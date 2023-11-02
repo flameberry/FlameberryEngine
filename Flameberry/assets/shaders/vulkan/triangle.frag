@@ -10,7 +10,6 @@ layout (location = 5) in mat3 v_TBNMatrix;
 layout (location = 0) out vec4 o_FragColor;
 
 #define PI 3.1415926535897932384626433832795
-#define AMBIENT 0.2f
 #define CASCADE_COUNT 4
 
 #extension GL_GOOGLE_include_directive : enable
@@ -56,6 +55,7 @@ layout (std140, set = 1, binding = 0) uniform SceneData {
     DirectionalLight u_DirectionalLight;
     PointLight u_PointLights[10];
     int u_LightCount;
+    float u_SkyLightIntensity;
     SceneRendererSettingsUniform u_SceneRendererSettings;
 };
 
@@ -353,7 +353,7 @@ vec3 PBR_TotalLight(vec3 normal)
     for (int i = 0; i < u_LightCount; i++)
         totalLight += PBR_PointLight(u_PointLights[i], normal);
     
-    const vec3 ambient = AMBIENT * GetAmbientOcclusion() * GetPixelColor();
+    const vec3 ambient = u_SkyLightIntensity * GetAmbientOcclusion() * GetPixelColor();
     return totalLight + ambient;
 }
 

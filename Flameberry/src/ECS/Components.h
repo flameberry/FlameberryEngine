@@ -46,7 +46,7 @@ namespace Flameberry {
      struct SkyLightComponent
      {
          glm::vec3 Color{ 0.0f };
-         float Intensity = 5.0f;
+         float Intensity = 0.2f;
          bool EnableSkyMap = false, EnableReflections = false;
          
          AssetHandle SkyMap = 0;
