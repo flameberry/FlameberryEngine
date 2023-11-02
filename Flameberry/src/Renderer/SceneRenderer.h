@@ -60,7 +60,7 @@ namespace Flameberry {
         std::shared_ptr<DescriptorSetLayout> m_CameraBufferDescSetLayout;
         std::vector<std::shared_ptr<DescriptorSet>> m_CameraBufferDescriptorSets;
         std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
-        std::shared_ptr<Pipeline> m_MeshPipeline, m_OutlinePipeline, m_SkyboxPipeline;
+        std::shared_ptr<Pipeline> m_MeshPipeline, m_SkyboxPipeline;
         std::vector<std::shared_ptr<DescriptorSet>> m_SceneDataDescriptorSets;
         std::shared_ptr<DescriptorSetLayout> m_SceneDescriptorSetLayout;
         VkSampler m_VkTextureSampler;

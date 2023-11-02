@@ -46,11 +46,6 @@ namespace Flameberry {
             MetallicMapEnabled = 0.0f;
     };
 
-    struct OutlinePushConstantData {
-        glm::mat4 ModelMatrix;
-        glm::vec2 ScreenSize;
-    };
-
     SceneRenderer::SceneRenderer(const glm::vec2& viewportSize)
         : m_ViewportSize(viewportSize)
     {
@@ -258,19 +253,21 @@ namespace Flameberry {
                     uniformBuffer->MapMemory(uniformBufferSize);
                 }
                 
-
                 DescriptorSetLayoutSpecification sceneDescSetLayoutSpec;
                 sceneDescSetLayoutSpec.Bindings.resize(2);
+                
+                // Scene Uniform Buffer
                 sceneDescSetLayoutSpec.Bindings[0].binding = 0;
                 sceneDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 sceneDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
                 sceneDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+                // Shadow Map
                 sceneDescSetLayoutSpec.Bindings[1].binding = 1;
                 sceneDescSetLayoutSpec.Bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 sceneDescSetLayoutSpec.Bindings[1].descriptorCount = 1;
                 sceneDescSetLayoutSpec.Bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
+                
                 m_SceneDescriptorSetLayout = DescriptorSetLayout::Create(sceneDescSetLayoutSpec);
 
                 DescriptorSetSpecification sceneDescSetSpec;
@@ -285,18 +282,14 @@ namespace Flameberry {
                     bufferInfo.range = sizeof(SceneUniformBufferData);
                     bufferInfo.offset=0;
                     bufferInfo.buffer = m_SceneUniformBuffers[i]->GetBuffer();
-
-                    m_SceneDataDescriptorSets[i]->WriteBuffer(0, bufferInfo);
                     
                     VkDescriptorImageInfo imageInfo{};
                     imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
                     imageInfo.imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView();
                     imageInfo.sampler = m_ShadowMapSampler;
                     
+                    m_SceneDataDescriptorSets[i]->WriteBuffer(0, bufferInfo);
                     m_SceneDataDescriptorSets[i]->WriteImage(1, imageInfo);
-                    
-                    FL_LOG(m_SceneUniformBuffers[i]->GetBuffer());
-
                     m_SceneDataDescriptorSets[i]->Update();
                 }
 
@@ -340,40 +333,6 @@ namespace Flameberry {
                 pipelineSpec.StencilOpState.writeMask = 1;
 
                 m_MeshPipeline = Pipeline::Create(pipelineSpec);
-            }
-
-            // Outline Resources
-            {
-                PipelineSpecification pipelineSpec{};
-                pipelineSpec.PipelineLayout.PushConstants = {
-                    { VK_SHADER_STAGE_VERTEX_BIT, sizeof(OutlinePushConstantData) }
-                };
-
-                pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_CameraBufferDescSetLayout };
-
-                pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/outline.vert.spv";
-                pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/outline.frag.spv";
-                pipelineSpec.RenderPass = m_GeometryPass;
-
-                pipelineSpec.VertexLayout = {
-                    VertexInputAttribute::VEC3F, // a_Position
-                    VertexInputAttribute::VEC3F  // a_Normal
-                };
-                pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
-                pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
-
-                pipelineSpec.DepthTestEnable = false;
-
-                pipelineSpec.StencilTestEnable = true;
-                pipelineSpec.StencilOpState.failOp = VK_STENCIL_OP_KEEP;
-                pipelineSpec.StencilOpState.depthFailOp = VK_STENCIL_OP_KEEP;
-                pipelineSpec.StencilOpState.passOp = VK_STENCIL_OP_REPLACE;
-                pipelineSpec.StencilOpState.compareOp = VK_COMPARE_OP_NOT_EQUAL;
-                pipelineSpec.StencilOpState.compareMask = 0xFF;
-                pipelineSpec.StencilOpState.reference = 1;
-                pipelineSpec.StencilOpState.writeMask = 1;
-
-                m_OutlinePipeline = Pipeline::Create(pipelineSpec);
             }
 
             // Skybox Pipeline
@@ -620,7 +579,8 @@ namespace Flameberry {
         RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
         // Skybox Rendering
-        if (skyMap && skyMap->EnableSkyMap && skyMap->SkyMap)
+        bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
+        if (shouldRenderSkyMap)
         {
             m_SkyboxPipeline->Bind();
 
@@ -654,57 +614,8 @@ namespace Flameberry {
         // Render All Scene Meshes
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
-            if (entity == selectedEntity)
-                continue;
-
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
             SubmitMesh(mesh.MeshHandle, mesh.OverridenMaterialTable, transform.GetTransform());
-        }
-
-        // Render Outlined Object
-        if (renderOutline && selectedEntity != fbentt::null)
-        {
-            auto& transform = scene->m_Registry->get<TransformComponent>(selectedEntity);
-            if (scene->m_Registry->has<MeshComponent>(selectedEntity))
-            {
-                auto& mesh = scene->m_Registry->get<MeshComponent>(selectedEntity);
-                auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-                if (staticMesh)
-                {
-                    Renderer::Submit([framebufferSize = m_ViewportSize](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                        {
-                            VkClearAttachment attachment{};
-                            attachment.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
-                            attachment.clearValue = { 1.0f, 0 };
-                            attachment.colorAttachment = 1;
-
-                            VkClearRect rect{};
-                            rect.baseArrayLayer = 0;
-                            rect.layerCount = 1;
-                            rect.rect = { {0, 0}, { (uint32_t)framebufferSize.x, (uint32_t)framebufferSize.y } };
-
-                            vkCmdClearAttachments(cmdBuffer, 1, &attachment, 1, &rect);
-                        }
-                    );
-                    // Draw outlined object normally first
-                    SubmitMesh(mesh.MeshHandle, mesh.OverridenMaterialTable, transform.GetTransform());
-
-                    // Render Mesh Outline
-                    m_OutlinePipeline->Bind();
-
-                    OutlinePushConstantData pushConstantData;
-                    pushConstantData.ModelMatrix = glm::scale(transform.GetTransform(), glm::vec3(1.05f));
-                    pushConstantData.ScreenSize = m_ViewportSize;
-
-                    Renderer::Submit([outlinePipelineLayout = m_OutlinePipeline->GetLayout(), globalDescriptorSet = m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet(), pushConstantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                        {
-                            vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
-                            vkCmdPushConstants(cmdBuffer, outlinePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(OutlinePushConstantData), &pushConstantData);
-                        }
-                    );
-                    staticMesh->OnDraw();
-                }
-            }
         }
 
         Renderer2D::BeginScene(m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet());
