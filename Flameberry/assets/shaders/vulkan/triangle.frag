@@ -35,7 +35,7 @@ layout (set = 2, binding = 4) uniform sampler2D u_MetallicMapSampler;
 struct DirectionalLight {
     vec3  Direction;
     vec3  Color;
-    float Intensity;
+    float Intensity, LightSize;
 };
 
 struct PointLight {
@@ -198,7 +198,7 @@ float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius,
 
 float PCSS_SearchWidth(float lightSize, float receiverDistance, uint cascadeIndex)
 {
-	return lightSize * (receiverDistance + u_CascadeDepthSplits[cascadeIndex] / 1000.0f) / receiverDistance;
+	return u_DirectionalLight.LightSize * (receiverDistance + u_CascadeDepthSplits[cascadeIndex] / 1000.0f) / receiverDistance;
 }
 
 vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, float interleavedNoise, float bias)
@@ -234,7 +234,7 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float in
     const float lightSize = 20.0f;
 
     float receiverDepth = shadowCoord.z;
-    float searchWidth = PCSS_SearchWidth(lightSize, receiverDepth, cascadeIndex);
+    float searchWidth = PCSS_SearchWidth(u_DirectionalLight.LightSize, receiverDepth, cascadeIndex);
     const vec2 blockerInfo = PCSS_BlockerDistance(shadowCoord.xyz, searchWidth, cascadeIndex, interleavedNoise, bias);
     
     if (blockerInfo.y == 0.0f)
@@ -247,7 +247,7 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float in
     // float softnessFallOff = 2.0f;
     // penumbraSize = 1.0 - pow(1.0 - penumbraSize, softnessFallOff);
 
-    float filterRadius = penumbraSize * lightSize;
+    float filterRadius = penumbraSize * u_DirectionalLight.LightSize;
     return FilterPCFRadial_DirectionalLight(shadowCoord, cascadeIndex, filterRadius, 16, bias, interleavedNoise);
 }
 

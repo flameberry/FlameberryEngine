@@ -171,6 +171,7 @@ namespace Flameberry {
                         auto& lightComp = destScene->m_Registry->emplace<DirectionalLightComponent>(deserializedEntity);
                         lightComp.Color = light["Color"].as<glm::vec3>();
                         lightComp.Intensity = light["Intensity"].as<float>();
+                        lightComp.LightSize = light["LightSize"].as<float>();
                     }
 
                     if (auto light = entity["PointLightComponent"]; light)
@@ -339,6 +340,7 @@ namespace Flameberry {
             out << YAML::Key << "DirectionalLightComponent" << YAML::BeginMap;
             out << YAML::Key << "Color" << YAML::Value << light.Color;
             out << YAML::Key << "Intensity" << YAML::Value << light.Intensity;
+            out << YAML::Key << "LightSize" << YAML::Value << light.LightSize;
             out << YAML::EndMap; // Directional Light Component
         }
 

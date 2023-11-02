@@ -73,9 +73,9 @@ namespace Flameberry {
     struct DirectionalLightComponent 
     {
         glm::vec3 Color;
-        float Intensity;
+        float Intensity, LightSize;
         
-        DirectionalLightComponent() : Color(1.0f), Intensity(10.0f) {}
+        DirectionalLightComponent() : Color(1.0f), Intensity(10.0f), LightSize(20.0f) {}
     };
     
     struct PointLightComponent

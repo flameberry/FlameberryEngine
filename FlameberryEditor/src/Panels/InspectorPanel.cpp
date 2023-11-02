@@ -452,6 +452,15 @@ namespace Flameberry {
                     ImGui::Text("Intensity");
                     ImGui::TableNextColumn();
                     ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f);
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    
+                    ImGui::AlignTextToFramePadding();
+                    ImGui::Text("Light Size");
+                    ImGui::TableNextColumn();
+                    ImGui::DragFloat("##LightSize", &light.LightSize, 0.1f, 0.0f, 200.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    
                     ImGui::PopItemWidth();
                     
                     ImGui::EndTable();

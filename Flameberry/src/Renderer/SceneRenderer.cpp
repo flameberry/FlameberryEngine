@@ -542,6 +542,7 @@ namespace Flameberry {
             sceneUniformBufferData.directionalLight.Color = dirLight.Color;
             sceneUniformBufferData.directionalLight.Intensity = dirLight.Intensity;
             sceneUniformBufferData.directionalLight.Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f)); // NOTE: X direction is 0.000001f to avoid shadows being not rendered when directional light perspective camera is looking directly downwards
+            sceneUniformBufferData.directionalLight.LightSize = dirLight.LightSize;
         }
 
         if (m_RendererSettings.EnableShadows)
