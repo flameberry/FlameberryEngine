@@ -345,7 +345,7 @@ namespace Flameberry {
                         m_ShouldOpenAnotherScene = true;
                         m_ScenePathToBeOpened = filePath;
                     }
-                    else if (ext == ".obj" || ext == ".fbx" || ext == ".gltf") { // TODO: Don't limit this
+                    else if (ext == ".obj" || ext == ".fbx" || ext == ".gltf" || ext == ".stl") { // TODO: Don't limit this
                         const auto& staticMesh = AssetManager::TryGetOrLoadAsset<StaticMesh>(path);
                         auto entity = m_ActiveScene->GetRegistry()->create();
                         m_ActiveScene->GetRegistry()->emplace<IDComponent>(entity);

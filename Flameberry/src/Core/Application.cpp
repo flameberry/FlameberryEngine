@@ -22,6 +22,8 @@
 #define FL_WINDOW_TITLE "Flameberry Engine [Unknown]"
 #endif
 
+#include "Scripting/ScriptEngine.h"
+
 namespace Flameberry {
     Application* Application::s_Instance;
 
@@ -45,6 +47,7 @@ namespace Flameberry {
         m_ImGuiLayer = std::make_unique<ImGuiLayer>();
 
         PhysicsEngine::Init();
+        ScriptEngine::Init();
     }
 
     void Application::Run()
@@ -112,6 +115,7 @@ namespace Flameberry {
         for (auto& layer : m_LayerStack)
             layer->OnDestroy();
 
+        ScriptEngine::Shutdown();
         PhysicsEngine::Shutdown();
         m_ImGuiLayer->OnDestroy();
 
