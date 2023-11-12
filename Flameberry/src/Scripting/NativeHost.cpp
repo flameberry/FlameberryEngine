@@ -9,17 +9,6 @@
 
 namespace Flameberry {
     
-    struct HostFXRFunctions
-    {
-        hostfxr_initialize_for_runtime_config_fn InitForRuntimeConfigFPtr;
-        hostfxr_get_runtime_delegate_fn GetRuntimeDelegateFPtr;
-        hostfxr_run_app_fn RunAppFPtr;
-        hostfxr_close_fn CloseFPtr;
-        hostfxr_set_error_writer_fn SetErrorWriterFPtr;
-    };
-    
-    HostFXRFunctions NativeHost::s_HostFXRFunctions;
-    
 #ifdef WINDOWS
     void* LoadLibrary(const char_t* path)
     {
@@ -51,52 +40,64 @@ namespace Flameberry {
     bool NativeHost::LoadHostFXR()
     {
         // Load hostfxr and get desired exports
-        void* lib = LoadLibrary("/usr/local/share/dotnet/host/fxr/7.0.0/libhostfxr.dylib");
-        s_HostFXRFunctions.InitForRuntimeConfigFPtr = (hostfxr_initialize_for_runtime_config_fn)GetExport(lib, "hostfxr_initialize_for_runtime_config");
-        s_HostFXRFunctions.GetRuntimeDelegateFPtr = (hostfxr_get_runtime_delegate_fn)GetExport(lib, "hostfxr_get_runtime_delegate");
-        s_HostFXRFunctions.CloseFPtr = (hostfxr_close_fn)GetExport(lib, "hostfxr_close");
-        s_HostFXRFunctions.SetErrorWriterFPtr = (hostfxr_set_error_writer_fn)GetExport(lib, "hostfxr_set_error_writer");
+        void* lib = LoadLibrary("/usr/local/share/dotnet/host/fxr/7.0.13/libhostfxr.dylib");
+        m_HostFXRFunctions.InitForRuntimeConfigFPtr = (hostfxr_initialize_for_runtime_config_fn)GetExport(lib, "hostfxr_initialize_for_runtime_config");
+        m_HostFXRFunctions.GetRuntimeDelegateFPtr = (hostfxr_get_runtime_delegate_fn)GetExport(lib, "hostfxr_get_runtime_delegate");
+        m_HostFXRFunctions.CloseFPtr = (hostfxr_close_fn)GetExport(lib, "hostfxr_close");
+        m_HostFXRFunctions.SetErrorWriterFPtr = (hostfxr_set_error_writer_fn)GetExport(lib, "hostfxr_set_error_writer");
         
-        return (s_HostFXRFunctions.InitForRuntimeConfigFPtr && s_HostFXRFunctions.GetRuntimeDelegateFPtr && s_HostFXRFunctions.CloseFPtr && s_HostFXRFunctions.SetErrorWriterFPtr);
+        return (m_HostFXRFunctions.InitForRuntimeConfigFPtr && m_HostFXRFunctions.GetRuntimeDelegateFPtr && m_HostFXRFunctions.CloseFPtr && m_HostFXRFunctions.SetErrorWriterFPtr);
     }
     
     void NativeHost::Init() 
     {
         FL_ASSERT(LoadHostFXR(), "Failed to load Host FXR!");
         
-        s_HostFXRFunctions.SetErrorWriterFPtr([](const char_t* InMessage) {
+        m_HostFXRFunctions.SetErrorWriterFPtr([](const char_t* InMessage) {
             FL_ERROR(InMessage);
         });
-    }
-    
-    AssemblyContext NativeHost::CreateContext(const char* runtimeConfigPath)
-    {
-        AssemblyContext context;
         
         // Load .NET Core
-        int rc = s_HostFXRFunctions.InitForRuntimeConfigFPtr(runtimeConfigPath, nullptr, &context.ContextHandle);
-        if (rc != 0 || context.ContextHandle == nullptr)
+        int rc = m_HostFXRFunctions.InitForRuntimeConfigFPtr(m_RuntimeConfigPath, nullptr, &m_AssemblyContext.ContextHandle);
+        if (rc != 0 || m_AssemblyContext.ContextHandle == nullptr)
         {
-            std::cerr << "Init failed: " << std::hex << std::showbase << rc << std::endl;
-            s_HostFXRFunctions.CloseFPtr(context.ContextHandle);
-            return context;
+            FL_ERROR("HostFXR - InitForRuntimeConfig failed: {0}", rc);
+            m_HostFXRFunctions.CloseFPtr(m_AssemblyContext.ContextHandle);
+            return m_AssemblyContext;
         }
         
         // Get the load assembly function pointer
         void* loadAssemblyAndGetFunctionPtr = nullptr;
-        rc = s_HostFXRFunctions.GetRuntimeDelegateFPtr(context.ContextHandle,
-                               hdt_load_assembly_and_get_function_pointer,
-                               &loadAssemblyAndGetFunctionPtr);
-        if (rc != 0 || loadAssemblyAndGetFunctionPtr == nullptr)
-            std::cerr << "Get delegate failed: " << std::hex << std::showbase << rc << std::endl;
+        rc = m_HostFXRFunctions.GetRuntimeDelegateFPtr(m_AssemblyContext.ContextHandle, hdt_load_assembly_and_get_function_pointer, &loadAssemblyAndGetFunctionPtr);
         
-        context.LoadAssemblyAndGetFunction = (load_assembly_and_get_function_pointer_fn)loadAssemblyAndGetFunctionPtr;
-        return context;
+        if (rc != 0 || loadAssemblyAndGetFunctionPtr == nullptr)
+            FL_ERROR("Get delegate failed: {0}", rc);
+        
+        m_AssemblyContext.LoadAssemblyAndGetFunction = (load_assembly_and_get_function_pointer_fn)loadAssemblyAndGetFunctionPtr;
+        
+        LoadCoreManagedFunctions();
+        
+        // Replace this with the actual user script project DLL path
+        m_ManagedFunctions.LoadAssembly("/Users/flameberry/Developer/Scripting/bin/Debug/net7.0/Scripting.dll");
+        // SetInternalCall("Flameberry", "Entity_AddComponent", funcPtr);
     }
     
-    void NativeHost::ShutdownContext(const AssemblyContext& context)
+    void NativeHost::LoadCoreManagedFunctions()
     {
-        s_HostFXRFunctions.CloseFPtr(context.ContextHandle);
+        m_ManagedFunctions.LoadAssembly = LoadManagedFunction<ManagedFunctions::LoadAssemblyFn>("Flameberry.Managed.AssemblyLoader, Flameberry-ScriptCore", "LoadAssembly");
+    }
+    
+    void NativeHost::SetInternalCall()
+    {
+    }
+    
+    void NativeHost::UploadInternalCalls() 
+    {
+    }
+    
+    void NativeHost::Shutdown()
+    {
+        m_HostFXRFunctions.CloseFPtr(m_AssemblyContext.ContextHandle);
     }
     
 }

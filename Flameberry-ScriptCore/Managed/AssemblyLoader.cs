@@ -1,13 +1,19 @@
 using System;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
-namespace Flameberry
+namespace Flameberry.Managed
 {
-    public static class AssemblyLoader
+    internal static class AssemblyLoader
     {
-        public static void LoadAssembly(string path)
+        [UnmanagedCallersOnly]
+        private static unsafe void LoadAssembly(IntPtr path)
         {
-            Assembly assembly = Assembly.LoadFile(path);
+            string? assemblyPath = Marshal.PtrToStringAuto(path);
+
+            Console.WriteLine($"LoadAssembly Called with Argument: {assemblyPath}");
+
+            Assembly assembly = Assembly.LoadFile(assemblyPath);
 
             Console.WriteLine($"Assembly: {assembly.FullName}");
 
