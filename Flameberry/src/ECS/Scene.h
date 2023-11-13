@@ -21,10 +21,10 @@ namespace Flameberry {
         explicit Scene(const Scene& other);
         const Scene& operator=(const Scene& other) const = delete;
 
-        void OnStartRuntime();
-        void OnStopRuntime();
+        void OnRuntimeStart();
+        void OnRuntimeStop();
 
-        void OnUpdateRuntime(float delta);
+        void OnRuntimeUpdate(float delta);
         void RenderScene(const glm::mat4& cameraMatrix);
         void OnViewportResize(const glm::vec2& viewportSize);
 
@@ -54,5 +54,6 @@ namespace Flameberry {
         friend class EnvironmentSettingsPanel;
         friend class SceneSerializer;
         friend class SceneRenderer;
+        friend class ScriptEngine;
     };
 }

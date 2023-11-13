@@ -74,17 +74,6 @@ namespace Flameberry {
             FL_ERROR("Get delegate failed: {0}", rc);
         
         m_AssemblyContext.LoadAssemblyAndGetFunction = (load_assembly_and_get_function_pointer_fn)loadAssemblyAndGetFunctionPtr;
-        
-        LoadCoreManagedFunctions();
-        
-        // Replace this with the actual user script project DLL path
-        m_ManagedFunctions.LoadAssembly("/Users/flameberry/Developer/Scripting/bin/Debug/net7.0/Scripting.dll");
-        // SetInternalCall("Flameberry", "Entity_AddComponent", funcPtr);
-    }
-    
-    void NativeHost::LoadCoreManagedFunctions()
-    {
-        m_ManagedFunctions.LoadAssembly = LoadManagedFunction<ManagedFunctions::LoadAssemblyFn>("Flameberry.Managed.AssemblyLoader, Flameberry-ScriptCore", "LoadAssembly");
     }
     
     void NativeHost::SetInternalCall()

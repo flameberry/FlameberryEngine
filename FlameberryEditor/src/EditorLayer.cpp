@@ -170,6 +170,9 @@ namespace Flameberry {
         // auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
         // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Assets/Meshes/cube.obj")->Handle;
         // m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
+        
+        // TODO: Init this when the project has been opened
+        ScriptEngine::Init();
     }
 
     void EditorLayer::OnUpdate(float delta)
@@ -205,7 +208,7 @@ namespace Flameberry {
             }
             case EditorState::Play:
             {
-                m_ActiveScene->OnUpdateRuntime(delta);
+                m_ActiveScene->OnRuntimeUpdate(delta);
 
                 // TODO: Design this better
                 const auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
@@ -293,6 +296,7 @@ namespace Flameberry {
 
     void EditorLayer::OnDestroy()
     {
+        ScriptEngine::Shutdown();
         Renderer2D::Shutdown();
     }
 
@@ -411,7 +415,7 @@ namespace Flameberry {
         UI_GizmoOverlay(workPos);
         UI_ToolbarOverlay(workPos, workSize);
         UI_ViewportSettingsOverlay(workPos, workSize);
-        
+
         UI_RendererSettings();
         // UI_CompositeView();
 
@@ -651,7 +655,7 @@ namespace Flameberry {
         ImGuiWindowClass windowClass;
         windowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
         ImGui::SetNextWindowClass(&windowClass);
-        
+
         ImGui::Begin("##Toolbar", nullptr, windowFlags);
         float buttonSize = ImGui::GetContentRegionAvail().y - 8.0f;
 
@@ -698,7 +702,7 @@ namespace Flameberry {
         ImVec2 window_pos;
         window_pos.x = workPos.x + s_OverlayPadding;
         window_pos.y = workPos.y + s_OverlayPadding;
-        
+
         UI_Overlay("##GizmoOverlay", window_pos, [=]() {
             if (ImGui::ImageButton("SelectModeButton", reinterpret_cast<ImTextureID>(m_CursorIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == -1 ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
             {
@@ -723,15 +727,15 @@ namespace Flameberry {
                 m_GizmoType = ImGuizmo::OPERATION::SCALE;
                 ImGui::SetWindowFocus("Viewport");
             }
-        });
+            });
     }
-    
+
     void EditorLayer::UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize)
     {
         ImVec2 window_pos;
         window_pos.x = workPos.x + workSize.x / 2.0f - 2 * s_OverlayButtonSize.x;
         window_pos.y = workPos.y + s_OverlayPadding;
-        
+
         UI_Overlay("##ToolbarOverlay", window_pos, [=]() {
             switch (m_EditorState)
             {
@@ -742,12 +746,12 @@ namespace Flameberry {
                     ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor);
                     break;
             }
-            
+
             if (ImGui::IsItemClicked() && m_EditorState == EditorState::Edit)
                 OnScenePlay();
-            
+
             ImGui::SameLine();
-            
+
             switch (m_EditorState)
             {
                 case EditorState::Edit:
@@ -757,30 +761,30 @@ namespace Flameberry {
                     ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1));
                     break;
             }
-            
+
             if (ImGui::IsItemClicked() && m_EditorState == EditorState::Play)
                 OnSceneEdit();
-        });
+            });
     }
-    
+
     void EditorLayer::UI_ViewportSettingsOverlay(const ImVec2& workPos, const ImVec2& workSize)
     {
         ImVec2 window_pos;
         window_pos.x = workPos.x + workSize.x - 1.5f * s_OverlayPadding - 2 * s_OverlayButtonSize.x;
         window_pos.y = workPos.y + s_OverlayPadding;
-        
+
         UI_Overlay("##ViewportSettingsOverlay", window_pos, [=]() {
             ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
-            
+
             if (ImGui::IsItemClicked())
                 ImGui::OpenPopup("##ViewportSettingsPopup");
-            
+
             if (ImGui::BeginPopup("##ViewportSettingsPopup"))
             {
                 ImGui::Checkbox("Display Grid", &m_EnableGrid);
                 ImGui::EndPopup();
             }
-        });
+            });
     }
 
     void EditorLayer::UI_CompositeView()
@@ -867,7 +871,7 @@ namespace Flameberry {
     {
         m_EditorState = EditorState::Edit;
 
-        m_ActiveScene->OnStopRuntime();
+        m_ActiveScene->OnRuntimeStop();
 
         // Delete the m_RuntimeScene
         std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
@@ -884,7 +888,7 @@ namespace Flameberry {
         m_ActiveScene = Scene::Create(m_ActiveSceneBackUpCopy);
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 
-        m_ActiveScene->OnStartRuntime();
+        m_ActiveScene->OnRuntimeStart();
     }
-    
+
 }

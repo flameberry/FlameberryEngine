@@ -119,6 +119,11 @@ namespace Flameberry {
         }
     };
 
+    struct ScriptComponent
+    {
+        std::string FullyQualifiedClassName = "SandboxProject.Player";
+    };
+
     struct RigidBodyComponent
     {
         enum class RigidBodyType : uint8_t { Static = 0, Dynamic };

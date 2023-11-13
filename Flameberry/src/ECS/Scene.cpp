@@ -1,11 +1,14 @@
 #include "Scene.h"
 
+#include <PxPhysicsAPI.h>
+
 #include "Core/Timer.h"
 #include "Core/Profiler.h"
 #include "Components.h"
 
 #include "Physics/PhysicsEngine.h"
-#include "PxPhysicsAPI.h"
+
+#include "Scripting/ScriptEngine.h"
 
 namespace Flameberry {
     Scene::Scene()
@@ -29,7 +32,7 @@ namespace Flameberry {
         FL_LOG("Deleting Scene...");
     }
 
-    void Scene::OnStartRuntime()
+    void Scene::OnRuntimeStart()
     {
         // Update Cameras
         for (auto entity : m_Registry->view<CameraComponent>())
@@ -38,7 +41,7 @@ namespace Flameberry {
             cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
         }
 
-        // Create Script Actors
+        // Native Scripting
         for (auto entity : m_Registry->view<NativeScriptComponent>())
         {
             auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
@@ -48,6 +51,9 @@ namespace Flameberry {
 
             nsc.Actor->OnInstanceCreated();
         }
+        
+        // CSharp Scripting
+        ScriptEngine::OnRuntimeStart(this);
 
         // Create Physics Context
         physx::PxSceneDesc sceneDesc(PhysicsEngine::GetTolerancesScale());
@@ -144,7 +150,7 @@ namespace Flameberry {
         }
     }
 
-    void Scene::OnStopRuntime()
+    void Scene::OnRuntimeStop()
     {
         m_PxScene->release();
 
@@ -155,9 +161,11 @@ namespace Flameberry {
             nsc.Actor->OnInstanceDeleted();
             nsc.DestroyScript(&nsc);
         }
+        
+        ScriptEngine::OnRuntimeStop();
     }
 
-    void Scene::OnUpdateRuntime(float delta)
+    void Scene::OnRuntimeUpdate(float delta)
     {
         FL_PROFILE_SCOPE("Scene::OnUpdateRuntime");
 
@@ -167,6 +175,9 @@ namespace Flameberry {
             auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
             nsc.Actor->OnUpdate(delta);
         }
+        
+        // Update CSharp Scripts
+        ScriptEngine::OnRuntimeUpdate(delta);
 
         // Update Physics
         m_PxScene->simulate(delta);

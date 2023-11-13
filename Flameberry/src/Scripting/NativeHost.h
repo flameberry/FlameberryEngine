@@ -24,13 +24,6 @@ namespace Flameberry {
         load_assembly_and_get_function_pointer_fn LoadAssemblyAndGetFunction = nullptr;
     };
     
-    struct ManagedFunctions
-    {
-        using LoadAssemblyFn = void (*)(const char_t*);
-        
-        LoadAssemblyFn LoadAssembly;
-    };
-    
     struct InternalCall
     {
         void* CallPtr = nullptr;
@@ -49,14 +42,12 @@ namespace Flameberry {
         template<typename FuncType>
         FuncType LoadManagedFunction(const char_t* dotnetType, const char_t* methodName, const char_t* delegateTypeName = UNMANAGEDCALLERSONLY_METHOD);
     private:
-        void LoadCoreManagedFunctions();
         bool LoadHostFXR();
     private:
         const char_t* m_CoreAssemblyPath = FL_PROJECT_DIR"Flameberry-ScriptCore/bin/Debug/net7.0/Flameberry-ScriptCore.dll";
         const char_t* m_RuntimeConfigPath = FL_PROJECT_DIR"Flameberry-ScriptCore/bin/Debug/net7.0/Flameberry-ScriptCore.runtimeconfig.json";
         
         HostFXRFunctions m_HostFXRFunctions;
-        ManagedFunctions m_ManagedFunctions;
         AssemblyContext m_AssemblyContext;
         
         std::vector<InternalCall> m_InternalCalls;

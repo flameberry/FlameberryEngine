@@ -56,6 +56,8 @@ namespace Flameberry {
                     m_Context->m_Registry->emplace<MeshComponent>(m_SelectionContext);
                 if (ImGui::MenuItem("Light Component"))
                     m_Context->m_Registry->emplace<PointLightComponent>(m_SelectionContext);
+                if (ImGui::MenuItem("Script Component"))
+                    m_Context->m_Registry->emplace<ScriptComponent>(m_SelectionContext);
                 if (ImGui::MenuItem("RigidBody Component"))
                     m_Context->m_Registry->emplace<RigidBodyComponent>(m_SelectionContext);
                 if (ImGui::MenuItem("Box Colllider Component"))
