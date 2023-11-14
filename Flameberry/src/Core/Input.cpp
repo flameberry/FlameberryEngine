@@ -2,10 +2,10 @@
 #include "Core/Application.h"
 
 namespace Flameberry {
-    bool Input::IsKeyPressed(uint16_t key)
+    bool Input::IsKeyPressed(KeyCode key)
     {
         GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
-        return glfwGetKey(window, key) == GLFW_PRESS;
+        return glfwGetKey(window, (uint16_t)key) == GLFW_PRESS;
     }
 
     bool Input::IsMouseButtonPressed(uint16_t button)

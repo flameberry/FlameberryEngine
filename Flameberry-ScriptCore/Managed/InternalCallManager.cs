@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -16,10 +15,14 @@ namespace Flameberry.Managed
 
     internal static class InternalCallStorage
 	{
-        internal static unsafe delegate*<IntPtr, byte, void> LogMessageICall;
+        internal static unsafe delegate*<IntPtr, byte, void> LogMessage;
 
-        internal static unsafe delegate*<ulong, Vector3> Entity_GetTransformICall;
-        //internal static unsafe delegate*<ulong, IntPtr, bool> Entity_HasComponent;
+        internal static unsafe delegate*<ushort, bool> Input_IsKeyDown;
+
+        internal static unsafe delegate*<ulong, int, bool> Entity_HasComponent;
+
+        internal static unsafe delegate*<ulong, Vector3> TransformComponent_GetTranslation;
+        internal static unsafe delegate*<ulong, Vector3*, void> TransformComponent_SetTranslation;
     }
 
     public static class Log
@@ -29,7 +32,7 @@ namespace Flameberry.Managed
         public static void LogMessage(string message, LogLevel logLevel)
         {
             IntPtr stringPtr = Marshal.StringToCoTaskMemAuto(message);
-            unsafe { InternalCallStorage.LogMessageICall(stringPtr, (byte)logLevel); };
+            unsafe { InternalCallStorage.LogMessage(stringPtr, (byte)logLevel); };
             Marshal.FreeCoTaskMem(stringPtr);
         }
     }

@@ -42,7 +42,7 @@ namespace Flameberry.Managed
 				actor!.ID = ID;
                 s_ManagedActors[ID] = actor!;
 
-                Log.LogMessage($"Creating Actor with EntityID: {ID}", Log.LogLevel.INFO);
+                Log.LogMessage($"Creating Actor with EntityID: {s_ManagedActors[ID].ID}", Log.LogLevel.INFO);
             }
 			else
 			{

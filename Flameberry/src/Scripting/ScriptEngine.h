@@ -6,6 +6,7 @@ namespace Flameberry {
     
     struct ManagedFunctions;
     class Scene;
+    struct ScriptEngineData;
     
     class ScriptEngine
     {
@@ -16,14 +17,16 @@ namespace Flameberry {
         static void OnRuntimeStart(Scene* context);
         static void OnRuntimeUpdate(float delta);
         static void OnRuntimeStop();
+        
+        static Scene* GetSceneContext();
     private:
         static void RegisterComponents();
         static void LoadCoreManagedFunctions();
     private:
-        static NativeHost s_NativeHost;
-        static ManagedFunctions s_ManagedFunctions;
-        static Scene* s_SceneContext;
-//        static std::unordered_map<int, std::function<void>> s_Map;
+        static ScriptEngineData* s_Data;
+        
+        template<typename Component>
+        friend void RegisterComponent(const char_t*);
     };
     
 }

@@ -8,6 +8,7 @@
 #include <dotnet/coreclr_delegates.h>
 
 #include "Core/Core.h"
+#include "Core/Input.h"
 
 #include "ECS/Scene.h"
 #include "ECS/Components.h"
@@ -28,9 +29,7 @@ namespace Flameberry {
         using InvokeOnCreateMethodOfActorWithIDFn = void (*)(uint64_t);
         using InvokeOnUpdateMethodOfActorWithIDFn = void (*)(uint64_t, float);
         
-        using GetComponentCountFn = int (*)();
-        using GetComponentHashesFn = void* (*)();
-        using FreeComponentStorageMemoryFn = void (*)();
+        using GetComponentHashCodeFn = int (*)(const char_t*);
         
         LoadAssemblyFn LoadAppAssembly;
         PrintAssemblyInfoFn PrintAssemblyInfo;
@@ -39,14 +38,23 @@ namespace Flameberry {
         DestroyAllActorsFn DestroyAllActors;
         InvokeOnCreateMethodOfActorWithIDFn InvokeOnCreateMethodOfActorWithID;
         InvokeOnUpdateMethodOfActorWithIDFn InvokeOnUpdateMethodOfActorWithID;
-        
-        GetComponentCountFn GetComponentCount;
-        GetComponentHashesFn GetComponentHashes;
-        FreeComponentStorageMemoryFn FreeComponentStorageMemory;
+
+        GetComponentHashCodeFn GetComponentHashCode;
     };
     
+    struct ScriptEngineData
+    {
+        NativeHost NativeHost;
+        ManagedFunctions ManagedFunctions;
+        Scene* SceneContext = nullptr;
+    };
+    
+    ScriptEngineData* ScriptEngine::s_Data = nullptr;
+    static std::unordered_map<int, std::function<bool(fbentt::entity)>> g_EntityHasComponentFunctionMap;
+    
     namespace InternalCalls {
-        void LogMessageICall(const char_t* message, uint8_t logLevel)
+        
+        void LogMessage(const char_t* message, uint8_t logLevel)
         {
             switch (flamelogger::LogLevel(logLevel))
             {
@@ -60,114 +68,146 @@ namespace Flameberry {
             }
         }
         
-        glm::vec3 Entity_GetTransformICall(fbentt::entity entity)
+        bool Input_IsKeyDown(uint16_t keyCode)
         {
-            FL_LOG("Called Entity_GetTransform with ID: {0}", entity);
+            return Input::IsKeyPressed((KeyCode)keyCode);
         }
+        
+        bool Entity_HasComponent(uint64_t entity, int hashcode)
+        {
+            FL_BASIC_ASSERT(g_EntityHasComponentFunctionMap.find(hashcode) != g_EntityHasComponentFunctionMap.end());
+            return g_EntityHasComponentFunctionMap.at(hashcode)(entity);
+        }
+        
+        glm::vec3 TransformComponent_GetTranslation(uint64_t entity)
+        {
+            Scene* context = ScriptEngine::GetSceneContext();
+            auto& transform = context->GetRegistry()->get<TransformComponent>(entity);
+            return transform.Translation;
+        }
+        
+        void TransformComponent_SetTranslation(uint64_t entity, glm::vec3* translation)
+        {
+            Scene* context = ScriptEngine::GetSceneContext();
+            context->GetRegistry()->get<TransformComponent>(entity).Translation = *translation;
+        }
+        
     }
-
-    NativeHost ScriptEngine::s_NativeHost;
-    ManagedFunctions ScriptEngine::s_ManagedFunctions;
-    Scene* ScriptEngine::s_SceneContext = nullptr;
     
-    struct ComponentInfo
-    {
-        const char_t* Name;
-        int HashCode;
-    };
+    Scene* ScriptEngine::GetSceneContext() { return s_Data->SceneContext; }
     
     void ScriptEngine::Init()
     {
-        s_NativeHost.Init();
+        s_Data = new ScriptEngineData();
+        
+        s_Data->NativeHost.Init();
         
         LoadCoreManagedFunctions();
         RegisterComponents();
         
-        s_ManagedFunctions.LoadAppAssembly("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/bin/Debug/net7.0/SandboxProject.dll");
-        s_ManagedFunctions.PrintAssemblyInfo();
+        s_Data->ManagedFunctions.LoadAppAssembly("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/bin/Debug/net7.0/SandboxProject.dll");
+        s_Data->ManagedFunctions.PrintAssemblyInfo();
         
-        s_NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "LogMessageICall", reinterpret_cast<void*>(&InternalCalls::LogMessageICall));
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "LogMessage", reinterpret_cast<void*>(&InternalCalls::LogMessage));
         
-        s_NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "Entity_GetTransformICall", reinterpret_cast<void*>(&InternalCalls::Entity_GetTransformICall));
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "Entity_HasComponent", reinterpret_cast<void*>(&InternalCalls::Entity_HasComponent));
         
-        s_NativeHost.UploadInternalCalls();
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "Input_IsKeyDown", reinterpret_cast<void*>(&InternalCalls::Input_IsKeyDown));
         
-        s_ManagedFunctions.CreateActorWithEntityID(1212121212, "SandboxProject.Player");
-        s_ManagedFunctions.InvokeOnCreateMethodOfActorWithID(1212121212);
-        s_ManagedFunctions.InvokeOnUpdateMethodOfActorWithID(1212121212, 4.5f);
-        s_ManagedFunctions.DestroyAllActors();
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_GetTranslation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_GetTranslation));        
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetTranslation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetTranslation));
+        
+        s_Data->NativeHost.UploadInternalCalls();
+        
+//        s_Data->ManagedFunctions.CreateActorWithEntityID(1212121212, "SandboxProject.Player");
+//        s_Data->ManagedFunctions.InvokeOnCreateMethodOfActorWithID(1212121212);
+//        s_Data->ManagedFunctions.InvokeOnUpdateMethodOfActorWithID(1212121212, 4.5f);
+//        s_Data->ManagedFunctions.DestroyAllActors();
     }
     
     void ScriptEngine::LoadCoreManagedFunctions()
     {
-        s_ManagedFunctions.LoadAppAssembly = s_NativeHost.LoadManagedFunction<ManagedFunctions::LoadAssemblyFn>("Flameberry.Managed.AppAssemblyManager, Flameberry-ScriptCore", "LoadAppAssembly");
+        s_Data->ManagedFunctions.LoadAppAssembly = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::LoadAssemblyFn>("Flameberry.Managed.AppAssemblyManager, Flameberry-ScriptCore", "LoadAppAssembly");
         
-        s_ManagedFunctions.PrintAssemblyInfo = s_NativeHost.LoadManagedFunction<ManagedFunctions::PrintAssemblyInfoFn>("Flameberry.Managed.AppAssemblyManager, Flameberry-ScriptCore", "PrintAssemblyInfo");
+        s_Data->ManagedFunctions.PrintAssemblyInfo = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::PrintAssemblyInfoFn>("Flameberry.Managed.AppAssemblyManager, Flameberry-ScriptCore", "PrintAssemblyInfo");
         
-        s_ManagedFunctions.CreateActorWithEntityID = s_NativeHost.LoadManagedFunction<ManagedFunctions::CreateActorWithEntityIDFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "CreateActorWithEntityID");
+        s_Data->ManagedFunctions.CreateActorWithEntityID = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::CreateActorWithEntityIDFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "CreateActorWithEntityID");
 
-        s_ManagedFunctions.DestroyAllActors = s_NativeHost.LoadManagedFunction<ManagedFunctions::DestroyAllActorsFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "DestroyAllActors");
+        s_Data->ManagedFunctions.DestroyAllActors = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::DestroyAllActorsFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "DestroyAllActors");
         
-        s_ManagedFunctions.InvokeOnCreateMethodOfActorWithID = s_NativeHost.LoadManagedFunction<ManagedFunctions::InvokeOnCreateMethodOfActorWithIDFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "InvokeOnCreateMethodOfActorWithID");
+        s_Data->ManagedFunctions.InvokeOnCreateMethodOfActorWithID = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::InvokeOnCreateMethodOfActorWithIDFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "InvokeOnCreateMethodOfActorWithID");
 
-        s_ManagedFunctions.InvokeOnUpdateMethodOfActorWithID = s_NativeHost.LoadManagedFunction<ManagedFunctions::InvokeOnUpdateMethodOfActorWithIDFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "InvokeOnUpdateMethodOfActorWithID");
+        s_Data->ManagedFunctions.InvokeOnUpdateMethodOfActorWithID = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::InvokeOnUpdateMethodOfActorWithIDFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "InvokeOnUpdateMethodOfActorWithID");
         
-        s_ManagedFunctions.GetComponentCount = s_NativeHost.LoadManagedFunction<ManagedFunctions::GetComponentCountFn>("Flameberry.Runtime.ComponentManager, Flameberry-ScriptCore", "GetComponentCount");
-        
-        s_ManagedFunctions.GetComponentHashes = s_NativeHost.LoadManagedFunction<ManagedFunctions::GetComponentHashesFn>("Flameberry.Runtime.ComponentManager, Flameberry-ScriptCore", "GetComponentHashes");
-        
-        s_ManagedFunctions.FreeComponentStorageMemory = s_NativeHost.LoadManagedFunction<ManagedFunctions::FreeComponentStorageMemoryFn>("Flameberry.Runtime.ComponentManager, Flameberry-ScriptCore", "FreeComponentStorageMemory");
+        s_Data->ManagedFunctions.GetComponentHashCode = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::GetComponentHashCodeFn>("Flameberry.Runtime.ComponentManager, Flameberry-ScriptCore", "GetComponentHashCode");
+    }
+    
+    template<typename Component>
+    void RegisterComponent(const char_t* assemblyQualifiedClassName)
+    {
+        int hashcode = ScriptEngine::s_Data->ManagedFunctions.GetComponentHashCode(assemblyQualifiedClassName);\
+        if (hashcode == -1)
+        {
+            FL_ERROR("Failed to find component type: {0}", assemblyQualifiedClassName);
+            FL_DEBUGBREAK();
+            return;
+        }
+        g_EntityHasComponentFunctionMap[hashcode] = [](fbentt::entity entity) { return ScriptEngine::s_Data->SceneContext->GetRegistry()->has<Component>(entity); };
     }
     
     void ScriptEngine::RegisterComponents()
     {
-        int count = s_ManagedFunctions.GetComponentCount();
-        ComponentInfo* ptr = (ComponentInfo*)s_ManagedFunctions.GetComponentHashes();
-        
-        for (int i = 0; i < count; i++)
-        {
-            FL_LOG(FL_TYPE_AS_STRING(TransformComponent));
-            FL_LOG("HOST: HashCode of {0} is {1}", ptr->Name, ptr->HashCode);
-            ptr++;
-        }
-        s_ManagedFunctions.FreeComponentStorageMemory();
+        RegisterComponent<TransformComponent>("Flameberry.Runtime.TransformComponent");
+        RegisterComponent<CameraComponent>("Flameberry.Runtime.CameraComponent");
+        RegisterComponent<SkyLightComponent>("Flameberry.Runtime.SkyLightComponent");
+        RegisterComponent<MeshComponent>("Flameberry.Runtime.MeshComponent");
+        RegisterComponent<DirectionalLightComponent>("Flameberry.Runtime.DirectionalLightComponent");
+        RegisterComponent<PointLightComponent>("Flameberry.Runtime.PointLightComponent");
+        RegisterComponent<NativeScriptComponent>("Flameberry.Runtime.NativeScriptComponent");
+        RegisterComponent<ScriptComponent>("Flameberry.Runtime.ScriptComponent");
+        RegisterComponent<RigidBodyComponent>("Flameberry.Runtime.RigidBodyComponent");
+        RegisterComponent<BoxColliderComponent>("Flameberry.Runtime.BoxColliderComponent");
+        RegisterComponent<SphereColliderComponent>("Flameberry.Runtime.SphereColliderComponent");
+        RegisterComponent<CapsuleColliderComponent>("Flameberry.Runtime.CapsuleColliderComponent");
     }
 
     void ScriptEngine::Shutdown()
     {
-        s_NativeHost.Shutdown();
+        s_Data->NativeHost.Shutdown();
+        delete s_Data;
     }
 
     void ScriptEngine::OnRuntimeStart(Scene* context)
     {
-        s_SceneContext = context;
+        s_Data->SceneContext = context;
         
         // Call OnCreate of all instances of Actor
-        for (const auto& entity : s_SceneContext->m_Registry->view<ScriptComponent>())
+        for (const auto& entity : s_Data->SceneContext->m_Registry->view<ScriptComponent>())
         {
-            auto& sc = s_SceneContext->m_Registry->get<ScriptComponent>(entity);
-            s_ManagedFunctions.CreateActorWithEntityID(entity, sc.FullyQualifiedClassName.c_str());
-            s_ManagedFunctions.InvokeOnCreateMethodOfActorWithID(entity); // TODO: Observe if every time the CreateActorWithEntityID function is called, InvokeOnCreateMethodOfActorWithID is also called, if yes then include the Invokation of `OnCreate()` function inside the csharp side itself
+            auto& sc = s_Data->SceneContext->m_Registry->get<ScriptComponent>(entity);
+            s_Data->ManagedFunctions.CreateActorWithEntityID(entity, sc.FullyQualifiedClassName.c_str());
+            s_Data->ManagedFunctions.InvokeOnCreateMethodOfActorWithID(entity); // TODO: Observe if every time the CreateActorWithEntityID function is called, InvokeOnCreateMethodOfActorWithID is also called, if yes then include the Invokation of `OnCreate()` function inside the csharp side itself
         }
     }
 
     void ScriptEngine::OnRuntimeUpdate(float delta) 
     {
         // Call OnUpdate of all instances of Actor
-        for (const auto& entity : s_SceneContext->m_Registry->view<ScriptComponent>())
+        for (const auto& entity : s_Data->SceneContext->m_Registry->view<ScriptComponent>())
         {
-            auto& sc = s_SceneContext->m_Registry->get<ScriptComponent>(entity);
-            s_ManagedFunctions.InvokeOnUpdateMethodOfActorWithID(entity, delta);
+            auto& sc = s_Data->SceneContext->m_Registry->get<ScriptComponent>(entity);
+            s_Data->ManagedFunctions.InvokeOnUpdateMethodOfActorWithID(entity, delta);
         }
     }
     
     void ScriptEngine::OnRuntimeStop()
     {
         // Call OnDestroy of all instances of Actor
-        s_ManagedFunctions.DestroyAllActors();
+        s_Data->ManagedFunctions.DestroyAllActors();
         
         // Destroy all instances of Actors
-        s_SceneContext = nullptr;
+        s_Data->SceneContext = nullptr;
     }
     
 }

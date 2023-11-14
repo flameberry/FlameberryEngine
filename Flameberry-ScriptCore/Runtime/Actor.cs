@@ -18,21 +18,21 @@ namespace Flameberry.Runtime
         public virtual void OnCreate() { }
         public virtual void OnUpdate(float delta) { }
 
-        //public bool HasComponent<T>() where T : Component, new()
-        //{
-        //    unsafe
-        //    {
-        //        bool hasComponent = InternalCallStorage.Entity_HasComponent(ID, typeof(T).GetHashCode());
-        //        return hasComponent;
-        //    }
-        //}
+        public bool HasComponent<T>() where T : Component, new()
+        {
+            unsafe
+            {
+                bool hasComponent = InternalCallStorage.Entity_HasComponent(ID, typeof(T).GetHashCode());
+                return hasComponent;
+            }
+        }
 
-        //public T? GetComponent<T>() where T: Component, new ()
-        //{
-        //    if (!HasComponent<T>())
-        //        return null;
-        //    return new T() { Actor = this };
-        //}
+        public T? GetComponent<T>() where T : Component, new()
+        {
+            if (!HasComponent<T>())
+                return null;
+            return new T() { Actor = this };
+        }
     }
 }
 

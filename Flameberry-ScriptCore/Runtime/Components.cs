@@ -1,6 +1,6 @@
-﻿using System;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Flameberry.Managed;
 
 namespace Flameberry.Runtime
 {
@@ -19,82 +19,46 @@ namespace Flameberry.Runtime
 
     internal static class ComponentManager
     {
-        private static List<IntPtr> s_ComponentNameStorage = new();
-        private static IntPtr s_ComponentInfoStoragePtr;
-
-        private static Type[] s_ComponentTypes = {
-            typeof(TransformComponent),
-            typeof(CameraComponent),
-            typeof(SkyLightComponent),
-            typeof(MeshComponent),
-            typeof(DirectionalLightComponent),
-            typeof(PointLightComponent),
-            typeof(NativeScriptComponent),
-            typeof(ScriptComponent),
-            typeof(RigidBodyComponent),
-            typeof(BoxColliderComponent),
-            typeof(SphereColliderComponent),
-            typeof(CapsuleColliderComponent)
-        };
-
         [UnmanagedCallersOnly]
-        internal static int GetComponentCount()
+        internal static int GetComponentHashCode(IntPtr assemblyQualifiedName)
         {
-            return s_ComponentTypes.Length;
-        }
-
-        [UnmanagedCallersOnly]
-        internal static IntPtr GetComponentHashes()
-        {
-            s_ComponentInfoStoragePtr = Marshal.AllocHGlobal(Marshal.SizeOf<ComponentInfo>() * s_ComponentTypes.Length);
-
-            try
+            string? assemblyQualifiedNameStr = Marshal.PtrToStringAuto(assemblyQualifiedName);
+            if (assemblyQualifiedNameStr == null)
             {
-                // Copy the array to unmanaged memory
-                for (int i = 0; i < s_ComponentTypes.Length; i++)
-                {
-                    s_ComponentNameStorage.Add(Marshal.StringToCoTaskMemAuto(s_ComponentTypes[i].ToString()));
-                    ComponentInfo component = new(s_ComponentNameStorage[i], s_ComponentTypes[i].GetHashCode());
-
-                    Console.WriteLine($"CSharp: HashCode of {s_ComponentTypes[i]} is {s_ComponentTypes[i].GetHashCode()}");
-
-                    IntPtr elementPtr = IntPtr.Add(s_ComponentInfoStoragePtr, i * Marshal.SizeOf<ComponentInfo>());
-                    Marshal.StructureToPtr(component, elementPtr, false);
-                }
-                return s_ComponentInfoStoragePtr;
+                Console.WriteLine("ERROR: Failed to GetComponentHashCode: Assembly Qualified Name is null!");
+                return -1;
             }
-            catch
+
+            Type? componentType = Type.GetType(assemblyQualifiedNameStr);
+
+            if (componentType == null)
             {
-                // Free allocated memory in case of an exception
-                foreach (IntPtr namePtr in s_ComponentNameStorage)
-                {
-                    Marshal.FreeCoTaskMem(namePtr);
-                }
-                s_ComponentNameStorage.Clear();
-                Marshal.FreeHGlobal(s_ComponentInfoStoragePtr);
-                throw;
+                Console.WriteLine($"ERROR: Failed to GetComponentHashCode: Could not find Component Type with name: {assemblyQualifiedNameStr}!");
+                return -1;
             }
-        }
-
-        [UnmanagedCallersOnly]
-        internal static void FreeComponentStorageMemory()
-        {
-            foreach (IntPtr namePtr in s_ComponentNameStorage)
-            {
-                Marshal.FreeCoTaskMem(namePtr);
-            }
-            s_ComponentNameStorage.Clear();
-            Marshal.FreeHGlobal(s_ComponentInfoStoragePtr);
+            return componentType.GetHashCode();
         }
     }
 
     public abstract class Component
     {
-        internal Actor Actor;
+        public Actor Actor { get; internal set; }
     }
 
     public class TransformComponent : Component
     {
+        public Vector3 Translation
+        {
+            get
+            {
+                unsafe { return InternalCallStorage.TransformComponent_GetTranslation(Actor.ID); }
+            }
+            set
+            {
+                unsafe { InternalCallStorage.TransformComponent_SetTranslation(Actor.ID, (Vector3*)&value); }
+            }
+        }
+
     }
 
     public class CameraComponent : Component

@@ -30,7 +30,7 @@ namespace Flameberry {
         
         static constexpr ImGuiPopupFlags m_PopupFlags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
 
-        float m_FirstChildSize = 150.0f, m_SecondChildSize = 0.0f;
+        float m_FirstChildSize = 165.0f, m_SecondChildSize = 0.0f;
         bool m_IsSearchBoxFocused = false;
         char m_SearchInputBuffer[256] = { '\0' };
     };

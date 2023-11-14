@@ -19,13 +19,13 @@ namespace Flameberry {
 
             float speed = 10.0f;
 
-            if (Input::IsKeyPressed(GLFW_KEY_W))
+            if (Input::IsKeyPressed(KeyCode::W))
                 transform.Translation.z -= speed * delta;
-            if (Input::IsKeyPressed(GLFW_KEY_S))
+            if (Input::IsKeyPressed(KeyCode::S))
                 transform.Translation.z += speed * delta;
-            if (Input::IsKeyPressed(GLFW_KEY_A))
+            if (Input::IsKeyPressed(KeyCode::A))
                 transform.Translation.x -= speed * delta;
-            if (Input::IsKeyPressed(GLFW_KEY_D))
+            if (Input::IsKeyPressed(KeyCode::D))
                 transform.Translation.x += speed * delta;
         }
     };
@@ -162,15 +162,6 @@ namespace Flameberry {
             );
         }
 
-        // Test
-        // auto cubeEntity = m_ActiveScene->GetRegistry()->create();
-        // m_ActiveScene->GetRegistry()->emplace<IDComponent>(cubeEntity);
-        // m_ActiveScene->GetRegistry()->emplace<TagComponent>(cubeEntity).Tag = "PaidActor";
-        // m_ActiveScene->GetRegistry()->emplace<TransformComponent>(cubeEntity);
-        // auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
-        // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Assets/Meshes/cube.obj")->Handle;
-        // m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
-        
         // TODO: Init this when the project has been opened
         ScriptEngine::Init();
     }
@@ -383,7 +374,7 @@ namespace Flameberry {
             auto& transformComp = m_ActiveScene->GetRegistry()->get<TransformComponent>(selectedEntity);
             glm::mat4 transform = transformComp.GetTransform();
 
-            bool snap = Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
+            bool snap = Input::IsKeyPressed(KeyCode::LeftControl);
             float snapValue = 0.5f;
             if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
                 snapValue = 45.0f;
@@ -478,8 +469,8 @@ namespace Flameberry {
 
     void EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
     {
-        bool ctrl_or_cmd = Input::IsKeyPressed(GLFW_KEY_LEFT_SUPER) || Input::IsKeyPressed(GLFW_KEY_RIGHT_SUPER);
-        bool shift = Input::IsKeyPressed(GLFW_KEY_LEFT_SHIFT) || Input::IsKeyPressed(GLFW_KEY_RIGHT_SHIFT);
+        bool ctrl_or_cmd = Input::IsKeyPressed(KeyCode::LeftSuper) || Input::IsKeyPressed(KeyCode::RightSuper);
+        bool shift = Input::IsKeyPressed(KeyCode::LeftShift) || Input::IsKeyPressed(KeyCode::RightShift);
         switch (e.KeyCode)
         {
             case GLFW_KEY_D:
