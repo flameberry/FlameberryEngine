@@ -26,8 +26,6 @@ namespace Flameberry.Managed
 				return;
 			}
 
-			Console.WriteLine($"INFO: Called CreateActorWithEntityID with Arguments: {ID}, {classNameStr}");
-
 			Type? type = AppAssemblyManager.FindType(classNameStr);
 
 			if (type == null)
@@ -39,9 +37,13 @@ namespace Flameberry.Managed
 			// Check if `type` is subclass of `Actor`
 			if (IsSubclassOf(type, typeof(Actor)))
 			{
-				object? instance = Activator.CreateInstance(type);
-				s_ManagedActors[ID] = (Actor)instance!;
-			}
+				object? instance = Activator.CreateInstance(type); // TODO: This doesn't set the ID which will cause trouble down the line
+				Actor? actor = (Actor?)instance;
+				actor!.ID = ID;
+                s_ManagedActors[ID] = actor!;
+
+                Log.LogMessage($"Creating Actor with EntityID: {ID}", Log.LogLevel.INFO);
+            }
 			else
 			{
 				Console.WriteLine($"ERROR: the following type: {type.FullName}, has a BaseType of {type.BaseType.FullName} is not a subclass of Actor!");

@@ -1,6 +1,7 @@
 #include "NativeHost.h"
 
 #include <dlfcn.h>
+#include <cstring>
 
 #include <dotnet/hostfxr.h>
 #include <dotnet/coreclr_delegates.h>
@@ -36,6 +37,14 @@ namespace Flameberry {
         return f;
     }
 #endif
+    
+    struct CoreManagedFunctions
+    {
+        using SetInternalCallsFn = void (*)(const void*, int);
+        
+        SetInternalCallsFn SetInternalCalls;
+    };
+    static CoreManagedFunctions g_CoreManagedFunctions;
     
     bool NativeHost::LoadHostFXR()
     {
@@ -74,14 +83,30 @@ namespace Flameberry {
             FL_ERROR("Get delegate failed: {0}", rc);
         
         m_AssemblyContext.LoadAssemblyAndGetFunction = (load_assembly_and_get_function_pointer_fn)loadAssemblyAndGetFunctionPtr;
+        
+        g_CoreManagedFunctions.SetInternalCalls = LoadManagedFunction<CoreManagedFunctions::SetInternalCallsFn>("Flameberry.Managed.InternalCallManager, Flameberry-ScriptCore", "SetInternalCalls");
     }
     
-    void NativeHost::SetInternalCall()
+    void NativeHost::AddInternalCall(const char_t* typeName, const char_t* methodName, void* funcPtr)
     {
+        std::string assemblyQualifiedName(typeName);
+        assemblyQualifiedName += "+";
+        assemblyQualifiedName += methodName;
+        assemblyQualifiedName += ", Flameberry-ScriptCore";
+        
+        const auto& name = m_InternalCallNameArray.emplace_back(assemblyQualifiedName);
+        
+        InternalCall call;
+        call.AssemblyQualifiedName = name.c_str();
+        call.NativeFunctionPtr = funcPtr;
+        m_InternalCallArray.emplace_back(call);
     }
     
     void NativeHost::UploadInternalCalls() 
     {
+        g_CoreManagedFunctions.SetInternalCalls(m_InternalCallArray.data(), static_cast<int32_t>(m_InternalCallArray.size()));
+        m_InternalCallArray.clear();
+        m_InternalCallNameArray.clear();
     }
     
     void NativeHost::Shutdown()

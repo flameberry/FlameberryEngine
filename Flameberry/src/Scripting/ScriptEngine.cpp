@@ -35,6 +35,29 @@ namespace Flameberry {
         InvokeOnCreateMethodOfActorWithIDFn InvokeOnCreateMethodOfActorWithID;
         InvokeOnUpdateMethodOfActorWithIDFn InvokeOnUpdateMethodOfActorWithID;
     };
+    
+    namespace InternalCalls {
+        
+        void LogMessageICall(const char_t* message, uint8_t logLevel)
+        {
+            switch (flamelogger::LogLevel(logLevel))
+            {
+                case flamelogger::LogLevel::TRACE: FL_TRACE(message); break;
+                case flamelogger::LogLevel::LOG: FL_LOG(message); break;
+                case flamelogger::LogLevel::INFO: FL_INFO(message); break;
+                case flamelogger::LogLevel::WARNING: FL_WARN(message); break;
+                case flamelogger::LogLevel::ERROR: FL_ERROR(message); break;
+                case flamelogger::LogLevel::CRITICAL: FL_CRITICAL(message); break;
+                default: FL_LOG(message); break;
+            }
+        }
+        
+        glm::vec3 Entity_GetTransformICall(fbentt::entity entity)
+        {
+            FL_LOG("Called Entity_GetTransform with ID: {0}", entity);
+        }
+        
+    }
 
     NativeHost ScriptEngine::s_NativeHost;
     ManagedFunctions ScriptEngine::s_ManagedFunctions;
@@ -49,10 +72,16 @@ namespace Flameberry {
         s_ManagedFunctions.LoadAppAssembly("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/bin/Debug/net7.0/SandboxProject.dll");
         s_ManagedFunctions.PrintAssemblyInfo();
         
-//        s_ManagedFunctions.CreateActorWithEntityID(1212121212, "SandboxProject.Player");
-//        s_ManagedFunctions.InvokeOnCreateMethodOfActorWithID(1212121212);
-//        s_ManagedFunctions.InvokeOnUpdateMethodOfActorWithID(1212121212, 4.5f);
-//        s_ManagedFunctions.DestroyAllActors();
+        s_NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "LogMessageICall", reinterpret_cast<void*>(&InternalCalls::LogMessageICall));
+        
+        s_NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "Entity_GetTransformICall", reinterpret_cast<void*>(&InternalCalls::Entity_GetTransformICall));
+        
+        s_NativeHost.UploadInternalCalls();
+        
+        s_ManagedFunctions.CreateActorWithEntityID(1212121212, "SandboxProject.Player");
+        s_ManagedFunctions.InvokeOnCreateMethodOfActorWithID(1212121212);
+        s_ManagedFunctions.InvokeOnUpdateMethodOfActorWithID(1212121212, 4.5f);
+        s_ManagedFunctions.DestroyAllActors();
     }
     
     void ScriptEngine::LoadCoreManagedFunctions()

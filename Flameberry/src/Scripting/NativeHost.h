@@ -23,20 +23,20 @@ namespace Flameberry {
         void* ContextHandle = nullptr;
         load_assembly_and_get_function_pointer_fn LoadAssemblyAndGetFunction = nullptr;
     };
-    
+
     struct InternalCall
     {
-        void* CallPtr = nullptr;
-        std::string AssemblyQualifiedName;
+        const char_t* AssemblyQualifiedName;
+        void* NativeFunctionPtr = nullptr;
     };
-    
+
     class NativeHost
     {
     public:
         void Init();
         void Shutdown();
         
-        void SetInternalCall();
+        void AddInternalCall(const char_t* typeName, const char_t* methodName, void* funcPtr);
         void UploadInternalCalls();
         
         template<typename FuncType>
@@ -50,7 +50,8 @@ namespace Flameberry {
         HostFXRFunctions m_HostFXRFunctions;
         AssemblyContext m_AssemblyContext;
         
-        std::vector<InternalCall> m_InternalCalls;
+        std::vector<InternalCall> m_InternalCallArray;
+        std::vector<std::string> m_InternalCallNameArray;
     };
     
     template<typename FuncType>
