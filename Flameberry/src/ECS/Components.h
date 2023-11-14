@@ -157,4 +157,9 @@ namespace Flameberry {
 
         void* RuntimeShape = nullptr;
     };
+    
+    template <typename... Component>
+    struct ComponentList {};
+    
+    using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, ScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>;
 }

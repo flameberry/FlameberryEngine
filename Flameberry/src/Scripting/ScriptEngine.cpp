@@ -14,6 +14,7 @@
 
 #define MAX_PATH 512
 #define STR(x) x
+#define FL_TYPE_AS_STRING(Type) #Type
 
 namespace Flameberry {
     
@@ -27,6 +28,10 @@ namespace Flameberry {
         using InvokeOnCreateMethodOfActorWithIDFn = void (*)(uint64_t);
         using InvokeOnUpdateMethodOfActorWithIDFn = void (*)(uint64_t, float);
         
+        using GetComponentCountFn = int (*)();
+        using GetComponentHashesFn = void* (*)();
+        using FreeComponentStorageMemoryFn = void (*)();
+        
         LoadAssemblyFn LoadAppAssembly;
         PrintAssemblyInfoFn PrintAssemblyInfo;
         
@@ -34,10 +39,13 @@ namespace Flameberry {
         DestroyAllActorsFn DestroyAllActors;
         InvokeOnCreateMethodOfActorWithIDFn InvokeOnCreateMethodOfActorWithID;
         InvokeOnUpdateMethodOfActorWithIDFn InvokeOnUpdateMethodOfActorWithID;
+        
+        GetComponentCountFn GetComponentCount;
+        GetComponentHashesFn GetComponentHashes;
+        FreeComponentStorageMemoryFn FreeComponentStorageMemory;
     };
     
     namespace InternalCalls {
-        
         void LogMessageICall(const char_t* message, uint8_t logLevel)
         {
             switch (flamelogger::LogLevel(logLevel))
@@ -56,18 +64,24 @@ namespace Flameberry {
         {
             FL_LOG("Called Entity_GetTransform with ID: {0}", entity);
         }
-        
     }
 
     NativeHost ScriptEngine::s_NativeHost;
     ManagedFunctions ScriptEngine::s_ManagedFunctions;
     Scene* ScriptEngine::s_SceneContext = nullptr;
     
+    struct ComponentInfo
+    {
+        const char_t* Name;
+        int HashCode;
+    };
+    
     void ScriptEngine::Init()
     {
         s_NativeHost.Init();
         
         LoadCoreManagedFunctions();
+        RegisterComponents();
         
         s_ManagedFunctions.LoadAppAssembly("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/bin/Debug/net7.0/SandboxProject.dll");
         s_ManagedFunctions.PrintAssemblyInfo();
@@ -97,6 +111,26 @@ namespace Flameberry {
         s_ManagedFunctions.InvokeOnCreateMethodOfActorWithID = s_NativeHost.LoadManagedFunction<ManagedFunctions::InvokeOnCreateMethodOfActorWithIDFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "InvokeOnCreateMethodOfActorWithID");
 
         s_ManagedFunctions.InvokeOnUpdateMethodOfActorWithID = s_NativeHost.LoadManagedFunction<ManagedFunctions::InvokeOnUpdateMethodOfActorWithIDFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "InvokeOnUpdateMethodOfActorWithID");
+        
+        s_ManagedFunctions.GetComponentCount = s_NativeHost.LoadManagedFunction<ManagedFunctions::GetComponentCountFn>("Flameberry.Runtime.ComponentManager, Flameberry-ScriptCore", "GetComponentCount");
+        
+        s_ManagedFunctions.GetComponentHashes = s_NativeHost.LoadManagedFunction<ManagedFunctions::GetComponentHashesFn>("Flameberry.Runtime.ComponentManager, Flameberry-ScriptCore", "GetComponentHashes");
+        
+        s_ManagedFunctions.FreeComponentStorageMemory = s_NativeHost.LoadManagedFunction<ManagedFunctions::FreeComponentStorageMemoryFn>("Flameberry.Runtime.ComponentManager, Flameberry-ScriptCore", "FreeComponentStorageMemory");
+    }
+    
+    void ScriptEngine::RegisterComponents()
+    {
+        int count = s_ManagedFunctions.GetComponentCount();
+        ComponentInfo* ptr = (ComponentInfo*)s_ManagedFunctions.GetComponentHashes();
+        
+        for (int i = 0; i < count; i++)
+        {
+            FL_LOG(FL_TYPE_AS_STRING(TransformComponent));
+            FL_LOG("HOST: HashCode of {0} is {1}", ptr->Name, ptr->HashCode);
+            ptr++;
+        }
+        s_ManagedFunctions.FreeComponentStorageMemory();
     }
 
     void ScriptEngine::Shutdown()
@@ -135,5 +169,5 @@ namespace Flameberry {
         // Destroy all instances of Actors
         s_SceneContext = nullptr;
     }
-
+    
 }
