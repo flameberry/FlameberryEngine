@@ -92,6 +92,32 @@ namespace Flameberry {
             context->GetRegistry()->get<TransformComponent>(entity).Translation = *translation;
         }
         
+        glm::vec3 TransformComponent_GetRotation(uint64_t entity)
+        {
+            Scene* context = ScriptEngine::GetSceneContext();
+            auto& transform = context->GetRegistry()->get<TransformComponent>(entity);
+            return transform.Rotation;
+        }
+        
+        void TransformComponent_SetRotation(uint64_t entity, glm::vec3* rotation)
+        {
+            Scene* context = ScriptEngine::GetSceneContext();
+            context->GetRegistry()->get<TransformComponent>(entity).Rotation = *rotation;
+        }
+        
+        glm::vec3 TransformComponent_GetScale(uint64_t entity)
+        {
+            Scene* context = ScriptEngine::GetSceneContext();
+            auto& transform = context->GetRegistry()->get<TransformComponent>(entity);
+            return transform.Scale;
+        }
+        
+        void TransformComponent_SetScale(uint64_t entity, glm::vec3* scale)
+        {
+            Scene* context = ScriptEngine::GetSceneContext();
+            context->GetRegistry()->get<TransformComponent>(entity).Scale = *scale;
+        }
+        
     }
     
     Scene* ScriptEngine::GetSceneContext() { return s_Data->SceneContext; }
@@ -118,12 +144,15 @@ namespace Flameberry {
         
         s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetTranslation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetTranslation));
         
-        s_Data->NativeHost.UploadInternalCalls();
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_GetRotation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_GetRotation));
         
-//        s_Data->ManagedFunctions.CreateActorWithEntityID(1212121212, "SandboxProject.Player");
-//        s_Data->ManagedFunctions.InvokeOnCreateMethodOfActorWithID(1212121212);
-//        s_Data->ManagedFunctions.InvokeOnUpdateMethodOfActorWithID(1212121212, 4.5f);
-//        s_Data->ManagedFunctions.DestroyAllActors();
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetRotation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetRotation));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_GetScale", reinterpret_cast<void*>(&InternalCalls::TransformComponent_GetScale));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetScale", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetScale));
+        
+        s_Data->NativeHost.UploadInternalCalls();
     }
     
     void ScriptEngine::LoadCoreManagedFunctions()

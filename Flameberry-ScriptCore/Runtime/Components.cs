@@ -59,6 +59,29 @@ namespace Flameberry.Runtime
             }
         }
 
+        public Vector3 Rotation
+        {
+            get
+            {
+                unsafe { return InternalCallStorage.TransformComponent_GetRotation(Actor.ID); }
+            }
+            set
+            {
+                unsafe { InternalCallStorage.TransformComponent_SetRotation(Actor.ID, (Vector3*)&value); }
+            }
+        }
+
+        public Vector3 Scale
+        {
+            get
+            {
+                unsafe { return InternalCallStorage.TransformComponent_GetScale(Actor.ID); }
+            }
+            set
+            {
+                unsafe { InternalCallStorage.TransformComponent_SetScale(Actor.ID, (Vector3*)&value); }
+            }
+        }
     }
 
     public class CameraComponent : Component

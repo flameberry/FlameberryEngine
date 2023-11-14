@@ -23,6 +23,12 @@ namespace Flameberry.Managed
 
         internal static unsafe delegate*<ulong, Vector3> TransformComponent_GetTranslation;
         internal static unsafe delegate*<ulong, Vector3*, void> TransformComponent_SetTranslation;
+        
+        internal static unsafe delegate*<ulong, Vector3> TransformComponent_GetRotation;
+        internal static unsafe delegate*<ulong, Vector3*, void> TransformComponent_SetRotation;
+
+        internal static unsafe delegate*<ulong, Vector3> TransformComponent_GetScale;
+        internal static unsafe delegate*<ulong, Vector3*, void> TransformComponent_SetScale;
     }
 
     public static class Log
