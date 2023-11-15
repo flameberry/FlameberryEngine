@@ -1,7 +1,7 @@
 #include "ContentBrowserPanel.h"
 
 #include "Flameberry.h"
-#include "../UI.h"
+#include "UI.h"
 
 #define FBY_BACK_ARROW_ICON 0
 #define FBY_FORWARD_ARROW_ICON 1

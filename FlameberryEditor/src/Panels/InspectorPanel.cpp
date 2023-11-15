@@ -1,7 +1,7 @@
 #include "InspectorPanel.h"
 
 #include <filesystem>
-#include "../UI.h"
+#include "UI.h"
 
 namespace Flameberry {
     InspectorPanel::InspectorPanel()

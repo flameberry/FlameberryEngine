@@ -3,7 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
 
-#include "../UI.h"
+#include "UI.h"
 
 namespace Flameberry {
     SceneHierarchyPanel::SceneHierarchyPanel(const std::shared_ptr<Scene>& context)
