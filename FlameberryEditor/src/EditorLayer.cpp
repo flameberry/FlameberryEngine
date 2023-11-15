@@ -577,24 +577,22 @@ namespace Flameberry {
     void EditorLayer::OpenScene()
     {
         std::string sceneToBeLoaded = platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
-        if (sceneToBeLoaded != "")
-        {
-            if (SceneSerializer::DeserializeIntoExistingScene(sceneToBeLoaded.c_str(), m_ActiveScene))
-            {
-                m_EditorScenePath = sceneToBeLoaded;
-                FL_INFO("Loaded Scene: {0}", sceneToBeLoaded);
-                return;
-            }
-        }
-        FL_ERROR("Failed to load scene!");
+        OpenScene(sceneToBeLoaded);
     }
 
     void EditorLayer::OpenScene(const std::string& path)
     {
-        if (!path.empty())
+        if (path.empty())
         {
-            if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
-                m_EditorScenePath = path;
+            FL_ERROR("Failed to load scene: path provided is null!");
+            return;
+        }
+        
+        if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
+        {
+            m_EditorScenePath = path;
+            m_ActiveScene->OnViewportResize(m_ViewportSize);
+            FL_INFO("Loaded Scene: {0}", m_EditorScenePath);
         }
     }
 

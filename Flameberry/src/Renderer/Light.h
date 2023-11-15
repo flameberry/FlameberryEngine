@@ -5,9 +5,9 @@
 namespace Flameberry {
     struct DirectionalLight
     {
-        alignas(16) glm::vec3 Direction;
-        alignas(16) glm::vec3 Color;
-        alignas(4) float Intensity, LightSize;
+        alignas(16) glm::vec3 Direction{0.0f};
+        alignas(16) glm::vec3 Color{0.0f};
+        alignas(4) float Intensity = 0.0f, LightSize = 0.0f;
     };
 
     struct PointLight
