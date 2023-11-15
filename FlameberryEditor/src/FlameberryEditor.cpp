@@ -22,12 +22,12 @@ namespace Flameberry {
         std::shared_ptr<Project> m_Project;
     };
 
-    std::shared_ptr<Application> Application::CreateClientApp()
+    Application* Application::CreateClientApp()
     {
         ProjectConfig projectConfig;
         projectConfig.AssetDirectory = "Assets";
         
         auto project = Project::Create(FL_PROJECT_DIR"SandboxProject", projectConfig);
-        return std::make_shared<FlameberryEditor>(project);
+        return new FlameberryEditor(project);
     }
 }

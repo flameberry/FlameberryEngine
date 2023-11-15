@@ -18,7 +18,7 @@ namespace Flameberry {
 
         Window& GetWindow() { return *m_Window; }
         static Application& Get() { return *s_Instance; }
-        static std::shared_ptr<Application> CreateClientApp();
+        static Application* CreateClientApp();
 
         void OnEvent(Event& e);
         void OnKeyPressedEvent(KeyPressedEvent& e);
