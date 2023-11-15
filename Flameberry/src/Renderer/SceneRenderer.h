@@ -19,7 +19,7 @@ namespace Flameberry {
     struct SceneRendererSettings {
         bool EnableShadows = true, ShowCascades = false, SoftShadows = true;
         float CascadeLambdaSplit = 0.91f;
-        static const uint32_t CascadeCount = 4, CascadeSize = 1028 * 2; // TODO: Make this a renderer startup setting
+        static const uint32_t CascadeCount = 4, CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
     };
 
     struct Cascade {
@@ -60,7 +60,7 @@ namespace Flameberry {
         std::shared_ptr<DescriptorSetLayout> m_CameraBufferDescSetLayout;
         std::vector<std::shared_ptr<DescriptorSet>> m_CameraBufferDescriptorSets;
         std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
-        std::shared_ptr<Pipeline> m_MeshPipeline, m_OutlinePipeline, m_SkyboxPipeline;
+        std::shared_ptr<Pipeline> m_MeshPipeline, m_SkyboxPipeline;
         std::vector<std::shared_ptr<DescriptorSet>> m_SceneDataDescriptorSets;
         std::shared_ptr<DescriptorSetLayout> m_SceneDescriptorSetLayout;
         VkSampler m_VkTextureSampler;
@@ -83,6 +83,6 @@ namespace Flameberry {
         std::vector<std::shared_ptr<DescriptorSet>> m_CompositePassDescriptorSets;
 
         // Textures
-        std::shared_ptr<Texture2D> m_LightIcon, m_CameraIcon;
+        std::shared_ptr<Texture2D> m_LightIcon, m_CameraIcon, m_DirectionalLightIcon;
     };
 }

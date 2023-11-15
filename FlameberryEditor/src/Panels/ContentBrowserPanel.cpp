@@ -8,20 +8,19 @@
 
 enum FileTypeIndex {
     DEFAULT = 2,
-    FOLDER, BERRY, OBJ, FBMAT, MTL, JSON, HDR
+    FOLDER, BERRY, OBJ, GLTF, FBX, FBMAT
 };
 
 static std::vector<std::string> g_IconPaths = {
     FL_PROJECT_DIR"FlameberryEditor/icons/arrow_back.png",
     FL_PROJECT_DIR"FlameberryEditor/icons/arrow_forward.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/default_file_icon.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconDefault.png",
     FL_PROJECT_DIR"FlameberryEditor/icons/folder_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/berry_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/obj_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/fbmat_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/mtl_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/json_file_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/hdr_file_icon.png"
+    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconBerry.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconOBJ.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconGLTF.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconFBX.png",
+    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconFBMAT.png"
 };
 
 namespace Flameberry {
@@ -228,14 +227,12 @@ namespace Flameberry {
                     currentIconIndex = FileTypeIndex::BERRY;
                 else if (ext == ".obj")
                     currentIconIndex = FileTypeIndex::OBJ;
-                else if (ext == ".mtl")
-                    currentIconIndex = FileTypeIndex::MTL;
+                else if (ext == ".gltf")
+                    currentIconIndex = FileTypeIndex::GLTF;
+                else if (ext == ".fbx")
+                    currentIconIndex = FileTypeIndex::FBX;
                 else if (ext == ".fbmat")
                     currentIconIndex = FileTypeIndex::FBMAT;
-                else if (ext == ".json")
-                    currentIconIndex = FileTypeIndex::JSON;
-                else if (ext == ".hdr")
-                    currentIconIndex = FileTypeIndex::HDR;
                 else {
                     currentIconIndex = FileTypeIndex::DEFAULT;
                     isFileSupported = false;
@@ -243,7 +240,7 @@ namespace Flameberry {
                 thumbnail = m_IconTextures[currentIconIndex];
             }
 
-            itemSize = UI::ContentBrowserItem(filePath, iconWidth, thumbnail);
+            itemSize = UI::ContentBrowserItem(filePath, iconWidth, thumbnail, !isFileSupported);
 
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
                 m_CurrentDirectory = directory.path();

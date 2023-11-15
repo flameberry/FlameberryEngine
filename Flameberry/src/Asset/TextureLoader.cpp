@@ -38,7 +38,7 @@ namespace Flameberry {
     }
     
     // TODO: Needs work quality wise
-    std::shared_ptr<Texture2D> TextureLoader::LoadTexture2DThumbnail(const std::filesystem::path &path, int newWidth, int newHeight)
+    std::shared_ptr<Texture2D> TextureLoader::LoadTexture2DResized(const std::filesystem::path &path, int newWidth, int newHeight)
     {
         auto calcWidthHeight = [](const int width, const int height, int& newWidth, int& newHeight)
         {

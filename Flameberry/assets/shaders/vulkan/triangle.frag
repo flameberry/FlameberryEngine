@@ -10,7 +10,6 @@ layout (location = 5) in mat3 v_TBNMatrix;
 layout (location = 0) out vec4 o_FragColor;
 
 #define PI 3.1415926535897932384626433832795
-#define AMBIENT 0.2f
 #define CASCADE_COUNT 4
 
 #extension GL_GOOGLE_include_directive : enable
@@ -36,7 +35,7 @@ layout (set = 2, binding = 4) uniform sampler2D u_MetallicMapSampler;
 struct DirectionalLight {
     vec3  Direction;
     vec3  Color;
-    float Intensity;
+    float Intensity, LightSize;
 };
 
 struct PointLight {
@@ -56,6 +55,7 @@ layout (std140, set = 1, binding = 0) uniform SceneData {
     DirectionalLight u_DirectionalLight;
     PointLight u_PointLights[10];
     int u_LightCount;
+    float u_SkyLightIntensity;
     SceneRendererSettingsUniform u_SceneRendererSettings;
 };
 
@@ -198,7 +198,7 @@ float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius,
 
 float PCSS_SearchWidth(float lightSize, float receiverDistance, uint cascadeIndex)
 {
-	return lightSize * (receiverDistance + u_CascadeDepthSplits[cascadeIndex] / 1000.0f) / receiverDistance;
+	return u_DirectionalLight.LightSize * (receiverDistance + u_CascadeDepthSplits[cascadeIndex] / 1000.0f) / receiverDistance;
 }
 
 vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, float interleavedNoise, float bias)
@@ -234,7 +234,7 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float in
     const float lightSize = 20.0f;
 
     float receiverDepth = shadowCoord.z;
-    float searchWidth = PCSS_SearchWidth(lightSize, receiverDepth, cascadeIndex);
+    float searchWidth = PCSS_SearchWidth(u_DirectionalLight.LightSize, receiverDepth, cascadeIndex);
     const vec2 blockerInfo = PCSS_BlockerDistance(shadowCoord.xyz, searchWidth, cascadeIndex, interleavedNoise, bias);
     
     if (blockerInfo.y == 0.0f)
@@ -247,7 +247,7 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float in
     // float softnessFallOff = 2.0f;
     // penumbraSize = 1.0 - pow(1.0 - penumbraSize, softnessFallOff);
 
-    float filterRadius = penumbraSize * lightSize;
+    float filterRadius = penumbraSize * u_DirectionalLight.LightSize;
     return FilterPCFRadial_DirectionalLight(shadowCoord, cascadeIndex, filterRadius, 16, bias, interleavedNoise);
 }
 
@@ -353,7 +353,7 @@ vec3 PBR_TotalLight(vec3 normal)
     for (int i = 0; i < u_LightCount; i++)
         totalLight += PBR_PointLight(u_PointLights[i], normal);
     
-    const vec3 ambient = AMBIENT * GetAmbientOcclusion() * GetPixelColor();
+    const vec3 ambient = u_SkyLightIntensity * GetAmbientOcclusion() * GetPixelColor();
     return totalLight + ambient;
 }
 

@@ -46,8 +46,6 @@ namespace Flameberry {
                 pWindow->m_Width = width;
                 pWindow->m_Height = height;
             
-                pWindow->m_WindowResizedFlag = true;
-
                 WindowResizedEvent event(width, height);
                 pWindow->m_EventCallBack(event);
             });
@@ -91,7 +89,7 @@ namespace Flameberry {
         VkResult result = m_SwapChain->AcquireNextImage();
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
-            m_SwapChain->Invalidate(m_SwapChain->GetVulkanSwapChain());
+            m_SwapChain->Invalidate();
             return false;
         }
         m_ImageIndex = m_SwapChain->GetAcquiredImageIndex();
@@ -102,7 +100,15 @@ namespace Flameberry {
     {
         const auto& device = VulkanContext::GetCurrentDevice();
         VkResult queuePresentStatus = m_SwapChain->SubmitCommandBuffer(device->GetCommandBuffer(Renderer::RT_GetCurrentFrameIndex()));
-        if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR || m_WindowResizedFlag)
-            m_SwapChain->Invalidate(m_SwapChain->GetVulkanSwapChain());
+        
+        // TODO: This code should be enabled when ensured that all the resources that depend upon the swapchain are also updated
+//        if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR)
+//            m_SwapChain->Invalidate();
     }
+    
+    void VulkanWindow::Resize() 
+    {
+        m_SwapChain->Invalidate();
+    }
+    
 }

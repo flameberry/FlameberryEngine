@@ -14,13 +14,13 @@ namespace Flameberry {
     }
 
     Scene::Scene(const std::shared_ptr<Scene>& other)
-        : m_Registry(std::make_shared<fbentt::registry>(*other->m_Registry)), m_Name(other->m_Name), m_Environment(other->m_Environment), m_ViewportSize(other->m_ViewportSize)
+        : m_Registry(std::make_shared<fbentt::registry>(*other->m_Registry)), m_Name(other->m_Name), m_ViewportSize(other->m_ViewportSize)
     {
         FL_LOG("Copying Scene...");
     }
 
     Scene::Scene(const Scene& other)
-        : m_Registry(std::make_shared<fbentt::registry>(*other.m_Registry)), m_Name(other.m_Name), m_Environment(other.m_Environment), m_ViewportSize(other.m_ViewportSize)
+        : m_Registry(std::make_shared<fbentt::registry>(*other.m_Registry)), m_Name(other.m_Name), m_ViewportSize(other.m_ViewportSize)
     {
     }
 
@@ -348,8 +348,8 @@ namespace Flameberry {
             m_Registry->emplace<CameraComponent>(destEntity, *comp);
         if (auto* comp = m_Registry->try_get<MeshComponent>(src); comp)
             m_Registry->emplace<MeshComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<LightComponent>(src); comp)
-            m_Registry->emplace<LightComponent>(destEntity, *comp);
+        if (auto* comp = m_Registry->try_get<PointLightComponent>(src); comp)
+            m_Registry->emplace<PointLightComponent>(destEntity, *comp);
         if (auto* comp = m_Registry->try_get<RigidBodyComponent>(src); comp)
             m_Registry->emplace<RigidBodyComponent>(destEntity, *comp);
         if (auto* comp = m_Registry->try_get<BoxColliderComponent>(src); comp)
@@ -387,8 +387,8 @@ namespace Flameberry {
                 m_Registry->emplace<CameraComponent>(destEntity, *comp);
             if (auto* comp = m_Registry->try_get<MeshComponent>(src); comp)
                 m_Registry->emplace<MeshComponent>(destEntity, *comp);
-            if (auto* comp = m_Registry->try_get<LightComponent>(src); comp)
-                m_Registry->emplace<LightComponent>(destEntity, *comp);
+            if (auto* comp = m_Registry->try_get<PointLightComponent>(src); comp)
+                m_Registry->emplace<PointLightComponent>(destEntity, *comp);
             if (auto* comp = m_Registry->try_get<RigidBodyComponent>(src); comp)
                 m_Registry->emplace<RigidBodyComponent>(destEntity, *comp);
             if (auto* comp = m_Registry->try_get<BoxColliderComponent>(src); comp)

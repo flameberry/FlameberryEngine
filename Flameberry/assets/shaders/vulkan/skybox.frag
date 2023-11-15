@@ -7,13 +7,13 @@ layout (location = 0) out vec4 o_FragColor;
 
 layout (set = 0, binding = 0) uniform sampler2D u_EquirectangularMap;
 
-const vec2 invAtan = vec2(0.1591, 0.3183);
+const vec2 invAtan = vec2(0.1591f, 0.3183f);
 vec2 SampleSphericalMap(vec3 v)
 {
     vec2 textureUV = vec2(atan(v.z, v.x), asin(v.y));
     textureUV *= invAtan;
-    textureUV += 0.5;
-    return vec2(textureUV.x, 1.0 - textureUV.y); // flip y
+    textureUV += 0.5f;
+    return vec2(textureUV.x, 1.0f - textureUV.y); // flip y
 }
 
 void main()
@@ -23,10 +23,10 @@ void main()
     vec3 color = texture(u_EquirectangularMap, textureUV).rgb;
 
     // Tone Mapping
-    color = color / (color + vec3(1.0));
+    color = color / (color + vec3(1.0f));
 
-    const float gamma = 2.2;
-    color = pow(color, vec3(1.0 / gamma));
+    const float gamma = 2.2f;
+    color = pow(color, vec3(1.0f / gamma));
     
-    o_FragColor = vec4(color, 1.0);
+    o_FragColor = vec4(color, 1.0f);
 }

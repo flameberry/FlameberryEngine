@@ -102,6 +102,7 @@ namespace Flameberry {
     void Application::OnWindowResizedEvent(WindowResizedEvent& e)
     {
         // TODO: Wait for Render Thread to finish Rendering
+        m_Window->Resize();
         m_ImGuiLayer->InvalidateResources();
     }
 

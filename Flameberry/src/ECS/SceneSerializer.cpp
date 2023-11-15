@@ -89,24 +89,8 @@ namespace Flameberry {
         };
 
         destScene->m_Name = data["Scene"].as<std::string>();
-
-        destScene->m_Environment.EnvironmentMap = nullptr;
+        
         destScene->m_Registry->clear();
-
-        // Deserialize Environment Map
-        auto& env = destScene->m_Environment;
-
-        auto envMapNode = data["Environment"];
-        env.ClearColor = envMapNode["ClearColor"].as<glm::vec3>();
-        env.EnableEnvironmentMap = envMapNode["EnableEnvironmentMap"].as<bool>();
-
-        if (auto path = envMapNode["EnvironmentMap"].as<std::string>(); !path.empty())
-            env.EnvironmentMap = AssetManager::TryGetOrLoadAsset<Texture2D>(path.c_str());
-
-        env.Reflections = envMapNode["Reflections"].as<bool>();
-        env.DirLight.Direction = envMapNode["DirectionalLight"]["Direction"].as<glm::vec3>();
-        env.DirLight.Color = envMapNode["DirectionalLight"]["Color"].as<glm::vec3>();
-        env.DirLight.Intensity = envMapNode["DirectionalLight"]["Intensity"].as<float>();
 
         auto entities = data["Entities"];
         if (entities)
@@ -170,10 +154,29 @@ namespace Flameberry {
                             meshComp.OverridenMaterialTable[entry["SubmeshIndex"].as<uint32_t>()] = mat->Handle;
                         }
                     }
-
-                    if (auto light = entity["LightComponent"]; light)
+                    
+                    if (auto skyLight = entity["SkyLightComponent"]; skyLight)
                     {
-                        auto& lightComp = destScene->m_Registry->emplace<LightComponent>(deserializedEntity);
+                        auto& skyLightComp = destScene->m_Registry->emplace<SkyLightComponent>(deserializedEntity);
+                        skyLightComp.Color = skyLight["Color"].as<glm::vec3>();
+                        skyLightComp.Intensity = skyLight["Intensity"].as<float>();
+                        skyLightComp.EnableSkyMap = skyLight["EnableSkyMap"].as<bool>();
+                        
+                        std::string skymapPath = skyLight["SkyMap"].as<std::string>();
+                        skyLightComp.SkyMap = ((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Texture2D>(skyLight["SkyMap"].as<std::string>())->Handle : AssetHandle(0));
+                    }
+                    
+                    if (auto light = entity["DirectionalLightComponent"]; light)
+                    {
+                        auto& lightComp = destScene->m_Registry->emplace<DirectionalLightComponent>(deserializedEntity);
+                        lightComp.Color = light["Color"].as<glm::vec3>();
+                        lightComp.Intensity = light["Intensity"].as<float>();
+                        lightComp.LightSize = light["LightSize"].as<float>();
+                    }
+
+                    if (auto light = entity["PointLightComponent"]; light)
+                    {
+                        auto& lightComp = destScene->m_Registry->emplace<PointLightComponent>(deserializedEntity);
                         lightComp.Color = light["Color"].as<glm::vec3>();
                         lightComp.Intensity = light["Intensity"].as<float>();
                     }
@@ -236,23 +239,6 @@ namespace Flameberry {
         YAML::Emitter out;
         out << YAML::BeginMap;
         out << YAML::Key << "Scene" << YAML::Value << sceneName;
-
-        // Environment Map
-        out << YAML::Key << "Environment" << YAML::Value << YAML::BeginMap;
-
-        auto& env = srcScene->m_Environment;
-        out << YAML::Key << "ClearColor" << YAML::Value << env.ClearColor;
-        out << YAML::Key << "EnvironmentMap" << YAML::Value << (env.EnvironmentMap ? env.EnvironmentMap->FilePath : "");
-        out << YAML::Key << "EnableEnvironmentMap" << YAML::Value << env.EnableEnvironmentMap;
-        out << YAML::Key << "Reflections" << YAML::Value << env.Reflections;
-
-        out << YAML::Key << "DirectionalLight" << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "Direction" << YAML::Value << env.DirLight.Direction;
-        out << YAML::Key << "Color" << YAML::Value << env.DirLight.Color;
-        out << YAML::Key << "Intensity" << YAML::Value << env.DirLight.Intensity;
-        out << YAML::EndMap; // Directional Light
-
-        out << YAML::EndMap; // Environment
 
         out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 
@@ -336,14 +322,35 @@ namespace Flameberry {
 
             meshUUIDs.insert(mesh.MeshHandle);
         }
-
-        if (scene->m_Registry->has<LightComponent>(entity))
+        
+        if (scene->m_Registry->has<SkyLightComponent>(entity))
         {
-            auto& light = scene->m_Registry->get<LightComponent>(entity);
-            out << YAML::Key << "LightComponent" << YAML::BeginMap;
+            auto& skyLight = scene->m_Registry->get<SkyLightComponent>(entity);
+            out << YAML::Key << "SkyLightComponent" << YAML::BeginMap;
+            out << YAML::Key << "Color" << YAML::Value << skyLight.Color;
+            out << YAML::Key << "Intensity" << YAML::Value << skyLight.Intensity;
+            out << YAML::Key << "EnableSkyMap" << YAML::Value << skyLight.EnableSkyMap;
+            out << YAML::Key << "SkyMap" << YAML::Value << (AssetManager::IsAssetHandleValid(skyLight.SkyMap) ? AssetManager::GetAsset<Texture2D>(skyLight.SkyMap)->FilePath : "");
+            out << YAML::EndMap; // Sky Light Component
+        }
+        
+        if (scene->m_Registry->has<DirectionalLightComponent>(entity))
+        {
+            auto& light = scene->m_Registry->get<DirectionalLightComponent>(entity);
+            out << YAML::Key << "DirectionalLightComponent" << YAML::BeginMap;
             out << YAML::Key << "Color" << YAML::Value << light.Color;
             out << YAML::Key << "Intensity" << YAML::Value << light.Intensity;
-            out << YAML::EndMap; // Light Component
+            out << YAML::Key << "LightSize" << YAML::Value << light.LightSize;
+            out << YAML::EndMap; // Directional Light Component
+        }
+
+        if (scene->m_Registry->has<PointLightComponent>(entity))
+        {
+            auto& light = scene->m_Registry->get<PointLightComponent>(entity);
+            out << YAML::Key << "PointLightComponent" << YAML::BeginMap;
+            out << YAML::Key << "Color" << YAML::Value << light.Color;
+            out << YAML::Key << "Intensity" << YAML::Value << light.Intensity;
+            out << YAML::EndMap; // Point Light Component
         }
 
         if (scene->m_Registry->has<RigidBodyComponent>(entity))

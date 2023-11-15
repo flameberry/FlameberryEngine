@@ -293,10 +293,22 @@ namespace Flameberry {
             }
             if (ImGui::BeginMenu("Light"))
             {
+                if (ImGui::MenuItem("Sky Light"))
+                {
+                    auto entity = m_Context->CreateEntityWithTagAndParent("Sky Light", parent);
+                    m_Context->m_Registry->emplace<SkyLightComponent>(entity);
+                    m_SelectionContext = entity;
+                }
+                if (ImGui::MenuItem("Directional Light"))
+                {
+                    auto entity = m_Context->CreateEntityWithTagAndParent("Directional Light", parent);
+                    m_Context->m_Registry->emplace<DirectionalLightComponent>(entity);
+                    m_SelectionContext = entity;
+                }
                 if (ImGui::MenuItem("Point Light"))
                 {
                     auto entity = m_Context->CreateEntityWithTagAndParent("Point Light", parent);
-                    m_Context->m_Registry->emplace<LightComponent>(entity);
+                    m_Context->m_Registry->emplace<PointLightComponent>(entity);
                     m_SelectionContext = entity;
                 }
                 ImGui::EndMenu();
