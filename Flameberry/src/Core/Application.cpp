@@ -89,9 +89,9 @@ namespace Flameberry {
         m_ImGuiLayer->OnEvent(e);
         for (auto& layer : m_LayerStack)
         {
-            layer->OnEvent(e);
             if (e.Handled)
                 break;
+            layer->OnEvent(e);
         }
     }
 

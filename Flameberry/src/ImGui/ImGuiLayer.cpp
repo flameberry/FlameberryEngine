@@ -266,11 +266,12 @@ namespace Flameberry {
 
     void ImGuiLayer::OnEvent(Event& e)
     {
-        if (!e.Handled)
+        // TODO: This currently does nothing
+        if (m_BlockEvents)
         {
             ImGuiIO& io = ImGui::GetIO();
-            e.Handled |= io.WantCaptureMouse;
-            e.Handled |= io.WantCaptureKeyboard;
+            e.Handled |= (e.GetCategory() == EventCategory::MouseEventCategory) && io.WantCaptureMouse;
+            e.Handled |= (e.GetCategory() == EventCategory::KeyEventCategory) && io.WantCaptureKeyboard;
         }
     }
 

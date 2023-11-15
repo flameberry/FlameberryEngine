@@ -180,6 +180,12 @@ namespace Flameberry {
                         lightComp.Color = light["Color"].as<glm::vec3>();
                         lightComp.Intensity = light["Intensity"].as<float>();
                     }
+                    
+                    if (auto script = entity["ScriptComponent"]; script)
+                    {
+                        auto& scriptComp = destScene->m_Registry->emplace<ScriptComponent>(deserializedEntity);
+                        scriptComp.FullyQualifiedClassName = script["FullyQualifiedClassName"].as<std::string>();
+                    }
 
                     if (auto rigidBody = entity["RigidBodyComponent"]; rigidBody)
                     {
@@ -232,8 +238,8 @@ namespace Flameberry {
         FL_SCOPED_TIMER("Serialization");
 
         std::string scenePath(path);
-        uint32_t lastSlashPosition = scenePath.find_last_of('/') + 1;
-        uint32_t lastDotPosition = scenePath.find_last_of('.');
+        auto lastSlashPosition = scenePath.find_last_of('/') + 1;
+        auto lastDotPosition = scenePath.find_last_of('.');
         std::string sceneName = scenePath.substr(lastSlashPosition, lastDotPosition - lastSlashPosition);
 
         YAML::Emitter out;
@@ -350,6 +356,14 @@ namespace Flameberry {
             out << YAML::Key << "PointLightComponent" << YAML::BeginMap;
             out << YAML::Key << "Color" << YAML::Value << light.Color;
             out << YAML::Key << "Intensity" << YAML::Value << light.Intensity;
+            out << YAML::EndMap; // Point Light Component
+        }
+        
+        if (scene->m_Registry->has<ScriptComponent>(entity))
+        {
+            auto& script = scene->m_Registry->get<ScriptComponent>(entity);
+            out << YAML::Key << "ScriptComponent" << YAML::BeginMap;
+            out << YAML::Key << "FullyQualifiedClassName" << YAML::Value << script.FullyQualifiedClassName;
             out << YAML::EndMap; // Point Light Component
         }
 

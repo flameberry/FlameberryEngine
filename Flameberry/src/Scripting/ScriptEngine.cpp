@@ -13,16 +13,14 @@
 #include "ECS/Scene.h"
 #include "ECS/Components.h"
 
-#define MAX_PATH 512
-#define STR(x) x
-#define FL_TYPE_AS_STRING(Type) #Type
-
 namespace Flameberry {
     
     struct ManagedFunctions
     {
         using LoadAssemblyFn = void (*)(const char_t*);
         using PrintAssemblyInfoFn = void (*)();
+        using GetActorTypeNamesInAppAssemblyFn = const char_t* (*)();
+        using FreeActorTypeNamesStringFn = void (*)();
         
         using CreateActorWithEntityIDFn = void (*)(uint64_t, const char_t*);
         using DestroyAllActorsFn = void (*)();
@@ -33,6 +31,8 @@ namespace Flameberry {
         
         LoadAssemblyFn LoadAppAssembly;
         PrintAssemblyInfoFn PrintAssemblyInfo;
+        GetActorTypeNamesInAppAssemblyFn GetActorTypeNamesInAppAssembly;
+        FreeActorTypeNamesStringFn FreeActorTypeNamesString;
         
         CreateActorWithEntityIDFn CreateActorWithEntityID;
         DestroyAllActorsFn DestroyAllActors;
@@ -47,6 +47,7 @@ namespace Flameberry {
         NativeHost NativeHost;
         ManagedFunctions ManagedFunctions;
         Scene* SceneContext = nullptr;
+        std::vector<std::string> ActorTypeNamesInAppAssembly;
     };
     
     ScriptEngineData* ScriptEngine::s_Data = nullptr;
@@ -121,6 +122,7 @@ namespace Flameberry {
     }
     
     Scene* ScriptEngine::GetSceneContext() { return s_Data->SceneContext; }
+    const std::vector<std::string>& ScriptEngine::GetActorTypeNamesInAppAssembly() { return s_Data->ActorTypeNamesInAppAssembly; }
     
     void ScriptEngine::Init()
     {
@@ -130,29 +132,14 @@ namespace Flameberry {
         
         LoadCoreManagedFunctions();
         RegisterComponents();
-        
-        s_Data->ManagedFunctions.LoadAppAssembly("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/bin/Debug/net7.0/SandboxProject.dll");
-        s_Data->ManagedFunctions.PrintAssemblyInfo();
-        
-        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "LogMessage", reinterpret_cast<void*>(&InternalCalls::LogMessage));
-        
-        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "Entity_HasComponent", reinterpret_cast<void*>(&InternalCalls::Entity_HasComponent));
-        
-        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "Input_IsKeyDown", reinterpret_cast<void*>(&InternalCalls::Input_IsKeyDown));
-        
-        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_GetTranslation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_GetTranslation));        
-        
-        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetTranslation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetTranslation));
-        
-        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_GetRotation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_GetRotation));
-        
-        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetRotation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetRotation));
-        
-        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_GetScale", reinterpret_cast<void*>(&InternalCalls::TransformComponent_GetScale));
-        
-        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetScale", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetScale));
-        
-        s_Data->NativeHost.UploadInternalCalls();
+        RegisterInternalCalls();
+        LoadAppAssembly();
+    }
+    
+    void ScriptEngine::Shutdown()
+    {
+        s_Data->NativeHost.Shutdown();
+        delete s_Data;
     }
     
     void ScriptEngine::LoadCoreManagedFunctions()
@@ -160,6 +147,10 @@ namespace Flameberry {
         s_Data->ManagedFunctions.LoadAppAssembly = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::LoadAssemblyFn>("Flameberry.Managed.AppAssemblyManager, Flameberry-ScriptCore", "LoadAppAssembly");
         
         s_Data->ManagedFunctions.PrintAssemblyInfo = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::PrintAssemblyInfoFn>("Flameberry.Managed.AppAssemblyManager, Flameberry-ScriptCore", "PrintAssemblyInfo");
+        
+        s_Data->ManagedFunctions.GetActorTypeNamesInAppAssembly = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::GetActorTypeNamesInAppAssemblyFn>("Flameberry.Managed.AppAssemblyManager, Flameberry-ScriptCore", "GetActorTypeNamesInAppAssembly");
+        
+        s_Data->ManagedFunctions.FreeActorTypeNamesString = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::FreeActorTypeNamesStringFn>("Flameberry.Managed.AppAssemblyManager, Flameberry-ScriptCore", "FreeActorTypeNamesString");
         
         s_Data->ManagedFunctions.CreateActorWithEntityID = s_Data->NativeHost.LoadManagedFunction<ManagedFunctions::CreateActorWithEntityIDFn>("Flameberry.Managed.ManagedActors, Flameberry-ScriptCore", "CreateActorWithEntityID");
 
@@ -200,11 +191,47 @@ namespace Flameberry {
         RegisterComponent<SphereColliderComponent>("Flameberry.Runtime.SphereColliderComponent");
         RegisterComponent<CapsuleColliderComponent>("Flameberry.Runtime.CapsuleColliderComponent");
     }
-
-    void ScriptEngine::Shutdown()
+    
+    void ScriptEngine::RegisterInternalCalls()
     {
-        s_Data->NativeHost.Shutdown();
-        delete s_Data;
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "LogMessage", reinterpret_cast<void*>(&InternalCalls::LogMessage));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "Entity_HasComponent", reinterpret_cast<void*>(&InternalCalls::Entity_HasComponent));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "Input_IsKeyDown", reinterpret_cast<void*>(&InternalCalls::Input_IsKeyDown));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_GetTranslation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_GetTranslation));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetTranslation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetTranslation));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_GetRotation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_GetRotation));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetRotation", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetRotation));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_GetScale", reinterpret_cast<void*>(&InternalCalls::TransformComponent_GetScale));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetScale", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetScale));
+        
+        s_Data->NativeHost.UploadInternalCalls();
+    }
+    
+    void ScriptEngine::LoadAppAssembly()
+    {
+        s_Data->ManagedFunctions.LoadAppAssembly("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/bin/Debug/net7.0/SandboxProject.dll");
+        // s_Data->ManagedFunctions.PrintAssemblyInfo();
+        
+        // Extract actor type names
+        const char_t* actorNames = s_Data->ManagedFunctions.GetActorTypeNamesInAppAssembly();
+        char_t* start = (char_t*)actorNames;
+        for (char_t* token = (char_t*)actorNames; *token != '\0'; token++)
+        {
+            if (*token == ';')
+            {
+                s_Data->ActorTypeNamesInAppAssembly.emplace_back(start, (size_t)(token - start));
+                start = token + 1;
+            }
+        }
+        s_Data->ManagedFunctions.FreeActorTypeNamesString(); // TODO: Set up a way to free this automoatically
     }
 
     void ScriptEngine::OnRuntimeStart(Scene* context)

@@ -2,12 +2,15 @@ using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
+using Flameberry.Runtime;
 
 namespace Flameberry.Managed
 {
     internal static class AppAssemblyManager
     {
         internal static Assembly? s_AppAssembly;
+
+        private static IntPtr s_ActorTypeNamesPtr;
 
         [UnmanagedCallersOnly]
         internal static void LoadAppAssembly(IntPtr path)
@@ -46,6 +49,33 @@ namespace Flameberry.Managed
                     Console.WriteLine($"  Method: {methodInfo.Name}");
                 }
             }
+        }
+
+        [UnmanagedCallersOnly]
+        internal static IntPtr GetActorTypeNamesInAppAssembly()
+        {
+            string actorTypeNames = "";
+
+            if (s_AppAssembly == null)
+            {
+                Console.WriteLine("ERROR: Cannot GetActorTypeNamesInAppAssembly: App Assembly is null!");
+                return IntPtr.Zero;
+            }
+
+            foreach (Type type in s_AppAssembly.GetTypes())
+            {
+                if (Utils.IsSubclassOf(type, typeof(Actor)))
+                    actorTypeNames += $"{type.FullName};";
+            }
+
+            s_ActorTypeNamesPtr = Marshal.StringToCoTaskMemAuto(actorTypeNames);
+            return s_ActorTypeNamesPtr;
+        }
+
+        [UnmanagedCallersOnly]
+        internal static void FreeActorTypeNamesString()
+        {
+            Marshal.FreeCoTaskMem(s_ActorTypeNamesPtr);
         }
 
         internal static Type? FindType(string typeFullName)

@@ -35,7 +35,7 @@ namespace Flameberry.Managed
 			}
 
 			// Check if `type` is subclass of `Actor`
-			if (IsSubclassOf(type, typeof(Actor)))
+			if (Utils.IsSubclassOf(type, typeof(Actor)))
 			{
 				object? instance = Activator.CreateInstance(type); // TODO: This doesn't set the ID which will cause trouble down the line
 				Actor? actor = (Actor?)instance;
@@ -82,15 +82,6 @@ namespace Flameberry.Managed
             }
 			Console.WriteLine($"ERROR: Failed to invoke `OnUpdate()` method of Actor with ID: {ID}: Actor doesn't exist!");
         }
-
-        // Utils
-        internal static bool IsSubclassOf(Type childType, Type parentType)
-        {
-            return childType.IsSubclassOf(parentType) ||
-				   childType.GetInterfaces().Any(i => i == parentType) ||
-				   childType == parentType;
-        }
-
     }
 }
 

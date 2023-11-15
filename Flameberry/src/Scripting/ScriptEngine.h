@@ -19,9 +19,12 @@ namespace Flameberry {
         static void OnRuntimeStop();
         
         static Scene* GetSceneContext();
+        static const std::vector<std::string>& GetActorTypeNamesInAppAssembly();
     private:
         static void RegisterComponents();
         static void LoadCoreManagedFunctions();
+        static void RegisterInternalCalls();
+        static void LoadAppAssembly();
     private:
         static ScriptEngineData* s_Data;
         
