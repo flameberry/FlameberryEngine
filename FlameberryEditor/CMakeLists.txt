@@ -14,5 +14,5 @@ endif()
 
 target_compile_definitions(FlameberryEditor PRIVATE ${FL_COMPILE_DEFINITIONS})
 
-target_include_directories(FlameberryEditor PRIVATE ${FL_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src/)
+target_include_directories(FlameberryEditor PRIVATE ${FL_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src/ ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 target_link_libraries(FlameberryEditor PRIVATE Flameberry ${FL_LIBRARY_DEPENDENCIES})

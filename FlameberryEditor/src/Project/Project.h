@@ -4,9 +4,9 @@
 
 namespace Flameberry {
     struct ProjectConfig {
-        std::filesystem::path AssetDirectory;
+        std::filesystem::path AssetDirectory, ScriptAssemblyPath;
         
-        std::string Name = "Untitled";
+        std::string Name = "Flameberry-Project";
     };
     
     class Project
@@ -21,10 +21,14 @@ namespace Flameberry {
         }
         
         Project(const std::filesystem::path& projectDirectory, const ProjectConfig& config);
+        Project() = default;
         ~Project();
+        
+        void Save();
         
         const std::filesystem::path& GetProjectDirectory() const { return m_ProjectDirectory; }
         std::filesystem::path GetAssetDirectory() const { return m_ProjectDirectory / m_Config.AssetDirectory; }
+        std::filesystem::path GetScriptAssemblyPath() const { return m_ProjectDirectory / m_Config.ScriptAssemblyPath; }
         
         ProjectConfig& GetConfig() { return m_Config; }
         
@@ -38,5 +42,15 @@ namespace Flameberry {
         ProjectConfig m_Config;
         
         inline static std::shared_ptr<Project> s_ActiveProject;
+        
+        friend class ProjectSerializer;
+    };
+    
+    class ProjectSerializer
+    {
+    public:
+        static std::shared_ptr<Project> DeserializeIntoNewProject(const std::filesystem::path& filePath);
+        static bool DeserializeIntoExistingProject(const std::filesystem::path& filePath, const std::shared_ptr<Project>& dest);
+        static void SerializeProject(const std::filesystem::path& filePath, const Project* project);
     };
 }

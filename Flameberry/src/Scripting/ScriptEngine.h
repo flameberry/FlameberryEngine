@@ -14,6 +14,8 @@ namespace Flameberry {
         static void Init();
         static void Shutdown();
         
+        static void LoadAppAssembly(const char_t* assemblyPath);
+        
         static void OnRuntimeStart(Scene* context);
         static void OnRuntimeUpdate(float delta);
         static void OnRuntimeStop();
@@ -24,7 +26,6 @@ namespace Flameberry {
         static void RegisterComponents();
         static void LoadCoreManagedFunctions();
         static void RegisterInternalCalls();
-        static void LoadAppAssembly();
     private:
         static ScriptEngineData* s_Data;
         

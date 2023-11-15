@@ -14,7 +14,7 @@ namespace Flameberry {
     class EditorLayer : public Layer
     {
     public:
-        EditorLayer(const std::shared_ptr<Project>& project);
+        EditorLayer();
         virtual ~EditorLayer() = default;
 
         void OnCreate() override;

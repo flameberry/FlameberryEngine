@@ -133,7 +133,6 @@ namespace Flameberry {
         LoadCoreManagedFunctions();
         RegisterComponents();
         RegisterInternalCalls();
-        LoadAppAssembly();
     }
     
     void ScriptEngine::Shutdown()
@@ -215,9 +214,9 @@ namespace Flameberry {
         s_Data->NativeHost.UploadInternalCalls();
     }
     
-    void ScriptEngine::LoadAppAssembly()
+    void ScriptEngine::LoadAppAssembly(const char_t* assemblyPath)
     {
-        s_Data->ManagedFunctions.LoadAppAssembly("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/bin/Debug/net7.0/SandboxProject.dll");
+        s_Data->ManagedFunctions.LoadAppAssembly(assemblyPath);
         // s_Data->ManagedFunctions.PrintAssemblyInfo();
         
         // Extract actor type names

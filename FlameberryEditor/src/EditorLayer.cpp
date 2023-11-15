@@ -31,8 +31,8 @@ namespace Flameberry {
     };
 
     struct CameraUniformBufferObject { glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix; };
-    EditorLayer::EditorLayer(const std::shared_ptr<Project>& project)
-        : m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{
+    EditorLayer::EditorLayer()
+        : m_ActiveCameraController(PerspectiveCameraSpecification{
             glm::vec3(0.0f, 2.0f, 4.0f),
             glm::vec3(0.0f, -0.3f, -1.0f),
             (float)Application::Get().GetWindow().GetWidth() / (float)Application::Get().GetWindow().GetHeight(),
@@ -60,6 +60,24 @@ namespace Flameberry {
         m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
         m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
         m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
+        
+        // Open a project browser window and if an existing project is selected then...
+        // std::shared_ptr<Project> project = ProjectSerializer::DeserializeIntoNewProject("path/to/project");
+        
+        // If a new project is to be created then
+        ProjectConfig projectConfig;
+        projectConfig.Name = "SandboxProject";
+        projectConfig.AssetDirectory = "Assets";
+        projectConfig.ScriptAssemblyPath = flamelogger::format_string("bin/Debug/net7.0/{0}.dll", projectConfig.Name);
+        
+        m_Project = Project::Create(FL_PROJECT_DIR"SandboxProject", projectConfig);
+        
+        Project::SetActive(m_Project);
+        std::filesystem::current_path(m_Project->GetProjectDirectory());
+        
+        // TODO: Init this when the project has been opened
+        ScriptEngine::Init();
+        ScriptEngine::LoadAppAssembly(m_Project->GetScriptAssemblyPath().c_str());
 
         m_ActiveScene = Scene::Create();
         m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
@@ -161,9 +179,6 @@ namespace Flameberry {
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
         }
-
-        // TODO: Init this when the project has been opened
-        ScriptEngine::Init();
     }
 
     void EditorLayer::OnUpdate(float delta)
