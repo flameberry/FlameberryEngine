@@ -1,5 +1,7 @@
 #include "EditorLayer.h"
 
+#include <fmt/format.h>
+
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
 #include "UI.h"
@@ -596,8 +598,15 @@ namespace Flameberry {
     {
         if (!path.empty())
         {
-            if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
-                m_EditorScenePath = path;
+            FL_ERROR("Failed to load scene: path provided is null!");
+            return;
+        }
+
+        if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
+        {
+            m_EditorScenePath = path;
+            m_ActiveScene->OnViewportResize(m_ViewportSize);
+            FL_INFO("Loaded Scene: {0}", m_EditorScenePath);
         }
     }
 

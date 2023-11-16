@@ -71,7 +71,7 @@ namespace Flameberry {
                     s_AssetFilePathToUUIDTable[asset->FilePath] = asset->Handle;
                 return;
             }
-            FL_WARN("Failed to register asset with UUID: {0}, Asset already registered!", asset->Handle);
+            FL_WARN("Failed to register asset with UUID: {0}, Asset already registered!", (uint64_t)asset->Handle);
         }
 
         static bool IsAssetHandleValid(AssetHandle handle)
