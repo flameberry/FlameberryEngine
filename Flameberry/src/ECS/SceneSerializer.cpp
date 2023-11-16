@@ -75,7 +75,7 @@ namespace Flameberry {
 
     bool SceneSerializer::DeserializeIntoExistingScene(const char* path, const std::shared_ptr<Scene>& destScene)
     {
-        FL_SCOPED_TIMER("Scene Deserialization");
+        FBY_SCOPED_TIMER("Scene Deserialization");
 
         std::ifstream in(path);
         std::stringstream ss;
@@ -84,7 +84,7 @@ namespace Flameberry {
         YAML::Node data = YAML::Load(ss.str());
         if (!data["Scene"])
         {
-            FL_ERROR("Failed to load scene [{0}]: 'Scene' attribute not present in file!", path);
+            FBY_ERROR("Failed to load scene [{0}]: 'Scene' attribute not present in file!", path);
             return false;
         };
 
@@ -229,7 +229,7 @@ namespace Flameberry {
 
     void SceneSerializer::SerializeSceneToFile(const char* path, const std::shared_ptr<Scene>& srcScene)
     {
-        FL_SCOPED_TIMER("Serialization");
+        FBY_SCOPED_TIMER("Serialization");
 
         std::string scenePath(path);
         uint32_t lastSlashPosition = scenePath.find_last_of('/') + 1;

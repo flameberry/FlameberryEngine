@@ -16,7 +16,7 @@ namespace Flameberry {
     Scene::Scene(const std::shared_ptr<Scene>& other)
         : m_Registry(std::make_shared<fbentt::registry>(*other->m_Registry)), m_Name(other->m_Name), m_ViewportSize(other->m_ViewportSize)
     {
-        FL_LOG("Copying Scene...");
+        FBY_LOG("Copying Scene...");
     }
 
     Scene::Scene(const Scene& other)
@@ -26,7 +26,7 @@ namespace Flameberry {
 
     Scene::~Scene()
     {
-        FL_LOG("Deleting Scene...");
+        FBY_LOG("Deleting Scene...");
     }
 
     void Scene::OnStartRuntime()
@@ -82,7 +82,7 @@ namespace Flameberry {
                 }
             }
 
-            FL_ASSERT(rigidBody.RuntimeRigidBody, "Failed to create RigidBody!");
+            FBY_ASSERT(rigidBody.RuntimeRigidBody, "Failed to create RigidBody!");
 
             physx::PxShape* shape = nullptr;
 
@@ -159,7 +159,7 @@ namespace Flameberry {
 
     void Scene::OnUpdateRuntime(float delta)
     {
-        FL_PROFILE_SCOPE("Scene::OnUpdateRuntime");
+        FBY_PROFILE_SCOPE("Scene::OnUpdateRuntime");
 
         // Update Native Scripts
         for (auto entity : m_Registry->view<NativeScriptComponent>())
@@ -331,7 +331,7 @@ namespace Flameberry {
 
     fbentt::entity Scene::DuplicateEntity(fbentt::entity src)
     {
-        FL_WARN("DuplicateEntity() Not Yet Implemented For Entities with Hierarchies!");
+        FBY_WARN("DuplicateEntity() Not Yet Implemented For Entities with Hierarchies!");
         const auto destEntity = m_Registry->create();
         // auto& duplicateRelation = m_Registry->emplace<RelationshipComponent>(entity);
 
@@ -369,7 +369,7 @@ namespace Flameberry {
 
     fbentt::entity Scene::CopyEntityTree(fbentt::entity src)
     {
-        FL_ASSERT(0, "CopyEntityTree() Not Yet Implemented!");
+        FBY_ASSERT(0, "CopyEntityTree() Not Yet Implemented!");
         const auto destEntity = m_Registry->create();
 
         auto* srcRel = m_Registry->try_get<RelationshipComponent>(src);

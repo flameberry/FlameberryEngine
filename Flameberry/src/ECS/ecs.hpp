@@ -1,12 +1,10 @@
 #pragma once
 
+#include <iostream>
 #include <stdint.h>
 #include <vector>
-#include <any>
 
 #include "Core/Core.h"
-
-#define FL_TYPE_NAME(type) #type
 
 /* This is a header only implementation of the ecs system */
 /* Formatting for this file includes brackets on the same line as the function to keep it compact */
@@ -42,7 +40,7 @@ namespace fbentt {
 
         int remove(Type value) {
             if (value >= sparse.size() || sparse[value] >= packed.size()) {
-                FL_WARN("Attempted to remove element '{0}' from sparse set that didn't belong to set!", value);
+                FBY_WARN("Attempted to remove element '{0}' from sparse set that didn't belong to set!", value);
                 return -1;
             }
             // copying the last element of packed array to the removed element location
@@ -76,7 +74,7 @@ namespace fbentt {
         }
 
         // Debug
-#ifdef FL_DEBUG
+#ifdef FBY_DEBUG
         void print() const {
             for (const auto& element : packed)
                 std::cout << element << "\t";
@@ -179,7 +177,7 @@ namespace fbentt {
             if (pool.copy_handler_data != NULL) {
                 // TODO: Check if this needs optimisation, currently the handler data is only copied upon loading the first scene and pressing the play button
                 pool.copy_handler_data(pool, *this);
-                FL_LOG("Copied ecs component pool handler data!");
+                FBY_LOG("Copied ecs component pool handler data!");
             }
         }
     };
@@ -242,7 +240,7 @@ namespace fbentt {
     public:
         entity get_entity_at_index(uint32_t index)
         {
-            FL_ASSERT(index < entities.size() && is_valid(entities[index]), "Failed to get entity at index: Invalid index/entity!");
+            FBY_ASSERT(index < entities.size() && is_valid(entities[index]), "Failed to get entity at index: Invalid index/entity!");
             return entities[index];
         }
 
@@ -261,16 +259,16 @@ namespace fbentt {
         /// @param _Fn: A function with a param of type `void*` which represents the current component being iterated
         /// And `uint32_t` which gives the typeID of the component
         template<typename Fn> void for_each_component(entity entity, Fn&& _Fn) {
-            FL_ASSERT(0, "for_each_component() Not Yet Implemented!");
+            FBY_ASSERT(0, "for_each_component() Not Yet Implemented!");
 
             static_assert(std::is_invocable_v<Fn, void*, uint32_t>);
 
-            FL_ASSERT(entity != null, "Failed to iterate over components of entity: Entity is null!");
+            FBY_ASSERT(entity != null, "Failed to iterate over components of entity: Entity is null!");
 
             const uint32_t index = to_index(entity);
             const uint32_t version = to_version(entities[index]);
 
-            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to iterate over components of entity: Invalid handle!");
+            FBY_ASSERT(index < entities.size() && version == to_version(entity), "Failed to iterate over components of entity: Invalid handle!");
 
             uint32_t typeID = 0;
             for (auto& pool : pools) {
@@ -314,12 +312,12 @@ namespace fbentt {
         }
 
         void destroy(entity entity) {
-            FL_ASSERT(entity != null, "Failed to destroy entity: Entity is null!");
+            FBY_ASSERT(entity != null, "Failed to destroy entity: Entity is null!");
 
             const uint32_t index = to_index(entity);
             const uint32_t version = to_version(entities[index]);
 
-            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to delete entity: Invalid handle!");
+            FBY_ASSERT(index < entities.size() && version == to_version(entity), "Failed to delete entity: Invalid handle!");
 
             for (auto& pool : pools) {
                 if (pool.entity_set.find(index) != -1) {
@@ -332,10 +330,10 @@ namespace fbentt {
         }
 
         template<typename Type, typename... Args> Type& emplace(const entity& entity, Args... args) {
-            FL_ASSERT(entity != null, "Failed to emplace component: Entity is null!");
+            FBY_ASSERT(entity != null, "Failed to emplace component: Entity is null!");
             const uint32_t index = to_index(entity);
             const uint32_t version = to_version(entities[index]);
-            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to emplace component: Invalid/Outdated handle!");
+            FBY_ASSERT(index < entities.size() && version == to_version(entity), "Failed to emplace component: Invalid/Outdated handle!");
 
             const uint32_t typeID = type_id<Type>();
             if (pools.size() <= typeID) {
@@ -347,8 +345,8 @@ namespace fbentt {
                 pools[typeID].handler = std::make_shared<pool_handler<Type>>();
             }
             else if (pools[typeID].entity_set.find(index) != -1) {
-                FL_ERROR("Failed to emplace component: Entity already has component!");
-                FL_DEBUGBREAK();
+                FBY_ERROR("Failed to emplace component: Entity already has component!");
+                FBY_DEBUGBREAK();
             }
             pools[typeID].entity_set.add(index);
 
@@ -403,10 +401,10 @@ namespace fbentt {
         }
 
         template<typename... Type> decltype(auto) get(const entity& entity) const {
-            FL_ASSERT(entity != null, "Failed to get component: Entity is null!");
+            FBY_ASSERT(entity != null, "Failed to get component: Entity is null!");
             const uint32_t index = to_index(entity);
             const uint32_t version = to_version(entities[index]);
-            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to get component: Invalid/Outdated handle!");
+            FBY_ASSERT(index < entities.size() && version == to_version(entity), "Failed to get component: Invalid/Outdated handle!");
 
             if constexpr (sizeof...(Type) == 1) {
                 using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
@@ -416,8 +414,8 @@ namespace fbentt {
                     || pools[typeID].entity_set.empty()
                     || pools[typeID].entity_set.find(index) == -1
                     ) {
-                    FL_ERROR("Failed to get component: Component does not exist!");
-                    FL_DEBUGBREAK();
+                    FBY_ERROR("Failed to get component: Component does not exist!");
+                    FBY_DEBUGBREAK();
                 }
                 else {
                     int set_index = pools[typeID].entity_set.find(index);
@@ -431,10 +429,10 @@ namespace fbentt {
         }
 
         template<typename... Type> bool has(const entity& entity) const {
-            FL_ASSERT(entity != null, "Failed to check component: Entity is null!");
+            FBY_ASSERT(entity != null, "Failed to check component: Entity is null!");
             const uint32_t index = to_index(entity);
             const uint32_t version = to_version(entities[index]);
-            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to check component: Invalid/Outdated handle!");
+            FBY_ASSERT(index < entities.size() && version == to_version(entity), "Failed to check component: Invalid/Outdated handle!");
 
             if constexpr (sizeof...(Type) == 1) {
                 using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
@@ -454,10 +452,10 @@ namespace fbentt {
         }
 
         template<typename... Type> void erase(const entity& entity) const {
-            FL_ASSERT(entity != null, "Failed to erase component: Entity is null!");
+            FBY_ASSERT(entity != null, "Failed to erase component: Entity is null!");
             const uint32_t index = to_index(entity);
             const uint32_t version = to_version(entities[index]);
-            FL_ASSERT(index < entities.size() && version == to_version(entity), "Failed to erase component: Invalid/Outdated handle!");
+            FBY_ASSERT(index < entities.size() && version == to_version(entity), "Failed to erase component: Invalid/Outdated handle!");
 
             if constexpr (sizeof...(Type) == 1) {
                 using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());

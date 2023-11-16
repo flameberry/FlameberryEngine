@@ -3,8 +3,8 @@
 #include "Flameberry.h"
 #include "../UI.h"
 
-#define FL_BACK_ARROW_ICON 0
-#define FL_FORWARD_ARROW_ICON 1
+#define FBY_BACK_ARROW_ICON 0
+#define FBY_FORWARD_ARROW_ICON 1
 
 enum FileTypeIndex {
     DEFAULT = 2,
@@ -12,15 +12,15 @@ enum FileTypeIndex {
 };
 
 static std::vector<std::string> g_IconPaths = {
-    FL_PROJECT_DIR"FlameberryEditor/icons/arrow_back.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/arrow_forward.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconDefault.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/folder_icon.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconBerry.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconOBJ.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconGLTF.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconFBX.png",
-    FL_PROJECT_DIR"FlameberryEditor/icons/FileIconFBMAT.png"
+    FBY_PROJECT_DIR"FlameberryEditor/icons/arrow_back.png",
+    FBY_PROJECT_DIR"FlameberryEditor/icons/arrow_forward.png",
+    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconDefault.png",
+    FBY_PROJECT_DIR"FlameberryEditor/icons/folder_icon.png",
+    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconBerry.png",
+    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconOBJ.png",
+    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconGLTF.png",
+    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconFBX.png",
+    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconFBMAT.png"
 };
 
 namespace Flameberry {
@@ -150,10 +150,10 @@ namespace Flameberry {
 
         ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         float arrowSize = 18.0f;
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FL_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
         if (m_IsSearchBoxFocused)

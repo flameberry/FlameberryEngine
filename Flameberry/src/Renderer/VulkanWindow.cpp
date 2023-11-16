@@ -14,14 +14,14 @@ namespace Flameberry {
     VulkanWindow::VulkanWindow(int width, int height, const char* title)
         : m_Width(width), m_Height(height), m_Title(title)
     {
-        FL_ASSERT(glfwInit(), "Failed to initialize GLFW!");
-        FL_INFO("Initialized GLFW!");
+        FBY_ASSERT(glfwInit(), "Failed to initialize GLFW!");
+        FBY_INFO("Initialized GLFW!");
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, NULL, NULL);
-        FL_ASSERT(m_Window, "GLFW window is null!");
-        FL_INFO("Created GLFW window of title '{0}' and dimensions ({1}, {2})", m_Title, m_Width, m_Height);
+        FBY_ASSERT(m_Window, "GLFW window is null!");
+        FBY_INFO("Created GLFW window of title '{0}' and dimensions ({1}, {2})", m_Title, m_Width, m_Height);
     }
 
     void VulkanWindow::Init()

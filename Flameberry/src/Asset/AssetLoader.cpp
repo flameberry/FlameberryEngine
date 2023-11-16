@@ -25,7 +25,7 @@ namespace Flameberry {
     {
         if ((uint16_t)type >= 4)
         {
-            FL_ASSERT(0, "Loader for the requested asset not present!");
+            FBY_ASSERT(0, "Loader for the requested asset not present!");
             return nullptr;
         }
         return g_AssetLoaderFunctionMap[(uint16_t)type].LoaderFunction(path);

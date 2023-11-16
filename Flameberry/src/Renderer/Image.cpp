@@ -100,7 +100,7 @@ namespace Flameberry {
     {
         VkFormatProperties formatProperties;
         vkGetPhysicalDeviceFormatProperties(VulkanContext::GetPhysicalDevice(), m_ImageSpec.Format, &formatProperties);
-        FL_ASSERT(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT, "Texture Image Format does not support linear blitting!");
+        FBY_ASSERT(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT, "Texture Image Format does not support linear blitting!");
 
         const auto& device = VulkanContext::GetCurrentDevice();
         VkCommandBuffer commandBuffer;

@@ -11,14 +11,14 @@ namespace Flameberry {
     RenderPass::RenderPass(const RenderPassSpecification& specification)
         : m_RenderPassSpec(specification)
     {
-        FL_ASSERT(m_RenderPassSpec.TargetFramebuffers.size(), "No Target Framebuffers provided to RenderPass!");
+        FBY_ASSERT(m_RenderPassSpec.TargetFramebuffers.size(), "No Target Framebuffers provided to RenderPass!");
 
         // Checking if all the Framebuffers have same specification
         for (uint32_t i = 1; i < m_RenderPassSpec.TargetFramebuffers.size(); i++)
         {
             const auto& spec = m_RenderPassSpec.TargetFramebuffers[i]->GetSpecification();
-            FL_ASSERT(spec.Attachments == m_RenderPassSpec.TargetFramebuffers[0]->GetSpecification().Attachments, "Framebuffers having different attachments must not be provided to single RenderPass!");
-            FL_ASSERT(spec.Samples == m_RenderPassSpec.TargetFramebuffers[0]->GetSpecification().Samples, "Framebuffers having different sample count must not be provided to single RenderPass!");
+            FBY_ASSERT(spec.Attachments == m_RenderPassSpec.TargetFramebuffers[0]->GetSpecification().Attachments, "Framebuffers having different attachments must not be provided to single RenderPass!");
+            FBY_ASSERT(spec.Samples == m_RenderPassSpec.TargetFramebuffers[0]->GetSpecification().Samples, "Framebuffers having different sample count must not be provided to single RenderPass!");
         }
 
         const auto& framebufferSpec = m_RenderPassSpec.TargetFramebuffers[0]->GetSpecification();
@@ -83,7 +83,7 @@ namespace Flameberry {
             attachments[i].storeOp = framebufferSpec.DepthStoreOp;
 
             useMultiView = useMultiView || attachment.LayerCount > 1;
-            FL_ASSERT(layerCount == attachment.LayerCount, "Different Layers for each attachment are not handled correctly yet!");
+            FBY_ASSERT(layerCount == attachment.LayerCount, "Different Layers for each attachment are not handled correctly yet!");
 
             if (RenderCommand::DoesFormatSupportDepthAttachment(attachment.Format))
             {

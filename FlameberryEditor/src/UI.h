@@ -7,7 +7,7 @@
 
 #include "Renderer/Texture2D.h"
 
-#define FL_PUSH_WIDTH_MAX(imgui_widget) { ImGui::PushItemWidth(-1); imgui_widget; ImGui::PopItemWidth(); }
+#define FBY_PUSH_WIDTH_MAX(imgui_widget) { ImGui::PushItemWidth(-1); imgui_widget; ImGui::PopItemWidth(); }
 
 namespace Flameberry {
 

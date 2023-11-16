@@ -18,7 +18,7 @@ namespace Flameberry {
     };
 
     VulkanContext* VulkanContext::s_CurrentContext = nullptr;
-#ifdef FL_DEBUG
+#ifdef FBY_DEBUG
     bool VulkanContext::s_EnableValidationLayers = true;
 #else
     bool VulkanContext::s_EnableValidationLayers = true;
@@ -27,10 +27,10 @@ namespace Flameberry {
     VulkanContext::VulkanContext(VulkanWindow* pWindow)
         : m_Window(pWindow)
     {
-        FL_ASSERT(pWindow->GetGLFWwindow(), "Invalid Window given to Vulkan Context!");
+        FBY_ASSERT(pWindow->GetGLFWwindow(), "Invalid Window given to Vulkan Context!");
 
         if (s_EnableValidationLayers)
-            FL_ASSERT(RenderCommand::CheckValidationLayerSupport(s_ValidationLayers), "Validation Layers are not supported!");
+            FBY_ASSERT(RenderCommand::CheckValidationLayerSupport(s_ValidationLayers), "Validation Layers are not supported!");
 
         m_VulkanInstance = VulkanInstance::Create();
 
@@ -39,7 +39,7 @@ namespace Flameberry {
         // Setting up Valid Vulkan Physical Device
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(m_VulkanInstance->GetVulkanInstance(), &deviceCount, nullptr);
-        FL_ASSERT(deviceCount, "Failed to find GPUs which support Vulkan!");
+        FBY_ASSERT(deviceCount, "Failed to find GPUs which support Vulkan!");
 
         std::vector<VkPhysicalDevice> vk_physical_devices(deviceCount);
         vkEnumeratePhysicalDevices(m_VulkanInstance->GetVulkanInstance(), &deviceCount, vk_physical_devices.data());
@@ -55,15 +55,15 @@ namespace Flameberry {
                 physical_device_list += ", ";
         }
 
-        FL_TRACE("{0} Physical devices found: {1}", deviceCount, physical_device_list);
+        FBY_TRACE("{0} Physical devices found: {1}", deviceCount, physical_device_list);
 
         // Accessing the actual physical device
         m_VkPhysicalDevice = GetValidPhysicalDevice(vk_physical_devices, pWindow->GetWindowSurface());
-        FL_ASSERT(m_VkPhysicalDevice != VK_NULL_HANDLE, "Vulkan physical device is null!");
+        FBY_ASSERT(m_VkPhysicalDevice != VK_NULL_HANDLE, "Vulkan physical device is null!");
 
         VkPhysicalDeviceProperties vk_physical_device_props;
         vkGetPhysicalDeviceProperties(m_VkPhysicalDevice, &vk_physical_device_props);
-        FL_INFO("Selected Vulkan Physical Device: {0}", vk_physical_device_props.deviceName);
+        FBY_INFO("Selected Vulkan Physical Device: {0}", vk_physical_device_props.deviceName);
 
         m_VulkanDevice = VulkanDevice::Create(m_VkPhysicalDevice, pWindow);
 
@@ -97,7 +97,7 @@ namespace Flameberry {
             std::set<std::string> required_extensions(s_VkDeviceExtensions.begin(), s_VkDeviceExtensions.end());
             for (const auto& extension : available_extensions)
             {
-                FL_LOG(extension.extensionName);
+                FBY_LOG(extension.extensionName);
                 required_extensions.erase(extension.extensionName);
             }
             bool found_required_extensions = required_extensions.empty();
@@ -125,7 +125,7 @@ namespace Flameberry {
             if (is_physical_device_valid)
                 return vk_device;
         }
-        FL_ASSERT(0, "Failed to find valid physical device!");
+        FBY_ASSERT(0, "Failed to find valid physical device!");
         return VK_NULL_HANDLE;
     }
 }

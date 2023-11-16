@@ -13,8 +13,8 @@ if(XCODE AND CMAKE_BUILD_TYPE STREQUAL "")
     message(WARNING "CMAKE_BUILD_TYPE not specified, setting to Release as default configuration.")
 endif()
 
-set(FL_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(FL_PROJ_GENERATOR "${CMAKE_GENERATOR}")
+set(FBY_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(FBY_PROJ_GENERATOR "${CMAKE_GENERATOR}")
 
 # Include util functions and variables with paths to library dependencies
 include(CMake/Dependencies.cmake)
@@ -22,15 +22,15 @@ include(CMake/CMakeUtils.cmake)
 
 # Get all shader files in shaders directory
 file(GLOB_RECURSE GLSL_SOURCE_FILES
-    "${FL_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.frag"
-    "${FL_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.vert"
-    "${FL_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.comp"
+    "${FBY_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.frag"
+    "${FBY_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.vert"
+    "${FBY_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.comp"
 )
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
     get_filename_component(FILE_NAME ${GLSL} NAME)
     message(STATUS "Adding ${FILE_NAME}.spv shader to compile target...")
-    set(SPIRV "${FL_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/bin/${FILE_NAME}.spv")
+    set(SPIRV "${FBY_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/bin/${FILE_NAME}.spv")
     add_custom_command(
         OUTPUT ${SPIRV}
         COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} -V ${GLSL} -o ${SPIRV}
@@ -38,7 +38,7 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
     )
     list(APPEND SPIRV_BINARY_FILES ${SPIRV})
 endforeach(GLSL)
- 
+
 add_custom_target(
     CompileShadersTarget
     DEPENDS ${SPIRV_BINARY_FILES}

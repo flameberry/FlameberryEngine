@@ -42,12 +42,12 @@ namespace Flameberry {
         constexpr float fontSize = 13.5f * DPI_SCALE;
         constexpr float bigFontSize = 18.0f * DPI_SCALE;
 
-        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", bigFontSize, &config);
-        io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", fontSize, &config);
+        io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", bigFontSize, &config);
+        io.FontDefault = io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", fontSize, &config);
         io.FontGlobalScale = 1 / DPI_SCALE;
 
         io.IniFilename = NULL;
-        ImGui::LoadIniSettingsFromDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
+        ImGui::LoadIniSettingsFromDisk(FBY_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
 
         // Setup Dear ImGui style
         SetupImGuiStyle();
@@ -134,7 +134,7 @@ namespace Flameberry {
     void ImGuiLayer::OnDestroy()
     {
         // Saving ImGui Layout
-        ImGui::SaveIniSettingsToDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
+        ImGui::SaveIniSettingsToDisk(FBY_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
 
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
