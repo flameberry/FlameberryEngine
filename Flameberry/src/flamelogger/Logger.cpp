@@ -1,8 +1,9 @@
-#include "flamelogger.h"
+#include "Logger.h"
+
 #include <iomanip>
 #include <ctime>
 
-namespace flamelogger {
+namespace Flameberry {
     std::string get_current_time_string()
     {
         std::stringstream prefix("");

@@ -1,4 +1,4 @@
-file(GLOB_RECURSE SRC_FILES 
+file(GLOB_RECURSE SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
@@ -36,6 +36,7 @@ target_include_directories(Flameberry PRIVATE ${FL_INCLUDE_DIRS} ${FL_SOURCE_DIR
 # Add Dependencies
 add_subdirectory(vendor/GLFW)
 add_subdirectory(vendor/yaml-cpp)
+add_subdirectory(vendor/fmtlib)
 
 target_compile_definitions(Flameberry PRIVATE ${FL_COMPILE_DEFINITIONS})
 

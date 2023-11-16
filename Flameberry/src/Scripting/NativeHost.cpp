@@ -72,7 +72,7 @@ namespace Flameberry {
         {
             FL_ERROR("HostFXR - InitForRuntimeConfig failed: {0}", rc);
             m_HostFXRFunctions.CloseFPtr(m_AssemblyContext.ContextHandle);
-            return m_AssemblyContext;
+            return;
         }
         
         // Get the load assembly function pointer

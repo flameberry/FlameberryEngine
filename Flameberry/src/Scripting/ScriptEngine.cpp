@@ -57,14 +57,14 @@ namespace Flameberry {
         
         void LogMessage(const char_t* message, uint8_t logLevel)
         {
-            switch (flamelogger::LogLevel(logLevel))
+            switch (Flameberry::LogLevel(logLevel))
             {
-                case flamelogger::LogLevel::TRACE: FL_TRACE(message); break;
-                case flamelogger::LogLevel::LOG: FL_LOG(message); break;
-                case flamelogger::LogLevel::INFO: FL_INFO(message); break;
-                case flamelogger::LogLevel::WARNING: FL_WARN(message); break;
-                case flamelogger::LogLevel::ERROR: FL_ERROR(message); break;
-                case flamelogger::LogLevel::CRITICAL: FL_CRITICAL(message); break;
+                case Flameberry::LogLevel::TRACE: FL_TRACE(message); break;
+                case Flameberry::LogLevel::LOG: FL_LOG(message); break;
+                case Flameberry::LogLevel::INFO: FL_INFO(message); break;
+                case Flameberry::LogLevel::WARNING: FL_WARN(message); break;
+                case Flameberry::LogLevel::ERROR: FL_ERROR(message); break;
+                case Flameberry::LogLevel::CRITICAL: FL_CRITICAL(message); break;
                 default: FL_LOG(message); break;
             }
         }

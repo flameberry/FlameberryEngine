@@ -6,7 +6,7 @@
 int main(int argc, char const* argv[])
 {
     FL_LOGGER_INIT("FLAMEBERRY");
-    FL_SET_LOG_LEVEL(flamelogger::LogLevel::TRACE);
+    FL_SET_LOG_LEVEL(Flameberry::LogLevel::TRACE);
     FL_INFO("Initialized Logger!");
     
     Flameberry::Application* clientApp = Flameberry::Application::CreateClientApp();

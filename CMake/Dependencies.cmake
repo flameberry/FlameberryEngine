@@ -11,52 +11,55 @@ IF(UNIX AND NOT APPLE)
 ENDIF()
 
 IF(WIN32)
-	IF (NOT Vulkan_FOUND)
+    IF(NOT Vulkan_FOUND)
         # If 64 bit compiler then use 64 bit version of vulkan library
-        if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
             set(VULKAN_LIB_PATH "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/x64")
         else()
             set(VULKAN_LIB_PATH "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/x86")
         endif()
 
-		find_library(Vulkan_LIBRARY NAMES vulkan-1 PATHS ${VULKAN_LIB_PATH} REQUIRED)
-		IF (Vulkan_LIBRARY)
-			set(Vulkan_FOUND ON)
-			MESSAGE(STATUS "Using bundled Vulkan library version")
-		ENDIF()
-	ENDIF()
+        find_library(Vulkan_LIBRARY NAMES vulkan-1 PATHS ${VULKAN_LIB_PATH} REQUIRED)
+
+        IF(Vulkan_LIBRARY)
+            set(Vulkan_FOUND ON)
+            MESSAGE(STATUS "Using bundled Vulkan library version")
+        ENDIF()
+    ENDIF()
 ELSEIF(LINUX)
-	IF (NOT Vulkan_FOUND)
-		find_library(Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/linux" REQUIRED)
-		IF (Vulkan_LIBRARY)
-			set(Vulkan_FOUND ON)
-			MESSAGE(STATUS "Using bundled Vulkan library version")
-		ENDIF()
-	ENDIF()
+    IF(NOT Vulkan_FOUND)
+        find_library(Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/linux" REQUIRED)
+
+        IF(Vulkan_LIBRARY)
+            set(Vulkan_FOUND ON)
+            MESSAGE(STATUS "Using bundled Vulkan library version")
+        ENDIF()
+    ENDIF()
 ELSEIF(APPLE)
-    IF (NOT Vulkan_FOUND)
-		find_library(Vulkan_LIBRARY NAMES vulkan HINTS "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/macOS" REQUIRED)
-		IF (Vulkan_LIBRARY)
-			set(Vulkan_FOUND ON)
-			MESSAGE(STATUS "Using bundled Vulkan library version")
-		ENDIF()
-	ENDIF()
+    IF(NOT Vulkan_FOUND)
+        find_library(Vulkan_LIBRARY NAMES vulkan HINTS "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/macOS" REQUIRED)
+
+        IF(Vulkan_LIBRARY)
+            set(Vulkan_FOUND ON)
+            MESSAGE(STATUS "Using bundled Vulkan library version")
+        ENDIF()
+    ENDIF()
 ENDIF(WIN32)
 
-if (NOT Vulkan_FOUND)
+if(NOT Vulkan_FOUND)
     message(FATAL_ERROR "Vulkan not found!")
 endif()
 
 message(STATUS "Found vulkan library at ${Vulkan_LIBRARY}")
 
-if (NOT Vulkan_INCLUDE_DIRS)
+if(NOT Vulkan_INCLUDE_DIRS)
     set(Vulkan_INCLUDE_DIRS "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/include")
     set(Vulkan_INCLUDE_DIR "${FL_SOURCE_DIR}/Flameberry/vendor/vulkan/include")
     message(STATUS "Using bundled Vulkan Include Headers!")
 endif()
 
 # Find GLSL Language Validator
-if (NOT Vulkan_glslangValidator_FOUND)
+if(NOT Vulkan_glslangValidator_FOUND)
     message(WARNING "GLSL Language Validator not found!")
 else()
     message(STATUS "Found GLSL_VALIDATOR at ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE}")
@@ -70,13 +73,14 @@ list(APPEND FL_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 set(FL_COMPILE_DEFINITIONS FL_PROJECT_DIR="${FL_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 # Setting the paths we require irrespective of the Graphics API
-list(APPEND FL_LIBRARY_DEPENDENCIES glfw yaml-cpp)
-list(APPEND FL_INCLUDE_DIRS 
+list(APPEND FL_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt)
+list(APPEND FL_INCLUDE_DIRS
     ${FL_SOURCE_DIR}/Flameberry/vendor
     ${FL_SOURCE_DIR}/Flameberry/vendor/GLFW/include
     ${FL_SOURCE_DIR}/Flameberry/vendor/glm
     ${FL_SOURCE_DIR}/Flameberry/vendor/imgui
     ${FL_SOURCE_DIR}/Flameberry/vendor/yaml-cpp/include
+    ${FL_SOURCE_DIR}/Flameberry/vendor/fmtlib/include
     ${FL_SOURCE_DIR}/Flameberry/vendor/Assimp/include
     ${FL_SOURCE_DIR}/Flameberry/vendor/Assimp/build/include
 )
@@ -121,6 +125,7 @@ list(APPEND FL_LIBRARY_DEPENDENCIES ${Assimp_LIBRARY})
 file(GLOB IMGUI_SRC ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.cpp ${FL_SOURCE_DIR}/Flameberry/vendor/imgui/*.h)
 
 set(FL_DEPENDENCY_SOURCE
+
     # ImGui
     ${IMGUI_SRC}
     ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp

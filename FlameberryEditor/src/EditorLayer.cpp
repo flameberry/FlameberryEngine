@@ -1,5 +1,7 @@
 #include "EditorLayer.h"
 
+#include <fmt/format.h>
+
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
 #include "UI.h"
@@ -60,21 +62,21 @@ namespace Flameberry {
         m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
         m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
         m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
-        
+
         // Open a project browser window and if an existing project is selected then...
         // std::shared_ptr<Project> project = ProjectSerializer::DeserializeIntoNewProject("path/to/project");
-        
+
         // If a new project is to be created then
         ProjectConfig projectConfig;
         projectConfig.Name = "SandboxProject";
         projectConfig.AssetDirectory = "Assets";
-        projectConfig.ScriptAssemblyPath = flamelogger::format_string("bin/Debug/net7.0/{0}.dll", projectConfig.Name);
-        
+        projectConfig.ScriptAssemblyPath = fmt::format("bin/Debug/net7.0/{}.dll", projectConfig.Name);
+
         m_Project = Project::Create(FL_PROJECT_DIR"SandboxProject", projectConfig);
-        
+
         Project::SetActive(m_Project);
         std::filesystem::current_path(m_Project->GetProjectDirectory());
-        
+
         // TODO: Init this when the project has been opened
         ScriptEngine::Init();
         ScriptEngine::LoadAppAssembly(m_Project->GetScriptAssemblyPath().c_str());
@@ -331,7 +333,7 @@ namespace Flameberry {
 
         m_IsViewportFocused = ImGui::IsWindowFocused();
         m_IsViewportHovered = ImGui::IsWindowHovered();
-        
+
         Application::Get().BlockImGuiEvents(!m_IsViewportHovered && !m_IsViewportFocused);
 
         uint32_t imageIndex = VulkanContext::GetCurrentWindow()->GetImageIndex();
@@ -602,7 +604,7 @@ namespace Flameberry {
             FL_ERROR("Failed to load scene: path provided is null!");
             return;
         }
-        
+
         if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
         {
             m_EditorScenePath = path;
