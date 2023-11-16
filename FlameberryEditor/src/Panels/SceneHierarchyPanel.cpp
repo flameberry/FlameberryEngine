@@ -219,7 +219,7 @@ namespace Flameberry {
         if (ImGui::BeginDragDropSource())
         {
             ImGui::SetDragDropPayload(
-                "FL_SCENE_HIERARCHY_ENTITY_NODE",
+                "FBY_SCENE_HIERARCHY_ENTITY_NODE",
                 &entity,
                 sizeof(entity),
                 ImGuiCond_Once
@@ -230,7 +230,7 @@ namespace Flameberry {
 
         if (ImGui::BeginDragDropTarget())
         {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_SCENE_HIERARCHY_ENTITY_NODE"))
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
             {
                 const fbentt::entity payloadEntity = *((const fbentt::entity*)payload->Data);
                 m_Context->ReparentEntity(payloadEntity, entity);

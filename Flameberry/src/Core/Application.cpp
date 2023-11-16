@@ -14,12 +14,12 @@
 
 #include "Platform/PlatformUtils.h"
 
-#ifdef FL_DEBUG
-#define FL_WINDOW_TITLE "Flameberry Engine [Debug]"
-#elif defined(FL_RELEASE)
-#define FL_WINDOW_TITLE "Flameberry Engine [Release]"
+#ifdef FBY_DEBUG
+#define FBY_WINDOW_TITLE "Flameberry Engine [Debug]"
+#elif defined(FBY_RELEASE)
+#define FBY_WINDOW_TITLE "Flameberry Engine [Release]"
 #else
-#define FL_WINDOW_TITLE "Flameberry Engine [Unknown]"
+#define FBY_WINDOW_TITLE "Flameberry Engine [Unknown]"
 #endif
 
 namespace Flameberry {
@@ -28,8 +28,8 @@ namespace Flameberry {
     Application::Application()
     {
         s_Instance = this;
-        m_Window = Window::Create(1280, 720, FL_WINDOW_TITLE);
-        m_Window->SetEventCallBack(FL_BIND_EVENT_FN(Application::OnEvent));
+        m_Window = Window::Create(1280, 720, FBY_WINDOW_TITLE);
+        m_Window->SetEventCallBack(FBY_BIND_EVENT_FN(Application::OnEvent));
 
         m_VulkanContext = VulkanContext::Create((VulkanWindow*)m_Window.get());
         VulkanContext::SetCurrentContext(m_VulkanContext.get());
@@ -121,6 +121,6 @@ namespace Flameberry {
         m_Window->Shutdown();
 
         glfwTerminate();
-        FL_INFO("Ended Application!");
+        FBY_INFO("Ended Application!");
     }
 }

@@ -44,8 +44,8 @@ namespace Flameberry {
     private:
         bool LoadHostFXR();
     private:
-        const char_t* m_CoreAssemblyPath = FL_PROJECT_DIR"Flameberry-ScriptCore/bin/Debug/net7.0/Flameberry-ScriptCore.dll";
-        const char_t* m_RuntimeConfigPath = FL_PROJECT_DIR"Flameberry-ScriptCore/bin/Debug/net7.0/Flameberry-ScriptCore.runtimeconfig.json";
+        const char_t* m_CoreAssemblyPath = FBY_PROJECT_DIR"Flameberry-ScriptCore/bin/Debug/net7.0/Flameberry-ScriptCore.dll";
+        const char_t* m_RuntimeConfigPath = FBY_PROJECT_DIR"Flameberry-ScriptCore/bin/Debug/net7.0/Flameberry-ScriptCore.runtimeconfig.json";
         
         HostFXRFunctions m_HostFXRFunctions;
         AssemblyContext m_AssemblyContext;
@@ -59,7 +59,7 @@ namespace Flameberry {
     {
         void* functionPtr = nullptr;
         int rc = m_AssemblyContext.LoadAssemblyAndGetFunction(m_CoreAssemblyPath, dotnetType, methodName, delegateTypeName, nullptr, &functionPtr);
-        FL_ASSERT(rc == 0 && functionPtr, "Failed to load managed function: {0} from {1}", methodName, dotnetType);
+        FBY_ASSERT(rc == 0 && functionPtr, "Failed to load managed function: {0} from {1}", methodName, dotnetType);
         return (FuncType)functionPtr;
     }
     

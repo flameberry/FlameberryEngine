@@ -178,7 +178,7 @@ namespace Flameberry {
             if ((typeFilter & (1 << i)) && (vk_physical_device_mem_properties.memoryTypes[i].propertyFlags & vk_memory_property_flags) == vk_memory_property_flags)
                 return i;
         }
-        FL_ERROR("Failed to find valid memory type!");
+        FBY_ERROR("Failed to find valid memory type!");
         return -1;
     }
 
@@ -199,7 +199,7 @@ namespace Flameberry {
                 (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & featureFlags) == featureFlags))
                 return format;
         }
-        FL_ERROR("Couldn't find supported format!");
+        FBY_ERROR("Couldn't find supported format!");
         return VK_FORMAT_UNDEFINED;
     }
 
@@ -224,7 +224,7 @@ namespace Flameberry {
             }
             if (!layerFound)
             {
-                FL_ERROR("Failed to find the layer named '{0}'!", layerName);
+                FBY_ERROR("Failed to find the layer named '{0}'!", layerName);
                 return false;
             }
         }
@@ -237,7 +237,7 @@ namespace Flameberry {
             if (!(i == layerCount - 1))
                 layer_list += ", ";
         }
-        FL_TRACE("Found the following Vulkan Validation Layers: {0}", layer_list);
+        FBY_TRACE("Found the following Vulkan Validation Layers: {0}", layer_list);
         return true;
     }
 
@@ -325,11 +325,11 @@ namespace Flameberry {
     std::vector<char> RenderCommand::LoadCompiledShaderCode(const std::string& filePath)
     {
         std::ifstream stream(filePath, std::ios::ate | std::ios::binary);
-        FL_ASSERT(stream.is_open(), "Failed to open the file '{0}'", filePath);
+        FBY_ASSERT(stream.is_open(), "Failed to open the file '{0}'", filePath);
 
         size_t fileSize = (size_t)stream.tellg();
 
-        FL_TRACE("File size of buffer taken from '{0}' is {1}", filePath, fileSize);
+        FBY_TRACE("File size of buffer taken from '{0}' is {1}", filePath, fileSize);
 
         std::vector<char> buffer(fileSize);
 

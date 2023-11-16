@@ -120,14 +120,14 @@ namespace Flameberry {
         if (ImGui::BeginPopupContextItem(filepath.c_str()))
         {
             if (ImGui::MenuItem("Delete"))
-                FL_LOG("Delete");
+                FBY_LOG("Delete");
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginDragDropSource())
         {
             ImGui::SetDragDropPayload(
-                "FL_CONTENT_BROWSER_ITEM",
+                "FBY_CONTENT_BROWSER_ITEM",
                 filepath.c_str(),
                 (strlen(filepath.c_str()) + 1) * sizeof(char),
                 ImGuiCond_Once

@@ -7,7 +7,7 @@ namespace Flameberry {
     InspectorPanel::InspectorPanel()
         : m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/triple_dots_icon.png"))
+        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/triple_dots_icon.png"))
     {
     }
 
@@ -15,7 +15,7 @@ namespace Flameberry {
         : m_Context(context),
         m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/triple_dots_icon.png"))
+        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/triple_dots_icon.png"))
     {
     }
 
@@ -183,18 +183,18 @@ namespace Flameberry {
                         
                         if (ImGui::BeginDragDropTarget())
                         {
-                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
                             {
                                 const char* path = (const char*)payload->Data;
                                 std::filesystem::path envPath{ path };
                                 const std::string& ext = envPath.extension().string();
                                 
-                                FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                                FBY_INFO("Payload recieved: {0}, with extension {1}", path, ext);
                                 
                                 if (std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath) && (ext == ".hdr"))
                                     skyLightComp.SkyMap = AssetManager::TryGetOrLoadAsset<Texture2D>(envPath)->Handle;
                                 else
-                                    FL_WARN("Bad File given as Environment!");
+                                    FBY_WARN("Bad File given as Environment!");
                             }
                             ImGui::EndDragDropTarget();
                         }
@@ -311,13 +311,13 @@ namespace Flameberry {
 
                         if (ImGui::BeginDragDropTarget())
                         {
-                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
                             {
                                 const char* path = (const char*)payload->Data;
                                 std::filesystem::path modelPath{ path };
                                 const std::string& ext = modelPath.extension().string();
 
-                                FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                                FBY_INFO("Payload recieved: {0}, with extension {1}", path, ext);
 
                                 if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
                                 {
@@ -325,7 +325,7 @@ namespace Flameberry {
                                     mesh.MeshHandle = loadedMesh->Handle;
                                 }
                                 else
-                                    FL_WARN("Bad File given as Model!");
+                                    FBY_WARN("Bad File given as Model!");
                             }
                             ImGui::EndDragDropTarget();
                         }
@@ -382,13 +382,13 @@ namespace Flameberry {
 
                                     if (ImGui::BeginDragDropTarget())
                                     {
-                                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
                                         {
                                             const char* path = (const char*)payload->Data;
                                             std::filesystem::path matPath{ path };
                                             const std::string& ext = matPath.extension().string();
 
-                                            FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                                            FBY_INFO("Payload recieved: {0}, with extension {1}", path, ext);
 
                                             if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
                                             {
@@ -396,7 +396,7 @@ namespace Flameberry {
                                                 mesh.OverridenMaterialTable[submeshIndex] = loadedMat->Handle;
                                             }
                                             else
-                                                FL_WARN("Bad File given as Material!");
+                                                FBY_WARN("Bad File given as Material!");
                                         }
                                         ImGui::EndDragDropTarget();
                                     }
@@ -657,7 +657,7 @@ namespace Flameberry {
                         ImGui::Text("Radius");
                         ImGui::TableNextColumn();
 
-                        FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Radius", &sphereCollider.Radius, 0.01f, 0.0f, 0.0f));
+                        FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Radius", &sphereCollider.Radius, 0.01f, 0.0f, 0.0f));
 
                         ImGui::EndTable();
                     }

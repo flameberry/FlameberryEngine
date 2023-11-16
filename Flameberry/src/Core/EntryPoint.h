@@ -5,13 +5,13 @@
 
 int main(int argc, char const* argv[])
 {
-    FL_LOGGER_INIT("FLAMEBERRY");
-    FL_SET_LOG_LEVEL(Flameberry::LogLevel::TRACE);
-    FL_INFO("Initialized Logger!");
-    
+    std::shared_ptr<Flameberry::Logger> logger = Flameberry::Logger::Create("FLAMEBERRY");
+    Flameberry::Logger::SetCoreLogger(logger);
+    logger->SetLogLevel(Flameberry::LogLevel::LOG);
+
     Flameberry::Application* clientApp = Flameberry::Application::CreateClientApp();
     clientApp->Run();
     delete clientApp;
-    
+
     return 0;
 }

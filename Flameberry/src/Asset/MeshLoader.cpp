@@ -37,14 +37,14 @@ namespace Flameberry {
 
     std::shared_ptr<Asset> MeshLoader::LoadMeshOBJ(const std::filesystem::path& path)
     {
-        FL_SCOPED_TIMER("Load_Model_TinyOBJ");
+        FBY_SCOPED_TIMER("Load_Model_TinyOBJ");
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
 
         std::string mtlBaseDir = path.parent_path();
-        FL_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), mtlBaseDir.c_str()), err);
+        FBY_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), mtlBaseDir.c_str()), err);
 
         bool has_tex_coord = attrib.texcoords.size();
 
@@ -237,7 +237,7 @@ namespace Flameberry {
         meshAsset->SizeInBytesOnCPU = sizeof(StaticMesh);
         meshAsset->SizeInBytesOnGPU = vertices.size() * sizeof(MeshVertex) + indices.size() * sizeof(uint32_t);
 
-        FL_INFO("Loaded Model: '{0}': Vertices: {1}, Indices: {2}", path, vertices.size(), indices.size());
+        FBY_INFO("Loaded Model: '{0}': Vertices: {1}, Indices: {2}", path, vertices.size(), indices.size());
         return meshAsset;
     }
 
@@ -367,7 +367,7 @@ namespace Flameberry {
 
     std::shared_ptr<Asset> MeshLoader::LoadMesh(const std::filesystem::path& path)
     {
-        FL_SCOPED_TIMER("Load_Model_Assimp");
+        FBY_SCOPED_TIMER("Load_Model_Assimp");
         // Create an instance of the Importer class
         Assimp::Importer importer;
 
@@ -381,7 +381,7 @@ namespace Flameberry {
         );
 
         // If the import failed, report it
-        FL_ASSERT(scene && !(scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE), importer.GetErrorString());
+        FBY_ASSERT(scene && !(scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE), importer.GetErrorString());
 
         // Process Scene
         std::vector<MeshVertex> vertices;
@@ -460,7 +460,7 @@ namespace Flameberry {
         meshAsset->SizeInBytesOnCPU = sizeof(StaticMesh);
         meshAsset->SizeInBytesOnGPU = vertices.size() * sizeof(MeshVertex) + indices.size() * sizeof(uint32_t);
 
-        FL_INFO("Loaded Model: '{0}': Vertices: {1}, Indices: {2}", path, vertices.size(), indices.size());
+        FBY_INFO("Loaded Model: '{0}': Vertices: {1}, Indices: {2}", path, vertices.size(), indices.size());
         return meshAsset;
     }
 

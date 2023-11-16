@@ -14,26 +14,26 @@ namespace Flameberry {
     void* LoadLibrary(const char_t* path)
     {
         HMODULE h = ::LoadLibraryW(path);
-        FL_ASSERT(h, "HMODULE is nullptr: {0}", path);
+        FBY_ASSERT(h, "HMODULE is nullptr: {0}", path);
         return (void*)h;
     }
     void* GetExport(void* h, const char* name)
     {
         void* f = ::GetProcAddress((HMODULE)h, name);
-        FL_ASSERT(f, "ProcAddress of {0} is nullptr!", name);
+        FBY_ASSERT(f, "ProcAddress of {0} is nullptr!", name);
         return f;
     }
 #else
     void* LoadLibrary(const char_t* path)
     {
         void* h = dlopen(path, RTLD_LAZY | RTLD_LOCAL);
-        FL_ASSERT(h, "HMODULE is nullptr: {0}", path);
+        FBY_ASSERT(h, "HMODULE is nullptr: {0}", path);
         return h;
     }
     void* GetExport(void* h, const char* name)
     {
         void* f = dlsym(h, name);
-        FL_ASSERT(f, "ProcAddress of {0} is nullptr!", name);
+        FBY_ASSERT(f, "ProcAddress of {0} is nullptr!", name);
         return f;
     }
 #endif
@@ -60,17 +60,17 @@ namespace Flameberry {
     
     void NativeHost::Init() 
     {
-        FL_ASSERT(LoadHostFXR(), "Failed to load Host FXR!");
+        FBY_ASSERT(LoadHostFXR(), "Failed to load Host FXR!");
         
         m_HostFXRFunctions.SetErrorWriterFPtr([](const char_t* InMessage) {
-            FL_ERROR(InMessage);
+            FBY_ERROR(InMessage);
         });
         
         // Load .NET Core
         int rc = m_HostFXRFunctions.InitForRuntimeConfigFPtr(m_RuntimeConfigPath, nullptr, &m_AssemblyContext.ContextHandle);
         if (rc != 0 || m_AssemblyContext.ContextHandle == nullptr)
         {
-            FL_ERROR("HostFXR - InitForRuntimeConfig failed: {0}", rc);
+            FBY_ERROR("HostFXR - InitForRuntimeConfig failed: {0}", rc);
             m_HostFXRFunctions.CloseFPtr(m_AssemblyContext.ContextHandle);
             return;
         }
@@ -80,7 +80,7 @@ namespace Flameberry {
         rc = m_HostFXRFunctions.GetRuntimeDelegateFPtr(m_AssemblyContext.ContextHandle, hdt_load_assembly_and_get_function_pointer, &loadAssemblyAndGetFunctionPtr);
         
         if (rc != 0 || loadAssemblyAndGetFunctionPtr == nullptr)
-            FL_ERROR("Get delegate failed: {0}", rc);
+            FBY_ERROR("Get delegate failed: {0}", rc);
         
         m_AssemblyContext.LoadAssemblyAndGetFunction = (load_assembly_and_get_function_pointer_fn)loadAssemblyAndGetFunctionPtr;
         

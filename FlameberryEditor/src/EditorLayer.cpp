@@ -11,10 +11,10 @@ namespace Flameberry {
     class MovingActor : public Flameberry::Actor {
     public:
         void OnInstanceCreated() override {
-            FL_LOG("Created MovingActor!");
+            FBY_LOG("Created MovingActor!");
         }
         void OnInstanceDeleted() override {
-            FL_LOG("Deleted MovingActor!");
+            FBY_LOG("Deleted MovingActor!");
         }
         void OnUpdate(float delta) override {
             auto& transform = GetComponent<TransformComponent>();
@@ -45,10 +45,10 @@ namespace Flameberry {
         )
     {
 #ifdef __APPLE__
-        platform::SetNewSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::NewScene));
-        platform::SetSaveSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::SaveScene));
-        platform::SetSaveSceneAsCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
-        platform::SetOpenSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::OpenScene));
+        platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
+        platform::SetSaveSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveScene));
+        platform::SetSaveSceneAsCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
+        platform::SetOpenSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::OpenScene));
         platform::CreateMenuBar();
         platform::UI_CustomTitleBar();
 #endif
@@ -56,12 +56,12 @@ namespace Flameberry {
 
     void EditorLayer::OnCreate()
     {
-        m_CursorIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/cursor_icon.png");
-        m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/translate_icon_2.png");
-        m_RotateIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/rotate_icon.png");
-        m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
-        m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
-        m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
+        m_CursorIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/cursor_icon.png");
+        m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/translate_icon_2.png");
+        m_RotateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/rotate_icon.png");
+        m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
+        m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
+        m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
 
         // Open a project browser window and if an existing project is selected then...
         // std::shared_ptr<Project> project = ProjectSerializer::DeserializeIntoNewProject("path/to/project");
@@ -72,7 +72,7 @@ namespace Flameberry {
         projectConfig.AssetDirectory = "Assets";
         projectConfig.ScriptAssemblyPath = fmt::format("bin/Debug/net7.0/{}.dll", projectConfig.Name);
 
-        m_Project = Project::Create(FL_PROJECT_DIR"SandboxProject", projectConfig);
+        m_Project = Project::Create(FBY_PROJECT_DIR"SandboxProject", projectConfig);
 
         Project::SetActive(m_Project);
         std::filesystem::current_path(m_Project->GetProjectDirectory());
@@ -129,8 +129,8 @@ namespace Flameberry {
                 m_MousePickingDescriptorSetLayout
             };
 
-            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.frag.spv";
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
@@ -146,8 +146,8 @@ namespace Flameberry {
                 m_MousePickingDescriptorSetLayout
             };
 
-            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.frag.spv";
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F, VertexInputAttribute::VEC3F, VertexInputAttribute::INT };
@@ -185,7 +185,7 @@ namespace Flameberry {
 
     void EditorLayer::OnUpdate(float delta)
     {
-        FL_PROFILE_SCOPE("EditorLayer::OnUpdate");
+        FBY_PROFILE_SCOPE("EditorLayer::OnUpdate");
         if (m_HasViewportSizeChanged)
         {
             m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
@@ -259,7 +259,7 @@ namespace Flameberry {
             int32_t entityIndex = data[0];
             m_MousePickingBuffer->UnmapMemory();
             m_SceneHierarchyPanel->SetSelectionContext((entityIndex != -1) ? m_ActiveScene->GetRegistry()->get_entity_at_index(entityIndex) : fbentt::null);
-            // FL_LOG("Selected Entity Index: {0}", entityIndex);
+            // FBY_LOG("Selected Entity Index: {0}", entityIndex);
             m_IsMousePickingBufferReady = false;
         }
 
@@ -281,7 +281,7 @@ namespace Flameberry {
 
             if (m_MouseX >= 0 && m_MouseY >= 0 && m_MouseX < (int)viewportSize.x && m_MouseY < (int)viewportSize.y)
             {
-                FL_PROFILE_SCOPE("Last Mouse Picking Pass");
+                FBY_PROFILE_SCOPE("Last Mouse Picking Pass");
                 m_IsMousePickingBufferReady = true;
 
                 auto framebuffer = m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0];
@@ -346,13 +346,13 @@ namespace Flameberry {
         // Scene File Drop Target
         if (ImGui::BeginDragDropTarget() && m_EditorState == EditorState::Edit)
         {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
             {
                 const char* path = (const char*)payload->Data;
                 std::filesystem::path filePath{ path };
                 const std::string& ext = filePath.extension().string();
 
-                FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+                FBY_LOG("Payload recieved: {0}, with extension {1}", path, ext);
 
                 if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath)) {
                     if (ext == ".scene" || ext == ".berry") {
@@ -370,7 +370,7 @@ namespace Flameberry {
                     }
                 }
                 else
-                    FL_WARN("Bad File given as Scene!");
+                    FBY_WARN("Bad File given as Scene!");
             }
             ImGui::EndDragDropTarget();
         }
@@ -585,10 +585,10 @@ namespace Flameberry {
         {
             SceneSerializer::SerializeSceneToFile(savePath.c_str(), m_ActiveScene);
             m_EditorScenePath = savePath;
-            FL_LOG("Scene saved to path: {0}", savePath);
+            FBY_LOG("Scene saved to path: {0}", savePath);
             return;
         }
-        FL_ERROR("Failed to save scene!");
+        FBY_ERROR("Failed to save scene!");
     }
 
     void EditorLayer::OpenScene()
@@ -601,7 +601,7 @@ namespace Flameberry {
     {
         if (path.empty())
         {
-            FL_ERROR("Failed to load scene: path provided is null!");
+            FBY_ERROR("Failed to load scene: path provided is null!");
             return;
         }
 
@@ -609,7 +609,7 @@ namespace Flameberry {
         {
             m_EditorScenePath = path;
             m_ActiveScene->OnViewportResize(m_ViewportSize);
-            FL_INFO("Loaded Scene: {0}", m_EditorScenePath);
+            FBY_INFO("Loaded Scene: {0}", m_EditorScenePath);
         }
     }
 
@@ -817,7 +817,7 @@ namespace Flameberry {
 
         ImGui::Begin("Renderer Settings");
         ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        FL_DISPLAY_SCOPE_DETAILS_IMGUI();
+        FBY_DISPLAY_SCOPE_DETAILS_IMGUI();
 
         ImGui::Separator();
 
@@ -868,7 +868,7 @@ namespace Flameberry {
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Lambda Split");
                 ImGui::TableNextColumn();
-                FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
+                FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
                 ImGui::EndTable();
             }
         }

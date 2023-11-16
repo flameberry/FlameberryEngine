@@ -37,7 +37,7 @@ namespace Flameberry {
         YAML::Node data = YAML::Load(ss.str());
         if (!data["Project"])
         {
-            FL_ERROR("Failed to load project [{0}]: 'Project' attribute not present in file!", filePath);
+            FBY_ERROR("Failed to load project [{0}]: 'Project' attribute not present in file!", filePath);
             return false;
         };
         dest->m_Config.Name = data["Project"].as<std::string>();
@@ -45,7 +45,7 @@ namespace Flameberry {
         auto config = data["Configuration"];
         if (!config)
         {
-            FL_ERROR("Failed to load project [{0}]: 'Configuration' attribute not present in file!", filePath);
+            FBY_ERROR("Failed to load project [{0}]: 'Configuration' attribute not present in file!", filePath);
             return false;
         };
         dest->m_Config.AssetDirectory = config["AssetDirectory"].as<std::string>();

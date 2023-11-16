@@ -59,13 +59,13 @@ namespace Flameberry {
         {
             switch (Flameberry::LogLevel(logLevel))
             {
-                case Flameberry::LogLevel::TRACE: FL_TRACE(message); break;
-                case Flameberry::LogLevel::LOG: FL_LOG(message); break;
-                case Flameberry::LogLevel::INFO: FL_INFO(message); break;
-                case Flameberry::LogLevel::WARNING: FL_WARN(message); break;
-                case Flameberry::LogLevel::ERROR: FL_ERROR(message); break;
-                case Flameberry::LogLevel::CRITICAL: FL_CRITICAL(message); break;
-                default: FL_LOG(message); break;
+                case Flameberry::LogLevel::TRACE: FBY_TRACE(message); break;
+                case Flameberry::LogLevel::LOG: FBY_LOG(message); break;
+                case Flameberry::LogLevel::INFO: FBY_INFO(message); break;
+                case Flameberry::LogLevel::WARNING: FBY_WARN(message); break;
+                case Flameberry::LogLevel::ERROR: FBY_ERROR(message); break;
+                case Flameberry::LogLevel::CRITICAL: FBY_CRITICAL(message); break;
+                default: FBY_LOG(message); break;
             }
         }
         
@@ -76,7 +76,7 @@ namespace Flameberry {
         
         bool Entity_HasComponent(uint64_t entity, int hashcode)
         {
-            FL_BASIC_ASSERT(g_EntityHasComponentFunctionMap.find(hashcode) != g_EntityHasComponentFunctionMap.end());
+            FBY_BASIC_ASSERT(g_EntityHasComponentFunctionMap.find(hashcode) != g_EntityHasComponentFunctionMap.end());
             return g_EntityHasComponentFunctionMap.at(hashcode)(entity);
         }
         
@@ -168,8 +168,8 @@ namespace Flameberry {
         int hashcode = ScriptEngine::s_Data->ManagedFunctions.GetComponentHashCode(assemblyQualifiedClassName);\
         if (hashcode == -1)
         {
-            FL_ERROR("Failed to find component type: {0}", assemblyQualifiedClassName);
-            FL_DEBUGBREAK();
+            FBY_ERROR("Failed to find component type: {0}", assemblyQualifiedClassName);
+            FBY_DEBUGBREAK();
             return;
         }
         g_EntityHasComponentFunctionMap[hashcode] = [](fbentt::entity entity) { return ScriptEngine::s_Data->SceneContext->GetRegistry()->has<Component>(entity); };

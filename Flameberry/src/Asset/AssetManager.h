@@ -20,21 +20,21 @@ namespace Flameberry {
         template <typename Type>
         static std::shared_ptr<Type> TryGetOrLoadAsset(const std::filesystem::path& path)
         {
-            FL_ASSERT(!path.empty(), "Given file path is empty!");
+            FBY_ASSERT(!path.empty(), "Given file path is empty!");
             if (s_AssetFilePathToUUIDTable.find(path) != s_AssetFilePathToUUIDTable.end())
             {
                 auto asset = s_AssetTable[s_AssetFilePathToUUIDTable[path]];
-                FL_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
+                FBY_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
 
                 // Moving the asset handle to the "front" of the list to indicate that this asset is recently accessed
                 // s_AssetCache.splice(s_AssetCache.begin(), s_AssetCache, asset->CacheIterator);
 
-                FL_INFO("Found asset having filepath: {0} in asset table!", path);
+                FBY_INFO("Found asset having filepath: {0} in asset table!", path);
                 return std::static_pointer_cast<Type>(asset);
             }
 
             auto asset = AssetLoader::LoadAsset(path, Type::GetStaticAssetType());
-            FL_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
+            FBY_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
 
             s_AssetTable[asset->Handle] = asset;
             s_AssetFilePathToUUIDTable[path] = asset->Handle;
@@ -51,14 +51,14 @@ namespace Flameberry {
             if (s_AssetTable.find(handle) != s_AssetTable.end())
             {
                 auto asset = s_AssetTable[handle];
-                FL_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
+                FBY_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
 
                 // Moving the asset handle to the "front" of the list to indicate that this asset is recently accessed
                 // s_AssetCache.splice(s_AssetCache.begin(), s_AssetCache, asset->CacheIterator);
 
                 return std::static_pointer_cast<Type>(asset);
             }
-//            FL_WARN("Failed to find the asset with handle: {0}", handle);
+//            FBY_WARN("Failed to find the asset with handle: {0}", handle);
             return nullptr;
         }
 
@@ -71,7 +71,7 @@ namespace Flameberry {
                     s_AssetFilePathToUUIDTable[asset->FilePath] = asset->Handle;
                 return;
             }
-            FL_WARN("Failed to register asset with UUID: {0}, Asset already registered!", (uint64_t)asset->Handle);
+            FBY_WARN("Failed to register asset with UUID: {0}, Asset already registered!", (uint64_t)asset->Handle);
         }
 
         static bool IsAssetHandleValid(AssetHandle handle)
