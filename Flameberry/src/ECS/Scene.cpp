@@ -41,20 +41,6 @@ namespace Flameberry {
             cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
         }
 
-        // Native Scripting
-        for (auto entity : m_Registry->view<NativeScriptComponent>())
-        {
-            auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
-            nsc.Actor = nsc.InitScript();
-            nsc.Actor->m_SceneRef = this;
-            nsc.Actor->m_Entity = entity;
-
-            nsc.Actor->OnInstanceCreated();
-        }
-        
-        // CSharp Scripting
-        ScriptEngine::OnRuntimeStart(this);
-
         // Create Physics Context
         physx::PxSceneDesc sceneDesc(PhysicsEngine::GetTolerancesScale());
         sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
@@ -87,7 +73,7 @@ namespace Flameberry {
                     break;
                 }
             }
-
+            
             FBY_ASSERT(rigidBody.RuntimeRigidBody, "Failed to create RigidBody!");
 
             physx::PxShape* shape = nullptr;
@@ -148,12 +134,26 @@ namespace Flameberry {
                 shape->release();
             }
         }
+        
+        // Native Scripting
+        for (auto entity : m_Registry->view<NativeScriptComponent>())
+        {
+            auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
+            nsc.Actor = nsc.InitScript();
+            nsc.Actor->m_SceneRef = this;
+            nsc.Actor->m_Entity = entity;
+            
+            nsc.Actor->OnInstanceCreated();
+        }
+        
+        // CSharp Scripting
+        ScriptEngine::OnRuntimeStart(this);
     }
 
     void Scene::OnRuntimeStop()
     {
         m_PxScene->release();
-
+        
         // Delete Script Actors
         for (auto entity : m_Registry->view<NativeScriptComponent>())
         {

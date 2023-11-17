@@ -1,7 +1,5 @@
 #include "EditorLayer.h"
 
-#include <fmt/format.h>
-
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
 #include "UI.h"
@@ -48,7 +46,7 @@ namespace Flameberry {
         platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
         platform::SetSaveSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveScene));
         platform::SetSaveSceneAsCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
-        platform::SetOpenSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::OpenScene));
+        platform::SetOpenProjectCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::OpenProject));
         platform::CreateMenuBar();
         platform::UI_CustomTitleBar();
 #endif
@@ -70,12 +68,14 @@ namespace Flameberry {
         ProjectConfig projectConfig;
         projectConfig.Name = "SandboxProject";
         projectConfig.AssetDirectory = "Assets";
-        projectConfig.ScriptAssemblyPath = fmt::format("bin/Debug/net7.0/{}.dll", projectConfig.Name);
+        projectConfig.ScriptAssemblyPath = fmt::format("Binaries/net7.0/{}.dll", projectConfig.Name);
 
         m_Project = Project::Create(FBY_PROJECT_DIR"SandboxProject", projectConfig);
 
         Project::SetActive(m_Project);
         std::filesystem::current_path(m_Project->GetProjectDirectory());
+        
+        m_Project->Save();
 
         // TODO: Init this when the project has been opened
         ScriptEngine::Init();
@@ -568,6 +568,22 @@ namespace Flameberry {
 
     void EditorLayer::OnMouseScrolledEvent(MouseScrollEvent& e)
     {
+    }
+    
+    void EditorLayer::OpenProject()
+    {
+        std::string path = platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
+        if (!path.empty())
+            OpenProject(path);
+    }
+    
+    void EditorLayer::OpenProject(const std::string& path)
+    {
+        // 1. Unload Assets
+        // 2. Unload App Assembly
+        // 3. Load Project
+        // 4. Load App Assembly
+        FBY_ASSERT(0, "Not Implemented Yet!");
     }
 
     void EditorLayer::SaveScene()

@@ -29,6 +29,9 @@ namespace Flameberry {
 
         void InvalidateViewportImGuiDescriptorSet(uint32_t index);
         void InvalidateCompositePassImGuiDescriptorSet(uint32_t index);
+        
+        void OpenProject();
+        void OpenProject(const std::string& path);
 
         void SaveScene();
         void SaveSceneAs();
@@ -53,7 +56,7 @@ namespace Flameberry {
     private:
         EditorCameraController m_ActiveCameraController;
 
-        // Test
+        // TODO: This doesn't work
         bool m_ShouldReloadMeshShaders = false;
 
         // Scalars

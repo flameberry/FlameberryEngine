@@ -121,7 +121,7 @@ namespace Flameberry {
 
     struct ScriptComponent
     {
-        std::string FullyQualifiedClassName = "SandboxProject.Player";
+        std::string FullyQualifiedClassName;
     };
 
     struct RigidBodyComponent

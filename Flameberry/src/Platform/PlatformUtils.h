@@ -13,7 +13,7 @@ namespace Flameberry {
         void SetNewSceneCallbackMenuBar(const std::function<void()>& callback);
         void SetSaveSceneCallbackMenuBar(const std::function<void()>& callback);
         void SetSaveSceneAsCallbackMenuBar(const std::function<void()>& callback);
-        void SetOpenSceneCallbackMenuBar(const std::function<void()>& callback);
+        void SetOpenProjectCallbackMenuBar(const std::function<void()>& callback);
 
         void OpenInExplorerOrFinder(const char* path);
 

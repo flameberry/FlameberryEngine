@@ -17,7 +17,7 @@ namespace Flameberry.Managed
         {
             string? assemblyPath = Marshal.PtrToStringAuto(path);
 
-            Console.WriteLine($"LoadAssembly Called with Argument: {assemblyPath}");
+            Console.WriteLine($"INFO: LoadAssembly Called with Argument: {assemblyPath}");
 
             if (assemblyPath == null)
             {

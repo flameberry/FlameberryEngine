@@ -112,8 +112,12 @@ namespace Flameberry.Runtime
     {
     }
 
-    public class RigidBodyComponent: Component
+    public class RigidBodyComponent : Component
     {
+        public void AddForce(Vector3 force)
+        {
+            unsafe { InternalCallStorage.RigidBodyComponent_AddForce(Actor.ID, &force); };
+        }
     }
 
     public class BoxColliderComponent : Component

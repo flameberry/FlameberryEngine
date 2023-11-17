@@ -49,7 +49,7 @@ namespace Flameberry {
             return false;
         };
         dest->m_Config.AssetDirectory = config["AssetDirectory"].as<std::string>();
-        dest->m_Config.ScriptAssemblyPath = config["ScriptAssemblyDirectory"].as<std::string>();
+        dest->m_Config.ScriptAssemblyPath = config["ScriptAssemblyPath"].as<std::string>();
         return true;
     }
     
@@ -62,7 +62,7 @@ namespace Flameberry {
         {
             out << YAML::BeginMap; // Configuration
             out << YAML::Key << "AssetDirectory" << YAML::Value << project->m_Config.AssetDirectory;
-            out << YAML::Key << "ScriptAssemblyDirectory" << YAML::Value << project->m_Config.ScriptAssemblyPath;
+            out << YAML::Key << "ScriptAssemblyPath" << YAML::Value << project->m_Config.ScriptAssemblyPath;
             out << YAML::EndMap; // Configuration
         }
         out << YAML::EndMap;

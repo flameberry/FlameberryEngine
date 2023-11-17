@@ -9,6 +9,7 @@ build_makefiles/
 build_xcode/
 build/
 obj/
+SandboxProject/Binaries
 
 !Flameberry/assets/shaders/vulkan/bin
 

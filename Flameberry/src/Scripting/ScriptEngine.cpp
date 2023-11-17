@@ -7,6 +7,8 @@
 #include <dotnet/hostfxr.h>
 #include <dotnet/coreclr_delegates.h>
 
+#include <PxPhysicsAPI.h>
+
 #include "Core/Core.h"
 #include "Core/Input.h"
 
@@ -119,6 +121,16 @@ namespace Flameberry {
             context->GetRegistry()->get<TransformComponent>(entity).Scale = *scale;
         }
         
+        void RigidBodyComponent_AddForce(uint64_t entity, glm::vec3* force)
+        {
+            Scene* context = ScriptEngine::GetSceneContext();
+            auto& rigidBody = context->GetRegistry()->get<RigidBodyComponent>(entity);
+            physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
+            const auto& forceRef = *force;
+            rigidBodyRuntimePtr->addForce(physx::PxVec3(forceRef.x, forceRef.y, forceRef.z), physx::PxForceMode::eFORCE);
+            FBY_LOG("{}", *force);
+        }
+        
     }
     
     Scene* ScriptEngine::GetSceneContext() { return s_Data->SceneContext; }
@@ -210,6 +222,8 @@ namespace Flameberry {
         s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_GetScale", reinterpret_cast<void*>(&InternalCalls::TransformComponent_GetScale));
         
         s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "TransformComponent_SetScale", reinterpret_cast<void*>(&InternalCalls::TransformComponent_SetScale));
+        
+        s_Data->NativeHost.AddInternalCall("Flameberry.Managed.InternalCallStorage", "RigidBodyComponent_AddForce", reinterpret_cast<void*>(&InternalCalls::RigidBodyComponent_AddForce));
         
         s_Data->NativeHost.UploadInternalCalls();
     }
