@@ -19,6 +19,7 @@ namespace Flameberry {
 
         // Currently filter only works for windows 
         std::string OpenFile(const char* filter);
+        std::string OpenFolder();
         std::string SaveFile(const char* filter);
     }
 }

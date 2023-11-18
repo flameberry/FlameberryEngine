@@ -164,7 +164,7 @@ namespace Flameberry {
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-        UI::SearchBar("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, "Search...");
+        UI::InputBox("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, "Search...");
         ImGui::PopStyleVar(2);
 
         if (m_IsSearchBoxFocused)

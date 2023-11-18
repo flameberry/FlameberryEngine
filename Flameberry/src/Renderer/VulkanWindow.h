@@ -9,7 +9,7 @@ namespace Flameberry {
     class VulkanWindow : public Window
     {
     public:
-        VulkanWindow(int width = 1280, int height = 720, const char* title = "Flameberry Engine");
+        VulkanWindow(const WindowSpecification& specification = WindowSpecification());
         ~VulkanWindow();
 
         void Init() override;
@@ -19,9 +19,8 @@ namespace Flameberry {
         void SwapBuffers() override;
 
         GLFWwindow* GetGLFWwindow() const override { return m_Window; }
+        const WindowSpecification& GetSpecification() const override { return m_Specification; }
         VkSurfaceKHR GetWindowSurface() const { return m_WindowSurface; }
-        uint32_t GetWidth() const override { return m_Width; }
-        uint32_t GetHeight() const override { return m_Height; }
         uint32_t GetImageIndex() const override { return m_ImageIndex; }
         std::shared_ptr<SwapChain> GetSwapChain() const { return m_SwapChain; }
 
@@ -30,12 +29,15 @@ namespace Flameberry {
         void DestroyVulkanWindowSurface(VkInstance instance);
 
         void SetEventCallBack(const std::function<void(Event&)>& fn) override;
+        void SetSize(int width, int height) override;
+        void SetTitle(const char* title) override;
+        
         void Resize() override;
     private:
         GLFWwindow* m_Window;
         VkSurfaceKHR m_WindowSurface = VK_NULL_HANDLE;
-        uint32_t m_Width, m_Height;
-        const char* m_Title;
+        
+        WindowSpecification m_Specification;
 
         std::shared_ptr<SwapChain> m_SwapChain;
         uint32_t m_ImageIndex = 0;

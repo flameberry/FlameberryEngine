@@ -9,10 +9,17 @@
 #include "Renderer/VulkanContext.h"
 
 namespace Flameberry {
+    
+    struct ApplicationSpecification
+    {
+        std::string Name;
+        WindowSpecification WindowSpec;
+    };
+    
     class Application
     {
     public:
-        Application();
+        Application(const ApplicationSpecification& specification);
         ~Application();
         void Run();
 
@@ -26,17 +33,16 @@ namespace Flameberry {
         
         void BlockImGuiEvents(bool value) { m_ImGuiLayer->BlockEvents(value); }
 
-        template<typename T, typename... Args> void PushLayer(Args... args) {
-            auto& layer = m_LayerStack.emplace_back(std::make_shared<T>(std::forward<Args>(args)...));
-            layer->OnCreate();
-        }
-        inline void PopLayer() { m_LayerStack.pop_back(); }
+        void PushLayer(Layer* layer);
+        void PopLayer(Layer* layer);
     private:
+        ApplicationSpecification m_Specification;
+        
         std::shared_ptr<Window> m_Window;
         std::shared_ptr<VulkanContext> m_VulkanContext;
         std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
 
-        std::vector<std::shared_ptr<Layer>> m_LayerStack;
+        std::vector<Layer*> m_LayerStack;
     private:
         static Application* s_Instance;
     };

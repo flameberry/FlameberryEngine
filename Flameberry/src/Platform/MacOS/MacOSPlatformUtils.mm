@@ -151,12 +151,34 @@ namespace Flameberry {
             NSArray *fileURLs = [NSArray arrayWithObjects:url, nil];
             [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:fileURLs];
         }
+        
+        std::string OpenFolder()
+        {
+            NSWindow *keyWindow = [NSApp keyWindow];
+            NSArray* URLs;
+            NSOpenPanel* panel = [NSOpenPanel openPanel];
+            
+            [panel setCanChooseFiles:NO];
+            [panel setCanChooseDirectories:YES];
+            
+            [panel setAllowsMultipleSelection : NO];
+            [panel setResolvesAliases : YES];
+            [panel setTreatsFilePackagesAsDirectories : YES];
+            [panel setMessage : @"Select a folder."];
+            [panel runModal];
+            URLs = [panel URLs];
+            [keyWindow makeKeyWindow];
+            if ([URLs count])
+                return std::string([[[URLs objectAtIndex:0] path] UTF8String]);
+            return "";
+        }
 
         std::string OpenFile(const char* filter)
         { 
             NSWindow *keyWindow = [NSApp keyWindow];
             NSArray* URLs;
             NSOpenPanel* panel = [NSOpenPanel openPanel];
+            
             [panel setAllowsMultipleSelection : NO];
             [panel setResolvesAliases : YES];
             [panel setTreatsFilePackagesAsDirectories : YES];

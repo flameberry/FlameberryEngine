@@ -126,9 +126,7 @@ namespace Flameberry {
             Scene* context = ScriptEngine::GetSceneContext();
             auto& rigidBody = context->GetRegistry()->get<RigidBodyComponent>(entity);
             physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
-            const auto& forceRef = *force;
-            rigidBodyRuntimePtr->addForce(physx::PxVec3(forceRef.x, forceRef.y, forceRef.z), physx::PxForceMode::eFORCE);
-            FBY_LOG("{}", *force);
+            rigidBodyRuntimePtr->addForce(physx::PxVec3(force->x, force->y, force->z), physx::PxForceMode::eFORCE);
         }
         
     }

@@ -162,7 +162,7 @@ namespace Flameberry {
     void ImGuiLayer::End()
     {
         ImGuiIO& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetWidth(), (float)VulkanContext::GetCurrentWindow()->GetHeight());
+        io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetSpecification().Width, (float)VulkanContext::GetCurrentWindow()->GetSpecification().Height);
 
         ImGui::Render();
         ImDrawData* main_draw_data = ImGui::GetDrawData();
@@ -221,7 +221,7 @@ namespace Flameberry {
         const auto& device = VulkanContext::GetCurrentDevice();
 
         const auto& swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
-        uint32_t imageCount = swapchain->GetImages().size();
+        auto imageCount = swapchain->GetImages().size();
 
         // Image Views creation
         m_ImGuiImageViews.resize(imageCount);

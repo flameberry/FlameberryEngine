@@ -4,6 +4,8 @@
 #include "Renderer/Framebuffer.h"
 #include "UI.h"
 
+#include "Physics/PhysicsEngine.h"
+
 namespace Flameberry {
 
     class MovingActor : public Flameberry::Actor {
@@ -31,11 +33,11 @@ namespace Flameberry {
     };
 
     struct CameraUniformBufferObject { glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix; };
-    EditorLayer::EditorLayer()
-        : m_ActiveCameraController(PerspectiveCameraSpecification{
+    EditorLayer::EditorLayer(const std::shared_ptr<Project>& project)
+        : m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{
             glm::vec3(0.0f, 2.0f, 4.0f),
             glm::vec3(0.0f, -0.3f, -1.0f),
-            (float)Application::Get().GetWindow().GetWidth() / (float)Application::Get().GetWindow().GetHeight(),
+            (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height,
             45.0f,
             0.1f,
             1000.0f
@@ -61,21 +63,12 @@ namespace Flameberry {
         m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
         m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
 
-        // Open a project browser window and if an existing project is selected then...
-        // std::shared_ptr<Project> project = ProjectSerializer::DeserializeIntoNewProject("path/to/project");
-
-        // If a new project is to be created then
-        ProjectConfig projectConfig;
-        projectConfig.Name = "SandboxProject";
-        projectConfig.AssetDirectory = "Assets";
-        projectConfig.ScriptAssemblyPath = fmt::format("Binaries/net7.0/{}.dll", projectConfig.Name);
-
-        m_Project = Project::Create(FBY_PROJECT_DIR"SandboxProject", projectConfig);
-
         Project::SetActive(m_Project);
         std::filesystem::current_path(m_Project->GetProjectDirectory());
         
-        m_Project->Save();
+        // m_Project->Save();
+        
+        PhysicsEngine::Init();
 
         // TODO: Init this when the project has been opened
         ScriptEngine::Init();
@@ -305,6 +298,7 @@ namespace Flameberry {
     void EditorLayer::OnDestroy()
     {
         ScriptEngine::Shutdown();
+        PhysicsEngine::Shutdown();
         Renderer2D::Shutdown();
     }
 

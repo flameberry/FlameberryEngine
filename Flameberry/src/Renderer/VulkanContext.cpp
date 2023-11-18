@@ -55,7 +55,7 @@ namespace Flameberry {
                 physical_device_list += ", ";
         }
 
-        FBY_TRACE("{0} Physical devices found: {1}", deviceCount, physical_device_list);
+        FBY_TRACE("{} Physical devices found: {}", deviceCount, physical_device_list);
 
         // Accessing the actual physical device
         m_VkPhysicalDevice = GetValidPhysicalDevice(vk_physical_devices, pWindow->GetWindowSurface());
@@ -63,7 +63,7 @@ namespace Flameberry {
 
         VkPhysicalDeviceProperties vk_physical_device_props;
         vkGetPhysicalDeviceProperties(m_VkPhysicalDevice, &vk_physical_device_props);
-        FBY_INFO("Selected Vulkan Physical Device: {0}", vk_physical_device_props.deviceName);
+        FBY_INFO("Selected Vulkan Physical Device: {}", vk_physical_device_props.deviceName);
 
         m_VulkanDevice = VulkanDevice::Create(m_VkPhysicalDevice, pWindow);
 
