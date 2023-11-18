@@ -39,7 +39,7 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
 
-        UI::SearchBar("##SceneHierarchySearchBar", width, m_SearchInputBuffer, 256, "Search...");
+        UI::InputBox("##SceneHierarchySearchBar", width, m_SearchInputBuffer, 256, "Search...");
 
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();

@@ -37,7 +37,7 @@ namespace Flameberry {
         return ImGui::Button(label);
     }
 
-    void UI::SearchBar(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint)
+    void UI::InputBox(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint)
     {
         ImGui::PushItemWidth(width);
         ImGui::InputTextWithHint(label, inputHint, inputBuffer, inputLength);

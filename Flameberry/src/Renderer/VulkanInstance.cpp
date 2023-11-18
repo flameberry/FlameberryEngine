@@ -19,19 +19,19 @@ namespace Flameberry {
         switch (messageSeverity)
         {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            FBY_LOG("{0}", pCallbackData->pMessage);
+            FBY_LOG("{}", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            FBY_INFO("{0}", pCallbackData->pMessage);
+            FBY_INFO("{}", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            FBY_WARN("{0}", pCallbackData->pMessage);
+            FBY_WARN("{}", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            FBY_ERROR("{0}", pCallbackData->pMessage);
+            FBY_ERROR("{}", pCallbackData->pMessage);
             break;
         default:
-            FBY_TRACE("{0}", pCallbackData->pMessage);
+            FBY_TRACE("{}", pCallbackData->pMessage);
             break;
         }
 #else

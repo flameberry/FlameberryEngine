@@ -6,6 +6,8 @@
 #include "Renderer/Framebuffer.h"
 #include "UI.h"
 
+#include "Physics/PhysicsEngine.h"
+
 namespace Flameberry {
 
     class MovingActor : public Flameberry::Actor {
@@ -37,7 +39,7 @@ namespace Flameberry {
         : m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{
             glm::vec3(0.0f, 2.0f, 4.0f),
             glm::vec3(0.0f, -0.3f, -1.0f),
-            (float)Application::Get().GetWindow().GetWidth() / (float)Application::Get().GetWindow().GetHeight(),
+            (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height,
             45.0f,
             0.1f,
             1000.0f
@@ -63,6 +65,7 @@ namespace Flameberry {
         m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
         m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
 
+        PhysicsEngine::Init();
         m_ActiveScene = Scene::Create();
         m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
         m_ContentBrowserPanel = ContentBrowserPanel::Create();
@@ -295,6 +298,7 @@ namespace Flameberry {
 
     void EditorLayer::OnDestroy()
     {
+        PhysicsEngine::Shutdown();
         Renderer2D::Shutdown();
     }
 

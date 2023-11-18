@@ -121,7 +121,6 @@ namespace Flameberry {
 
                 vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
             });
-
     }
 
     void RenderCommand::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize)

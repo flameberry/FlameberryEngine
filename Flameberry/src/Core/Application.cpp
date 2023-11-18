@@ -9,26 +9,16 @@
 #include "Renderer/Texture2D.h"
 #include "Asset/AssetManager.h"
 
-// TODO: Find a better place for this
-#include "Physics/PhysicsEngine.h"
-
 #include "Platform/PlatformUtils.h"
-
-#ifdef FBY_DEBUG
-#define FBY_WINDOW_TITLE "Flameberry Engine [Debug]"
-#elif defined(FBY_RELEASE)
-#define FBY_WINDOW_TITLE "Flameberry Engine [Release]"
-#else
-#define FBY_WINDOW_TITLE "Flameberry Engine [Unknown]"
-#endif
 
 namespace Flameberry {
     Application* Application::s_Instance;
 
-    Application::Application()
+    Application::Application(const ApplicationSpecification& specification)
+        : m_Specification(specification)
     {
         s_Instance = this;
-        m_Window = Window::Create(1280, 720, FBY_WINDOW_TITLE);
+        m_Window = Window::Create(m_Specification.WindowSpec);
         m_Window->SetEventCallBack(FBY_BIND_EVENT_FN(Application::OnEvent));
 
         m_VulkanContext = VulkanContext::Create((VulkanWindow*)m_Window.get());
@@ -43,8 +33,6 @@ namespace Flameberry {
         Texture2D::InitStaticResources();
 
         m_ImGuiLayer = std::make_unique<ImGuiLayer>();
-
-        PhysicsEngine::Init();
     }
 
     void Application::Run()
@@ -105,14 +93,31 @@ namespace Flameberry {
         m_Window->Resize();
         m_ImGuiLayer->InvalidateResources();
     }
+    
+    void Application::PushLayer(Layer* layer) 
+    {
+        m_LayerStack.emplace_back(layer);
+        layer->OnCreate();
+    }
+    
+    void Application::PopLayer(Layer* layer) 
+    {
+        auto iterator = std::find(m_LayerStack.begin(), m_LayerStack.end(), layer);
+        (*iterator)->OnDestroy();
+        delete (*iterator);
+        m_LayerStack.erase(iterator);
+    }
 
     Application::~Application()
     {
         VulkanContext::GetCurrentDevice()->WaitIdle();
-        for (auto& layer : m_LayerStack)
+        
+        for (auto* layer : m_LayerStack)
+        {
             layer->OnDestroy();
-
-        PhysicsEngine::Shutdown();
+            delete layer;
+        }
+        
         m_ImGuiLayer->OnDestroy();
 
         Texture2D::DestroyStaticResources();
