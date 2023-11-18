@@ -339,6 +339,22 @@ namespace Flameberry {
         }
         return false;
     }
+    
+    template<typename... Component>
+    static void CopyComponentIfExists(Scene* context, fbentt::entity dest, fbentt::entity src)
+    {
+        ([&]()
+         {
+            if (auto* comp = context->GetRegistry()->try_get<Component>(src); comp)
+                context->GetRegistry()->emplace<Component>(dest, *comp);
+        }(), ...);
+    }
+    
+    template<typename... Component>
+    static void CopyComponentIfExists(ComponentList<Component...>, Scene* context, fbentt::entity dest, fbentt::entity src)
+    {
+        CopyComponentIfExists<Component...>(context, dest, src);
+    }
 
     fbentt::entity Scene::DuplicateEntity(fbentt::entity src)
     {
@@ -346,30 +362,11 @@ namespace Flameberry {
         const auto destEntity = m_Registry->create();
         // auto& duplicateRelation = m_Registry->emplace<RelationshipComponent>(entity);
 
-        // Copy Each Component
-        static uint32_t i = 0;
-        std::string tag = m_Registry->get<TagComponent>(src).Tag + " - Duplicate " + std::to_string(i);
-        i++;
-
         m_Registry->emplace<IDComponent>(destEntity);
-        m_Registry->emplace<TagComponent>(destEntity, tag);
-        m_Registry->emplace<TransformComponent>(destEntity, m_Registry->get<TransformComponent>(src));
-
-        if (auto* comp = m_Registry->try_get<CameraComponent>(src); comp)
-            m_Registry->emplace<CameraComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<MeshComponent>(src); comp)
-            m_Registry->emplace<MeshComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<PointLightComponent>(src); comp)
-            m_Registry->emplace<PointLightComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<RigidBodyComponent>(src); comp)
-            m_Registry->emplace<RigidBodyComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<BoxColliderComponent>(src); comp)
-            m_Registry->emplace<BoxColliderComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<SphereColliderComponent>(src); comp)
-            m_Registry->emplace<SphereColliderComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<CapsuleColliderComponent>(src); comp)
-            m_Registry->emplace<CapsuleColliderComponent>(destEntity, *comp);
-
+        m_Registry->emplace<TagComponent>(destEntity, m_Registry->get<TagComponent>(src).Tag);
+        
+        CopyComponentIfExists(AllComponents{}, this, destEntity, src);
+        
         // auto* relation = m_Registry->try_get<RelationshipComponent>(src);
         // if (relation && relation->Parent != fbentt::null)
         // {
