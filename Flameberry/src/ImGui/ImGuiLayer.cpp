@@ -120,15 +120,6 @@ namespace Flameberry {
         init_info.Allocator = VK_NULL_HANDLE;
         // init_info.CheckVkResultFn = vk_check_result;
         ImGui_ImplVulkan_Init(&init_info, m_ImGuiLayerRenderPass);
-
-        // Upload fonts
-        VkCommandBuffer commandBuffer;
-        device->BeginSingleTimeCommandBuffer(commandBuffer);
-        ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-        device->EndSingleTimeCommandBuffer(commandBuffer);
-        device->WaitIdle();
-
-        ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
 
     void ImGuiLayer::OnDestroy()
