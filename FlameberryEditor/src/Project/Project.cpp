@@ -16,8 +16,8 @@ namespace Flameberry {
     
     void Project::Save()
     {
-        std::string fileName = s_ActiveProject->m_Config.Name + ".fbproj";
-        ProjectSerializer::SerializeProject(GetActiveProjectDirectory() / fileName, this);
+        std::string fileName = m_Config.Name + ".fbproj";
+        ProjectSerializer::SerializeProject(m_ProjectDirectory / fileName, this);
     }
 
     std::shared_ptr<Project> ProjectSerializer::DeserializeIntoNewProject(const std::filesystem::path& filePath)

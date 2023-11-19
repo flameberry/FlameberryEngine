@@ -20,8 +20,8 @@ namespace Flameberry {
         std::shared_ptr<Project> m_Project;
         std::function<void(const std::shared_ptr<Project>&)> m_Callback;
         
-        char m_ProjectPathBuffer[512] = { '\0' };
-        char m_ProjectNameBuffer[128] = { '\0' };
+        char m_ProjectNameBuffer[128] = "";
+        char m_ProjectPathBuffer[512] = "";
     };
     
 }

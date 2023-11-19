@@ -113,7 +113,7 @@ namespace Flameberry {
         ImGui::Begin("Content Browser");
         ImGui::PopStyleVar();
 
-        m_SecondChildSize = ImGui::GetWindowContentRegionWidth() - m_FirstChildSize - 8.0f;
+        m_SecondChildSize = ImGui::GetContentRegionAvail().x - m_FirstChildSize - 8.0f;
 
         UI::Splitter(true, 1.2f, &m_FirstChildSize, &m_SecondChildSize, 10.0f, 80.0f);
 
