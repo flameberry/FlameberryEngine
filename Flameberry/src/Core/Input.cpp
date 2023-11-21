@@ -1,27 +1,36 @@
 #include "Input.h"
-#include "../Renderer/Renderer2D.h"
+#include "Core/Application.h"
 
 namespace Flameberry {
-    GLFWwindow* Input::m_GLFWwindowCache = NULL;
-
-    bool Input::IsKey(uint16_t key, uint16_t action)
+    bool Input::IsKeyPressed(uint16_t key)
     {
-        if (glfwGetKey(GetCachedWindow(), key) == action)
-            return true;
-        return false;
+        GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
+        return glfwGetKey(window, key) == GLFW_PRESS;
     }
 
-    bool Input::IsMouseButton(uint16_t button, uint16_t action)
+    bool Input::IsMouseButtonPressed(uint16_t button)
     {
-        if (glfwGetMouseButton(GetCachedWindow(), button) == action)
-            return true;
-        return false;
+        GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
+        return glfwGetMouseButton(window, button) == GLFW_PRESS;
     }
 
-    GLFWwindow* Input::GetCachedWindow()
+    glm::vec2 Input::GetCursorPosition()
     {
-        if (!m_GLFWwindowCache)
-            m_GLFWwindowCache = Renderer2D::GetUserGLFWwindow();
-        return m_GLFWwindowCache;
+        GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+        return glm::vec2((float)x, (float)y);
+    }
+    
+    void Input::SetCursorPosition(const glm::vec2 &pos)
+    {
+        GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
+        glfwSetCursorPos(window, pos.x, pos.y);
+    }
+
+    void Input::SetCursorMode(uint32_t mode)
+    {
+        GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
+        glfwSetInputMode(window, GLFW_CURSOR, mode);
     }
 }

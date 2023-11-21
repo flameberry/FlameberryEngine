@@ -1,69 +1,70 @@
 import os
+import time
 import pathlib
-import glob
-import platform
+import requests
+import tarfile
 import subprocess
-
-fl_project_dir = pathlib.Path(__file__).parent.parent
-fl_project_name = 'FlameberryEngine'
+from zipfile import ZipFile
 
 
-def find_cmake() -> str:
-    cmake_search_dir = ''
-    preferred_cmake_path = ''
-
-    if platform.system() == 'Darwin':
-        preferred_cmake_path = pathlib.Path(
-            f'{fl_project_dir}/vendor/cmake/cmake')
-        cmake_search_dir = '/usr/**/cmake'
-    elif platform.system() == 'Windows':
-        preferred_cmake_path = pathlib.Path(
-            f'{fl_project_dir}/vendor/cmake/cmake.exe')
-        cmake_search_dir = f'{os.environ["ProgramFiles"]}\**\cmake.exe'
-
-    if preferred_cmake_path.is_file():
-        print(f"[FLAMEBERRY]: CMake found at {preferred_cmake_path}")
-        return preferred_cmake_path
-
-    for path in glob.glob(f'{cmake_search_dir}', recursive=True):
-        if path:
-            print(f"[FLAMEBERRY]: CMake found at {path}")
-            return path
-
-    print("[FLAMEBERRY]: CMake not found!\n[FLAMEBERRY]: If you wish to install cmake, visit https://cmake.org/download/")
-    return ''
+def get_project_dir() -> pathlib.Path:
+    return pathlib.Path(__file__).parent.parent
 
 
-def build_fl_engine():
-    # Searching For CMake
-    cmake_path = find_cmake()
-    if cmake_path == '':
+def is_valid_git_repo(path: os.PathLike, github_url):
+    cwd = os.getcwd()
+    # Check if the folder exists
+    if not os.path.isdir(path):
+        return False
+    try:
+        os.chdir(path)
+        # Check if the remote URL matches the provided GitHub URL
+        remote_url = subprocess.check_output(["git", "config", "--get", "remote.origin.url"], universal_newlines=True)
+        os.chdir(cwd)
+        return github_url in remote_url
+    except subprocess.CalledProcessError:
+        return False
+
+
+def download_file(url, file_path):
+    if type(url) is not str:
+        print("[FLAMEBERRY]: ERROR: URL should be a str!")
         return
 
-    # Determining Build Config for Flameberry Engine
-    cmake_build_type = 'Debug'
-    print("[FLAMEBERRY]: Enter project build configuration('d' for Debug/'r' for Release)")
-    build_type = input("[FLAMEBERRY]: ")
+    file_name = url.split("/")[-1]
 
-    if build_type.lower() == "d":
-        cmake_build_type = "Debug"
-    elif build_type.lower() == "r":
-        cmake_build_type = "Release"
+    pathlib.Path(file_path).mkdir(parents=True, exist_ok=True)
+    print(f"[FLAMEBERRY]: Preparing to download: {file_name} to path: {file_path}")
 
-    print(
-        f"[FLAMEBERRY]: {cmake_build_type} configuration selected for building Flameberry Engine.")
-    print("[FLAMEBERRY]: Starting CMake Project Generation...\n")
+    start = time.perf_counter()
 
-    # Generating project files using CMake
-    subprocess.run(
-        [f"cmake", f"-DCMAKE_BUILD_TYPE={cmake_build_type}", "-Wno-dev", "-S.", "-Bbuild/make"])
+    response = requests.get(url, stream=True)
+    file_size = int(response.headers.get("content-length"))
+    downloaded = 0
 
-    # Building the project using make
-    os.chdir(fl_project_dir / 'build/make')
+    print(f"[FLAMEBERRY]: Downloading! CMake Download Size: {round(file_size / 1024 / 1024, 2)} Mb")
 
-    print("[FLAMEBERRY]: Building Flameberry Engine project using 4 threads.")
-    subprocess.run(["make", "-j4"])
+    with open(f"{file_path}/{file_name}", "wb") as f:
+        for chunk in response.iter_content(chunk_size=1024 * 1024):
+            if chunk:
+                f.write(chunk)
+                downloaded += len(chunk)
+                percent = round(downloaded * 100 / file_size, 2)
+                print(f"[FLAMEBERRY]: Downloading CMake... [{percent}%] [{round(downloaded / 1024 / 1024, 3)} MB]")
+    print(f"[FLAMEBERRY]: Done! The download took {round(time.perf_counter() - start, 1)} seconds!")
 
-    os.chdir(fl_project_dir)
-    print(
-        f'[FLAMEBERRY]: The Flameberry Engine project executable is generated at the path bin/{cmake_build_type}/SandboxApp-{platform.system()}-{platform.machine()}/SandboxApp_{cmake_build_type}')
+
+def unzip_file(file_ext, src, dest_folder):
+    if file_ext == "zip":
+        with ZipFile(src, "r") as zip:
+            # extracting all the files
+            print(f"[FLAMEBERRY]: Extracting {src}")
+            zip.extractall(dest_folder)
+    elif file_ext == "tar.gz":
+        file = tarfile.open(src)
+        file.extractall(dest_folder)
+        file.close()
+    else:
+        print("[FLAMEBERRY]: ERROR: Compressed file extension is not supported!")
+        return
+    print(f"[FLAMEBERRY]: Extracted {src} to {dest_folder}")

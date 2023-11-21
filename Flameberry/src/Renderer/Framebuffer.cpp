@@ -1,91 +1,113 @@
 #include "Framebuffer.h"
-#include "../Core/Core.h"
-#include <glad/glad.h>
+
+#include "VulkanContext.h"
+#include "VulkanDebug.h"
+#include "RenderCommand.h"
 
 namespace Flameberry {
-    std::shared_ptr<Framebuffer> Framebuffer::Create(float width, float height)
+    Framebuffer::Framebuffer(const FramebufferSpecification& specification)
+        : m_FramebufferSpec(specification)
     {
-        return std::make_shared<Framebuffer>(width, height);
+        Invalidate();
     }
 
-    Framebuffer::Framebuffer(float width, float height)
-        : m_FramebufferId(0), m_ColorAttachmentId(0), m_DepthAttachmentId(0), m_FramebufferSize(width, height)
+    void Framebuffer::OnResize(uint32_t width, uint32_t height, VkRenderPass renderPass)
     {
-        glGenFramebuffers(1, &m_FramebufferId);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
-
-        glGenTextures(1, &m_ColorAttachmentId);
-        glBindTexture(GL_TEXTURE_2D, m_ColorAttachmentId);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_FramebufferSize.x, m_FramebufferSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachmentId, 0);
-
-        glGenTextures(1, &m_DepthAttachmentId);
-        glBindTexture(GL_TEXTURE_2D, m_DepthAttachmentId);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_FramebufferSize.x, m_FramebufferSize.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachmentId, 0);
-
-        FL_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        m_FramebufferSpec.Width = width;
+        m_FramebufferSpec.Height = height;
+        Invalidate();
+        CreateVulkanFramebuffer(renderPass);
     }
 
-    void Framebuffer::OnUpdate()
+    void Framebuffer::CreateVulkanFramebuffer(VkRenderPass renderPass)
     {
-        if (m_FramebufferId)
+        VkImageView imageViews[m_FramebufferImages.size()];
+        for (uint32_t i = 0; i < m_FramebufferImages.size(); i++)
+            imageViews[i] = m_FramebufferImages[i]->GetImageView();
+
+        VkFramebufferCreateInfo vk_framebuffer_create_info{};
+        vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        vk_framebuffer_create_info.renderPass = renderPass;
+        vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(m_FramebufferImages.size());
+        vk_framebuffer_create_info.pAttachments = imageViews;
+        vk_framebuffer_create_info.width = m_FramebufferSpec.Width;
+        vk_framebuffer_create_info.height = m_FramebufferSpec.Height;
+        vk_framebuffer_create_info.layers = 1;
+
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        VK_CHECK_RESULT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VkFramebuffer));
+    }
+
+    void Framebuffer::Invalidate()
+    {
+        if (m_VkFramebuffer != VK_NULL_HANDLE)
         {
-            glDeleteFramebuffers(1, &m_FramebufferId);
-            glDeleteTextures(1, &m_ColorAttachmentId);
-            glDeleteTextures(1, &m_DepthAttachmentId);
+            const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+            VulkanContext::GetCurrentDevice()->WaitIdle();
+            vkDestroyFramebuffer(device, m_VkFramebuffer, nullptr);
+
+            m_FramebufferImages.clear();
         }
 
-        glGenFramebuffers(1, &m_FramebufferId);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
+        std::vector<FramebufferAttachmentSpecification> colorAttachments;
 
-        glGenTextures(1, &m_ColorAttachmentId);
-        glBindTexture(GL_TEXTURE_2D, m_ColorAttachmentId);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_FramebufferSize.x, m_FramebufferSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        for (const auto& attachment : m_FramebufferSpec.Attachments)
+        {
+            ImageSpecification imageSpec;
+            imageSpec.Width = m_FramebufferSpec.Width;
+            imageSpec.Height = m_FramebufferSpec.Height;
+            imageSpec.MipLevels = 1;
+            imageSpec.ArrayLayers = attachment.LayerCount;
+            imageSpec.Samples = m_FramebufferSpec.Samples;
+            imageSpec.Format = attachment.Format;
+            imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
+            imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+            imageSpec.Usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT; // TODO: Remove setting usage as VK_IMAGE_USAGE_TRANSFER_SRC_BIT for all
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            imageSpec.ViewSpecification.LayerCount = attachment.LayerCount;
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachmentId, 0);
+            if (RenderCommand::DoesFormatSupportDepthAttachment(attachment.Format))
+            {
+                imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
+                imageSpec.Usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+                m_DepthAttachmentIndex = m_FramebufferImages.size();
+            }
+            else
+            {
+                imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+                imageSpec.Usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        glGenTextures(1, &m_DepthAttachmentId);
-        glBindTexture(GL_TEXTURE_2D, m_DepthAttachmentId);
+                colorAttachments.emplace_back(attachment);
+            }
+            m_FramebufferImages.emplace_back(Image::Create(imageSpec));
+        }
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_FramebufferSize.x, m_FramebufferSize.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachmentId, 0);
+        if (m_FramebufferSpec.Samples > 1)
+        {
+            for (auto& attachment : colorAttachments)
+            {
+                ImageSpecification imageSpec;
+                imageSpec.Width = m_FramebufferSpec.Width;
+                imageSpec.Height = m_FramebufferSpec.Height;
+                imageSpec.MipLevels = 1;
+                imageSpec.ArrayLayers = attachment.LayerCount;
+                imageSpec.Samples = 1;
+                imageSpec.Format = attachment.Format;
+                imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
+                imageSpec.Usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+                imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-        FL_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
+                imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+                imageSpec.ViewSpecification.LayerCount = attachment.LayerCount;
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
-    void Framebuffer::SetFramebufferSize(float width, float height)
-    {
-        m_FramebufferSize = { width, height };
-    }
-
-    void Framebuffer::Bind() const
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
-        glViewport(0, 0, m_FramebufferSize.x, m_FramebufferSize.y);
-    }
-
-    void Framebuffer::Unbind() const
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                m_FramebufferImages.emplace_back(Image::Create(imageSpec));
+            }
+        }
     }
 
     Framebuffer::~Framebuffer()
     {
-        glDeleteTextures(1, &m_ColorAttachmentId);
-        glDeleteTextures(1, &m_DepthAttachmentId);
-        glDeleteFramebuffers(1, &m_FramebufferId);
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyFramebuffer(device, m_VkFramebuffer, nullptr);
     }
 }

@@ -1,23 +1,43 @@
-file(GLOB_RECURSE SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-add_library(Flameberry STATIC ${SRC_FILES} ${IMGUI_SRC})
+file(GLOB_RECURSE SRC_FILES 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+)
+
+if(MSVC OR XCODE)
+    list(APPEND SRC_FILES ${GLSL_SOURCE_FILES})
+endif()
+
+if(WIN32)
+    file(GLOB EXCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.mm)
+elseif(APPLE)
+    file(GLOB EXCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Windows/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Windows/*.h)
+endif()
+
+exclude_from_list(SRC_FILES ${EXCLUDE_FILES})
+
+add_library(Flameberry STATIC ${SRC_FILES} ${FL_DEPENDENCY_SOURCE})
+target_compile_features(Flameberry PUBLIC cxx_std_17)
+
+add_dependencies(Flameberry CompileShadersTarget)
 
 set_custom_build_properties(Flameberry)
 
 # Defines "FL_DEBUG" for Debug build, and "FL_RELEASE" for Release build
 set_build_config_macro_for_target(Flameberry)
 
-if(${FL_PROJ_GENERATOR} STREQUAL "Xcode")
+if(XCODE)
     target_compile_definitions(Flameberry PRIVATE FL_XCODE_PROJ)
 endif()
 
-target_include_directories(Flameberry PRIVATE ${FL_GRAPHICS_INCLUDE_DIRS})
-target_include_directories(Flameberry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/vendor/Glad/include)
+target_include_directories(Flameberry PRIVATE ${FL_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src)
 
 # Add Dependencies
 add_subdirectory(vendor/GLFW)
-add_subdirectory(vendor/Glad)
+add_subdirectory(vendor/yaml-cpp)
 
-target_compile_definitions(Flameberry PRIVATE GLFW_INCLUDE_NONE FL_PROJECT_DIR="${FL_SOURCE_DIR}" IMGUI_IMPL_OPENGL_LOADER_GLAD)
+target_compile_definitions(Flameberry PRIVATE ${FL_COMPILE_DEFINITIONS})
 
-# "FL_GRAPHICS_LIBS" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
-target_link_libraries(Flameberry PRIVATE ${FL_GRAPHICS_LIBS})
+# "FL_LIBRARY_DEPENDENCIES" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
+target_link_libraries(Flameberry PRIVATE ${FL_LIBRARY_DEPENDENCIES})

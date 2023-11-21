@@ -12,20 +12,28 @@
 #define FL_COLOR_DEFAULT ""
 #define FL_COLOR_RED ""
 #define FL_COLOR_GREEN ""
+#define FL_COLOR_BRIGHT_GREEN ""
 #define FL_COLOR_YELLOW ""
+#define FL_COLOR_BRIGHT_YELLOW ""
 #define FL_COLOR_PURPLE ""
 #define FL_COLOR_CYAN ""
 #define FL_COLOR_WHITE ""
+
+#define FL_BG_COLOR_RED ""
 
 #else
 
 #define FL_COLOR_DEFAULT "\e[0m"
 #define FL_COLOR_RED "\e[0;31m"
 #define FL_COLOR_GREEN "\e[0;32m"
+#define FL_COLOR_BRIGHT_GREEN "\e[0;92m"
 #define FL_COLOR_YELLOW "\e[0;33m"
+#define FL_COLOR_BRIGHT_YELLOW "\e[0;93m"
 #define FL_COLOR_CYAN "\e[0;36m"
 #define FL_COLOR_PURPLE "\e[0;35m"
 #define FL_COLOR_WHITE "\e[0;37m"
+
+#define FL_BG_COLOR_RED "\e[0;41m"
 
 // #define FL_COLOR_DEFAULT "\033[0m"
 // #define FL_COLOR_RED "\033[31m"
@@ -38,7 +46,7 @@
 
 namespace flamelogger {
     /// This enum class is currently only used for adding log level prefix to all logger messages
-    enum class LogLevel { TRACE = 0, LOG, INFO, WARNING, ERROR };
+    enum class LogLevel : uint8_t { TRACE = 0, LOG, INFO, WARNING, ERROR, CRITICAL };
 
     std::string get_current_time_string();
 
@@ -126,13 +134,13 @@ namespace flamelogger {
         return msg;
     }
 
-    class FLInstance
+    class Logger
     {
     public:
         /// Instance Name should be set at the beginning of the program,
         /// which will be used as a prefix to all the log messages during runtime
-        FLInstance(const char* instanceName);
-        static std::shared_ptr<FLInstance> Create(const char* instanceName);
+        Logger(const char* instanceName);
+        static std::shared_ptr<Logger> Create(const char* instanceName);
         void SetLogLevel(const LogLevel& logLevel);
 
         /// Logs the message in CYAN color in the terminal
@@ -164,7 +172,7 @@ namespace flamelogger {
             if (m_CurrentLogLevel <= LogLevel::INFO)
             {
                 std::string output_message = format_string(message, args...);
-                std::cout << FL_COLOR_GREEN << get_prefix(LogLevel::INFO) << output_message << FL_COLOR_DEFAULT << std::endl;
+                std::cout << FL_COLOR_BRIGHT_GREEN << get_prefix(LogLevel::INFO) << output_message << FL_COLOR_DEFAULT << std::endl;
             }
         }
 
@@ -175,7 +183,7 @@ namespace flamelogger {
             if (m_CurrentLogLevel <= LogLevel::WARNING)
             {
                 std::string output_message = format_string(message, args...);
-                std::cout << FL_COLOR_YELLOW << get_prefix(LogLevel::WARNING) << output_message << FL_COLOR_DEFAULT << std::endl;
+                std::cout << FL_COLOR_BRIGHT_YELLOW << get_prefix(LogLevel::WARNING) << output_message << FL_COLOR_DEFAULT << std::endl;
             }
         }
 
@@ -188,6 +196,31 @@ namespace flamelogger {
                 std::string output_message = format_string(message, args...);
                 std::cout << FL_COLOR_RED << get_prefix(LogLevel::ERROR) << output_message << FL_COLOR_DEFAULT << std::endl;
             }
+        }
+
+        /// Logs the message in RED color in the terminal
+        template<typename T, typename... Args>
+        void critical(const T& message, const Args&... args)
+        {
+            if (m_CurrentLogLevel <= LogLevel::CRITICAL)
+            {
+                std::string output_message = format_string(message, args...);
+                std::cout << FL_BG_COLOR_RED << get_prefix(LogLevel::CRITICAL) << output_message << FL_COLOR_DEFAULT << std::endl;
+            }
+        }
+
+        template<typename T, typename... Args>
+        void log_assert(const char* file, int line, const T& message, const Args&... args)
+        {
+            std::string msg = format_string(message, args...);
+            std::string assert_message = format_string("{0}[ASSERT] Assertion failed: {1} (file: {2}, line: {3})", get_current_time_string(), msg, file, line);
+            std::cout << FL_COLOR_RED << assert_message << FL_COLOR_DEFAULT << std::endl;
+        }
+
+        void log_assert(const char* file, int line)
+        {
+            std::string assert_message = format_string("{0}[ASSERT] Assertion failed, file: {1}, line: {2}", get_current_time_string(), file, line);
+            std::cout << FL_COLOR_RED << assert_message << FL_COLOR_DEFAULT << std::endl;
         }
     private:
         /// Gets the prefix of the log message

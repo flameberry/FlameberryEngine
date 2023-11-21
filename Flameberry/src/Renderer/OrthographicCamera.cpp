@@ -1,36 +1,47 @@
 #include "OrthographicCamera.h"
+
+#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include "../Core/Input.h"
-#include "Renderer2D.h"
+
+#include "Core/Input.h"
 
 namespace Flameberry {
-    OrthographicCamera::OrthographicCamera(float aspectRatio, float zoom)
-        : m_ProjectionMatrix(glm::ortho(-aspectRatio * zoom, aspectRatio* zoom, -zoom, zoom, -1.0f, 1.0f)), m_ViewMatrix(1.0f)
+    OrthographicCamera::OrthographicCamera(const glm::vec2& viewportSize, float zoom)
+        : m_ViewportSize(viewportSize), m_Zoom(zoom), m_ViewMatrix(1.0f)
     {
+        m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y;
+        m_ProjectionMatrix = glm::ortho(-m_AspectRatio * zoom, m_AspectRatio * zoom, -zoom, zoom, -1.0f, 1.0f);
         m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
     }
 
-    void OrthographicCamera::AddControls()
-    {
-        // Camera Movement
-        if (Input::IsKey(GLFW_KEY_W, GLFW_PRESS))
-            m_CameraPosition.y += Renderer2D::ConvertYAxisPixelValueToOpenGLValue(m_CameraSensitivity);
-        else if (Input::IsKey(GLFW_KEY_S, GLFW_PRESS))
-            m_CameraPosition.y -= Renderer2D::ConvertYAxisPixelValueToOpenGLValue(m_CameraSensitivity);
-        else if (Input::IsKey(GLFW_KEY_D, GLFW_PRESS))
-            m_CameraPosition.x += Renderer2D::ConvertXAxisPixelValueToOpenGLValue(m_CameraSensitivity);
-        else if (Input::IsKey(GLFW_KEY_A, GLFW_PRESS))
-            m_CameraPosition.x -= Renderer2D::ConvertXAxisPixelValueToOpenGLValue(m_CameraSensitivity);
-    }
-
     OrthographicCamera::~OrthographicCamera()
-    {
-    }
+    {}
 
-    void OrthographicCamera::OnUpdate()
+    void OrthographicCamera::OnUpdate(float delta)
     {
-        AddControls();
+        if (Input::IsKeyPressed(GLFW_KEY_LEFT_ALT))
+        {
+            // Camera Movement
+            if (Input::IsKeyPressed(GLFW_KEY_UP))
+                m_CameraPosition.y += m_CameraSpeed * delta;
+            else if (Input::IsKeyPressed(GLFW_KEY_DOWN))
+                m_CameraPosition.y -= m_CameraSpeed * delta;
+            else if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
+                m_CameraPosition.x += m_CameraSpeed * delta;
+            else if (Input::IsKeyPressed(GLFW_KEY_LEFT))
+                m_CameraPosition.x -= m_CameraSpeed * delta;
 
+            // Zoom Controls
+            if (Input::IsKeyPressed(GLFW_KEY_I))
+                m_Zoom -= 0.025f;
+            if (Input::IsKeyPressed(GLFW_KEY_O))
+                m_Zoom += 0.025f;
+        }
+
+        m_Zoom = glm::max(m_Zoom, 0.1f);
+        m_CameraSpeed = m_Zoom * 2.5f;
+
+        m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y;
         m_ProjectionMatrix = glm::ortho(-m_AspectRatio * m_Zoom, m_AspectRatio * m_Zoom, -m_Zoom, m_Zoom, -1.0f, 1.0f);
 
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_CameraPosition) * glm::rotate(glm::mat4(1.0f), glm::radians(m_CameraRotation), glm::vec3(0, 0, 1));

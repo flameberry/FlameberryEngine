@@ -1,17 +1,14 @@
 #pragma once
+
 #include <glm/glm.hpp>
-#include <GLFW/glfw3.h>
-#include "Core.h"
 
 namespace Flameberry {
-    class Input
+    struct Input
     {
-    public:
-        static bool IsKey(uint16_t key, uint16_t action);
-        static bool IsMouseButton(uint16_t button, uint16_t action);
-    private:
-        static GLFWwindow* GetCachedWindow();
-    private:
-        static GLFWwindow* m_GLFWwindowCache;
+        static bool IsKeyPressed(uint16_t key);
+        static bool IsMouseButtonPressed(uint16_t button);
+        static glm::vec2 GetCursorPosition();
+        static void SetCursorPosition(const glm::vec2& pos);
+        static void SetCursorMode(uint32_t mode);
     };
 }
