@@ -29,8 +29,10 @@ namespace Flameberry {
         void DestroyVulkanWindowSurface(VkInstance instance);
 
         void SetEventCallBack(const std::function<void(Event&)>& fn) override;
+        void SetPosition(int xpos, int ypos) override;
         void SetSize(int width, int height) override;
         void SetTitle(const char* title) override;
+        void MoveToCenter() override;
         
         void Resize() override;
     private:
@@ -38,6 +40,8 @@ namespace Flameberry {
         VkSurfaceKHR m_WindowSurface = VK_NULL_HANDLE;
         
         WindowSpecification m_Specification;
+        
+        uint32_t m_PrimaryMonitorWidth = 0, m_PrimaryMonitorHeight = 0;
 
         std::shared_ptr<SwapChain> m_SwapChain;
         uint32_t m_ImageIndex = 0;

@@ -45,8 +45,10 @@ namespace Flameberry {
         
         virtual void SetEventCallBack(const std::function<void(Event&)>& fn) = 0;
         
+        virtual void SetPosition(int xpos, int ypos) = 0;
         virtual void SetSize(int width, int height) = 0;
         virtual void SetTitle(const char* title) = 0;
+        virtual void MoveToCenter() = 0;
     };
 
 }

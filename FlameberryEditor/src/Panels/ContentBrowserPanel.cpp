@@ -142,7 +142,6 @@ namespace Flameberry {
         ImGui::EndChild();
         ImGui::PopStyleVar();
         
-
         ImGui::SameLine();
 
         float topChildHeight = 38.0f;

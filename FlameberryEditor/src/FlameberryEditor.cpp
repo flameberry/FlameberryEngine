@@ -24,10 +24,12 @@ namespace Flameberry {
         {
             auto projectRef = project; // This is to prevent `project` being deleted when Layer is poped
             PopLayer(m_LauncherLayer);
+            delete m_LauncherLayer;
             
             auto& window = Application::Get().GetWindow();
-            window.SetSize(1280, 720);
             window.SetTitle(fmt::format("Flameberry Engine [{}]", FBY_CONFIG_STR).c_str());
+            window.SetSize(1280, 720);
+            window.MoveToCenter();
             
             m_EditorLayer = new EditorLayer(projectRef);
             PushLayer(m_EditorLayer);

@@ -34,8 +34,11 @@ R"(
     void LauncherLayer::OnCreate()
     {
         auto& window = Application::Get().GetWindow();
+        constexpr int width = 1280 / 2, height = 720 / 2;
+        
         window.SetTitle("Launcher Window");
-        window.SetSize(1280 / 2, 720 / 2);
+        window.SetSize(width, height);
+        window.MoveToCenter();
     }
 
     void LauncherLayer::OnUpdate(float delta)
@@ -43,35 +46,86 @@ R"(
         if (g_ShouldClose)
             m_Callback(m_Project);
     }
+    
+    static bool ProjectItem(const char* projectName, const char* path)
+    {
+        constexpr float itemHeight = 40.0f;
+        
+        float cursorPosY = ImGui::GetCursorPos().y;
+        auto& bigFont = ImGui::GetIO().Fonts->Fonts[0];
+        ImGui::PushFont(bigFont);
+        ImGui::Selectable(projectName, false, ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_AllowOverlap | ImGuiSelectableFlags_SpanAvailWidth, ImVec2(0.0f, itemHeight));
+        ImGui::PopFont();
+        
+        // Double-click detection
+        bool isDoubleClicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0);
+        
+        cursorPosY += itemHeight;
+        
+        ImGui::SetCursorPosY(cursorPosY - ImGui::GetTextLineHeight());
+        ImGui::Text("Path: %s", path);
+        return isDoubleClicked;
+    }
 
     void LauncherLayer::OnUIRender()
     {
+        constexpr ImVec2 buttonSize{200.0f, 40.0f};
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Project Launcher");
-        if (ImGui::Button("New Project"))
+        ImGui::PopStyleVar();
+        
+        static float firstChildSize = 100.0f, secondChildSize = 220.0f;
+        firstChildSize = ImGui::GetContentRegionAvail().x - secondChildSize - 8.0f;
+        
+        ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0), ImGuiChildFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        
+        if (ProjectItem("SandboxProject", "/Users/flameberry/Developer/FlameberryEngine/SandboxProject"))
+        {
+            // Open Project
+            m_Project = ProjectSerializer::DeserializeIntoNewProject("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/SandboxProject.fbproj");
+            g_ShouldClose = true;
+        }
+        
+        ImGui::EndChild();
+        
+        ImGui::SameLine();
+        
+        ImGui::BeginChild("##ProjectControls", ImVec2(secondChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_Border, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        
+        if (UI::AlignedButton("New Project", buttonSize))
             ImGui::OpenPopup("New Project");
 
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(1280 / 3, 720 / 4));
 
-        if (ImGui::BeginPopupModal("New Project", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize))
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
+        const bool beginPopupModal = ImGui::BeginPopupModal("New Project", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::PopStyleVar();
+        
+        if (beginPopupModal)
         {
             ImGuiIO& io = ImGui::GetIO();
             auto& bigFont = io.Fonts->Fonts[0];
 
             ImGui::PushFont(bigFont);
-            ImGui::Text("Enter the full project path:");
+            ImGui::Text("Enter project name and parent directory:");
+            ImGui::Spacing();
             ImGui::PopFont();
+            
+            const float inputBoxWidth = ImGui::GetContentRegionAvail().x - 30.0f;
 
-            UI::InputBox("##ProjectNameInput", 150.0f, m_ProjectNameBuffer, 128, "Project Name...");
-            UI::InputBox("##ProjectPathInput", 150.0f, m_ProjectPathBuffer, 512, "Enter a directory...");
+            UI::InputBox("##ProjectNameInput", inputBoxWidth, m_ProjectNameBuffer, 128, "Project Name...");
+            UI::InputBox("##ProjectPathInput", inputBoxWidth, m_ProjectPathBuffer, 512, "Enter a directory...");
             ImGui::SameLine();
             if (ImGui::Button("..."))
             {
                 std::string directoryPath = platform::OpenFolder();
                 if (!directoryPath.empty())
                     strcpy(m_ProjectPathBuffer, directoryPath.c_str());
-                FBY_LOG("Wow you are lazy, just type in a path!");
             }
+            
+            ImGui::Spacing();
 
             if (ImGui::Button("Create", ImVec2(120, 0)))
             {
@@ -130,7 +184,7 @@ R"(
             ImGui::EndPopup();
         }
 
-        if (ImGui::Button("Open Project"))
+        if (UI::AlignedButton("Open Project", buttonSize))
         {
             // Open a project browser window and if an existing project is selected then...
             std::string path = platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
@@ -140,6 +194,7 @@ R"(
                 g_ShouldClose = true;
             }
         }
+        ImGui::EndChild();
         ImGui::End();
     }
 
