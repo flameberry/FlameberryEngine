@@ -269,10 +269,11 @@ namespace Flameberry {
     {
         auto& style = ImGui::GetStyle();
         style.ColorButtonPosition = ImGuiDir_Left;
-        style.FrameRounding = 2.0f;
+        style.WindowRounding = 5;
+        style.FrameRounding = 2;
+        style.PopupRounding = 3;
         style.CellPadding = ImVec2(8, 5);
         style.ScrollbarSize = 12;
-        style.PopupRounding = 3;
         style.DockingSeparatorSize = 1;
         style.WindowMenuButtonPosition = ImGuiDir_Right;
 

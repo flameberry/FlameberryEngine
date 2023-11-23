@@ -104,7 +104,6 @@ namespace Flameberry {
     {
         auto iterator = std::find(m_LayerStack.begin(), m_LayerStack.end(), layer);
         (*iterator)->OnDestroy();
-        delete (*iterator);
         m_LayerStack.erase(iterator);
     }
 
