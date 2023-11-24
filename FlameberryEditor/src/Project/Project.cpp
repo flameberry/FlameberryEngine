@@ -40,8 +40,8 @@ namespace Flameberry {
             FBY_ERROR("Failed to load project [{0}]: 'Project' attribute not present in file!", filePath);
             return false;
         };
-
-        dest->m_ProjectDirectory = filePath.parent_path();
+        
+        dest->m_ProjectDirectory = std::filesystem::absolute(filePath.parent_path());
         dest->m_Config.Name = data["Project"].as<std::string>();
 
         auto config = data["Configuration"];
