@@ -44,8 +44,8 @@ namespace Flameberry {
     private:
         bool LoadHostFXR();
     private:
-        const char_t* m_CoreAssemblyPath = FBY_PROJECT_DIR"Flameberry-ScriptCore/bin/Debug/net7.0/Flameberry-ScriptCore.dll";
-        const char_t* m_RuntimeConfigPath = FBY_PROJECT_DIR"Flameberry-ScriptCore/bin/Debug/net7.0/Flameberry-ScriptCore.runtimeconfig.json";
+        const char_t* m_CoreAssemblyPath = FBY_PROJECT_DIR"Flameberry-ScriptCore/Binaries/net7.0/Flameberry-ScriptCore.dll";
+        const char_t* m_RuntimeConfigPath = FBY_PROJECT_DIR"Flameberry-ScriptCore/Binaries/net7.0/Flameberry-ScriptCore.runtimeconfig.json";
 
         HostFXRFunctions m_HostFXRFunctions;
         AssemblyContext m_AssemblyContext;

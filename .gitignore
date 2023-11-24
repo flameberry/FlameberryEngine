@@ -71,3 +71,4 @@ Flameberry/vendor/PhysX/**
 *.exe
 *.out
 *.app
+Flameberry-ScriptCore/Binaries
