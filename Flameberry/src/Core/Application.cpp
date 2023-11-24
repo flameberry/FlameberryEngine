@@ -18,6 +18,11 @@ namespace Flameberry {
         : m_Specification(specification)
     {
         s_Instance = this;
+        
+        // Set the working directory
+        if (std::filesystem::exists(m_Specification.WorkingDirectory))
+            std::filesystem::current_path(m_Specification.WorkingDirectory);
+        
         m_Window = Window::Create(m_Specification.WindowSpec);
         m_Window->SetEventCallBack(FBY_BIND_EVENT_FN(Application::OnEvent));
 
