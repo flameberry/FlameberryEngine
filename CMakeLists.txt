@@ -47,5 +47,5 @@ add_custom_target(
 # Add the actual library directory and the Sandbox project
 add_subdirectory(Flameberry)
 
-# The Game Editor App
+# The Editor App
 add_subdirectory(FlameberryEditor)

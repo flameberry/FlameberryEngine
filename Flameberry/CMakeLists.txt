@@ -38,7 +38,8 @@ add_subdirectory(vendor/GLFW)
 add_subdirectory(vendor/yaml-cpp)
 add_subdirectory(vendor/fmtlib)
 
-target_compile_definitions(Flameberry PRIVATE ${FBY_COMPILE_DEFINITIONS})
+set(FBY_CORE_ONLY_COMPILE_DEFINITIONS FBY_HOSTFXR_LIBRARY_PATH="${HostFXR_LIBRARY}")
+target_compile_definitions(Flameberry PRIVATE ${FBY_COMPILE_DEFINITIONS} ${FBY_CORE_ONLY_COMPILE_DEFINITIONS})
 
 # "FBY_LIBRARY_DEPENDENCIES" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
 target_link_libraries(Flameberry PRIVATE ${FBY_LIBRARY_DEPENDENCIES})

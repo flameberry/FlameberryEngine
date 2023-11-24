@@ -146,3 +146,43 @@ set(FBY_DEPENDENCY_SOURCE
     ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.h
     ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImZoomSlider.h
 )
+
+# Add the directory containing FindDotnet.cmake to CMAKE_MODULE_PATH
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/vendor")
+
+# Now include the FindDotnet module
+include(FindDotnet)
+find_package(Dotnet REQUIRED)
+
+execute_process(
+    COMMAND ${DOTNET_EXE} --list-runtimes
+    OUTPUT_VARIABLE FBY_DOTNET_RUNTIME_LIST
+    RESULT_VARIABLE FBY_DOTNET_RUNTIME_LIST_RESULT
+)
+
+set(FBY_LATEST_DOTNET_VERSION "")
+
+if(FBY_DOTNET_RUNTIME_LIST_RESULT EQUAL 0)
+    string(REGEX MATCHALL "[0-9]+\\.[0-9]+\\.[0-9]+" DOTNET_VERSIONS ${FBY_DOTNET_RUNTIME_LIST})
+
+    list(LENGTH DOTNET_VERSIONS NUM_VERSIONS)
+
+    if(NUM_VERSIONS GREATER 0)
+        list(SORT DOTNET_VERSIONS)
+        list(GET DOTNET_VERSIONS -1 FBY_LATEST_DOTNET_VERSION)
+        message(STATUS "Latest Dotnet Runtime Version: ${FBY_LATEST_DOTNET_VERSION}")
+    else()
+        message(WARNING "No Dotnet Runtimes found.")
+    endif()
+else()
+    message(FATAL_ERROR "Failed to run '${DOTNET_EXE} --list-runtimes'")
+endif()
+
+# Assuming 'your_executable' is the path to your executable
+get_filename_component(FBY_DOTNET_DIR "${DOTNET_EXE}" DIRECTORY)
+
+message(STATUS ${FBY_DOTNET_DIR})
+
+find_library(HostFXR_LIBRARY NAMES hostfxr PATHS "${FBY_DOTNET_DIR}/host/fxr" PATH_SUFFIXES ${FBY_LATEST_DOTNET_VERSION} REQUIRED)
+
+# PATH_SUFFIXES "${FBY_LATEST_DOTNET_VERSION}"
