@@ -10,11 +10,24 @@
 
 namespace Flameberry {
     
+    struct ApplicationCommandLineArgs
+    {
+        int Count;
+        const char** Args;
+        
+        const char* operator[](int idx) const {
+            FBY_ASSERT(idx < Count, "Command Line Arguments: Index '{}' is out of range!", idx);
+            return Args[idx];
+        }
+    };
+
+    
     struct ApplicationSpecification
     {
         std::string Name;
         WindowSpecification WindowSpec;
         std::filesystem::path WorkingDirectory;
+        ApplicationCommandLineArgs CommandLineArgs;
     };
     
     class Application
@@ -26,7 +39,7 @@ namespace Flameberry {
 
         Window& GetWindow() { return *m_Window; }
         static Application& Get() { return *s_Instance; }
-        static Application* CreateClientApp();
+        static Application* CreateClientApp(const ApplicationCommandLineArgs& appCmdLineArgs);
 
         void OnEvent(Event& e);
         void OnKeyPressedEvent(KeyPressedEvent& e);

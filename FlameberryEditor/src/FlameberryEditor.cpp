@@ -11,9 +11,22 @@ namespace Flameberry {
         FlameberryEditor(const ApplicationSpecification& specification)
             : Application(specification)
         {
-            // TODO: Improve this API urgently
-            m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(FlameberryEditor::OpenEditor));
-            PushLayer(m_LauncherLayer);
+            // Check for startup project
+            if (specification.CommandLineArgs.Count > 1)
+            {
+                std::string projectPath = specification.CommandLineArgs[1];
+                FBY_ASSERT(std::filesystem::exists(projectPath), "Invalid project path passed as command line arguments: {}", projectPath);
+                
+                auto project = ProjectSerializer::DeserializeIntoNewProject(projectPath);
+                m_EditorLayer = new EditorLayer(project);
+                PushLayer(m_EditorLayer);
+            }
+            else
+            {
+                // TODO: Improve this API urgently
+                m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(FlameberryEditor::OpenEditor));
+                PushLayer(m_LauncherLayer);
+            }
         }
 
         ~FlameberryEditor()
@@ -39,13 +52,14 @@ namespace Flameberry {
         Layer* m_EditorLayer = nullptr;
     };
 
-    Application* Application::CreateClientApp()
+    Application* Application::CreateClientApp(const ApplicationCommandLineArgs& appCmdLineArgs)
     {
         ApplicationSpecification applicationSpec;
         applicationSpec.Name = "Flameberry-Editor";
         applicationSpec.WindowSpec.Width = 1280;
         applicationSpec.WindowSpec.Height = 720;
         applicationSpec.WorkingDirectory = FBY_PROJECT_DIR;
+        applicationSpec.CommandLineArgs = appCmdLineArgs;
         
         return new FlameberryEditor(applicationSpec);
     }
