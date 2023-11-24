@@ -9,7 +9,7 @@ int main(int argc, char const* argv[])
     Flameberry::Logger::SetCoreLogger(logger);
     logger->SetLogLevel(Flameberry::LogLevel::LOG);
     
-    Flameberry::Application* clientApp = Flameberry::Application::CreateClientApp();
+    Flameberry::Application* clientApp = Flameberry::Application::CreateClientApp({argc, argv});
     clientApp->Run();
     delete clientApp;
 
