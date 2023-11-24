@@ -29,7 +29,7 @@ namespace Flameberry {
                 // Moving the asset handle to the "front" of the list to indicate that this asset is recently accessed
                 // s_AssetCache.splice(s_AssetCache.begin(), s_AssetCache, asset->CacheIterator);
 
-                FBY_INFO("Found asset having filepath: {0} in asset table!", path);
+                FBY_INFO("Found asset having filepath: {} in asset table!", path);
                 return std::static_pointer_cast<Type>(asset);
             }
 
@@ -58,7 +58,7 @@ namespace Flameberry {
 
                 return std::static_pointer_cast<Type>(asset);
             }
-//            FBY_WARN("Failed to find the asset with handle: {0}", handle);
+//            FBY_WARN("Failed to find the asset with handle: {}", handle);
             return nullptr;
         }
 
@@ -71,7 +71,7 @@ namespace Flameberry {
                     s_AssetFilePathToUUIDTable[asset->FilePath] = asset->Handle;
                 return;
             }
-            FBY_WARN("Failed to register asset with UUID: {0}, Asset already registered!", (uint64_t)asset->Handle);
+            FBY_WARN("Failed to register asset with UUID: {}, Asset already registered!", (uint64_t)asset->Handle);
         }
 
         static bool IsAssetHandleValid(AssetHandle handle)

@@ -237,7 +237,7 @@ namespace Flameberry {
         meshAsset->SizeInBytesOnCPU = sizeof(StaticMesh);
         meshAsset->SizeInBytesOnGPU = vertices.size() * sizeof(MeshVertex) + indices.size() * sizeof(uint32_t);
 
-        FBY_INFO("Loaded Model: '{0}': Vertices: {1}, Indices: {2}", path, vertices.size(), indices.size());
+        FBY_INFO("Loaded Model: '{}': Vertices: {}, Indices: {}", path, vertices.size(), indices.size());
         return meshAsset;
     }
 
@@ -460,7 +460,7 @@ namespace Flameberry {
         meshAsset->SizeInBytesOnCPU = sizeof(StaticMesh);
         meshAsset->SizeInBytesOnGPU = vertices.size() * sizeof(MeshVertex) + indices.size() * sizeof(uint32_t);
 
-        FBY_INFO("Loaded Model: '{0}': Vertices: {1}, Indices: {2}", path, vertices.size(), indices.size());
+        FBY_INFO("Loaded Model: '{}': Vertices: {}, Indices: {}", path, vertices.size(), indices.size());
         return meshAsset;
     }
 

@@ -187,7 +187,7 @@ namespace Flameberry {
                                 std::filesystem::path envPath{ path };
                                 const std::string& ext = envPath.extension().string();
                                 
-                                FBY_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                                FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
                                 
                                 if (std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath) && (ext == ".hdr"))
                                     skyLightComp.SkyMap = AssetManager::TryGetOrLoadAsset<Texture2D>(envPath)->Handle;
@@ -315,7 +315,7 @@ namespace Flameberry {
                                 std::filesystem::path modelPath{ path };
                                 const std::string& ext = modelPath.extension().string();
 
-                                FBY_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                                FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
                                 if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
                                 {
@@ -386,7 +386,7 @@ namespace Flameberry {
                                             std::filesystem::path matPath{ path };
                                             const std::string& ext = matPath.extension().string();
 
-                                            FBY_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                                            FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
                                             if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
                                             {

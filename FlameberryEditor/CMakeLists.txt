@@ -9,8 +9,10 @@ set_custom_build_properties(FlameberryEditor)
 set_build_config_macro_for_target(FlameberryEditor)
 
 if(XCODE)
-    target_compile_definitions(Flameberry PRIVATE FBY_XCODE_PROJ)
+    target_compile_definitions(FlameberryEditor PRIVATE FBY_XCODE_PROJ)
 endif()
+
+set_property(TARGET FlameberryEditor PROPERTY XCODE_SCHEME_ARGUMENTS "${FBY_SOURCE_DIR}/SandboxProject/SandboxProject.fbproj")
 
 target_compile_definitions(FlameberryEditor PRIVATE ${FBY_COMPILE_DEFINITIONS})
 

@@ -56,7 +56,7 @@ namespace Flameberry {
                     std::filesystem::path matPath{ path };
                     const std::string& ext = matPath.extension().string();
 
-                    FBY_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                    FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
                     if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
                         m_EditingContext = AssetManager::TryGetOrLoadAsset<Material>(matPath);
@@ -149,7 +149,7 @@ namespace Flameberry {
                 {
                     std::filesystem::path path = (const char*)payload->Data;
                     const auto& ext = path.extension();
-                    FBY_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                    FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
                     if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
                     {
@@ -158,7 +158,7 @@ namespace Flameberry {
                         m_IsMaterialEdited = true;
                     }
                     else
-                        FBY_WARN("Bad File given as {0}!", label);
+                        FBY_WARN("Bad File given as {}!", label);
                 }
                 ImGui::EndDragDropTarget();
             }

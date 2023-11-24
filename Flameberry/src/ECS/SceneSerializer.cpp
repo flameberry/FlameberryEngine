@@ -84,7 +84,7 @@ namespace Flameberry {
         YAML::Node data = YAML::Load(ss.str());
         if (!data["Scene"])
         {
-            FBY_ERROR("Failed to load scene [{0}]: 'Scene' attribute not present in file!", path);
+            FBY_ERROR("Failed to load scene [{}]: 'Scene' attribute not present in file!", path);
             return false;
         };
 

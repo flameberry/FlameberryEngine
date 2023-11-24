@@ -40,7 +40,7 @@ namespace fbentt {
 
         int remove(Type value) {
             if (value >= sparse.size() || sparse[value] >= packed.size()) {
-                FBY_WARN("Attempted to remove element '{0}' from sparse set that didn't belong to set!", value);
+                FBY_WARN("Attempted to remove element '{}' from sparse set that didn't belong to set!", value);
                 return -1;
             }
             // copying the last element of packed array to the removed element location
