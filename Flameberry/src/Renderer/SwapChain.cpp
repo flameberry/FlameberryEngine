@@ -163,7 +163,7 @@ namespace Flameberry {
             VK_CHECK_RESULT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]));
             VK_CHECK_RESULT(vkCreateFence(device, &vk_fence_create_info, nullptr, &m_InFlightFences[i]));
         }
-        FBY_INFO("Created {0} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
+        FBY_INFO("Created {} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
     }
 
     SwapChain::~SwapChain()
@@ -177,7 +177,7 @@ namespace Flameberry {
             vkDestroySemaphore(device, m_RenderFinishedSemaphores[i], nullptr);
             vkDestroyFence(device, m_InFlightFences[i], nullptr);
         }
-        FBY_INFO("Destroyed {0} Image Available Semaphores, Render Finished Semaphores and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
+        FBY_INFO("Destroyed {} Image Available Semaphores, Render Finished Semaphores and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
 
         vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
     }

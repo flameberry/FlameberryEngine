@@ -223,7 +223,7 @@ namespace Flameberry {
             }
             if (!layerFound)
             {
-                FBY_ERROR("Failed to find the layer named '{0}'!", layerName);
+                FBY_ERROR("Failed to find the layer named '{}'!", layerName);
                 return false;
             }
         }
@@ -236,7 +236,7 @@ namespace Flameberry {
             if (!(i == layerCount - 1))
                 layer_list += ", ";
         }
-        FBY_TRACE("Found the following Vulkan Validation Layers: {0}", layer_list);
+        FBY_TRACE("Found the following Vulkan Validation Layers: {}", layer_list);
         return true;
     }
 
@@ -324,11 +324,11 @@ namespace Flameberry {
     std::vector<char> RenderCommand::LoadCompiledShaderCode(const std::string& filePath)
     {
         std::ifstream stream(filePath, std::ios::ate | std::ios::binary);
-        FBY_ASSERT(stream.is_open(), "Failed to open the file '{0}'", filePath);
+        FBY_ASSERT(stream.is_open(), "Failed to open the file '{}'", filePath);
 
         size_t fileSize = (size_t)stream.tellg();
 
-        FBY_TRACE("File size of buffer taken from '{0}' is {1}", filePath, fileSize);
+        FBY_TRACE("File size of buffer taken from '{}' is {}", filePath, fileSize);
 
         std::vector<char> buffer(fileSize);
 

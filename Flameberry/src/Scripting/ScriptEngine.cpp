@@ -178,7 +178,7 @@ namespace Flameberry {
         int hashcode = ScriptEngine::s_Data->ManagedFunctions.GetComponentHashCode(assemblyQualifiedClassName);\
         if (hashcode == -1)
         {
-            FBY_ERROR("Failed to find component type: {0}", assemblyQualifiedClassName);
+            FBY_ERROR("Failed to find component type: {}", assemblyQualifiedClassName);
             FBY_DEBUGBREAK();
             return;
         }

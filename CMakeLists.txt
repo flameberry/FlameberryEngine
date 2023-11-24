@@ -7,6 +7,9 @@ project(FlameberryEngine VERSION 1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 
+# Xcode scheme generation is helpful for things like passing command line arguments for development
+set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
+
 # Handle Generation for single config generators like MakeFiles, when no Config is specified explicitly in the command line
 if(CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE "Release")

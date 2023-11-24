@@ -252,7 +252,7 @@ namespace Flameberry {
             int32_t entityIndex = data[0];
             m_MousePickingBuffer->UnmapMemory();
             m_SceneHierarchyPanel->SetSelectionContext((entityIndex != -1) ? m_ActiveScene->GetRegistry()->get_entity_at_index(entityIndex) : fbentt::null);
-            // FBY_LOG("Selected Entity Index: {0}", entityIndex);
+            // FBY_LOG("Selected Entity Index: {}", entityIndex);
             m_IsMousePickingBufferReady = false;
         }
 
@@ -346,7 +346,7 @@ namespace Flameberry {
                 std::filesystem::path filePath{ path };
                 const std::string& ext = filePath.extension().string();
 
-                FBY_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+                FBY_LOG("Payload recieved: {}, with extension {}", path, ext);
 
                 if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath)) {
                     if (ext == ".scene" || ext == ".berry") {
@@ -595,7 +595,7 @@ namespace Flameberry {
         {
             SceneSerializer::SerializeSceneToFile(savePath.c_str(), m_ActiveScene);
             m_EditorScenePath = savePath;
-            FBY_LOG("Scene saved to path: {0}", savePath);
+            FBY_LOG("Scene saved to path: {}", savePath);
             return;
         }
         FBY_ERROR("Failed to save scene!");
@@ -619,7 +619,7 @@ namespace Flameberry {
         {
             m_EditorScenePath = path;
             m_ActiveScene->OnViewportResize(m_ViewportSize);
-            FBY_INFO("Loaded Scene: {0}", m_EditorScenePath);
+            FBY_INFO("Loaded Scene: {}", m_EditorScenePath);
         }
     }
 
