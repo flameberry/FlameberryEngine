@@ -14,17 +14,19 @@ namespace Flameberry {
             // Check for startup project
             if (specification.CommandLineArgs.Count > 1)
             {
-                std::string projectPath = specification.CommandLineArgs[1];
+                std::filesystem::path projectPath = specification.CommandLineArgs[1];
                 FBY_ASSERT(std::filesystem::exists(projectPath), "Invalid project path passed as command line arguments: {}", projectPath);
                 
                 auto project = ProjectSerializer::DeserializeIntoNewProject(projectPath);
+                
+                // Create an Editor Instance and push it to Application Layers
                 m_EditorLayer = new EditorLayer(project);
                 PushLayer(m_EditorLayer);
             }
             else
             {
                 // TODO: Improve this API urgently
-                m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(FlameberryEditor::OpenEditor));
+                m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(FlameberryEditor::OpenProjectWithEditor));
                 PushLayer(m_LauncherLayer);
             }
         }
@@ -33,17 +35,20 @@ namespace Flameberry {
         {
         }
         
-        void OpenEditor(const std::shared_ptr<Project>& project)
+        void OpenProjectWithEditor(const std::shared_ptr<Project>& project)
         {
             auto projectRef = project; // This is to prevent `project` being deleted when Layer is poped
-            PopLayer(m_LauncherLayer);
-            delete m_LauncherLayer;
             
+            // Remove the Launcher Window Layer
+            PopAndDeleteLayer(m_LauncherLayer);
+            
+            // Resize the window from the previous launcher size to the new editor suitable size
             auto& window = Application::Get().GetWindow();
             window.SetTitle(fmt::format("Flameberry Engine [{}]", FBY_CONFIG_STR).c_str());
             window.SetSize(1280, 720);
             window.MoveToCenter();
             
+            // Create an Editor Instance and push it to Application Layers
             m_EditorLayer = new EditorLayer(projectRef);
             PushLayer(m_EditorLayer);
         }

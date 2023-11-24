@@ -6,7 +6,7 @@
 
 namespace Flameberry {
 
-    static const std::string g_CSProjTemplate = 
+    static constexpr const char* g_CSProjTemplate = 
 R"(
 <Project Sdk="Microsoft.NET.Sdk">
 <PropertyGroup>
@@ -24,10 +24,8 @@ R"(
 </Project>
 )";
 
-    static bool g_ShouldClose = false;
-
     LauncherLayer::LauncherLayer(const std::function<void(const std::shared_ptr<Project>&)>& callback)
-        : m_Callback(callback)
+        : m_OpenProjectCallback(callback)
     {
     }
 
@@ -43,8 +41,8 @@ R"(
 
     void LauncherLayer::OnUpdate(float delta)
     {
-        if (g_ShouldClose)
-            m_Callback(m_Project);
+        if (m_ShouldClose)
+            m_OpenProjectCallback(m_Project);
     }
     
     static bool ProjectItem(const char* projectName, const char* path)
@@ -83,7 +81,7 @@ R"(
         {
             // Open Project
             m_Project = ProjectSerializer::DeserializeIntoNewProject("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/SandboxProject.fbproj");
-            g_ShouldClose = true;
+            m_ShouldClose = true;
         }
         
         ImGui::EndChild();
@@ -161,7 +159,7 @@ R"(
                             csprojFile.close();
 
                             // Signal callback to FlameberryEditor class
-                            g_ShouldClose = true;
+                            m_ShouldClose = true;
                         }
                         else
                         {
@@ -191,7 +189,7 @@ R"(
             if (!path.empty())
             {
                 m_Project = ProjectSerializer::DeserializeIntoNewProject(path);
-                g_ShouldClose = true;
+                m_ShouldClose = true;
             }
         }
         ImGui::EndChild();
