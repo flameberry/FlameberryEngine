@@ -49,6 +49,7 @@ namespace Flameberry {
 
         void PushLayer(Layer* layer);
         void PopLayer(Layer* layer);
+        void PopAndDeleteLayer(Layer* layer);
     private:
         ApplicationSpecification m_Specification;
         
