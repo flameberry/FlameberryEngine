@@ -14,6 +14,7 @@ namespace Flameberry {
     {
         std::string Name;
         WindowSpecification WindowSpec;
+        std::filesystem::path WorkingDirectory;
     };
     
     class Application
