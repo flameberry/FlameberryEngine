@@ -152,4 +152,9 @@ if __name__ == "__main__":
     if cmake_process.returncode == 0:
         print(f"[FLAMEBERRY]: Flameberry project files are generated at the path: {project_dir}/build/")
     else:
-        print("[FLAMEBERRY]: ERROR: Failed to generate project files!")
+        raise Exception("[FLAMEBERRY]: Failed to generate project files!")
+    
+    dotnet_params = ["dotnet", "build", "Flameberry-ScriptCore/"]
+    dotnet_process = subprocess.run(dotnet_params)
+    if (dotnet_process.returncode != 0):
+        raise Exception("[FLAMEBERRY]: Failed to build dotnet project: Flameberry-ScriptCore!")
