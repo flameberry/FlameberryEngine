@@ -134,7 +134,8 @@ if __name__ == "__main__":
     assimp_build_proc = subprocess.run(build_params)
     if assimp_build_proc.returncode != 0:
         raise Exception("Failed to build the Assimp Library!")
-
+    
+    os.chdir(project_dir)
     cmake_build_type = "Release"
     if len(sys.argv):
         argumentList = sys.argv[1:]
