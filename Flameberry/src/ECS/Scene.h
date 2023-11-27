@@ -35,10 +35,9 @@ namespace Flameberry {
         fbentt::entity DuplicateEntity(fbentt::entity src);
         fbentt::entity CopyEntityTree(fbentt::entity src);
 
-        fbentt::entity GetPrimaryCameraEntity() const;
-
-        inline std::shared_ptr<fbentt::registry> GetRegistry() const { return m_Registry; }
         inline std::string GetName() const { return m_Name; }
+        inline std::shared_ptr<fbentt::registry> GetRegistry() const { return m_Registry; }
+        fbentt::entity GetPrimaryCameraEntity() const;
 
         template<typename... Args>
         static std::shared_ptr<Scene> Create(Args... args) { return std::make_shared<Scene>(std::forward<Args>(args)...); }
