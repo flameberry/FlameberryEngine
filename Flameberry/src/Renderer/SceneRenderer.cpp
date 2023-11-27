@@ -1034,7 +1034,7 @@ namespace Flameberry {
             {
                 case ProjectionType::Orthographic:
                 {
-                    const float left = -settings.AspectRatio * settings.Zoom;
+                    const float left = -aspectRatio * settings.Zoom;
                     const float right = -left;
                     const float bottom = -settings.Zoom;
                     const float top = settings.Zoom;
