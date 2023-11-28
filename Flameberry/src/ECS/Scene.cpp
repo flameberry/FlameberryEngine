@@ -97,7 +97,7 @@ namespace Flameberry {
                 shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
                 sphereCollider->RuntimeShape = shape;
             }
-
+            
             if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
             {
                 auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
@@ -106,15 +106,15 @@ namespace Flameberry {
 
                 switch (capsuleCollider->Axis)
                 {
-                    case CapsuleColliderComponent::AxisType::X:
+                    case AxisType::X:
                         break;
-                    case CapsuleColliderComponent::AxisType::Y:
+                    case AxisType::Y:
                     {
                         physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1)));
                         shape->setLocalPose(relativePose);
                         break;
                     }
-                    case CapsuleColliderComponent::AxisType::Z:
+                    case AxisType::Z:
                     {
                         physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(1, 0, 0)));
                         shape->setLocalPose(relativePose);
@@ -126,6 +126,7 @@ namespace Flameberry {
 
             if (shape)
             {
+                // TODO: Add axis locking
                 physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
                 rigidBodyRuntimePtr->attachShape(*shape);
                 if (rigidBody.Type == RigidBodyComponent::RigidBodyType::Dynamic)

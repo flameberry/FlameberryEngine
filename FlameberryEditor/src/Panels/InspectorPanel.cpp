@@ -692,7 +692,7 @@ namespace Flameberry {
                                 if (ImGui::Selectable(axisTypeStrings[i], &isSelected))
                                 {
                                     currentAxisType = i;
-                                    capsuleCollider.Axis = (CapsuleColliderComponent::AxisType)i;
+                                    capsuleCollider.Axis = (AxisType)i;
                                 }
 
                                 if (isSelected)

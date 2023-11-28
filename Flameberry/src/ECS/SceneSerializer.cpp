@@ -45,24 +45,24 @@ namespace Flameberry {
             return RigidBodyComponent::RigidBodyType::Dynamic;
     }
 
-    static std::string AxisTypeEnumToString(CapsuleColliderComponent::AxisType type)
+    static std::string AxisTypeEnumToString(AxisType type)
     {
         switch (type)
         {
-            case CapsuleColliderComponent::AxisType::X: return "X";
-            case CapsuleColliderComponent::AxisType::Y: return "Y";
-            case CapsuleColliderComponent::AxisType::Z: return "Z";
+            case AxisType::X: return "X";
+            case AxisType::Y: return "Y";
+            case AxisType::Z: return "Z";
         }
     }
 
-    static CapsuleColliderComponent::AxisType AxisTypeStringToEnum(const std::string& type)
+    static AxisType AxisTypeStringToEnum(const std::string& type)
     {
         if (type == "X")
-            return CapsuleColliderComponent::AxisType::X;
+            return AxisType::X;
         else if (type == "Y")
-            return CapsuleColliderComponent::AxisType::Y;
+            return AxisType::Y;
         else if (type == "Z")
-            return CapsuleColliderComponent::AxisType::Z;
+            return AxisType::Z;
     }
 
     std::shared_ptr<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
