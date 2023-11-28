@@ -876,6 +876,7 @@ namespace Flameberry {
         }
     }
 
+    // TODO: Move this to EditorLayer.cpp ASAP
     void SceneRenderer::SubmitPhysicsColliderGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
     {
         // TODO: Optimise this function (maybe embed the vertices (?))
@@ -1020,6 +1021,7 @@ namespace Flameberry {
         }
     }
 
+    // TODO: Move this to EditorLayer.cpp ASAP
     void SceneRenderer::SubmitCameraViewGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
     {
         constexpr glm::vec3 color(1);
