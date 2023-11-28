@@ -488,7 +488,7 @@ namespace Flameberry {
         {
             case GLFW_KEY_D:
                 // Duplicate Entity
-                if (ctrl_or_cmd && m_EditorState == EditorState::Edit && (m_IsViewportFocused || m_SceneHierarchyPanel->IsFocused()))
+                if (ctrl_or_cmd && m_EditorState == EditorState::Edit && !m_IsCameraMoving && (m_IsViewportFocused || m_SceneHierarchyPanel->IsFocused()))
                 {
                     const auto selectionContext = m_SceneHierarchyPanel->GetSelectionContext();
                     if (selectionContext != fbentt::null)

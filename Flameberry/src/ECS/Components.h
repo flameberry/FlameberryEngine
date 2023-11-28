@@ -44,15 +44,6 @@ namespace Flameberry {
         bool IsPrimary = false;
     };
 
-     struct SkyLightComponent
-     {
-         glm::vec3 Color{ 0.0f };
-         float Intensity = 0.2f;
-         bool EnableSkyMap = false, EnableReflections = false;
-         
-         AssetHandle SkyMap = 0;
-     };
-
     // struct MaterialTable {
     //     std::unordered_map<uint32_t, AssetHandle> Table;
 
@@ -69,6 +60,15 @@ namespace Flameberry {
         MaterialTable OverridenMaterialTable;
 
         MeshComponent(AssetHandle meshHandle = 0) : MeshHandle(meshHandle) {}
+    };
+    
+    struct SkyLightComponent
+    {
+        glm::vec3 Color{ 0.0f };
+        float Intensity = 0.2f;
+        bool EnableSkyMap = false, EnableReflections = false;
+        
+        AssetHandle SkyMap = 0;
     };
     
     struct DirectionalLightComponent 
@@ -163,6 +163,6 @@ namespace Flameberry {
     template <typename... Component>
     struct ComponentList {};
     
-    using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, ScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>;
+    using AllComponents = ComponentList<TransformComponent, CameraComponent, MeshComponent, SkyLightComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, ScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>;
 
 }
