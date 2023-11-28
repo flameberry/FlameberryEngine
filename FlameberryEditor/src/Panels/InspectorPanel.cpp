@@ -7,7 +7,7 @@ namespace Flameberry {
     InspectorPanel::InspectorPanel()
         : m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/triple_dots_icon.png"))
+        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png"))
     {
     }
 
@@ -15,7 +15,7 @@ namespace Flameberry {
         : m_Context(context),
         m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/triple_dots_icon.png"))
+        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon2.png"))
     {
     }
 
@@ -48,27 +48,23 @@ namespace Flameberry {
 
             if (ImGui::BeginPopup("AddComponentPopUp"))
             {
-                if (ImGui::MenuItem("Transform Component"))
-                    m_Context->m_Registry->emplace<TransformComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Camera Component"))
-                    m_Context->m_Registry->emplace<CameraComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Mesh Component"))
-                    m_Context->m_Registry->emplace<MeshComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Light Component"))
-                    m_Context->m_Registry->emplace<PointLightComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("RigidBody Component"))
-                    m_Context->m_Registry->emplace<RigidBodyComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Box Colllider Component"))
-                    m_Context->m_Registry->emplace<BoxColliderComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Sphere Colllider Component"))
-                    m_Context->m_Registry->emplace<SphereColliderComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Capsule Colllider Component"))
-                    m_Context->m_Registry->emplace<CapsuleColliderComponent>(m_SelectionContext);
+                DrawAddComponentEntry<TransformComponent>("Transform Component");
+                DrawAddComponentEntry<CameraComponent>("Camera Component");
+                DrawAddComponentEntry<MeshComponent>("Mesh Component");
+                DrawAddComponentEntry<SkyLightComponent>("Sky Light Component");
+                DrawAddComponentEntry<DirectionalLightComponent>("Directional Light Component");
+                DrawAddComponentEntry<PointLightComponent>("Point Light Component");
+                DrawAddComponentEntry<ScriptComponent>("Script Component");
+                DrawAddComponentEntry<RigidBodyComponent>("Rigid Body Component");
+                DrawAddComponentEntry<BoxColliderComponent>("Box Collider Component");
+                DrawAddComponentEntry<SphereColliderComponent>("Sphere Collider Component");
+                DrawAddComponentEntry<CapsuleColliderComponent>("Capsule Collider Component");
+                
                 ImGui::EndPopup();
             }
 
             ImGui::PushStyleColor(ImGuiCol_Border, Theme::WindowBorder);
-            ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), true, ImGuiWindowFlags_AlwaysAutoResize);
+            ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX);
             ImGui::PopStyleColor();
 #if 0
             DrawComponent<IDComponent>("ID Component", this, [&]()
@@ -87,11 +83,11 @@ namespace Flameberry {
                         ImGui::Text("%llu", (uint64_t)ID);
                         ImGui::EndTable();
                     }
-                }
+                }, true // removable = false
             );
 #endif
 
-            DrawComponent<TransformComponent>("Transform", this, [&]()
+            DrawComponent<TransformComponent>("Transform", [&]()
                 {
                     auto& transform = m_Context->m_Registry->get<TransformComponent>(m_SelectionContext);
 
@@ -127,10 +123,10 @@ namespace Flameberry {
                         UI::Vec3Control("Scale", transform.Scale, 1.0f, 0.01f, colWidth);
                         ImGui::EndTable();
                     }
-                }
+                }, false // removable = false
             );
             
-            DrawComponent<SkyLightComponent>("Sky Light", this, [=]()
+            DrawComponent<SkyLightComponent>("Sky Light", [=]()
             {
                 auto& skyLightComp = m_Context->m_Registry->get<SkyLightComponent>(m_SelectionContext);
                 
@@ -203,7 +199,7 @@ namespace Flameberry {
                 }
             });
 
-            DrawComponent<CameraComponent>("Camera", this, [&]()
+            DrawComponent<CameraComponent>("Camera", [&]()
                 {
                     auto& cameraComp = m_Context->m_Registry->get<CameraComponent>(m_SelectionContext);
 
@@ -288,7 +284,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<MeshComponent>("Mesh", this, [&]()
+            DrawComponent<MeshComponent>("Mesh", [&]()
                 {
                     auto& mesh = m_Context->m_Registry->get<MeshComponent>(m_SelectionContext);
 
@@ -426,7 +422,7 @@ namespace Flameberry {
                 }
             );
             
-            DrawComponent<DirectionalLightComponent>("Light", this, [&]()
+            DrawComponent<DirectionalLightComponent>("Light", [&]()
             {
                 auto& light = m_Context->m_Registry->get<DirectionalLightComponent>(m_SelectionContext);
                 
@@ -467,7 +463,7 @@ namespace Flameberry {
                 }
             });
 
-            DrawComponent<PointLightComponent>("Light", this, [&]()
+            DrawComponent<PointLightComponent>("Point Light", [&]()
                 {
                     auto& light = m_Context->m_Registry->get<PointLightComponent>(m_SelectionContext);
 
@@ -499,8 +495,49 @@ namespace Flameberry {
                     }
                 }
             );
+            
+            DrawComponent<ScriptComponent>("Script", [&]()
+                                                     {
+                auto& script = m_Context->m_Registry->get<ScriptComponent>(m_SelectionContext);
+                
+                if (ImGui::BeginTable("ScriptComponentAttributes", 2, s_TableFlags))
+                {
+                    ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
+                    ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    
+                    ImGui::AlignTextToFramePadding();
+                    ImGui::Text("Class");
+                    ImGui::TableNextColumn();
+                    
+//                    ImGui::Text("%s", script.FullyQualifiedClassName.c_str());
+                    
+                    const auto& classNames = ScriptEngine::GetActorTypeNamesInAppAssembly();
+                    auto& currentClassName = script.FullyQualifiedClassName;
+                    
+                    ImGui::PushItemWidth(-1.0f);
+                    if (ImGui::BeginCombo("##RigidBodyType", currentClassName.c_str()))
+                    {
+                        for (int i = 0; i < classNames.size(); i++)
+                        {
+                            bool isSelected = (classNames[i] == currentClassName);
+                            if (ImGui::Selectable(classNames[i].c_str(), &isSelected))
+                                currentClassName = classNames[i];
+                            
+                            if (isSelected)
+                                ImGui::SetItemDefaultFocus();
+                        }
+                        ImGui::EndCombo();
+                    }
+                    ImGui::PopItemWidth();
+                    
+                    ImGui::EndTable();
+                }
+            });
 
-            DrawComponent<RigidBodyComponent>("RigidBody", this, [&]()
+            DrawComponent<RigidBodyComponent>("Rigid Body", [&]()
                 {
                     auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);
 
@@ -575,7 +612,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<BoxColliderComponent>("Box Collider", this, [&]()
+            DrawComponent<BoxColliderComponent>("Box Collider", [&]()
                 {
                     auto& boxCollider = m_Context->m_Registry->get<BoxColliderComponent>(m_SelectionContext);
 
@@ -598,7 +635,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<SphereColliderComponent>("Sphere Collider", this, [&]()
+            DrawComponent<SphereColliderComponent>("Sphere Collider", [&]()
                 {
                     auto& sphereCollider = m_Context->m_Registry->get<SphereColliderComponent>(m_SelectionContext);
 
@@ -621,7 +658,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<CapsuleColliderComponent>("Capsule Collider", this, [&]()
+            DrawComponent<CapsuleColliderComponent>("Capsule Collider", [&]()
                 {
                     auto& capsuleCollider = m_Context->m_Registry->get<CapsuleColliderComponent>(m_SelectionContext);
 

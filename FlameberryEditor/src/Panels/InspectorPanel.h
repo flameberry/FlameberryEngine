@@ -38,42 +38,69 @@ namespace Flameberry {
         fbentt::entity m_SelectionContext = {};
         std::shared_ptr<Scene> m_Context;
 
-        std::shared_ptr<Texture2D> m_TripleDotsIcon;
-
+        std::shared_ptr<Texture2D> m_SettingsIcon;
+    private:
+        template<typename ComponentType>
+        void DrawAddComponentEntry(const char* name);
+        
         template<typename ComponentType, typename Fn>
-        friend void DrawComponent(const char* name, InspectorPanel* instance, Fn&& fn);
+        void DrawComponent(const char* name, Fn&& fn, bool removable = true);
     };
-
+    
+    template<typename ComponentType>
+    void InspectorPanel::DrawAddComponentEntry(const char* name)
+    {
+        if (!m_Context->m_Registry->has<ComponentType>(m_SelectionContext))
+        {
+            if (ImGui::MenuItem(name))
+                m_Context->m_Registry->emplace<ComponentType>(m_SelectionContext);
+        }
+    }
+    
     template<typename ComponentType, typename Fn>
-    void DrawComponent(const char* name, InspectorPanel* instance, Fn&& fn)
+    void InspectorPanel::DrawComponent(const char* name, Fn&& fn, bool removable)
     {
         static_assert(std::is_invocable_v<Fn>);
-        if (instance->GetContextRegistry()->has<ComponentType>(instance->m_SelectionContext))
+        if (m_Context->m_Registry->has<ComponentType>(m_SelectionContext))
         {
             ImGui::PushID(name);
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 4.0f });
+            
+            ImVec2 contentRegionAvail = ImGui::GetContentRegionAvail();
+            
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-            bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_FramePadding);
-            ImGui::PopStyleVar(2);
-
-            // float width = 14.0f;
-            // ImGui::SameLine(ImGui::GetWindowSize().x - width - ImGui::GetStyle().ItemSpacing.x);
-            // ImGui::ImageButton(reinterpret_cast<ImTextureID>(instance->m_TripleDotsIcon->GetDescriptorSet()), ImVec2(width, width));
-
-            // bool should_remove_comp = false;
-            // if (ImGui::BeginPopupContextItem("ComponentSettings", ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonLeft))
-            // {
-            //     if (ImGui::MenuItem("Remove Component"))
-            //         should_remove_comp = true;
-            //     ImGui::EndPopup();
-            // }
-
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2, 4 });
+            
+            auto& style = ImGui::GetStyle();
+            float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
+            
+            bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
+            ImGui::PopStyleVar();
+            
+            float imageSize = lineHeight - 2.0f * style.FramePadding.y;
+            ImGui::SameLine(contentRegionAvail.x - lineHeight * 0.5f);
+            
+            ImGui::ImageButton("ComponentSettingsToggle", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), ImVec2(imageSize, imageSize));
+            FBY_LOG("Actual Button Size: {}", ImGui::GetItemRectSize().x);
+            ImGui::PopStyleVar();
+            
+            bool shouldRemoveComp = false;
+            if (ImGui::BeginPopupContextItem("ComponentSettings", ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonLeft))
+            {
+                ImGui::BeginDisabled(!removable);
+                if (ImGui::MenuItem("Remove Component"))
+                    shouldRemoveComp = true;
+                ImGui::EndDisabled();
+                
+                ImGui::EndPopup();
+            }
+            
             if (open)
                 fn();
             ImGui::PopID();
-
-            // if (should_remove_comp)
-            //     instance->GetContextRegistry()->erase<ComponentType>(instance->m_SelectionContext);
+            
+            if (shouldRemoveComp)
+                m_Context->m_Registry->erase<ComponentType>(m_SelectionContext);
         }
     }
+
 }

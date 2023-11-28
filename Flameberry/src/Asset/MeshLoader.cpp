@@ -375,8 +375,8 @@ namespace Flameberry {
         // Usually - if speed is not the most important aspect for you - you'll
         // probably to request more postprocessing than we do in this example.
         const aiScene* scene = importer.ReadFile(path,
-            // aiProcessPreset_TargetRealtime_Fast
-            aiProcessPreset_TargetRealtime_Quality
+            aiProcessPreset_TargetRealtime_Fast
+//            aiProcessPreset_TargetRealtime_Quality
             | aiProcess_FlipUVs
         );
 
