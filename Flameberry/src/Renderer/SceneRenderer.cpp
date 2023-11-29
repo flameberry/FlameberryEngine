@@ -117,14 +117,14 @@ namespace Flameberry {
             for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
             {
                 m_ShadowMapDescriptorSets[i] = DescriptorSet::Create(shadowMapDescSetSpec);
-                
+
                 VkDescriptorBufferInfo bufferInfo{};
                 bufferInfo.buffer = m_ShadowMapUniformBuffers[i]->GetBuffer();
                 bufferInfo.range = bufferSize;
                 bufferInfo.offset = 0;
 
                 m_ShadowMapDescriptorSets[i]->WriteBuffer(0, bufferInfo);
-                
+
                 m_ShadowMapDescriptorSets[i]->Update();
             }
 
@@ -252,10 +252,10 @@ namespace Flameberry {
                     uniformBuffer = std::make_unique<Buffer>(bufferSpec);
                     uniformBuffer->MapMemory(uniformBufferSize);
                 }
-                
+
                 DescriptorSetLayoutSpecification sceneDescSetLayoutSpec;
                 sceneDescSetLayoutSpec.Bindings.resize(2);
-                
+
                 // Scene Uniform Buffer
                 sceneDescSetLayoutSpec.Bindings[0].binding = 0;
                 sceneDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -267,7 +267,7 @@ namespace Flameberry {
                 sceneDescSetLayoutSpec.Bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 sceneDescSetLayoutSpec.Bindings[1].descriptorCount = 1;
                 sceneDescSetLayoutSpec.Bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                
+
                 m_SceneDescriptorSetLayout = DescriptorSetLayout::Create(sceneDescSetLayoutSpec);
 
                 DescriptorSetSpecification sceneDescSetSpec;
@@ -277,17 +277,17 @@ namespace Flameberry {
                 for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
                 {
                     m_SceneDataDescriptorSets[i] = DescriptorSet::Create(sceneDescSetSpec);
-                    
+
                     VkDescriptorBufferInfo bufferInfo{};
                     bufferInfo.range = sizeof(SceneUniformBufferData);
-                    bufferInfo.offset=0;
+                    bufferInfo.offset = 0;
                     bufferInfo.buffer = m_SceneUniformBuffers[i]->GetBuffer();
-                    
+
                     VkDescriptorImageInfo imageInfo{};
                     imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
                     imageInfo.imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView();
                     imageInfo.sampler = m_ShadowMapSampler;
-                    
+
                     m_SceneDataDescriptorSets[i]->WriteBuffer(0, bufferInfo);
                     m_SceneDataDescriptorSets[i]->WriteImage(1, imageInfo);
                     m_SceneDataDescriptorSets[i]->Update();
@@ -404,13 +404,13 @@ namespace Flameberry {
             for (uint8_t i = 0; i < m_CompositePassDescriptorSets.size(); i++)
             {
                 m_CompositePassDescriptorSets[i] = DescriptorSet::Create(setSpec);
-                
+
                 VkDescriptorImageInfo imageInfo{
                     .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                     .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetImageView(),
                     .sampler = m_VkTextureSampler
                 };
-                
+
                 m_CompositePassDescriptorSets[i]->WriteImage(0, imageInfo);
 
                 m_CompositePassDescriptorSets[i]->Update();
@@ -464,15 +464,15 @@ namespace Flameberry {
                         .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetImageView(),
                         .sampler = m_VkTextureSampler
                     };
-                    
+
                     m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, imageInfo);
 
                     m_CompositePassDescriptorSets[imageIndex]->Update();
                     m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass());
                 }
 
-//                VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
-//                m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->SetClearColorValue(color);
+                //                VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
+                //                m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->SetClearColorValue(color);
             }
         );
 
@@ -483,9 +483,9 @@ namespace Flameberry {
         cameraBufferData.ViewProjectionMatrix = projectionMatrix * viewMatrix;
 
         m_CameraUniformBuffers[currentFrame]->WriteToBuffer(&cameraBufferData, sizeof(CameraUniformBufferObject));
-        
+
         SceneUniformBufferData sceneUniformBufferData;
-        
+
         // Keep the skylight ready
         SkyLightComponent* skyMap = nullptr;
         for (const auto entity : scene->m_Registry->view<TransformComponent, SkyLightComponent>())
@@ -493,7 +493,7 @@ namespace Flameberry {
             skyMap = scene->m_Registry->try_get<SkyLightComponent>(entity);
             sceneUniformBufferData.SkyLightIntensity = skyMap->Intensity;
         }
-        
+
         // Update Directional Lights
         for (const auto& entity : scene->m_Registry->view<TransformComponent, DirectionalLightComponent>())
         {
@@ -536,7 +536,7 @@ namespace Flameberry {
 
             lightEntityHandles.emplace_back(entity);
         }
-        
+
         m_SceneUniformBuffers[currentFrame]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData));
 
         // Render Passes
@@ -635,7 +635,7 @@ namespace Flameberry {
                 Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
             }
             Renderer2D::FlushQuads();
-            
+
             Renderer2D::SetActiveTexture(m_DirectionalLightIcon);
             for (auto entity : scene->m_Registry->view<TransformComponent, DirectionalLightComponent>())
             {
@@ -645,7 +645,7 @@ namespace Flameberry {
             Renderer2D::FlushQuads();
         }
 
-        if (renderPhysicsCollider && selectedEntity != fbentt::null)
+        if (selectedEntity != fbentt::null && renderPhysicsCollider)
         {
             auto& transform = scene->m_Registry->get<TransformComponent>(selectedEntity);
 
@@ -879,9 +879,14 @@ namespace Flameberry {
     // TODO: Move this to EditorLayer.cpp ASAP
     void SceneRenderer::SubmitPhysicsColliderGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
     {
+        auto* rigidBody = scene->m_Registry->try_get<RigidBodyComponent>(entity);
+        if (!rigidBody) return;
+            
         // TODO: Optimise this function (maybe embed the vertices (?))
         constexpr glm::vec3 greenColor(0.2f, 1.0f, 0.2f);
         constexpr float bias(0.001f);
+        
+        const glm::vec3 position = transform.Translation + rigidBody->ColliderOffset;
         const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
 
         // Render Physics Colliders
@@ -891,14 +896,14 @@ namespace Flameberry {
             const glm::vec3 halfExtent = transform.Scale * boxCollider->Size * 0.5f + bias;
 
             // Calculate the positions of the vertices of the collider
-            glm::vec3 vertex1 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, -halfExtent.y, -halfExtent.z));
-            glm::vec3 vertex2 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, -halfExtent.y, -halfExtent.z));
-            glm::vec3 vertex3 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, halfExtent.y, -halfExtent.z));
-            glm::vec3 vertex4 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, halfExtent.y, -halfExtent.z));
-            glm::vec3 vertex5 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, -halfExtent.y, halfExtent.z));
-            glm::vec3 vertex6 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, -halfExtent.y, halfExtent.z));
-            glm::vec3 vertex7 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, halfExtent.y, halfExtent.z));
-            glm::vec3 vertex8 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, halfExtent.y, halfExtent.z));
+            glm::vec3 vertex1 = glm::vec3(position + rotationMatrix * glm::vec3(-halfExtent.x, -halfExtent.y, -halfExtent.z));
+            glm::vec3 vertex2 = glm::vec3(position + rotationMatrix * glm::vec3(halfExtent.x, -halfExtent.y, -halfExtent.z));
+            glm::vec3 vertex3 = glm::vec3(position + rotationMatrix * glm::vec3(halfExtent.x, halfExtent.y, -halfExtent.z));
+            glm::vec3 vertex4 = glm::vec3(position + rotationMatrix * glm::vec3(-halfExtent.x, halfExtent.y, -halfExtent.z));
+            glm::vec3 vertex5 = glm::vec3(position + rotationMatrix * glm::vec3(-halfExtent.x, -halfExtent.y, halfExtent.z));
+            glm::vec3 vertex6 = glm::vec3(position + rotationMatrix * glm::vec3(halfExtent.x, -halfExtent.y, halfExtent.z));
+            glm::vec3 vertex7 = glm::vec3(position + rotationMatrix * glm::vec3(halfExtent.x, halfExtent.y, halfExtent.z));
+            glm::vec3 vertex8 = glm::vec3(position + rotationMatrix * glm::vec3(-halfExtent.x, halfExtent.y, halfExtent.z));
 
             Renderer2D::AddLine(vertex1, vertex2, greenColor); // Edge 1
             Renderer2D::AddLine(vertex2, vertex3, greenColor); // Edge 2
@@ -924,10 +929,10 @@ namespace Flameberry {
         else if (auto* sphereCollider = scene->m_Registry->try_get<SphereColliderComponent>(entity); sphereCollider)
         {
             // Define the radius of the sphere
-            float radius = sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z) + bias;
+            const float radius = sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z) + bias;
 
             // Define the number of lines
-            int numLines = 32;
+            constexpr int numLines = 32;
 
             // Calculate the angle between each line segment
             float segmentAngle = 2 * M_PI / numLines;
@@ -937,7 +942,7 @@ namespace Flameberry {
 
             uint8_t index = 1;
             // Calculate the vertices for the circle
-            for (int i = 0; i < numLines; i++) 
+            for (int i = 0; i < numLines; i++)
             {
                 float theta = i * segmentAngle;
                 vertices[index].x = radius * cos(theta);
@@ -946,28 +951,28 @@ namespace Flameberry {
 
                 const auto& pos = vertices[(index + 1) % 2];
                 const auto& pos2 = vertices[index];
-                Renderer2D::AddLine(pos + transform.Translation, pos2 + transform.Translation, greenColor);
-                Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, glm::vec3(pos2.x, pos2.z, pos2.y) + transform.Translation, greenColor);
-                Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, glm::vec3(pos2.z, pos2.y, pos2.x) + transform.Translation, greenColor);
+                Renderer2D::AddLine(pos + position, pos2 + position, greenColor);
+                Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + position, glm::vec3(pos2.x, pos2.z, pos2.y) + position, greenColor);
+                Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + position, glm::vec3(pos2.z, pos2.y, pos2.x) + position, greenColor);
                 index = (index + 1) % 2;
             }
 
             const auto& pos = vertices[(index + 1) % 2];
-            Renderer2D::AddLine(pos + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), greenColor);
-            Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), greenColor);
-            Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, transform.Translation + glm::vec3(0.0f, 0.0f, radius), greenColor);
+            Renderer2D::AddLine(pos + position, position + glm::vec3(radius, 0.0f, 0.0f), greenColor);
+            Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + position, position + glm::vec3(radius, 0.0f, 0.0f), greenColor);
+            Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + position, position + glm::vec3(0.0f, 0.0f, radius), greenColor);
         }
         else if (auto* capsuleCollider = scene->m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
         {
             // TODO: Fix the wrong vertices
             // Define the radius and half height of the capsule
-            float halfHeight = 0.5f * capsuleCollider->Height * transform.Scale.y;
-            float radius = capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z) + bias;
+            const float halfHeight = 0.5f * capsuleCollider->Height * transform.Scale.y;
+            const float radius = capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z) + bias;
 
-            Renderer2D::AddLine(transform.Translation + rotationMatrix * glm::vec3(radius, halfHeight, 0), transform.Translation + rotationMatrix * glm::vec3(radius, -halfHeight, 0), greenColor);
-            Renderer2D::AddLine(transform.Translation + rotationMatrix * glm::vec3(-radius, halfHeight, 0), transform.Translation + rotationMatrix * glm::vec3(-radius, -halfHeight, 0), greenColor);
-            Renderer2D::AddLine(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, radius), transform.Translation + rotationMatrix * glm::vec3(0, -halfHeight, radius), greenColor);
-            Renderer2D::AddLine(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, -radius), transform.Translation + rotationMatrix * glm::vec3(0, -halfHeight, -radius), greenColor);
+            Renderer2D::AddLine(position + rotationMatrix * glm::vec3(radius, halfHeight, 0), position + rotationMatrix * glm::vec3(radius, -halfHeight, 0), greenColor);
+            Renderer2D::AddLine(position + rotationMatrix * glm::vec3(-radius, halfHeight, 0), position + rotationMatrix * glm::vec3(-radius, -halfHeight, 0), greenColor);
+            Renderer2D::AddLine(position + rotationMatrix * glm::vec3(0, halfHeight, radius), position + rotationMatrix * glm::vec3(0, -halfHeight, radius), greenColor);
+            Renderer2D::AddLine(position + rotationMatrix * glm::vec3(0, halfHeight, -radius), position + rotationMatrix * glm::vec3(0, -halfHeight, -radius), greenColor);
 
             // Define the number of lines
             constexpr int numLines = 32;
@@ -989,8 +994,8 @@ namespace Flameberry {
 
                 const auto& pos = vertices[(index + 1) % 2];
                 const auto& pos2 = vertices[index];
-                Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, halfHeight, 0)) + transform.Translation, rotationMatrix * (pos2 + glm::vec3(0, halfHeight, 0)) + transform.Translation, greenColor);
-                Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, -halfHeight, 0)) + transform.Translation, rotationMatrix * (pos2 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, greenColor);
+                Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, halfHeight, 0)) + position, rotationMatrix * (pos2 + glm::vec3(0, halfHeight, 0)) + position, greenColor);
+                Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, -halfHeight, 0)) + position, rotationMatrix * (pos2 + glm::vec3(0, -halfHeight, 0)) + position, greenColor);
 
                 // Hemispheres
                 const glm::vec3& vertex1 = { vertices[(index + 1) % 2].x, vertices[(index + 1) % 2].z, vertices[(index + 1) % 2].y };
@@ -999,26 +1004,26 @@ namespace Flameberry {
                 const glm::vec3& vertex4 = { vertices[index].y, vertices[index].x, vertices[index].z };
                 if (i < numLines / 2)
                 {
-                    Renderer2D::AddLine(rotationMatrix * (vertex1 + glm::vec3(0, halfHeight, 0)) + transform.Translation, rotationMatrix * (vertex2 + glm::vec3(0, halfHeight, 0)) + transform.Translation, greenColor);
-                    Renderer2D::AddLine(rotationMatrix * (vertex3 + glm::vec3(0, halfHeight, 0)) + transform.Translation, rotationMatrix * (vertex4 + glm::vec3(0, halfHeight, 0)) + transform.Translation, greenColor);
+                    Renderer2D::AddLine(rotationMatrix * (vertex1 + glm::vec3(0, halfHeight, 0)) + position, rotationMatrix * (vertex2 + glm::vec3(0, halfHeight, 0)) + position, greenColor);
+                    Renderer2D::AddLine(rotationMatrix * (vertex3 + glm::vec3(0, halfHeight, 0)) + position, rotationMatrix * (vertex4 + glm::vec3(0, halfHeight, 0)) + position, greenColor);
                 }
                 else
                 {
-                    Renderer2D::AddLine(rotationMatrix * (vertex1 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, rotationMatrix * (vertex2 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, greenColor);
-                    Renderer2D::AddLine(rotationMatrix * (vertex3 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, rotationMatrix * (vertex4 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, greenColor);
+                    Renderer2D::AddLine(rotationMatrix * (vertex1 + glm::vec3(0, -halfHeight, 0)) + position, rotationMatrix * (vertex2 + glm::vec3(0, -halfHeight, 0)) + position, greenColor);
+                    Renderer2D::AddLine(rotationMatrix * (vertex3 + glm::vec3(0, -halfHeight, 0)) + position, rotationMatrix * (vertex4 + glm::vec3(0, -halfHeight, 0)) + position, greenColor);
                 }
                 index = (index + 1) % 2;
             }
 
             const auto& pos = vertices[(index + 1) % 2];
-            Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, halfHeight, 0)) + transform.Translation, transform.Translation + rotationMatrix * glm::vec3{ radius, halfHeight, 0.0f }, greenColor);
-            Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, -halfHeight, 0)) + transform.Translation, transform.Translation + rotationMatrix * glm::vec3{ radius, -halfHeight, 0.0f }, greenColor);
+            Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, halfHeight, 0)) + position, position + rotationMatrix * glm::vec3{ radius, halfHeight, 0.0f }, greenColor);
+            Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, -halfHeight, 0)) + position, position + rotationMatrix * glm::vec3{ radius, -halfHeight, 0.0f }, greenColor);
 
             const glm::vec3& vertex = { vertices[(index + 1) % 2].x, vertices[(index + 1) % 2].z, vertices[(index + 1) % 2].y };
             const glm::vec3& vertex2 = { vertices[(index + 1) % 2].y, vertices[(index + 1) % 2].x, vertices[(index + 1) % 2].z };
 
-            Renderer2D::AddLine(rotationMatrix * (vertex + glm::vec3(0, halfHeight, 0)) + transform.Translation, transform.Translation + rotationMatrix * glm::vec3{ 0.0f, halfHeight, radius }, greenColor);
-            Renderer2D::AddLine(rotationMatrix * (vertex2 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, transform.Translation + rotationMatrix * glm::vec3{ 0.0f, -halfHeight, radius }, greenColor);
+            Renderer2D::AddLine(rotationMatrix * (vertex + glm::vec3(0, halfHeight, 0)) + position, position + rotationMatrix * glm::vec3{ 0.0f, halfHeight, radius }, greenColor);
+            Renderer2D::AddLine(rotationMatrix * (vertex2 + glm::vec3(0, -halfHeight, 0)) + position, position + rotationMatrix * glm::vec3{ 0.0f, -halfHeight, radius }, greenColor);
         }
     }
 

@@ -195,6 +195,7 @@ namespace Flameberry {
                         rbComp.StaticFriction = rigidBody["StaticFriction"].as<float>();
                         rbComp.DynamicFriction = rigidBody["DynamicFriction"].as<float>();
                         rbComp.Restitution = rigidBody["Restitution"].as<float>();
+                        rbComp.ColliderOffset = rigidBody["ColliderOffset"].as<glm::vec3>();
                     }
 
                     if (auto boxCollider = entity["BoxColliderComponent"]; boxCollider)
@@ -376,6 +377,7 @@ namespace Flameberry {
             out << YAML::Key << "StaticFriction" << YAML::Value << rigidBody.StaticFriction;
             out << YAML::Key << "DynamicFriction" << YAML::Value << rigidBody.DynamicFriction;
             out << YAML::Key << "Restitution" << YAML::Value << rigidBody.Restitution;
+            out << YAML::Key << "ColliderOffset" << YAML::Value << rigidBody.ColliderOffset;
             out << YAML::Key << YAML::EndMap; // Rigid Body Component
         }
 

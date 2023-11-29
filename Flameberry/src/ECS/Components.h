@@ -131,16 +131,17 @@ namespace Flameberry {
     {
         enum class RigidBodyType : uint8_t { Static = 0, Dynamic };
         RigidBodyType Type = RigidBodyType::Static;
-
+        
         float Density = 10.0f;
         float StaticFriction = 0.5f, DynamicFriction = 0.7f, Restitution = 0.1f;
+        glm::vec3 ColliderOffset{0.0f};
 
         void* RuntimeRigidBody = nullptr;
     };
 
     struct BoxColliderComponent
     {
-        glm::vec3 Size{ 1.0f };
+        glm::vec3 Size{0.0f};
 
         void* RuntimeShape = nullptr;
     };

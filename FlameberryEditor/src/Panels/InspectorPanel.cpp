@@ -606,6 +606,15 @@ namespace Flameberry {
                         ImGui::TableNextColumn();
                         ImGui::DragFloat("##Restitution", &rigidBody.Restitution, 0.005f, 0.0f, 1.0f);
                         ImGui::PopItemWidth();
+                        
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Collider Offset");
+                        ImGui::TableNextColumn();
+                        
+                        UI::Vec3Control("RigidBodyColliderOffset", rigidBody.ColliderOffset, 1.0f, 0.01f, ImGui::GetColumnWidth());
 
                         ImGui::EndTable();
                     }
@@ -694,7 +703,7 @@ namespace Flameberry {
                             }
                             ImGui::EndCombo();
                         }
-
+                        
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 

@@ -80,7 +80,6 @@ namespace Flameberry {
             ImGui::SameLine(contentRegionAvail.x - lineHeight * 0.5f);
             
             ImGui::ImageButton("ComponentSettingsToggle", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), ImVec2(imageSize, imageSize));
-            FBY_LOG("Actual Button Size: {}", ImGui::GetItemRectSize().x);
             ImGui::PopStyleVar();
             
             bool shouldRemoveComp = false;

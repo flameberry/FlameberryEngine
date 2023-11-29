@@ -54,12 +54,67 @@ namespace Flameberry {
         for (auto entity : m_Registry->view<TransformComponent, RigidBodyComponent>())
         {
             auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
+            physx::PxShape* shape = nullptr;
 
+            if (auto* boxCollider = m_Registry->try_get<BoxColliderComponent>(entity); boxCollider)
+            {
+                auto geometry = physx::PxBoxGeometry(
+                    0.5f * boxCollider->Size.x * transform.Scale.x,
+                    0.5f * boxCollider->Size.y * transform.Scale.y,
+                    0.5f * boxCollider->Size.z * transform.Scale.z
+                );
+                auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
+                shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
+                shape->setLocalPose(physx::PxTransform(physx::PxVec3(rigidBody.ColliderOffset.x, rigidBody.ColliderOffset.y, rigidBody.ColliderOffset.z)));
+                boxCollider->RuntimeShape = shape;
+            }
+
+            if (auto* sphereCollider = m_Registry->try_get<SphereColliderComponent>(entity); sphereCollider)
+            {
+                auto geometry = physx::PxSphereGeometry(sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z));
+                auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
+                shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
+                shape->setLocalPose(physx::PxTransform(physx::PxVec3(rigidBody.ColliderOffset.x, rigidBody.ColliderOffset.y, rigidBody.ColliderOffset.z)));
+                sphereCollider->RuntimeShape = shape;
+            }
+
+            if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
+            {
+                auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
+                auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
+                shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
+
+                switch (capsuleCollider->Axis)
+                {
+                    case AxisType::X:
+                    {
+                        const physx::PxTransform relativePose(physx::PxVec3(rigidBody.ColliderOffset.x, rigidBody.ColliderOffset.y, rigidBody.ColliderOffset.z));
+                        shape->setLocalPose(relativePose);
+                        break;
+                    }
+                    case AxisType::Y:
+                    {
+                        const physx::PxTransform relativePose(physx::PxVec3(rigidBody.ColliderOffset.x, rigidBody.ColliderOffset.y, rigidBody.ColliderOffset.z), physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1)));
+                        shape->setLocalPose(relativePose);
+                        break;
+                    }
+                    case AxisType::Z:
+                    {
+                        const physx::PxTransform relativePose(physx::PxVec3(rigidBody.ColliderOffset.x, rigidBody.ColliderOffset.y, rigidBody.ColliderOffset.z), physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 1, 0)));
+                        shape->setLocalPose(relativePose);
+                        break;
+                    }
+                }
+                capsuleCollider->RuntimeShape = shape;
+            }
+
+            // Creating the Rigid Body
             const auto quat = glm::quat(transform.Rotation);
             const auto transformMat = physx::PxTransform(
                 physx::PxVec3(transform.Translation.x, transform.Translation.y, transform.Translation.z),
                 physx::PxQuat(quat.x, quat.y, quat.z, quat.w)
             );
+
             switch (rigidBody.Type)
             {
                 case RigidBodyComponent::RigidBodyType::Static: {
@@ -73,69 +128,19 @@ namespace Flameberry {
                     break;
                 }
             }
-            
+
             FBY_ASSERT(rigidBody.RuntimeRigidBody, "Failed to create RigidBody!");
 
-            physx::PxShape* shape = nullptr;
-
-            if (auto* boxCollider = m_Registry->try_get<BoxColliderComponent>(entity); boxCollider)
-            {
-                auto geometry = physx::PxBoxGeometry(
-                    0.5f * boxCollider->Size.x * transform.Scale.x,
-                    0.5f * boxCollider->Size.y * transform.Scale.y,
-                    0.5f * boxCollider->Size.z * transform.Scale.z
-                );
-                auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
-                shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
-                boxCollider->RuntimeShape = shape;
-            }
-
-            if (auto* sphereCollider = m_Registry->try_get<SphereColliderComponent>(entity); sphereCollider)
-            {
-                auto geometry = physx::PxSphereGeometry(sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z));
-                auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
-                shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
-                sphereCollider->RuntimeShape = shape;
-            }
-            
-            if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
-            {
-                auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
-                auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
-                shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
-
-                switch (capsuleCollider->Axis)
-                {
-                    case AxisType::X:
-                        break;
-                    case AxisType::Y:
-                    {
-                        physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1)));
-                        shape->setLocalPose(relativePose);
-                        break;
-                    }
-                    case AxisType::Z:
-                    {
-                        physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(1, 0, 0)));
-                        shape->setLocalPose(relativePose);
-                        break;
-                    }
-                }
-                capsuleCollider->RuntimeShape = shape;
-            }
+            // TODO: Add axis locking
+            physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
+            if (rigidBody.Type == RigidBodyComponent::RigidBodyType::Dynamic)
+                physx::PxRigidBodyExt::updateMassAndInertia(*rigidBodyRuntimePtr, rigidBody.Density);
 
             if (shape)
-            {
-                // TODO: Add axis locking
-                physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
                 rigidBodyRuntimePtr->attachShape(*shape);
-                if (rigidBody.Type == RigidBodyComponent::RigidBodyType::Dynamic)
-                    physx::PxRigidBodyExt::updateMassAndInertia(*rigidBodyRuntimePtr, rigidBody.Density);
-                m_PxScene->addActor(*rigidBodyRuntimePtr);
-                shape->release();
-            }
+            m_PxScene->addActor(*rigidBodyRuntimePtr);
         }
-        
+
         // Native Scripting
         for (auto entity : m_Registry->view<NativeScriptComponent>())
         {
@@ -143,18 +148,24 @@ namespace Flameberry {
             nsc.Actor = nsc.InitScript();
             nsc.Actor->m_SceneRef = this;
             nsc.Actor->m_Entity = entity;
-            
+
             nsc.Actor->OnInstanceCreated();
         }
-        
+
         // CSharp Scripting
         ScriptEngine::OnRuntimeStart(this);
     }
 
     void Scene::OnRuntimeStop()
     {
+        for (auto entity : m_Registry->view<RigidBodyComponent>())
+        {
+            auto& rigidBody = m_Registry->get<RigidBodyComponent>(entity);
+            auto* ptr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
+            ptr->release();
+        }
         m_PxScene->release();
-        
+
         // Delete Script Actors
         for (auto entity : m_Registry->view<NativeScriptComponent>())
         {
@@ -162,7 +173,7 @@ namespace Flameberry {
             nsc.Actor->OnInstanceDeleted();
             nsc.DestroyScript(&nsc);
         }
-        
+
         ScriptEngine::OnRuntimeStop();
     }
 
@@ -176,7 +187,7 @@ namespace Flameberry {
             auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
             nsc.Actor->OnUpdate(delta);
         }
-        
+
         // Update CSharp Scripts
         ScriptEngine::OnRuntimeUpdate(delta);
 
@@ -340,17 +351,17 @@ namespace Flameberry {
         }
         return false;
     }
-    
+
     template<typename... Component>
     static void CopyComponentIfExists(Scene* context, fbentt::entity dest, fbentt::entity src)
     {
         ([&]()
-         {
-            if (auto* comp = context->GetRegistry()->try_get<Component>(src); comp)
-                context->GetRegistry()->emplace<Component>(dest, *comp);
-        }(), ...);
+            {
+                if (auto* comp = context->GetRegistry()->try_get<Component>(src); comp)
+                    context->GetRegistry()->emplace<Component>(dest, *comp);
+            }(), ...);
     }
-    
+
     template<typename... Component>
     static void CopyComponentIfExists(ComponentList<Component...>, Scene* context, fbentt::entity dest, fbentt::entity src)
     {
@@ -365,9 +376,9 @@ namespace Flameberry {
 
         m_Registry->emplace<IDComponent>(destEntity);
         m_Registry->emplace<TagComponent>(destEntity, m_Registry->get<TagComponent>(src).Tag);
-        
+
         CopyComponentIfExists(AllComponents{}, this, destEntity, src);
-        
+
         // auto* relation = m_Registry->try_get<RelationshipComponent>(src);
         // if (relation && relation->Parent != fbentt::null)
         // {

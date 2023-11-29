@@ -82,8 +82,7 @@ if __name__ == "__main__":
         gen_process = subprocess.run(["sh", "./generate_projects.sh", physX_preset])
 
     if gen_process.returncode != 0:
-        print(f"[FLAMEBERRY]: ERROR: Failed to generate Nvidia PhysX project files!")
-        exit()
+        raise Exception(f"[FLAMEBERRY]: ERROR: Failed to generate Nvidia PhysX project files!")
 
     # Build Nvidia PhysX libraries
     physX_build_configs = ["checked", "release"]  # debug and profile configs aren't used by Flameberry yet
