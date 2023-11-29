@@ -8,6 +8,8 @@ bin/
 build_makefiles/
 build_xcode/
 build/
+obj/
+SandboxProject/Binaries
 
 !Flameberry/assets/shaders/vulkan/bin
 
@@ -20,6 +22,8 @@ logs/
 
 # Visual Studio Code Generated Folder
 .vscode/
+*.sln
+.vs/
 
 # My Computer Specific Scripts
 *.sh
