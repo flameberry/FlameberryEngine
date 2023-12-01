@@ -80,5 +80,6 @@ class VulkanSDKRequirements:
         return URLS[platform.system()]
 
 if __name__ == '__main__':
+    ColoredLogger.InitLogger()
     if not VulkanSDKRequirements.Validate():
         VulkanSDKRequirements.InstallVulkanSDK()

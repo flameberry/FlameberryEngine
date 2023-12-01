@@ -24,6 +24,9 @@ class PhysXSDKRequirements:
         else: presetParam = []
 
         try:
+            cwd = os.getcwd()
+            os.chdir(cls.__PhysXRootDirectory / 'physx')
+
             # Generate PhysX Project Files
             if os.name == 'nt':
                 params = [cls.__PhysXRootDirectory / 'physx/generate_projects.bat'] + presetParam
@@ -47,6 +50,8 @@ class PhysXSDKRequirements:
                 # Build for single-config generators like Xcode, Visual Studio
                 for config in ('checked', 'release'):
                     subprocess.run(["cmake", "--build", compilerDir / dir, f"--config={config}"])
+            
+            os.chdir(cwd)
         except Exception as e:
             raise e
         
@@ -108,18 +113,22 @@ set(PHYSX_COMPILE_DEFINITIONS NDEBUG)
                 'libPhysXExtensions_static_64.a'
             ]
 
-        binDir = cls.__PhysXRootDirectory / 'physx/bin'
-        innerBinDirs = [x for x in os.listdir(binDir) if (binDir / x).is_dir()]
+        binDirectory = cls.__PhysXRootDirectory / 'physx/bin'
+        if not binDirectory.exists():
+            return None
+        
+        innerBinDirs = [x for x in os.listdir(binDirectory) if (binDirectory / x).is_dir()]
 
         for dir in innerBinDirs: # example dir = macos.x86_64
             success = True
             for library in requiredLibraryNames:
-                if not os.path.isfile(binDir / dir / 'checked' / library) or not os.path.isfile(binDir / dir / 'release' / library):
+                if not os.path.isfile(binDirectory / dir / 'checked' / library) or not os.path.isfile(binDirectory / dir / 'release' / library):
                     success = success and False
             if success: 
-                return binDir / dir
+                return binDirectory / dir
         return None
 
 if __name__ == '__main__':
+    ColoredLogger.InitLogger()
     if not PhysXSDKRequirements.Validate():
         PhysXSDKRequirements.BuildPhysXSDK()

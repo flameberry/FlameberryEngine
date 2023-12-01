@@ -99,5 +99,6 @@ class CMakeRequirements:
         return URL
 
 if __name__ == '__main__':
+    ColoredLogger.InitLogger()
     if not CMakeRequirements.Validate():
         CMakeRequirements.InstallCMake()
