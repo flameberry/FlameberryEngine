@@ -8,12 +8,13 @@ Flameberry Engine is a C++ Game Engine based upon the Vulkan Graphics API and is
 
 ## Build Requirements:
 1. Vulkan/MoltenVK support
-2. Python OR CMake
+2. Python
+3. CMake (Preferred)
 3. C++17 Compiler
 
 ## Build Steps:
-1. Clone the repository using: <br> `git clone --recursive https://github.com/flameberry/flameberry-engine <folder-name>`
-2. Run the `scripts/generate_project.py` script to setup Nvidia PhysX and generate project files.
+1. Clone the repository using: <br> `git clone --recursive https://github.com/flameberry/FlameberryEngine`
+2. Run the `Scripts/Setup.py` script to setup all the dependencies and generate project files.
 3. Open the project file using an IDE and build it and run it.
 
 ## Third party libs:
@@ -26,3 +27,4 @@ Flameberry Engine is a C++ Game Engine based upon the Vulkan Graphics API and is
 7. Tiny OBJ Loader
 8. Yaml-CPP
 9. Nvidia PhysX
+10. Microsoft Dotnet
