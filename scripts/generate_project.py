@@ -4,7 +4,7 @@ import glob
 import pathlib
 import platform
 import getopt
-from utils import *
+from Utils import *
 from setup_cmake import setup_cmake
 import subprocess
 
@@ -41,7 +41,7 @@ def find_exact_bin_dir(common_bin_dir: pathlib.Path):
 
 
 if __name__ == "__main__":
-    project_dir = get_project_dir()
+    project_dir = Utils.GetProjectDirectory()
     os.chdir(project_dir)
     search_results = setup_cmake()
     if not len(search_results):
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     physX_url = "https://github.com/flameberry/PhysX"
     physX_path = project_dir / "Flameberry/vendor/PhysX"
 
-    if not is_valid_git_repo(physX_path, physX_url):
+    if not Utils.IsValidGitRepository(physX_path, physX_url):
         clone_process = subprocess.run(["git", "clone", physX_url, str(physX_path.resolve())])
         if clone_process.returncode != 0:
             # git must not be present

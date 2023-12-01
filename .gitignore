@@ -66,6 +66,7 @@ __pycache__/
 !Flameberry/vendor/vulkan/lib/*.lib
 
 Flameberry/vendor/VulkanSDK/
+CMake/envPhysX.cmake
 
 # Executables
 *.exe
