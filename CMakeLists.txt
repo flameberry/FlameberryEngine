@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 # Handle Generation for single config generators like MakeFiles, when no Config is specified explicitly in the command line
-if(CMAKE_BUILD_TYPE STREQUAL "")
+if(XCODE AND CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE "Release")
     message(WARNING "CMAKE_BUILD_TYPE not specified, setting to Release as default configuration.")
 endif()

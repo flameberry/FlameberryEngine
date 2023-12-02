@@ -5,7 +5,9 @@ from Utils import Utils
 class VulkanSDKRequirements:
     __VulkanMinimumVersionRequired = '1.3.'
     __VulkanVersionPreferred = '1.3.268.0'
-    __MacOSVulkanSDKInstallPath = os.path.expanduser(f'~/VulkanSDK/{__VulkanVersionPreferred}')
+    __MacOSVulkanSDKInstallPathGlobal = os.path.expanduser(f'~/VulkanSDK/{__VulkanVersionPreferred}')
+    __VulkanSDKInstallPathLocal = Utils.GetProjectDirectory() / f'Flameberry/vendor/VulkanSDK/{__VulkanVersionPreferred}'
+    __ShouldInstallVulkanSDKLocally = True
 
     @classmethod
     def Validate(cls) -> bool:
@@ -31,7 +33,10 @@ class VulkanSDKRequirements:
         # For Windows installation only
         if URL.endswith('.exe'):
             try:
-                installParams = [installerPath, '--accept-licenses', '--default-answer', '--confirm-command', 'install']
+                if cls.__ShouldInstallVulkanSDKLocally:
+                    installParams = [installerPath, '--root', cls.__VulkanSDKInstallPathLocal, '--accept-licenses', '--default-answer', '--confirm-command', 'install']
+                else:
+                    installParams = [installerPath, '--accept-licenses', '--default-answer', '--confirm-command', 'install']
                 subprocess.run(installParams)
             except Exception as e:
                 raise e
@@ -43,9 +48,14 @@ class VulkanSDKRequirements:
             volumePath = f'/Volumes/vulkansdk-macos-{cls.__VulkanVersionPreferred}'
             installerPath = f'/Volumes/vulkansdk-macos-{cls.__VulkanVersionPreferred}/InstallVulkan.app/Contents/MacOS/InstallVulkan'
 
+            vulkanSDKPath = str(cls.__VulkanSDKInstallPathLocal if cls.__ShouldInstallVulkanSDKLocally else cls.__MacOSVulkanSDKInstallPathGlobal)
             # Install the Vulkan SDK
             try:
-                installParams = [installerPath, '--root', cls.__MacOSVulkanSDKInstallPath, '--accept-licenses', '--default-answer', '--confirm-command', 'install']
+                installParams = [
+                    installerPath, 
+                    '--root', vulkanSDKPath,
+                    '--accept-licenses', '--default-answer', '--confirm-command', 'install'
+                ]
                 subprocess.run(installParams)
             except Exception as e:
                 subprocess.run(['hdiutil', 'detach', volumePath])
@@ -59,16 +69,18 @@ class VulkanSDKRequirements:
             shellProfilePath = os.path.join(homeDirectory, '.zshrc' if os.path.exists(os.path.expanduser("~/.zshrc")) else '.bash_profile')
             with open(shellProfilePath, 'a') as profile:
                 profile.write('\n# Vulkan SDK Setup (Installed by Flameberry)\n')
-                profile.write(f'source {cls.__MacOSVulkanSDKInstallPath}/setup-env.sh\n')
+                profile.write(f'source {vulkanSDKPath}/setup-env.sh\n')
             
             # TODO: Maybe obsolete
-            os.environ['VULKAN_SDK'] = f'{os.pathsep}{cls.__MacOSVulkanSDKInstallPath + "/macOS"}'
+            os.environ['VULKAN_SDK'] = f'{os.pathsep}{vulkanSDKPath + "/macOS"}'
         
         # For Linux installation only
         else:
             ColoredLogger.Logger.warning(f'Vulkan SDK Tar file is downloaded at: {installerPath}. You have to further install the Vulkan SDK referring to this documentation: https://vulkan.lunarg.com/doc/sdk/latest/linux/getting_started.html')
             ColoredLogger.Logger.warning(f'Make sure to add VULKAN_SDK to Environment PATH before running the script again.')
             quit()
+        
+        os.remove(installerPath)
 
     @classmethod
     def __ConstructVulkanSDKURL(cls) -> tuple[str, str]:
@@ -81,5 +93,5 @@ class VulkanSDKRequirements:
 
 if __name__ == '__main__':
     ColoredLogger.InitLogger()
-    if not VulkanSDKRequirements.Validate():
-        VulkanSDKRequirements.InstallVulkanSDK()
+    # if not VulkanSDKRequirements.Validate():
+    VulkanSDKRequirements.InstallVulkanSDK()
