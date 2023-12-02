@@ -6,6 +6,8 @@ class CMakeRequirements:
     __CMakeMinimumVersionRequired = '3.20.0'
     __CMakeVersionPreferred = '3.27.9'
 
+    CMakeChosenPath = ''
+
     @classmethod
     def Validate(cls) -> bool:
         cmakeExe = 'cmake.exe' if os.name == 'nt' else 'cmake'
@@ -44,7 +46,8 @@ class CMakeRequirements:
 
         for path in possiblePaths:
             if cls.__ValidateCMakeVersion(path):
-                os.environ['PATH'] += f'{os.pathsep}{pathlib.Path(path).parent}'
+                cls.CMakeChosenPath = path
+                os.environ['PATH'] += f'{os.pathsep}{pathlib.Path(cls.CMakeChosenPath).parent}'
                 ColoredLogger.Logger.info(f'Temporarily added path to shell environment: {path}')
                 return True
         
@@ -67,7 +70,14 @@ class CMakeRequirements:
             'Darwin': f'{unzippedPath}/CMake.app/Contents/bin/cmake',
             'Linux': f'{unzippedPath}/bin/cmake'
         }
-        os.environ['PATH'] += f'{os.pathsep}{paths[platform.system()]}'
+        cls.CMakeChosenPath = paths[platform.system()]
+        os.environ['PATH'] += f'{os.pathsep}{cls.CMakeChosenPath}'
+    
+    @classmethod
+    def WriteChosenDirectoryToMeta(cls):
+        f = open(Utils.GetProjectDirectory() / 'Scripts/Setup.meta', 'w')
+        f.write(f'cmake={cls.CMakeChosenPath}\n')
+        f.close()
 
     @classmethod
     def __ValidateCMakeVersion(cls, path) -> bool:
@@ -102,3 +112,5 @@ if __name__ == '__main__':
     ColoredLogger.InitLogger()
     if not CMakeRequirements.Validate():
         CMakeRequirements.InstallCMake()
+    
+    CMakeRequirements.WriteChosenDirectoryToMeta()

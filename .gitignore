@@ -28,6 +28,8 @@ logs/
 # My Computer Specific Scripts
 *.sh
 shellscripts/
+!Scripts/*.sh
+Scripts/Setup.meta
 
 # Pycharm folders
 .idea/
