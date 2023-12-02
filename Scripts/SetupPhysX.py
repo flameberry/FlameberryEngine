@@ -74,20 +74,34 @@ set(PHYSX_COMPILE_DEFINITIONS NDEBUG)
     
     @classmethod
     def __FindPreset(cls, parent):
+        if platform.system() == 'Windows':
+            visualStudioVersion = Utils.GetVisualStudioVersionIfInstalled()
+            if visualStudioVersion is None:
+                ColoredLogger.Logger.error('Visual Studio must be installed for PhysX to be built')
+                quit()
+        
+        elif platform.system() == 'Darwin':
+            isXcodeInstalled = Utils.IsXcodeInstalled()
+
         for file in glob.glob(str(parent / "*.xml")):
             filepath = pathlib.Path(file)
             presetName = filepath.name.removesuffix(".xml")
 
             # Choose preset based upon platform
             if platform.system() == "Windows":
-                if "win64" and "vc17" in presetName:
+                if "win64" and f'vc{visualStudioVersion}' in presetName:
                     return presetName
+            
             elif platform.system() == "Darwin":
-                is_arm = platform.machine() == "arm64"
-                is_preset_for_arm = "arm64" in presetName
+                isArm = platform.machine() == "arm64"
+                isPresetForArm = "arm64" in presetName
+
                 if "mac" in presetName:
-                    if (is_arm and is_preset_for_arm) or (not is_arm and not is_preset_for_arm):
+                    xcodeFilter = (isXcodeInstalled and 'xcode' in presetName) or (not isXcodeInstalled and 'xcode' not in presetName)
+                    archFilter = (isArm and isPresetForArm) or (not isArm and not isPresetForArm)
+                    if xcodeFilter and archFilter:
                         return presetName
+            
             elif platform.system() == "Linux":
                 is_aarch = platform.machine() == "aarch64"
                 is_preset_for_aarc = "aarch64" in presetName
