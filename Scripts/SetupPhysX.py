@@ -40,7 +40,8 @@ class PhysXSDKRequirements:
             innerCompilerDirs = [x for x in os.listdir(compilerDir) if (compilerDir / x).is_dir() and preset in x]
 
             # Only relevant if preset is empty (selected by user in the previously called script)
-            innerCompilerDirs.remove('public')
+            if preset == '':
+                innerCompilerDirs.remove('public')
 
             for dir in innerCompilerDirs:
                 # Build for multi-config generators like GNU Make
@@ -73,25 +74,26 @@ set(PHYSX_COMPILE_DEFINITIONS NDEBUG)
     
     @classmethod
     def __FindPreset(cls, parent):
-        for file in glob.glob(parent + "/*.xml"):
+        for file in glob.glob(str(parent / "*.xml")):
             filepath = pathlib.Path(file)
+            presetName = filepath.name.removesuffix(".xml")
 
             # Choose preset based upon platform
             if platform.system() == "Windows":
-                if "win64" and "vc17" in filepath.name:
-                    return filepath.name
+                if "win64" and "vc17" in presetName:
+                    return presetName
             elif platform.system() == "Darwin":
                 is_arm = platform.machine() == "arm64"
-                is_preset_for_arm = "arm64" in filepath.name
-                if "mac" in filepath.name:
+                is_preset_for_arm = "arm64" in presetName
+                if "mac" in presetName:
                     if (is_arm and is_preset_for_arm) or (not is_arm and not is_preset_for_arm):
-                        return filepath.name
+                        return presetName
             elif platform.system() == "Linux":
                 is_aarch = platform.machine() == "aarch64"
-                is_preset_for_aarc = "aarch64" in filepath.name
-                if "linux" in filepath.name:
+                is_preset_for_aarc = "aarch64" in presetName
+                if "linux" in presetName:
                     if (is_aarch and is_preset_for_aarc) or (not is_aarch and not is_preset_for_aarc):
-                        return filepath.name
+                        return presetName
         return None
     
     @classmethod
