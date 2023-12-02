@@ -46,13 +46,13 @@ class VulkanSDKRequirements:
             # Attach DMG Volume
             subprocess.run(['hdiutil', 'attach', installerPath])
             volumePath = f'/Volumes/vulkansdk-macos-{cls.__VulkanVersionPreferred}'
-            installerPath = f'/Volumes/vulkansdk-macos-{cls.__VulkanVersionPreferred}/InstallVulkan.app/Contents/MacOS/InstallVulkan'
+            vulkanInstallerPath = f'/Volumes/vulkansdk-macos-{cls.__VulkanVersionPreferred}/InstallVulkan.app/Contents/MacOS/InstallVulkan'
 
             vulkanSDKPath = str(cls.__VulkanSDKInstallPathLocal if cls.__ShouldInstallVulkanSDKLocally else cls.__MacOSVulkanSDKInstallPathGlobal)
             # Install the Vulkan SDK
             try:
                 installParams = [
-                    installerPath, 
+                    vulkanInstallerPath, 
                     '--root', vulkanSDKPath,
                     '--accept-licenses', '--default-answer', '--confirm-command', 'install'
                 ]
