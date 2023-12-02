@@ -66,7 +66,7 @@ class VulkanSDKRequirements:
 
             # Add VulkanSDK to PATH
             homeDirectory = os.path.expanduser("~")
-            shellProfilePath = os.path.join(homeDirectory, '.zshrc' if os.path.exists(os.path.expanduser("~/.zshrc")) else '.bash_profile')
+            shellProfilePath = os.path.join(homeDirectory, '.zshrc' if os.path.exists(os.path.expanduser("~/.zshrc")) else '.zprofile' if os.path.exists(os.path.expanduser("~/.zprofile")) else '.bash_profile')
             with open(shellProfilePath, 'a') as profile:
                 profile.write('\n# Vulkan SDK Setup (Installed by Flameberry)\n')
                 profile.write(f'source {vulkanSDKPath}/setup-env.sh\n')
