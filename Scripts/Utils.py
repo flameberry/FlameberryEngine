@@ -1,4 +1,4 @@
-import os, time, pathlib, requests, tarfile, subprocess
+import os, time, pathlib, requests, tarfile, subprocess, re
 from zipfile import ZipFile
 from Logger import ColoredLogger
 from requests.exceptions import RequestException
@@ -7,6 +7,37 @@ class Utils:
     @classmethod
     def GetProjectDirectory(cls) -> pathlib.Path:
         return pathlib.Path(__file__).parent.parent
+
+    @classmethod
+    def GetVisualStudioVersionIfInstalled(cls):
+        try:
+            # Run the reg command to query the Windows Registry for Visual Studio installation
+            result = subprocess.run(['reg', 'query', 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio'], capture_output=True, text=True)
+
+            # Check if the command was successful (return code 0) and if Visual Studio keys are present in the output
+            if result.returncode == 0 and 'VisualStudio' in result.stdout:
+                # Extract version information from the output using regular expressions
+                versionMatch = re.search(r'VisualStudio\\(\d+)', result.stdout)
+                if versionMatch:
+                    return versionMatch.group(1)
+            return None
+
+        except Exception as e:
+            ColoredLogger.Logger.error(e)
+            return None
+
+    @classmethod
+    def IsXcodeInstalled(cls):
+        try:
+            # Run the xcode-select command to check if Xcode is installed
+            result = subprocess.run(['xcode-select', '--print-path'], capture_output=True, text=True)
+
+            # Check if the command was successful (return code 0) and if Xcode path is present in the output
+            return result.returncode == 0 and '/Applications/Xcode.app' in result.stdout.strip()
+
+        except Exception as e:
+            ColoredLogger.Logger.error(e)
+            return False
 
     @classmethod
     def IsValidGitRepository(cls, path: os.PathLike, githubURL):
