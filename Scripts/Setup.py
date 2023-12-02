@@ -19,3 +19,5 @@ if __name__ == '__main__':
 
     if not AssimpRequirements.Validate():
         AssimpRequirements.BuildAssimp()
+    
+    ColoredLogger.Logger.info('Finished Setup!')
