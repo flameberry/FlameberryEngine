@@ -26,8 +26,8 @@ namespace Flameberry {
     {
         ProjectConfig projectConfig;
         projectConfig.AssetDirectory = "Assets";
-        
-        auto project = Project::Create(FL_PROJECT_DIR"SandboxProject", projectConfig);
+
+        auto project = Project::Create(FBY_PROJECT_DIR"SandboxProject", projectConfig);
         return new FlameberryEditor(project);
     }
 }
