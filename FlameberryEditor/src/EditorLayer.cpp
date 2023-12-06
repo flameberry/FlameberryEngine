@@ -52,7 +52,6 @@ namespace Flameberry {
         platform::SetSaveSceneAsCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
         platform::SetOpenSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::OpenScene));
         platform::CreateMenuBar();
-        platform::UI_CustomTitleBar();
 #endif
     }
 
@@ -64,7 +63,7 @@ namespace Flameberry {
         m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
         m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
         m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
-        
+
         Project::SetActive(m_Project);
         std::filesystem::current_path(m_Project->GetProjectDirectory());
 
@@ -193,7 +192,10 @@ namespace Flameberry {
         if (m_IsViewportFocused)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 
-        if (m_ShouldReloadMeshShaders) {
+        Application::Get().BlockAllEvents(m_IsCameraMoving);
+
+        if (m_ShouldReloadMeshShaders)
+        {
             VulkanContext::GetCurrentDevice()->WaitIdle();
             m_SceneRenderer->ReloadMeshShaders();
             m_ShouldReloadMeshShaders = false;
@@ -310,6 +312,12 @@ namespace Flameberry {
 #ifndef __APPLE__
         UI_Menubar();
 #endif
+        auto& io = ImGui::GetIO();
+        if (m_IsCameraMoving)
+            io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+        else
+            io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(8.0f * s_OverlayButtonSize.x + 4.0f * s_OverlayPadding, 2 * s_OverlayButtonSize.y));
         m_DidViewportBegin = ImGui::Begin("Viewport");
@@ -330,6 +338,8 @@ namespace Flameberry {
 
         m_IsViewportFocused = ImGui::IsWindowFocused();
         m_IsViewportHovered = ImGui::IsWindowHovered();
+
+        Application::Get().ImGuiLayerBlockEvents(!m_IsViewportFocused && !m_SceneHierarchyPanel->IsFocused());
 
         uint32_t imageIndex = VulkanContext::GetCurrentWindow()->GetImageIndex();
 
@@ -489,7 +499,7 @@ namespace Flameberry {
         {
             case GLFW_KEY_D:
                 // Duplicate Entity
-                if (ctrl_or_cmd && m_EditorState == EditorState::Edit && !m_IsCameraMoving && (m_IsViewportFocused || m_SceneHierarchyPanel->IsFocused()))
+                if (ctrl_or_cmd && m_EditorState == EditorState::Edit)
                 {
                     const auto selectionContext = m_SceneHierarchyPanel->GetSelectionContext();
                     if (selectionContext != fbentt::null)
@@ -520,19 +530,19 @@ namespace Flameberry {
                 }
                 break;
             case GLFW_KEY_Q:
-                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = -1;
                 break;
             case GLFW_KEY_W:
-                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
                 break;
             case GLFW_KEY_E:
-                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = ImGuizmo::OPERATION::ROTATE;
                 break;
             case GLFW_KEY_R:
-                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = ImGuizmo::OPERATION::SCALE;
                 break;
             case GLFW_KEY_G:
@@ -540,7 +550,7 @@ namespace Flameberry {
                     m_EnableGrid = !m_EnableGrid;
                 break;
             case GLFW_KEY_BACKSPACE:
-                if (ctrl_or_cmd && (m_IsViewportFocused || m_SceneHierarchyPanel->IsFocused()))
+                if (ctrl_or_cmd)
                 {
                     const auto entity = m_SceneHierarchyPanel->GetSelectionContext();
                     if (entity != fbentt::null)
@@ -549,6 +559,7 @@ namespace Flameberry {
                         m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
                     }
                 }
+                break;
         }
     }
 

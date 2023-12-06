@@ -11,7 +11,9 @@
 #include "Renderer/Renderer.h"
 
 namespace Flameberry {
-    ImGuiLayer::ImGuiLayer()
+    ImGuiLayer::ImGuiLayer() {}
+
+    void ImGuiLayer::OnCreate()
     {
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -257,11 +259,12 @@ namespace Flameberry {
 
     void ImGuiLayer::OnEvent(Event& e)
     {
-        if (!e.Handled)
+        // TODO: This currently does nothing
+        if (m_BlockEvents)
         {
             ImGuiIO& io = ImGui::GetIO();
-            e.Handled |= io.WantCaptureMouse;
-            e.Handled |= io.WantCaptureKeyboard;
+            e.Handled |= e.IsInCategory(EventCategory::MouseEventCategory) && io.WantCaptureMouse;
+            e.Handled |= e.IsInCategory(EventCategory::KeyEventCategory) && io.WantCaptureKeyboard;
         }
     }
 
@@ -319,11 +322,11 @@ namespace Flameberry {
         colors[ImGuiCol_CheckMark] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
         colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
         colors[ImGuiCol_ResizeGripActive] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-        
+
         colors[ImGuiCol_Separator] = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
         colors[ImGuiCol_SeparatorHovered] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
         colors[ImGuiCol_SeparatorActive] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-        
+
         colors[ImGuiCol_NavHighlight] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
         colors[ImGuiCol_PopupBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
     }

@@ -9,19 +9,19 @@
 #include "Renderer/VulkanContext.h"
 
 namespace Flameberry {
-    
+
     struct ApplicationCommandLineArgs
     {
         int Count;
         const char** Args;
-        
+
         const char* operator[](int idx) const {
             FBY_ASSERT(idx < Count, "Command Line Arguments: Index '{}' is out of range!", idx);
             return Args[idx];
         }
     };
 
-    
+
     struct ApplicationSpecification
     {
         std::string Name;
@@ -29,7 +29,7 @@ namespace Flameberry {
         std::filesystem::path WorkingDirectory;
         ApplicationCommandLineArgs CommandLineArgs;
     };
-    
+
     class Application
     {
     public:
@@ -45,17 +45,28 @@ namespace Flameberry {
         void OnKeyPressedEvent(KeyPressedEvent& e);
         void OnWindowResizedEvent(WindowResizedEvent& e);
 
+        void ImGuiLayerBlockEvents(bool block) { m_ImGuiLayer->BlockEvents(block); }
+        void BlockAllEvents(bool block) { m_BlockAllLayerEvents = block; }
+
         void PushLayer(Layer* layer);
         void PopLayer(Layer* layer);
         void PopAndDeleteLayer(Layer* layer);
+
+        void PushOverlay(Layer* layer);
+        void PopOverlay(Layer* layer);
+        void PopAndDeleteOverlay(Layer* layer);
     private:
         ApplicationSpecification m_Specification;
-        
+
         std::shared_ptr<Window> m_Window;
         std::shared_ptr<VulkanContext> m_VulkanContext;
-        std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
+        ImGuiLayer* m_ImGuiLayer;
 
+        bool m_BlockAllLayerEvents = false;
+
+        // Layer Stack Related Variables
         std::vector<Layer*> m_LayerStack;
+        uint32_t m_LayerInsertIndex = 0;
     private:
         static Application* s_Instance;
     };
