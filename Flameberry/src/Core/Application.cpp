@@ -18,11 +18,11 @@ namespace Flameberry {
         : m_Specification(specification)
     {
         s_Instance = this;
-        
+
         // Set the working directory
         if (std::filesystem::exists(m_Specification.WorkingDirectory))
             std::filesystem::current_path(m_Specification.WorkingDirectory);
-        
+
         m_Window = Window::Create(m_Specification.WindowSpec);
         m_Window->SetEventCallBack(FBY_BIND_EVENT_FN(Application::OnEvent));
 
@@ -37,7 +37,8 @@ namespace Flameberry {
         // Create the generic texture descriptor layout
         Texture2D::InitStaticResources();
 
-        m_ImGuiLayer = std::make_unique<ImGuiLayer>();
+        m_ImGuiLayer = new ImGuiLayer();
+        PushOverlay(m_ImGuiLayer);
     }
 
     void Application::Run()
@@ -70,7 +71,8 @@ namespace Flameberry {
 
     void Application::OnEvent(Event& e)
     {
-        switch (e.GetType()) {
+        switch (e.GetType())
+        {
             case EventType::WindowResized:
                 this->OnWindowResizedEvent(*(WindowResizedEvent*)(&e));
                 break;
@@ -79,12 +81,14 @@ namespace Flameberry {
                 break;
         }
 
-        m_ImGuiLayer->OnEvent(e);
-        for (auto& layer : m_LayerStack)
+        if (!m_BlockAllLayerEvents)
         {
-            if (e.Handled)
-                break;
-            layer->OnEvent(e);
+            for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); it++)
+            {
+                if (e.Handled)
+                    break;
+                (*it)->OnEvent(e);
+            }
         }
     }
 
@@ -98,39 +102,62 @@ namespace Flameberry {
         m_Window->Resize();
         m_ImGuiLayer->InvalidateResources();
     }
-    
-    void Application::PushLayer(Layer* layer) 
+
+    void Application::PushLayer(Layer* layer)
     {
-        m_LayerStack.emplace_back(layer);
+        m_LayerStack.insert(m_LayerStack.begin() + m_LayerInsertIndex, layer);
+        m_LayerInsertIndex++;
         layer->OnCreate();
     }
-    
-    void Application::PopLayer(Layer* layer) 
+
+    void Application::PopLayer(Layer* layer)
     {
         auto iterator = std::find(m_LayerStack.begin(), m_LayerStack.end(), layer);
-        (*iterator)->OnDestroy();
-        m_LayerStack.erase(iterator);
+        if (iterator != m_LayerStack.begin() + m_LayerInsertIndex)
+        {
+            (*iterator)->OnDestroy();
+            m_LayerStack.erase(iterator);
+            m_LayerInsertIndex--;
+        }
     }
-    
+
     void Application::PopAndDeleteLayer(Layer* layer)
     {
-        auto iterator = std::find(m_LayerStack.begin(), m_LayerStack.end(), layer);
-        (*iterator)->OnDestroy();
-        delete (*iterator);
-        m_LayerStack.erase(iterator);
+        PopLayer(layer);
+        delete layer;
+    }
+
+    void Application::PushOverlay(Layer* overlay)
+    {
+        m_LayerStack.emplace_back(overlay);
+        overlay->OnCreate();
+    }
+
+    void Application::PopOverlay(Layer* overlay)
+    {
+        auto iterator = std::find(m_LayerStack.begin(), m_LayerStack.end(), overlay);
+        if (iterator != m_LayerStack.end())
+        {
+            (*iterator)->OnDestroy();
+            m_LayerStack.erase(iterator);
+        }
+    }
+
+    void Application::PopAndDeleteOverlay(Layer* overlay)
+    {
+        PopOverlay(overlay);
+        delete overlay;
     }
 
     Application::~Application()
     {
         VulkanContext::GetCurrentDevice()->WaitIdle();
-        
+
         for (auto* layer : m_LayerStack)
         {
             layer->OnDestroy();
             delete layer;
         }
-        
-        m_ImGuiLayer->OnDestroy();
 
         Texture2D::DestroyStaticResources();
         AssetManager::Clear();

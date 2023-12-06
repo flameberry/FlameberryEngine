@@ -6,18 +6,22 @@
 #include "Core/Layer.h"
 
 namespace Flameberry {
-    class ImGuiLayer
+    class ImGuiLayer : public Layer
     {
     public:
         ImGuiLayer();
         ~ImGuiLayer() = default;
 
-        void OnDestroy();
+        void OnCreate() override;
+        void OnUpdate(float delta) override {};
+        void OnUIRender() override {};
+        void OnEvent(Event& e) override;
+        void OnDestroy() override;
+
         void Begin();
         void End();
 
-        inline void BlockEvents(bool value) { m_BlockEvents = value; }
-        void OnEvent(Event& e);
+        void BlockEvents(bool block) { m_BlockEvents = block; }
         void InvalidateResources();
     private:
         void SetupImGuiStyle();

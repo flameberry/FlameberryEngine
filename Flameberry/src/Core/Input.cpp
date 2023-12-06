@@ -21,14 +21,14 @@ namespace Flameberry {
         glfwGetCursorPos(window, &x, &y);
         return glm::vec2((float)x, (float)y);
     }
-    
-    void Input::SetCursorPosition(const glm::vec2 &pos)
+
+    void Input::SetCursorPosition(const glm::vec2& pos)
     {
         GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
         glfwSetCursorPos(window, pos.x, pos.y);
     }
 
-    void Input::SetCursorMode(uint32_t mode)
+    void Input::SetCursorMode(int mode)
     {
         GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
         glfwSetInputMode(window, GLFW_CURSOR, mode);
