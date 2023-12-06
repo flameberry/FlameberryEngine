@@ -119,6 +119,8 @@ namespace Flameberry {
             DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Actor; nsc->Actor = nullptr; };
         }
     };
+    
+    enum class AxisType : uint8_t { X = 0, Y, Z };
 
     struct RigidBodyComponent
     {

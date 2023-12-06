@@ -54,7 +54,6 @@ namespace Flameberry {
                 DrawAddComponentEntry<SkyLightComponent>("Sky Light Component");
                 DrawAddComponentEntry<DirectionalLightComponent>("Directional Light Component");
                 DrawAddComponentEntry<PointLightComponent>("Point Light Component");
-                DrawAddComponentEntry<ScriptComponent>("Script Component");
                 DrawAddComponentEntry<RigidBodyComponent>("Rigid Body Component");
                 DrawAddComponentEntry<BoxColliderComponent>("Box Collider Component");
                 DrawAddComponentEntry<SphereColliderComponent>("Sphere Collider Component");
@@ -496,47 +495,6 @@ namespace Flameberry {
                 }
             );
             
-            DrawComponent<ScriptComponent>("Script", [&]()
-                                                     {
-                auto& script = m_Context->m_Registry->get<ScriptComponent>(m_SelectionContext);
-                
-                if (ImGui::BeginTable("ScriptComponentAttributes", 2, s_TableFlags))
-                {
-                    ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-                    ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-                    
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::AlignTextToFramePadding();
-                    ImGui::Text("Class");
-                    ImGui::TableNextColumn();
-                    
-//                    ImGui::Text("%s", script.FullyQualifiedClassName.c_str());
-                    
-                    const auto& classNames = ScriptEngine::GetActorTypeNamesInAppAssembly();
-                    auto& currentClassName = script.FullyQualifiedClassName;
-                    
-                    ImGui::PushItemWidth(-1.0f);
-                    if (ImGui::BeginCombo("##RigidBodyType", currentClassName.c_str()))
-                    {
-                        for (int i = 0; i < classNames.size(); i++)
-                        {
-                            bool isSelected = (classNames[i] == currentClassName);
-                            if (ImGui::Selectable(classNames[i].c_str(), &isSelected))
-                                currentClassName = classNames[i];
-                            
-                            if (isSelected)
-                                ImGui::SetItemDefaultFocus();
-                        }
-                        ImGui::EndCombo();
-                    }
-                    ImGui::PopItemWidth();
-                    
-                    ImGui::EndTable();
-                }
-            });
-
             DrawComponent<RigidBodyComponent>("Rigid Body", [&]()
                 {
                     auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);
