@@ -5,12 +5,24 @@
 #include <fmt/format.h>
 #include <fmt/color.h>
 
+#include <glm/gtx/string_cast.hpp>
+
 /// Xcode doesn't support integrated terminal output by default, so the escape characters for coloring output are printed out
 /// as it is, which just creates a mess, so the macro `FBY_XCODE_PROJ` is defined by CMake, if the cmake generator is `Xcode`
 /// and the macros are defined as `""`
 #ifdef FBY_XCODE_PROJ
 #define __FBY_LOGGER_STYLE_FLAG
 #endif
+
+template <>
+struct fmt::formatter<glm::vec3> : formatter<std::string_view>
+{
+    template <typename FormatContext>
+    auto format(const glm::vec3& vec, FormatContext& ctx)
+    {
+        return formatter<std::string_view>::format(glm::to_string(vec), ctx);
+    }
+};
 
 // Make std::filesystem::path formattable
 template <>

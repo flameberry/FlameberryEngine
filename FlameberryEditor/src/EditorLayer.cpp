@@ -562,6 +562,22 @@ namespace Flameberry {
     {
     }
 
+    void EditorLayer::OpenProject()
+    {
+        std::string path = platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
+        if (!path.empty())
+            OpenProject(path);
+    }
+
+    void EditorLayer::OpenProject(const std::string& path)
+    {
+        // 1. Unload Assets
+        // 2. Unload App Assembly
+        // 3. Load Project
+        // 4. Load App Assembly
+        FBY_ASSERT(0, "Not Implemented Yet!");
+    }
+
     void EditorLayer::SaveScene()
     {
         if (!m_EditorScenePath.empty())

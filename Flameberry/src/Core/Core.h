@@ -11,6 +11,14 @@
 #define FBY_DEBUGBREAK()
 #endif
 
+#ifdef FBY_DEBUG
+#define FBY_CONFIG_STR "Debug"
+#elif defined(FBY_RELEASE)
+#define FBY_CONFIG_STR "Release"
+#else
+#define FBY_CONFIG_STR
+#endif
+
 #define FBY_BIND_EVENT_FN(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
 
 // Including All Utils related to Logging

@@ -13,7 +13,7 @@ namespace Flameberry {
     }
 
     Project::~Project() {}
-    
+
     void Project::Save()
     {
         std::string fileName = s_ActiveProject->m_Config.Name + ".fbproj";
@@ -27,23 +27,23 @@ namespace Flameberry {
             return newProject;
         return nullptr;
     }
-    
+
     bool ProjectSerializer::DeserializeIntoExistingProject(const std::filesystem::path& filePath, const std::shared_ptr<Project>& dest)
     {
         std::ifstream in(filePath);
         std::stringstream ss;
         ss << in.rdbuf();
-        
+
         YAML::Node data = YAML::Load(ss.str());
         if (!data["Project"])
         {
             FBY_ERROR("Failed to load project [{0}]: 'Project' attribute not present in file!", filePath);
             return false;
         };
-        
+
         dest->m_ProjectDirectory = filePath.parent_path();
         dest->m_Config.Name = data["Project"].as<std::string>();
-        
+
         auto config = data["Configuration"];
         if (!config)
         {
@@ -51,11 +51,11 @@ namespace Flameberry {
             return false;
         };
         dest->m_Config.AssetDirectory = config["AssetDirectory"].as<std::string>();
-        dest->m_Config.ScriptAssemblyPath = config["ScriptAssemblyDirectory"].as<std::string>();
+        dest->m_Config.ScriptAssemblyPath = config["ScriptAssemblyPath"].as<std::string>();
         return true;
     }
-    
-    void ProjectSerializer::SerializeProject(const std::filesystem::path &filePath, const Project* project)
+
+    void ProjectSerializer::SerializeProject(const std::filesystem::path& filePath, const Project* project)
     {
         YAML::Emitter out;
         out << YAML::BeginMap;
@@ -64,11 +64,11 @@ namespace Flameberry {
         {
             out << YAML::BeginMap; // Configuration
             out << YAML::Key << "AssetDirectory" << YAML::Value << project->m_Config.AssetDirectory;
-            out << YAML::Key << "ScriptAssemblyDirectory" << YAML::Value << project->m_Config.ScriptAssemblyPath;
+            out << YAML::Key << "ScriptAssemblyPath" << YAML::Value << project->m_Config.ScriptAssemblyPath;
             out << YAML::EndMap; // Configuration
         }
         out << YAML::EndMap;
-        
+
         std::ofstream fout(filePath);
         fout << out.c_str();
     }
