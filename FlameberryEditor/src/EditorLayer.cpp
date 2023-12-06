@@ -189,9 +189,8 @@ namespace Flameberry {
             m_HasViewportSizeChanged = false;
         }
 
-        if (m_IsViewportFocused)
+        if (m_IsCameraMoving || m_IsViewportHovered)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
-
         Application::Get().BlockAllEvents(m_IsCameraMoving);
 
         if (m_ShouldReloadMeshShaders)
@@ -336,8 +335,11 @@ namespace Flameberry {
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
         m_RenderViewportSize = { viewportPanelSize.x * ImGui::GetWindowDpiScale(), viewportPanelSize.y * ImGui::GetWindowDpiScale() };
 
-        m_IsViewportFocused = ImGui::IsWindowFocused();
         m_IsViewportHovered = ImGui::IsWindowHovered();
+        // For the Camera Input if other windows are focused but the user right clicks this window then set focus for the camera to continue moving without affecting other windows
+        if (m_IsViewportHovered && ImGui::IsMouseDown(ImGuiMouseButton_Right))
+            ImGui::SetWindowFocus();
+        m_IsViewportFocused = ImGui::IsWindowFocused();
 
         Application::Get().ImGuiLayerBlockEvents(!m_IsViewportFocused && !m_SceneHierarchyPanel->IsFocused());
 

@@ -62,7 +62,7 @@ namespace Flameberry {
         EditorState m_EditorState = EditorState::Edit;
         int m_MouseX = 0, m_MouseY = 0;
         int m_GizmoType = -1;
-        bool m_IsViewportFocused = false, m_IsViewportHovered = false, m_IsClickedInsideViewport = false, m_HasViewportSizeChanged = false;
+        bool m_IsViewportFocused = false, m_IsViewportHovered = false, m_HasViewportSizeChanged = false;
         bool m_IsCameraMoving = false, m_IsGizmoActive = false;
         bool m_IsMousePickingBufferReady = false, m_DidViewportBegin = true, m_IsAnyOverlayHovered = false;
         bool m_EnableGrid = true;
