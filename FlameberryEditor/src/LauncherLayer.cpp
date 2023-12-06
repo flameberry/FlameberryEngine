@@ -6,24 +6,6 @@
 
 namespace Flameberry {
 
-    static constexpr const char* g_CSProjTemplate = 
-R"(
-<Project Sdk="Microsoft.NET.Sdk">
-<PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <OutputPath>Binaries</OutputPath>
-</PropertyGroup>
-<ItemGroup>
-    <Reference Include="Flameberry-ScriptCore">
-    <HintPath>/Users/flameberry/Developer/FlameberryEngine/Flameberry-ScriptCore/bin/Debug/net7.0/Flameberry-ScriptCore.dll</HintPath>
-    <Private>True</Private>
-    </Reference>
-</ItemGroup>
-</Project>
-)";
-
     LauncherLayer::LauncherLayer(const std::function<void(const std::shared_ptr<Project>&)>& callback)
         : m_OpenProjectCallback(callback)
     {
@@ -135,7 +117,6 @@ R"(
                         ProjectConfig projectConfig;
                         projectConfig.Name = std::string(m_ProjectNameBuffer);
                         projectConfig.AssetDirectory = "Assets";
-                        projectConfig.ScriptAssemblyPath = fmt::format("Binaries/net7.0/{}.dll", projectConfig.Name);
 
                         m_Project = Project::Create(projectParentPath / projectConfig.Name, projectConfig);
 
@@ -150,13 +131,6 @@ R"(
                             m_Project->Save();
                             // 3. Create an Assets folder
                             std::filesystem::create_directory(m_Project->GetAssetDirectory());
-                            // 4. Write a .csproj file with template
-                            std::string csprojPath = m_Project->GetProjectDirectory() / fmt::format("{}.csproj", projectConfig.Name);
-                            std::ofstream csprojFile(csprojPath, std::ios::out | std::ios::trunc);
-
-                            FBY_ASSERT(csprojFile.is_open(), "Failed to open ofstream to: {}", csprojPath);
-                            csprojFile << g_CSProjTemplate;
-                            csprojFile.close();
 
                             // Signal callback to FlameberryEditor class
                             m_ShouldClose = true;
