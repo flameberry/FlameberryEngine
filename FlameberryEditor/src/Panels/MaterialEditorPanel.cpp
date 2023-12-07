@@ -139,7 +139,7 @@ namespace Flameberry {
         if (mapEnabledVar)
         {
             if (!map)
-                map = AssetManager::TryGetOrLoadAsset<Texture2D>("Assets/Textures/Checkerboard.png");
+                map = AssetManager::TryGetOrLoadAsset<Texture2D>("Content/Textures/Checkerboard.png");
 
             ImGui::SameLine();
             ImGui::Image(reinterpret_cast<ImTextureID>(map->CreateOrGetDescriptorSet()), ImVec2{ 70, 70 });

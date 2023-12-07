@@ -4,7 +4,7 @@
 
 namespace Flameberry {
     struct ProjectConfig {
-        std::filesystem::path AssetDirectory;
+        std::filesystem::path AssetDirectory /* = "Content" */;
 
         std::string Name = "Flameberry-Project";
     };

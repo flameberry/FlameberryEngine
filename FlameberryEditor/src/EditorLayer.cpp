@@ -175,7 +175,7 @@ namespace Flameberry {
         // m_ActiveScene->GetRegistry()->emplace<TagComponent>(cubeEntity).Tag = "PaidActor";
         // m_ActiveScene->GetRegistry()->emplace<TransformComponent>(cubeEntity);
         // auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
-        // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Assets/Meshes/cube.obj")->Handle;
+        // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Content/Meshes/cube.obj")->Handle;
         // m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
     }
 

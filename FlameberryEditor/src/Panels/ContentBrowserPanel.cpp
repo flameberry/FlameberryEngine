@@ -124,7 +124,7 @@ namespace Flameberry {
         ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleColor();
 
-        for (auto& directory : std::filesystem::directory_iterator("Assets")) {
+        for (auto& directory : std::filesystem::directory_iterator(Project::GetActiveProject()->GetConfig().AssetDirectory)) {
             if (directory.is_directory()) {
                 RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator(directory));
             }
@@ -149,10 +149,10 @@ namespace Flameberry {
 
         ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         float arrowSize = 18.0f;
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
         if (m_IsSearchBoxFocused)

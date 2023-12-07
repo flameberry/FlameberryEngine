@@ -15,7 +15,7 @@ namespace Flameberry {
     {
         auto& window = Application::Get().GetWindow();
         constexpr int width = 1280 / 2, height = 720 / 2;
-        
+
         window.SetTitle("Launcher Window");
         window.SetSize(width, height);
         window.MoveToCenter();
@@ -26,22 +26,22 @@ namespace Flameberry {
         if (m_ShouldClose)
             m_OpenProjectCallback(m_Project);
     }
-    
+
     static bool ProjectItem(const char* projectName, const char* path)
     {
         constexpr float itemHeight = 40.0f;
-        
+
         float cursorPosY = ImGui::GetCursorPos().y;
         auto& bigFont = ImGui::GetIO().Fonts->Fonts[0];
         ImGui::PushFont(bigFont);
         ImGui::Selectable(projectName, false, ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_AllowOverlap | ImGuiSelectableFlags_SpanAvailWidth, ImVec2(0.0f, itemHeight));
         ImGui::PopFont();
-        
+
         // Double-click detection
         bool isDoubleClicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0);
-        
+
         cursorPosY += itemHeight;
-        
+
         ImGui::SetCursorPosY(cursorPosY - ImGui::GetTextLineHeight());
         ImGui::Text("Path: %s", path);
         return isDoubleClicked;
@@ -49,29 +49,29 @@ namespace Flameberry {
 
     void LauncherLayer::OnUIRender()
     {
-        constexpr ImVec2 buttonSize{200.0f, 40.0f};
+        constexpr ImVec2 buttonSize{ 200.0f, 40.0f };
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Project Launcher");
         ImGui::PopStyleVar();
-        
+
         static float firstChildSize = 100.0f, secondChildSize = 220.0f;
         firstChildSize = ImGui::GetContentRegionAvail().x - secondChildSize - 8.0f;
-        
+
         ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0), ImGuiChildFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysUseWindowPadding);
-        
+
         if (ProjectItem("SandboxProject", "/Users/flameberry/Developer/FlameberryEngine/SandboxProject"))
         {
             // Open Project
             m_Project = ProjectSerializer::DeserializeIntoNewProject("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/SandboxProject.fbproj");
             m_ShouldClose = true;
         }
-        
+
         ImGui::EndChild();
-        
+
         ImGui::SameLine();
-        
+
         ImGui::BeginChild("##ProjectControls", ImVec2(secondChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_Border, ImGuiWindowFlags_AlwaysUseWindowPadding);
-        
+
         if (UI::AlignedButton("New Project", buttonSize))
             ImGui::OpenPopup("New Project");
 
@@ -82,7 +82,7 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
         const bool beginPopupModal = ImGui::BeginPopupModal("New Project", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleVar();
-        
+
         if (beginPopupModal)
         {
             ImGuiIO& io = ImGui::GetIO();
@@ -92,7 +92,7 @@ namespace Flameberry {
             ImGui::Text("Enter project name and parent directory:");
             ImGui::Spacing();
             ImGui::PopFont();
-            
+
             const float inputBoxWidth = ImGui::GetContentRegionAvail().x - 30.0f;
 
             UI::InputBox("##ProjectNameInput", inputBoxWidth, m_ProjectNameBuffer, 128, "Project Name...");
@@ -104,7 +104,7 @@ namespace Flameberry {
                 if (!directoryPath.empty())
                     strcpy(m_ProjectPathBuffer, directoryPath.c_str());
             }
-            
+
             ImGui::Spacing();
 
             if (ImGui::Button("Create", ImVec2(120, 0)))
@@ -116,7 +116,7 @@ namespace Flameberry {
                     {
                         ProjectConfig projectConfig;
                         projectConfig.Name = std::string(m_ProjectNameBuffer);
-                        projectConfig.AssetDirectory = "Assets";
+                        projectConfig.AssetDirectory = "Content";
 
                         m_Project = Project::Create(projectParentPath / projectConfig.Name, projectConfig);
 
@@ -129,7 +129,7 @@ namespace Flameberry {
                         {
                             // 2. Serialize the Project
                             m_Project->Save();
-                            // 3. Create an Assets folder
+                            // 3. Create a Content folder
                             std::filesystem::create_directory(m_Project->GetAssetDirectory());
 
                             // Signal callback to FlameberryEditor class
