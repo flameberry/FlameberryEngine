@@ -148,8 +148,9 @@ namespace Flameberry {
         if (disabled)
             ImGui::BeginDisabled();
 
-        ImGui::BeginGroup();
+        const auto& cursorScreenPos = ImGui::GetCursorScreenPos();
 
+        ImGui::BeginGroup();
         ImVec2 cursorPos = ImGui::GetCursorPos();
         ImGui::SetCursorPosX(cursorPos.x + paddingX);
         ImGui::SetCursorPosY(cursorPos.y + 2.0f * paddingY);
@@ -167,15 +168,16 @@ namespace Flameberry {
         if (disabled)
             ImGui::EndDisabled();
 
-        const auto& windowPos = ImGui::GetWindowPos();
-        if (ImGui::IsItemHovered())
+        ImRect itemRect(cursorScreenPos, cursorScreenPos + ImVec2(itemWidth, ImGui::GetCursorPosY() - cursorPos.y));
+        bool hovered, held;
+        bool isDoubleClicked = ImGui::ButtonBehavior(itemRect, ImGui::GetID(projectName), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
+
+        if (hovered)
         {
             const ImU32 color = ImGui::IsMouseDown(0) ? IM_COL32(255, 255, 255, 60) : IM_COL32(255, 255, 255, 30);
-            ImGui::GetWindowDrawList()->AddRectFilled(windowPos + cursorPos, windowPos + ImVec2(cursorPos.x + itemWidth, ImGui::GetCursorPosY()), color, 5.0f);
+            ImGui::GetWindowDrawList()->AddRectFilled(itemRect.Min, itemRect.Max, color, 5.0f);
         }
-        // ImGui::GetWindowDrawList()->AddRect(windowPos + cursorPos, windowPos + ImVec2(cursorPos.x + itemWidth, ImGui::GetCursorPosY()), IM_COL32(200, 200, 200, 255), 5.0f, 0, 1.0f);
-
-        return ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+        return isDoubleClicked;
     }
 
     void UI::Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)
