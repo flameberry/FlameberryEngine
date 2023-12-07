@@ -80,6 +80,7 @@ namespace Flameberry {
         static void AppendEntryToGlobalRegistry(Project* project);
         static void RemoveEntryFromGlobalRegistry(const std::filesystem::path& pathOfProjectEntry);
         static ProjectRegistry LoadEntireProjectRegistry();
+        static void ClearAllNonExistingProjectRegistryEntries();
 
     private:
         constexpr static const char* c_GlobalProjectRegistryPath = FBY_PROJECT_DIR"FlameberryEditor/GlobalConfig/ProjectRegistry.fbreg";

@@ -38,6 +38,12 @@ namespace Flameberry {
         ImGui::Begin("Project Launcher");
         ImGui::PopStyleVar();
 
+        if (ImGui::Button("Clear Deleted Projects"))
+        {
+            ProjectRegistryManager::ClearAllNonExistingProjectRegistryEntries();
+            m_ProjectRegistry = ProjectRegistryManager::LoadEntireProjectRegistry();
+        }
+
         static float firstChildSize = 100.0f, secondChildSize = 220.0f;
         firstChildSize = ImGui::GetContentRegionAvail().x - secondChildSize - 8.0f;
 
@@ -45,7 +51,7 @@ namespace Flameberry {
 
         for (const auto& entry : m_ProjectRegistry)
         {
-            if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), entry.ProjectFilePath.c_str()))
+            if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), entry.ProjectFilePath.c_str(), !std::filesystem::exists(entry.ProjectFilePath)))
             {
                 // Open Project
                 m_Project = ProjectSerializer::DeserializeIntoNewProject(entry.ProjectFilePath);

@@ -1,6 +1,7 @@
 #include "Project.h"
 
 #include <fstream>
+#include <filesystem>
 
 #include "Core/Core.h"
 #include "Core/YamlUtils.h"
@@ -109,6 +110,29 @@ namespace Flameberry {
             registry.emplace_back(projectEntry);
         }
         return registry;
+    }
+
+    void ProjectRegistryManager::ClearAllNonExistingProjectRegistryEntries()
+    {
+        std::stringstream ss;
+        {
+            std::ifstream fin(c_GlobalProjectRegistryPath);
+            ss << fin.rdbuf();
+        }
+
+        YAML::Node data = YAML::Load(ss.str());
+
+        for (const auto& entry : data)
+        {
+            const auto& path = entry.first.as<std::string>();
+            if (!std::filesystem::exists(path))
+                data.remove(entry.first.as<std::string>());
+        }
+
+        {
+            std::ofstream fout(c_GlobalProjectRegistryPath, std::ios::trunc);
+            fout << data << '\n';
+        }
     }
 
 }

@@ -138,12 +138,15 @@ namespace Flameberry {
         return ImVec2(fullWidth, fullHeight);
     }
 
-    bool UI::ProjectRegistryEntryItem(const char* projectName, const char* path)
+    bool UI::ProjectRegistryEntryItem(const char* projectName, const char* path, bool disabled)
     {
         constexpr float paddingX = 15.0f, paddingY = 5.0f, spacing = 10.0f;
         const float itemWidth = ImGui::GetContentRegionAvail().x;
 
         ImGui::SetNextItemWidth(itemWidth);
+
+        if (disabled)
+            ImGui::BeginDisabled();
 
         ImGui::BeginGroup();
 
@@ -160,6 +163,9 @@ namespace Flameberry {
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + paddingY);
 
         ImGui::EndGroup();
+
+        if (disabled)
+            ImGui::EndDisabled();
 
         const auto& windowPos = ImGui::GetWindowPos();
         if (ImGui::IsItemHovered())

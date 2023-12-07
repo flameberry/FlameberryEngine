@@ -15,7 +15,6 @@ namespace Flameberry {
         void OnUIRender() override;
         void OnEvent(Event& e) override;
         void OnDestroy() override;
-
     private:
         ProjectRegistry m_ProjectRegistry;
 

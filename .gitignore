@@ -76,3 +76,4 @@ CMake/envPhysX.cmake
 *.app
 
 Flameberry-ScriptCore/Binaries
+FlameberryEditor/GlobalConfig/ProjectRegistry.fbreg
