@@ -1,4 +1,4 @@
-file(GLOB_RECURSE SRC_FILES 
+file(GLOB_RECURSE SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
@@ -17,27 +17,28 @@ endif()
 
 exclude_from_list(SRC_FILES ${EXCLUDE_FILES})
 
-add_library(Flameberry STATIC ${SRC_FILES} ${FL_DEPENDENCY_SOURCE})
+add_library(Flameberry STATIC ${SRC_FILES} ${FBY_DEPENDENCY_SOURCE})
 target_compile_features(Flameberry PUBLIC cxx_std_17)
 
 add_dependencies(Flameberry CompileShadersTarget)
 
 set_custom_build_properties(Flameberry)
 
-# Defines "FL_DEBUG" for Debug build, and "FL_RELEASE" for Release build
+# Defines "FBY_DEBUG" for Debug build, and "FBY_RELEASE" for Release build
 set_build_config_macro_for_target(Flameberry)
 
 if(XCODE)
-    target_compile_definitions(Flameberry PRIVATE FL_XCODE_PROJ)
+    target_compile_definitions(Flameberry PRIVATE FBY_XCODE_PROJ)
 endif()
 
-target_include_directories(Flameberry PRIVATE ${FL_INCLUDE_DIRS} ${FL_SOURCE_DIR}/Flameberry/src)
+target_include_directories(Flameberry PRIVATE ${FBY_INCLUDE_DIRS} ${FBY_SOURCE_DIR}/Flameberry/src)
 
 # Add Dependencies
 add_subdirectory(vendor/GLFW)
 add_subdirectory(vendor/yaml-cpp)
+add_subdirectory(vendor/fmtlib)
 
-target_compile_definitions(Flameberry PRIVATE ${FL_COMPILE_DEFINITIONS})
+target_compile_definitions(Flameberry PRIVATE ${FBY_COMPILE_DEFINITIONS})
 
-# "FL_LIBRARY_DEPENDENCIES" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
-target_link_libraries(Flameberry PRIVATE ${FL_LIBRARY_DEPENDENCIES})
+# "FBY_LIBRARY_DEPENDENCIES" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
+target_link_libraries(Flameberry PRIVATE ${FBY_LIBRARY_DEPENDENCIES})

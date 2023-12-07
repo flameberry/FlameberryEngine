@@ -6,22 +6,33 @@
 #include "Renderer/Renderer.h"
 
 namespace Flameberry {
-    std::shared_ptr<Window> Window::Create(int width, int height, const char* title)
+    std::shared_ptr<Window> Window::Create(const WindowSpecification& specification)
     {
-        return std::make_shared<VulkanWindow>(width, height, title);
+        return std::make_shared<VulkanWindow>(specification);
     }
 
-    VulkanWindow::VulkanWindow(int width, int height, const char* title)
-        : m_Width(width), m_Height(height), m_Title(title)
+    VulkanWindow::VulkanWindow(const WindowSpecification& specification)
+        : m_Specification(specification)
     {
-        FL_ASSERT(glfwInit(), "Failed to initialize GLFW!");
-        FL_INFO("Initialized GLFW!");
+        FBY_ASSERT(glfwInit(), "Failed to initialize GLFW!");
+        FBY_INFO("Initialized GLFW!");
+        
+        // Get the primary monitor
+        GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+        
+        // Get the current video mode of the primary monitor
+        const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+        
+        m_PrimaryMonitorWidth = mode->width;
+        m_PrimaryMonitorHeight = mode->height;
+        
+        FBY_ASSERT(m_PrimaryMonitorWidth && m_PrimaryMonitorHeight, "Monitor size not initialized!");
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, NULL, NULL);
-        FL_ASSERT(m_Window, "GLFW window is null!");
-        FL_INFO("Created GLFW window of title '{0}' and dimensions ({1}, {2})", m_Title, m_Width, m_Height);
+        m_Window = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Title, NULL, NULL);
+        FBY_ASSERT(m_Window, "GLFW window is null!");
+        FBY_INFO("Created GLFW window of title '{}' and dimensions ({}, {})", m_Specification.Title, m_Specification.Width, m_Specification.Height);
     }
 
     void VulkanWindow::Init()
@@ -43,11 +54,13 @@ namespace Flameberry {
         glfwSetFramebufferSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
             {
                 VulkanWindow* pWindow = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
-                pWindow->m_Width = width;
-                pWindow->m_Height = height;
+                pWindow->m_Specification.Width = width;
+                pWindow->m_Specification.Height = height;
             
                 WindowResizedEvent event(width, height);
                 pWindow->m_EventCallBack(event);
+            
+                FBY_LOG(event.ToString());
             });
 
         glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -87,9 +100,10 @@ namespace Flameberry {
     bool VulkanWindow::BeginFrame()
     {
         VkResult result = m_SwapChain->AcquireNextImage();
-        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+        if (result != VK_SUCCESS)
         {
-            m_SwapChain->Invalidate();
+            if (result == VK_ERROR_OUT_OF_DATE_KHR)
+                m_SwapChain->Invalidate();
             return false;
         }
         m_ImageIndex = m_SwapChain->GetAcquiredImageIndex();
@@ -102,13 +116,37 @@ namespace Flameberry {
         VkResult queuePresentStatus = m_SwapChain->SubmitCommandBuffer(device->GetCommandBuffer(Renderer::RT_GetCurrentFrameIndex()));
         
         // TODO: This code should be enabled when ensured that all the resources that depend upon the swapchain are also updated
-//        if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR)
-//            m_SwapChain->Invalidate();
+        // if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR)
+        //     m_SwapChain->Invalidate();
     }
     
     void VulkanWindow::Resize() 
     {
         m_SwapChain->Invalidate();
+    }
+    
+    void VulkanWindow::SetPosition(int xpos, int ypos)
+    {
+        glfwSetWindowPos(m_Window, xpos, ypos);
+    }
+
+    void VulkanWindow::SetSize(int width, int height)
+    {
+        glfwSetWindowSize(m_Window, width, height);
+        m_Specification.Width = width;
+        m_Specification.Height = height;
+    }
+    
+    void VulkanWindow::SetTitle(const char *title) 
+    {
+        glfwSetWindowTitle(m_Window, title);
+    }
+    
+    void VulkanWindow::MoveToCenter()
+    {
+        const int xpos = m_PrimaryMonitorWidth / 2 - m_Specification.Width / 2;
+        const int ypos = m_PrimaryMonitorHeight / 2 - m_Specification.Height / 2;
+        glfwSetWindowPos(m_Window, xpos, ypos);
     }
     
 }

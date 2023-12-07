@@ -1,9 +1,10 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "Texture2D.h"
 
 #include "Core/UUID.h"
+
+#include "Texture2D.h"
 
 namespace Flameberry {
     class Material : public Asset

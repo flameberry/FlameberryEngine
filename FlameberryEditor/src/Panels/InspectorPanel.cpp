@@ -1,13 +1,13 @@
 #include "InspectorPanel.h"
 
 #include <filesystem>
-#include "../UI.h"
+#include "UI.h"
 
 namespace Flameberry {
     InspectorPanel::InspectorPanel()
         : m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/triple_dots_icon.png"))
+        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png"))
     {
     }
 
@@ -15,7 +15,7 @@ namespace Flameberry {
         : m_Context(context),
         m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_TripleDotsIcon(Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/triple_dots_icon.png"))
+        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon2.png"))
     {
     }
 
@@ -48,27 +48,22 @@ namespace Flameberry {
 
             if (ImGui::BeginPopup("AddComponentPopUp"))
             {
-                if (ImGui::MenuItem("Transform Component"))
-                    m_Context->m_Registry->emplace<TransformComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Camera Component"))
-                    m_Context->m_Registry->emplace<CameraComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Mesh Component"))
-                    m_Context->m_Registry->emplace<MeshComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Light Component"))
-                    m_Context->m_Registry->emplace<PointLightComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("RigidBody Component"))
-                    m_Context->m_Registry->emplace<RigidBodyComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Box Colllider Component"))
-                    m_Context->m_Registry->emplace<BoxColliderComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Sphere Colllider Component"))
-                    m_Context->m_Registry->emplace<SphereColliderComponent>(m_SelectionContext);
-                if (ImGui::MenuItem("Capsule Colllider Component"))
-                    m_Context->m_Registry->emplace<CapsuleColliderComponent>(m_SelectionContext);
+                DrawAddComponentEntry<TransformComponent>("Transform Component");
+                DrawAddComponentEntry<CameraComponent>("Camera Component");
+                DrawAddComponentEntry<MeshComponent>("Mesh Component");
+                DrawAddComponentEntry<SkyLightComponent>("Sky Light Component");
+                DrawAddComponentEntry<DirectionalLightComponent>("Directional Light Component");
+                DrawAddComponentEntry<PointLightComponent>("Point Light Component");
+                DrawAddComponentEntry<RigidBodyComponent>("Rigid Body Component");
+                DrawAddComponentEntry<BoxColliderComponent>("Box Collider Component");
+                DrawAddComponentEntry<SphereColliderComponent>("Sphere Collider Component");
+                DrawAddComponentEntry<CapsuleColliderComponent>("Capsule Collider Component");
+                
                 ImGui::EndPopup();
             }
 
             ImGui::PushStyleColor(ImGuiCol_Border, Theme::WindowBorder);
-            ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), true, ImGuiWindowFlags_AlwaysAutoResize);
+            ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX);
             ImGui::PopStyleColor();
 #if 0
             DrawComponent<IDComponent>("ID Component", this, [&]()
@@ -87,11 +82,11 @@ namespace Flameberry {
                         ImGui::Text("%llu", (uint64_t)ID);
                         ImGui::EndTable();
                     }
-                }
+                }, true // removable = false
             );
 #endif
 
-            DrawComponent<TransformComponent>("Transform", this, [&]()
+            DrawComponent<TransformComponent>("Transform", [&]()
                 {
                     auto& transform = m_Context->m_Registry->get<TransformComponent>(m_SelectionContext);
 
@@ -127,10 +122,10 @@ namespace Flameberry {
                         UI::Vec3Control("Scale", transform.Scale, 1.0f, 0.01f, colWidth);
                         ImGui::EndTable();
                     }
-                }
+                }, false // removable = false
             );
             
-            DrawComponent<SkyLightComponent>("Sky Light", this, [=]()
+            DrawComponent<SkyLightComponent>("Sky Light", [=]()
             {
                 auto& skyLightComp = m_Context->m_Registry->get<SkyLightComponent>(m_SelectionContext);
                 
@@ -181,18 +176,18 @@ namespace Flameberry {
                         
                         if (ImGui::BeginDragDropTarget())
                         {
-                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
                             {
                                 const char* path = (const char*)payload->Data;
                                 std::filesystem::path envPath{ path };
                                 const std::string& ext = envPath.extension().string();
                                 
-                                FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                                FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
                                 
                                 if (std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath) && (ext == ".hdr"))
                                     skyLightComp.SkyMap = AssetManager::TryGetOrLoadAsset<Texture2D>(envPath)->Handle;
                                 else
-                                    FL_WARN("Bad File given as Environment!");
+                                    FBY_WARN("Bad File given as Environment!");
                             }
                             ImGui::EndDragDropTarget();
                         }
@@ -203,7 +198,7 @@ namespace Flameberry {
                 }
             });
 
-            DrawComponent<CameraComponent>("Camera", this, [&]()
+            DrawComponent<CameraComponent>("Camera", [&]()
                 {
                     auto& cameraComp = m_Context->m_Registry->get<CameraComponent>(m_SelectionContext);
 
@@ -288,7 +283,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<MeshComponent>("Mesh", this, [&]()
+            DrawComponent<MeshComponent>("Mesh", [&]()
                 {
                     auto& mesh = m_Context->m_Registry->get<MeshComponent>(m_SelectionContext);
 
@@ -309,13 +304,13 @@ namespace Flameberry {
 
                         if (ImGui::BeginDragDropTarget())
                         {
-                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
                             {
                                 const char* path = (const char*)payload->Data;
                                 std::filesystem::path modelPath{ path };
                                 const std::string& ext = modelPath.extension().string();
 
-                                FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                                FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
                                 if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
                                 {
@@ -323,7 +318,7 @@ namespace Flameberry {
                                     mesh.MeshHandle = loadedMesh->Handle;
                                 }
                                 else
-                                    FL_WARN("Bad File given as Model!");
+                                    FBY_WARN("Bad File given as Model!");
                             }
                             ImGui::EndDragDropTarget();
                         }
@@ -380,13 +375,13 @@ namespace Flameberry {
 
                                     if (ImGui::BeginDragDropTarget())
                                     {
-                                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
                                         {
                                             const char* path = (const char*)payload->Data;
                                             std::filesystem::path matPath{ path };
                                             const std::string& ext = matPath.extension().string();
 
-                                            FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                                            FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
                                             if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
                                             {
@@ -394,7 +389,7 @@ namespace Flameberry {
                                                 mesh.OverridenMaterialTable[submeshIndex] = loadedMat->Handle;
                                             }
                                             else
-                                                FL_WARN("Bad File given as Material!");
+                                                FBY_WARN("Bad File given as Material!");
                                         }
                                         ImGui::EndDragDropTarget();
                                     }
@@ -426,7 +421,7 @@ namespace Flameberry {
                 }
             );
             
-            DrawComponent<DirectionalLightComponent>("Light", this, [&]()
+            DrawComponent<DirectionalLightComponent>("Light", [&]()
             {
                 auto& light = m_Context->m_Registry->get<DirectionalLightComponent>(m_SelectionContext);
                 
@@ -467,7 +462,7 @@ namespace Flameberry {
                 }
             });
 
-            DrawComponent<PointLightComponent>("Light", this, [&]()
+            DrawComponent<PointLightComponent>("Point Light", [&]()
                 {
                     auto& light = m_Context->m_Registry->get<PointLightComponent>(m_SelectionContext);
 
@@ -499,8 +494,8 @@ namespace Flameberry {
                     }
                 }
             );
-
-            DrawComponent<RigidBodyComponent>("RigidBody", this, [&]()
+            
+            DrawComponent<RigidBodyComponent>("Rigid Body", [&]()
                 {
                     auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);
 
@@ -575,7 +570,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<BoxColliderComponent>("Box Collider", this, [&]()
+            DrawComponent<BoxColliderComponent>("Box Collider", [&]()
                 {
                     auto& boxCollider = m_Context->m_Registry->get<BoxColliderComponent>(m_SelectionContext);
 
@@ -598,7 +593,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<SphereColliderComponent>("Sphere Collider", this, [&]()
+            DrawComponent<SphereColliderComponent>("Sphere Collider", [&]()
                 {
                     auto& sphereCollider = m_Context->m_Registry->get<SphereColliderComponent>(m_SelectionContext);
 
@@ -614,14 +609,14 @@ namespace Flameberry {
                         ImGui::Text("Radius");
                         ImGui::TableNextColumn();
 
-                        FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Radius", &sphereCollider.Radius, 0.01f, 0.0f, 0.0f));
+                        FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Radius", &sphereCollider.Radius, 0.01f, 0.0f, 0.0f));
 
                         ImGui::EndTable();
                     }
                 }
             );
 
-            DrawComponent<CapsuleColliderComponent>("Capsule Collider", this, [&]()
+            DrawComponent<CapsuleColliderComponent>("Capsule Collider", [&]()
                 {
                     auto& capsuleCollider = m_Context->m_Registry->get<CapsuleColliderComponent>(m_SelectionContext);
 
@@ -649,7 +644,7 @@ namespace Flameberry {
                                 if (ImGui::Selectable(axisTypeStrings[i], &isSelected))
                                 {
                                     currentAxisType = i;
-                                    capsuleCollider.Axis = (CapsuleColliderComponent::AxisType)i;
+                                    capsuleCollider.Axis = (AxisType)i;
                                 }
 
                                 if (isSelected)

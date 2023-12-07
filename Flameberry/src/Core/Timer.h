@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <chrono>
 #include "Core/Core.h"
 
@@ -22,9 +23,9 @@ namespace Flameberry {
     public:
         ScopedTimer(const std::string& scopeName) : m_ScopeName(scopeName) { m_Start = std::chrono::high_resolution_clock::now(); }
         ~ScopedTimer() {
-#ifdef FL_DEBUG
-            FL_WARN("{0}: process took: {1} ms", m_ScopeName, std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_Start).count());
-#elif defined(FL_RELEASE)
+#ifdef FBY_DEBUG
+            FBY_WARN("{}: process took: {} ms", m_ScopeName, std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_Start).count());
+#elif defined(FBY_RELEASE)
             std::cout << m_ScopeName << ": process took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_Start).count() << " ms\n";
 #endif
         }
@@ -34,4 +35,4 @@ namespace Flameberry {
     };
 }
 
-#define FL_SCOPED_TIMER(name) Flameberry::ScopedTimer timer(name)
+#define FBY_SCOPED_TIMER(name) Flameberry::ScopedTimer timer(name)

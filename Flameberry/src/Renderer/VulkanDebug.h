@@ -56,8 +56,8 @@ namespace Flameberry {
     }
 }
 
-#ifdef FL_DEBUG
-#define VK_CHECK_RESULT(result) FL_DO_ON_ASSERT(result == VK_SUCCESS, Flameberry::Logger::CoreLogger->log_assert(__FILE__, __LINE__, "Vulkan process failed with: {0}", Flameberry::GetVkResult(result)), FL_DEBUGBREAK())
+#ifdef FBY_DEBUG
+#define VK_CHECK_RESULT(result) FBY_DO_ON_ASSERT(result == VK_SUCCESS, Flameberry::Logger::GetCoreLogger()->log_assert(__FILE__, __LINE__, "Vulkan process failed with: {}", Flameberry::GetVkResult(result)), FBY_DEBUGBREAK())
 #else
 #define VK_CHECK_RESULT(result) result
 #endif

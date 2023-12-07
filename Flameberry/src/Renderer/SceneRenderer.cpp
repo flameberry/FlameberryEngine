@@ -134,8 +134,8 @@ namespace Flameberry {
             };
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_ShadowMapDescriptorSetLayout };
 
-            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.frag.spv";
             pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
@@ -307,8 +307,8 @@ namespace Flameberry {
                     Material::GetLayout()
                 };
 
-                pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.vert.spv";
-                pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.frag.spv";
+                pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.vert.spv";
+                pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.frag.spv";
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {
@@ -344,8 +344,8 @@ namespace Flameberry {
 
                 pipelineSpec.PipelineLayout.DescriptorSetLayouts = { Texture2D::GetDescriptorLayout() };
 
-                pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/skybox.vert.spv";
-                pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/skybox.frag.spv";
+                pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/skybox.vert.spv";
+                pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/skybox.frag.spv";
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {};
@@ -420,8 +420,8 @@ namespace Flameberry {
             pipelineSpec.PipelineLayout.PushConstants = {};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_CompositePassDescriptorSetLayout };
 
-            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.frag.spv";
             pipelineSpec.RenderPass = m_CompositePass;
 
             pipelineSpec.VertexLayout = {};
@@ -439,9 +439,9 @@ namespace Flameberry {
         Renderer2D::Init(m_CameraBufferDescSetLayout, m_GeometryPass);
 
         // Textures
-        m_LightIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/bulb_icon_v4.png");
-        m_CameraIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/camera_icon.png");
-        m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/DirectionalLightIcon.png");
+        m_LightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/BulbIcon.png");
+        m_CameraIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/CameraIcon.png");
+        m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SunIcon.png");
     }
 
     void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
@@ -876,6 +876,7 @@ namespace Flameberry {
         }
     }
 
+    // TODO: Move this to EditorLayer.cpp ASAP
     void SceneRenderer::SubmitPhysicsColliderGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
     {
         // TODO: Optimise this function (maybe embed the vertices (?))
@@ -936,7 +937,8 @@ namespace Flameberry {
 
             uint8_t index = 1;
             // Calculate the vertices for the circle
-            for (int i = 0; i < numLines; i++) {
+            for (int i = 0; i < numLines; i++) 
+            {
                 float theta = i * segmentAngle;
                 vertices[index].x = radius * cos(theta);
                 vertices[index].y = radius * sin(theta);
@@ -945,15 +947,15 @@ namespace Flameberry {
                 const auto& pos = vertices[(index + 1) % 2];
                 const auto& pos2 = vertices[index];
                 Renderer2D::AddLine(pos + transform.Translation, pos2 + transform.Translation, greenColor);
-                Renderer2D::AddLine(glm::vec3{ pos.x, pos.z, pos.y } + transform.Translation, glm::vec3{ pos2.x, pos2.z, pos2.y } + transform.Translation, greenColor);
-                Renderer2D::AddLine(glm::vec3{ pos.z, pos.y, pos.x } + transform.Translation, glm::vec3{ pos2.z, pos2.y, pos2.x } + transform.Translation, greenColor);
+                Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, glm::vec3(pos2.x, pos2.z, pos2.y) + transform.Translation, greenColor);
+                Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, glm::vec3(pos2.z, pos2.y, pos2.x) + transform.Translation, greenColor);
                 index = (index + 1) % 2;
             }
 
             const auto& pos = vertices[(index + 1) % 2];
-            Renderer2D::AddLine(pos + transform.Translation, transform.Translation + glm::vec3{ radius, 0.0f, 0.0f }, greenColor);
-            Renderer2D::AddLine(glm::vec3{ pos.x, pos.z, pos.y } + transform.Translation, transform.Translation + glm::vec3{ radius, 0.0f, 0.0f }, greenColor);
-            Renderer2D::AddLine(glm::vec3{ pos.z, pos.y, pos.x } + transform.Translation, transform.Translation + glm::vec3{ 0.0f, 0.0f, radius }, greenColor);
+            Renderer2D::AddLine(pos + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), greenColor);
+            Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), greenColor);
+            Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, transform.Translation + glm::vec3(0.0f, 0.0f, radius), greenColor);
         }
         else if (auto* capsuleCollider = scene->m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
         {
@@ -1020,9 +1022,10 @@ namespace Flameberry {
         }
     }
 
+    // TODO: Move this to EditorLayer.cpp ASAP
     void SceneRenderer::SubmitCameraViewGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
     {
-        constexpr glm::vec3 color(1);
+        constexpr glm::vec3 color(0.961f, 0.796f, 0.486f); // TODO: Replace with Theme::AccentColor
         auto* cameraComp = scene->m_Registry->try_get<CameraComponent>(entity);
         if (cameraComp)
         {
@@ -1034,7 +1037,7 @@ namespace Flameberry {
             {
                 case ProjectionType::Orthographic:
                 {
-                    const float left = -settings.AspectRatio * settings.Zoom;
+                    const float left = -aspectRatio * settings.Zoom;
                     const float right = -left;
                     const float bottom = -settings.Zoom;
                     const float top = settings.Zoom;

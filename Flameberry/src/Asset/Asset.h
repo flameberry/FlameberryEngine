@@ -16,7 +16,7 @@ namespace Flameberry {
         Texture2D, StaticMesh, Material
     };
 
-    enum AssetFlag : uint16_t
+    enum class AssetFlag : uint32_t
     {
         None = 0,
     };

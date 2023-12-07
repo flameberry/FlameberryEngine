@@ -33,7 +33,7 @@ namespace Flameberry {
 
     void Renderer::RT_Render()
     {
-        FL_PROFILE_SCOPE("RT_RenderLoop");
+        FBY_PROFILE_SCOPE("RT_RenderLoop");
         auto& window = Application::Get().GetWindow();
         const auto& device = VulkanContext::GetCurrentDevice();
 

@@ -45,24 +45,24 @@ namespace Flameberry {
             return RigidBodyComponent::RigidBodyType::Dynamic;
     }
 
-    static std::string AxisTypeEnumToString(CapsuleColliderComponent::AxisType type)
+    static std::string AxisTypeEnumToString(AxisType type)
     {
         switch (type)
         {
-            case CapsuleColliderComponent::AxisType::X: return "X";
-            case CapsuleColliderComponent::AxisType::Y: return "Y";
-            case CapsuleColliderComponent::AxisType::Z: return "Z";
+            case AxisType::X: return "X";
+            case AxisType::Y: return "Y";
+            case AxisType::Z: return "Z";
         }
     }
 
-    static CapsuleColliderComponent::AxisType AxisTypeStringToEnum(const std::string& type)
+    static AxisType AxisTypeStringToEnum(const std::string& type)
     {
         if (type == "X")
-            return CapsuleColliderComponent::AxisType::X;
+            return AxisType::X;
         else if (type == "Y")
-            return CapsuleColliderComponent::AxisType::Y;
+            return AxisType::Y;
         else if (type == "Z")
-            return CapsuleColliderComponent::AxisType::Z;
+            return AxisType::Z;
     }
 
     std::shared_ptr<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
@@ -75,7 +75,7 @@ namespace Flameberry {
 
     bool SceneSerializer::DeserializeIntoExistingScene(const char* path, const std::shared_ptr<Scene>& destScene)
     {
-        FL_SCOPED_TIMER("Scene Deserialization");
+        FBY_SCOPED_TIMER("Scene Deserialization");
 
         std::ifstream in(path);
         std::stringstream ss;
@@ -84,7 +84,7 @@ namespace Flameberry {
         YAML::Node data = YAML::Load(ss.str());
         if (!data["Scene"])
         {
-            FL_ERROR("Failed to load scene [{0}]: 'Scene' attribute not present in file!", path);
+            FBY_ERROR("Failed to load scene [{}]: 'Scene' attribute not present in file!", path);
             return false;
         };
 
@@ -229,7 +229,7 @@ namespace Flameberry {
 
     void SceneSerializer::SerializeSceneToFile(const char* path, const std::shared_ptr<Scene>& srcScene)
     {
-        FL_SCOPED_TIMER("Serialization");
+        FBY_SCOPED_TIMER("Serialization");
 
         std::string scenePath(path);
         uint32_t lastSlashPosition = scenePath.find_last_of('/') + 1;

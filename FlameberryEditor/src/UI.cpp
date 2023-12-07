@@ -23,21 +23,21 @@ namespace Flameberry {
         return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f, 0.0f, 0xFF000000);
     }
 
-    bool UI::CenteredButton(const char* label, float alignment)
+    bool UI::AlignedButton(const char* label, const ImVec2& size, float alignment)
     {
         ImGuiStyle& style = ImGui::GetStyle();
 
-        float size = ImGui::CalcTextSize(label).x + style.FramePadding.x * 2.0f;
+        float width = size.x ? size.x : ImGui::CalcTextSize(label).x + style.FramePadding.x * 2.0f;
         float avail = ImGui::GetContentRegionAvail().x;
 
-        float off = (avail - size) * alignment;
+        float off = (avail - width) * alignment;
         if (off > 0.0f)
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
 
-        return ImGui::Button(label);
+        return ImGui::Button(label, size);
     }
 
-    void UI::SearchBar(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint)
+    void UI::InputBox(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint)
     {
         ImGui::PushItemWidth(width);
         ImGui::InputTextWithHint(label, inputHint, inputBuffer, inputLength);
@@ -120,14 +120,14 @@ namespace Flameberry {
         if (ImGui::BeginPopupContextItem(filepath.c_str()))
         {
             if (ImGui::MenuItem("Delete"))
-                FL_LOG("Delete");
+                FBY_LOG("Delete");
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginDragDropSource())
         {
             ImGui::SetDragDropPayload(
-                "FL_CONTENT_BROWSER_ITEM",
+                "FBY_CONTENT_BROWSER_ITEM",
                 filepath.c_str(),
                 (strlen(filepath.c_str()) + 1) * sizeof(char),
                 ImGuiCond_Once

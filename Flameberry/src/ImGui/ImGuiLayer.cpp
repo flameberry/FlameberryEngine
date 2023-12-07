@@ -11,7 +11,9 @@
 #include "Renderer/Renderer.h"
 
 namespace Flameberry {
-    ImGuiLayer::ImGuiLayer()
+    ImGuiLayer::ImGuiLayer() {}
+
+    void ImGuiLayer::OnCreate()
     {
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -42,12 +44,12 @@ namespace Flameberry {
         constexpr float fontSize = 13.5f * DPI_SCALE;
         constexpr float bigFontSize = 18.0f * DPI_SCALE;
 
-        io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", bigFontSize, &config);
-        io.FontDefault = io.Fonts->AddFontFromFileTTF(FL_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", fontSize, &config);
+        io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", bigFontSize, &config);
+        io.FontDefault = io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", fontSize, &config);
         io.FontGlobalScale = 1 / DPI_SCALE;
 
         io.IniFilename = NULL;
-        ImGui::LoadIniSettingsFromDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
+        ImGui::LoadIniSettingsFromDisk(FBY_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
 
         // Setup Dear ImGui style
         SetupImGuiStyle();
@@ -120,21 +122,12 @@ namespace Flameberry {
         init_info.Allocator = VK_NULL_HANDLE;
         // init_info.CheckVkResultFn = vk_check_result;
         ImGui_ImplVulkan_Init(&init_info, m_ImGuiLayerRenderPass);
-
-        // Upload fonts
-        VkCommandBuffer commandBuffer;
-        device->BeginSingleTimeCommandBuffer(commandBuffer);
-        ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-        device->EndSingleTimeCommandBuffer(commandBuffer);
-        device->WaitIdle();
-
-        ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
 
     void ImGuiLayer::OnDestroy()
     {
         // Saving ImGui Layout
-        ImGui::SaveIniSettingsToDisk(FL_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
+        ImGui::SaveIniSettingsToDisk(FBY_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
 
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
@@ -162,7 +155,7 @@ namespace Flameberry {
     void ImGuiLayer::End()
     {
         ImGuiIO& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetWidth(), (float)VulkanContext::GetCurrentWindow()->GetHeight());
+        io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetSpecification().Width, (float)VulkanContext::GetCurrentWindow()->GetSpecification().Height);
 
         ImGui::Render();
         ImDrawData* main_draw_data = ImGui::GetDrawData();
@@ -221,7 +214,7 @@ namespace Flameberry {
         const auto& device = VulkanContext::GetCurrentDevice();
 
         const auto& swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
-        uint32_t imageCount = swapchain->GetImages().size();
+        auto imageCount = swapchain->GetImages().size();
 
         // Image Views creation
         m_ImGuiImageViews.resize(imageCount);
@@ -266,11 +259,12 @@ namespace Flameberry {
 
     void ImGuiLayer::OnEvent(Event& e)
     {
-        if (!e.Handled)
+        // TODO: This currently does nothing
+        if (m_BlockEvents)
         {
             ImGuiIO& io = ImGui::GetIO();
-            e.Handled |= io.WantCaptureMouse;
-            e.Handled |= io.WantCaptureKeyboard;
+            e.Handled |= e.IsInCategory(EventCategory::MouseEventCategory) && io.WantCaptureMouse;
+            e.Handled |= e.IsInCategory(EventCategory::KeyEventCategory) && io.WantCaptureKeyboard;
         }
     }
 
@@ -278,10 +272,11 @@ namespace Flameberry {
     {
         auto& style = ImGui::GetStyle();
         style.ColorButtonPosition = ImGuiDir_Left;
-        style.FrameRounding = 2.0f;
+        style.WindowRounding = 5;
+        style.FrameRounding = 2;
+        style.PopupRounding = 3;
         style.CellPadding = ImVec2(8, 5);
         style.ScrollbarSize = 12;
-        style.PopupRounding = 3;
         style.DockingSeparatorSize = 1;
         style.WindowMenuButtonPosition = ImGuiDir_Right;
 
@@ -327,11 +322,11 @@ namespace Flameberry {
         colors[ImGuiCol_CheckMark] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
         colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
         colors[ImGuiCol_ResizeGripActive] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-        
+
         colors[ImGuiCol_Separator] = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
         colors[ImGuiCol_SeparatorHovered] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
         colors[ImGuiCol_SeparatorActive] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-        
+
         colors[ImGuiCol_NavHighlight] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
         colors[ImGuiCol_PopupBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
     }
