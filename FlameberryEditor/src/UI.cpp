@@ -50,14 +50,14 @@ namespace Flameberry {
         bool isDirectory = std::filesystem::is_directory(filepath);
 
         ImGuiStyle& style = ImGui::GetStyle();
-        
+
         const float width = size;
         float height = size;
-        
+
         const float borderThickness = 1.5f;
         const float thumbnailWidth = size - 2.0f * borderThickness;
         const float thumbnailHeight = width * thumbnail->GetImageSpecification().Height / thumbnail->GetImageSpecification().Width;
-        
+
         const auto& framePadding = style.FramePadding;
         height += framePadding.y;
 
@@ -65,21 +65,27 @@ namespace Flameberry {
         const float fullWidth = width;
         const float fullHeight = height + 2 * textHeight;
 
+        const auto& cursorPos = ImGui::GetCursorScreenPos();
+        bool isItemHovered = ImGui::IsMouseHoveringRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight));
+
         if (!isDirectory)
         {
-            const auto& cursorPos = ImGui::GetCursorScreenPos();
-            ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, ImVec2(cursorPos.x + fullWidth, cursorPos.y + height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
-            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), ImVec2(cursorPos.x + fullWidth, cursorPos.y + fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
-            ImGui::GetWindowDrawList()->AddRect(cursorPos, ImVec2(cursorPos.x + fullWidth, cursorPos.y + fullHeight), 0xff000000, 3, 0, borderThickness);
+            ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
+            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), cursorPos + ImVec2(fullWidth, fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
+            ImGui::GetWindowDrawList()->AddRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), isItemHovered ? ImGui::ColorConvertFloat4ToU32(Theme::AccentColor) : 0xff000000, 3, 0, borderThickness);
+        }
+        else if (isItemHovered)
+        {
+            ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
         }
 
         ImGui::BeginGroup();
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
-        
+
         float centerTranslationHeight = height / 2.0f - thumbnailHeight / 2.0f;
-        
+
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() - framePadding.x + borderThickness);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + centerTranslationHeight - framePadding.y);
 
@@ -91,11 +97,11 @@ namespace Flameberry {
         const auto cursorPosX = ImGui::GetCursorPosX();
         ImGui::SetCursorPosX(cursorPosX + framePadding.x);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y + centerTranslationHeight);
-        
+
         const auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
         const auto aWidth = ImGui::CalcTextSize("a").x;
         const uint32_t characters = fullWidth / aWidth;
-        
+
         // Format and align text based on whether the item is a directory or a file
         if (isDirectory)
         {
@@ -114,7 +120,7 @@ namespace Flameberry {
             else
                 ImGui::TextWrapped("%s", filename.c_str());
         }
-        
+
         ImGui::EndGroup();
 
         if (ImGui::BeginPopupContextItem(filepath.c_str()))
