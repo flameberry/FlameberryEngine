@@ -14,37 +14,21 @@ namespace Flameberry {
     void LauncherLayer::OnCreate()
     {
         auto& window = Application::Get().GetWindow();
-        constexpr int width = 1280 / 2, height = 720 / 2;
+        constexpr int width = 1280 * 0.7f, height = 720 * 0.7f;
 
         window.SetTitle("Launcher Window");
         window.SetSize(width, height);
         window.MoveToCenter();
+
+        // Load User Projects
+        m_ProjectRegistry = ProjectRegistryManager::LoadEntireProjectRegistry();
+        FBY_LOG("Found user projects: {}", m_ProjectRegistry.size());
     }
 
     void LauncherLayer::OnUpdate(float delta)
     {
         if (m_ShouldClose)
             m_OpenProjectCallback(m_Project);
-    }
-
-    static bool ProjectItem(const char* projectName, const char* path)
-    {
-        constexpr float itemHeight = 40.0f;
-
-        float cursorPosY = ImGui::GetCursorPos().y;
-        auto& bigFont = ImGui::GetIO().Fonts->Fonts[0];
-        ImGui::PushFont(bigFont);
-        ImGui::Selectable(projectName, false, ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_AllowOverlap | ImGuiSelectableFlags_SpanAvailWidth, ImVec2(0.0f, itemHeight));
-        ImGui::PopFont();
-
-        // Double-click detection
-        bool isDoubleClicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0);
-
-        cursorPosY += itemHeight;
-
-        ImGui::SetCursorPosY(cursorPosY - ImGui::GetTextLineHeight());
-        ImGui::Text("Path: %s", path);
-        return isDoubleClicked;
     }
 
     void LauncherLayer::OnUIRender()
@@ -59,11 +43,14 @@ namespace Flameberry {
 
         ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0), ImGuiChildFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysUseWindowPadding);
 
-        if (ProjectItem("SandboxProject", "/Users/flameberry/Developer/FlameberryEngine/SandboxProject"))
+        for (const auto& entry : m_ProjectRegistry)
         {
-            // Open Project
-            m_Project = ProjectSerializer::DeserializeIntoNewProject("/Users/flameberry/Developer/FlameberryEngine/SandboxProject/SandboxProject.fbproj");
-            m_ShouldClose = true;
+            if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), entry.ProjectFilePath.c_str()))
+            {
+                // Open Project
+                m_Project = ProjectSerializer::DeserializeIntoNewProject(entry.ProjectFilePath);
+                m_ShouldClose = true;
+            }
         }
 
         ImGui::EndChild();
@@ -131,6 +118,8 @@ namespace Flameberry {
                             m_Project->Save();
                             // 3. Create a Content folder
                             std::filesystem::create_directory(m_Project->GetAssetDirectory());
+                            // 4. Add project entry to GlobalProjectRegistry
+                            ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
 
                             // Signal callback to FlameberryEditor class
                             m_ShouldClose = true;
@@ -163,6 +152,14 @@ namespace Flameberry {
             if (!path.empty())
             {
                 m_Project = ProjectSerializer::DeserializeIntoNewProject(path);
+
+                ProjectRegistryEntry entry{ m_Project->GetConfig().Name, path };
+                if (std::find(m_ProjectRegistry.begin(), m_ProjectRegistry.end(), entry) == m_ProjectRegistry.end())
+                {
+                    // The project didn't exist before in the ProjectRegistry
+                    ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
+                }
+
                 m_ShouldClose = true;
             }
         }

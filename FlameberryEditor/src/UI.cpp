@@ -50,14 +50,14 @@ namespace Flameberry {
         bool isDirectory = std::filesystem::is_directory(filepath);
 
         ImGuiStyle& style = ImGui::GetStyle();
-        
+
         const float width = size;
         float height = size;
-        
+
         const float borderThickness = 1.5f;
         const float thumbnailWidth = size - 2.0f * borderThickness;
         const float thumbnailHeight = width * thumbnail->GetImageSpecification().Height / thumbnail->GetImageSpecification().Width;
-        
+
         const auto& framePadding = style.FramePadding;
         height += framePadding.y;
 
@@ -77,9 +77,9 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
-        
+
         float centerTranslationHeight = height / 2.0f - thumbnailHeight / 2.0f;
-        
+
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() - framePadding.x + borderThickness);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + centerTranslationHeight - framePadding.y);
 
@@ -91,11 +91,11 @@ namespace Flameberry {
         const auto cursorPosX = ImGui::GetCursorPosX();
         ImGui::SetCursorPosX(cursorPosX + framePadding.x);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y + centerTranslationHeight);
-        
+
         const auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
         const auto aWidth = ImGui::CalcTextSize("a").x;
         const uint32_t characters = fullWidth / aWidth;
-        
+
         // Format and align text based on whether the item is a directory or a file
         if (isDirectory)
         {
@@ -114,7 +114,7 @@ namespace Flameberry {
             else
                 ImGui::TextWrapped("%s", filename.c_str());
         }
-        
+
         ImGui::EndGroup();
 
         if (ImGui::BeginPopupContextItem(filepath.c_str()))
@@ -136,6 +136,40 @@ namespace Flameberry {
             ImGui::EndDragDropSource();
         }
         return ImVec2(fullWidth, fullHeight);
+    }
+
+    bool UI::ProjectRegistryEntryItem(const char* projectName, const char* path)
+    {
+        constexpr float paddingX = 15.0f, paddingY = 5.0f, spacing = 10.0f;
+        const float itemWidth = ImGui::GetContentRegionAvail().x;
+
+        ImGui::SetNextItemWidth(itemWidth);
+
+        ImGui::BeginGroup();
+
+        ImVec2 cursorPos = ImGui::GetCursorPos();
+        ImGui::SetCursorPosX(cursorPos.x + paddingX);
+        ImGui::SetCursorPosY(cursorPos.y + 2.0f * paddingY);
+
+        auto& bigFont = ImGui::GetIO().Fonts->Fonts[0];
+        ImGui::Text("%s", projectName);
+
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + paddingX);
+        ImGui::TextWrapped("%s", path);
+
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + paddingY);
+
+        ImGui::EndGroup();
+
+        const auto& windowPos = ImGui::GetWindowPos();
+        if (ImGui::IsItemHovered())
+        {
+            const ImU32 color = ImGui::IsMouseDown(0) ? IM_COL32(255, 255, 255, 60) : IM_COL32(255, 255, 255, 30);
+            ImGui::GetWindowDrawList()->AddRectFilled(windowPos + cursorPos, windowPos + ImVec2(cursorPos.x + itemWidth, ImGui::GetCursorPosY()), color, 5.0f);
+        }
+        // ImGui::GetWindowDrawList()->AddRect(windowPos + cursorPos, windowPos + ImVec2(cursorPos.x + itemWidth, ImGui::GetCursorPosY()), IM_COL32(200, 200, 200, 255), 5.0f, 0, 1.0f);
+
+        return ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
     }
 
     void UI::Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)

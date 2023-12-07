@@ -21,6 +21,7 @@ namespace Flameberry {
 
         // Returns full width and height of the group including text and file icon
         static ImVec2 ContentBrowserItem(const std::filesystem::path& filepath, float size, const std::shared_ptr<Texture2D>& thumbnail, bool keepExtension = false);
+        static bool ProjectRegistryEntryItem(const char* name, const char* path);
     };
 
     class Theme
