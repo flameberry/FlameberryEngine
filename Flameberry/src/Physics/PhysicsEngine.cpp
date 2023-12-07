@@ -15,7 +15,7 @@ namespace Flameberry {
 
     physx::PxTolerancesScale PhysicsEngine::s_TolerancesScale;
 
-    void PhysicsEngine::Init()
+    void PhysicsEngine::Init(int numThreads)
     {
         s_Foundation = PxCreateFoundation(PX_PHYSICS_VERSION, s_DefaultAllocatorCallback, s_DefaultErrorCallback);
         FBY_ASSERT(s_Foundation, "Failed to create PxFoundation object!");
@@ -28,7 +28,7 @@ namespace Flameberry {
         s_Cooking = PxCreateCooking(PX_PHYSICS_VERSION, *s_Foundation, physx::PxCookingParams(s_TolerancesScale));
         FBY_ASSERT(s_Cooking, "Failed to create PxCooking object!");
 
-        s_CPUDispatcher = physx::PxDefaultCpuDispatcherCreate(2);
+        s_CPUDispatcher = physx::PxDefaultCpuDispatcherCreate(numThreads);
         FBY_ASSERT(s_CPUDispatcher, "Failed to create PxCpuDispatcher object!");
     }
 
