@@ -45,7 +45,7 @@ namespace Flameberry {
     }
 
     // TODO: Call one of 2 functions one for Folder Thumbnail and other for file
-    ImVec2 UI::ContentBrowserItem(const std::filesystem::path& filepath, float size, const std::shared_ptr<Texture2D>& thumbnail, bool keepExtension)
+    bool UI::ContentBrowserItem(const std::filesystem::path& filepath, float size, const std::shared_ptr<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
     {
         bool isDirectory = std::filesystem::is_directory(filepath);
 
@@ -66,15 +66,16 @@ namespace Flameberry {
         const float fullHeight = height + 2 * textHeight;
 
         const auto& cursorPos = ImGui::GetCursorScreenPos();
-        bool isItemHovered = ImGui::IsMouseHoveringRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight));
+        bool hovered, held;
+        bool isDoubleClicked = ImGui::ButtonBehavior(ImRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight)), ImGui::GetID(filepath.c_str()), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
 
         if (!isDirectory)
         {
             ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
             ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), cursorPos + ImVec2(fullWidth, fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
-            ImGui::GetWindowDrawList()->AddRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), isItemHovered ? ImGui::ColorConvertFloat4ToU32(Theme::AccentColor) : 0xff000000, 3, 0, borderThickness);
+            ImGui::GetWindowDrawList()->AddRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), hovered ? ImGui::ColorConvertFloat4ToU32(Theme::AccentColor) : 0xff000000, 3, 0, borderThickness);
         }
-        else if (isItemHovered)
+        else if (hovered)
         {
             ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
         }
@@ -141,7 +142,8 @@ namespace Flameberry {
             ImGui::Text("%s", filepath.c_str());
             ImGui::EndDragDropSource();
         }
-        return ImVec2(fullWidth, fullHeight);
+        outItemSize = ImVec2(fullWidth, fullHeight);
+        return isDoubleClicked;
     }
 
     void UI::Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)

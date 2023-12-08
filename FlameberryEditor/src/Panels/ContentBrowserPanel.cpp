@@ -240,9 +240,7 @@ namespace Flameberry {
                 thumbnail = m_IconTextures[currentIconIndex];
             }
 
-            itemSize = UI::ContentBrowserItem(filePath, iconWidth, thumbnail, !isFileSupported);
-
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
+            if (UI::ContentBrowserItem(filePath, iconWidth, thumbnail, itemSize, !isFileSupported) && isDirectory)
                 m_CurrentDirectory = directory.path();
 
             if (ImGui::GetColumnIndex() == columns - 1)
