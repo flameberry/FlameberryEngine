@@ -24,13 +24,13 @@ const mat4 g_BiasMatrix = mat4(
 	0.5, 0.5, 0.0, 1.0
 );
 
-layout (set = 1, binding = 1) uniform sampler2DArray u_ShadowMapSamplerArray;
+layout (set = 2, binding = 0) uniform sampler2DArray u_ShadowMapSamplerArray;
 
-layout (set = 2, binding = 0) uniform sampler2D u_TextureMapSampler;
-layout (set = 2, binding = 1) uniform sampler2D u_NormalMapSampler;
-layout (set = 2, binding = 2) uniform sampler2D u_RoughnessMapSampler;
-layout (set = 2, binding = 3) uniform sampler2D u_AmbientOcclusionMapSampler;
-layout (set = 2, binding = 4) uniform sampler2D u_MetallicMapSampler;
+layout (set = 3, binding = 0) uniform sampler2D u_TextureMapSampler;
+layout (set = 3, binding = 1) uniform sampler2D u_NormalMapSampler;
+layout (set = 3, binding = 2) uniform sampler2D u_RoughnessMapSampler;
+layout (set = 3, binding = 3) uniform sampler2D u_AmbientOcclusionMapSampler;
+layout (set = 3, binding = 4) uniform sampler2D u_MetallicMapSampler;
 
 struct DirectionalLight {
     vec3  Direction;

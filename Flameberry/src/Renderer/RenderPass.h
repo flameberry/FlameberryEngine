@@ -9,6 +9,7 @@ namespace Flameberry {
     struct RenderPassSpecification
     {
         std::vector<std::shared_ptr<Framebuffer>> TargetFramebuffers;
+        std::vector<VkSubpassDependency> Dependencies;
     };
 
     class RenderPass
