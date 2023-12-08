@@ -75,3 +75,4 @@ CMake/envPhysX.cmake
 *.out
 *.app
 Flameberry-ScriptCore/Binaries
+SandboxProject/Content
