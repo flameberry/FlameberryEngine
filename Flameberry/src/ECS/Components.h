@@ -127,8 +127,6 @@ namespace Flameberry {
         std::string FullyQualifiedClassName;
     };
     
-    enum class AxisType : uint8_t { X = 0, Y, Z };
-
     struct RigidBodyComponent
     {
         enum class RigidBodyType : uint8_t { Static = 0, Dynamic };

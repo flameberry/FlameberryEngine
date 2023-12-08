@@ -195,7 +195,8 @@ namespace Flameberry {
                         rbComp.StaticFriction = rigidBody["StaticFriction"].as<float>();
                         rbComp.DynamicFriction = rigidBody["DynamicFriction"].as<float>();
                         rbComp.Restitution = rigidBody["Restitution"].as<float>();
-                        rbComp.ColliderOffset = rigidBody["ColliderOffset"].as<glm::vec3>();
+                        if (rigidBody["ColliderOffset"])
+                            rbComp.ColliderOffset = rigidBody["ColliderOffset"].as<glm::vec3>();
                     }
 
                     if (auto boxCollider = entity["BoxColliderComponent"]; boxCollider)

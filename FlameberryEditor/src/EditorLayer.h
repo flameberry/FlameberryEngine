@@ -33,8 +33,6 @@ namespace Flameberry {
         void OpenProject();
         void OpenProject(const std::string& path);
 
-        void OpenProject();
-        void OpenProject(const std::string& path);
         void SaveScene();
         void SaveSceneAs();
         void OpenScene();

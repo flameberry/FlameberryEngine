@@ -368,22 +368,6 @@ namespace Flameberry {
         CopyComponentIfExists<Component...>(context, dest, src);
     }
 
-    template<typename... Component>
-    static void CopyComponentIfExists(Scene* context, fbentt::entity dest, fbentt::entity src)
-    {
-        ([&]()
-            {
-                if (auto* comp = context->GetRegistry()->try_get<Component>(src); comp)
-                    context->GetRegistry()->emplace<Component>(dest, *comp);
-            }(), ...);
-    }
-
-    template<typename... Component>
-    static void CopyComponentIfExists(ComponentList<Component...>, Scene* context, fbentt::entity dest, fbentt::entity src)
-    {
-        CopyComponentIfExists<Component...>(context, dest, src);
-    }
-
     fbentt::entity Scene::DuplicateEntity(fbentt::entity src)
     {
         FBY_WARN("DuplicateEntity() Not Yet Implemented For Entities with Hierarchies!");
