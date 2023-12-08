@@ -124,7 +124,7 @@ namespace Flameberry {
         ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleColor();
 
-        for (auto& directory : std::filesystem::directory_iterator("Assets")) {
+        for (auto& directory : std::filesystem::directory_iterator(Project::GetActiveProject()->GetConfig().AssetDirectory)) {
             if (directory.is_directory()) {
                 RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator(directory));
             }
@@ -136,12 +136,12 @@ namespace Flameberry {
         const float shadowYMax = ImGui::GetWindowPos().y;
         ImVec2 pMin(shadowXMax - shadowWidth, shadowYMax + ImGui::GetWindowHeight());
         ImVec2 pMax(shadowXMax, shadowYMax);
-        
+
         ImGui::GetWindowDrawList()->AddRectFilledMultiColor(pMin, pMax, IM_COL32(5, 5, 5, 0), IM_COL32(5, 5, 5, 140), IM_COL32(5, 5, 5, 140), IM_COL32(5, 5, 5, 0));
-        
+
         ImGui::EndChild();
         ImGui::PopStyleVar();
-        
+
         ImGui::SameLine();
 
         float topChildHeight = 38.0f;
@@ -149,10 +149,10 @@ namespace Flameberry {
 
         ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         float arrowSize = 18.0f;
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Assets")
+        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
         if (m_IsSearchBoxFocused)
@@ -186,16 +186,17 @@ namespace Flameberry {
         ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, bottomChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleVar();
 
-        float iconWidth = 90.0f, padding = 0.0f;
-        float cellSize = iconWidth + padding;
+        float iconWidth = 90.0f;
+        float cellSize = iconWidth + ImGui::GetStyle().ItemSpacing.x;
         uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize, rowIndex = 0;
         columns = columns >= 1 ? columns : 1;
         ImGui::Columns(columns, (const char*)__null, false);
 
+
         ImVec2 itemSize;
-        
+
         m_ThumbnailCache->ResetThumbnailLoadedCounter();
-        
+
         for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory })
         {
             const std::filesystem::path& filePath = directory.path();
@@ -214,7 +215,7 @@ namespace Flameberry {
             std::string ext = filePath.extension().string();
             int currentIconIndex;
             bool isFileSupported = true, isDirectory = directory.is_directory();
-            
+
             std::shared_ptr<Texture2D> thumbnail;
             if (!isDirectory)
                 thumbnail = m_ThumbnailCache->TryGetOrCreateThumbnail(filePath);
@@ -239,9 +240,7 @@ namespace Flameberry {
                 thumbnail = m_IconTextures[currentIconIndex];
             }
 
-            itemSize = UI::ContentBrowserItem(filePath, iconWidth, thumbnail, !isFileSupported);
-
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
+            if (UI::ContentBrowserItem(filePath, iconWidth, thumbnail, itemSize, !isFileSupported) && isDirectory)
                 m_CurrentDirectory = directory.path();
 
             if (ImGui::GetColumnIndex() == columns - 1)

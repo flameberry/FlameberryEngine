@@ -1,4 +1,4 @@
 Project: SandboxProject
 Configuration:
-  AssetDirectory: Assets
+  AssetDirectory: Content
   ScriptAssemblyPath: Binaries/net7.0/SandboxProject.dll

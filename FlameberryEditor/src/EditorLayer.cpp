@@ -1,5 +1,7 @@
 #include "EditorLayer.h"
 
+#include <fmt/format.h>
+
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
 #include "UI.h"
@@ -73,6 +75,10 @@ namespace Flameberry {
         ScriptEngine::Init();
         ScriptEngine::LoadAppAssembly(m_Project->GetScriptAssemblyPath().c_str());
 
+        Project::SetActive(m_Project);
+        std::filesystem::current_path(m_Project->GetProjectDirectory());
+
+        PhysicsEngine::Init();
         m_ActiveScene = Scene::Create();
         m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
         m_ContentBrowserPanel = ContentBrowserPanel::Create();
@@ -582,6 +588,22 @@ namespace Flameberry {
             OpenProject(path);
     }
     
+    void EditorLayer::OpenProject(const std::string& path)
+    {
+        // 1. Unload Assets
+        // 2. Unload App Assembly
+        // 3. Load Project
+        // 4. Load App Assembly
+        FBY_ASSERT(0, "Not Implemented Yet!");
+    }
+
+    void EditorLayer::OpenProject()
+    {
+        std::string path = platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
+        if (!path.empty())
+            OpenProject(path);
+    }
+
     void EditorLayer::OpenProject(const std::string& path)
     {
         // 1. Unload Assets

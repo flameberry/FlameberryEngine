@@ -48,9 +48,11 @@ class PhysXSDKRequirements:
                 if 'checked' in dir or 'release' in dir:
                     subprocess.run(["cmake", "--build", compilerDir / dir])
                     continue
-                # Build for single-config generators like Xcode, Visual Studio
-                for config in ('checked', 'release'):
-                    subprocess.run(["cmake", "--build", compilerDir / dir, f"--config={config}"])
+                
+                if 'debug' not in dir and 'profile' not in dir:
+                    # Build for single-config generators like Xcode, Visual Studio
+                    for config in ('checked', 'release'):
+                        subprocess.run(["cmake", "--build", compilerDir / dir, f"--config={config}"])
             
             os.chdir(cwd)
         except Exception as e:

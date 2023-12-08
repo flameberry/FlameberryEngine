@@ -57,12 +57,10 @@ namespace Flameberry {
 
         // Geometry
         std::shared_ptr<RenderPass> m_GeometryPass;
-        std::shared_ptr<DescriptorSetLayout> m_CameraBufferDescSetLayout;
-        std::vector<std::shared_ptr<DescriptorSet>> m_CameraBufferDescriptorSets;
+        std::shared_ptr<DescriptorSetLayout> m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
+        std::vector<std::shared_ptr<DescriptorSet>> m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
         std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
         std::shared_ptr<Pipeline> m_MeshPipeline, m_SkyboxPipeline;
-        std::vector<std::shared_ptr<DescriptorSet>> m_SceneDataDescriptorSets;
-        std::shared_ptr<DescriptorSetLayout> m_SceneDescriptorSetLayout;
         VkSampler m_VkTextureSampler;
 
         // Shadow Map

@@ -75,10 +75,10 @@ namespace Flameberry {
     {
         glm::vec3 Color;
         float Intensity, LightSize;
-        
+
         DirectionalLightComponent() : Color(1.0f), Intensity(10.0f), LightSize(20.0f) {}
     };
-    
+
     struct PointLightComponent
     {
         glm::vec3 Color;
@@ -119,6 +119,8 @@ namespace Flameberry {
             DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Actor; nsc->Actor = nullptr; };
         }
     };
+    
+    enum class AxisType : uint8_t { X = 0, Y, Z };
 
     struct ScriptComponent
     {

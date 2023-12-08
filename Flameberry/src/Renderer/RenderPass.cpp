@@ -23,24 +23,26 @@ namespace Flameberry {
 
         const auto& framebufferSpec = m_RenderPassSpec.TargetFramebuffers[0]->GetSpecification();
 
-        // Subpass dependencies for layout transitions
-        std::array<VkSubpassDependency, 2> dependencies;
+        if (!m_RenderPassSpec.Dependencies.size())
+        {
+            m_RenderPassSpec.Dependencies.resize(2);
 
-        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[0].dstSubpass = 0;
-        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+            m_RenderPassSpec.Dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+            m_RenderPassSpec.Dependencies[0].dstSubpass = 0;
+            m_RenderPassSpec.Dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+            m_RenderPassSpec.Dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            m_RenderPassSpec.Dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+            m_RenderPassSpec.Dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            m_RenderPassSpec.Dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        dependencies[1].srcSubpass = 0;
-        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+            m_RenderPassSpec.Dependencies[1].srcSubpass = 0;
+            m_RenderPassSpec.Dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+            m_RenderPassSpec.Dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            m_RenderPassSpec.Dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+            m_RenderPassSpec.Dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            m_RenderPassSpec.Dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+            m_RenderPassSpec.Dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        }
 
         // VkSampleCountFlagBits samples = (VkSampleCountFlagBits)m_RenderPassSpec.Samples;
         VkSampleCountFlagBits samples;
@@ -57,7 +59,7 @@ namespace Flameberry {
             default: samples = VK_SAMPLE_COUNT_1_BIT;  break;
         }
 
-        const uint32_t count = framebufferSpec.Samples > 1 ?
+        const auto count = framebufferSpec.Samples > 1 ?
             2 * framebufferSpec.Attachments.size() - 1
             : framebufferSpec.Attachments.size();
 
@@ -160,8 +162,8 @@ namespace Flameberry {
         vk_render_pass_create_info.pAttachments = attachments.data();
         vk_render_pass_create_info.subpassCount = 1;
         vk_render_pass_create_info.pSubpasses = &vk_subpass_description;
-        vk_render_pass_create_info.dependencyCount = (uint32_t)dependencies.size();
-        vk_render_pass_create_info.pDependencies = dependencies.data();
+        vk_render_pass_create_info.dependencyCount = (uint32_t)m_RenderPassSpec.Dependencies.size();
+        vk_render_pass_create_info.pDependencies = m_RenderPassSpec.Dependencies.data();
 
         if (useMultiView)
             vk_render_pass_create_info.pNext = &multiViewRenderPassCreateInfo;

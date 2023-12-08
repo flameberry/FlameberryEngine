@@ -79,6 +79,28 @@ namespace Flameberry {
 
             RenderPassSpecification shadowMapRenderPassSpec;
             shadowMapRenderPassSpec.TargetFramebuffers.resize(imageCount);
+            shadowMapRenderPassSpec.Dependencies = {
+                {
+                    VK_SUBPASS_EXTERNAL,                            // uint32_t                   srcSubpass
+                    0,                                              // uint32_t                   dstSubpass
+                    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,          // VkPipelineStageFlags       srcStageMask
+                    VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,     // VkPipelineStageFlags       dstStageMask
+                    VK_ACCESS_SHADER_READ_BIT,                      // VkAccessFlags              srcAccessMask
+                    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,   // VkAccessFlags              dstAccessMask
+                    VK_DEPENDENCY_BY_REGION_BIT                     // VkDependencyFlags          dependencyFlags
+                },
+                {
+                    0,                                              // uint32_t                   srcSubpass
+                    VK_SUBPASS_EXTERNAL,                            // uint32_t                   dstSubpass
+                    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,      // VkPipelineStageFlags       srcStageMask
+                    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,          // VkPipelineStageFlags       dstStageMask
+                    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,   // VkAccessFlags              srcAccessMask
+                    VK_ACCESS_SHADER_READ_BIT,                      // VkAccessFlags              dstAccessMask
+                    VK_DEPENDENCY_BY_REGION_BIT                     // VkDependencyFlags          dependencyFlags
+                }
+            };
+
+
             for (uint32_t i = 0; i < imageCount; i++)
                 shadowMapRenderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(shadowMapFramebufferSpec);
 
@@ -230,6 +252,26 @@ namespace Flameberry {
 
             RenderPassSpecification sceneRenderPassSpec;
             sceneRenderPassSpec.TargetFramebuffers.resize(imageCount);
+            sceneRenderPassSpec.Dependencies = {
+                {
+                    VK_SUBPASS_EXTERNAL,                            // uint32_t                   srcSubpass
+                    0,                                              // uint32_t                   dstSubpass
+                    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,      // VkPipelineStageFlags       srcStageMask
+                    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,          // VkPipelineStageFlags       dstStageMask
+                    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,   // VkAccessFlags              srcAccessMask
+                    VK_ACCESS_SHADER_READ_BIT,                      // VkAccessFlags              dstAccessMask
+                    VK_DEPENDENCY_BY_REGION_BIT                     // VkDependencyFlags          dependencyFlags
+                },
+                {
+                    0,                                              // uint32_t                   srcSubpass
+                    VK_SUBPASS_EXTERNAL,                            // uint32_t                   dstSubpass
+                    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,  // VkPipelineStageFlags       srcStageMask
+                    VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,              // VkPipelineStageFlags       dstStageMask
+                    VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,           // VkAccessFlags              srcAccessMask
+                    VK_ACCESS_MEMORY_READ_BIT,                      // VkAccessFlags              dstAccessMask
+                    VK_DEPENDENCY_BY_REGION_BIT                     // VkDependencyFlags          dependencyFlags
+                }
+            };
 
             for (uint32_t i = 0; i < imageCount; i++)
                 sceneRenderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(sceneFramebufferSpec);
@@ -254,19 +296,13 @@ namespace Flameberry {
                 }
 
                 DescriptorSetLayoutSpecification sceneDescSetLayoutSpec;
-                sceneDescSetLayoutSpec.Bindings.resize(2);
+                sceneDescSetLayoutSpec.Bindings.resize(1);
 
                 // Scene Uniform Buffer
                 sceneDescSetLayoutSpec.Bindings[0].binding = 0;
                 sceneDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 sceneDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
                 sceneDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                // Shadow Map
-                sceneDescSetLayoutSpec.Bindings[1].binding = 1;
-                sceneDescSetLayoutSpec.Bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                sceneDescSetLayoutSpec.Bindings[1].descriptorCount = 1;
-                sceneDescSetLayoutSpec.Bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
                 m_SceneDescriptorSetLayout = DescriptorSetLayout::Create(sceneDescSetLayoutSpec);
 
@@ -283,14 +319,36 @@ namespace Flameberry {
                     bufferInfo.offset = 0;
                     bufferInfo.buffer = m_SceneUniformBuffers[i]->GetBuffer();
 
+                    m_SceneDataDescriptorSets[i]->WriteBuffer(0, bufferInfo);
+                    m_SceneDataDescriptorSets[i]->Update();
+                }
+
+                DescriptorSetLayoutSpecification shadowMapRefDescSetLayoutSpec;
+                shadowMapRefDescSetLayoutSpec.Bindings.resize(1);
+
+                // Shadow Map
+                shadowMapRefDescSetLayoutSpec.Bindings[0].binding = 0;
+                shadowMapRefDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                shadowMapRefDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
+                shadowMapRefDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                m_ShadowMapRefDescriptorSetLayout = DescriptorSetLayout::Create(shadowMapRefDescSetLayoutSpec);
+
+                DescriptorSetSpecification shadowMapRefDescSetSpec;
+                shadowMapRefDescSetSpec.Layout = m_ShadowMapRefDescriptorSetLayout;
+
+                m_ShadowMapRefDescSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+                for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+                {
+                    m_ShadowMapRefDescSets[i] = DescriptorSet::Create(shadowMapRefDescSetSpec);
+
                     VkDescriptorImageInfo imageInfo{};
                     imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
                     imageInfo.imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView();
                     imageInfo.sampler = m_ShadowMapSampler;
 
-                    m_SceneDataDescriptorSets[i]->WriteBuffer(0, bufferInfo);
-                    m_SceneDataDescriptorSets[i]->WriteImage(1, imageInfo);
-                    m_SceneDataDescriptorSets[i]->Update();
+                    m_ShadowMapRefDescSets[i]->WriteImage(0, imageInfo);
+                    m_ShadowMapRefDescSets[i]->Update();
                 }
 
                 PipelineSpecification pipelineSpec{};
@@ -304,11 +362,12 @@ namespace Flameberry {
                 pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
                     m_CameraBufferDescSetLayout,
                     m_SceneDescriptorSetLayout,
+                    m_ShadowMapRefDescriptorSetLayout,
                     Material::GetLayout()
                 };
 
-                pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.vert.spv";
-                pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/triangle.frag.spv";
+                pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mesh.vert.spv";
+                pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mesh.frag.spv";
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {
@@ -601,12 +660,13 @@ namespace Flameberry {
         // Mesh Rendering
         m_MeshPipeline->Bind();
 
-        VkDescriptorSet descriptorSets[] = {
-            m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet(),
-            m_SceneDataDescriptorSets[currentFrame]->GetDescriptorSet()
-        };
-        Renderer::Submit([pipelineLayout = m_MeshPipeline->GetLayout(), descriptorSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([=, pipelineLayout = m_MeshPipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
+                VkDescriptorSet descriptorSets[] = {
+                    m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet(),
+                    m_SceneDataDescriptorSets[currentFrame]->GetDescriptorSet(), // TODO: This is the problem for shadow flickering
+                    m_ShadowMapRefDescSets[imageIndex]->GetDescriptorSet()
+                };
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
             }
         );
@@ -867,7 +927,7 @@ namespace Flameberry {
 
             Renderer::Submit([pipelineLayout = m_MeshPipeline->GetLayout(), descSet = materialAsset ? materialAsset->GetDescriptorSet() : Material::GetEmptyDesciptorSet(), pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
-                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, 1, &descSet, 0, nullptr);
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 3, 1, &descSet, 0, nullptr);
                     vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
                 }
             );
