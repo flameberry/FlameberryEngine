@@ -42,11 +42,11 @@ namespace Flameberry {
     private:
         template<typename ComponentType>
         void DrawAddComponentEntry(const char* name);
-        
+
         template<typename ComponentType, typename Fn>
         void DrawComponent(const char* name, Fn&& fn, bool removable = true);
     };
-    
+
     template<typename ComponentType>
     void InspectorPanel::DrawAddComponentEntry(const char* name)
     {
@@ -56,7 +56,7 @@ namespace Flameberry {
                 m_Context->m_Registry->emplace<ComponentType>(m_SelectionContext);
         }
     }
-    
+
     template<typename ComponentType, typename Fn>
     void InspectorPanel::DrawComponent(const char* name, Fn&& fn, bool removable)
     {
@@ -64,25 +64,24 @@ namespace Flameberry {
         if (m_Context->m_Registry->has<ComponentType>(m_SelectionContext))
         {
             ImGui::PushID(name);
-            
+
             ImVec2 contentRegionAvail = ImGui::GetContentRegionAvail();
-            
+
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2, 4 });
-            
+
             auto& style = ImGui::GetStyle();
             float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
-            
+
             bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
             ImGui::PopStyleVar();
-            
+
             float imageSize = lineHeight - 2.0f * style.FramePadding.y;
             ImGui::SameLine(contentRegionAvail.x - lineHeight * 0.5f);
-            
+
             ImGui::ImageButton("ComponentSettingsToggle", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), ImVec2(imageSize, imageSize));
-            FBY_LOG("Actual Button Size: {}", ImGui::GetItemRectSize().x);
             ImGui::PopStyleVar();
-            
+
             bool shouldRemoveComp = false;
             if (ImGui::BeginPopupContextItem("ComponentSettings", ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonLeft))
             {
@@ -90,14 +89,14 @@ namespace Flameberry {
                 if (ImGui::MenuItem("Remove Component"))
                     shouldRemoveComp = true;
                 ImGui::EndDisabled();
-                
+
                 ImGui::EndPopup();
             }
-            
+
             if (open)
                 fn();
             ImGui::PopID();
-            
+
             if (shouldRemoveComp)
                 m_Context->m_Registry->erase<ComponentType>(m_SelectionContext);
         }
