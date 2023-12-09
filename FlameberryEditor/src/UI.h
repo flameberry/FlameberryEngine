@@ -20,6 +20,7 @@ namespace Flameberry {
         static void InputBox(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint = (const char*)__null);
 
         // Returns full width and height of the group including text and file icon
+        static bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled = false);
         static bool ContentBrowserItem(const std::filesystem::path& filepath, float size, const std::shared_ptr<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension = false);
     };
 

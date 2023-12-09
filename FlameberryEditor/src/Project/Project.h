@@ -3,11 +3,32 @@
 #include <filesystem>
 
 namespace Flameberry {
-    struct ProjectConfig {
+    struct ProjectConfig
+    {
         std::filesystem::path AssetDirectory /* = "Content" */;
 
         std::string Name = "Flameberry-Project";
     };
+
+    struct ProjectRegistryEntry
+    {
+        std::string ProjectName;
+        std::filesystem::path ProjectFilePath;
+
+        const bool operator==(const ProjectRegistryEntry& other) {
+            // This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
+            return ProjectFilePath == other.ProjectFilePath;
+        }
+
+        const bool operator!=(const ProjectRegistryEntry& other) {
+            // This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
+            return !(*this == other);
+        }
+
+        // TODO: Add Timestamps, Project Type etc in the future
+    };
+
+    typedef std::vector<ProjectRegistryEntry> ProjectRegistry;
 
     class Project
     {
@@ -51,5 +72,17 @@ namespace Flameberry {
         static std::shared_ptr<Project> DeserializeIntoNewProject(const std::filesystem::path& filePath);
         static bool DeserializeIntoExistingProject(const std::filesystem::path& filePath, const std::shared_ptr<Project>& dest);
         static void SerializeProject(const std::filesystem::path& filePath, const Project* project);
+    };
+
+    class ProjectRegistryManager
+    {
+    public:
+        static void AppendEntryToGlobalRegistry(Project* project);
+        static void RemoveEntryFromGlobalRegistry(const std::filesystem::path& pathOfProjectEntry);
+        static ProjectRegistry LoadEntireProjectRegistry();
+        static void ClearAllNonExistingProjectRegistryEntries();
+
+    private:
+        constexpr static const char* c_GlobalProjectRegistryPath = FBY_PROJECT_DIR"FlameberryEditor/GlobalConfig/ProjectRegistry.fbreg";
     };
 }
