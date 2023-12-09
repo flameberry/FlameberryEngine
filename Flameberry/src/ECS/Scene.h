@@ -33,7 +33,8 @@ namespace Flameberry {
         void ReparentEntity(fbentt::entity entity, fbentt::entity parent);
         bool IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
         fbentt::entity DuplicateEntity(fbentt::entity src);
-        fbentt::entity CopyEntityTree(fbentt::entity src);
+        fbentt::entity DuplicateSingleEntity(fbentt::entity src);
+        fbentt::entity DuplicateEntityTree(fbentt::entity src);
 
         inline std::string GetName() const { return m_Name; }
         inline std::shared_ptr<fbentt::registry> GetRegistry() const { return m_Registry; }
