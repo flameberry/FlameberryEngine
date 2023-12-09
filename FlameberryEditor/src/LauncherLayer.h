@@ -15,6 +15,8 @@ namespace Flameberry {
         void OnUIRender() override;
         void OnEvent(Event& e) override;
         void OnDestroy() override;
+
+        void UI_NewProjectPopup();
     private:
         ProjectRegistry m_ProjectRegistry;
 

@@ -68,6 +68,39 @@ namespace Flameberry {
         if (UI::AlignedButton("New Project", buttonSize))
             ImGui::OpenPopup("New Project");
 
+        UI_NewProjectPopup();
+
+        if (UI::AlignedButton("Open Project", buttonSize))
+        {
+            // Open a project browser window and if an existing project is selected then...
+            std::string path = platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
+            if (!path.empty())
+            {
+                m_Project = ProjectSerializer::DeserializeIntoNewProject(path);
+
+                ProjectRegistryEntry entry{ m_Project->GetConfig().Name, path };
+                if (std::find(m_ProjectRegistry.begin(), m_ProjectRegistry.end(), entry) == m_ProjectRegistry.end())
+                {
+                    // The project didn't exist before in the ProjectRegistry
+                    ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
+                }
+
+                m_ShouldClose = true;
+            }
+        }
+        ImGui::EndChild();
+        ImGui::End();
+    }
+
+    void LauncherLayer::OnEvent(Event& e)
+    {
+    }
+
+    void LauncherLayer::OnDestroy() {
+    }
+
+    void LauncherLayer::UI_NewProjectPopup()
+    {
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowSize(ImVec2(1280 / 3, 720 / 4));
@@ -150,34 +183,6 @@ namespace Flameberry {
             if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
             ImGui::EndPopup();
         }
-
-        if (UI::AlignedButton("Open Project", buttonSize))
-        {
-            // Open a project browser window and if an existing project is selected then...
-            std::string path = platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
-            if (!path.empty())
-            {
-                m_Project = ProjectSerializer::DeserializeIntoNewProject(path);
-
-                ProjectRegistryEntry entry{ m_Project->GetConfig().Name, path };
-                if (std::find(m_ProjectRegistry.begin(), m_ProjectRegistry.end(), entry) == m_ProjectRegistry.end())
-                {
-                    // The project didn't exist before in the ProjectRegistry
-                    ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
-                }
-
-                m_ShouldClose = true;
-            }
-        }
-        ImGui::EndChild();
-        ImGui::End();
-    }
-
-    void LauncherLayer::OnEvent(Event& e)
-    {
-    }
-
-    void LauncherLayer::OnDestroy() {
     }
 
 }
