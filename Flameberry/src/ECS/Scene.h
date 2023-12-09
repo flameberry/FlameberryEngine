@@ -30,8 +30,9 @@ namespace Flameberry {
 
         fbentt::entity CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent);
         void DestroyEntityTree(fbentt::entity entity);
-        void ReparentEntity(fbentt::entity entity, fbentt::entity parent);
+        void ReparentEntity(fbentt::entity entity, fbentt::entity destParent);
         bool IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
+        bool IsEntityRoot(fbentt::entity entity);
         fbentt::entity DuplicateEntity(fbentt::entity src);
         fbentt::entity DuplicateSingleEntity(fbentt::entity src);
         fbentt::entity DuplicateEntityTree(fbentt::entity src);

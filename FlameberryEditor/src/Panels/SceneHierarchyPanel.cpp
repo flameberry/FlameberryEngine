@@ -78,12 +78,22 @@ namespace Flameberry {
             ImGui::EndPopup();
         }
 
+        ImRect windowRect(ImGui::GetWindowPos(), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y));
+        if (ImGui::BeginDragDropTargetCustom(windowRect, ImGui::GetID("##EntityList")))
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
+            {
+                const fbentt::entity payloadEntity = *((const fbentt::entity*)payload->Data);
+                m_Context->ReparentEntity(payloadEntity, fbentt::null);
+            }
+            ImGui::EndDragDropTarget();
+        }
+
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
         m_IsSelectedNodeDisplayed = false;
         m_Context->m_Registry->for_each([this](fbentt::entity entity)
             {
-                auto* relation = m_Context->m_Registry->try_get<RelationshipComponent>(entity);
-                if (!relation || relation->Parent == fbentt::null)
+                if (m_Context->IsEntityRoot(entity))
                     DrawEntityNode(entity);
             }
         );
