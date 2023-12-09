@@ -64,7 +64,7 @@ namespace Flameberry {
         vk_swap_chain_create_info.oldSwapchain = oldSwapChain ? oldSwapChain->m_VkSwapChain : VK_NULL_HANDLE;
 
         VK_CHECK_RESULT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain));
-        FL_INFO("Created Vulkan Swap Chain!");
+        FBY_INFO("Created Vulkan Swap Chain!");
 
         vkGetSwapchainImagesKHR(device, m_VkSwapChain, &m_ImageCount, nullptr);
         m_VkSwapChainImages.resize(m_ImageCount);
@@ -163,7 +163,7 @@ namespace Flameberry {
             VK_CHECK_RESULT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]));
             VK_CHECK_RESULT(vkCreateFence(device, &vk_fence_create_info, nullptr, &m_InFlightFences[i]));
         }
-        FL_INFO("Created {0} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
+        FBY_INFO("Created {} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
     }
 
     SwapChain::~SwapChain()
@@ -177,14 +177,14 @@ namespace Flameberry {
             vkDestroySemaphore(device, m_RenderFinishedSemaphores[i], nullptr);
             vkDestroyFence(device, m_InFlightFences[i], nullptr);
         }
-        FL_INFO("Destroyed {0} Image Available Semaphores, Render Finished Semaphores and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
+        FBY_INFO("Destroyed {} Image Available Semaphores, Render Finished Semaphores and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
 
         vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
     }
 
     void SwapChain::Invalidate()
     {
-        FL_INFO("Invalidating SwapChain...");
+        FBY_INFO("Invalidating SwapChain...");
         
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
@@ -240,7 +240,7 @@ namespace Flameberry {
         vk_swap_chain_create_info.oldSwapchain = VK_NULL_HANDLE;
 
         VK_CHECK_RESULT(vkCreateSwapchainKHR(device, &vk_swap_chain_create_info, nullptr, &m_VkSwapChain));
-        FL_INFO("Created Vulkan Swap Chain!");
+        FBY_INFO("Created Vulkan Swap Chain!");
 
         uint32_t vk_swap_chain_image_count = 0;
         vkGetSwapchainImagesKHR(device, m_VkSwapChain, &vk_swap_chain_image_count, nullptr);

@@ -1,7 +1,7 @@
 #include "MaterialEditorPanel.h"
 
 #include <filesystem>
-#include "../UI.h"
+#include "UI.h"
 
 namespace Flameberry {
     void MaterialEditorPanel::OnUIRender()
@@ -50,18 +50,18 @@ namespace Flameberry {
 
             if (ImGui::BeginDragDropTarget())
             {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
                 {
                     const char* path = (const char*)payload->Data;
                     std::filesystem::path matPath{ path };
                     const std::string& ext = matPath.extension().string();
 
-                    FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                    FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
                     if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
                         m_EditingContext = AssetManager::TryGetOrLoadAsset<Material>(matPath);
                     else
-                        FL_WARN("Bad File given as Material!");
+                        FBY_WARN("Bad File given as Material!");
                 }
                 ImGui::EndDragDropTarget();
             }
@@ -139,17 +139,17 @@ namespace Flameberry {
         if (mapEnabledVar)
         {
             if (!map)
-                map = AssetManager::TryGetOrLoadAsset<Texture2D>("Assets/Textures/Checkerboard.png");
+                map = AssetManager::TryGetOrLoadAsset<Texture2D>("Content/Textures/Checkerboard.png");
 
             ImGui::SameLine();
             ImGui::Image(reinterpret_cast<ImTextureID>(map->CreateOrGetDescriptorSet()), ImVec2{ 70, 70 });
             if (ImGui::BeginDragDropTarget())
             {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
                 {
                     std::filesystem::path path = (const char*)payload->Data;
                     const auto& ext = path.extension();
-                    FL_INFO("Payload recieved: {0}, with extension {1}", path, ext);
+                    FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
                     if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
                     {
@@ -158,7 +158,7 @@ namespace Flameberry {
                         m_IsMaterialEdited = true;
                     }
                     else
-                        FL_WARN("Bad File given as {0}!", label);
+                        FBY_WARN("Bad File given as {}!", label);
                 }
                 ImGui::EndDragDropTarget();
             }

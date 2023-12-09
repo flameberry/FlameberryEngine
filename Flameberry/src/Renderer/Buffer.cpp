@@ -49,7 +49,7 @@ namespace Flameberry {
     VkResult Buffer::MapMemory(VkDeviceSize size, VkDeviceSize offset)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        FL_ASSERT(size && m_VkBufferDeviceMemory, "Cannot Map memory of size: 0!");
+        FBY_ASSERT(size && m_VkBufferDeviceMemory, "Cannot Map memory of size: 0!");
         return vkMapMemory(device, m_VkBufferDeviceMemory, offset, size, 0, &m_VkBufferMappedMemory);
     }
 
@@ -77,7 +77,7 @@ namespace Flameberry {
 
     void Buffer::WriteToIndex(const void* data, uint32_t index)
     {
-        FL_ASSERT(m_BufferSpec.InstanceSize, "Failed to write to index: Instance size not specified during buffer creation!");
+        FBY_ASSERT(m_BufferSpec.InstanceSize, "Failed to write to index: Instance size not specified during buffer creation!");
         WriteToBuffer(data, m_BufferSpec.InstanceSize, index * m_AlignmentSize);
     }
 

@@ -3,7 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
 
-#include "../UI.h"
+#include "UI.h"
 
 namespace Flameberry {
     SceneHierarchyPanel::SceneHierarchyPanel(const std::shared_ptr<Scene>& context)
@@ -39,7 +39,7 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
 
-        UI::SearchBar("##SceneHierarchySearchBar", width, m_SearchInputBuffer, 256, "Search...");
+        UI::InputBox("##SceneHierarchySearchBar", width, m_SearchInputBuffer, 256, "Search...");
 
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
@@ -219,7 +219,7 @@ namespace Flameberry {
         if (ImGui::BeginDragDropSource())
         {
             ImGui::SetDragDropPayload(
-                "FL_SCENE_HIERARCHY_ENTITY_NODE",
+                "FBY_SCENE_HIERARCHY_ENTITY_NODE",
                 &entity,
                 sizeof(entity),
                 ImGuiCond_Once
@@ -230,7 +230,7 @@ namespace Flameberry {
 
         if (ImGui::BeginDragDropTarget())
         {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_SCENE_HIERARCHY_ENTITY_NODE"))
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
             {
                 const fbentt::entity payloadEntity = *((const fbentt::entity*)payload->Data);
                 m_Context->ReparentEntity(payloadEntity, entity);

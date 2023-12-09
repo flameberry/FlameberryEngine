@@ -16,7 +16,7 @@ namespace Flameberry {
     Scene::Scene(const std::shared_ptr<Scene>& other)
         : m_Registry(std::make_shared<fbentt::registry>(*other->m_Registry)), m_Name(other->m_Name), m_ViewportSize(other->m_ViewportSize)
     {
-        FL_LOG("Copying Scene...");
+        FBY_LOG("Copying Scene...");
     }
 
     Scene::Scene(const Scene& other)
@@ -26,7 +26,7 @@ namespace Flameberry {
 
     Scene::~Scene()
     {
-        FL_LOG("Deleting Scene...");
+        FBY_LOG("Deleting Scene...");
     }
 
     void Scene::OnStartRuntime()
@@ -82,7 +82,7 @@ namespace Flameberry {
                 }
             }
 
-            FL_ASSERT(rigidBody.RuntimeRigidBody, "Failed to create RigidBody!");
+            FBY_ASSERT(rigidBody.RuntimeRigidBody, "Failed to create RigidBody!");
 
             physx::PxShape* shape = nullptr;
 
@@ -105,7 +105,7 @@ namespace Flameberry {
                 shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
                 sphereCollider->RuntimeShape = shape;
             }
-
+            
             if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
             {
                 auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
@@ -114,15 +114,15 @@ namespace Flameberry {
 
                 switch (capsuleCollider->Axis)
                 {
-                    case CapsuleColliderComponent::AxisType::X:
+                    case AxisType::X:
                         break;
-                    case CapsuleColliderComponent::AxisType::Y:
+                    case AxisType::Y:
                     {
                         physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1)));
                         shape->setLocalPose(relativePose);
                         break;
                     }
-                    case CapsuleColliderComponent::AxisType::Z:
+                    case AxisType::Z:
                     {
                         physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(1, 0, 0)));
                         shape->setLocalPose(relativePose);
@@ -134,6 +134,7 @@ namespace Flameberry {
 
             if (shape)
             {
+                // TODO: Add axis locking
                 physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
                 rigidBodyRuntimePtr->attachShape(*shape);
                 if (rigidBody.Type == RigidBodyComponent::RigidBodyType::Dynamic)
@@ -159,7 +160,7 @@ namespace Flameberry {
 
     void Scene::OnUpdateRuntime(float delta)
     {
-        FL_PROFILE_SCOPE("Scene::OnUpdateRuntime");
+        FBY_PROFILE_SCOPE("Scene::OnUpdateRuntime");
 
         // Update Native Scripts
         for (auto entity : m_Registry->view<NativeScriptComponent>())
@@ -328,37 +329,34 @@ namespace Flameberry {
         }
         return false;
     }
+    
+    template<typename... Component>
+    static void CopyComponentIfExists(Scene* context, fbentt::entity dest, fbentt::entity src)
+    {
+        ([&]()
+         {
+            if (auto* comp = context->GetRegistry()->try_get<Component>(src); comp)
+                context->GetRegistry()->emplace<Component>(dest, *comp);
+        }(), ...);
+    }
+    
+    template<typename... Component>
+    static void CopyComponentIfExists(ComponentList<Component...>, Scene* context, fbentt::entity dest, fbentt::entity src)
+    {
+        CopyComponentIfExists<Component...>(context, dest, src);
+    }
 
     fbentt::entity Scene::DuplicateEntity(fbentt::entity src)
     {
-        FL_WARN("DuplicateEntity() Not Yet Implemented For Entities with Hierarchies!");
+        FBY_WARN("DuplicateEntity() Not Yet Implemented For Entities with Hierarchies!");
         const auto destEntity = m_Registry->create();
         // auto& duplicateRelation = m_Registry->emplace<RelationshipComponent>(entity);
 
-        // Copy Each Component
-        static uint32_t i = 0;
-        std::string tag = m_Registry->get<TagComponent>(src).Tag + " - Duplicate " + std::to_string(i);
-        i++;
-
         m_Registry->emplace<IDComponent>(destEntity);
-        m_Registry->emplace<TagComponent>(destEntity, tag);
-        m_Registry->emplace<TransformComponent>(destEntity, m_Registry->get<TransformComponent>(src));
-
-        if (auto* comp = m_Registry->try_get<CameraComponent>(src); comp)
-            m_Registry->emplace<CameraComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<MeshComponent>(src); comp)
-            m_Registry->emplace<MeshComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<PointLightComponent>(src); comp)
-            m_Registry->emplace<PointLightComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<RigidBodyComponent>(src); comp)
-            m_Registry->emplace<RigidBodyComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<BoxColliderComponent>(src); comp)
-            m_Registry->emplace<BoxColliderComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<SphereColliderComponent>(src); comp)
-            m_Registry->emplace<SphereColliderComponent>(destEntity, *comp);
-        if (auto* comp = m_Registry->try_get<CapsuleColliderComponent>(src); comp)
-            m_Registry->emplace<CapsuleColliderComponent>(destEntity, *comp);
-
+        m_Registry->emplace<TagComponent>(destEntity, m_Registry->get<TagComponent>(src).Tag);
+        
+        CopyComponentIfExists(AllComponents{}, this, destEntity, src);
+        
         // auto* relation = m_Registry->try_get<RelationshipComponent>(src);
         // if (relation && relation->Parent != fbentt::null)
         // {
@@ -369,7 +367,7 @@ namespace Flameberry {
 
     fbentt::entity Scene::CopyEntityTree(fbentt::entity src)
     {
-        FL_ASSERT(0, "CopyEntityTree() Not Yet Implemented!");
+        FBY_ASSERT(0, "CopyEntityTree() Not Yet Implemented!");
         const auto destEntity = m_Registry->create();
 
         auto* srcRel = m_Registry->try_get<RelationshipComponent>(src);

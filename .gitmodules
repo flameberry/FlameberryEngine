@@ -19,3 +19,6 @@
 [submodule "Flameberry/vendor/PhysX"]
 	path = Flameberry/vendor/PhysX
 	url = https://github.com/flameberry/PhysX
+[submodule "Flameberry/vendor/fmtlib"]
+	path = Flameberry/vendor/fmtlib
+	url = https://github.com/fmtlib/fmt

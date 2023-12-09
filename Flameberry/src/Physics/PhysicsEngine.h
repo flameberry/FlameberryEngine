@@ -7,7 +7,7 @@ namespace Flameberry {
     class PhysicsEngine
     {
     public:
-        static void Init();
+        static void Init(int numThreads = 0);
         static void Shutdown();
 
         static physx::PxPhysics* GetPhysics() { return s_Physics; }

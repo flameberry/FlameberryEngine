@@ -12,6 +12,7 @@
 #include "Actor.h"
 
 namespace Flameberry {
+    
     struct IDComponent
     {
         UUID ID;
@@ -43,14 +44,14 @@ namespace Flameberry {
         bool IsPrimary = false;
     };
 
-     struct SkyLightComponent
-     {
-         glm::vec3 Color{ 0.0f };
-         float Intensity = 0.2f;
-         bool EnableSkyMap = false, EnableReflections = false;
-         
-         AssetHandle SkyMap = 0;
-     };
+    struct SkyLightComponent
+    {
+        glm::vec3 Color{ 0.0f };
+        float Intensity = 0.2f;
+        bool EnableSkyMap = false, EnableReflections = false;
+
+        AssetHandle SkyMap = 0;
+    };
 
     // struct MaterialTable {
     //     std::unordered_map<uint32_t, AssetHandle> Table;
@@ -69,15 +70,15 @@ namespace Flameberry {
 
         MeshComponent(AssetHandle meshHandle = 0) : MeshHandle(meshHandle) {}
     };
-    
-    struct DirectionalLightComponent 
+
+    struct DirectionalLightComponent
     {
         glm::vec3 Color;
         float Intensity, LightSize;
-        
+
         DirectionalLightComponent() : Color(1.0f), Intensity(10.0f), LightSize(20.0f) {}
     };
-    
+
     struct PointLightComponent
     {
         glm::vec3 Color;
@@ -118,6 +119,8 @@ namespace Flameberry {
             DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Actor; nsc->Actor = nullptr; };
         }
     };
+    
+    enum class AxisType : uint8_t { X = 0, Y, Z };
 
     struct RigidBodyComponent
     {
@@ -146,10 +149,15 @@ namespace Flameberry {
 
     struct CapsuleColliderComponent
     {
-        enum class AxisType : uint8_t { X = 0, Y, Z };
         AxisType Axis = AxisType::Y;
         float Radius = 0.5f, Height = 1.0f;
 
         void* RuntimeShape = nullptr;
     };
+
+    template <typename... Component>
+    struct ComponentList {};
+
+    using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>;
+
 }

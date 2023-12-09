@@ -21,10 +21,10 @@ namespace Flameberry {
     };
 }
 
-#ifdef FL_DEBUG
-#define FL_PROFILE_SCOPE(scopeName) Flameberry::Profiler profiler(scopeName);
-#define FL_DISPLAY_SCOPE_DETAILS_IMGUI() Flameberry::Profiler::DisplayScopeDetailsImGui()
+#ifdef FBY_DEBUG
+#define FBY_PROFILE_SCOPE(scopeName) Flameberry::Profiler profiler(scopeName);
+#define FBY_DISPLAY_SCOPE_DETAILS_IMGUI() Flameberry::Profiler::DisplayScopeDetailsImGui()
 #else
-#define FL_PROFILE_SCOPE(scopeName) Flameberry::Profiler profiler(scopeName);
-#define FL_DISPLAY_SCOPE_DETAILS_IMGUI() Flameberry::Profiler::DisplayScopeDetailsImGui()
+#define FBY_PROFILE_SCOPE(scopeName) Flameberry::Profiler profiler(scopeName);
+#define FBY_DISPLAY_SCOPE_DETAILS_IMGUI() Flameberry::Profiler::DisplayScopeDetailsImGui()
 #endif

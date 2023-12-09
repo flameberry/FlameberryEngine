@@ -23,21 +23,21 @@ namespace Flameberry {
         return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f, 0.0f, 0xFF000000);
     }
 
-    bool UI::CenteredButton(const char* label, float alignment)
+    bool UI::AlignedButton(const char* label, const ImVec2& size, float alignment)
     {
         ImGuiStyle& style = ImGui::GetStyle();
 
-        float size = ImGui::CalcTextSize(label).x + style.FramePadding.x * 2.0f;
+        float width = size.x ? size.x : ImGui::CalcTextSize(label).x + style.FramePadding.x * 2.0f;
         float avail = ImGui::GetContentRegionAvail().x;
 
-        float off = (avail - size) * alignment;
+        float off = (avail - width) * alignment;
         if (off > 0.0f)
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
 
-        return ImGui::Button(label);
+        return ImGui::Button(label, size);
     }
 
-    void UI::SearchBar(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint)
+    void UI::InputBox(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint)
     {
         ImGui::PushItemWidth(width);
         ImGui::InputTextWithHint(label, inputHint, inputBuffer, inputLength);
@@ -45,19 +45,19 @@ namespace Flameberry {
     }
 
     // TODO: Call one of 2 functions one for Folder Thumbnail and other for file
-    ImVec2 UI::ContentBrowserItem(const std::filesystem::path& filepath, float size, const std::shared_ptr<Texture2D>& thumbnail, bool keepExtension)
+    bool UI::ContentBrowserItem(const std::filesystem::path& filepath, float size, const std::shared_ptr<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
     {
         bool isDirectory = std::filesystem::is_directory(filepath);
 
         ImGuiStyle& style = ImGui::GetStyle();
-        
+
         const float width = size;
         float height = size;
-        
+
         const float borderThickness = 1.5f;
         const float thumbnailWidth = size - 2.0f * borderThickness;
         const float thumbnailHeight = width * thumbnail->GetImageSpecification().Height / thumbnail->GetImageSpecification().Width;
-        
+
         const auto& framePadding = style.FramePadding;
         height += framePadding.y;
 
@@ -65,21 +65,28 @@ namespace Flameberry {
         const float fullWidth = width;
         const float fullHeight = height + 2 * textHeight;
 
+        const auto& cursorPos = ImGui::GetCursorScreenPos();
+        bool hovered, held;
+        bool isDoubleClicked = ImGui::ButtonBehavior(ImRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight)), ImGui::GetID(filepath.c_str()), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
+
         if (!isDirectory)
         {
-            const auto& cursorPos = ImGui::GetCursorScreenPos();
-            ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, ImVec2(cursorPos.x + fullWidth, cursorPos.y + height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
-            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), ImVec2(cursorPos.x + fullWidth, cursorPos.y + fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
-            ImGui::GetWindowDrawList()->AddRect(cursorPos, ImVec2(cursorPos.x + fullWidth, cursorPos.y + fullHeight), 0xff000000, 3, 0, borderThickness);
+            ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
+            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), cursorPos + ImVec2(fullWidth, fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
+            ImGui::GetWindowDrawList()->AddRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), hovered ? ImGui::ColorConvertFloat4ToU32(Theme::AccentColor) : 0xff000000, 3, 0, borderThickness);
+        }
+        else if (hovered)
+        {
+            ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
         }
 
         ImGui::BeginGroup();
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
-        
+
         float centerTranslationHeight = height / 2.0f - thumbnailHeight / 2.0f;
-        
+
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() - framePadding.x + borderThickness);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + centerTranslationHeight - framePadding.y);
 
@@ -91,11 +98,11 @@ namespace Flameberry {
         const auto cursorPosX = ImGui::GetCursorPosX();
         ImGui::SetCursorPosX(cursorPosX + framePadding.x);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y + centerTranslationHeight);
-        
+
         const auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
         const auto aWidth = ImGui::CalcTextSize("a").x;
         const uint32_t characters = fullWidth / aWidth;
-        
+
         // Format and align text based on whether the item is a directory or a file
         if (isDirectory)
         {
@@ -114,20 +121,20 @@ namespace Flameberry {
             else
                 ImGui::TextWrapped("%s", filename.c_str());
         }
-        
+
         ImGui::EndGroup();
 
         if (ImGui::BeginPopupContextItem(filepath.c_str()))
         {
             if (ImGui::MenuItem("Delete"))
-                FL_LOG("Delete");
+                FBY_LOG("Delete");
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginDragDropSource())
         {
             ImGui::SetDragDropPayload(
-                "FL_CONTENT_BROWSER_ITEM",
+                "FBY_CONTENT_BROWSER_ITEM",
                 filepath.c_str(),
                 (strlen(filepath.c_str()) + 1) * sizeof(char),
                 ImGuiCond_Once
@@ -135,7 +142,50 @@ namespace Flameberry {
             ImGui::Text("%s", filepath.c_str());
             ImGui::EndDragDropSource();
         }
-        return ImVec2(fullWidth, fullHeight);
+        outItemSize = ImVec2(fullWidth, fullHeight);
+        return isDoubleClicked;
+    }
+
+    bool UI::ProjectRegistryEntryItem(const char* projectName, const char* path, bool disabled)
+    {
+        constexpr float paddingX = 15.0f, paddingY = 5.0f, spacing = 10.0f;
+        const float itemWidth = ImGui::GetContentRegionAvail().x;
+
+        ImGui::SetNextItemWidth(itemWidth);
+
+        if (disabled)
+            ImGui::BeginDisabled();
+
+        const auto& cursorScreenPos = ImGui::GetCursorScreenPos();
+
+        ImGui::BeginGroup();
+        ImVec2 cursorPos = ImGui::GetCursorPos();
+        ImGui::SetCursorPosX(cursorPos.x + paddingX);
+        ImGui::SetCursorPosY(cursorPos.y + 2.0f * paddingY);
+
+        auto& bigFont = ImGui::GetIO().Fonts->Fonts[0];
+        ImGui::Text("%s", projectName);
+
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + paddingX);
+        ImGui::TextWrapped("%s", path);
+
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + paddingY);
+
+        ImGui::EndGroup();
+
+        if (disabled)
+            ImGui::EndDisabled();
+
+        ImRect itemRect(cursorScreenPos, cursorScreenPos + ImVec2(itemWidth, ImGui::GetCursorPosY() - cursorPos.y));
+        bool hovered, held;
+        bool isDoubleClicked = ImGui::ButtonBehavior(itemRect, ImGui::GetID(projectName), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
+
+        if (hovered)
+        {
+            const ImU32 color = ImGui::IsMouseDown(0) ? IM_COL32(255, 255, 255, 60) : IM_COL32(255, 255, 255, 30);
+            ImGui::GetWindowDrawList()->AddRectFilled(itemRect.Min, itemRect.Max, color, 5.0f);
+        }
+        return isDoubleClicked;
     }
 
     void UI::Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)

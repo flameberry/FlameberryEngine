@@ -1,4 +1,4 @@
-SandboxProject/Assets/**
+SandboxProject/Content/**
 
 # Mac Specific
 .DS_Store
@@ -28,6 +28,8 @@ logs/
 # My Computer Specific Scripts
 *.sh
 shellscripts/
+!Scripts/*.sh
+Scripts/Setup.meta
 
 # Pycharm folders
 .idea/
@@ -65,7 +67,13 @@ __pycache__/
 !Flameberry/vendor/vulkan/lib/*.dylib
 !Flameberry/vendor/vulkan/lib/*.lib
 
+Flameberry/vendor/VulkanSDK/
+CMake/envPhysX.cmake
+
 # Executables
 *.exe
 *.out
 *.app
+
+Flameberry-ScriptCore/Binaries
+FlameberryEditor/GlobalConfig/ProjectRegistry.fbreg

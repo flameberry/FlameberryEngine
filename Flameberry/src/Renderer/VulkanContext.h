@@ -37,7 +37,7 @@ namespace Flameberry {
         static void SetCurrentContext(VulkanContext* pContext) { s_CurrentContext = pContext; }
         static VulkanContext* GetCurrentContext() {
             if (!s_CurrentContext)
-                FL_ERROR("Attempted to access current context which is null!");
+                FBY_ERROR("Attempted to access current context which is null!");
             return s_CurrentContext;
         }
     private:

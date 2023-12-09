@@ -1,18 +1,22 @@
 #include "EditorLayer.h"
 
+#include <fmt/format.h>
+
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
 #include "UI.h"
+
+#include "Physics/PhysicsEngine.h"
 
 namespace Flameberry {
 
     class MovingActor : public Flameberry::Actor {
     public:
         void OnInstanceCreated() override {
-            FL_LOG("Created MovingActor!");
+            FBY_LOG("Created MovingActor!");
         }
         void OnInstanceDeleted() override {
-            FL_LOG("Deleted MovingActor!");
+            FBY_LOG("Deleted MovingActor!");
         }
         void OnUpdate(float delta) override {
             auto& transform = GetComponent<TransformComponent>();
@@ -35,7 +39,7 @@ namespace Flameberry {
         : m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{
             glm::vec3(0.0f, 2.0f, 4.0f),
             glm::vec3(0.0f, -0.3f, -1.0f),
-            (float)Application::Get().GetWindow().GetWidth() / (float)Application::Get().GetWindow().GetHeight(),
+            (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height,
             45.0f,
             0.1f,
             1000.0f
@@ -43,24 +47,27 @@ namespace Flameberry {
         )
     {
 #ifdef __APPLE__
-        platform::SetNewSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::NewScene));
-        platform::SetSaveSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::SaveScene));
-        platform::SetSaveSceneAsCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
-        platform::SetOpenSceneCallbackMenuBar(FL_BIND_EVENT_FN(EditorLayer::OpenScene));
+        platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
+        platform::SetSaveSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveScene));
+        platform::SetSaveSceneAsCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
+        platform::SetOpenSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::OpenScene));
         platform::CreateMenuBar();
-        platform::UI_CustomTitleBar();
 #endif
     }
 
     void EditorLayer::OnCreate()
     {
-        m_CursorIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/cursor_icon.png");
-        m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/translate_icon_2.png");
-        m_RotateIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/rotate_icon.png");
-        m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
-        m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
-        m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FL_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
+        m_CursorIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/cursor_icon.png");
+        m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/translate_icon_2.png");
+        m_RotateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/rotate_icon.png");
+        m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
+        m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
+        m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
 
+        Project::SetActive(m_Project);
+        std::filesystem::current_path(m_Project->GetProjectDirectory());
+
+        PhysicsEngine::Init();
         m_ActiveScene = Scene::Create();
         m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
         m_ContentBrowserPanel = ContentBrowserPanel::Create();
@@ -109,8 +116,8 @@ namespace Flameberry {
                 m_MousePickingDescriptorSetLayout
             };
 
-            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.frag.spv";
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
@@ -126,8 +133,8 @@ namespace Flameberry {
                 m_MousePickingDescriptorSetLayout
             };
 
-            pipelineSpec.VertexShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FL_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.frag.spv";
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F, VertexInputAttribute::VEC3F, VertexInputAttribute::INT };
@@ -168,13 +175,13 @@ namespace Flameberry {
         // m_ActiveScene->GetRegistry()->emplace<TagComponent>(cubeEntity).Tag = "PaidActor";
         // m_ActiveScene->GetRegistry()->emplace<TransformComponent>(cubeEntity);
         // auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
-        // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Assets/Meshes/cube.obj")->Handle;
+        // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Content/Meshes/cube.obj")->Handle;
         // m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
     }
 
     void EditorLayer::OnUpdate(float delta)
     {
-        FL_PROFILE_SCOPE("EditorLayer::OnUpdate");
+        FBY_PROFILE_SCOPE("EditorLayer::OnUpdate");
         if (m_HasViewportSizeChanged)
         {
             m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
@@ -182,10 +189,12 @@ namespace Flameberry {
             m_HasViewportSizeChanged = false;
         }
 
-        if (m_IsViewportFocused)
+        if (m_IsCameraMoving || m_IsViewportHovered)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
+        Application::Get().BlockAllEvents(m_IsCameraMoving);
 
-        if (m_ShouldReloadMeshShaders) {
+        if (m_ShouldReloadMeshShaders)
+        {
             VulkanContext::GetCurrentDevice()->WaitIdle();
             m_SceneRenderer->ReloadMeshShaders();
             m_ShouldReloadMeshShaders = false;
@@ -248,7 +257,7 @@ namespace Flameberry {
             int32_t entityIndex = data[0];
             m_MousePickingBuffer->UnmapMemory();
             m_SceneHierarchyPanel->SetSelectionContext((entityIndex != -1) ? m_ActiveScene->GetRegistry()->get_entity_at_index(entityIndex) : fbentt::null);
-            // FL_LOG("Selected Entity Index: {0}", entityIndex);
+            // FBY_LOG("Selected Entity Index: {}", entityIndex);
             m_IsMousePickingBufferReady = false;
         }
 
@@ -270,7 +279,7 @@ namespace Flameberry {
 
             if (m_MouseX >= 0 && m_MouseY >= 0 && m_MouseX < (int)viewportSize.x && m_MouseY < (int)viewportSize.y)
             {
-                FL_PROFILE_SCOPE("Last Mouse Picking Pass");
+                FBY_PROFILE_SCOPE("Last Mouse Picking Pass");
                 m_IsMousePickingBufferReady = true;
 
                 auto framebuffer = m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0];
@@ -293,6 +302,7 @@ namespace Flameberry {
 
     void EditorLayer::OnDestroy()
     {
+        PhysicsEngine::Shutdown();
         Renderer2D::Shutdown();
     }
 
@@ -301,6 +311,12 @@ namespace Flameberry {
 #ifndef __APPLE__
         UI_Menubar();
 #endif
+        auto& io = ImGui::GetIO();
+        if (m_IsCameraMoving)
+            io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+        else
+            io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(8.0f * s_OverlayButtonSize.x + 4.0f * s_OverlayPadding, 2 * s_OverlayButtonSize.y));
         m_DidViewportBegin = ImGui::Begin("Viewport");
@@ -319,8 +335,13 @@ namespace Flameberry {
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
         m_RenderViewportSize = { viewportPanelSize.x * ImGui::GetWindowDpiScale(), viewportPanelSize.y * ImGui::GetWindowDpiScale() };
 
-        m_IsViewportFocused = ImGui::IsWindowFocused();
         m_IsViewportHovered = ImGui::IsWindowHovered();
+        // For the Camera Input if other windows are focused but the user right clicks this window then set focus for the camera to continue moving without affecting other windows
+        if (m_IsViewportHovered && ImGui::IsMouseDown(ImGuiMouseButton_Right))
+            ImGui::SetWindowFocus();
+        m_IsViewportFocused = ImGui::IsWindowFocused();
+
+        Application::Get().ImGuiLayerBlockEvents(!m_IsViewportFocused && !m_SceneHierarchyPanel->IsFocused());
 
         uint32_t imageIndex = VulkanContext::GetCurrentWindow()->GetImageIndex();
 
@@ -332,13 +353,13 @@ namespace Flameberry {
         // Scene File Drop Target
         if (ImGui::BeginDragDropTarget() && m_EditorState == EditorState::Edit)
         {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FL_CONTENT_BROWSER_ITEM"))
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
             {
                 const char* path = (const char*)payload->Data;
                 std::filesystem::path filePath{ path };
                 const std::string& ext = filePath.extension().string();
 
-                FL_LOG("Payload recieved: {0}, with extension {1}", path, ext);
+                FBY_LOG("Payload recieved: {}, with extension {}", path, ext);
 
                 if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath)) {
                     if (ext == ".scene" || ext == ".berry") {
@@ -356,7 +377,7 @@ namespace Flameberry {
                     }
                 }
                 else
-                    FL_WARN("Bad File given as Scene!");
+                    FBY_WARN("Bad File given as Scene!");
             }
             ImGui::EndDragDropTarget();
         }
@@ -411,7 +432,7 @@ namespace Flameberry {
         UI_GizmoOverlay(workPos);
         UI_ToolbarOverlay(workPos, workSize);
         UI_ViewportSettingsOverlay(workPos, workSize);
-        
+
         UI_RendererSettings();
         // UI_CompositeView();
 
@@ -480,7 +501,7 @@ namespace Flameberry {
         {
             case GLFW_KEY_D:
                 // Duplicate Entity
-                if (ctrl_or_cmd && m_EditorState == EditorState::Edit && (m_IsViewportFocused || m_SceneHierarchyPanel->IsFocused()))
+                if (ctrl_or_cmd && m_EditorState == EditorState::Edit)
                 {
                     const auto selectionContext = m_SceneHierarchyPanel->GetSelectionContext();
                     if (selectionContext != fbentt::null)
@@ -511,19 +532,19 @@ namespace Flameberry {
                 }
                 break;
             case GLFW_KEY_Q:
-                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = -1;
                 break;
             case GLFW_KEY_W:
-                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
                 break;
             case GLFW_KEY_E:
-                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = ImGuizmo::OPERATION::ROTATE;
                 break;
             case GLFW_KEY_R:
-                if (!m_IsCameraMoving && !m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = ImGuizmo::OPERATION::SCALE;
                 break;
             case GLFW_KEY_G:
@@ -531,7 +552,7 @@ namespace Flameberry {
                     m_EnableGrid = !m_EnableGrid;
                 break;
             case GLFW_KEY_BACKSPACE:
-                if (ctrl_or_cmd && (m_IsViewportFocused || m_SceneHierarchyPanel->IsFocused()))
+                if (ctrl_or_cmd)
                 {
                     const auto entity = m_SceneHierarchyPanel->GetSelectionContext();
                     if (entity != fbentt::null)
@@ -540,6 +561,7 @@ namespace Flameberry {
                         m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
                     }
                 }
+                break;
         }
     }
 
@@ -554,6 +576,22 @@ namespace Flameberry {
 
     void EditorLayer::OnMouseScrolledEvent(MouseScrollEvent& e)
     {
+    }
+
+    void EditorLayer::OpenProject()
+    {
+        std::string path = platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
+        if (!path.empty())
+            OpenProject(path);
+    }
+
+    void EditorLayer::OpenProject(const std::string& path)
+    {
+        // 1. Unload Assets
+        // 2. Unload App Assembly
+        // 3. Load Project
+        // 4. Load App Assembly
+        FBY_ASSERT(0, "Not Implemented Yet!");
     }
 
     void EditorLayer::SaveScene()
@@ -571,33 +609,31 @@ namespace Flameberry {
         {
             SceneSerializer::SerializeSceneToFile(savePath.c_str(), m_ActiveScene);
             m_EditorScenePath = savePath;
-            FL_LOG("Scene saved to path: {0}", savePath);
+            FBY_LOG("Scene saved to path: {}", savePath);
             return;
         }
-        FL_ERROR("Failed to save scene!");
+        FBY_ERROR("Failed to save scene!");
     }
 
     void EditorLayer::OpenScene()
     {
         std::string sceneToBeLoaded = platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
-        if (sceneToBeLoaded != "")
-        {
-            if (SceneSerializer::DeserializeIntoExistingScene(sceneToBeLoaded.c_str(), m_ActiveScene))
-            {
-                m_EditorScenePath = sceneToBeLoaded;
-                FL_INFO("Loaded Scene: {0}", sceneToBeLoaded);
-                return;
-            }
-        }
-        FL_ERROR("Failed to load scene!");
+        OpenScene(sceneToBeLoaded);
     }
 
     void EditorLayer::OpenScene(const std::string& path)
     {
-        if (!path.empty())
+        if (path.empty())
         {
-            if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
-                m_EditorScenePath = path;
+            FBY_ERROR("Failed to load scene: path provided is null!");
+            return;
+        }
+
+        if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
+        {
+            m_EditorScenePath = path;
+            m_ActiveScene->OnViewportResize(m_ViewportSize);
+            FBY_INFO("Loaded Scene: {}", m_EditorScenePath);
         }
     }
 
@@ -651,7 +687,7 @@ namespace Flameberry {
         ImGuiWindowClass windowClass;
         windowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
         ImGui::SetNextWindowClass(&windowClass);
-        
+
         ImGui::Begin("##Toolbar", nullptr, windowFlags);
         float buttonSize = ImGui::GetContentRegionAvail().y - 8.0f;
 
@@ -698,7 +734,7 @@ namespace Flameberry {
         ImVec2 window_pos;
         window_pos.x = workPos.x + s_OverlayPadding;
         window_pos.y = workPos.y + s_OverlayPadding;
-        
+
         UI_Overlay("##GizmoOverlay", window_pos, [=]() {
             if (ImGui::ImageButton("SelectModeButton", reinterpret_cast<ImTextureID>(m_CursorIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == -1 ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
             {
@@ -723,15 +759,15 @@ namespace Flameberry {
                 m_GizmoType = ImGuizmo::OPERATION::SCALE;
                 ImGui::SetWindowFocus("Viewport");
             }
-        });
+            });
     }
-    
+
     void EditorLayer::UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize)
     {
         ImVec2 window_pos;
         window_pos.x = workPos.x + workSize.x / 2.0f - 2 * s_OverlayButtonSize.x;
         window_pos.y = workPos.y + s_OverlayPadding;
-        
+
         UI_Overlay("##ToolbarOverlay", window_pos, [=]() {
             switch (m_EditorState)
             {
@@ -742,12 +778,12 @@ namespace Flameberry {
                     ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor);
                     break;
             }
-            
+
             if (ImGui::IsItemClicked() && m_EditorState == EditorState::Edit)
                 OnScenePlay();
-            
+
             ImGui::SameLine();
-            
+
             switch (m_EditorState)
             {
                 case EditorState::Edit:
@@ -757,30 +793,30 @@ namespace Flameberry {
                     ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1));
                     break;
             }
-            
+
             if (ImGui::IsItemClicked() && m_EditorState == EditorState::Play)
                 OnSceneEdit();
-        });
+            });
     }
-    
+
     void EditorLayer::UI_ViewportSettingsOverlay(const ImVec2& workPos, const ImVec2& workSize)
     {
         ImVec2 window_pos;
         window_pos.x = workPos.x + workSize.x - 1.5f * s_OverlayPadding - 2 * s_OverlayButtonSize.x;
         window_pos.y = workPos.y + s_OverlayPadding;
-        
+
         UI_Overlay("##ViewportSettingsOverlay", window_pos, [=]() {
             ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
-            
+
             if (ImGui::IsItemClicked())
                 ImGui::OpenPopup("##ViewportSettingsPopup");
-            
+
             if (ImGui::BeginPopup("##ViewportSettingsPopup"))
             {
                 ImGui::Checkbox("Display Grid", &m_EnableGrid);
                 ImGui::EndPopup();
             }
-        });
+            });
     }
 
     void EditorLayer::UI_CompositeView()
@@ -805,7 +841,7 @@ namespace Flameberry {
 
         ImGui::Begin("Renderer Settings");
         ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        FL_DISPLAY_SCOPE_DETAILS_IMGUI();
+        FBY_DISPLAY_SCOPE_DETAILS_IMGUI();
 
         ImGui::Separator();
 
@@ -856,7 +892,7 @@ namespace Flameberry {
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Lambda Split");
                 ImGui::TableNextColumn();
-                FL_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
+                FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
                 ImGui::EndTable();
             }
         }
@@ -886,5 +922,5 @@ namespace Flameberry {
 
         m_ActiveScene->OnStartRuntime();
     }
-    
+
 }
