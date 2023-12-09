@@ -42,6 +42,8 @@ namespace Flameberry {
         template<typename... Args>
         static std::shared_ptr<Scene> Create(Args... args) { return std::make_shared<Scene>(std::forward<Args>(args)...); }
     private:
+        bool Recursive_IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
+    private:
         std::shared_ptr<fbentt::registry> m_Registry;
         physx::PxScene* m_PxScene;
 

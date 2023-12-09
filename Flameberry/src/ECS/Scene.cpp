@@ -311,8 +311,8 @@ namespace Flameberry {
             m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = entity;
         newParentRel.FirstChild = entity;
     }
-
-    bool Scene::IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
+    
+    bool Scene::Recursive_IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
     {
         auto* relation = m_Registry->try_get<RelationshipComponent>(parent);
         auto sibling = parent;
@@ -320,14 +320,20 @@ namespace Flameberry {
         {
             if (sibling == key)
                 return true;
-
-            if (relation->FirstChild != fbentt::null && IsEntityInHierarchy(key, relation->FirstChild))
+            
+            if (relation->FirstChild != fbentt::null && Recursive_IsEntityInHierarchy(key, relation->FirstChild))
                 return true;
-
+            
             sibling = relation->NextSibling;
             relation = m_Registry->try_get<RelationshipComponent>(sibling);
         }
         return false;
+    }
+
+    bool Scene::IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
+    {
+        auto* relation = m_Registry->try_get<RelationshipComponent>(parent);
+        return relation ? Recursive_IsEntityInHierarchy(key, relation->FirstChild) : false;
     }
     
     template<typename... Component>
