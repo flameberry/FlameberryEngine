@@ -280,6 +280,9 @@ namespace Flameberry {
     void Scene::ReparentEntity(fbentt::entity entity, fbentt::entity destParent)
     {
         FBY_ASSERT(entity != fbentt::null, "Can't reparent null entity!");
+        
+        if (entity == destParent)
+            return;
 
         if (destParent == fbentt::null)
         {
