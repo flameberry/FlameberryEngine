@@ -30,10 +30,12 @@ namespace Flameberry {
 
         fbentt::entity CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent);
         void DestroyEntityTree(fbentt::entity entity);
-        void ReparentEntity(fbentt::entity entity, fbentt::entity parent);
+        void ReparentEntity(fbentt::entity entity, fbentt::entity destParent);
         bool IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
+        bool IsEntityRoot(fbentt::entity entity);
         fbentt::entity DuplicateEntity(fbentt::entity src);
-        fbentt::entity CopyEntityTree(fbentt::entity src);
+        fbentt::entity DuplicateSingleEntity(fbentt::entity src);
+        fbentt::entity DuplicateEntityTree(fbentt::entity src);
 
         inline std::string GetName() const { return m_Name; }
         inline std::shared_ptr<fbentt::registry> GetRegistry() const { return m_Registry; }
@@ -41,6 +43,8 @@ namespace Flameberry {
 
         template<typename... Args>
         static std::shared_ptr<Scene> Create(Args... args) { return std::make_shared<Scene>(std::forward<Args>(args)...); }
+    private:
+        bool Recursive_IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
     private:
         std::shared_ptr<fbentt::registry> m_Registry;
         physx::PxScene* m_PxScene;

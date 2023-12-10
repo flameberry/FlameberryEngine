@@ -105,7 +105,7 @@ namespace Flameberry {
                 shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
                 sphereCollider->RuntimeShape = shape;
             }
-            
+
             if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
             {
                 auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
@@ -277,42 +277,68 @@ namespace Flameberry {
         m_Registry->destroy(entity);
     }
 
-    void Scene::ReparentEntity(fbentt::entity entity, fbentt::entity parent)
+    void Scene::ReparentEntity(fbentt::entity entity, fbentt::entity destParent)
     {
-        if (IsEntityInHierarchy(parent, entity))
+        FBY_ASSERT(entity != fbentt::null, "Can't reparent null entity!");
+        
+        if (entity == destParent)
             return;
 
-        if (!m_Registry->has<RelationshipComponent>(entity))
-            m_Registry->emplace<RelationshipComponent>(entity);
-
-        if (!m_Registry->has<RelationshipComponent>(parent))
-            m_Registry->emplace<RelationshipComponent>(parent);
-
-        auto& relation = m_Registry->get<RelationshipComponent>(entity);
-
-        auto oldParent = relation.Parent;
-        if (oldParent != fbentt::null)
+        if (destParent == fbentt::null)
         {
-            auto& oldParentRel = m_Registry->get<RelationshipComponent>(oldParent);
-            if (oldParentRel.FirstChild == entity)
-                oldParentRel.FirstChild = relation.NextSibling;
+            if (IsEntityRoot(entity))
+                return;
+            
+            auto& relation = m_Registry->get<RelationshipComponent>(entity);
+
+            if (relation.PrevSibling == fbentt::null)
+                m_Registry->get<RelationshipComponent>(relation.Parent).FirstChild = relation.NextSibling;
+            else
+                m_Registry->get<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
+            if (relation.NextSibling != fbentt::null)
+                m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
+
+            relation.Parent = fbentt::null;
+            relation.PrevSibling = fbentt::null;
+            relation.NextSibling = fbentt::null;
         }
-        if (relation.PrevSibling != fbentt::null)
-            m_Registry->get<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
-        if (relation.NextSibling != fbentt::null)
-            m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
+        else
+        {
+            if (IsEntityInHierarchy(destParent, entity))
+                return;
 
-        auto& newParentRel = m_Registry->get<RelationshipComponent>(parent);
-        relation.NextSibling = newParentRel.FirstChild;
-        relation.PrevSibling = fbentt::null;
-        relation.Parent = parent;
+            if (!m_Registry->has<RelationshipComponent>(entity))
+                m_Registry->emplace<RelationshipComponent>(entity);
 
-        if (relation.NextSibling != fbentt::null)
-            m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = entity;
-        newParentRel.FirstChild = entity;
+            if (!m_Registry->has<RelationshipComponent>(destParent))
+                m_Registry->emplace<RelationshipComponent>(destParent);
+
+            auto& relation = m_Registry->get<RelationshipComponent>(entity);
+
+            auto oldParent = relation.Parent;
+            if (oldParent != fbentt::null)
+            {
+                auto& oldParentRel = m_Registry->get<RelationshipComponent>(oldParent);
+                if (oldParentRel.FirstChild == entity)
+                    oldParentRel.FirstChild = relation.NextSibling;
+            }
+            if (relation.PrevSibling != fbentt::null)
+                m_Registry->get<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
+            if (relation.NextSibling != fbentt::null)
+                m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
+
+            auto& newParentRel = m_Registry->get<RelationshipComponent>(destParent);
+            relation.NextSibling = newParentRel.FirstChild;
+            relation.PrevSibling = fbentt::null;
+            relation.Parent = destParent;
+
+            if (relation.NextSibling != fbentt::null)
+                m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = entity;
+            newParentRel.FirstChild = entity;
+        }
     }
 
-    bool Scene::IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
+    bool Scene::Recursive_IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
     {
         auto* relation = m_Registry->try_get<RelationshipComponent>(parent);
         auto sibling = parent;
@@ -321,7 +347,7 @@ namespace Flameberry {
             if (sibling == key)
                 return true;
 
-            if (relation->FirstChild != fbentt::null && IsEntityInHierarchy(key, relation->FirstChild))
+            if (relation->FirstChild != fbentt::null && Recursive_IsEntityInHierarchy(key, relation->FirstChild))
                 return true;
 
             sibling = relation->NextSibling;
@@ -329,17 +355,29 @@ namespace Flameberry {
         }
         return false;
     }
-    
+
+    bool Scene::IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
+    {
+        auto* relation = m_Registry->try_get<RelationshipComponent>(parent);
+        return relation ? Recursive_IsEntityInHierarchy(key, relation->FirstChild) : false;
+    }
+
+    bool Scene::IsEntityRoot(fbentt::entity entity)
+    {
+        auto* rel = m_Registry->try_get<RelationshipComponent>(entity);
+        return !rel || rel->Parent == fbentt::null;
+    }
+
     template<typename... Component>
     static void CopyComponentIfExists(Scene* context, fbentt::entity dest, fbentt::entity src)
     {
         ([&]()
-         {
-            if (auto* comp = context->GetRegistry()->try_get<Component>(src); comp)
-                context->GetRegistry()->emplace<Component>(dest, *comp);
-        }(), ...);
+            {
+                if (auto* comp = context->GetRegistry()->try_get<Component>(src); comp)
+                    context->GetRegistry()->emplace<Component>(dest, *comp);
+            }(), ...);
     }
-    
+
     template<typename... Component>
     static void CopyComponentIfExists(ComponentList<Component...>, Scene* context, fbentt::entity dest, fbentt::entity src)
     {
@@ -348,66 +386,77 @@ namespace Flameberry {
 
     fbentt::entity Scene::DuplicateEntity(fbentt::entity src)
     {
-        FBY_WARN("DuplicateEntity() Not Yet Implemented For Entities with Hierarchies!");
-        const auto destEntity = m_Registry->create();
-        // auto& duplicateRelation = m_Registry->emplace<RelationshipComponent>(entity);
+        if (m_Registry->has<RelationshipComponent>(src))
+        {
+            fbentt::entity duplicateEntity = DuplicateEntityTree(src);
 
+            auto& destRelation = m_Registry->get<RelationshipComponent>(duplicateEntity);
+            auto& srcRelation = m_Registry->get<RelationshipComponent>(src);
+
+            // Handling the `duplicateEntity`'s relation component
+            if (srcRelation.Parent != fbentt::null)
+            {
+                fbentt::entity srcNextSibling = srcRelation.NextSibling;
+                auto* srcNextSiblingRel = m_Registry->try_get<RelationshipComponent>(srcNextSibling);
+
+                destRelation.Parent = srcRelation.Parent;
+                destRelation.PrevSibling = src;
+                destRelation.NextSibling = srcNextSibling;
+
+                srcRelation.NextSibling = duplicateEntity;
+                if (srcNextSiblingRel)
+                    srcNextSiblingRel->PrevSibling = duplicateEntity;
+            }
+            return duplicateEntity;
+        }
+        return DuplicateSingleEntity(src);
+    }
+
+    fbentt::entity Scene::DuplicateSingleEntity(fbentt::entity src)
+    {
+        const auto destEntity = m_Registry->create();
         m_Registry->emplace<IDComponent>(destEntity);
         m_Registry->emplace<TagComponent>(destEntity, m_Registry->get<TagComponent>(src).Tag);
-        
-        CopyComponentIfExists(AllComponents{}, this, destEntity, src);
-        
-        // auto* relation = m_Registry->try_get<RelationshipComponent>(src);
-        // if (relation && relation->Parent != fbentt::null)
-        // {
-        // }
 
+        CopyComponentIfExists(AllComponents{}, this, destEntity, src);
         return destEntity;
     }
 
-    fbentt::entity Scene::CopyEntityTree(fbentt::entity src)
+    fbentt::entity Scene::DuplicateEntityTree(fbentt::entity src)
     {
-        FBY_ASSERT(0, "CopyEntityTree() Not Yet Implemented!");
-        const auto destEntity = m_Registry->create();
+        if (src == fbentt::null)
+            return fbentt::null;
 
-        auto* srcRel = m_Registry->try_get<RelationshipComponent>(src);
-        fbentt::entity srcChild = srcRel->FirstChild;
-        if (srcRel && srcChild != fbentt::null)
+        const auto destEntity = DuplicateSingleEntity(src);
+        auto& destRelation = m_Registry->emplace<RelationshipComponent>(destEntity);
+
+        auto& srcRelation = m_Registry->get<RelationshipComponent>(src);
+        fbentt::entity child = srcRelation.FirstChild;
+
+        // Intermediate Variables
+        fbentt::entity prevDestChild = fbentt::null;
+        RelationshipComponent* prevDestChildRel = nullptr;
+
+        while (child != fbentt::null)
         {
-            auto& destRel = m_Registry->emplace<RelationshipComponent>(destEntity);
+            // Create a copy of each children of `src`
+            fbentt::entity destChild = DuplicateEntityTree(child);
 
-            // Copy Each Component
-            m_Registry->emplace<IDComponent>(destEntity);
-            m_Registry->emplace<TagComponent>(destEntity, m_Registry->get<TagComponent>(src));
-            m_Registry->emplace<TransformComponent>(destEntity, m_Registry->get<TransformComponent>(src));
+            // Setup the Relationship Component of the copy of children of `src`
+            auto& destChildRel = m_Registry->get<RelationshipComponent>(destChild);
+            destChildRel.Parent = destEntity;
+            destChildRel.PrevSibling = prevDestChild;
+            if (prevDestChildRel = m_Registry->try_get<RelationshipComponent>(prevDestChild); prevDestChildRel)
+                prevDestChildRel->NextSibling = destChild;
 
-            if (auto* comp = m_Registry->try_get<CameraComponent>(src); comp)
-                m_Registry->emplace<CameraComponent>(destEntity, *comp);
-            if (auto* comp = m_Registry->try_get<MeshComponent>(src); comp)
-                m_Registry->emplace<MeshComponent>(destEntity, *comp);
-            if (auto* comp = m_Registry->try_get<PointLightComponent>(src); comp)
-                m_Registry->emplace<PointLightComponent>(destEntity, *comp);
-            if (auto* comp = m_Registry->try_get<RigidBodyComponent>(src); comp)
-                m_Registry->emplace<RigidBodyComponent>(destEntity, *comp);
-            if (auto* comp = m_Registry->try_get<BoxColliderComponent>(src); comp)
-                m_Registry->emplace<BoxColliderComponent>(destEntity, *comp);
-            if (auto* comp = m_Registry->try_get<SphereColliderComponent>(src); comp)
-                m_Registry->emplace<SphereColliderComponent>(destEntity, *comp);
-            if (auto* comp = m_Registry->try_get<CapsuleColliderComponent>(src); comp)
-                m_Registry->emplace<CapsuleColliderComponent>(destEntity, *comp);
+            // Set FirstChild variable of `destEntity`
+            if (prevDestChild == fbentt::null)
+                m_Registry->get<RelationshipComponent>(destEntity).FirstChild = destChild;
 
-            fbentt::entity sibling = srcChild;
-            while (sibling != fbentt::null)
-            {
-                const auto childCopy = CopyEntityTree(srcChild);
-                auto* rel = m_Registry->try_get<RelationshipComponent>(childCopy);
-                if (!rel)
-                    rel = &m_Registry->emplace<RelationshipComponent>(childCopy);
-
-                auto& siblingRel = m_Registry->get<RelationshipComponent>(sibling);
-                sibling = siblingRel.NextSibling;
-            }
+            prevDestChild = destChild;
+            child = m_Registry->get<RelationshipComponent>(child).NextSibling;
         }
+        return destEntity;
     }
 
 }

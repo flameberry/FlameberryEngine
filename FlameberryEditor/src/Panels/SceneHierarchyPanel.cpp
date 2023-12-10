@@ -78,12 +78,22 @@ namespace Flameberry {
             ImGui::EndPopup();
         }
 
+        ImRect windowRect(ImGui::GetWindowPos(), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y));
+        if (ImGui::BeginDragDropTargetCustom(windowRect, ImGui::GetID("##EntityList")))
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
+            {
+                const fbentt::entity payloadEntity = *((const fbentt::entity*)payload->Data);
+                m_Context->ReparentEntity(payloadEntity, fbentt::null);
+            }
+            ImGui::EndDragDropTarget();
+        }
+
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
         m_IsSelectedNodeDisplayed = false;
         m_Context->m_Registry->for_each([this](fbentt::entity entity)
             {
-                auto* relation = m_Context->m_Registry->try_get<RelationshipComponent>(entity);
-                if (!relation || relation->Parent == fbentt::null)
+                if (m_Context->IsEntityRoot(entity))
                     DrawEntityNode(entity);
             }
         );
@@ -141,24 +151,24 @@ namespace Flameberry {
                 highlight = true;
         }
 
-        bool is_renamed = m_RenamedEntity == entity;
-        bool is_selected = m_SelectionContext == entity;
-        m_IsSelectedNodeDisplayed = m_IsSelectedNodeDisplayed || is_selected;
+        bool isRenamed = m_RenamedEntity == entity;
+        bool isSelected = m_SelectionContext == entity;
+        m_IsSelectedNodeDisplayed = m_IsSelectedNodeDisplayed || isSelected;
 
         bool should_delete_entity = false, should_duplicate_entity = false;
-        int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
+        int treeNodeFlags = (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
             | ImGuiTreeNodeFlags_OpenOnArrow
             | ImGuiTreeNodeFlags_FramePadding;
 
-        bool has_child = false;
+        bool hasChild = false;
 
         if (m_Context->m_Registry->has<RelationshipComponent>(entity))
         {
             auto& relation = m_Context->m_Registry->get<RelationshipComponent>(entity);
-            has_child = relation.FirstChild != fbentt::null;
+            hasChild = relation.FirstChild != fbentt::null;
         }
 
-        if (!has_child)
+        if (!hasChild)
             treeNodeFlags |= ImGuiTreeNodeFlags_Leaf;
 
         if (m_RenamedEntity != entity)
@@ -166,10 +176,10 @@ namespace Flameberry {
 
         ImGui::PushID((const void*)(uint64_t)entity);
 
-        const float textColor = is_selected ? 0.0f : 1.0f;
+        const float textColor = isSelected ? 0.0f : 1.0f;
         ImGui::PushStyleColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
         ImGui::PushStyleColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
-        if (is_selected)
+        if (isSelected)
             ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
 
@@ -188,12 +198,12 @@ namespace Flameberry {
             ImGui::PopStyleColor();
 
         ImGui::PopStyleVar(2);
-        ImGui::PopStyleColor(is_selected ? 4 : 3);
+        ImGui::PopStyleColor(isSelected ? 4 : 3);
 
         if (ImGui::IsItemClicked())
             m_SelectionContext = entity;
 
-        if (is_selected && ImGui::IsWindowFocused())
+        if (isSelected && ImGui::IsWindowFocused())
         {
             ImGuiIO& io = ImGui::GetIO();
             if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
@@ -240,12 +250,14 @@ namespace Flameberry {
 
         ImGui::PopID();
 
-        if (is_renamed)
+        if (isRenamed)
             RenameNode(tag);
 
-        if (open) {
-            if (has_child) {
-                auto child = m_Context->m_Registry->get<RelationshipComponent>(entity).FirstChild;
+        if (open)
+        {
+            if (hasChild)
+            {
+                fbentt::entity child = m_Context->m_Registry->get<RelationshipComponent>(entity).FirstChild;
                 while (child != fbentt::null)
                 {
                     auto temp = m_Context->m_Registry->get<RelationshipComponent>(child).NextSibling;

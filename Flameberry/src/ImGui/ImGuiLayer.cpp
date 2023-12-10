@@ -329,5 +329,7 @@ namespace Flameberry {
 
         colors[ImGuiCol_NavHighlight] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
         colors[ImGuiCol_PopupBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+
+        colors[ImGuiCol_DragDropTarget] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
     }
 }
