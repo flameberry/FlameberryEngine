@@ -36,7 +36,7 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
     set(SPIRV "${FBY_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/bin/${FILE_NAME}.spv")
     add_custom_command(
         OUTPUT ${SPIRV}
-        COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} -V ${GLSL} -o ${SPIRV}
+        COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${GLSL} -o ${SPIRV}
         DEPENDS ${GLSL}
     )
     list(APPEND SPIRV_BINARY_FILES ${SPIRV})

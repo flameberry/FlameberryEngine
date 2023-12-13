@@ -59,10 +59,10 @@ if(NOT Vulkan_INCLUDE_DIRS)
 endif()
 
 # Find GLSL Language Validator
-if(NOT Vulkan_glslangValidator_FOUND)
-    message(WARNING "GLSL Language Validator not found!")
+if(NOT Vulkan_glslc_FOUND)
+    message(WARNING "GLSL Compiler not found!")
 else()
-    message(STATUS "Found GLSL_VALIDATOR at ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE}")
+    message(STATUS "Found GLSL_COMPILER at ${Vulkan_GLSLC_EXECUTABLE}")
 endif()
 
 # Now that every package required is found, setup the build environment
