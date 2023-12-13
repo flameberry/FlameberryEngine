@@ -536,19 +536,19 @@ namespace Flameberry {
                 }
                 break;
             case KeyCode::Q:
-                if (!m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive)
                     m_GizmoType = -1;
                 break;
             case KeyCode::W:
-                if (!m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive)
                     m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
                 break;
             case KeyCode::E:
-                if (!m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive)
                     m_GizmoType = ImGuizmo::OPERATION::ROTATE;
                 break;
             case KeyCode::R:
-                if (!m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive)
                     m_GizmoType = ImGuizmo::OPERATION::SCALE;
                 break;
             case KeyCode::G:
