@@ -371,7 +371,11 @@ namespace Flameberry {
                         auto entity = m_ActiveScene->GetRegistry()->create();
                         m_ActiveScene->GetRegistry()->emplace<IDComponent>(entity);
                         m_ActiveScene->GetRegistry()->emplace<TagComponent>(entity, "StaticMesh");
-                        m_ActiveScene->GetRegistry()->emplace<TransformComponent>(entity);
+
+                        auto& transform = m_ActiveScene->GetRegistry()->emplace<TransformComponent>(entity);
+                        constexpr float distance = 5.0f;
+                        transform.Translation = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().Position + m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().Direction * distance;
+
                         m_ActiveScene->GetRegistry()->emplace<MeshComponent>(entity, staticMesh->Handle);
                         m_SceneHierarchyPanel->SetSelectionContext(entity);
                     }
