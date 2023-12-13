@@ -23,13 +23,13 @@ namespace Flameberry {
 
             float speed = 10.0f;
 
-            if (Input::IsKeyPressed(GLFW_KEY_W))
+            if (Input::IsKeyPressed(KeyCode::W))
                 transform.Translation.z -= speed * delta;
-            if (Input::IsKeyPressed(GLFW_KEY_S))
+            if (Input::IsKeyPressed(KeyCode::S))
                 transform.Translation.z += speed * delta;
-            if (Input::IsKeyPressed(GLFW_KEY_A))
+            if (Input::IsKeyPressed(KeyCode::A))
                 transform.Translation.x -= speed * delta;
-            if (Input::IsKeyPressed(GLFW_KEY_D))
+            if (Input::IsKeyPressed(KeyCode::D))
                 transform.Translation.x += speed * delta;
         }
     };
@@ -400,7 +400,7 @@ namespace Flameberry {
             auto& transformComp = m_ActiveScene->GetRegistry()->get<TransformComponent>(selectedEntity);
             glm::mat4 transform = transformComp.GetTransform();
 
-            bool snap = Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
+            bool snap = Input::IsKeyPressed(KeyCode::LeftControl);
             float snapValue = 0.5f;
             if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
                 snapValue = 45.0f;
@@ -495,11 +495,11 @@ namespace Flameberry {
 
     void EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
     {
-        bool ctrl_or_cmd = Input::IsKeyPressed(GLFW_KEY_LEFT_SUPER) || Input::IsKeyPressed(GLFW_KEY_RIGHT_SUPER);
-        bool shift = Input::IsKeyPressed(GLFW_KEY_LEFT_SHIFT) || Input::IsKeyPressed(GLFW_KEY_RIGHT_SHIFT);
-        switch (e.KeyCode)
+        bool ctrl_or_cmd = Input::IsKeyPressed(KeyCode::LeftSuper) || Input::IsKeyPressed(KeyCode::RightSuper);
+        bool shift = Input::IsKeyPressed(KeyCode::LeftShift) || Input::IsKeyPressed(KeyCode::RightShift);
+        switch (e.Key)
         {
-            case GLFW_KEY_D:
+            case KeyCode::D:
                 // Duplicate Entity
                 if (ctrl_or_cmd && m_EditorState == EditorState::Edit)
                 {
@@ -511,7 +511,7 @@ namespace Flameberry {
                     }
                     break;
                 }
-            case GLFW_KEY_O:
+            case KeyCode::O:
                 if (ctrl_or_cmd) {
 #ifndef __APPLE__
                     // m_ShouldOpenAnotherScene = true;
@@ -520,7 +520,7 @@ namespace Flameberry {
 #endif
                 }
                 break;
-            case GLFW_KEY_S:
+            case KeyCode::S:
                 if (ctrl_or_cmd)
                 {
 #ifndef __APPLE__
@@ -531,27 +531,27 @@ namespace Flameberry {
 #endif
                 }
                 break;
-            case GLFW_KEY_Q:
+            case KeyCode::Q:
                 if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = -1;
                 break;
-            case GLFW_KEY_W:
+            case KeyCode::W:
                 if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
                 break;
-            case GLFW_KEY_E:
+            case KeyCode::E:
                 if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = ImGuizmo::OPERATION::ROTATE;
                 break;
-            case GLFW_KEY_R:
+            case KeyCode::R:
                 if (!m_IsGizmoActive && m_IsViewportFocused)
                     m_GizmoType = ImGuizmo::OPERATION::SCALE;
                 break;
-            case GLFW_KEY_G:
+            case KeyCode::G:
                 if (ctrl_or_cmd)
                     m_EnableGrid = !m_EnableGrid;
                 break;
-            case GLFW_KEY_BACKSPACE:
+            case KeyCode::Backspace:
                 if (ctrl_or_cmd)
                 {
                     const auto entity = m_SceneHierarchyPanel->GetSelectionContext();
