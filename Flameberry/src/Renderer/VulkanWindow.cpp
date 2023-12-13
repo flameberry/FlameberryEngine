@@ -68,7 +68,7 @@ namespace Flameberry {
                 VulkanWindow* ptr = (VulkanWindow*)glfwGetWindowUserPointer(window);
                 if (action == GLFW_PRESS)
                 {
-                    KeyPressedEvent event(key);
+                    KeyPressedEvent event((KeyCode)key);
                     ptr->m_EventCallBack(event);
                 }
             }

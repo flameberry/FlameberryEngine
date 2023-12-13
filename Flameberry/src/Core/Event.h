@@ -4,6 +4,8 @@
 #include <string>
 #include <functional>
 
+#include "KeyCodes.h"
+
 namespace Flameberry {
     enum class EventType : uint8_t
     {
@@ -50,11 +52,11 @@ inline bool IsInCategory(const EventCategory& category) const override { return 
 
     struct KeyPressedEvent : public Event
     {
-        uint32_t KeyCode;
+        KeyCode Key;
 
-        KeyPressedEvent(uint32_t keyCode) : KeyCode(keyCode) {}
+        KeyPressedEvent(KeyCode key) : Key(key) {}
         EventType GetType() const override { return EventType::KeyPressed; }
-        std::string ToString() const override { return "KeyPressedEvent: " + std::to_string(KeyCode); }
+        std::string ToString() const override { return "KeyPressedEvent: " + std::to_string(Key); }
 
         EVENT_CATEGORY(KeyEventCategory);
     };

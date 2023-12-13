@@ -33,37 +33,37 @@ namespace Flameberry {
         Input::SetCursorMode(GLFW_CURSOR_DISABLED);
 
         float speed = 10.5f, rotationSpeed = 0.6f;
-        if (Input::IsKeyPressed(GLFW_KEY_LEFT_SHIFT) || Input::IsKeyPressed(GLFW_KEY_RIGHT_SHIFT))
+        if (Input::IsKeyPressed(KeyCode::LeftShift) || Input::IsKeyPressed(KeyCode::RightShift))
             speed *= 2.0f;
 
         bool moved = false;
         auto& cameraSpec = m_Camera->m_CameraSpec;
-        if (Input::IsKeyPressed(GLFW_KEY_W))
+        if (Input::IsKeyPressed(KeyCode::W))
         {
             cameraSpec.Position += cameraSpec.Direction * speed * delta;
             moved = true;
         }
-        if (Input::IsKeyPressed(GLFW_KEY_S))
+        if (Input::IsKeyPressed(KeyCode::S))
         {
             cameraSpec.Position -= cameraSpec.Direction * speed * delta;
             moved = true;
         }
-        if (Input::IsKeyPressed(GLFW_KEY_A))
+        if (Input::IsKeyPressed(KeyCode::A))
         {
             cameraSpec.Position -= m_RightDirection * speed * delta;
             moved = true;
         }
-        if (Input::IsKeyPressed(GLFW_KEY_D))
+        if (Input::IsKeyPressed(KeyCode::D))
         {
             cameraSpec.Position += m_RightDirection * speed * delta;
             moved = true;
         }
-        if (Input::IsKeyPressed(GLFW_KEY_Q))
+        if (Input::IsKeyPressed(KeyCode::Q))
         {
             cameraSpec.Position -= m_UpDirection * speed * delta;
             moved = true;
         }
-        if (Input::IsKeyPressed(GLFW_KEY_E))
+        if (Input::IsKeyPressed(KeyCode::E))
         {
             cameraSpec.Position += m_UpDirection * speed * delta;
             moved = true;
