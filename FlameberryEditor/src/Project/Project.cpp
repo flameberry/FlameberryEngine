@@ -85,7 +85,7 @@ namespace Flameberry {
         out << YAML::EndMap;
 
         std::ofstream fout(c_GlobalProjectRegistryPath, std::ios_base::app);
-        FBY_ASSERT(fout.is_open(), "Failed to project registry: {}", c_GlobalProjectRegistryPath);
+        FBY_ASSERT(fout.is_open(), "Failed to find/open project registry: {}", c_GlobalProjectRegistryPath);
         fout << out.c_str() << '\n';
     }
 

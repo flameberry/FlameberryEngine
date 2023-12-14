@@ -324,17 +324,18 @@ namespace Flameberry {
     std::vector<char> RenderCommand::LoadCompiledShaderCode(const std::string& filePath)
     {
         std::ifstream stream(filePath, std::ios::ate | std::ios::binary);
-        FBY_ASSERT(stream.is_open(), "Failed to open the file '{}'", filePath);
+        if (!stream.is_open())
+        {
+            FBY_ERROR("Failed to load compiled shader code: {}", filePath);
+            return {};
+        }
 
         size_t fileSize = (size_t)stream.tellg();
-
         FBY_TRACE("File size of buffer taken from '{}' is {}", filePath, fileSize);
 
         std::vector<char> buffer(fileSize);
-
         stream.seekg(0);
         stream.read(buffer.data(), fileSize);
-
         stream.close();
         return buffer;
     }

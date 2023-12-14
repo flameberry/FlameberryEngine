@@ -117,23 +117,9 @@ namespace Flameberry {
     };
 }
 
-#ifdef FBY_DEBUG
-#define FBY_DO_ON_ASSERT(x, ...) {if(!(x)) {__VA_ARGS__;}}
-#define FBY_ASSERT(x, ...) FBY_DO_ON_ASSERT(x, Flameberry::Logger::GetCoreLogger()->log_assert(__FILE__, __LINE__, __VA_ARGS__), FBY_DEBUGBREAK())
-#define FBY_BASIC_ASSERT(x) FBY_DO_ON_ASSERT(x, Flameberry::Logger::GetCoreLogger()->log_assert(__FILE__, __LINE__), FBY_DEBUGBREAK())
-
-#define FBY_DO_IN_ORDER(...) __VA_ARGS__;
-#else
-#define FBY_DO_ON_ASSERT(x, ...)
-#define FBY_ASSERT(x, ...) if (!(x));
-#define FBY_BASIC_ASSERT(x) if (!(x));
-#endif
-
-#if defined(FBY_DEBUG) || defined(FBY_RELEASE)
 #define FBY_TRACE(...) Flameberry::Logger::GetCoreLogger()->trace(__VA_ARGS__)
 #define FBY_LOG(...) Flameberry::Logger::GetCoreLogger()->log(__VA_ARGS__)
 #define FBY_INFO(...) Flameberry::Logger::GetCoreLogger()->info(__VA_ARGS__)
 #define FBY_WARN(...) Flameberry::Logger::GetCoreLogger()->warn(__VA_ARGS__)
 #define FBY_ERROR(...) Flameberry::Logger::GetCoreLogger()->error(__VA_ARGS__)
 #define FBY_CRITICAL(...) Flameberry::Logger::GetCoreLogger()->critical(__VA_ARGS__)
-#endif

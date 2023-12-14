@@ -44,7 +44,12 @@ namespace Flameberry {
         std::string warn, err;
 
         std::string mtlBaseDir = path.parent_path();
-        FBY_ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), mtlBaseDir.c_str()), err);
+
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), mtlBaseDir.c_str()))
+        {
+            FBY_ERROR("Failed to load OBJ file: {}", path);
+            return nullptr;
+        }
 
         bool has_tex_coord = attrib.texcoords.size();
 
@@ -348,7 +353,7 @@ namespace Flameberry {
             .IndexOffset = indexOffset,
             .IndexCount = (uint32_t)refIndices.size() - indexOffset,
             .MaterialHandle = refMatHandles[mesh->mMaterialIndex]
-        });
+            });
     }
 
     static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles)
@@ -376,12 +381,16 @@ namespace Flameberry {
         // probably to request more postprocessing than we do in this example.
         const aiScene* scene = importer.ReadFile(path,
             aiProcessPreset_TargetRealtime_Fast
-//            aiProcessPreset_TargetRealtime_Quality
+            //            aiProcessPreset_TargetRealtime_Quality
             | aiProcess_FlipUVs
         );
 
         // If the import failed, report it
-        FBY_ASSERT(scene && !(scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE), importer.GetErrorString());
+        if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE))
+        {
+            FBY_ERROR("{}", importer.GetErrorString());
+            return nullptr;
+        }
 
         // Process Scene
         std::vector<MeshVertex> vertices;

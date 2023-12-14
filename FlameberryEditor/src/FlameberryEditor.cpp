@@ -15,13 +15,23 @@ namespace Flameberry {
             if (specification.CommandLineArgs.Count > 1)
             {
                 std::filesystem::path projectPath = specification.CommandLineArgs[1];
-                FBY_ASSERT(std::filesystem::exists(projectPath), "Invalid project path passed as command line arguments: {}", projectPath);
 
-                auto project = ProjectSerializer::DeserializeIntoNewProject(projectPath);
+                if (!std::filesystem::exists(projectPath))
+                {
+                    FBY_ERROR("Invalid project path passed as command line arguments: {}", projectPath);
 
-                // Create an Editor Instance and push it to Application Layers
-                m_EditorLayer = new EditorLayer(project);
-                PushLayer(m_EditorLayer);
+                    // TODO: Improve this API urgently
+                    m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(FlameberryEditor::OpenProjectWithEditor));
+                    PushLayer(m_LauncherLayer);
+                }
+                else
+                {
+                    auto project = ProjectSerializer::DeserializeIntoNewProject(projectPath);
+
+                    // Create an Editor Instance and push it to Application Layers
+                    m_EditorLayer = new EditorLayer(project);
+                    PushLayer(m_EditorLayer);
+                }
             }
             else
             {

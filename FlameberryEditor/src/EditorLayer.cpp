@@ -46,7 +46,7 @@ namespace Flameberry {
             }
         )
     {
-#ifdef __APPLE__
+#ifdef FBY_PLATFORM_MACOS
         platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
         platform::SetSaveSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveScene));
         platform::SetSaveSceneAsCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveSceneAs));

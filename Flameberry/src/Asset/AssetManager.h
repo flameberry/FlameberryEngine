@@ -20,7 +20,6 @@ namespace Flameberry {
         template <typename Type>
         static std::shared_ptr<Type> TryGetOrLoadAsset(const std::filesystem::path& path)
         {
-            FBY_ASSERT(!path.empty(), "Given file path is empty!");
             if (s_AssetFilePathToUUIDTable.find(path) != s_AssetFilePathToUUIDTable.end())
             {
                 auto asset = s_AssetTable[s_AssetFilePathToUUIDTable[path]];
@@ -58,7 +57,7 @@ namespace Flameberry {
 
                 return std::static_pointer_cast<Type>(asset);
             }
-//            FBY_WARN("Failed to find the asset with handle: {}", handle);
+            // FBY_WARN("Failed to get the asset with handle: {}", handle);
             return nullptr;
         }
 

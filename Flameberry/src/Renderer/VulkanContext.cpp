@@ -27,10 +27,14 @@ namespace Flameberry {
     VulkanContext::VulkanContext(VulkanWindow* pWindow)
         : m_Window(pWindow)
     {
-        FBY_ASSERT(pWindow->GetGLFWwindow(), "Invalid Window given to Vulkan Context!");
+        FBY_ASSERT(pWindow->GetGLFWwindow(), "Null Window given to Vulkan Context!");
 
         if (s_EnableValidationLayers)
-            FBY_ASSERT(RenderCommand::CheckValidationLayerSupport(s_ValidationLayers), "Validation Layers are not supported!");
+        {
+            bool isSupported = RenderCommand::CheckValidationLayerSupport(s_ValidationLayers);
+            if (!isSupported)
+                FBY_ERROR("Validation Layers are not supported!");
+        }
 
         m_VulkanInstance = VulkanInstance::Create();
 

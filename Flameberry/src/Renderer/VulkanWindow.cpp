@@ -14,18 +14,20 @@ namespace Flameberry {
     VulkanWindow::VulkanWindow(const WindowSpecification& specification)
         : m_Specification(specification)
     {
-        FBY_ASSERT(glfwInit(), "Failed to initialize GLFW!");
+        int status = glfwInit();
+        FBY_ASSERT(status == GLFW_TRUE, "Failed to initialize GLFW!");
+
         FBY_INFO("Initialized GLFW!");
-        
+
         // Get the primary monitor
         GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
-        
+
         // Get the current video mode of the primary monitor
         const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
-        
+
         m_PrimaryMonitorWidth = mode->width;
         m_PrimaryMonitorHeight = mode->height;
-        
+
         FBY_ASSERT(m_PrimaryMonitorWidth && m_PrimaryMonitorHeight, "Monitor size not initialized!");
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -56,10 +58,10 @@ namespace Flameberry {
                 VulkanWindow* pWindow = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
                 pWindow->m_Specification.Width = width;
                 pWindow->m_Specification.Height = height;
-            
+
                 WindowResizedEvent event(width, height);
                 pWindow->m_EventCallBack(event);
-            
+
                 FBY_LOG(event.ToString());
             });
 
@@ -114,17 +116,17 @@ namespace Flameberry {
     {
         const auto& device = VulkanContext::GetCurrentDevice();
         VkResult queuePresentStatus = m_SwapChain->SubmitCommandBuffer(device->GetCommandBuffer(Renderer::RT_GetCurrentFrameIndex()));
-        
+
         // TODO: This code should be enabled when ensured that all the resources that depend upon the swapchain are also updated
         // if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR)
         //     m_SwapChain->Invalidate();
     }
-    
-    void VulkanWindow::Resize() 
+
+    void VulkanWindow::Resize()
     {
         m_SwapChain->Invalidate();
     }
-    
+
     void VulkanWindow::SetPosition(int xpos, int ypos)
     {
         glfwSetWindowPos(m_Window, xpos, ypos);
@@ -136,17 +138,17 @@ namespace Flameberry {
         m_Specification.Width = width;
         m_Specification.Height = height;
     }
-    
-    void VulkanWindow::SetTitle(const char *title) 
+
+    void VulkanWindow::SetTitle(const char* title)
     {
         glfwSetWindowTitle(m_Window, title);
     }
-    
+
     void VulkanWindow::MoveToCenter()
     {
         const int xpos = m_PrimaryMonitorWidth / 2 - m_Specification.Width / 2;
         const int ypos = m_PrimaryMonitorHeight / 2 - m_Specification.Height / 2;
         glfwSetWindowPos(m_Window, xpos, ypos);
     }
-    
+
 }
