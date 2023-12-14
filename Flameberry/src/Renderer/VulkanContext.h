@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.h>
 
 #include "Core/Core.h"
-#include "Core/optional.h"
 #include "VulkanWindow.h"
 #include "VulkanInstance.h"
 #include "VulkanDevice.h"

@@ -42,7 +42,7 @@ namespace Flameberry {
         vk_swap_chain_create_info.imageArrayLayers = 1;
         vk_swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
+        uint32_t vk_queue_indices[2] = { (uint32_t)queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex, (uint32_t)queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
         if (queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
         {
@@ -218,7 +218,7 @@ namespace Flameberry {
         vk_swap_chain_create_info.imageArrayLayers = 1;
         vk_swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
+        uint32_t vk_queue_indices[2] = { (uint32_t)queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex, (uint32_t)queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
         if (queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
         {

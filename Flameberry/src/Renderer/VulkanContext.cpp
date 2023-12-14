@@ -116,8 +116,8 @@ namespace Flameberry {
             VkPhysicalDeviceFeatures supportedFeatures;
             vkGetPhysicalDeviceFeatures(vk_device, &supportedFeatures);
 
-            bool is_physical_device_valid = indices.GraphicsAndComputeSupportedQueueFamilyIndex.has_value()
-                && indices.PresentationSupportedQueueFamilyIndex.has_value()
+            bool is_physical_device_valid = indices.GraphicsAndComputeSupportedQueueFamilyIndex != -1
+                && indices.PresentationSupportedQueueFamilyIndex != -1
                 && found_required_extensions
                 && is_swap_chain_adequate
                 && supportedFeatures.samplerAnisotropy

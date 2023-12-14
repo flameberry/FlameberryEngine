@@ -262,7 +262,7 @@ namespace Flameberry {
             if (is_presentation_supported)
                 indices.PresentationSupportedQueueFamilyIndex = index;
 
-            if (indices.GraphicsAndComputeSupportedQueueFamilyIndex.has_value() && indices.PresentationSupportedQueueFamilyIndex.has_value())
+            if (indices.GraphicsAndComputeSupportedQueueFamilyIndex != -1 && indices.PresentationSupportedQueueFamilyIndex != -1)
                 break;
             index++;
         }

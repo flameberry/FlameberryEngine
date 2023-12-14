@@ -4,14 +4,13 @@
 #include <set>
 #include <vulkan/vulkan.h>
 
-#include "Core/optional.h"
 #include "Renderer/VulkanWindow.h"
 
 namespace Flameberry {
     struct QueueFamilyIndices
     {
-        flame::optional<uint32_t> GraphicsAndComputeSupportedQueueFamilyIndex;
-        flame::optional<uint32_t> PresentationSupportedQueueFamilyIndex;
+        int GraphicsAndComputeSupportedQueueFamilyIndex = -1;
+        int PresentationSupportedQueueFamilyIndex = -1;
     };
 
     class VulkanDevice
