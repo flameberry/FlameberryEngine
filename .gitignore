@@ -11,7 +11,7 @@ build/
 obj/
 SandboxProject/Binaries
 
-!Flameberry/assets/shaders/vulkan/bin
+!Flameberry/shaders/vulkan/bin
 
 # Ignore CMake Instance downloaded by python scripts
 vendor/cmake/

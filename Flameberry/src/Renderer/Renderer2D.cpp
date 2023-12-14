@@ -32,8 +32,8 @@ namespace Flameberry {
             pipelineSpec.PipelineLayout.PushConstants = {};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout };
 
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/solid_color.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/solid_color.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/solid_color.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/solid_color.frag.spv";
             pipelineSpec.RenderPass = renderPass;
 
             pipelineSpec.VertexLayout = {
@@ -106,8 +106,8 @@ namespace Flameberry {
             pipelineSpec.PipelineLayout.PushConstants = {};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout, Texture2D::GetDescriptorLayout() };
 
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/quad.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/quad.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/quad.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/quad.frag.spv";
             pipelineSpec.RenderPass = renderPass;
 
             pipelineSpec.VertexLayout = {

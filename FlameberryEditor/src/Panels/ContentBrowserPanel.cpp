@@ -12,15 +12,15 @@ enum FileTypeIndex {
 };
 
 static std::vector<std::string> g_IconPaths = {
-    FBY_PROJECT_DIR"FlameberryEditor/icons/arrow_back.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/arrow_forward.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconDefault.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/folder_icon.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconBerry.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconOBJ.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconGLTF.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconFBX.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconFBMAT.png"
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/arrow_back.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/arrow_forward.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconDefault.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/folder_icon.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconBerry.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconOBJ.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconGLTF.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconFBX.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconFBMAT.png"
 };
 
 namespace Flameberry {

@@ -44,8 +44,8 @@ namespace Flameberry {
         constexpr float fontSize = 13.5f * DPI_SCALE;
         constexpr float bigFontSize = 18.0f * DPI_SCALE;
 
-        io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", bigFontSize, &config);
-        io.FontDefault = io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"Flameberry/assets/fonts/arial/Arial.ttf", fontSize, &config);
+        io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"FlameberryEditor/Assets/Fonts/arial/Arial.ttf", bigFontSize, &config);
+        io.FontDefault = io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"FlameberryEditor/Assets/Fonts/arial/Arial.ttf", fontSize, &config);
         io.FontGlobalScale = 1 / DPI_SCALE;
 
         io.IniFilename = NULL;

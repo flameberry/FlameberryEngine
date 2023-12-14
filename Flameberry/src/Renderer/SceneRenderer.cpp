@@ -156,8 +156,8 @@ namespace Flameberry {
             };
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_ShadowMapDescriptorSetLayout };
 
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/shadow_map.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadow_map.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadow_map.frag.spv";
             pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
@@ -366,8 +366,8 @@ namespace Flameberry {
                     Material::GetLayout()
                 };
 
-                pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mesh.vert.spv";
-                pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mesh.frag.spv";
+                pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.vert.spv";
+                pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.frag.spv";
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {
@@ -403,8 +403,8 @@ namespace Flameberry {
 
                 pipelineSpec.PipelineLayout.DescriptorSetLayouts = { Texture2D::GetDescriptorLayout() };
 
-                pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/skybox.vert.spv";
-                pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/skybox.frag.spv";
+                pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/skybox.vert.spv";
+                pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/skybox.frag.spv";
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {};
@@ -479,8 +479,8 @@ namespace Flameberry {
             pipelineSpec.PipelineLayout.PushConstants = {};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_CompositePassDescriptorSetLayout };
 
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/composite.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/composite.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/composite.frag.spv";
             pipelineSpec.RenderPass = m_CompositePass;
 
             pipelineSpec.VertexLayout = {};
@@ -498,9 +498,9 @@ namespace Flameberry {
         Renderer2D::Init(m_CameraBufferDescSetLayout, m_GeometryPass);
 
         // Textures
-        m_LightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/BulbIcon.png");
-        m_CameraIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/CameraIcon.png");
-        m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SunIcon.png");
+        m_LightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/BulbIcon.png");
+        m_CameraIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/CameraIcon.png");
+        m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SunIcon.png");
     }
 
     void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)

@@ -57,12 +57,12 @@ namespace Flameberry {
 
     void EditorLayer::OnCreate()
     {
-        m_CursorIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/cursor_icon.png");
-        m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/translate_icon_2.png");
-        m_RotateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/rotate_icon.png");
-        m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
-        m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
-        m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
+        m_CursorIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/cursor_icon.png");
+        m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/translate_icon_2.png");
+        m_RotateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/rotate_icon.png");
+        m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/scale_icon.png");
+        m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/PlayAndStopButtonIcon.png");
+        m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon.png");
 
         Project::SetActive(m_Project);
         std::filesystem::current_path(m_Project->GetProjectDirectory());
@@ -116,8 +116,8 @@ namespace Flameberry {
                 m_MousePickingDescriptorSetLayout
             };
 
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking.frag.spv";
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
@@ -133,8 +133,8 @@ namespace Flameberry {
                 m_MousePickingDescriptorSetLayout
             };
 
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.frag.spv";
+            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking2D.vert.spv";
+            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking2D.frag.spv";
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F, VertexInputAttribute::VEC3F, VertexInputAttribute::INT };

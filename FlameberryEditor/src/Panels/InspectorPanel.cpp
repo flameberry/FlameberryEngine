@@ -7,7 +7,7 @@ namespace Flameberry {
     InspectorPanel::InspectorPanel()
         : m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png"))
+        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon.png"))
     {
     }
 
@@ -15,7 +15,7 @@ namespace Flameberry {
         : m_Context(context),
         m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
         m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon2.png"))
+        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon2.png"))
     {
     }
 
