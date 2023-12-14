@@ -206,7 +206,7 @@ namespace Flameberry {
 
             if (m_SearchInputBuffer[0] != '\0') {
                 // TODO: Maybe some optimisation to not search again if the input string is same
-                int index = kmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer, true);
+                int index = Algorithm::KmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer, true);
                 if (index == -1)
                     continue;
             }

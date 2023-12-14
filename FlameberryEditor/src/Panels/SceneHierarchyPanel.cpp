@@ -147,7 +147,7 @@ namespace Flameberry {
 
         if (m_SearchInputBuffer[0] != '\0') {
             // TODO: Maybe some optimisation to not search again if the input string is same
-            if (kmpSearch(tag.c_str(), m_SearchInputBuffer, true) != -1)
+            if (Algorithm::KmpSearch(tag.c_str(), m_SearchInputBuffer, true) != -1)
                 highlight = true;
         }
 
