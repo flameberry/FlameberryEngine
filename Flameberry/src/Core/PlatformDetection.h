@@ -6,7 +6,7 @@
 #elif defined(__linux__)
 #define FBY_PLATFORM_LINUX
 
-#elif defined(FBY_PLATFORM_MACOS) && defined(__MACH__)
+#elif defined(__APPLE__) && defined(__MACH__)
 #define FBY_PLATFORM_MACOS
 
 #else
