@@ -308,7 +308,7 @@ namespace Flameberry {
 
     void EditorLayer::OnUIRender()
     {
-#ifndef __APPLE__
+#ifndef FBY_PLATFORM_MACOS
         UI_Menubar();
 #endif
         auto& io = ImGui::GetIO();
@@ -517,7 +517,7 @@ namespace Flameberry {
                 }
             case KeyCode::O:
                 if (ctrl_or_cmd) {
-#ifndef __APPLE__
+#ifndef FBY_PLATFORM_MACOS
                     // m_ShouldOpenAnotherScene = true;
                     // m_ScenePathToBeOpened = platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
                     OpenScene();
@@ -527,7 +527,7 @@ namespace Flameberry {
             case KeyCode::S:
                 if (ctrl_or_cmd)
                 {
-#ifndef __APPLE__
+#ifndef FBY_PLATFORM_MACOS
                     if (shift)
                         SaveSceneAs();
                     else

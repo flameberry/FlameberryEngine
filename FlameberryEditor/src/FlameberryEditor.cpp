@@ -40,7 +40,7 @@ namespace Flameberry {
                 PushLayer(m_LauncherLayer);
             }
 
-#ifdef __APPLE__
+#ifdef FBY_PLATFORM_MACOS
             platform::UI_CustomTitleBar();
 #endif
         }

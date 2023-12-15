@@ -28,7 +28,7 @@ namespace Flameberry {
 
         ImFontConfig config{};
 
-#ifdef __APPLE__
+#ifdef FBY_PLATFORM_MACOS
         constexpr float DPI_SCALE = 2.0f;
 
         config.OversampleH = 3;
