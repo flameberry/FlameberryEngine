@@ -4,6 +4,7 @@
 #include <set>
 #include <vulkan/vulkan.h>
 
+#include "Core/Core.h"
 #include "Renderer/VulkanWindow.h"
 
 namespace Flameberry {
