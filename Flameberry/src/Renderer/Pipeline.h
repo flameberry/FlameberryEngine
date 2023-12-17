@@ -18,14 +18,14 @@ namespace Flameberry {
     struct PipelineLayoutSpecification
     {
         std::vector<PushConstantSpecification> PushConstants;
-        std::vector<std::shared_ptr<DescriptorSetLayout>> DescriptorSetLayouts;
+        std::vector<Ref<DescriptorSetLayout>> DescriptorSetLayouts;
     };
 
     struct PipelineSpecification
     {
         PipelineLayoutSpecification PipelineLayout;
         std::string VertexShaderFilePath, FragmentShaderFilePath;
-        std::shared_ptr<RenderPass> RenderPass;
+        Ref<RenderPass> RenderPass;
         uint32_t SubPass = 0;
         VertexInputAttributeLayout VertexLayout;
         VkVertexInputBindingDescription VertexInputBindingDescription;
@@ -53,9 +53,6 @@ namespace Flameberry {
 
         void ReloadShaders();
         void Bind();
-
-        template<typename... Args>
-        static std::shared_ptr<Pipeline> Create(Args... args) { return std::make_shared<Pipeline>(std::forward<Args>(args)...); }
     private:
         void CreatePipeline();
     private:
@@ -79,9 +76,6 @@ namespace Flameberry {
         VkPipelineLayout GetLayout() const { return m_VkPipelineLayout; }
 
         void Bind();
-
-        template<typename... Args>
-        static std::shared_ptr<ComputePipeline> Create(Args... args) { return std::make_shared<ComputePipeline>(std::forward<Args>(args)...); }
     private:
         ComputePipelineSpecification m_PipelineSpec;
         VkPipeline m_VkComputePipeline;

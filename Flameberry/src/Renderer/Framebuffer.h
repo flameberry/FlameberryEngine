@@ -46,18 +46,15 @@ namespace Flameberry {
         FramebufferSpecification GetSpecification() const { return m_FramebufferSpec; }
         VkFramebuffer GetVulkanFramebuffer() const { return m_VkFramebuffer; }
 
-        std::shared_ptr<Image> GetColorAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[attachmentIndex]; }
-        std::shared_ptr<Image> GetColorResolveAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[m_DepthAttachmentIndex + 1 + attachmentIndex]; }
-        std::shared_ptr<Image> GetDepthAttachment() const { return m_FramebufferImages[m_DepthAttachmentIndex]; }
+        Ref<Image> GetColorAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[attachmentIndex]; }
+        Ref<Image> GetColorResolveAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[m_DepthAttachmentIndex + 1 + attachmentIndex]; }
+        Ref<Image> GetDepthAttachment() const { return m_FramebufferImages[m_DepthAttachmentIndex]; }
 
         void SetClearColorValue(const VkClearColorValue& value) { m_FramebufferSpec.ClearColorValue = value; }
-
-        template<typename... Args>
-        static std::shared_ptr<Framebuffer> Create(Args... args) { return std::make_shared<Framebuffer>(std::forward<Args>(args)...); }
     private:
         void Invalidate();
     private:
-        std::vector<std::shared_ptr<Image>> m_FramebufferImages;
+        std::vector<Ref<Image>> m_FramebufferImages;
         uint32_t m_DepthAttachmentIndex = -1;
 
         FramebufferSpecification m_FramebufferSpec;

@@ -58,7 +58,7 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView));
     }
 
-    Image::Image(const std::shared_ptr<Image>& image, const ImageViewSpecification& viewSpecification)
+    Image::Image(const Ref<Image>& image, const ImageViewSpecification& viewSpecification)
         : m_VkImage(image->m_VkImage), m_VkImageDeviceMemory(image->m_VkImageDeviceMemory), m_ImageSpec(image->m_ImageSpec), m_ReferenceCount(image->m_ReferenceCount)
     {
         m_ImageSpec.ViewSpecification = viewSpecification;

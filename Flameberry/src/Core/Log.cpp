@@ -3,7 +3,7 @@
 #include <fmt/chrono.h>
 
 namespace Flameberry {
-    std::shared_ptr<Logger> Logger::s_CoreLogger;
+    Ref<Logger> Logger::s_CoreLogger;
     
     Logger::Logger(const char* instanceName)
         : m_CurrentLogLevel(LogLevel::TRACE), m_InstanceName(instanceName)

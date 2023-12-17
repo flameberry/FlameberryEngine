@@ -9,18 +9,18 @@
 
 namespace Flameberry {
     Scene::Scene()
-        : m_Registry(std::make_shared<fbentt::registry>())
+        : m_Registry(CreateRef<fbentt::registry>())
     {
     }
 
-    Scene::Scene(const std::shared_ptr<Scene>& other)
-        : m_Registry(std::make_shared<fbentt::registry>(*other->m_Registry)), m_Name(other->m_Name), m_ViewportSize(other->m_ViewportSize)
+    Scene::Scene(const Ref<Scene>& other)
+        : m_Registry(CreateRef<fbentt::registry>(*other->m_Registry)), m_Name(other->m_Name), m_ViewportSize(other->m_ViewportSize)
     {
         FBY_LOG("Copying Scene...");
     }
 
     Scene::Scene(const Scene& other)
-        : m_Registry(std::make_shared<fbentt::registry>(*other.m_Registry)), m_Name(other.m_Name), m_ViewportSize(other.m_ViewportSize)
+        : m_Registry(CreateRef<fbentt::registry>(*other.m_Registry)), m_Name(other.m_Name), m_ViewportSize(other.m_ViewportSize)
     {
     }
 

@@ -21,7 +21,7 @@ namespace Flameberry {
     class StaticMesh : public Asset
     {
     public:
-        StaticMesh(const std::shared_ptr<Buffer>& vertexBuffer, const std::shared_ptr<Buffer>& indexBuffer, const std::vector<SubMesh>& submeshes);
+        StaticMesh(const Ref<Buffer>& vertexBuffer, const Ref<Buffer>& indexBuffer, const std::vector<SubMesh>& submeshes);
         ~StaticMesh();
 
         void Bind() const;
@@ -34,7 +34,7 @@ namespace Flameberry {
         AssetType GetAssetType() const override { return AssetType::StaticMesh; }
         static constexpr AssetType GetStaticAssetType() { return AssetType::StaticMesh; }
     private:
-        std::shared_ptr<Buffer> m_VertexBuffer, m_IndexBuffer;
+        Ref<Buffer> m_VertexBuffer, m_IndexBuffer;
         std::vector<SubMesh> m_SubMeshes;
 
         std::string m_Name = "StaticMesh";

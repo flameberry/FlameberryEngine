@@ -4,12 +4,12 @@
 
 namespace Flameberry {
     
-    ThumbnailCache::ThumbnailCache(const std::shared_ptr<Project>& project, const ThumbnailCacheConfig& config)
+    ThumbnailCache::ThumbnailCache(const Ref<Project>& project, const ThumbnailCacheConfig& config)
         : m_Project(project), m_ThumbnailCacheDirectory(m_Project->GetProjectDirectory() / "Thumbnail.cache"), m_Config(config)
     {
     }
     
-    std::shared_ptr<Texture2D> ThumbnailCache::TryGetOrCreateThumbnail(const std::filesystem::path& assetPath)
+    Ref<Texture2D> ThumbnailCache::TryGetOrCreateThumbnail(const std::filesystem::path& assetPath)
     {
         auto absolutePath = m_Project->GetProjectDirectory() / assetPath;
         std::filesystem::file_time_type lastWriteTime = std::filesystem::last_write_time(absolutePath);

@@ -21,15 +21,15 @@ namespace Flameberry {
         ProjectSerializer::SerializeProject(m_ProjectDirectory / fileName, this);
     }
 
-    std::shared_ptr<Project> ProjectSerializer::DeserializeIntoNewProject(const std::filesystem::path& filePath)
+    Ref<Project> ProjectSerializer::DeserializeIntoNewProject(const std::filesystem::path& filePath)
     {
-        std::shared_ptr<Project> newProject = std::make_shared<Project>();
+        Ref<Project> newProject = CreateRef<Project>();
         if (DeserializeIntoExistingProject(filePath, newProject))
             return newProject;
         return nullptr;
     }
 
-    bool ProjectSerializer::DeserializeIntoExistingProject(const std::filesystem::path& filePath, const std::shared_ptr<Project>& dest)
+    bool ProjectSerializer::DeserializeIntoExistingProject(const std::filesystem::path& filePath, const Ref<Project>& dest)
     {
         std::ifstream in(filePath);
         std::stringstream ss;

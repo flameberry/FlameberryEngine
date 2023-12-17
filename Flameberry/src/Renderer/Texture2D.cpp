@@ -11,12 +11,12 @@
 #include <filesystem>
 
 namespace Flameberry {
-    std::shared_ptr<DescriptorSetLayout> Texture2D::s_DescriptorLayout;
-    std::shared_ptr<DescriptorSet> Texture2D::s_EmptyDescriptorSet;
-    std::shared_ptr<Image> Texture2D::s_EmptyImage;
+    Ref<DescriptorSetLayout> Texture2D::s_DescriptorLayout;
+    Ref<DescriptorSet> Texture2D::s_EmptyDescriptorSet;
+    Ref<Image> Texture2D::s_EmptyImage;
     VkSampler Texture2D::s_DefaultSampler;
 
-    std::unordered_map<std::string, std::shared_ptr<Texture2D>> Texture2D::s_TextureCacheDirectory;
+    std::unordered_map<std::string, Ref<Texture2D>> Texture2D::s_TextureCacheDirectory;
 
     Texture2D::Texture2D(const std::string& texturePath, bool canGenerateMipMaps, VkSampler sampler)
     {
@@ -70,7 +70,7 @@ namespace Flameberry {
         m_TextureImageSpecification.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         m_TextureImageSpecification.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
-        m_TextureImage = Image::Create(m_TextureImageSpecification);
+        m_TextureImage = CreateRef<Image>(m_TextureImageSpecification);
 
         BufferSpecification stagingBufferSpec;
         stagingBufferSpec.InstanceCount = 1;
@@ -158,14 +158,14 @@ namespace Flameberry {
         return m_DescriptorSet;
     }
 
-    std::shared_ptr<Texture2D> Texture2D::TryGetOrLoadTexture(const std::string& texturePath)
+    Ref<Texture2D> Texture2D::TryGetOrLoadTexture(const std::string& texturePath)
     {
         if (s_TextureCacheDirectory.find(texturePath) != s_TextureCacheDirectory.end()) {
             FBY_INFO("Successfully retrieved vulkan texture from cache!");
             return s_TextureCacheDirectory[texturePath];
         }
         else {
-            std::shared_ptr<Texture2D> texture = std::make_shared<Texture2D>(texturePath.c_str());
+            Ref<Texture2D> texture = CreateRef<Texture2D>(texturePath.c_str());
             s_TextureCacheDirectory[texturePath] = texture;
             FBY_WARN("Texture not found in cache! Loading texture from disk!");
             return texture;
@@ -187,7 +187,7 @@ namespace Flameberry {
         imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
-        s_EmptyImage = Image::Create(imageSpec);
+        s_EmptyImage = CreateRef<Image>(imageSpec);
 
         {
             const auto& device = VulkanContext::GetCurrentDevice();
@@ -254,12 +254,12 @@ namespace Flameberry {
         emptyDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         emptyDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
 
-        s_DescriptorLayout = DescriptorSetLayout::Create(emptyDescSetLayoutSpec);
+        s_DescriptorLayout = CreateRef<DescriptorSetLayout>(emptyDescSetLayoutSpec);
 
         DescriptorSetSpecification emptyDescSetSpec;
         emptyDescSetSpec.Layout = s_DescriptorLayout;
 
-        s_EmptyDescriptorSet = DescriptorSet::Create(emptyDescSetSpec);
+        s_EmptyDescriptorSet = CreateRef<DescriptorSet>(emptyDescSetSpec);
 
         VkDescriptorImageInfo desc_image{};
         desc_image.sampler = s_DefaultSampler;

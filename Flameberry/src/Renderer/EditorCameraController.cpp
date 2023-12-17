@@ -6,11 +6,12 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include "Core/Core.h"
 #include "Core/Input.h"
 
 namespace Flameberry {
     EditorCameraController::EditorCameraController(const PerspectiveCameraSpecification& specification)
-        : m_Camera(std::make_shared<PerspectiveCamera>(specification))
+        : m_Camera(CreateRef<PerspectiveCamera>(specification))
     {
     }
 

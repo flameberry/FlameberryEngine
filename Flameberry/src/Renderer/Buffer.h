@@ -3,6 +3,8 @@
 #include <memory>
 #include <vulkan/vulkan.h>
 
+#include "Core/Core.h"
+
 namespace Flameberry {
     struct BufferSpecification
     {
@@ -32,9 +34,6 @@ namespace Flameberry {
         const void* GetMappedMemory() const { return m_VkBufferMappedMemory; }
 
         BufferSpecification GetSpecification() const { return m_BufferSpec; }
-
-        template<typename... Args>
-        static std::shared_ptr<Buffer> Create(Args... args) { return std::make_shared<Buffer>(std::forward<Args>(args)...); }
     private:
         VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
     private:

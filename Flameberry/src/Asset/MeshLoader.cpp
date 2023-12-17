@@ -35,7 +35,7 @@ namespace std {
 
 namespace Flameberry {
 
-    std::shared_ptr<Asset> MeshLoader::LoadMeshOBJ(const std::filesystem::path& path)
+    Ref<Asset> MeshLoader::LoadMeshOBJ(const std::filesystem::path& path)
     {
         FBY_SCOPED_TIMER("Load_Model_TinyOBJ");
         tinyobj::attrib_t attrib;
@@ -60,7 +60,7 @@ namespace Flameberry {
         std::unordered_map<MeshVertex, uint32_t> uniqueVertices{};
 
         for (const auto& mat : materials) {
-            auto materialAsset = std::make_shared<Material>();
+            auto materialAsset = CreateRef<Material>();
             materialAsset->SetName(mat.name.c_str());
             materialAsset->SetAlbedo({ mat.diffuse[0], mat.diffuse[1], mat.diffuse[2] });
             materialAsset->SetRoughness(mat.roughness);
@@ -181,7 +181,7 @@ namespace Flameberry {
                 submesh.MaterialHandle = materialHandles[shape.mesh.material_ids[0]];
         }
 
-        std::shared_ptr<Buffer> vertexBuffer, indexBuffer;
+        Ref<Buffer> vertexBuffer, indexBuffer;
 
         {
             // Creating Vertex Buffer
@@ -235,7 +235,7 @@ namespace Flameberry {
             RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), indexBuffer->GetBuffer(), bufferSize);
         }
 
-        auto meshAsset = std::make_shared<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
+        auto meshAsset = CreateRef<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
 
         // Set Asset Class Variables
         meshAsset->FilePath = path;
@@ -249,7 +249,7 @@ namespace Flameberry {
     // Returns Flameberry Material Asset Handle
     static AssetHandle ProcessAndLoadMaterial(aiMaterial* material, const std::filesystem::path& path)
     {
-        auto materialAsset = std::make_shared<Material>();
+        auto materialAsset = CreateRef<Material>();
 
         aiString name;
         material->Get(AI_MATKEY_NAME, name);
@@ -370,7 +370,7 @@ namespace Flameberry {
             ProcessNode(node->mChildren[i], scene, refVertices, refIndices, refSubMeshes, refMatHandles);
     }
 
-    std::shared_ptr<Asset> MeshLoader::LoadMesh(const std::filesystem::path& path)
+    Ref<Asset> MeshLoader::LoadMesh(const std::filesystem::path& path)
     {
         FBY_SCOPED_TIMER("Load_Model_Assimp");
         // Create an instance of the Importer class
@@ -408,7 +408,7 @@ namespace Flameberry {
         // Load Meshes
         ProcessNode(scene->mRootNode, scene, vertices, indices, submeshes, materialHandles);
 
-        std::shared_ptr<Buffer> vertexBuffer, indexBuffer;
+        Ref<Buffer> vertexBuffer, indexBuffer;
 
         {
             // Creating Vertex Buffer
@@ -462,7 +462,7 @@ namespace Flameberry {
             RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), indexBuffer->GetBuffer(), bufferSize);
         }
 
-        auto meshAsset = std::make_shared<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
+        auto meshAsset = CreateRef<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
 
         // Set Asset Class Variables
         meshAsset->FilePath = path;

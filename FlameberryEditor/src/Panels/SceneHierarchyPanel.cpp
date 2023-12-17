@@ -6,9 +6,9 @@
 #include "UI.h"
 
 namespace Flameberry {
-    SceneHierarchyPanel::SceneHierarchyPanel(const std::shared_ptr<Scene>& context)
+    SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
         : m_Context(context),
-        m_InspectorPanel(InspectorPanel::Create(m_Context))
+        m_InspectorPanel(CreateRef<InspectorPanel>(m_Context))
     {
     }
 
@@ -127,7 +127,7 @@ namespace Flameberry {
         ImGui::PopItemWidth();
     }
 
-    void SceneHierarchyPanel::SetContext(const std::shared_ptr<Scene>& context)
+    void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
     {
         m_Context = context;
         m_InspectorPanel->SetContext(m_Context);

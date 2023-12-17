@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#include "Core/Core.h"
+
 namespace Flameberry {
     struct ProjectConfig
     {
@@ -52,16 +54,13 @@ namespace Flameberry {
 
         ProjectConfig& GetConfig() { return m_Config; }
 
-        static std::shared_ptr<Project> GetActiveProject() { return s_ActiveProject; }
-        static void SetActive(const std::shared_ptr<Project>& project) { s_ActiveProject = project; }
-
-        template <typename... Args>
-        static std::shared_ptr<Project> Create(Args... args) { return std::make_shared<Project>(std::forward<Args>(args)...); }
+        static Ref<Project> GetActiveProject() { return s_ActiveProject; }
+        static void SetActive(const Ref<Project>& project) { s_ActiveProject = project; }
     private:
         std::filesystem::path m_ProjectDirectory;
         ProjectConfig m_Config;
 
-        inline static std::shared_ptr<Project> s_ActiveProject;
+        inline static Ref<Project> s_ActiveProject;
 
         friend class ProjectSerializer;
     };
@@ -69,8 +68,8 @@ namespace Flameberry {
     class ProjectSerializer
     {
     public:
-        static std::shared_ptr<Project> DeserializeIntoNewProject(const std::filesystem::path& filePath);
-        static bool DeserializeIntoExistingProject(const std::filesystem::path& filePath, const std::shared_ptr<Project>& dest);
+        static Ref<Project> DeserializeIntoNewProject(const std::filesystem::path& filePath);
+        static bool DeserializeIntoExistingProject(const std::filesystem::path& filePath, const Ref<Project>& dest);
         static void SerializeProject(const std::filesystem::path& filePath, const Project* project);
     };
 

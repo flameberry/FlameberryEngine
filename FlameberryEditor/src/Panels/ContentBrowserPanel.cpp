@@ -26,11 +26,11 @@ static std::vector<std::string> g_IconPaths = {
 namespace Flameberry {
     ContentBrowserPanel::ContentBrowserPanel()
         : m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory), // Getting Asset Directory via this method to get the relative path only
-        m_ThumbnailCache(std::make_shared<ThumbnailCache>(Project::GetActiveProject())),
+        m_ThumbnailCache(CreateRef<ThumbnailCache>(Project::GetActiveProject())),
         m_VkTextureSampler(Texture2D::GetDefaultSampler())
     {
         for (const auto& path : g_IconPaths)
-            m_IconTextures.emplace_back(std::make_shared<Texture2D>(path.c_str(), m_VkTextureSampler));
+            m_IconTextures.emplace_back(CreateRef<Texture2D>(path.c_str(), m_VkTextureSampler));
     }
 
     ContentBrowserPanel::~ContentBrowserPanel()
@@ -216,7 +216,7 @@ namespace Flameberry {
             int currentIconIndex;
             bool isFileSupported = true, isDirectory = directory.is_directory();
 
-            std::shared_ptr<Texture2D> thumbnail;
+            Ref<Texture2D> thumbnail;
             if (!isDirectory)
                 thumbnail = m_ThumbnailCache->TryGetOrCreateThumbnail(filePath);
             if (!thumbnail)
@@ -263,7 +263,7 @@ namespace Flameberry {
             {
                 if (ImGui::MenuItem("Material"))
                 {
-                    auto mat = std::make_shared<Material>();
+                    auto mat = CreateRef<Material>();
                     MaterialSerializer::Serialize(mat, (m_CurrentDirectory / "NewMaterial.fbmat").c_str());
                 }
                 ImGui::EndMenu();

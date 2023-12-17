@@ -166,7 +166,7 @@ namespace fbentt {
 
     struct pool_data {
         sparse_set<uint32_t> entity_set;
-        std::shared_ptr<void> handler{ nullptr };
+        Flameberry::Ref<void> handler{ nullptr };
         void (*remove)(const pool_data& pool, uint32_t index);
         void (*copy_handler_data)(const pool_data& src, pool_data& dest);
 
@@ -339,10 +339,10 @@ namespace fbentt {
             if (pools.size() <= typeID) {
                 pools.resize(typeID + 1);
                 auto& pool = pools.back();
-                pool.handler = std::make_shared<pool_handler<Type>>();
+                pool.handler = Flameberry::CreateRef<pool_handler<Type>>();
             }
             else if (pools[typeID].handler == nullptr) {
-                pools[typeID].handler = std::make_shared<pool_handler<Type>>();
+                pools[typeID].handler = Flameberry::CreateRef<pool_handler<Type>>();
             }
             else if (pools[typeID].entity_set.find(index) != -1) {
                 FBY_ERROR("Failed to emplace component: Entity already has component!");
@@ -364,7 +364,7 @@ namespace fbentt {
                         if (src.handler)
                         {
                             auto& handler = (*((pool_handler<Type>*)src.handler.get()));
-                            dest.handler = std::make_shared<pool_handler<Type>>(handler);
+                            dest.handler = CreateRef<pool_handler<Type>>(handler);
                         }
                     };
             }

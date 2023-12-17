@@ -121,7 +121,7 @@ namespace Flameberry {
             MaterialSerializer::Serialize(m_EditingContext, m_EditingContext->FilePath.c_str());
     }
 
-    void MaterialEditorPanel::DrawMapControls(const char* label, bool& mapEnabledVar, std::shared_ptr<Texture2D>& map)
+    void MaterialEditorPanel::DrawMapControls(const char* label, bool& mapEnabledVar, Ref<Texture2D>& map)
     {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();

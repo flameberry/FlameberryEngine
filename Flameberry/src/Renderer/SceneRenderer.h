@@ -33,13 +33,13 @@ namespace Flameberry {
         SceneRenderer(const glm::vec2& viewportSize);
         ~SceneRenderer();
 
-        void RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true, bool renderOutline = true, bool renderPhysicsCollider = true);
+        void RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true, bool renderOutline = true, bool renderPhysicsCollider = true);
 
         VkImageView GetGeometryPassOutputImageView(uint32_t index) const { return m_GeometryPass->GetSpecification().TargetFramebuffers[index]->GetColorResolveAttachment(0)->GetImageView(); }
         VkImageView GetCompositePassOutputImageView(uint32_t index) const { return m_CompositePass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetImageView(); }
 
         SceneRendererSettings& GetRendererSettingsRef() { return m_RendererSettings; }
-        void RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Pipeline>& pipeline, const std::shared_ptr<Pipeline>& pipeline2D, const glm::vec2& mousePos);
+        void RenderSceneForMousePicking(const Ref<Scene>& scene, const Ref<RenderPass>& renderPass, const Ref<Pipeline>& pipeline, const Ref<Pipeline>& pipeline2D, const glm::vec2& mousePos);
 
         void ReloadMeshShaders();
     private:
@@ -47,27 +47,27 @@ namespace Flameberry {
 
         void CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection);
         void SubmitMesh(AssetHandle handle, const MaterialTable& materialTable, const glm::mat4& transform);
-        void SubmitPhysicsColliderGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform);
-        void SubmitCameraViewGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform);
+        void SubmitPhysicsColliderGeometry(const Ref<Scene>& scene, fbentt::entity entity, TransformComponent& transform);
+        void SubmitCameraViewGeometry(const Ref<Scene>& scene, fbentt::entity entity, TransformComponent& transform);
     private:
         glm::vec2 m_ViewportSize;
 
         // Command Buffers
-        std::vector<std::shared_ptr<CommandBuffer>> m_CommandBuffers;
+        std::vector<Ref<CommandBuffer>> m_CommandBuffers;
 
         // Geometry
-        std::shared_ptr<RenderPass> m_GeometryPass;
-        std::shared_ptr<DescriptorSetLayout> m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
-        std::vector<std::shared_ptr<DescriptorSet>> m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
+        Ref<RenderPass> m_GeometryPass;
+        Ref<DescriptorSetLayout> m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
+        std::vector<Ref<DescriptorSet>> m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
         std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
-        std::shared_ptr<Pipeline> m_MeshPipeline, m_SkyboxPipeline;
+        Ref<Pipeline> m_MeshPipeline, m_SkyboxPipeline;
         VkSampler m_VkTextureSampler;
 
         // Shadow Map
-        std::shared_ptr<RenderPass> m_ShadowMapRenderPass;
-        std::shared_ptr<Pipeline> m_ShadowMapPipeline;
-        std::shared_ptr<DescriptorSetLayout> m_ShadowMapDescriptorSetLayout;
-        std::vector<std::shared_ptr<DescriptorSet>> m_ShadowMapDescriptorSets;
+        Ref<RenderPass> m_ShadowMapRenderPass;
+        Ref<Pipeline> m_ShadowMapPipeline;
+        Ref<DescriptorSetLayout> m_ShadowMapDescriptorSetLayout;
+        std::vector<Ref<DescriptorSet>> m_ShadowMapDescriptorSets;
         std::vector<std::unique_ptr<Buffer>> m_ShadowMapUniformBuffers;
         VkSampler m_ShadowMapSampler;
 
@@ -75,12 +75,12 @@ namespace Flameberry {
         SceneRendererSettings m_RendererSettings;
 
         // Post processing
-        std::shared_ptr<RenderPass> m_CompositePass;
-        std::shared_ptr<Pipeline> m_CompositePipeline;
-        std::shared_ptr<DescriptorSetLayout> m_CompositePassDescriptorSetLayout;
-        std::vector<std::shared_ptr<DescriptorSet>> m_CompositePassDescriptorSets;
+        Ref<RenderPass> m_CompositePass;
+        Ref<Pipeline> m_CompositePipeline;
+        Ref<DescriptorSetLayout> m_CompositePassDescriptorSetLayout;
+        std::vector<Ref<DescriptorSet>> m_CompositePassDescriptorSets;
 
         // Textures
-        std::shared_ptr<Texture2D> m_LightIcon, m_CameraIcon, m_DirectionalLightIcon;
+        Ref<Texture2D> m_LightIcon, m_CameraIcon, m_DirectionalLightIcon;
     };
 }

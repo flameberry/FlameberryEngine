@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "PlatformDetection.h"
 
 // Platform Specific Code
@@ -25,6 +27,19 @@
 #endif
 
 #define FBY_BIND_EVENT_FN(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
+
+namespace Flameberry {
+
+    template<typename T>
+    using Ref = std::shared_ptr<T>;
+
+    template<typename T, typename ... Args>
+    constexpr Ref<T> CreateRef(Args&& ... args)
+    {
+        return std::make_shared<T>(std::forward<Args>(args)...);
+    }
+
+}
 
 // Including All Utils related to Logging
 #include "Log.h"

@@ -6,7 +6,7 @@
 #include "Asset/AssetManager.h"
 
 namespace Flameberry {
-    std::shared_ptr<DescriptorSetLayout> Material::s_CommonDescSetLayout;
+    Ref<DescriptorSetLayout> Material::s_CommonDescSetLayout;
     std::unique_ptr<DescriptorSet> Material::s_EmptyMaterialDescSet;
 
     Material::Material()
@@ -89,7 +89,7 @@ namespace Flameberry {
             layoutSpec.Bindings[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         }
 
-        s_CommonDescSetLayout = DescriptorSetLayout::Create(layoutSpec);
+        s_CommonDescSetLayout = CreateRef<DescriptorSetLayout>(layoutSpec);
 
         DescriptorSetSpecification descSetSpec;
         descSetSpec.Layout = s_CommonDescSetLayout;
@@ -113,7 +113,7 @@ namespace Flameberry {
         s_CommonDescSetLayout = nullptr; // TODO: This is the current cause of the VK_ERROR
     }
 
-    void MaterialSerializer::Serialize(const std::shared_ptr<Material>& material, const char* path)
+    void MaterialSerializer::Serialize(const Ref<Material>& material, const char* path)
     {
         YAML::Emitter out;
         out << YAML::BeginMap;
@@ -138,7 +138,7 @@ namespace Flameberry {
         fout << out.c_str();
     }
 
-    std::shared_ptr<Material> MaterialSerializer::Deserialize(const char* path)
+    Ref<Material> MaterialSerializer::Deserialize(const char* path)
     {
         std::ifstream in(path);
         std::stringstream ss;
@@ -146,7 +146,7 @@ namespace Flameberry {
 
         YAML::Node data = YAML::Load(ss.str());
 
-        std::shared_ptr<Material> material = std::make_shared<Material>();
+        Ref<Material> material = CreateRef<Material>();
         material->Handle = data["Handle"].as<uint64_t>();
 
         material->m_Name = data["Name"].as<std::string>();

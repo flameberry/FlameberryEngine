@@ -5,16 +5,16 @@
 
 namespace Flameberry {
     InspectorPanel::InspectorPanel()
-        : m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
-        m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
+        : m_MaterialSelectorPanel(CreateRef<MaterialSelectorPanel>()),
+        m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()),
         m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon.png"))
     {
     }
 
-    InspectorPanel::InspectorPanel(const std::shared_ptr<Scene>& context)
+    InspectorPanel::InspectorPanel(const Ref<Scene>& context)
         : m_Context(context),
-        m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
-        m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
+        m_MaterialSelectorPanel(CreateRef<MaterialSelectorPanel>()),
+        m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()),
         m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon2.png"))
     {
     }
@@ -359,7 +359,7 @@ namespace Flameberry {
                                     ImGui::Text("Element %d", submeshIndex);
                                     ImGui::TableNextColumn();
 
-                                    std::shared_ptr<Material> mat;
+                                    Ref<Material> mat;
                                     if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
                                         mat = AssetManager::GetAsset<Material>(it->second);
                                     else
@@ -405,7 +405,7 @@ namespace Flameberry {
 
                                     if (ImGui::IsItemClicked())
                                     {
-                                        m_MaterialSelectorPanel->OpenPanel([mesh, submeshIndex](const std::shared_ptr<Material>& material) mutable
+                                        m_MaterialSelectorPanel->OpenPanel([mesh, submeshIndex](const Ref<Material>& material) mutable
                                             {
                                                 mesh.OverridenMaterialTable[submeshIndex] = material->Handle;
                                             }

@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <vulkan/vulkan.h>
 
+#include "Core/Core.h"
+
 namespace Flameberry {
     class DescriptorPool
     {
@@ -30,9 +32,6 @@ namespace Flameberry {
 
         VkDescriptorSetLayout GetLayout() const { return m_Layout; }
         DescriptorSetLayoutSpecification GetSpecification() const { return m_DescSetLayoutSpec; }
-
-        template<typename... Args>
-        static std::shared_ptr<DescriptorSetLayout> Create(Args... args) { return std::make_shared<DescriptorSetLayout>(std::forward<Args>(args)...); }
     private:
         DescriptorSetLayoutSpecification m_DescSetLayoutSpec;
         VkDescriptorSetLayout m_Layout;
@@ -40,8 +39,8 @@ namespace Flameberry {
 
     struct DescriptorSetSpecification
     {
-        std::shared_ptr<DescriptorPool> Pool;
-        std::shared_ptr<DescriptorSetLayout> Layout;
+        Ref<DescriptorPool> Pool;
+        Ref<DescriptorSetLayout> Layout;
     };
 
     class DescriptorSet
@@ -56,9 +55,6 @@ namespace Flameberry {
         void WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo);
         void WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo);
         void Update();
-
-        template<typename... Args>
-        static std::shared_ptr<DescriptorSet> Create(Args... args) { return std::make_shared<DescriptorSet>(std::forward<Args>(args)...); }
     private:
         std::vector<VkWriteDescriptorSet> m_WriteInfos;
 

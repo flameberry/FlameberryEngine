@@ -102,9 +102,9 @@ namespace Flameberry {
 
 
             for (uint32_t i = 0; i < imageCount; i++)
-                shadowMapRenderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(shadowMapFramebufferSpec);
+                shadowMapRenderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(shadowMapFramebufferSpec);
 
-            m_ShadowMapRenderPass = RenderPass::Create(shadowMapRenderPassSpec);
+            m_ShadowMapRenderPass = CreateRef<RenderPass>(shadowMapRenderPassSpec);
 
             // Shadow Map Pipeline
             auto bufferSize = sizeof(glm::mat4) * SceneRendererSettings::CascadeCount;
@@ -130,7 +130,7 @@ namespace Flameberry {
             shadowDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
             shadowDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-            m_ShadowMapDescriptorSetLayout = DescriptorSetLayout::Create(shadowDescSetLayoutSpec);
+            m_ShadowMapDescriptorSetLayout = CreateRef<DescriptorSetLayout>(shadowDescSetLayoutSpec);
 
             DescriptorSetSpecification shadowMapDescSetSpec;
             shadowMapDescSetSpec.Layout = m_ShadowMapDescriptorSetLayout;
@@ -138,7 +138,7 @@ namespace Flameberry {
             m_ShadowMapDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
             for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
             {
-                m_ShadowMapDescriptorSets[i] = DescriptorSet::Create(shadowMapDescSetSpec);
+                m_ShadowMapDescriptorSets[i] = CreateRef<DescriptorSet>(shadowMapDescSetSpec);
 
                 VkDescriptorBufferInfo bufferInfo{};
                 bufferInfo.buffer = m_ShadowMapUniformBuffers[i]->GetBuffer();
@@ -171,7 +171,7 @@ namespace Flameberry {
             pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
             pipelineSpec.DepthClampEnable = true;
 
-            m_ShadowMapPipeline = Pipeline::Create(pipelineSpec);
+            m_ShadowMapPipeline = CreateRef<Pipeline>(pipelineSpec);
 
             VkSamplerCreateInfo sampler_info{};
             sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -219,7 +219,7 @@ namespace Flameberry {
             cameraBufferDescLayoutSpec.Bindings[0].descriptorCount = 1;
             cameraBufferDescLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-            m_CameraBufferDescSetLayout = DescriptorSetLayout::Create(cameraBufferDescLayoutSpec);
+            m_CameraBufferDescSetLayout = CreateRef<DescriptorSetLayout>(cameraBufferDescLayoutSpec);
 
             DescriptorSetSpecification cameraBufferDescSetSpec;
             cameraBufferDescSetSpec.Layout = m_CameraBufferDescSetLayout;
@@ -227,7 +227,7 @@ namespace Flameberry {
             m_CameraBufferDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
             for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
             {
-                m_CameraBufferDescriptorSets[i] = DescriptorSet::Create(cameraBufferDescSetSpec);
+                m_CameraBufferDescriptorSets[i] = CreateRef<DescriptorSet>(cameraBufferDescSetSpec);
 
                 VkDescriptorBufferInfo vk_descriptor_buffer_info{};
                 vk_descriptor_buffer_info.buffer = m_CameraUniformBuffers[i]->GetBuffer();
@@ -274,9 +274,9 @@ namespace Flameberry {
             };
 
             for (uint32_t i = 0; i < imageCount; i++)
-                sceneRenderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(sceneFramebufferSpec);
+                sceneRenderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(sceneFramebufferSpec);
 
-            m_GeometryPass = RenderPass::Create(sceneRenderPassSpec);
+            m_GeometryPass = CreateRef<RenderPass>(sceneRenderPassSpec);
 
             {
                 // Creating Mesh Pipeline
@@ -304,7 +304,7 @@ namespace Flameberry {
                 sceneDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
                 sceneDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-                m_SceneDescriptorSetLayout = DescriptorSetLayout::Create(sceneDescSetLayoutSpec);
+                m_SceneDescriptorSetLayout = CreateRef<DescriptorSetLayout>(sceneDescSetLayoutSpec);
 
                 DescriptorSetSpecification sceneDescSetSpec;
                 sceneDescSetSpec.Layout = m_SceneDescriptorSetLayout;
@@ -312,7 +312,7 @@ namespace Flameberry {
                 m_SceneDataDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
                 for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
                 {
-                    m_SceneDataDescriptorSets[i] = DescriptorSet::Create(sceneDescSetSpec);
+                    m_SceneDataDescriptorSets[i] = CreateRef<DescriptorSet>(sceneDescSetSpec);
 
                     VkDescriptorBufferInfo bufferInfo{};
                     bufferInfo.range = sizeof(SceneUniformBufferData);
@@ -332,7 +332,7 @@ namespace Flameberry {
                 shadowMapRefDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
                 shadowMapRefDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-                m_ShadowMapRefDescriptorSetLayout = DescriptorSetLayout::Create(shadowMapRefDescSetLayoutSpec);
+                m_ShadowMapRefDescriptorSetLayout = CreateRef<DescriptorSetLayout>(shadowMapRefDescSetLayoutSpec);
 
                 DescriptorSetSpecification shadowMapRefDescSetSpec;
                 shadowMapRefDescSetSpec.Layout = m_ShadowMapRefDescriptorSetLayout;
@@ -340,7 +340,7 @@ namespace Flameberry {
                 m_ShadowMapRefDescSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
                 for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
                 {
-                    m_ShadowMapRefDescSets[i] = DescriptorSet::Create(shadowMapRefDescSetSpec);
+                    m_ShadowMapRefDescSets[i] = CreateRef<DescriptorSet>(shadowMapRefDescSetSpec);
 
                     VkDescriptorImageInfo imageInfo{};
                     imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
@@ -391,7 +391,7 @@ namespace Flameberry {
                 pipelineSpec.StencilOpState.reference = 1;
                 pipelineSpec.StencilOpState.writeMask = 1;
 
-                m_MeshPipeline = Pipeline::Create(pipelineSpec);
+                m_MeshPipeline = CreateRef<Pipeline>(pipelineSpec);
             }
 
             // Skybox Pipeline
@@ -422,7 +422,7 @@ namespace Flameberry {
                 pipelineSpec.DepthWriteEnable = false;
                 pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 
-                m_SkyboxPipeline = Pipeline::Create(pipelineSpec);
+                m_SkyboxPipeline = CreateRef<Pipeline>(pipelineSpec);
             }
             m_VkTextureSampler = Texture2D::GetDefaultSampler();
         }
@@ -442,9 +442,9 @@ namespace Flameberry {
             RenderPassSpecification renderPassSpec{};
             renderPassSpec.TargetFramebuffers.resize(swapchain->GetSwapChainImageCount());
             for (uint32_t i = 0; i < renderPassSpec.TargetFramebuffers.size(); i++)
-                renderPassSpec.TargetFramebuffers[i] = Framebuffer::Create(framebufferSpec);
+                renderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(framebufferSpec);
 
-            m_CompositePass = RenderPass::Create(renderPassSpec);
+            m_CompositePass = CreateRef<RenderPass>(renderPassSpec);
 
             DescriptorSetLayoutSpecification layoutSpec;
             layoutSpec.Bindings.resize(1);
@@ -454,7 +454,7 @@ namespace Flameberry {
             layoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             layoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-            m_CompositePassDescriptorSetLayout = DescriptorSetLayout::Create(layoutSpec);
+            m_CompositePassDescriptorSetLayout = CreateRef<DescriptorSetLayout>(layoutSpec);
 
             DescriptorSetSpecification setSpec;
             setSpec.Layout = m_CompositePassDescriptorSetLayout;
@@ -462,7 +462,7 @@ namespace Flameberry {
             m_CompositePassDescriptorSets.resize(imageCount);
             for (uint8_t i = 0; i < m_CompositePassDescriptorSets.size(); i++)
             {
-                m_CompositePassDescriptorSets[i] = DescriptorSet::Create(setSpec);
+                m_CompositePassDescriptorSets[i] = CreateRef<DescriptorSet>(setSpec);
 
                 VkDescriptorImageInfo imageInfo{
                     .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -491,7 +491,7 @@ namespace Flameberry {
             pipelineSpec.BlendingEnable = true;
             pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
 
-            m_CompositePipeline = Pipeline::Create(pipelineSpec);
+            m_CompositePipeline = CreateRef<Pipeline>(pipelineSpec);
         }
 #pragma endregion CompositionResources
 
@@ -503,7 +503,7 @@ namespace Flameberry {
         m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SunIcon.png");
     }
 
-    void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const std::shared_ptr<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
+    void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
     {
         uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
         std::vector<fbentt::entity> lightEntityHandles;
@@ -835,7 +835,7 @@ namespace Flameberry {
         }
     }
 
-    void SceneRenderer::RenderSceneForMousePicking(const std::shared_ptr<Scene>& scene, const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Pipeline>& pipeline, const std::shared_ptr<Pipeline>& pipeline2D, const glm::vec2& mousePos)
+    void SceneRenderer::RenderSceneForMousePicking(const Ref<Scene>& scene, const Ref<RenderPass>& renderPass, const Ref<Pipeline>& pipeline, const Ref<Pipeline>& pipeline2D, const glm::vec2& mousePos)
     {
         renderPass->Begin(0, { (int)mousePos.x, (int)mousePos.y }, { 1, 1 });
         pipeline->Bind();
@@ -907,7 +907,7 @@ namespace Flameberry {
             MeshData pushConstantMeshData;
             pushConstantMeshData.ModelMatrix = transform;
 
-            std::shared_ptr<Material> materialAsset;
+            Ref<Material> materialAsset;
             if (auto it = materialTable.find(submeshIndex); it != materialTable.end())
                 materialAsset = AssetManager::GetAsset<Material>(it->second);
             else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
@@ -937,7 +937,7 @@ namespace Flameberry {
     }
 
     // TODO: Move this to EditorLayer.cpp ASAP
-    void SceneRenderer::SubmitPhysicsColliderGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
+    void SceneRenderer::SubmitPhysicsColliderGeometry(const Ref<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
     {
         // TODO: Optimise this function (maybe embed the vertices (?))
         constexpr glm::vec3 greenColor(0.2f, 1.0f, 0.2f);
@@ -1083,7 +1083,7 @@ namespace Flameberry {
     }
 
     // TODO: Move this to EditorLayer.cpp ASAP
-    void SceneRenderer::SubmitCameraViewGeometry(const std::shared_ptr<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
+    void SceneRenderer::SubmitCameraViewGeometry(const Ref<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
     {
         constexpr glm::vec3 color(0.961f, 0.796f, 0.486f); // TODO: Replace with Theme::AccentColor
         auto* cameraComp = scene->m_Registry->try_get<CameraComponent>(entity);

@@ -2,7 +2,7 @@
 
 namespace Flameberry {
 
-    std::shared_ptr<Asset> MaterialLoader::LoadMaterial(const std::filesystem::path& path)
+    Ref<Asset> MaterialLoader::LoadMaterial(const std::filesystem::path& path)
     {
         auto materialAsset = MaterialSerializer::Deserialize(path.c_str());
 

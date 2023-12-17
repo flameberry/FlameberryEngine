@@ -7,6 +7,8 @@
 
 #include <glm/gtx/string_cast.hpp>
 
+#include "Core/Core.h"
+
 /// Xcode doesn't support integrated terminal output by default, so the escape characters for coloring output are printed out
 /// as it is, which just creates a mess, so the macro `FBY_XCODE_PROJ` is defined by CMake, if the cmake generator is `Xcode`
 /// and the macros are defined as `""`
@@ -41,16 +43,13 @@ namespace Flameberry {
     class Logger
     {
     public:
-        inline static std::shared_ptr<Logger> GetCoreLogger() { return s_CoreLogger; }
-        inline static void SetCoreLogger(const std::shared_ptr<Logger>& logger) { s_CoreLogger = logger; }
+        inline static Ref<Logger> GetCoreLogger() { return s_CoreLogger; }
+        inline static void SetCoreLogger(const Ref<Logger>& logger) { s_CoreLogger = logger; }
     public:
         /// Instance Name should be set at the beginning of the program,
         /// which will be used as a prefix to all the log messages during runtime
         Logger(const char* instanceName);
         inline void SetLogLevel(const LogLevel& logLevel) { m_CurrentLogLevel = logLevel; }
-
-        template <typename... Args>
-        static std::shared_ptr<Logger> Create(Args... args) { return std::make_shared<Logger>(std::forward<Args>(args)...); }
 
         template<typename T, typename... Args>
         void log(const T& message, const Args&... args)
@@ -113,7 +112,7 @@ namespace Flameberry {
         std::string m_InstanceName;
         LogLevel m_CurrentLogLevel;
 
-        static std::shared_ptr<Logger> s_CoreLogger;
+        static Ref<Logger> s_CoreLogger;
     };
 }
 

@@ -6,6 +6,6 @@ namespace Flameberry {
     class MaterialLoader
     {
     public:
-        static std::shared_ptr<Asset> LoadMaterial(const std::filesystem::path& path);
+        static Ref<Asset> LoadMaterial(const std::filesystem::path& path);
     };
 }

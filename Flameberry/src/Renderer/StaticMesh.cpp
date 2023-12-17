@@ -9,7 +9,7 @@
 #include "Asset/AssetManager.h"
 
 namespace Flameberry {
-    StaticMesh::StaticMesh(const std::shared_ptr<Buffer>& vertexBuffer, const std::shared_ptr<Buffer>& indexBuffer, const std::vector<SubMesh>& submeshes)
+    StaticMesh::StaticMesh(const Ref<Buffer>& vertexBuffer, const Ref<Buffer>& indexBuffer, const std::vector<SubMesh>& submeshes)
         : m_VertexBuffer(vertexBuffer), m_IndexBuffer(indexBuffer), m_SubMeshes(std::move(submeshes))
     {
     }

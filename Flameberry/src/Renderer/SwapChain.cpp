@@ -7,13 +7,13 @@
 #include "Image.h"
 
 namespace Flameberry {
-    SwapChain::SwapChain(VkSurfaceKHR surface, const std::shared_ptr<SwapChain>& oldSwapChain)
+    SwapChain::SwapChain(VkSurfaceKHR surface, const Ref<SwapChain>& oldSwapChain)
         : m_VkSurface(surface)
     {
         CreateSwapChain(oldSwapChain);
     }
 
-    void SwapChain::CreateSwapChain(const std::shared_ptr<SwapChain>& oldSwapChain)
+    void SwapChain::CreateSwapChain(const Ref<SwapChain>& oldSwapChain)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();

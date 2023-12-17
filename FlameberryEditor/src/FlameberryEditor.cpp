@@ -49,7 +49,7 @@ namespace Flameberry {
         {
         }
 
-        void OpenProjectWithEditor(const std::shared_ptr<Project>& project)
+        void OpenProjectWithEditor(const Ref<Project>& project)
         {
             auto projectRef = project; // This is to prevent `project` being deleted when Layer is poped
 

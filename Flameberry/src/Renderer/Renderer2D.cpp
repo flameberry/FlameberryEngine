@@ -14,7 +14,7 @@
 namespace Flameberry {
     Renderer2DData Renderer2D::s_Renderer2DData;
 
-    void Renderer2D::Init(const std::shared_ptr<DescriptorSetLayout>& globalDescriptorSetLayout, const std::shared_ptr<RenderPass>& renderPass)
+    void Renderer2D::Init(const Ref<DescriptorSetLayout>& globalDescriptorSetLayout, const Ref<RenderPass>& renderPass)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         {
@@ -25,7 +25,7 @@ namespace Flameberry {
             bufferSpec.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             bufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-            s_Renderer2DData.LineVertexBuffer = Buffer::Create(bufferSpec);
+            s_Renderer2DData.LineVertexBuffer = CreateRef<Buffer>(bufferSpec);
             s_Renderer2DData.LineVertexBuffer->MapMemory(bufferSpec.InstanceSize);
 
             PipelineSpecification pipelineSpec{};
@@ -49,7 +49,7 @@ namespace Flameberry {
             pipelineSpec.PrimitiveTopology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
             pipelineSpec.CullMode = VK_CULL_MODE_NONE;
 
-            s_Renderer2DData.LinePipeline = Pipeline::Create(pipelineSpec);
+            s_Renderer2DData.LinePipeline = CreateRef<Pipeline>(pipelineSpec);
         }
 
         {
@@ -60,7 +60,7 @@ namespace Flameberry {
             bufferSpec.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             bufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-            s_Renderer2DData.QuadVertexBuffer = Buffer::Create(bufferSpec);
+            s_Renderer2DData.QuadVertexBuffer = CreateRef<Buffer>(bufferSpec);
             s_Renderer2DData.QuadVertexBuffer->MapMemory(bufferSpec.InstanceSize);
 
             BufferSpecification indexBufferSpec{};
@@ -69,7 +69,7 @@ namespace Flameberry {
             indexBufferSpec.Usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
             indexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-            s_Renderer2DData.QuadIndexBuffer = Buffer::Create(indexBufferSpec);
+            s_Renderer2DData.QuadIndexBuffer = CreateRef<Buffer>(indexBufferSpec);
 
             uint32_t* indices = new uint32_t[MAX_QUAD_INDICES];
             uint32_t offset = 0;
@@ -122,7 +122,7 @@ namespace Flameberry {
 
             pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
 
-            s_Renderer2DData.QuadPipeline = Pipeline::Create(pipelineSpec);
+            s_Renderer2DData.QuadPipeline = CreateRef<Pipeline>(pipelineSpec);
         }
     }
 

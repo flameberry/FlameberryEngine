@@ -3,6 +3,8 @@
 #include <memory>
 #include <vulkan/vulkan.h>
 
+#include "Core/Core.h"
+
 namespace Flameberry {
     struct ImageViewSpecification
     {
@@ -25,7 +27,7 @@ namespace Flameberry {
     {
     public:
         Image(const ImageSpecification& specification);
-        Image(const std::shared_ptr<Image>& image, const ImageViewSpecification& viewSpecification);
+        Image(const Ref<Image>& image, const ImageViewSpecification& viewSpecification);
         ~Image();
 
         void GenerateMipMaps();
@@ -37,9 +39,6 @@ namespace Flameberry {
 
         ImageSpecification GetSpecification() const { return m_ImageSpec; }
         VkMemoryRequirements GetMemoryRequirements() const { return m_MemoryRequirements; }
-
-        template<typename... Args>
-        static std::shared_ptr<Image> Create(Args... args) { return std::make_shared<Image>(std::forward<Args>(args)...); }
     private:
         VkImage m_VkImage;
         VkImageView m_VkImageView;

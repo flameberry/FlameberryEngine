@@ -58,8 +58,8 @@ namespace Flameberry {
     private:
         ApplicationSpecification m_Specification;
 
-        std::shared_ptr<Window> m_Window;
-        std::shared_ptr<VulkanContext> m_VulkanContext;
+        Ref<Window> m_Window;
+        Ref<VulkanContext> m_VulkanContext;
         ImGuiLayer* m_ImGuiLayer;
 
         bool m_BlockAllLayerEvents = false;

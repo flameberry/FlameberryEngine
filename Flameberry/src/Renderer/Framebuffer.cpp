@@ -79,7 +79,7 @@ namespace Flameberry {
 
                 colorAttachments.emplace_back(attachment);
             }
-            m_FramebufferImages.emplace_back(Image::Create(imageSpec));
+            m_FramebufferImages.emplace_back(CreateRef<Image>(imageSpec));
         }
 
         if (m_FramebufferSpec.Samples > 1)
@@ -100,7 +100,7 @@ namespace Flameberry {
                 imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
                 imageSpec.ViewSpecification.LayerCount = attachment.LayerCount;
 
-                m_FramebufferImages.emplace_back(Image::Create(imageSpec));
+                m_FramebufferImages.emplace_back(CreateRef<Image>(imageSpec));
             }
         }
     }

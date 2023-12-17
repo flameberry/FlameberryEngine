@@ -65,15 +65,15 @@ namespace Flameberry {
             return AxisType::Z;
     }
 
-    std::shared_ptr<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
+    Ref<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
     {
-        std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
+        Ref<Scene> newScene = CreateRef<Scene>();
         if (DeserializeIntoExistingScene(path, newScene))
             return newScene;
         return nullptr;
     }
 
-    bool SceneSerializer::DeserializeIntoExistingScene(const char* path, const std::shared_ptr<Scene>& destScene)
+    bool SceneSerializer::DeserializeIntoExistingScene(const char* path, const Ref<Scene>& destScene)
     {
         FBY_SCOPED_TIMER("Scene Deserialization");
 
@@ -241,7 +241,7 @@ namespace Flameberry {
         return true;
     }
 
-    void SceneSerializer::SerializeSceneToFile(const char* path, const std::shared_ptr<Scene>& srcScene)
+    void SceneSerializer::SerializeSceneToFile(const char* path, const Ref<Scene>& srcScene)
     {
         FBY_SCOPED_TIMER("Serialization");
 
@@ -284,7 +284,7 @@ namespace Flameberry {
         fout << out.c_str();
     }
 
-    void SceneSerializer::SerializeEntity(YAML::Emitter& out, const fbentt::entity& entity, const std::shared_ptr<Scene>& scene, std::set<UUID>& meshUUIDs)
+    void SceneSerializer::SerializeEntity(YAML::Emitter& out, const fbentt::entity& entity, const Ref<Scene>& scene, std::set<UUID>& meshUUIDs)
     {
         out << YAML::BeginMap;
         out << YAML::Key << "Entity" << YAML::Value << scene->m_Registry->get<IDComponent>(entity).ID;

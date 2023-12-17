@@ -17,7 +17,7 @@ namespace Flameberry {
         Scene();
         ~Scene();
 
-        explicit Scene(const std::shared_ptr<Scene>& other);
+        explicit Scene(const Ref<Scene>& other);
         explicit Scene(const Scene& other);
         const Scene& operator=(const Scene& other) const = delete;
 
@@ -38,15 +38,12 @@ namespace Flameberry {
         fbentt::entity DuplicateEntityTree(fbentt::entity src);
 
         inline std::string GetName() const { return m_Name; }
-        inline std::shared_ptr<fbentt::registry> GetRegistry() const { return m_Registry; }
+        inline Ref<fbentt::registry> GetRegistry() const { return m_Registry; }
         fbentt::entity GetPrimaryCameraEntity() const;
-
-        template<typename... Args>
-        static std::shared_ptr<Scene> Create(Args... args) { return std::make_shared<Scene>(std::forward<Args>(args)...); }
     private:
         bool Recursive_IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
     private:
-        std::shared_ptr<fbentt::registry> m_Registry;
+        Ref<fbentt::registry> m_Registry;
         physx::PxScene* m_PxScene;
 
         std::string m_Name = "Untitled";

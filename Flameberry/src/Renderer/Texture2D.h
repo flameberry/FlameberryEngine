@@ -31,30 +31,30 @@ namespace Flameberry {
         static void InitStaticResources();
         static void DestroyStaticResources();
 
-        static std::shared_ptr<DescriptorSetLayout> GetDescriptorLayout() { return s_DescriptorLayout; }
+        static Ref<DescriptorSetLayout> GetDescriptorLayout() { return s_DescriptorLayout; }
         static VkDescriptorSet GetEmptyDescriptorSet() { return s_EmptyDescriptorSet->GetDescriptorSet(); }
         static VkSampler GetDefaultSampler() { return s_DefaultSampler; }
         static VkImageView GetEmptyImageView() { return s_EmptyImage->GetImageView(); }
 
-        static std::shared_ptr<Texture2D> TryGetOrLoadTexture(const std::string& texturePath);
+        static Ref<Texture2D> TryGetOrLoadTexture(const std::string& texturePath);
 
-        static std::shared_ptr<Texture2D> LoadFromFile(const char* path) { return std::make_shared<Texture2D>(path); }
+        static Ref<Texture2D> LoadFromFile(const char* path) { return CreateRef<Texture2D>(path); }
     private:
         void SetupTexture(const void* data, const float width, const float height, const float imageSize, const uint16_t mipLevels, const VkFormat format, const VkSampler sampler);
     private:
         ImageSpecification m_TextureImageSpecification;
 
-        std::shared_ptr<Image> m_TextureImage;
+        Ref<Image> m_TextureImage;
         VkSampler m_VkTextureSampler;
         VkDescriptorSet m_DescriptorSet = VK_NULL_HANDLE;
 
         bool m_DidCreateSampler = false;
 
-        static std::shared_ptr<DescriptorSetLayout> s_DescriptorLayout;
-        static std::shared_ptr<DescriptorSet> s_EmptyDescriptorSet;
-        static std::shared_ptr<Image> s_EmptyImage;
+        static Ref<DescriptorSetLayout> s_DescriptorLayout;
+        static Ref<DescriptorSet> s_EmptyDescriptorSet;
+        static Ref<Image> s_EmptyImage;
         static VkSampler s_DefaultSampler;
 
-        static std::unordered_map<std::string, std::shared_ptr<Texture2D>> s_TextureCacheDirectory;
+        static std::unordered_map<std::string, Ref<Texture2D>> s_TextureCacheDirectory;
     };
 }

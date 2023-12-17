@@ -35,7 +35,7 @@ namespace Flameberry {
     };
 
     struct CameraUniformBufferObject { glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix; };
-    EditorLayer::EditorLayer(const std::shared_ptr<Project>& project)
+    EditorLayer::EditorLayer(const Ref<Project>& project)
         : m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{
             glm::vec3(0.0f, 2.0f, 4.0f),
             glm::vec3(0.0f, -0.3f, -1.0f),
@@ -68,9 +68,9 @@ namespace Flameberry {
         std::filesystem::current_path(m_Project->GetProjectDirectory());
 
         PhysicsEngine::Init();
-        m_ActiveScene = Scene::Create();
-        m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
-        m_ContentBrowserPanel = ContentBrowserPanel::Create();
+        m_ActiveScene = CreateRef<Scene>();
+        m_SceneHierarchyPanel = CreateRef<SceneHierarchyPanel>(m_ActiveScene);
+        m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
 
 #pragma region MousePickingResources
         BufferSpecification mousePickingBufferSpec;
@@ -90,9 +90,9 @@ namespace Flameberry {
         mousePickingFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
 
         RenderPassSpecification mousePickingRenderPassSpec;
-        mousePickingRenderPassSpec.TargetFramebuffers = { Framebuffer::Create(mousePickingFramebufferSpec) };
+        mousePickingRenderPassSpec.TargetFramebuffers = { CreateRef<Framebuffer>(mousePickingFramebufferSpec) };
 
-        m_MousePickingRenderPass = RenderPass::Create(mousePickingRenderPassSpec);
+        m_MousePickingRenderPass = CreateRef<RenderPass>(mousePickingRenderPassSpec);
 
         // Creating Descriptors
         DescriptorSetLayoutSpecification mousePickingDescSetLayoutSpec;
@@ -103,7 +103,7 @@ namespace Flameberry {
         mousePickingDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         mousePickingDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
 
-        m_MousePickingDescriptorSetLayout = DescriptorSetLayout::Create(mousePickingDescSetLayoutSpec);
+        m_MousePickingDescriptorSetLayout = CreateRef<DescriptorSetLayout>(mousePickingDescSetLayoutSpec);
 
         {
             // Pipeline Creation
@@ -123,7 +123,7 @@ namespace Flameberry {
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
             pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
 
-            m_MousePickingPipeline = Pipeline::Create(pipelineSpec);
+            m_MousePickingPipeline = CreateRef<Pipeline>(pipelineSpec);
         }
 
         {
@@ -143,7 +143,7 @@ namespace Flameberry {
             pipelineSpec.VertexInputBindingDescription.stride = sizeof(QuadVertex);
             pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
 
-            m_MousePicking2DPipeline = Pipeline::Create(pipelineSpec);
+            m_MousePicking2DPipeline = CreateRef<Pipeline>(pipelineSpec);
         }
 #pragma endregion MousePickingResources
 
@@ -643,7 +643,7 @@ namespace Flameberry {
 
     void EditorLayer::NewScene()
     {
-        m_ActiveScene = Scene::Create();
+        m_ActiveScene = CreateRef<Scene>();
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
         m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
 
@@ -921,7 +921,7 @@ namespace Flameberry {
 
         std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
         // Copy m_ActiveSceneBackUpCopy to m_ActiveScene
-        m_ActiveScene = Scene::Create(m_ActiveSceneBackUpCopy);
+        m_ActiveScene = CreateRef<Scene>(m_ActiveSceneBackUpCopy);
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 
         m_ActiveScene->OnStartRuntime();

@@ -6,9 +6,9 @@
 #include "Renderer/Renderer.h"
 
 namespace Flameberry {
-    std::shared_ptr<Window> Window::Create(const WindowSpecification& specification)
+    Ref<Window> Window::Create(const WindowSpecification& specification)
     {
-        return std::make_shared<VulkanWindow>(specification);
+        return CreateRef<VulkanWindow>(specification);
     }
 
     VulkanWindow::VulkanWindow(const WindowSpecification& specification)
@@ -39,7 +39,7 @@ namespace Flameberry {
 
     void VulkanWindow::Init()
     {
-        m_SwapChain = std::make_shared<SwapChain>(m_WindowSurface);
+        m_SwapChain = CreateRef<SwapChain>(m_WindowSurface);
     }
 
     void VulkanWindow::Shutdown()

@@ -11,7 +11,7 @@
 namespace Flameberry {
     struct AssetLoaderFunctionMapEntry {
         AssetType Type;
-        std::shared_ptr<Asset>(*LoaderFunction)(const std::filesystem::path&);
+        Ref<Asset>(*LoaderFunction)(const std::filesystem::path&);
     };
 
     constexpr AssetLoaderFunctionMapEntry g_AssetLoaderFunctionMap[4] = {
@@ -21,7 +21,7 @@ namespace Flameberry {
         { AssetType::Material,   MaterialLoader::LoadMaterial }
     };
 
-    std::shared_ptr<Asset> AssetLoader::LoadAsset(const std::filesystem::path& path, AssetType type)
+    Ref<Asset> AssetLoader::LoadAsset(const std::filesystem::path& path, AssetType type)
     {
         if ((uint16_t)type >= 4)
         {
