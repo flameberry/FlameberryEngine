@@ -121,11 +121,11 @@ namespace Flameberry {
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = {
-                ShaderDataType::Float3,
-                ShaderDataType::Dummy12,
-                ShaderDataType::Dummy8,
-                ShaderDataType::Dummy12,
-                ShaderDataType::Dummy12
+                ShaderDataType::Float3,  // a_Position
+                ShaderDataType::Dummy12, // Normal (Unnecessary)
+                ShaderDataType::Dummy8,  // TextureCoords (Unnecessary)
+                ShaderDataType::Dummy12, // Tangent (Unnecessary)
+                ShaderDataType::Dummy12  // BiTangent (Unnecessary)
             };
 
             m_MousePickingPipeline = CreateRef<Pipeline>(pipelineSpec);
@@ -142,7 +142,11 @@ namespace Flameberry {
             pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking2D.frag.spv");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
-            pipelineSpec.VertexLayout = { ShaderDataType::Float3, ShaderDataType::Dummy12, ShaderDataType::Int };
+            pipelineSpec.VertexLayout = {
+                ShaderDataType::Float3,  // a_Position
+                ShaderDataType::Dummy12, // Color (Unnecessary)
+                ShaderDataType::Int      // a_EntityIndex
+            };
             pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
 
             m_MousePicking2DPipeline = CreateRef<Pipeline>(pipelineSpec);

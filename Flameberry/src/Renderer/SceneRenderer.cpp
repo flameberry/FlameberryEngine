@@ -161,11 +161,11 @@ namespace Flameberry {
             pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
             pipelineSpec.VertexLayout = {
-                ShaderDataType::Float3,
-                ShaderDataType::Dummy12,
-                ShaderDataType::Dummy8,
-                ShaderDataType::Dummy12,
-                ShaderDataType::Dummy12
+                ShaderDataType::Float3,  // a_Position
+                ShaderDataType::Dummy12, // Normal (Unnecessary)
+                ShaderDataType::Dummy8,  // TextureCoords (Unnecessary)
+                ShaderDataType::Dummy12, // Tangent (Unnecessary)
+                ShaderDataType::Dummy12  // BiTangent (Unnecessary)
             };
 
             pipelineSpec.Viewport.width = SceneRendererSettings::CascadeSize;

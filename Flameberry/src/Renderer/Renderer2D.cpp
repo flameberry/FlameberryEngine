@@ -111,7 +111,7 @@ namespace Flameberry {
             pipelineSpec.VertexLayout = {
                 ShaderDataType::Float3, // a_Position
                 ShaderDataType::Float3, // a_Color
-                ShaderDataType::Dummy4  // EntityID
+                ShaderDataType::Dummy4  // EntityIndex (Unnecessary)
             };
             pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
             pipelineSpec.BlendingEnable = true;
