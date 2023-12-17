@@ -120,8 +120,13 @@ namespace Flameberry {
             pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking.frag.spv");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
-            pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
-            pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
+            pipelineSpec.VertexLayout = {
+                ShaderDataType::Float3,
+                ShaderDataType::Dummy12,
+                ShaderDataType::Dummy8,
+                ShaderDataType::Dummy12,
+                ShaderDataType::Dummy12
+            };
 
             m_MousePickingPipeline = CreateRef<Pipeline>(pipelineSpec);
         }
@@ -137,10 +142,7 @@ namespace Flameberry {
             pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking2D.frag.spv");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
-            pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F, VertexInputAttribute::VEC3F, VertexInputAttribute::INT };
-            pipelineSpec.VertexInputBindingDescription.binding = 0;
-            pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-            pipelineSpec.VertexInputBindingDescription.stride = sizeof(QuadVertex);
+            pipelineSpec.VertexLayout = { ShaderDataType::Float3, ShaderDataType::Dummy12, ShaderDataType::Int };
             pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
 
             m_MousePicking2DPipeline = CreateRef<Pipeline>(pipelineSpec);

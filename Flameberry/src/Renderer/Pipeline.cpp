@@ -13,29 +13,57 @@ namespace Flameberry {
         CreatePipeline();
     }
 
-    Pipeline::~Pipeline()
+    static VkFormat ShaderDataTypeToFormat(ShaderDataType type)
     {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
+        switch (type)
+        {
+            case ShaderDataType::None:     return VK_FORMAT_UNDEFINED;           break;
+            case ShaderDataType::Float:    return VK_FORMAT_R32_SFLOAT;          break;
+            case ShaderDataType::Float2:   return VK_FORMAT_R32G32_SFLOAT;       break;
+            case ShaderDataType::Float3:   return VK_FORMAT_R32G32B32_SFLOAT;    break;
+            case ShaderDataType::Float4:   return VK_FORMAT_R32G32B32A32_SFLOAT; break;
+            case ShaderDataType::UInt:     return VK_FORMAT_R32_UINT;            break;
+            case ShaderDataType::UInt2:    return VK_FORMAT_R32G32_UINT;         break;
+            case ShaderDataType::UInt3:    return VK_FORMAT_R32G32B32_UINT;      break;
+            case ShaderDataType::UInt4:    return VK_FORMAT_R32G32B32_UINT;      break;
+            case ShaderDataType::Int:      return VK_FORMAT_R32_SINT;            break;
+            case ShaderDataType::Int2:     return VK_FORMAT_R32G32_SINT;         break;
+            case ShaderDataType::Int3:     return VK_FORMAT_R32G32B32_SINT;      break;
+            case ShaderDataType::Int4:     return VK_FORMAT_R32G32B32A32_SINT;   break;
+            case ShaderDataType::Float3x3: return VK_FORMAT_R32G32B32_SFLOAT;    break;
+            case ShaderDataType::Float4x4: return VK_FORMAT_R32G32B32A32_SFLOAT; break;
+            case ShaderDataType::Bool:     return VK_FORMAT_R8_UINT;             break;
+            default: return VK_FORMAT_UNDEFINED; break;
+        }
     }
 
-    void Pipeline::ReloadShaders()
+    static VkDeviceSize SizeOfShaderDataType(ShaderDataType type)
     {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
-
-        CreatePipeline();
-    }
-
-    void Pipeline::Bind()
-    {
-        Renderer::Submit([pipeline = m_VkGraphicsPipeline](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-            }
-        );
+        switch (type)
+        {
+            case ShaderDataType::None:     return 0;         break;
+            case ShaderDataType::Float:    return 4;         break;
+            case ShaderDataType::Float2:   return 4 * 2;     break;
+            case ShaderDataType::Float3:   return 4 * 3;     break;
+            case ShaderDataType::Float4:   return 4 * 4;     break;
+            case ShaderDataType::UInt:     return 4;         break;
+            case ShaderDataType::UInt2:    return 4 * 2;     break;
+            case ShaderDataType::UInt3:    return 4 * 3;     break;
+            case ShaderDataType::UInt4:    return 4 * 4;     break;
+            case ShaderDataType::Int:      return 4;         break;
+            case ShaderDataType::Int2:     return 4 * 2;     break;
+            case ShaderDataType::Int3:     return 4 * 3;     break;
+            case ShaderDataType::Int4:     return 4 * 4;     break;
+            case ShaderDataType::Float3x3: return 4 * 3 * 3; break;
+            case ShaderDataType::Float4x4: return 4 * 4 * 4; break;
+            case ShaderDataType::Bool:     return 1;         break;
+            case ShaderDataType::Dummy1:   return 1;         break;
+            case ShaderDataType::Dummy4:   return 4;         break;
+            case ShaderDataType::Dummy8:   return 8;         break;
+            case ShaderDataType::Dummy12:  return 12;        break;
+            case ShaderDataType::Dummy16:  return 16;        break;
+        }
+        return 0;
     }
 
     void Pipeline::CreatePipeline()
@@ -46,15 +74,17 @@ namespace Flameberry {
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 
         // Creating Pipeline Layout
-        uint32_t offset = 0;
-        for (const auto& pushConstant : m_PipelineSpec.PipelineLayout.PushConstants)
         {
-            auto& range = pushConstantRanges.emplace_back();
-            range.offset = offset;
-            range.size = pushConstant.Size;
-            range.stageFlags = pushConstant.ShaderStage;
+            uint32_t offset = 0;
+            for (const auto& pushConstant : m_PipelineSpec.PipelineLayout.PushConstants)
+            {
+                auto& range = pushConstantRanges.emplace_back();
+                range.offset = offset;
+                range.size = pushConstant.Size;
+                range.stageFlags = pushConstant.ShaderStage;
 
-            offset += pushConstant.Size;
+                offset += pushConstant.Size;
+            }
         }
 
         for (const auto& layout : m_PipelineSpec.PipelineLayout.DescriptorSetLayouts)
@@ -144,14 +174,35 @@ namespace Flameberry {
         pipelineDepthStencilStateCreateInfo.front = m_PipelineSpec.StencilOpState;
         pipelineDepthStencilStateCreateInfo.back = m_PipelineSpec.StencilOpState;
 
-        const auto& vertexAttributeDesc = m_PipelineSpec.VertexLayout.CreateVertexInputAttributeDescriptions();
+        // Create the vertex attribute description structs based on the m_PipelineSpec.VertexLayout
+        VkVertexInputAttributeDescription vertexAttributeDescriptions[m_PipelineSpec.VertexLayout.size()];
+        uint32_t offset = 0, index = 0;
+        for (uint32_t loc = 0; loc < m_PipelineSpec.VertexLayout.size(); loc++)
+        {
+            const auto dataType = m_PipelineSpec.VertexLayout[loc];
+            if (dataType < ShaderDataType::Dummy1)
+            {
+                vertexAttributeDescriptions[index].binding = 0;
+                vertexAttributeDescriptions[index].location = loc;
+                vertexAttributeDescriptions[index].format = ShaderDataTypeToFormat(dataType);
+                vertexAttributeDescriptions[index].offset = offset;
+                index++;
+            }
+            offset += SizeOfShaderDataType(dataType);
+        }
+
+        // Fill the Vertex Binding Description purely based upon the vertex layout provided
+        VkVertexInputBindingDescription vertexInputBindingDescription{};
+        vertexInputBindingDescription.binding = 0;
+        vertexInputBindingDescription.stride = offset; // The final offset will turn out to be the total stride
+        vertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
         VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo{};
         pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = m_PipelineSpec.VertexInputBindingDescription.stride ? 1 : 0;
-        pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = &m_PipelineSpec.VertexInputBindingDescription;
-        pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttributeDesc.size());
-        pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexAttributeDesc.data();
+        pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = vertexInputBindingDescription.stride ? 1 : 0;
+        pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = &vertexInputBindingDescription;
+        pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = index; // Index will represent Size after the last increment
+        pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexAttributeDescriptions;
 
         VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo{};
         pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -237,6 +288,31 @@ namespace Flameberry {
         vk_graphics_pipeline_create_info.basePipelineIndex = -1;
 
         VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_VkGraphicsPipeline));
+    }
+
+    void Pipeline::ReloadShaders()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
+
+        CreatePipeline();
+    }
+
+    void Pipeline::Bind()
+    {
+        Renderer::Submit([pipeline = m_VkGraphicsPipeline](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+            }
+        );
+    }
+
+    Pipeline::~Pipeline()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
     }
 
     ComputePipeline::ComputePipeline(const ComputePipelineSpecification& pipelineSpec)

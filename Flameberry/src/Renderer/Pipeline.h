@@ -4,12 +4,13 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-#include "VulkanVertex.h"
 #include "RenderPass.h"
 #include "DescriptorSet.h"
 #include "Shader.h"
 
 namespace Flameberry {
+
+    using VertexInputLayout = std::vector<ShaderDataType>;
 
     struct PushConstantSpecification {
         VkShaderStageFlags ShaderStage;
@@ -27,10 +28,12 @@ namespace Flameberry {
         Ref<RenderPass> RenderPass;
         Ref<Shader> VertexShader, FragmentShader;
 
+        // Make sure to provide all the attributes present in the Vertex Buffer
+        // And for those that don't need to be used in the shader replace them with the equivalent Dummy Types
+        VertexInputLayout VertexLayout;
+
         PipelineLayoutSpecification PipelineLayout;
         uint32_t SubPass = 0;
-        VertexInputAttributeLayout VertexLayout;
-        VkVertexInputBindingDescription VertexInputBindingDescription;
         uint32_t Samples = 1;
         VkViewport Viewport = { 0, 0, 0, 0, 0.0f, 1.0f };
         VkRect2D Scissor;

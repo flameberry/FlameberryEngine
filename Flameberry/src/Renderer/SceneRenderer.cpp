@@ -160,8 +160,13 @@ namespace Flameberry {
             pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadow_map.frag.spv");
             pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
-            pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
-            pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
+            pipelineSpec.VertexLayout = {
+                ShaderDataType::Float3,
+                ShaderDataType::Dummy12,
+                ShaderDataType::Dummy8,
+                ShaderDataType::Dummy12,
+                ShaderDataType::Dummy12
+            };
 
             pipelineSpec.Viewport.width = SceneRendererSettings::CascadeSize;
             pipelineSpec.Viewport.height = SceneRendererSettings::CascadeSize;
@@ -371,13 +376,12 @@ namespace Flameberry {
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {
-                    VertexInputAttribute::VEC3F, // a_Position
-                    VertexInputAttribute::VEC3F, // a_Normal
-                    VertexInputAttribute::VEC2F, // a_TextureCoords
-                    VertexInputAttribute::VEC3F, // a_Tangent
-                    VertexInputAttribute::VEC3F  // a_BiTangent
+                    ShaderDataType::Float3, // a_Position
+                    ShaderDataType::Float3, // a_Normal
+                    ShaderDataType::Float2, // a_TextureCoords
+                    ShaderDataType::Float3, // a_Tangent
+                    ShaderDataType::Float3  // a_BiTangent
                 };
-                pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
                 pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
                 pipelineSpec.BlendingEnable = true;
@@ -408,10 +412,6 @@ namespace Flameberry {
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {};
-
-                pipelineSpec.VertexInputBindingDescription.binding = 0;
-                pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-                pipelineSpec.VertexInputBindingDescription.stride = 0;
 
                 VkSampleCountFlagBits sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
                 pipelineSpec.Samples = sampleCount;
@@ -484,9 +484,6 @@ namespace Flameberry {
             pipelineSpec.RenderPass = m_CompositePass;
 
             pipelineSpec.VertexLayout = {};
-            pipelineSpec.VertexInputBindingDescription.binding = 0;
-            pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-            pipelineSpec.VertexInputBindingDescription.stride = 0;
 
             pipelineSpec.BlendingEnable = true;
             pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;

@@ -37,12 +37,10 @@ namespace Flameberry {
             pipelineSpec.RenderPass = renderPass;
 
             pipelineSpec.VertexLayout = {
-                VertexInputAttribute::VEC3F, // a_Position
-                VertexInputAttribute::VEC3F  // a_Color
+                ShaderDataType::Float3, // a_Position
+                ShaderDataType::Float3  // a_Color
+
             };
-            pipelineSpec.VertexInputBindingDescription.binding = 0;
-            pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-            pipelineSpec.VertexInputBindingDescription.stride = sizeof(LineVertex);
             pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
             pipelineSpec.PolygonMode = VK_POLYGON_MODE_LINE;
@@ -111,12 +109,10 @@ namespace Flameberry {
             pipelineSpec.RenderPass = renderPass;
 
             pipelineSpec.VertexLayout = {
-                VertexInputAttribute::VEC3F, // a_Position
-                VertexInputAttribute::VEC3F, // a_Color
+                ShaderDataType::Float3, // a_Position
+                ShaderDataType::Float3, // a_Color
+                ShaderDataType::Dummy4  // EntityID
             };
-            pipelineSpec.VertexInputBindingDescription.binding = 0;
-            pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-            pipelineSpec.VertexInputBindingDescription.stride = sizeof(QuadVertex);
             pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
             pipelineSpec.BlendingEnable = true;
 
