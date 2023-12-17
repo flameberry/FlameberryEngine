@@ -156,8 +156,8 @@ namespace Flameberry {
             };
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_ShadowMapDescriptorSetLayout };
 
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadow_map.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadow_map.frag.spv";
+            pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadow_map.vert.spv");
+            pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadow_map.frag.spv");
             pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
@@ -366,8 +366,8 @@ namespace Flameberry {
                     Material::GetLayout()
                 };
 
-                pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.vert.spv";
-                pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.frag.spv";
+                pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.vert.spv");
+                pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.frag.spv");
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {
@@ -403,8 +403,8 @@ namespace Flameberry {
 
                 pipelineSpec.PipelineLayout.DescriptorSetLayouts = { Texture2D::GetDescriptorLayout() };
 
-                pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/skybox.vert.spv";
-                pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/skybox.frag.spv";
+                pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/skybox.vert.spv");
+                pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/skybox.frag.spv");
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {};
@@ -479,8 +479,8 @@ namespace Flameberry {
             pipelineSpec.PipelineLayout.PushConstants = {};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_CompositePassDescriptorSetLayout };
 
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/composite.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/composite.frag.spv";
+            pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/composite.vert.spv");
+            pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/composite.frag.spv");
             pipelineSpec.RenderPass = m_CompositePass;
 
             pipelineSpec.VertexLayout = {};

@@ -116,8 +116,8 @@ namespace Flameberry {
                 m_MousePickingDescriptorSetLayout
             };
 
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking.frag.spv";
+            pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking.vert.spv");
+            pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking.frag.spv");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
@@ -133,8 +133,8 @@ namespace Flameberry {
                 m_MousePickingDescriptorSetLayout
             };
 
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking2D.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking2D.frag.spv";
+            pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking2D.vert.spv");
+            pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking2D.frag.spv");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F, VertexInputAttribute::VEC3F, VertexInputAttribute::INT };

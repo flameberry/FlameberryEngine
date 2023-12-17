@@ -7,6 +7,7 @@
 #include "VulkanVertex.h"
 #include "RenderPass.h"
 #include "DescriptorSet.h"
+#include "Shader.h"
 
 namespace Flameberry {
 
@@ -23,9 +24,10 @@ namespace Flameberry {
 
     struct PipelineSpecification
     {
-        PipelineLayoutSpecification PipelineLayout;
-        std::string VertexShaderFilePath, FragmentShaderFilePath;
         Ref<RenderPass> RenderPass;
+        Ref<Shader> VertexShader, FragmentShader;
+
+        PipelineLayoutSpecification PipelineLayout;
         uint32_t SubPass = 0;
         VertexInputAttributeLayout VertexLayout;
         VkVertexInputBindingDescription VertexInputBindingDescription;

@@ -70,22 +70,16 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
 
         // Creating Pipeline
-        std::vector<char> compiledVertexShader = RenderCommand::LoadCompiledShaderCode(m_PipelineSpec.VertexShaderFilePath);
-        std::vector<char> compiledFragmentShader = RenderCommand::LoadCompiledShaderCode(m_PipelineSpec.FragmentShaderFilePath);
-
-        VkShaderModule vk_vertex_shader_module = RenderCommand::CreateShaderModule(compiledVertexShader);
-        VkShaderModule vk_fragment_shader_module = RenderCommand::CreateShaderModule(compiledFragmentShader);
-
         VkPipelineShaderStageCreateInfo vk_pipeline_vertex_shader_stage_create_info{};
         vk_pipeline_vertex_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vk_pipeline_vertex_shader_stage_create_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vk_pipeline_vertex_shader_stage_create_info.module = vk_vertex_shader_module;
+        vk_pipeline_vertex_shader_stage_create_info.module = m_PipelineSpec.VertexShader->GetVulkanShaderModule();
         vk_pipeline_vertex_shader_stage_create_info.pName = "main";
 
         VkPipelineShaderStageCreateInfo vk_pipeline_fragment_shader_stage_create_info{};
         vk_pipeline_fragment_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vk_pipeline_fragment_shader_stage_create_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        vk_pipeline_fragment_shader_stage_create_info.module = vk_fragment_shader_module;
+        vk_pipeline_fragment_shader_stage_create_info.module = m_PipelineSpec.FragmentShader->GetVulkanShaderModule();
         vk_pipeline_fragment_shader_stage_create_info.pName = "main";
 
         VkPipelineShaderStageCreateInfo vk_shader_stages_create_infos[2] = { vk_pipeline_vertex_shader_stage_create_info , vk_pipeline_fragment_shader_stage_create_info };
@@ -243,10 +237,6 @@ namespace Flameberry {
         vk_graphics_pipeline_create_info.basePipelineIndex = -1;
 
         VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_VkGraphicsPipeline));
-
-        // Destroying Shader Modules
-        vkDestroyShaderModule(device, vk_vertex_shader_module, nullptr);
-        vkDestroyShaderModule(device, vk_fragment_shader_module, nullptr);
     }
 
     ComputePipeline::ComputePipeline(const ComputePipelineSpecification& pipelineSpec)
