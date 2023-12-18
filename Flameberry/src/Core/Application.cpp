@@ -34,8 +34,7 @@ namespace Flameberry {
         auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
         VulkanContext::GetCurrentDevice()->AllocateCommandBuffers(swapchain->GetSwapChainImageCount());
 
-        // Create the generic texture descriptor layout
-        Texture2D::InitStaticResources();
+        Renderer::Init();
 
         m_ImGuiLayer = new ImGuiLayer();
         PushOverlay(m_ImGuiLayer);
@@ -44,8 +43,6 @@ namespace Flameberry {
     void Application::Run()
     {
         float last = 0.0f;
-
-        Renderer::Init();
         while (m_Window->IsRunning())
         {
             float now = glfwGetTime();
@@ -66,7 +63,6 @@ namespace Flameberry {
             Renderer::WaitAndRender();
             glfwPollEvents();
         }
-        Renderer::Shutdown();
     }
 
     void Application::OnEvent(Event& e)
@@ -159,7 +155,7 @@ namespace Flameberry {
             delete layer;
         }
 
-        Texture2D::DestroyStaticResources();
+        Renderer::Shutdown();
         AssetManager::Clear();
 
         m_Window->Shutdown();

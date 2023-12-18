@@ -3,9 +3,10 @@
 #include "Core/Application.h"
 #include "Core/Profiler.h"
 
+#include "VulkanContext.h"
 #include "SwapChain.h"
 #include "Texture2D.h"
-#include "VulkanContext.h"
+#include "Material.h"
 
 namespace Flameberry {
     std::vector<Renderer::Command> Renderer::s_CommandQueue;
@@ -13,10 +14,15 @@ namespace Flameberry {
 
     void Renderer::Init()
     {
+        // Create the generic texture descriptor layout
+        Texture2D::InitStaticResources();
+        Material::Init();
     }
 
     void Renderer::Shutdown()
     {
+        Material::Shutdown();
+        Texture2D::DestroyStaticResources();
     }
 
     void Renderer::Submit(const Command& cmd)

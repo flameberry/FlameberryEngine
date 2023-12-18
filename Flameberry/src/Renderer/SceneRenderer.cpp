@@ -353,9 +353,6 @@ namespace Flameberry {
                     m_ShadowMapRefDescSets[i]->Update();
                 }
 
-                // Temp
-                Material::Init();
-
                 PipelineSpecification pipelineSpec{};
 
                 pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
@@ -1151,8 +1148,6 @@ namespace Flameberry {
     {
         auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDestroySampler(device, m_ShadowMapSampler, nullptr);
-
-        Material::Shutdown();
     }
 
 }
