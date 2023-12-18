@@ -59,9 +59,11 @@ layout (std140, set = 1, binding = 0) uniform SceneData {
     SceneRendererSettingsUniform u_SceneRendererSettings;
 };
 
+// Only u_ModelMatrix is not used in the fragment shader
+// But for simplification, currently all the push constant data is sent in one PushConstantRange
 layout (push_constant) uniform MeshData {
-    mat4  u_ModelMatrix;
-    vec3  u_Albedo;
+    mat4 u_ModelMatrix;
+    vec3 u_Albedo;
     float u_Roughness;
     float u_Metallic;
 

@@ -108,10 +108,6 @@ namespace Flameberry {
         {
             // Pipeline Creation
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.PushConstants = {
-                { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MousePickingPushConstantData) }
-            };
-
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
                 m_MousePickingDescriptorSetLayout
             };
@@ -572,8 +568,8 @@ namespace Flameberry {
                     }
                 }
                 break;
-        }
-    }
+                }
+                }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -933,4 +929,4 @@ namespace Flameberry {
         m_ActiveScene->OnStartRuntime();
     }
 
-}
+        }

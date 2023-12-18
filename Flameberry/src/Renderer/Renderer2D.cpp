@@ -29,7 +29,6 @@ namespace Flameberry {
             s_Renderer2DData.LineVertexBuffer->MapMemory(bufferSpec.InstanceSize);
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.PushConstants = {};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout };
 
             pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/solid_color.vert.spv");
@@ -101,7 +100,6 @@ namespace Flameberry {
             delete[] indices;
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.PushConstants = {};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout, Texture2D::GetDescriptorLayout() };
 
             pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/quad.vert.spv");

@@ -151,9 +151,6 @@ namespace Flameberry {
             }
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.PushConstants = {
-                { VK_SHADER_STAGE_VERTEX_BIT, sizeof(ModelMatrixPushConstantData) },
-            };
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_ShadowMapDescriptorSetLayout };
 
             pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadow_map.vert.spv");
@@ -356,13 +353,10 @@ namespace Flameberry {
                     m_ShadowMapRefDescSets[i]->Update();
                 }
 
-                PipelineSpecification pipelineSpec{};
-                pipelineSpec.PipelineLayout.PushConstants = {
-                    { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MeshData) }
-                };
-
                 // Temp
                 Material::Init();
+
+                PipelineSpecification pipelineSpec{};
 
                 pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
                     m_CameraBufferDescSetLayout,
@@ -401,10 +395,6 @@ namespace Flameberry {
             // Skybox Pipeline
             {
                 Flameberry::PipelineSpecification pipelineSpec{};
-                pipelineSpec.PipelineLayout.PushConstants = {
-                    { VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4) }
-                };
-
                 pipelineSpec.PipelineLayout.DescriptorSetLayouts = { Texture2D::GetDescriptorLayout() };
 
                 pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/skybox.vert.spv");
@@ -476,7 +466,6 @@ namespace Flameberry {
             }
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.PushConstants = {};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_CompositePassDescriptorSetLayout };
 
             pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/composite.vert.spv");

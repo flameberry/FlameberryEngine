@@ -7,6 +7,13 @@
 
 namespace Flameberry {
 
+    struct PushConstantSpecification
+    {
+        const char* Name;
+        VkShaderStageFlagBits ShaderStage;
+        uint32_t Size, Offset;
+    };
+
     enum class ShaderDataType : uint8_t
     {
         None = 0,
@@ -29,11 +36,14 @@ namespace Flameberry {
 
         VkShaderModule GetVulkanShaderModule() const { return m_ShaderModule; }
         const std::vector<ShaderDataType>& GetInputVariableDataTypes() const { return m_InputDataTypes; }
+        const std::vector<PushConstantSpecification>& GetPushConstantSpecifications() const { return m_PushConstantSpecifications; }
     private:
+        // TODO: Think about if this needs to be kept here rather than just in the constructor
         spv_reflect::ShaderModule m_ReflectionShaderModule;
         VkShaderModule m_ShaderModule;
 
         std::vector<ShaderDataType> m_InputDataTypes;
+        std::vector<PushConstantSpecification> m_PushConstantSpecifications;
     };
 
 }

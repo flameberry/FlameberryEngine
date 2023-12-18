@@ -70,32 +70,46 @@ namespace Flameberry {
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-        std::vector<VkPushConstantRange> pushConstantRanges;
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
-
         // Creating Pipeline Layout
+        std::vector<VkPushConstantRange> vulkanPushConstantRanges;
         {
-            uint32_t offset = 0;
-            for (const auto& pushConstant : m_PipelineSpec.PipelineLayout.PushConstants)
-            {
-                auto& range = pushConstantRanges.emplace_back();
-                range.offset = offset;
-                range.size = pushConstant.Size;
-                range.stageFlags = pushConstant.ShaderStage;
+            std::unordered_map<uint32_t, uint32_t> pcOffsetToIndex;
+            std::vector<PushConstantSpecification> pushConstantSpecs = { m_PipelineSpec.VertexShader->GetPushConstantSpecifications() };
+            pushConstantSpecs.insert(pushConstantSpecs.end(), m_PipelineSpec.FragmentShader->GetPushConstantSpecifications().begin(), m_PipelineSpec.FragmentShader->GetPushConstantSpecifications().end());
 
-                offset += pushConstant.Size;
+            for (const auto& specification : pushConstantSpecs)
+            {
+                if (auto it = pcOffsetToIndex.find(specification.Offset); it != pcOffsetToIndex.end())
+                {
+                    FBY_ASSERT(!(specification.ShaderStage & vulkanPushConstantRanges[it->second].stageFlags), "Push constant blocks within the same shader stage must not have the same offset!");
+                    // TODO: Maybe make this be just a warning, so that the flexibility still remains
+                    FBY_ASSERT(specification.Size == vulkanPushConstantRanges[it->second].size, "Push constant blocks between different shader stages having the same offset must have the same size! (The assumption here is that both represent the same push constant block)");
+                    vulkanPushConstantRanges[it->second].stageFlags |= specification.ShaderStage;
+                }
+                else
+                {
+                    vulkanPushConstantRanges.emplace_back(
+                        VkPushConstantRange{
+                        .offset = specification.Offset,
+                        .size = specification.Size,
+                        .stageFlags = (VkShaderStageFlags)specification.ShaderStage
+                        }
+                    );
+                    pcOffsetToIndex[specification.Offset] = (uint32_t)vulkanPushConstantRanges.size() - 1;
+                }
             }
         }
 
+        std::vector<VkDescriptorSetLayout> vulkanDescriptorSetLayouts;
         for (const auto& layout : m_PipelineSpec.PipelineLayout.DescriptorSetLayouts)
-            descriptorSetLayouts.emplace_back(layout->GetLayout());
+            vulkanDescriptorSetLayouts.emplace_back(layout->GetLayout());
 
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
         vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        vk_pipeline_layout_create_info.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
-        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts.data();
-        vk_pipeline_layout_create_info.pushConstantRangeCount = (uint32_t)pushConstantRanges.size();
-        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges.data();
+        vk_pipeline_layout_create_info.setLayoutCount = (uint32_t)vulkanDescriptorSetLayouts.size();
+        vk_pipeline_layout_create_info.pSetLayouts = vulkanDescriptorSetLayouts.data();
+        vk_pipeline_layout_create_info.pushConstantRangeCount = (uint32_t)vulkanPushConstantRanges.size();
+        vk_pipeline_layout_create_info.pPushConstantRanges = vulkanPushConstantRanges.data();
 
         VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
 
@@ -322,6 +336,9 @@ namespace Flameberry {
         std::vector<VkPushConstantRange> pushConstantRanges;
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 
+
+        FBY_ASSERT(0, "Compute Pipeline Not implemented yet!");
+#if 0
         // Creating Pipeline Layout
         uint32_t offset = 0;
         for (const auto& pushConstant : m_PipelineSpec.PipelineLayout.PushConstants)
@@ -333,6 +350,7 @@ namespace Flameberry {
 
             offset += pushConstant.Size;
         }
+#endif
 
         for (const auto& layout : m_PipelineSpec.PipelineLayout.DescriptorSetLayouts)
             descriptorSetLayouts.emplace_back(layout->GetLayout());

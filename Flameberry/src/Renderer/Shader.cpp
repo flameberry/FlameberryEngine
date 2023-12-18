@@ -43,26 +43,10 @@ namespace Flameberry {
         if (m_ReflectionShaderModule.GetResult() != SPV_REFLECT_RESULT_SUCCESS)
             FBY_ERROR("Could not process: {} (Is it a valid SPIR-V bytecode?)", spvBinaryPath);
 
-        uint32_t count = 0;
-
-        // auto result = m_ReflectionShaderModule.EnumerateDescriptorSets(&count, NULL);
-        // FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Descriptor Sets for shader: {}", spvBinaryPath);
-        // std::vector<SpvReflectDescriptorSet*> sets(count);
-        // result = m_ReflectionShaderModule.EnumerateDescriptorSets(&count, sets.data());
-        // FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Descriptor Sets for shader: {}", spvBinaryPath);
-
-        // for (uint32_t i = 0; i < count; i++)
-        // {
-        //     for (uint32_t j = 0; j < sets[i]->binding_count; j++)
-        //     {
-        //         if (sets[i]->bindings[j]->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
-        //             FBY_LOG("{}", sets[i]->bindings[j]->name);
-        //     }
-        // }
-
 #if 0
         if (m_ReflectionShaderModule.GetShaderStage() == SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
         {
+            uint32_t count = 0;
             auto result = m_ReflectionShaderModule.EnumerateInputVariables(&count, NULL);
             FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Input Variables for shader: {}", spvBinaryPath);
             std::vector<SpvReflectInterfaceVariable*> vars(count);
@@ -111,6 +95,31 @@ namespace Flameberry {
             }
         }
 #endif
+
+        // The information about push constants is collected here
+        uint32_t count = 0;
+        auto result = m_ReflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
+        FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", spvBinaryPath);
+        std::vector<SpvReflectBlockVariable*> pcblocks(count);
+        result = m_ReflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
+        FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", spvBinaryPath);
+
+        m_PushConstantSpecifications.resize(count);
+        for (uint32_t i = 0; i < count; i++)
+        {
+            uint32_t absoluteSize = 0;
+            for (uint32_t j = 0; j < pcblocks[i]->member_count; j++)
+            {
+                auto& member = pcblocks[i]->members[j];
+                absoluteSize += member.size;
+                FBY_LOG("Member Name: {}", member.name);
+            }
+
+            m_PushConstantSpecifications[i].Name = pcblocks[i]->type_description->type_name;
+            m_PushConstantSpecifications[i].Offset = pcblocks[i]->offset;
+            m_PushConstantSpecifications[i].Size = absoluteSize;
+            m_PushConstantSpecifications[i].ShaderStage = (VkShaderStageFlagBits)m_ReflectionShaderModule.GetShaderStage();
+        }
 
         // Create the Vulkan Shader Module
         VkShaderModuleCreateInfo shaderModuleCreateInfo{};

@@ -12,14 +12,8 @@ namespace Flameberry {
 
     using VertexInputLayout = std::vector<ShaderDataType>;
 
-    struct PushConstantSpecification {
-        VkShaderStageFlags ShaderStage;
-        uint32_t Size;
-    };
-
     struct PipelineLayoutSpecification
     {
-        std::vector<PushConstantSpecification> PushConstants;
         std::vector<Ref<DescriptorSetLayout>> DescriptorSetLayouts;
     };
 

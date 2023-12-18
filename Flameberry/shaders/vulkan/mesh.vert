@@ -17,11 +17,16 @@ layout (set = 0, binding = 0) uniform UniformBufferObject {
     mat4 u_ViewMatrix, u_ProjectionMatrix, u_ViewProjectionMatrix;
 };
 
+// Only u_ModelMatrix is used in the vertex shader
+// But for simplification, currently all the push constant data is sent in one PushConstantRange
 layout (push_constant) uniform MeshData {
-    mat4  u_ModelMatrix;
-    vec3  u_Albdeo;
+    mat4 u_ModelMatrix;
+
+    // This is only used in the fragment shader
+    vec3 u_Albedo;
     float u_Roughness;
     float u_Metallic;
+    float u_TextureMapEnabled, u_NormalMapEnabled, u_RoughnessMapEnabled, u_AmbientOcclusionMapEnabled, u_MetallicMapEnabled;
 };
 
 void main()
