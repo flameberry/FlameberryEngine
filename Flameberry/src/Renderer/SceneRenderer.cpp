@@ -153,8 +153,8 @@ namespace Flameberry {
             PipelineSpecification pipelineSpec{};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_ShadowMapDescriptorSetLayout };
 
-            pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadow_map.vert.spv");
-            pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadow_map.frag.spv");
+            pipelineSpec.VertexShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadowMapping.vert.spv");
+            pipelineSpec.FragmentShader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadowMapping.frag.spv");
             pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
             pipelineSpec.VertexLayout = {

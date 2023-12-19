@@ -14,6 +14,9 @@ namespace Flameberry {
 
     struct PipelineLayoutSpecification
     {
+        // This still exists as I haven't figured out a way to manage usage of common descriptor set layouts
+        // for multiple pipelines using the same descriptors
+        // So the current solution is to let the developer provide the layouts and make the descriptor sets out of them
         std::vector<Ref<DescriptorSetLayout>> DescriptorSetLayouts;
     };
 

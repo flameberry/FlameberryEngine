@@ -12,8 +12,6 @@ layout (location = 0) out vec4 o_FragColor;
 #define PI 3.1415926535897932384626433832795
 #define CASCADE_COUNT 4
 
-#extension GL_GOOGLE_include_directive : enable
-
 #define POISSON_PROVIDE_32_SAMPLES
 #include "include/poisson.glsl"
 
