@@ -3,6 +3,8 @@
 #include "Core/Core.h"
 #include "Shader.h"
 #include "DescriptorSet.h"
+#include "Buffer.h"
+#include "Texture2D.h"
 
 namespace Flameberry {
 
@@ -16,8 +18,8 @@ namespace Flameberry {
         template<typename T>
         void Set(const std::string& uniformName, const T& value)
         {
-            const auto& uniformVar = m_Shader->Get(uniformName);
-            FBY_ASSERT(sizeof(T) == uniformVar.Size, "Size of uniform variable {} ({}) does not match the size of the value ({}) given!", uniformName, uniformVar.Size, sizeof(T));
+            const auto& uniformVar = m_Shader->GetUniform(uniformName);
+            FBY_ASSERT(sizeof(T) == uniformVar.Size, "Size of uniform variable {} ({}) does not match the size of the value ({}) given", uniformName, uniformVar.Size, sizeof(T));
             FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize, "Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
 
             memcpy(m_PushConstantBuffer + uniformVar.LocalOffset, &value, uniformVar.Size);
@@ -25,11 +27,61 @@ namespace Flameberry {
 
         void Set(const std::string& uniformName, const void* data, std::size_t size)
         {
-            const auto& uniformVar = m_Shader->Get(uniformName);
-            FBY_ASSERT(size == uniformVar.Size, "Size of uniform variable {} ({}) does not match the size of the value ({}) given!", uniformName, uniformVar.Size, size);
+            const auto& uniformVar = m_Shader->GetUniform(uniformName);
+            FBY_ASSERT(size == uniformVar.Size, "Size of uniform variable {} ({}) does not match the size of the value ({}) given", uniformName, uniformVar.Size, size);
             FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize, "Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
 
             memcpy(m_PushConstantBuffer + uniformVar.LocalOffset, data, uniformVar.Size);
+        }
+
+        template<>
+        void Set<Ref<Texture2D>>(const std::string& uniformName, const Ref<Texture2D>& texture)
+        {
+            const auto& binding = m_Shader->GetBinding(uniformName);
+            FBY_ASSERT(binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor");
+
+            // How to assemble this?
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageView = texture->GetImageView();
+            imageInfo.sampler = texture->GetSampler();
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+            m_DescriptorSets[binding.Set - m_StartSetIndex]->WriteImage(binding.Binding, imageInfo);
+            m_DescriptorSets[binding.Set - m_StartSetIndex]->Update();
+        }
+
+        // This one looks ugly, maybe the arguments should be abstracted away somehow...
+        void Set(const std::string& uniformName, const Ref<Image>& image, VkSampler sampler, VkImageLayout imageLayout)
+        {
+            const auto& binding = m_Shader->GetBinding(uniformName);
+            FBY_ASSERT(binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor");
+
+            // How to assemble this?
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageView = image->GetImageView();
+            imageInfo.sampler = sampler;
+            imageInfo.imageLayout = imageLayout;
+
+            m_DescriptorSets[binding.Set - m_StartSetIndex]->WriteImage(binding.Binding, imageInfo);
+            m_DescriptorSets[binding.Set - m_StartSetIndex]->Update();
+        }
+
+        // This function is a bit dodgy and the behaviour is not tested yet, be cautious
+        template<>
+        void Set<Ref<Buffer>>(const std::string& uniformName, const Ref<Buffer>& uniformBuffer)
+        {
+            const auto& binding = m_Shader->GetBinding(uniformName);
+            FBY_ASSERT(!binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not a Buffer Descriptor");
+
+            VkDescriptorBufferInfo bufferInfo{};
+            bufferInfo.buffer = uniformBuffer->GetBuffer();
+            bufferInfo.offset = 0;
+            bufferInfo.range = uniformBuffer->GetBufferSize();
+
+            m_DescriptorSets[binding.Set - m_StartSetIndex]->WriteBuffer(binding.Binding, bufferInfo);
+            m_DescriptorSets[binding.Set - m_StartSetIndex]->Update();
+
+            FBY_WARN("Material::Set() for Buffers is not tested and could produce undefined behaviour!");
         }
 
 #if 1
@@ -37,7 +89,7 @@ namespace Flameberry {
         template<typename T>
         T Get(const std::string& uniformName)
         {
-            const auto& uniformVar = m_Shader->Get(uniformName);
+            const auto& uniformVar = m_Shader->GetUniform(uniformName);
             FBY_ASSERT(sizeof(T) == uniformVar.Size, "Size of uniform variable {} does not match the size of the type given!", uniformName);
             FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize, "Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
 
@@ -48,7 +100,7 @@ namespace Flameberry {
         template<typename T>
         const T* GetArray(const std::string& uniformName)
         {
-            const auto& uniformVar = m_Shader->Get(uniformName);
+            const auto& uniformVar = m_Shader->GetUniform(uniformName);
             FBY_ASSERT(uniformVar.Size % sizeof(T) == 0, "Size of uniform array {} is not a multiple of the size of the type given!", uniformName);
             FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize, "Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
 
@@ -62,12 +114,17 @@ namespace Flameberry {
         // The core element behind the material is this shader
         Ref<Shader> m_Shader;
 
-        uint32_t m_PushConstantBufferSize = 0;
         // This is the main push constant data that will be sent to the shader directly
         uint8_t* m_PushConstantBuffer = nullptr;
+        uint32_t m_PushConstantBufferSize = 0;
 
         // Descriptor Sets required
         std::vector<Ref<DescriptorSet>> m_DescriptorSets;
+        // This indicates the starting set index of the first descriptor set stored in `m_DescriptorSets`
+        // This is purely on the assumption that the Renderer Only Sets will have lower set numbers and
+        // the rest will be Material accessible sets
+        // Hence it is assumed that these sets will be in ascending order starting from `m_StartSetIndex`
+        uint32_t m_StartSetIndex = -1;
     };
 
 }

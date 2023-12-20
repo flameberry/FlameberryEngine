@@ -69,11 +69,18 @@ namespace Flameberry {
         m_ShaderModule = CreateVulkanShaderModule(shaderSpvBinaryCode);
     }
 
-    const ReflectionUniformVariableSpecification& Shader::Get(const std::string& name) const
+    const ReflectionUniformVariableSpecification& Shader::GetUniform(const std::string& name) const
     {
         auto it = m_UniformFullNameToSpecification.find(name);
         FBY_ASSERT(it != m_UniformFullNameToSpecification.end(), "Uniform does not exist in shader: {}", name);
         return it->second;
+    }
+
+    const ReflectionDescriptorBindingSpecification& Shader::GetBinding(const std::string& name) const
+    {
+        auto it = m_DescriptorBindingVariableFullNameToSpecificationIndex.find(name);
+        FBY_ASSERT(it != m_DescriptorBindingVariableFullNameToSpecificationIndex.end(), "Descriptor Binding does not exist in shader: {}", name);
+        return m_DescriptorBindingSpecifications[it->second];
     }
 
     std::vector<char> Shader::LoadShaderSpvCode(const char* path)
@@ -217,7 +224,7 @@ namespace Flameberry {
                     auto& binding = descSets[i]->bindings[j];
 
                     std::string fullName = binding->name;
-                    bool rendererOnly;
+                    bool rendererOnly, isDescriptorTypeImage;
 
                     if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER
                         || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
@@ -225,11 +232,13 @@ namespace Flameberry {
                         || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE
                         || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT)
                     {
+                        isDescriptorTypeImage = true;
                         // An image descriptor will be considered renderer only when it's name has the following prefix
                         rendererOnly = Utils::HasPrefix(binding->name, FBY_SHADER_RENDERER_ONLY_PREFIX);
                     }
                     else
                     {
+                        isDescriptorTypeImage = false;
                         // A buffer descriptor will be considered renderer only when it's TYPE name (not the alias name) has the following prefix
                         rendererOnly = Utils::HasPrefix(binding->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX);
                         // Is this the right way to deal with this? Being able to refer an Uniform Buffer with it's alias
@@ -247,7 +256,8 @@ namespace Flameberry {
                         .Count = binding->count,
                         .Type = (VkDescriptorType)binding->descriptor_type,
                         .VulkanShaderStage = (VkShaderStageFlags)reflectionShaderModule.GetShaderStage(),
-                        .RendererOnly = rendererOnly
+                        .RendererOnly = rendererOnly,
+                        .IsDescriptorTypeImage = isDescriptorTypeImage
                         }
                     );
 

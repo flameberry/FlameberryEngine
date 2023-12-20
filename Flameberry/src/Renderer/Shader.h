@@ -28,7 +28,7 @@ namespace Flameberry {
         uint32_t Set, Binding, Count;
         VkDescriptorType Type;
         VkShaderStageFlags VulkanShaderStage;
-        bool RendererOnly = true;
+        bool RendererOnly = true, IsDescriptorTypeImage = false;
     };
 
     struct ReflectionDescriptorSetSpecification
@@ -66,7 +66,8 @@ namespace Flameberry {
         const std::vector<ReflectionDescriptorSetSpecification>& GetDescriptorSetSpecifications() const { return m_DescriptorSetSpecifications; }
 
         // Costly functions
-        const ReflectionUniformVariableSpecification& Get(const std::string& name) const;
+        const ReflectionUniformVariableSpecification& GetUniform(const std::string& name) const;
+        const ReflectionDescriptorBindingSpecification& GetBinding(const std::string& name) const;
     private:
         std::vector<char> LoadShaderSpvCode(const char* path);
         void Reflect(const std::vector<char>& shaderSpvBinaryCode);

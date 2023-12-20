@@ -58,22 +58,28 @@ namespace Flameberry {
     void EditorLayer::OnCreate()
     {
 #if 1
-        Ref<Shader> shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.frag.spv");
-        __Material mat("Material_01", shader);
-        mat.Set("u_Roughness", 12.69f);
-        FBY_LOG("Roughness of material is: {}", mat.Get<float>("u_Roughness"));
+        {
+            Ref<Texture2D> texture = CreateRef<Texture2D>(FBY_PROJECT_DIR"SandboxProject/Content/Textures/brick.png");
+            Ref<Shader> shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.frag.spv");
+            __Material mat("Material_01", shader);
+            mat.Set("u_Roughness", 12.69f);
+            FBY_LOG("Roughness of material is: {}", mat.Get<float>("u_Roughness"));
 
-        glm::vec3 color(2.0f);
-        mat.Set("u_Albedo", glm::value_ptr(color), sizeof(glm::vec3));
-        const float* cptr = mat.GetArray<float>("u_Albedo");
-        glm::vec3 retrievedColor(cptr[0], cptr[1], cptr[2]);
-        FBY_LOG("Albedo of material is: {}", retrievedColor);
+            glm::vec3 color(2.0f);
+            mat.Set("u_Albedo", glm::value_ptr(color), sizeof(glm::vec3));
+            const float* cptr = mat.GetArray<float>("u_Albedo");
+            glm::vec3 retrievedColor(cptr[0], cptr[1], cptr[2]);
+            FBY_LOG("Albedo of material is: {}", retrievedColor);
 
-        mat.Set("u_Metallic", 62.457f);
-        mat.Set("u_MetallicMapEnabled", 1.02f);
-        FBY_LOG("Metallic Map Enabled: {}", mat.Get<float>("u_MetallicMapEnabled"));
-        mat.Set("u_MetallicMapEnabled", 0.03f);
-        FBY_LOG("Metallic Map Enabled: {}", mat.Get<float>("u_MetallicMapEnabled"));
+            mat.Set("u_Metallic", 62.457f);
+            mat.Set("u_MetallicMapEnabled", 1.02f);
+            FBY_LOG("Metallic Map Enabled: {}", mat.Get<float>("u_MetallicMapEnabled"));
+            mat.Set("u_MetallicMapEnabled", 0.03f);
+            FBY_LOG("Metallic Map Enabled: {}", mat.Get<float>("u_MetallicMapEnabled"));
+
+            mat.Set("u_TextureMapSampler", texture);
+            FBY_LOG("Wow");
+        }
 #endif
 
         m_CursorIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/cursor_icon.png");

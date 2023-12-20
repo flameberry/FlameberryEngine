@@ -33,6 +33,7 @@ namespace Flameberry {
         {
             for (uint32_t i = 0; i < reflectionDescSet.BindingCount; i++)
             {
+                // This ensures that the Renderer Only Descriptor Sets are not handled or stored by the Material class
                 if (descriptorBindings[index].RendererOnly)
                 {
                     index++;
@@ -64,6 +65,13 @@ namespace Flameberry {
                 m_DescriptorSets.push_back(descSet);
 
                 vulkanDescSetBindings.clear();
+
+                // Only set this the first time any set is created which will inherently store the start set index
+                if (m_StartSetIndex == -1)
+                    m_StartSetIndex = reflectionDescSet.Set;
+
+                // This will assert the assumption that all the material specific descriptor sets will have sequential set indices
+                FBY_ASSERT(reflectionDescSet.Set - m_StartSetIndex == m_DescriptorSets.size() - 1, "Material specific descriptor sets do not have sequentialy set indices!");
             }
         }
     }
