@@ -25,41 +25,80 @@ namespace Flameberry {
             return true;
         }
 
+        static ShaderDataType ReflectionFormatToShaderInputDataType(SpvReflectFormat format)
+        {
+            switch (format)
+            {
+                case SPV_REFLECT_FORMAT_R32_UINT:            return ShaderDataType::UInt;
+                case SPV_REFLECT_FORMAT_R32_SINT:            return ShaderDataType::Int;
+                case SPV_REFLECT_FORMAT_R32_SFLOAT:          return ShaderDataType::Float;
+                case SPV_REFLECT_FORMAT_R32G32_SFLOAT:       return ShaderDataType::Float2;
+                case SPV_REFLECT_FORMAT_R32G32B32_SFLOAT:    return ShaderDataType::Float3;
+                case SPV_REFLECT_FORMAT_R32G32B32A32_SFLOAT: return ShaderDataType::Float4;
+                case SPV_REFLECT_FORMAT_R64G64B64A64_SFLOAT: return ShaderDataType::Float4;
+                default:
+                    FBY_ASSERT(0, "Type Description of Flag: {} not handled by Shader Class!");
+                    return ShaderDataType::None;
+            }
+        }
+
     }
 
-    static ShaderDataType ReflectionFormatToShaderInputDataType(SpvReflectFormat format)
+    Shader::Shader(const char* vertexShaderSpvPath, const char* fragmentShaderSpvPath)
     {
-        switch (format)
-        {
-            case SPV_REFLECT_FORMAT_R32_UINT:            return ShaderDataType::UInt;
-            case SPV_REFLECT_FORMAT_R32_SINT:            return ShaderDataType::Int;
-            case SPV_REFLECT_FORMAT_R32_SFLOAT:          return ShaderDataType::Float;
-            case SPV_REFLECT_FORMAT_R32G32_SFLOAT:       return ShaderDataType::Float2;
-            case SPV_REFLECT_FORMAT_R32G32B32_SFLOAT:    return ShaderDataType::Float3;
-            case SPV_REFLECT_FORMAT_R32G32B32A32_SFLOAT: return ShaderDataType::Float4;
-            case SPV_REFLECT_FORMAT_R64G64B64A64_SFLOAT: return ShaderDataType::Float4;
-            default:
-                FBY_ASSERT(0, "Type Description of Flag: {} not handled by Shader Class!");
-                return ShaderDataType::None;
-        }
+        // TODO: This is probably some odd behaviour to name the shader with just vertex shader's name
+        m_Name = std::filesystem::path(vertexShaderSpvPath).stem();
+
+        // Vertex Shader
+        std::vector<char> vertexShaderSpvBinaryCode = LoadShaderSpvCode(vertexShaderSpvPath);
+        Reflect(vertexShaderSpvBinaryCode);
+        m_VertexShaderModule = CreateVulkanShaderModule(vertexShaderSpvBinaryCode);
+
+        // Fragment Shader
+        std::vector<char> fragmentShaderSpvBinaryCode = LoadShaderSpvCode(fragmentShaderSpvPath);
+        Reflect(fragmentShaderSpvBinaryCode);
+        m_FragmentShaderModule = CreateVulkanShaderModule(fragmentShaderSpvBinaryCode);
     }
 
     Shader::Shader(const char* spvBinaryPath)
     {
-        std::ifstream spv_ifstream(spvBinaryPath, std::ios::binary);
+        m_Name = std::filesystem::path(spvBinaryPath).stem();
+
+        std::vector<char> shaderSpvBinaryCode = LoadShaderSpvCode(spvBinaryPath);
+        Reflect(shaderSpvBinaryCode);
+        m_ShaderModule = CreateVulkanShaderModule(shaderSpvBinaryCode);
+    }
+
+    const UniformVariableSpecification& Shader::Get(const std::string& name) const
+    {
+        auto it = m_UniformFullNameToSpecification.find(name);
+        FBY_ASSERT(it != m_UniformFullNameToSpecification.end(), "Uniform does not exist in shader: {}", name);
+        return it->second;
+    }
+
+    std::vector<char> Shader::LoadShaderSpvCode(const char* path)
+    {
+        std::ifstream spv_ifstream(path, std::ios::binary);
         if (!spv_ifstream.is_open())
-            FBY_ERROR("Failed to open SPIRV binary: {}", spvBinaryPath);
+            FBY_ERROR("Failed to open SPIRV binary: {}", path);
 
         spv_ifstream.seekg(0, std::ios::end);
         size_t size = static_cast<size_t>(spv_ifstream.tellg());
         spv_ifstream.seekg(0, std::ios::beg);
 
-        std::vector<char> spv_data(size);
-        spv_ifstream.read(spv_data.data(), size);
+        std::vector<char> shaderSpvBinaryCode(size);
+        spv_ifstream.read(shaderSpvBinaryCode.data(), size);
+        return std::move(shaderSpvBinaryCode);
+    }
 
-        spv_reflect::ShaderModule reflectionShaderModule(spv_data.size(), spv_data.data());
+    void Shader::Reflect(const std::vector<char>& shaderSpvBinaryCode)
+    {
+        spv_reflect::ShaderModule reflectionShaderModule(shaderSpvBinaryCode.size(), shaderSpvBinaryCode.data());
         if (reflectionShaderModule.GetResult() != SPV_REFLECT_RESULT_SUCCESS)
-            FBY_ERROR("Could not process: {} (Is it a valid SPIR-V bytecode?)", spvBinaryPath);
+            FBY_ERROR("Could not process: {} (Is it a valid SPIR-V bytecode?)", m_Name);
+
+        // Store the shader stage flags
+        m_VulkanShaderStageFlags |= reflectionShaderModule.GetVulkanShaderStage();
 
 #if 0
         if (reflectionShaderModule.GetShaderStage() == SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
@@ -88,9 +127,9 @@ namespace Flameberry {
                 if (vars[i]->type_description->type_flags & SPV_REFLECT_TYPE_FLAG_BOOL)
                     m_InputDataTypes[i] = ShaderDataType::Bool;
                 if (vars[i]->type_description->type_flags & SPV_REFLECT_TYPE_FLAG_INT)
-                    m_InputDataTypes[i] = ReflectionFormatToShaderInputDataType(vars[i]->format);
+                    m_InputDataTypes[i] = Utils::ReflectionFormatToShaderInputDataType(vars[i]->format);
                 if (vars[i]->type_description->type_flags & SPV_REFLECT_TYPE_FLAG_FLOAT)
-                    m_InputDataTypes[i] = ReflectionFormatToShaderInputDataType(vars[i]->format);
+                    m_InputDataTypes[i] = Utils::ReflectionFormatToShaderInputDataType(vars[i]->format);
                 if (vars[i]->type_description->type_flags & SPV_REFLECT_TYPE_FLAG_MATRIX)
                 {
                     // Currently only square matrices of 3 or 4 size are considered
@@ -117,12 +156,12 @@ namespace Flameberry {
         // The information about push constants is collected here
         uint32_t count = 0;
         auto result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
-        FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", spvBinaryPath);
+        FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
         std::vector<SpvReflectBlockVariable*> pcblocks(count);
         result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
-        FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", spvBinaryPath);
+        FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 
-        m_PushConstantSpecifications.resize(count);
+        m_PushConstantSpecifications.reserve(m_PushConstantSpecifications.size() + count);
         for (uint32_t i = 0; i < count; i++)
         {
             uint32_t absoluteSize = 0;
@@ -146,34 +185,54 @@ namespace Flameberry {
                 };
             }
 
-            m_PushConstantSpecifications[i].Name = pcblocks[i]->type_description->type_name;
-            m_PushConstantSpecifications[i].Offset = pcblocks[i]->offset;
-            m_PushConstantSpecifications[i].Size = absoluteSize;
-            m_PushConstantSpecifications[i].ShaderStage = (VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage();
-            m_PushConstantSpecifications[i].RendererOnly = Utils::HasPrefix(pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX);
+            auto& specification = m_PushConstantSpecifications.emplace_back();
+
+            specification.Name = pcblocks[i]->type_description->type_name;
+            specification.Offset = pcblocks[i]->offset;
+            specification.Size = absoluteSize;
+            specification.ShaderStage = (VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage();
+            specification.RendererOnly = Utils::HasPrefix(pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX);
         }
-
-        // Create the Vulkan Shader Module
-        VkShaderModuleCreateInfo shaderModuleCreateInfo{};
-        shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        shaderModuleCreateInfo.codeSize = spv_data.size();
-        shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(spv_data.data());
-
-        const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        VK_CHECK_RESULT(vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &m_ShaderModule));
     }
 
-    const UniformVariableSpecification& Shader::Get(const std::string& name) const
+    VkShaderModule Shader::CreateVulkanShaderModule(const std::vector<char>& shaderSpvBinaryCode)
     {
-        auto it = m_UniformFullNameToSpecification.find(name);
-        FBY_ASSERT(it != m_UniformFullNameToSpecification.end(), "Uniform does not exist in shader: {}", name);
-        return it->second;
+        VkShaderModuleCreateInfo shaderModuleCreateInfo{};
+        shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        shaderModuleCreateInfo.codeSize = shaderSpvBinaryCode.size();
+        shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderSpvBinaryCode.data());
+
+        const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        VkShaderModule vulkanShaderModule = VK_NULL_HANDLE;
+        VK_CHECK_RESULT(vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &vulkanShaderModule));
+        return vulkanShaderModule;
     }
 
     Shader::~Shader()
     {
         const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkDestroyShaderModule(device, m_ShaderModule, nullptr);
+        if (m_VulkanShaderStageFlags & (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT))
+        {
+            vkDestroyShaderModule(device, m_VertexShaderModule, nullptr);
+            vkDestroyShaderModule(device, m_FragmentShaderModule, nullptr);
+        }
+        else
+        {
+            vkDestroyShaderModule(device, m_ShaderModule, nullptr);
+        }
+    }
+
+    void Shader::GetVertexAndFragmentShaderModules(VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const
+    {
+        FBY_ASSERT(m_VulkanShaderStageFlags & (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT), "GetVertexAndFragmentShaderModules() should only be called for Shader made using Vertex and Fragment components both!");
+        *outVertexShaderModule = m_VertexShaderModule;
+        *outFragmentShaderModule = m_FragmentShaderModule;
+    }
+
+    VkShaderModule Shader::GetVulkanShaderModule() const
+    {
+        FBY_ASSERT((m_VulkanShaderStageFlags > 0) && ((m_VulkanShaderStageFlags & (m_VulkanShaderStageFlags - 1)) == 0), "GetVulkanShaderModule() should only be called for Shader made using single component like Compute or Vertex or Fragment but not a combination of them!");
+        return m_ShaderModule;
     }
 
 }

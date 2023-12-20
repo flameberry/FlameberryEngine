@@ -74,10 +74,7 @@ namespace Flameberry {
         std::vector<VkPushConstantRange> vulkanPushConstantRanges;
         {
             std::unordered_map<uint32_t, uint32_t> pcOffsetToIndex;
-            std::vector<PushConstantSpecification> pushConstantSpecs = { m_PipelineSpec.VertexShader->GetPushConstantSpecifications() };
-            pushConstantSpecs.insert(pushConstantSpecs.end(), m_PipelineSpec.FragmentShader->GetPushConstantSpecifications().begin(), m_PipelineSpec.FragmentShader->GetPushConstantSpecifications().end());
-
-            for (const auto& specification : pushConstantSpecs)
+            for (const auto& specification : m_PipelineSpec.Shader->GetPushConstantSpecifications())
             {
                 if (auto it = pcOffsetToIndex.find(specification.Offset); it != pcOffsetToIndex.end())
                 {
@@ -114,16 +111,19 @@ namespace Flameberry {
         VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
 
         // Creating Pipeline
+        VkShaderModule vertexModule, fragmentModule;
+        m_PipelineSpec.Shader->GetVertexAndFragmentShaderModules(&vertexModule, &fragmentModule);
+
         VkPipelineShaderStageCreateInfo vk_pipeline_vertex_shader_stage_create_info{};
         vk_pipeline_vertex_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vk_pipeline_vertex_shader_stage_create_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vk_pipeline_vertex_shader_stage_create_info.module = m_PipelineSpec.VertexShader->GetVulkanShaderModule();
+        vk_pipeline_vertex_shader_stage_create_info.module = vertexModule;
         vk_pipeline_vertex_shader_stage_create_info.pName = "main";
 
         VkPipelineShaderStageCreateInfo vk_pipeline_fragment_shader_stage_create_info{};
         vk_pipeline_fragment_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vk_pipeline_fragment_shader_stage_create_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        vk_pipeline_fragment_shader_stage_create_info.module = m_PipelineSpec.FragmentShader->GetVulkanShaderModule();
+        vk_pipeline_fragment_shader_stage_create_info.module = fragmentModule;
         vk_pipeline_fragment_shader_stage_create_info.pName = "main";
 
         VkPipelineShaderStageCreateInfo vk_shader_stages_create_infos[2] = { vk_pipeline_vertex_shader_stage_create_info , vk_pipeline_fragment_shader_stage_create_info };

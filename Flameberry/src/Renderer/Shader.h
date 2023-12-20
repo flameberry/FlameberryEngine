@@ -38,17 +38,36 @@ namespace Flameberry {
     class Shader
     {
     public:
+        Shader(const char* vertexShaderSpvPath, const char* fragmentShaderSpvPath);
         Shader(const char* spvBinaryPath);
         ~Shader();
 
-        VkShaderModule GetVulkanShaderModule() const { return m_ShaderModule; }
+        void GetVertexAndFragmentShaderModules(VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const;
+
+        VkShaderModule GetVulkanShaderModule() const;
         const std::vector<ShaderDataType>& GetInputVariableDataTypes() const { return m_InputDataTypes; }
         const std::vector<PushConstantSpecification>& GetPushConstantSpecifications() const { return m_PushConstantSpecifications; }
 
         // Costly functions
         const UniformVariableSpecification& Get(const std::string& name) const;
     private:
-        VkShaderModule m_ShaderModule;
+        std::vector<char> LoadShaderSpvCode(const char* path);
+        void Reflect(const std::vector<char>& shaderSpvBinaryCode);
+        VkShaderModule CreateVulkanShaderModule(const std::vector<char>& shaderSpvBinaryCode);
+    private:
+        std::string m_Name;
+
+        union
+        {
+            VkShaderModule m_ShaderModule;
+            struct
+            {
+                VkShaderModule m_VertexShaderModule;
+                VkShaderModule m_FragmentShaderModule;
+            };
+        };
+
+        VkShaderStageFlags m_VulkanShaderStageFlags = 0;
 
         std::vector<ShaderDataType> m_InputDataTypes;
         std::vector<PushConstantSpecification> m_PushConstantSpecifications;

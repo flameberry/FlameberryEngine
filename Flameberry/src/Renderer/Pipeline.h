@@ -23,7 +23,7 @@ namespace Flameberry {
     struct PipelineSpecification
     {
         Ref<RenderPass> RenderPass;
-        Ref<Shader> VertexShader, FragmentShader;
+        Ref<Shader> Shader;
 
         // Make sure to provide all the attributes present in the Vertex Buffer
         // And for those that don't need to be used in the shader replace them with the equivalent Dummy Types
