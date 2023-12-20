@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Core/Core.h"
 #include "VulkanDebug.h"
@@ -35,7 +36,6 @@ namespace Flameberry {
     };
 
     struct MeshData {
-        glm::mat4 ModelMatrix;
         glm::vec3 Albedo{ 1.0f };
         float Roughness = 0.2f;
         float Metallic = 0.0f;
@@ -885,10 +885,15 @@ namespace Flameberry {
 
         staticMesh->Bind();
 
+        Renderer::Submit([pipelineLayout = m_MeshPipeline->GetLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(transform));
+            }
+        );
+
         int submeshIndex = 0;
         for (const auto& submesh : staticMesh->GetSubMeshes()) {
             MeshData pushConstantMeshData;
-            pushConstantMeshData.ModelMatrix = transform;
 
             Ref<Material> materialAsset;
             if (auto it = materialTable.find(submeshIndex); it != materialTable.end())
@@ -911,7 +916,7 @@ namespace Flameberry {
             Renderer::Submit([pipelineLayout = m_MeshPipeline->GetLayout(), descSet = materialAsset ? materialAsset->GetDescriptorSet() : Material::GetEmptyDesciptorSet(), pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 3, 1, &descSet, 0, nullptr);
-                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshData), &pushConstantMeshData);
+                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), sizeof(MeshData), &pushConstantMeshData);
                 }
             );
             staticMesh->OnDrawSubMesh(submeshIndex);

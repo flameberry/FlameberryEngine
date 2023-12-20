@@ -13,20 +13,16 @@ layout (location = 3) out vec2 v_TextureCoords;
 layout (location = 4) out vec3 v_ViewSpacePosition;
 layout (location = 5) out mat3 v_TBNMatrix;
 
-layout (set = 0, binding = 0) uniform UniformBufferObject {
+// These are the uniforms that are set by Renderer and are not exposed to the Material class
+// How do we decide that? The classes which are marked by _FBY_ prefix are considered Renderer only
+layout (set = 0, binding = 0) uniform _FBY_CameraMatrices {
     mat4 u_ViewMatrix, u_ProjectionMatrix, u_ViewProjectionMatrix;
 };
 
-// Only u_ModelMatrix is used in the vertex shader
-// But for simplification, currently all the push constant data is sent in one PushConstantRange
-layout (push_constant) uniform MeshData {
+// This is the push constant that is set by the Renderer and is not exposed to the Material class
+// How do we decide that? The classes which are marked by _FBY_ prefix are considered Renderer only
+layout (push_constant) uniform _FBY_ModelMatrix {
     mat4 u_ModelMatrix;
-
-    // This is only used in the fragment shader
-    vec3 u_Albedo;
-    float u_Roughness;
-    float u_Metallic;
-    float u_TextureMapEnabled, u_NormalMapEnabled, u_RoughnessMapEnabled, u_AmbientOcclusionMapEnabled, u_MetallicMapEnabled;
 };
 
 void main()

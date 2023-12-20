@@ -22,14 +22,6 @@ const mat4 g_BiasMatrix = mat4(
 	0.5, 0.5, 0.0, 1.0
 );
 
-layout (set = 2, binding = 0) uniform sampler2DArray u_ShadowMapSamplerArray;
-
-layout (set = 3, binding = 0) uniform sampler2D u_TextureMapSampler;
-layout (set = 3, binding = 1) uniform sampler2D u_NormalMapSampler;
-layout (set = 3, binding = 2) uniform sampler2D u_RoughnessMapSampler;
-layout (set = 3, binding = 3) uniform sampler2D u_AmbientOcclusionMapSampler;
-layout (set = 3, binding = 4) uniform sampler2D u_MetallicMapSampler;
-
 struct DirectionalLight {
     vec3  Direction;
     vec3  Color;
@@ -46,22 +38,35 @@ struct SceneRendererSettingsUniform {
     int EnableShadows, ShowCascades, SoftShadows;
 };
 
-layout (std140, set = 1, binding = 0) uniform SceneData {
-    mat4 u_CascadeMatrices[CASCADE_COUNT];
-    vec4 u_CascadeDepthSplits;
-    vec3 u_CameraPosition;
-    DirectionalLight u_DirectionalLight;
-    PointLight u_PointLights[10];
-    int u_LightCount;
-    float u_SkyLightIntensity;
-    SceneRendererSettingsUniform u_SceneRendererSettings;
-};
+// These are the uniforms that are set by Renderer and are not exposed to the Material class
+// How do we decide that? The classes which are marked by _FBY_ prefix are considered Renderer only
+layout (std140, set = 1, binding = 0) uniform _FBY_SceneData {
+    mat4 CascadeMatrices[CASCADE_COUNT];
+    vec4 CascadeDepthSplits;
+    vec3 CameraPosition;
+    DirectionalLight DirectionalLight;
+    PointLight PointLights[10];
+    int LightCount;
+    float SkyLightIntensity;
+    SceneRendererSettingsUniform SceneRendererSettings;
+} u_SceneData;
 
-// Only u_ModelMatrix is not used in the fragment shader
-// But for simplification, currently all the push constant data is sent in one PushConstantRange
+// These are the uniforms that are set by Renderer and are not exposed to the Material class
+// How do we decide that? The classes which are marked by _FBY_ prefix are considered Renderer only
+layout (set = 2, binding = 0) uniform sampler2DArray _FBY_u_ShadowMapSamplerArray;
+
+// These are the uniforms that are exposed to the Material class
+// How do we decide that? The classes which are not marked by _FBY_ prefix are exposed to the Material class
+layout (set = 3, binding = 0) uniform sampler2D u_TextureMapSampler;
+layout (set = 3, binding = 1) uniform sampler2D u_NormalMapSampler;
+layout (set = 3, binding = 2) uniform sampler2D u_RoughnessMapSampler;
+layout (set = 3, binding = 3) uniform sampler2D u_AmbientOcclusionMapSampler;
+layout (set = 3, binding = 4) uniform sampler2D u_MetallicMapSampler;
+
+// This is the push constant that is exposed to Material class
+// How do we decide that? The classes which are not marked by _FBY_ prefix are exposed to the Material class
 layout (push_constant) uniform MeshData {
-    mat4 u_ModelMatrix;
-    vec3 u_Albedo;
+    layout (offset = 64) vec3 u_Albedo;
     float u_Roughness;
     float u_Metallic;
 
@@ -155,7 +160,7 @@ float TextureProj_DirectionalLight(vec4 shadowCoord, vec2 offset, uint cascadeIn
 {
 	float shadow = 1.0f;
 	if (shadowCoord.z > -1.0f && shadowCoord.z < 1.0f) {
-		float dist = texture(u_ShadowMapSamplerArray, vec3(shadowCoord.st + offset, cascadeIndex)).r;
+		float dist = texture(_FBY_u_ShadowMapSamplerArray, vec3(shadowCoord.st + offset, cascadeIndex)).r;
 		if (shadowCoord.w > 0 && dist < shadowCoord.z - bias) {
 			// shadow = AMBIENT * GetAmbientOcclusion();
             shadow = 0.0f;
@@ -166,7 +171,7 @@ float TextureProj_DirectionalLight(vec4 shadowCoord, vec2 offset, uint cascadeIn
 
 float FilterPCF_DirectionalLight(vec4 sc, uint cascadeIndex, float pixelSize, int filterSize, float bias)
 {
-    const ivec2 texDim = textureSize(u_ShadowMapSamplerArray, 0).xy;
+    const ivec2 texDim = textureSize(_FBY_u_ShadowMapSamplerArray, 0).xy;
 	const float dx = pixelSize / float(texDim.x);
 	const float dy = pixelSize / float(texDim.y);
 
@@ -182,8 +187,8 @@ float FilterPCF_DirectionalLight(vec4 sc, uint cascadeIndex, float pixelSize, in
 
 float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius, uint sampleCount, float bias, float interleavedNoise)
 {
-    const float scale = 1.0f + u_CascadeDepthSplits[cascadeIndex] / 1000.01f;
-    const vec2 texelSize = scale / textureSize(u_ShadowMapSamplerArray, 0).xy;
+    const float scale = 1.0f + u_SceneData.CascadeDepthSplits[cascadeIndex] / 1000.01f;
+    const vec2 texelSize = scale / textureSize(_FBY_u_ShadowMapSamplerArray, 0).xy;
 
     float shadowFactor = 0.0f;
 	for (uint i = 0; i < sampleCount; i++) 
@@ -198,8 +203,8 @@ float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius,
 
 float FilterPCFBilinear_DirectionalLight(vec4 sc, uint cascadeIndex, int kernelSize, float bias)
 {
-    const int scale = int(clamp(1.0f + u_CascadeDepthSplits[cascadeIndex] / 1000.01f, 1.0f, 4.0f));
-    const ivec2 resolution = textureSize(u_ShadowMapSamplerArray, 0).xy;
+    const int scale = int(clamp(1.0f + u_SceneData.CascadeDepthSplits[cascadeIndex] / 1000.01f, 1.0f, 4.0f));
+    const ivec2 resolution = textureSize(_FBY_u_ShadowMapSamplerArray, 0).xy;
     const vec2 texelSize = float(scale) / resolution;
     const float pixelSize = texelSize.x;
     // float pixelSize = CalculatePixelSize(cascadeIndex, float(resolution.x));
@@ -212,7 +217,7 @@ float FilterPCFBilinear_DirectionalLight(vec4 sc, uint cascadeIndex, int kernelS
     for (int i = -kernelSize; i <= kernelSize; i++) {
         for (int j = -kernelSize; j <= kernelSize; j++) {
             vec2 offset = vec2(i, j) * vec2(pixelSize, pixelSize);
-            vec4 tmp = textureGather(u_ShadowMapSamplerArray, vec3(sc.xy + offset, cascadeIndex));
+            vec4 tmp = textureGather(_FBY_u_ShadowMapSamplerArray, vec3(sc.xy + offset, cascadeIndex));
             
             // Assuming texels outside the shadow map are treated as fully lit
             tmp = step(sc.z - bias, tmp);
@@ -226,7 +231,7 @@ float FilterPCFBilinear_DirectionalLight(vec4 sc, uint cascadeIndex, int kernelS
 
 float PCSS_SearchWidth(float lightSize, float receiverDistance, uint cascadeIndex)
 {
-	return u_DirectionalLight.LightSize * (receiverDistance + u_CascadeDepthSplits[cascadeIndex] / 1000.0f) / receiverDistance;
+	return u_SceneData.DirectionalLight.LightSize * (receiverDistance + u_SceneData.CascadeDepthSplits[cascadeIndex] / 1000.0f) / receiverDistance;
 }
 
 vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, float interleavedNoise, float bias)
@@ -237,15 +242,15 @@ vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, fl
 	int blockers = 0;
 	float avgBlockerDepth = 0.0f;
 
-    const float scale = 1.0f + u_CascadeDepthSplits[cascadeIndex] / 1000.01f;
-    const vec2 texelSize = scale / textureSize(u_ShadowMapSamplerArray, 0).xy;
-    // const float pixelSize = 1.0f / textureSize(u_ShadowMapSamplerArray, 0).x;
+    const float scale = 1.0f + u_SceneData.CascadeDepthSplits[cascadeIndex] / 1000.01f;
+    const vec2 texelSize = scale / textureSize(_FBY_u_ShadowMapSamplerArray, 0).xy;
+    // const float pixelSize = 1.0f / textureSize(_FBY_u_ShadowMapSamplerArray, 0).x;
 
     for (uint i = 0; i < blockerSearch_SampleCount; i++)
     {
         // vec2 offset = vec2(g_PoissonSamples[i]) * searchUV * pixelSize;
         vec2 offset = VogelDiskSample(i, blockerSearch_SampleCount, interleavedNoise) * searchUV * texelSize;
-        float randomlySampledZ = texture(u_ShadowMapSamplerArray, vec3(projCoords.xy + offset, cascadeIndex)).r;
+        float randomlySampledZ = texture(_FBY_u_ShadowMapSamplerArray, vec3(projCoords.xy + offset, cascadeIndex)).r;
 
         if (randomlySampledZ < projCoords.z - bias)
 		{
@@ -261,7 +266,7 @@ vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, fl
 float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float interleavedNoise, float bias)
 {
     float receiverDepth = shadowCoord.z;
-    float searchWidth = PCSS_SearchWidth(u_DirectionalLight.LightSize, receiverDepth, cascadeIndex);
+    float searchWidth = PCSS_SearchWidth(u_SceneData.DirectionalLight.LightSize, receiverDepth, cascadeIndex);
 
     const vec2 blockerInfo = PCSS_BlockerDistance(shadowCoord.xyz, searchWidth, cascadeIndex, interleavedNoise, bias);
     
@@ -275,7 +280,7 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float in
     // float softnessFallOff = 2.0f;
     // penumbraSize = 1.0 - pow(1.0 - penumbraSize, softnessFallOff);
 
-    float filterRadius = penumbraSize * u_DirectionalLight.LightSize;
+    float filterRadius = penumbraSize * u_SceneData.DirectionalLight.LightSize;
     return FilterPCFRadial_DirectionalLight(shadowCoord, cascadeIndex, filterRadius, 16, bias, interleavedNoise);
 }
 
@@ -286,7 +291,7 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
     vec3 l = normalize(-light.Direction);
     
     vec3 n = normal;
-    vec3 v = normalize(u_CameraPosition - v_WorldSpacePosition);
+    vec3 v = normalize(u_SceneData.CameraPosition - v_WorldSpacePosition);
     vec3 h = normalize(v + l);
     
     float n_dot_h = max(dot(n, h), 0.0f);
@@ -306,24 +311,24 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
     vec3 diffuseBRDF = kD * GetPixelColor() / PI;
 
     float shadow = 1.0f;
-    if (u_SceneRendererSettings.EnableShadows == 1)
+    if (u_SceneData.SceneRendererSettings.EnableShadows == 1)
     {
         // Get cascade index for the current fragment's view position
         uint cascadeIndex = 0;
         for (uint i = 0; i < CASCADE_COUNT - 1; i++) {
-            if (v_ViewSpacePosition.z < u_CascadeDepthSplits[i]) {	
+            if (v_ViewSpacePosition.z < u_SceneData.CascadeDepthSplits[i]) {	
                 cascadeIndex = i + 1;
             }
         }
 
         float bias = max(0.05f * (1.0f - dot(normal, -l)), 0.002f);
         const float biasModifier = 0.5f;
-        bias *= 1.0f / (-u_CascadeDepthSplits[cascadeIndex] * biasModifier);
+        bias *= 1.0f / (-u_SceneData.CascadeDepthSplits[cascadeIndex] * biasModifier);
 
         // Depth compare for shadowing
-        vec4 shadowCoord = (g_BiasMatrix * u_CascadeMatrices[cascadeIndex]) * vec4(v_WorldSpacePosition, 1.0f);	
+        vec4 shadowCoord = (g_BiasMatrix * u_SceneData.CascadeMatrices[cascadeIndex]) * vec4(v_WorldSpacePosition, 1.0f);	
 
-        if (u_SceneRendererSettings.SoftShadows == 1) {
+        if (u_SceneData.SceneRendererSettings.SoftShadows == 1) {
             float interleavedNoise = 2.0 * PI * Noise(v_ClipSpacePosition.xy);
             shadow = PCSS_Shadow_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, interleavedNoise, bias);
 
@@ -349,7 +354,7 @@ vec3 PBR_PointLight(PointLight light, vec3 normal)
     lightIntensity /= lightToPixelDistance * lightToPixelDistance;
     
     vec3 n = normal;
-    vec3 v = normalize(u_CameraPosition - v_WorldSpacePosition);
+    vec3 v = normalize(u_SceneData.CameraPosition - v_WorldSpacePosition);
     vec3 h = normalize(v + l);
     
     float n_dot_h = max(dot(n, h), 0.0f);
@@ -377,12 +382,12 @@ vec3 PBR_TotalLight(vec3 normal)
 {
     vec3 totalLight = vec3(0.0f);
 
-    totalLight += PBR_DirectionalLight(u_DirectionalLight, normal);
+    totalLight += PBR_DirectionalLight(u_SceneData.DirectionalLight, normal);
 
-    for (int i = 0; i < u_LightCount; i++)
-        totalLight += PBR_PointLight(u_PointLights[i], normal);
+    for (int i = 0; i < u_SceneData.LightCount; i++)
+        totalLight += PBR_PointLight(u_SceneData.PointLights[i], normal);
     
-    const vec3 ambient = u_SkyLightIntensity * GetAmbientOcclusion() * GetPixelColor();
+    const vec3 ambient = u_SceneData.SkyLightIntensity * GetAmbientOcclusion() * GetPixelColor();
     return totalLight + ambient;
 }
 
@@ -396,11 +401,11 @@ void main()
 
     o_FragColor = vec4(intermediateColor, 1.0f);
 
-    if (u_SceneRendererSettings.ShowCascades == 1)
+    if (u_SceneData.SceneRendererSettings.ShowCascades == 1)
     {
         uint cascadeIndex = 0;
         for(uint i = 0; i < CASCADE_COUNT - 1; ++i) {
-            if (v_ViewSpacePosition.z < u_CascadeDepthSplits[i]) {	
+            if (v_ViewSpacePosition.z < u_SceneData.CascadeDepthSplits[i]) {	
                 cascadeIndex = i + 1;
             }
         }

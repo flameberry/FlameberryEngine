@@ -7,7 +7,25 @@
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanDebug.h"
 
+#define FBY_SHADER_RENDERER_ONLY_PREFIX "_FBY_"
+
 namespace Flameberry {
+
+    namespace Utils {
+
+        bool HasPrefix(const char* str1, const char* prefix)
+        {
+            while (*str1 != '\0' && *prefix != '\0')
+            {
+                if (*str1 != *prefix)
+                    return false;
+                ++str1;
+                ++prefix;
+            }
+            return true;
+        }
+
+    }
 
     static ShaderDataType ReflectionFormatToShaderInputDataType(SpvReflectFormat format)
     {
@@ -39,18 +57,18 @@ namespace Flameberry {
         std::vector<char> spv_data(size);
         spv_ifstream.read(spv_data.data(), size);
 
-        m_ReflectionShaderModule = spv_reflect::ShaderModule(spv_data.size(), spv_data.data());
-        if (m_ReflectionShaderModule.GetResult() != SPV_REFLECT_RESULT_SUCCESS)
+        spv_reflect::ShaderModule reflectionShaderModule(spv_data.size(), spv_data.data());
+        if (reflectionShaderModule.GetResult() != SPV_REFLECT_RESULT_SUCCESS)
             FBY_ERROR("Could not process: {} (Is it a valid SPIR-V bytecode?)", spvBinaryPath);
 
 #if 0
-        if (m_ReflectionShaderModule.GetShaderStage() == SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
+        if (reflectionShaderModule.GetShaderStage() == SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
         {
             uint32_t count = 0;
-            auto result = m_ReflectionShaderModule.EnumerateInputVariables(&count, NULL);
+            auto result = reflectionShaderModule.EnumerateInputVariables(&count, NULL);
             FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Input Variables for shader: {}", spvBinaryPath);
             std::vector<SpvReflectInterfaceVariable*> vars(count);
-            result = m_ReflectionShaderModule.EnumerateInputVariables(&count, vars.data());
+            result = reflectionShaderModule.EnumerateInputVariables(&count, vars.data());
             FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Input Variables for shader: {}", spvBinaryPath);
 
             m_InputDataTypes.resize(count);
@@ -98,10 +116,10 @@ namespace Flameberry {
 
         // The information about push constants is collected here
         uint32_t count = 0;
-        auto result = m_ReflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
+        auto result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
         FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", spvBinaryPath);
         std::vector<SpvReflectBlockVariable*> pcblocks(count);
-        result = m_ReflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
+        result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
         FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", spvBinaryPath);
 
         m_PushConstantSpecifications.resize(count);
@@ -113,12 +131,26 @@ namespace Flameberry {
                 auto& member = pcblocks[i]->members[j];
                 absoluteSize += member.size;
                 FBY_LOG("Member Name: {}", member.name);
+
+                std::string fullName(pcblocks[i]->name);
+                if (!fullName.empty())
+                    fullName += ".";
+                fullName += member.name;
+
+                // Full name is used to ensure uniqueness of the uniform variable (even though it is rare to overlap)
+                m_UniformFullNameToSpecification[fullName] = UniformVariableSpecification{
+                    .Name = member.name,
+                    .LocalOffset = member.offset - pcblocks[i]->offset,
+                    .GlobalOffset = member.offset,
+                    .Size = member.size
+                };
             }
 
             m_PushConstantSpecifications[i].Name = pcblocks[i]->type_description->type_name;
             m_PushConstantSpecifications[i].Offset = pcblocks[i]->offset;
             m_PushConstantSpecifications[i].Size = absoluteSize;
-            m_PushConstantSpecifications[i].ShaderStage = (VkShaderStageFlagBits)m_ReflectionShaderModule.GetShaderStage();
+            m_PushConstantSpecifications[i].ShaderStage = (VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage();
+            m_PushConstantSpecifications[i].RendererOnly = Utils::HasPrefix(pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX);
         }
 
         // Create the Vulkan Shader Module
@@ -129,6 +161,13 @@ namespace Flameberry {
 
         const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         VK_CHECK_RESULT(vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &m_ShaderModule));
+    }
+
+    const UniformVariableSpecification& Shader::Get(const std::string& name) const
+    {
+        auto it = m_UniformFullNameToSpecification.find(name);
+        FBY_ASSERT(it != m_UniformFullNameToSpecification.end(), "Uniform does not exist in shader: {}", name);
+        return it->second;
     }
 
     Shader::~Shader()

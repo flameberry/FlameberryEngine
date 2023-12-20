@@ -12,6 +12,13 @@ namespace Flameberry {
         const char* Name;
         VkShaderStageFlagBits ShaderStage;
         uint32_t Size, Offset;
+        bool RendererOnly = true;
+    };
+
+    struct UniformVariableSpecification
+    {
+        const char* Name;
+        uint32_t LocalOffset, GlobalOffset, Size;
     };
 
     enum class ShaderDataType : uint8_t
@@ -37,13 +44,20 @@ namespace Flameberry {
         VkShaderModule GetVulkanShaderModule() const { return m_ShaderModule; }
         const std::vector<ShaderDataType>& GetInputVariableDataTypes() const { return m_InputDataTypes; }
         const std::vector<PushConstantSpecification>& GetPushConstantSpecifications() const { return m_PushConstantSpecifications; }
+
+        // Costly functions
+        const UniformVariableSpecification& Get(const std::string& name) const;
     private:
-        // TODO: Think about if this needs to be kept here rather than just in the constructor
-        spv_reflect::ShaderModule m_ReflectionShaderModule;
         VkShaderModule m_ShaderModule;
 
         std::vector<ShaderDataType> m_InputDataTypes;
         std::vector<PushConstantSpecification> m_PushConstantSpecifications;
+
+        // This should only be accessed while initalisation of material or while editing it.
+        // Don't access this during rendering every frame. As std::string hashing causes overhead
+        // Note: The full names of the uniforms are used to access it, for e.g.: `u_Material.Roughness` instead of just `Roughness`
+        // If no alias is given to the push constant block, then only the variable name is considered as full name, e.g.: `u_Roughness`
+        std::unordered_map<std::string, UniformVariableSpecification> m_UniformFullNameToSpecification;
     };
 
 }
