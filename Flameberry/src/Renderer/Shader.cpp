@@ -69,7 +69,7 @@ namespace Flameberry {
         m_ShaderModule = CreateVulkanShaderModule(shaderSpvBinaryCode);
     }
 
-    const UniformVariableSpecification& Shader::Get(const std::string& name) const
+    const ReflectionUniformVariableSpecification& Shader::Get(const std::string& name) const
     {
         auto it = m_UniformFullNameToSpecification.find(name);
         FBY_ASSERT(it != m_UniformFullNameToSpecification.end(), "Uniform does not exist in shader: {}", name);
@@ -153,45 +153,110 @@ namespace Flameberry {
         }
 #endif
 
-        // The information about push constants is collected here
-        uint32_t count = 0;
-        auto result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
-        FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
-        std::vector<SpvReflectBlockVariable*> pcblocks(count);
-        result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
-        FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
-
-        m_PushConstantSpecifications.reserve(m_PushConstantSpecifications.size() + count);
-        for (uint32_t i = 0; i < count; i++)
         {
-            uint32_t absoluteSize = 0;
-            for (uint32_t j = 0; j < pcblocks[i]->member_count; j++)
+            // The information about push constants is collected here
+            uint32_t count = 0;
+            auto result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
+            FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+            std::vector<SpvReflectBlockVariable*> pcblocks(count);
+            result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
+            FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+
+            m_PushConstantSpecifications.reserve(m_PushConstantSpecifications.size() + count);
+            for (uint32_t i = 0; i < count; i++)
             {
-                auto& member = pcblocks[i]->members[j];
-                absoluteSize += member.size;
-                FBY_LOG("Member Name: {}", member.name);
+                uint32_t absoluteSize = 0;
+                for (uint32_t j = 0; j < pcblocks[i]->member_count; j++)
+                {
+                    auto& member = pcblocks[i]->members[j];
+                    absoluteSize += member.size;
+                    FBY_LOG("Member Name: {}", member.name);
 
-                std::string fullName(pcblocks[i]->name);
-                if (!fullName.empty())
-                    fullName += ".";
-                fullName += member.name;
+                    std::string fullName(pcblocks[i]->name);
+                    if (!fullName.empty())
+                        fullName += ".";
+                    fullName += member.name;
 
-                // Full name is used to ensure uniqueness of the uniform variable (even though it is rare to overlap)
-                m_UniformFullNameToSpecification[fullName] = UniformVariableSpecification{
-                    .Name = member.name,
-                    .LocalOffset = member.offset - pcblocks[i]->offset,
-                    .GlobalOffset = member.offset,
-                    .Size = member.size
-                };
+                    // Full name is used to ensure uniqueness of the uniform variable (even though it is rare to overlap)
+                    m_UniformFullNameToSpecification[fullName] = ReflectionUniformVariableSpecification{
+                        .Name = fullName.c_str(), // Wondering if the full name should be used
+                        .LocalOffset = member.offset - pcblocks[i]->offset,
+                        .GlobalOffset = member.offset,
+                        .Size = member.size
+                    };
+                }
+
+                m_PushConstantSpecifications.emplace_back(ReflectionPushConstantSpecification{
+                    .Name = pcblocks[i]->type_description->type_name,
+                    .Offset = pcblocks[i]->offset,
+                    .Size = absoluteSize,
+                    .VulkanShaderStage = (VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage(),
+                    .RendererOnly = Utils::HasPrefix(pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX)
+                    }
+                );
+
             }
+        }
 
-            auto& specification = m_PushConstantSpecifications.emplace_back();
+        {
+            // The information about descriptor sets is collected here
+            uint32_t count = 0;
+            auto result = reflectionShaderModule.EnumerateDescriptorSets(&count, NULL);
+            FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+            std::vector<SpvReflectDescriptorSet*> descSets(count);
+            result = reflectionShaderModule.EnumerateDescriptorSets(&count, descSets.data());
+            FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 
-            specification.Name = pcblocks[i]->type_description->type_name;
-            specification.Offset = pcblocks[i]->offset;
-            specification.Size = absoluteSize;
-            specification.ShaderStage = (VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage();
-            specification.RendererOnly = Utils::HasPrefix(pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX);
+            m_DescriptorSetSpecifications.reserve(m_DescriptorSetSpecifications.size() + count);
+            // Iterating through the reflection descriptor sets to store the binding information needed to create a descriptor set
+            for (uint32_t i = 0; i < count; i++)
+            {
+                m_DescriptorBindingSpecifications.reserve(m_DescriptorBindingSpecifications.size() + descSets[i]->binding_count);
+                for (uint32_t j = 0; j < descSets[i]->binding_count; j++)
+                {
+                    auto& binding = descSets[i]->bindings[j];
+
+                    std::string fullName = binding->name;
+                    bool rendererOnly;
+
+                    if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER
+                        || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+                        || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE
+                        || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE
+                        || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT)
+                    {
+                        // An image descriptor will be considered renderer only when it's name has the following prefix
+                        rendererOnly = Utils::HasPrefix(binding->name, FBY_SHADER_RENDERER_ONLY_PREFIX);
+                    }
+                    else
+                    {
+                        // A buffer descriptor will be considered renderer only when it's TYPE name (not the alias name) has the following prefix
+                        rendererOnly = Utils::HasPrefix(binding->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX);
+                        // Is this the right way to deal with this? Being able to refer an Uniform Buffer with it's alias
+                        // If alias is not present then with the Uniform Type name
+                        if (fullName.empty())
+                            fullName = binding->type_description->type_name;
+                    }
+
+                    // Here all the reflection binding specifications are pushed back
+                    // Assumption here is that all the bindings are in order (Yet to find out how would it affect the functioning)
+                    m_DescriptorBindingSpecifications.emplace_back(ReflectionDescriptorBindingSpecification{
+                        .Name = fullName,
+                        .Set = binding->set,
+                        .Binding = binding->binding,
+                        .Count = binding->count,
+                        .Type = (VkDescriptorType)binding->descriptor_type,
+                        .VulkanShaderStage = (VkShaderStageFlags)reflectionShaderModule.GetShaderStage(),
+                        .RendererOnly = rendererOnly
+                        }
+                    );
+
+                    // This unordered_map is stored only for convenience of setting the Uniform Buffers/Images using their names in the shader
+                    // It shouldn't be accessed every frame
+                    m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] = m_DescriptorBindingSpecifications.size() - 1;
+                }
+                m_DescriptorSetSpecifications.emplace_back(ReflectionDescriptorSetSpecification{ .Set = descSets[i]->set, .BindingCount = descSets[i]->binding_count });
+            }
         }
     }
 

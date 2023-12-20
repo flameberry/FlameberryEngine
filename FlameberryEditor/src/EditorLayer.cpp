@@ -58,7 +58,7 @@ namespace Flameberry {
     void EditorLayer::OnCreate()
     {
 #if 1
-        Ref<Shader> shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.frag.spv");
+        Ref<Shader> shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.frag.spv");
         __Material mat("Material_01", shader);
         mat.Set("u_Roughness", 12.69f);
         FBY_LOG("Roughness of material is: {}", mat.Get<float>("u_Roughness"));

@@ -78,10 +78,10 @@ namespace Flameberry {
             {
                 if (auto it = pcOffsetToIndex.find(specification.Offset); it != pcOffsetToIndex.end())
                 {
-                    FBY_ASSERT(!(specification.ShaderStage & vulkanPushConstantRanges[it->second].stageFlags), "Push constant blocks within the same shader stage must not have the same offset!");
+                    FBY_ASSERT(!(specification.VulkanShaderStage & vulkanPushConstantRanges[it->second].stageFlags), "Push constant blocks within the same shader stage must not have the same offset!");
                     // TODO: Maybe make this be just a warning, so that the flexibility still remains
                     FBY_ASSERT(specification.Size == vulkanPushConstantRanges[it->second].size, "Push constant blocks between different shader stages having the same offset must have the same size! (The assumption here is that both represent the same push constant block)");
-                    vulkanPushConstantRanges[it->second].stageFlags |= specification.ShaderStage;
+                    vulkanPushConstantRanges[it->second].stageFlags |= specification.VulkanShaderStage;
                 }
                 else
                 {
@@ -89,7 +89,7 @@ namespace Flameberry {
                         VkPushConstantRange{
                         .offset = specification.Offset,
                         .size = specification.Size,
-                        .stageFlags = (VkShaderStageFlags)specification.ShaderStage
+                        .stageFlags = (VkShaderStageFlags)specification.VulkanShaderStage
                         }
                     );
                     pcOffsetToIndex[specification.Offset] = (uint32_t)vulkanPushConstantRanges.size() - 1;
