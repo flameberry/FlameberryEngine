@@ -2,12 +2,48 @@
 
 #include <array>
 
+#include <MurmurHash/MurmurHash3.h>
+
+#include "Core/Timer.h"
 #include "SwapChain.h"
 #include "VulkanContext.h"
 #include "RenderCommand.h"
 #include "VulkanDebug.h"
 
+bool operator==(const VkDescriptorSetLayoutBinding& b1, const VkDescriptorSetLayoutBinding& b2) {
+    return b1.binding == b2.binding
+        && b1.descriptorCount == b2.descriptorCount
+        && b1.descriptorType == b2.descriptorType
+        && b1.stageFlags == b2.stageFlags
+        && b1.pImmutableSamplers == nullptr
+        && b2.pImmutableSamplers == nullptr;
+}
+
 namespace Flameberry {
+
+    bool operator==(const DescriptorSetLayoutSpecification& s1, const DescriptorSetLayoutSpecification& s2) {
+        return s1.Bindings == s2.Bindings;
+    }
+
+}
+
+namespace std {
+
+    template<>
+    struct hash<Flameberry::DescriptorSetLayoutSpecification> {
+        size_t operator()(const Flameberry::DescriptorSetLayoutSpecification& specification) const {
+            FBY_SCOPED_TIMER("Murmur3_Hash");
+            // Should 32 bit murmur hash be used? Or should 128 bits hash be used and sliced back to 64 bits?
+            uint32_t hashValue;
+            MurmurHash3_x86_32(specification.Bindings.data(), sizeof(VkDescriptorSetLayoutBinding) * specification.Bindings.size(), 0, &hashValue);
+            return static_cast<size_t>(hashValue);
+        }
+    };
+
+}
+
+namespace Flameberry {
+
     DescriptorPool::DescriptorPool(VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets)
     {
         VkDescriptorPoolCreateInfo vk_descriptor_pool_create_info{};
@@ -39,6 +75,8 @@ namespace Flameberry {
         return true;
     }
 
+    std::unordered_map<DescriptorSetLayoutSpecification, Ref<DescriptorSetLayout>> DescriptorSetLayout::s_CachedDescriptorSetLayouts;
+
     DescriptorSetLayout::DescriptorSetLayout(const DescriptorSetLayoutSpecification& specification)
         : m_DescSetLayoutSpec(specification)
     {
@@ -55,6 +93,23 @@ namespace Flameberry {
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         vkDestroyDescriptorSetLayout(device, m_Layout, nullptr);
+    }
+
+    Ref<DescriptorSetLayout> DescriptorSetLayout::CreateOrGetCached(const DescriptorSetLayoutSpecification& specification)
+    {
+#if 1
+        // Debug only
+        static int i = 0; i++;
+        FBY_WARN("DescriptorSetLayout Cache Stats: Layouts: {} vs Total calls : {}", s_CachedDescriptorSetLayouts.size(), i);
+#endif
+        if (auto it = s_CachedDescriptorSetLayouts.find(specification); it != s_CachedDescriptorSetLayouts.end())
+        {
+            FBY_INFO("DescriptorSetLayout retrieved from cache!");
+            return it->second;
+        }
+        auto layout = CreateRef<DescriptorSetLayout>(specification);
+        s_CachedDescriptorSetLayouts[specification] = layout;
+        return layout;
     }
 
     DescriptorSet::DescriptorSet(const DescriptorSetSpecification& specification)

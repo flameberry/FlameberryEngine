@@ -130,7 +130,7 @@ namespace Flameberry {
         mousePickingDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         mousePickingDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
 
-        m_MousePickingDescriptorSetLayout = CreateRef<DescriptorSetLayout>(mousePickingDescSetLayoutSpec);
+        m_MousePickingDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(mousePickingDescSetLayoutSpec);
 
         {
             // Pipeline Creation
@@ -597,8 +597,8 @@ namespace Flameberry {
                     }
                 }
                 break;
-                }
-                }
+        }
+    }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -958,4 +958,4 @@ namespace Flameberry {
         m_ActiveScene->OnStartRuntime();
     }
 
-        }
+}

@@ -17,7 +17,7 @@ namespace Flameberry {
         DescriptorSetSpecification descSetSpec;
         descSetSpec.Layout = s_CommonDescSetLayout;
         m_TextureMapSet = std::make_unique<DescriptorSet>(descSetSpec);
-        
+
         VkDescriptorImageInfo imageInfo{
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             .sampler = Texture2D::GetDefaultSampler(),
@@ -89,13 +89,13 @@ namespace Flameberry {
             layoutSpec.Bindings[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         }
 
-        s_CommonDescSetLayout = CreateRef<DescriptorSetLayout>(layoutSpec);
+        s_CommonDescSetLayout = DescriptorSetLayout::CreateOrGetCached(layoutSpec);
 
         DescriptorSetSpecification descSetSpec;
         descSetSpec.Layout = s_CommonDescSetLayout;
 
         s_EmptyMaterialDescSet = std::make_unique<DescriptorSet>(descSetSpec);
-        
+
         VkDescriptorImageInfo imageInfo{
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             .sampler = Texture2D::GetDefaultSampler(),

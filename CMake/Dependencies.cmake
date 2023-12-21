@@ -145,4 +145,8 @@ set(FBY_DEPENDENCY_SOURCE
     ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.cpp
     ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.h
     ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImZoomSlider.h
+
+    # Murmur Hash
+    ${FBY_SOURCE_DIR}/Flameberry/vendor/MurmurHash/MurmurHash3.h
+    ${FBY_SOURCE_DIR}/Flameberry/vendor/MurmurHash/MurmurHash3.cpp
 )

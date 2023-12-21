@@ -30,11 +30,15 @@ namespace Flameberry {
         DescriptorSetLayout(const DescriptorSetLayoutSpecification& specification);
         ~DescriptorSetLayout();
 
+        static Ref<DescriptorSetLayout> CreateOrGetCached(const DescriptorSetLayoutSpecification& specification);
+
         VkDescriptorSetLayout GetLayout() const { return m_Layout; }
         DescriptorSetLayoutSpecification GetSpecification() const { return m_DescSetLayoutSpec; }
     private:
         DescriptorSetLayoutSpecification m_DescSetLayoutSpec;
         VkDescriptorSetLayout m_Layout;
+
+        static std::unordered_map<DescriptorSetLayoutSpecification, Ref<DescriptorSetLayout>> s_CachedDescriptorSetLayouts;
     };
 
     struct DescriptorSetSpecification

@@ -110,11 +110,9 @@ namespace Flameberry {
     protected:
         uint32_t GetUniformDataSize() const { return m_PushConstantBufferSize; }
 
+        // This function is to be used by MaterialAsset class to access the data easily every frame without having to refer uniforms by their names
         template<typename T>
-        inline T& GetUniformDataReferenceAs() const
-        {
-            return (T&)*reinterpret_cast<T*>(m_PushConstantBuffer);
-        }
+        inline T& GetUniformDataReferenceAs() const { return (T&)*reinterpret_cast<T*>(m_PushConstantBuffer); }
     private:
         // The core element behind the material is this shader
         Ref<Shader> m_Shader;

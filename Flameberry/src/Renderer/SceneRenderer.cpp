@@ -132,7 +132,7 @@ namespace Flameberry {
             shadowDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
             shadowDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-            m_ShadowMapDescriptorSetLayout = CreateRef<DescriptorSetLayout>(shadowDescSetLayoutSpec);
+            m_ShadowMapDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(shadowDescSetLayoutSpec);
 
             DescriptorSetSpecification shadowMapDescSetSpec;
             shadowMapDescSetSpec.Layout = m_ShadowMapDescriptorSetLayout;
@@ -222,7 +222,7 @@ namespace Flameberry {
             cameraBufferDescLayoutSpec.Bindings[0].descriptorCount = 1;
             cameraBufferDescLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-            m_CameraBufferDescSetLayout = CreateRef<DescriptorSetLayout>(cameraBufferDescLayoutSpec);
+            m_CameraBufferDescSetLayout = DescriptorSetLayout::CreateOrGetCached(cameraBufferDescLayoutSpec);
 
             DescriptorSetSpecification cameraBufferDescSetSpec;
             cameraBufferDescSetSpec.Layout = m_CameraBufferDescSetLayout;
@@ -307,7 +307,7 @@ namespace Flameberry {
                 sceneDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
                 sceneDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-                m_SceneDescriptorSetLayout = CreateRef<DescriptorSetLayout>(sceneDescSetLayoutSpec);
+                m_SceneDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(sceneDescSetLayoutSpec);
 
                 DescriptorSetSpecification sceneDescSetSpec;
                 sceneDescSetSpec.Layout = m_SceneDescriptorSetLayout;
@@ -335,7 +335,7 @@ namespace Flameberry {
                 shadowMapRefDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
                 shadowMapRefDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-                m_ShadowMapRefDescriptorSetLayout = CreateRef<DescriptorSetLayout>(shadowMapRefDescSetLayoutSpec);
+                m_ShadowMapRefDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(shadowMapRefDescSetLayoutSpec);
 
                 DescriptorSetSpecification shadowMapRefDescSetSpec;
                 shadowMapRefDescSetSpec.Layout = m_ShadowMapRefDescriptorSetLayout;
@@ -441,7 +441,7 @@ namespace Flameberry {
             layoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             layoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-            m_CompositePassDescriptorSetLayout = CreateRef<DescriptorSetLayout>(layoutSpec);
+            m_CompositePassDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(layoutSpec);
 
             DescriptorSetSpecification setSpec;
             setSpec.Layout = m_CompositePassDescriptorSetLayout;

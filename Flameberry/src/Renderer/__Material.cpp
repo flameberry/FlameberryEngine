@@ -59,7 +59,7 @@ namespace Flameberry {
                 descSetSpecification.Pool = VulkanContext::GetCurrentGlobalDescriptorPool();
 
                 DescriptorSetLayoutSpecification layoutSpecification{ vulkanDescSetBindings };
-                descSetSpecification.Layout = CreateRef<DescriptorSetLayout>(layoutSpecification);
+                descSetSpecification.Layout = DescriptorSetLayout::CreateOrGetCached(layoutSpecification);
 
                 auto descSet = CreateRef<DescriptorSet>(descSetSpecification);
                 m_DescriptorSets.push_back(descSet);

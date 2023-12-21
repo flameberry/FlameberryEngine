@@ -254,7 +254,7 @@ namespace Flameberry {
         emptyDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         emptyDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
 
-        s_DescriptorLayout = CreateRef<DescriptorSetLayout>(emptyDescSetLayoutSpec);
+        s_DescriptorLayout = DescriptorSetLayout::CreateOrGetCached(emptyDescSetLayoutSpec);
 
         DescriptorSetSpecification emptyDescSetSpec;
         emptyDescSetSpec.Layout = s_DescriptorLayout;
