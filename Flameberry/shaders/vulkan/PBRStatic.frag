@@ -57,10 +57,10 @@ layout (set = 2, binding = 0) uniform sampler2DArray _FBY_u_ShadowMapSamplerArra
 
 // These are the uniforms that are exposed to the Material class
 // How do we decide that? The classes which are not marked by _FBY_ prefix are exposed to the Material class
-layout (set = 3, binding = 0) uniform sampler2D u_TextureMapSampler;
+layout (set = 3, binding = 0) uniform sampler2D u_AlbedoMapSampler;
 layout (set = 3, binding = 1) uniform sampler2D u_NormalMapSampler;
 layout (set = 3, binding = 2) uniform sampler2D u_RoughnessMapSampler;
-layout (set = 3, binding = 3) uniform sampler2D u_AmbientOcclusionMapSampler;
+layout (set = 3, binding = 3) uniform sampler2D u_AmbientMapSampler;
 layout (set = 3, binding = 4) uniform sampler2D u_MetallicMapSampler;
 
 // This is the push constant that is exposed to Material class
@@ -70,19 +70,19 @@ layout (push_constant) uniform MeshData {
     float u_Roughness;
     float u_Metallic;
 
-    float u_TextureMapEnabled, u_NormalMapEnabled, u_RoughnessMapEnabled, u_AmbientOcclusionMapEnabled, u_MetallicMapEnabled;
+    uint u_UseAlbedoMap, u_UseNormalMap, u_UseRoughnessMap, u_UseAmbientMap, u_UseMetallicMap;
 };
 
 vec3 GetPixelColor()
 {
-    if (u_TextureMapEnabled == 1.0f)
-        return texture(u_TextureMapSampler, v_TextureCoords).xyz;
+    if (u_UseAlbedoMap == 1)
+        return texture(u_AlbedoMapSampler, v_TextureCoords).xyz;
     return u_Albedo;
 }
 
 vec3 GetPixelNormal()
 {
-    if (u_NormalMapEnabled == 1.0f)
+    if (u_UseNormalMap == 1)
     {
         vec3 rgbNormal = texture(u_NormalMapSampler, v_TextureCoords).rgb * 2.0f - 1.003921568627451f;
         return normalize(v_TBNMatrix * normalize(rgbNormal));
@@ -90,23 +90,23 @@ vec3 GetPixelNormal()
     return normalize(v_Normal);
 }
 
-float GetPixelRoughness()
+float GetRoughnessFactor()
 {
-    if (u_RoughnessMapEnabled == 1.0f)
+    if (u_UseRoughnessMap == 1)
         return texture(u_RoughnessMapSampler, v_TextureCoords).x;
     return u_Roughness;
 }
 
-float GetAmbientOcclusion()
+float GetAmbientFactor()
 {
-    if (u_AmbientOcclusionMapEnabled == 1.0f)
-        return texture(u_AmbientOcclusionMapSampler, v_TextureCoords).x;
+    if (u_UseAlbedoMap == 1)
+        return texture(u_AmbientMapSampler, v_TextureCoords).x;
     return 1.0;
 }
 
 float GetMetallicFactor()
 {
-    if (u_MetallicMapEnabled == 1.0f)
+    if (u_UseMetallicMap == 1)
         return texture(u_MetallicMapSampler, v_TextureCoords).x;
     return u_Metallic;
 }
@@ -120,14 +120,14 @@ vec3 SchlickFresnel(float v_dot_h)
 
 float GeomSmith(float dp)
 {
-    float k = (GetPixelRoughness() + 1.0f) * (GetPixelRoughness() + 1.0f) / 8.0f;
+    float k = (GetRoughnessFactor() + 1.0f) * (GetRoughnessFactor() + 1.0f) / 8.0f;
     float denom = dp * (1.0f - k) + k;
     return dp / denom;
 }
 
 float GGXDistribution(float n_dot_h)
 {
-    float alpha2 = pow(GetPixelRoughness(), 4);
+    float alpha2 = pow(GetRoughnessFactor(), 4);
     float d = n_dot_h * n_dot_h * (alpha2 - 1.0f) + 1.0f;
     float ggxdistrib = alpha2 / (PI * d * d);
     return ggxdistrib;
@@ -162,7 +162,7 @@ float TextureProj_DirectionalLight(vec4 shadowCoord, vec2 offset, uint cascadeIn
 	if (shadowCoord.z > -1.0f && shadowCoord.z < 1.0f) {
 		float dist = texture(_FBY_u_ShadowMapSamplerArray, vec3(shadowCoord.st + offset, cascadeIndex)).r;
 		if (shadowCoord.w > 0 && dist < shadowCoord.z - bias) {
-			// shadow = AMBIENT * GetAmbientOcclusion();
+			// shadow = AMBIENT * GetAmbientFactor();
             shadow = 0.0f;
 		}
 	}
@@ -387,7 +387,7 @@ vec3 PBR_TotalLight(vec3 normal)
     for (int i = 0; i < u_SceneData.LightCount; i++)
         totalLight += PBR_PointLight(u_SceneData.PointLights[i], normal);
     
-    const vec3 ambient = u_SceneData.SkyLightIntensity * GetAmbientOcclusion() * GetPixelColor();
+    const vec3 ambient = u_SceneData.SkyLightIntensity * GetAmbientFactor() * GetPixelColor();
     return totalLight + ambient;
 }
 

@@ -18,7 +18,7 @@ namespace Flameberry {
     void MaterialAsset::SetAlbedoMap(const Ref<Texture2D>& map)
     {
         m_AlbedoMap = map;
-        m_MaterialRef->Set("u_TextureMapSampler", m_AlbedoMap);
+        m_MaterialRef->Set("u_AlbedoMapSampler", m_AlbedoMap);
     }
 
     void MaterialAsset::SetNormalMap(const Ref<Texture2D>& map)
@@ -35,8 +35,8 @@ namespace Flameberry {
 
     void MaterialAsset::SetAmbientOcclusionMap(const Ref<Texture2D>& map)
     {
-        m_AmbientOcclusionMap = map;
-        m_MaterialRef->Set("u_AmbientOcclusionMapSampler", m_AmbientOcclusionMap);
+        m_AmbientMap = map;
+        m_MaterialRef->Set("u_AmbientMapSampler", m_AmbientMap);
     }
 
     void MaterialAsset::SetMetallicMap(const Ref<Texture2D>& map)
@@ -57,15 +57,15 @@ namespace Flameberry {
 
         out << YAML::Key << "Roughness" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Roughness");
         out << YAML::Key << "Metallic" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Metallic");
-        out << YAML::Key << "TextureMapEnabled" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<float>("u_AlbedoMapEnabled");
-        out << YAML::Key << "TextureMap" << YAML::Value << (materialAsset->m_AlbedoMap ? materialAsset->m_AlbedoMap->FilePath : "");
-        out << YAML::Key << "NormalMapEnabled" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<float>("u_NormalMapEnabled");
+        out << YAML::Key << "UseAlbedoMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAlbedoMap");
+        out << YAML::Key << "AlbedoMap" << YAML::Value << (materialAsset->m_AlbedoMap ? materialAsset->m_AlbedoMap->FilePath : "");
+        out << YAML::Key << "UseNormalMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseNormalMap");
         out << YAML::Key << "NormalMap" << YAML::Value << (materialAsset->m_NormalMap ? materialAsset->m_NormalMap->FilePath : "");
-        out << YAML::Key << "RoughnessMapEnabled" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<float>("u_RoughnessMapEnabled");
+        out << YAML::Key << "UseRoughnessMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseRoughnessMap");
         out << YAML::Key << "RoughnessMap" << YAML::Value << (materialAsset->m_RoughnessMap ? materialAsset->m_RoughnessMap->FilePath : "");
-        out << YAML::Key << "AmbientOcclusionMapEnabled" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<float>("u_AmbientOcclusionEnabled");
-        out << YAML::Key << "AmbientOcclusionMap" << YAML::Value << (materialAsset->m_AmbientOcclusionMap ? materialAsset->m_AmbientOcclusionMap->FilePath : "");
-        out << YAML::Key << "MetallicMapEnabled" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<float>("u_MetallicMapEnabled");
+        out << YAML::Key << "UseAmbientOcclusionMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAmbientMap");
+        out << YAML::Key << "AmbientOcclusionMap" << YAML::Value << (materialAsset->m_AmbientMap ? materialAsset->m_AmbientMap->FilePath : "");
+        out << YAML::Key << "UseMetallicMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseMetallicMap");
         out << YAML::Key << "MetallicMap" << YAML::Value << (materialAsset->m_MetallicMap ? materialAsset->m_MetallicMap->FilePath : "");
         out << YAML::EndMap;
 
@@ -92,14 +92,15 @@ namespace Flameberry {
         materialAsset->SetAlbedo(data["Albedo"].as<glm::vec3>());
         materialAsset->SetRoughness(data["Roughness"].as<float>());
         materialAsset->SetMetallic(data["Metallic"].as<float>());
-        materialAsset->SetAlbedoMapEnabled(data["TextureMapEnabled"].as<bool>());
-        materialAsset->SetNormalMapEnabled(data["NormalMapEnabled"].as<bool>());
-        materialAsset->SetRoughnessMapEnabled(data["RoughnessMapEnabled"].as<bool>());
-        materialAsset->SetAmbientOcclusionMapEnabled(data["AmbientOcclusionMapEnabled"].as<bool>());
-        materialAsset->SetMetallicMapEnabled(data["MetallicMapEnabled"].as<bool>());
+
+        materialAsset->SetUseAlbedoMap(data["UseAlbedoMap"].as<bool>());
+        materialAsset->SetUseNormalMap(data["UseNormalMap"].as<bool>());
+        materialAsset->SetUseRoughnessMap(data["UseRoughnessMap"].as<bool>());
+        materialAsset->SetUseAmbientMap(data["UseAmbientOcclusionMap"].as<bool>());
+        materialAsset->SetUseMetallicMap(data["UseMetallicMap"].as<bool>());
 
         // TODO: Batch update the descriptor set of `m_MaterialRef`
-        if (auto map = data["TextureMap"].as<std::string>(); !map.empty())
+        if (auto map = data["AlbedoMap"].as<std::string>(); !map.empty())
             materialAsset->SetAlbedoMap(AssetManager::TryGetOrLoadAsset<Texture2D>(map));
 
         if (auto map = data["NormalMap"].as<std::string>(); !map.empty())

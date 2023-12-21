@@ -71,16 +71,16 @@ namespace Flameberry {
             FBY_LOG("Roughness of Material Asset: {}", materialAsset->GetRoughness());
             materialAsset->SetMetallic(7.69f);
             FBY_LOG("Metallic of Material Asset: {}", materialAsset->GetMetallic());
-            materialAsset->SetAlbedoMapEnabled(true);
-            FBY_LOG("AlbedoMapEnabled of Material Asset: {}", materialAsset->IsAlbedoMapEnabled());
-            materialAsset->SetNormalMapEnabled(false);
-            FBY_LOG("Normal Enabled of Material Asset: {}", materialAsset->IsNormalMapEnabled());
-            materialAsset->SetRoughnessMapEnabled(true);
-            FBY_LOG("Roughness Enabled of Material Asset: {}", materialAsset->IsRoughnessMapEnabled());
-            materialAsset->SetAmbientOcclusionMapEnabled(false);
-            FBY_LOG("Ambient Enabled of Material Asset: {}", materialAsset->IsAmbientOcclusionMapEnabled());
-            materialAsset->SetMetallicMapEnabled(true);
-            FBY_LOG("Metallic Enabled of Material Asset: {}", materialAsset->IsMetallicMapEnabled());
+            materialAsset->SetUseAlbedoMap(true);
+            FBY_LOG("AlbedoMapEnabled of Material Asset: {}", materialAsset->IsUsingAlbedoMap());
+            materialAsset->SetUseNormalMap(false);
+            FBY_LOG("Normal Enabled of Material Asset: {}", materialAsset->IsUsingNormalMap());
+            materialAsset->SetUseRoughnessMap(true);
+            FBY_LOG("Roughness Enabled of Material Asset: {}", materialAsset->IsUsingRoughnessMap());
+            materialAsset->SetUseAmbientMap(false);
+            FBY_LOG("Ambient Enabled of Material Asset: {}", materialAsset->IsUsingAmbientMap());
+            materialAsset->SetUseMetallicMap(true);
+            FBY_LOG("Metallic Enabled of Material Asset: {}", materialAsset->IsUsingMetallicMap());
 
             materialAsset->SetAlbedoMap(texture);
 
