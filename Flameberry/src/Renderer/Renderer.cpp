@@ -26,6 +26,8 @@ namespace Flameberry {
         ShaderLibrary::Shutdown();
         Material::Shutdown();
         Texture2D::DestroyStaticResources();
+
+        DescriptorSetLayout::ClearCache(); // TODO: Maybe move this to somewhere obvious like VulkanDevice or Renderer
     }
 
     void Renderer::Submit(const Command& cmd)

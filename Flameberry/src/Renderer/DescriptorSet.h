@@ -31,6 +31,7 @@ namespace Flameberry {
         ~DescriptorSetLayout();
 
         static Ref<DescriptorSetLayout> CreateOrGetCached(const DescriptorSetLayoutSpecification& specification);
+        static void ClearCache();
 
         VkDescriptorSetLayout GetLayout() const { return m_Layout; }
         DescriptorSetLayoutSpecification GetSpecification() const { return m_DescSetLayoutSpec; }
