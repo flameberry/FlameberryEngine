@@ -6,6 +6,7 @@
 #include "VulkanContext.h"
 #include "SwapChain.h"
 #include "Texture2D.h"
+#include "ShaderLibrary.h"
 #include "Material.h"
 
 namespace Flameberry {
@@ -17,10 +18,12 @@ namespace Flameberry {
         // Create the generic texture descriptor layout
         Texture2D::InitStaticResources();
         Material::Init();
+        ShaderLibrary::Init();
     }
 
     void Renderer::Shutdown()
     {
+        ShaderLibrary::Shutdown();
         Material::Shutdown();
         Texture2D::DestroyStaticResources();
     }

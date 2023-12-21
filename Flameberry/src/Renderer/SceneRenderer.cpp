@@ -5,12 +5,14 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Core/Core.h"
+
 #include "VulkanDebug.h"
-#include "RenderCommand.h"
 #include "VulkanContext.h"
-#include "Material.h"
 #include "Renderer.h"
 #include "Renderer2D.h"
+#include "RenderCommand.h"
+#include "ShaderLibrary.h"
+#include "Material.h"
 
 #include "Asset/AssetManager.h"
 
@@ -153,7 +155,7 @@ namespace Flameberry {
             PipelineSpecification pipelineSpec{};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_ShadowMapDescriptorSetLayout };
 
-            pipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadowMapping.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/shadowMapping.frag.spv");
+            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_DirectionalShadowMap");
             pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
             pipelineSpec.VertexLayout = {
@@ -361,7 +363,7 @@ namespace Flameberry {
                     Material::GetLayout()
                 };
 
-                pipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.frag.spv");
+                pipelineSpec.Shader = ShaderLibrary::Get("mesh");
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {
@@ -392,7 +394,7 @@ namespace Flameberry {
                 Flameberry::PipelineSpecification pipelineSpec{};
                 pipelineSpec.PipelineLayout.DescriptorSetLayouts = { Texture2D::GetDescriptorLayout() };
 
-                pipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/skybox.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/skybox.frag.spv");
+                pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_SkyMap");
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {};
@@ -413,6 +415,7 @@ namespace Flameberry {
 #pragma endregion GeometryPassResources
 
 #pragma region CompositionResources
+#if 0
         {
             // Create render pass
             FramebufferSpecification framebufferSpec{};
@@ -472,6 +475,7 @@ namespace Flameberry {
 
             m_CompositePipeline = CreateRef<Pipeline>(pipelineSpec);
         }
+#endif
 #pragma endregion CompositionResources
 
         Renderer2D::Init(m_CameraBufferDescSetLayout, m_GeometryPass);
@@ -503,10 +507,12 @@ namespace Flameberry {
                         .sampler = m_VkTextureSampler
                     };
 
+#if 0
                     m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, imageInfo);
 
                     m_CompositePassDescriptorSets[imageIndex]->Update();
                     m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass());
+#endif
                 }
 
                 //                VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };

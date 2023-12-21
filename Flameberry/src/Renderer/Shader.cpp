@@ -46,8 +46,9 @@ namespace Flameberry {
 
     Shader::Shader(const char* vertexShaderSpvPath, const char* fragmentShaderSpvPath)
     {
-        // TODO: This is probably some odd behaviour to name the shader with just vertex shader's name
-        m_Name = std::filesystem::path(vertexShaderSpvPath).stem();
+        // TODO: This is probably some odd behaviour to name the shader with just the vertex shader's name
+        const auto& stem = std::filesystem::path(vertexShaderSpvPath).stem().string();
+        m_Name = stem.substr(0, stem.find('.'));
 
         // Vertex Shader
         std::vector<char> vertexShaderSpvBinaryCode = LoadShaderSpvCode(vertexShaderSpvPath);

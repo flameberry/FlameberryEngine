@@ -2,6 +2,7 @@
 
 #include "Renderer.h"
 
+#include "ShaderLibrary.h"
 #include "RenderPass.h"
 #include "VulkanDebug.h"
 #include "RenderCommand.h"
@@ -31,7 +32,7 @@ namespace Flameberry {
             PipelineSpecification pipelineSpec{};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout };
 
-            pipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/solid_color.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/solid_color.frag.spv");
+            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_SolidColor");
             pipelineSpec.RenderPass = renderPass;
 
             pipelineSpec.VertexLayout = {
@@ -101,7 +102,7 @@ namespace Flameberry {
             PipelineSpecification pipelineSpec{};
             pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout, Texture2D::GetDescriptorLayout() };
 
-            pipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/quad.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/quad.frag.spv");
+            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_Quad");
             pipelineSpec.RenderPass = renderPass;
 
             pipelineSpec.VertexLayout = {

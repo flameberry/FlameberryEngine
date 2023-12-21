@@ -4,12 +4,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Core/YamlUtils.h"
+#include "ShaderLibrary.h"
 #include "Asset/AssetManager.h"
 
 namespace Flameberry {
 
-    MaterialAsset::MaterialAsset(const std::string& name, const Ref<__Material>& material)
-        : m_Name(name), m_MaterialRef(material) // TODO: This should be changed immediately
+    MaterialAsset::MaterialAsset(const std::string& name)
+        : m_Name(name), m_MaterialRef(CreateRef<__Material>(ShaderLibrary::Get("Flameberry_PBR"))) // TODO: This should be changed immediately
     {
         // This is here to remind the developer to update the GPU representation of the Material Struct when it is updated in the shader
         FBY_ASSERT(sizeof(MaterialStructGPURepresentation) == m_MaterialRef->GetUniformDataSize(), "The GPU Representation of Material has a size ({}) which is not the same as actual Uniform size ({})", sizeof(MaterialStructGPURepresentation), m_MaterialRef->GetUniformDataSize());
@@ -81,12 +82,7 @@ namespace Flameberry {
 
         YAML::Node data = YAML::Load(ss.str());
 
-#if 1
-        Ref<Shader> shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mesh.frag.spv");
-        Ref<__Material> mat = CreateRef<__Material>(shader);
-        Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>(data["Name"].as<std::string>(), mat);
-#endif
-
+        Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>(data["Name"].as<std::string>());
         materialAsset->Handle = data["Handle"].as<uint64_t>();
 
         materialAsset->SetAlbedo(data["Albedo"].as<glm::vec3>());

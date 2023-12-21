@@ -17,7 +17,7 @@ namespace Flameberry {
     class MaterialAsset : public Asset
     {
     public:
-        MaterialAsset(const std::string& name, const Ref<__Material>& material);
+        MaterialAsset(const std::string& name);
 
         Ref<__Material> GetUnderlyingMaterial() { return m_MaterialRef; }
 

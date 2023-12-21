@@ -60,9 +60,7 @@ namespace Flameberry {
 #if 1
         {
             Ref<Texture2D> texture = CreateRef<Texture2D>(FBY_PROJECT_DIR"SandboxProject/Content/Textures/brick.png");
-            Ref<Shader> shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/PBRStatic.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/PBRStatic.frag.spv");
-            Ref<__Material> mat = CreateRef<__Material>(shader);
-            Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>("Material_01", mat);
+            Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>("Material_01");
 
             glm::vec3 albedo(3.69f);
             materialAsset->SetAlbedo(albedo);
@@ -83,8 +81,6 @@ namespace Flameberry {
             FBY_LOG("Metallic Enabled of Material Asset: {}", materialAsset->IsUsingMetallicMap());
 
             materialAsset->SetAlbedoMap(texture);
-
-            FBY_DEBUGBREAK();
         }
 #endif
 
@@ -143,7 +139,7 @@ namespace Flameberry {
                 m_MousePickingDescriptorSetLayout
             };
 
-            pipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking.frag.spv");
+            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_MousePicking");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = {
@@ -164,7 +160,7 @@ namespace Flameberry {
                 m_MousePickingDescriptorSetLayout
             };
 
-            pipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking2D.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/mousePicking2D.frag.spv");
+            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_MousePicking2D");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
             pipelineSpec.VertexLayout = {
@@ -193,11 +189,13 @@ namespace Flameberry {
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
 
+#if 0
             m_CompositePassViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
                 Texture2D::GetDefaultSampler(),
                 m_SceneRenderer->GetCompositePassOutputImageView(i),
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
+#endif
         }
 
         // Test
@@ -270,7 +268,9 @@ namespace Flameberry {
             {
                 // TODO: Update these descriptors only when there corresponding framebuffer is updated
                 InvalidateViewportImGuiDescriptorSet(imageIndex);
+#if 0
                 InvalidateCompositePassImGuiDescriptorSet(imageIndex);
+#endif
             }
         );
 
@@ -597,8 +597,8 @@ namespace Flameberry {
                     }
                 }
                 break;
-        }
-    }
+                }
+                }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -958,4 +958,4 @@ namespace Flameberry {
         m_ActiveScene->OnStartRuntime();
     }
 
-}
+        }
