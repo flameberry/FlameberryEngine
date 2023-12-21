@@ -50,8 +50,8 @@ namespace Flameberry {
         Pipeline(const PipelineSpecification& pipelineSpec);
         ~Pipeline();
 
-        PipelineSpecification GetSpecification() const { return m_PipelineSpec; }
-        VkPipelineLayout GetLayout() const { return m_VkPipelineLayout; }
+        const PipelineSpecification& GetSpecification() const { return m_PipelineSpec; }
+        VkPipelineLayout GetVulkanPipelineLayout() const { return m_VkPipelineLayout; }
 
         void ReloadShaders();
         void Bind();

@@ -4,8 +4,8 @@
 
 namespace Flameberry {
 
-    __Material::__Material(const char* name, const Ref<Shader>& shader)
-        : m_Name(name), m_Shader(shader)
+    __Material::__Material(const Ref<Shader>& shader)
+        : m_Shader(shader)
     {
         // Arranging resources for the push constants
         // Currently the push constant blocks which are material specific (i.e. not Renderer Only) are accumulated and the combined data is stored together

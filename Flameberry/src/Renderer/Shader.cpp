@@ -105,7 +105,7 @@ namespace Flameberry {
             FBY_ERROR("Could not process: {} (Is it a valid SPIR-V bytecode?)", m_Name);
 
         // Store the shader stage flags
-        m_VulkanShaderStageFlags |= reflectionShaderModule.GetVulkanShaderStage();
+        m_VulkanShaderStageFlags |= reflectionShaderModule.GetShaderStage();
 
 #if 0
         if (reflectionShaderModule.GetShaderStage() == SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)

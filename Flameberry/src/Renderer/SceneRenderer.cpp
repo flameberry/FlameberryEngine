@@ -583,7 +583,7 @@ namespace Flameberry {
         {
             m_ShadowMapRenderPass->Begin();
             m_ShadowMapPipeline->Bind();
-            Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr);
                 }
@@ -597,7 +597,7 @@ namespace Flameberry {
                 {
                     ModelMatrixPushConstantData pushContantData;
                     pushContantData.ModelMatrix = transform.GetTransform();
-                    Renderer::Submit([shadowMapPipelineLayout = m_ShadowMapPipeline->GetLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                    Renderer::Submit([shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                         {
                             vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
                         }
@@ -623,7 +623,7 @@ namespace Flameberry {
             m_SkyboxPipeline->Bind();
 
             glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
-            auto pipelineLayout = m_SkyboxPipeline->GetLayout();
+            auto pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
             auto textureDescSet = AssetManager::GetAsset<Texture2D>(skyMap->SkyMap)->CreateOrGetDescriptorSet();
 
             Renderer::Submit([pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
@@ -639,7 +639,7 @@ namespace Flameberry {
         // Mesh Rendering
         m_MeshPipeline->Bind();
 
-        Renderer::Submit([=, pipelineLayout = m_MeshPipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([=, pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
                 VkDescriptorSet descriptorSets[] = {
                     m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet(),
@@ -819,7 +819,7 @@ namespace Flameberry {
         renderPass->Begin(0, { (int)mousePos.x, (int)mousePos.y }, { 1, 1 });
         pipeline->Bind();
 
-        Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetDescriptorSet(), mousePickingPipelineLayout = pipeline->GetLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetDescriptorSet(), mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
             }
@@ -835,7 +835,7 @@ namespace Flameberry {
                 pushContantData.ModelMatrix = transform.GetTransform();
                 pushContantData.EntityIndex = fbentt::to_index(entity);
 
-                Renderer::Submit([mousePickingPipelineLayout = pipeline->GetLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                Renderer::Submit([mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                     {
                         vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);
                     }
@@ -851,7 +851,7 @@ namespace Flameberry {
         uint32_t indexCount = 6 * Renderer2D::GetRendererData().VertexBufferOffset / (4 * sizeof(QuadVertex));
         Renderer::Submit([
             descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetDescriptorSet(),
-                mousePicking2DPipelineLayout = pipeline2D->GetLayout(),
+                mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
                 vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetBuffer(),
                 indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetBuffer(),
                 indexCount]
@@ -881,7 +881,7 @@ namespace Flameberry {
 
         staticMesh->Bind();
 
-        Renderer::Submit([pipelineLayout = m_MeshPipeline->GetLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
                 vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(transform));
             }
@@ -909,7 +909,7 @@ namespace Flameberry {
                 pushConstantMeshData.MetallicMapEnabled = materialAsset->IsMetallicMapEnabled();
             }
 
-            Renderer::Submit([pipelineLayout = m_MeshPipeline->GetLayout(), descSet = materialAsset ? materialAsset->GetDescriptorSet() : Material::GetEmptyDesciptorSet(), pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(), descSet = materialAsset ? materialAsset->GetDescriptorSet() : Material::GetEmptyDesciptorSet(), pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 3, 1, &descSet, 0, nullptr);
                     vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), sizeof(MeshData), &pushConstantMeshData);

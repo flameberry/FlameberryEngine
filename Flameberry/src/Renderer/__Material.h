@@ -12,7 +12,7 @@ namespace Flameberry {
     class __Material
     {
     public:
-        __Material(const char* name, const Ref<Shader>& shader);
+        __Material(const Ref<Shader>& shader);
         ~__Material();
 
         template<typename T>
@@ -107,10 +107,15 @@ namespace Flameberry {
             return reinterpret_cast<const T*>(&m_PushConstantBuffer[uniformVar.LocalOffset]);
         }
 #endif
-    private:
-        // Wondering if this should be std::string
-        const char* m_Name;
+    protected:
+        uint32_t GetUniformDataSize() const { return m_PushConstantBufferSize; }
 
+        template<typename T>
+        inline T& GetUniformDataReferenceAs() const
+        {
+            return (T&)*reinterpret_cast<T*>(m_PushConstantBuffer);
+        }
+    private:
         // The core element behind the material is this shader
         Ref<Shader> m_Shader;
 
@@ -125,6 +130,9 @@ namespace Flameberry {
         // the rest will be Material accessible sets
         // Hence it is assumed that these sets will be in ascending order starting from `m_StartSetIndex`
         uint32_t m_StartSetIndex = -1;
+
+    private:
+        friend class MaterialAsset;
     };
 
 }
