@@ -55,7 +55,7 @@ namespace Flameberry {
         ~DescriptorSet();
 
         DescriptorSetSpecification GetSpecification() const { return m_DescSetSpec; }
-        VkDescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
+        VkDescriptorSet GetVulkanDescriptorSet() const { return m_DescriptorSet; }
 
         void WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo);
         void WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo);

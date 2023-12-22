@@ -10,10 +10,17 @@
 namespace Flameberry {
 
     MaterialAsset::MaterialAsset(const std::string& name)
-        : m_Name(name), m_MaterialRef(CreateRef<__Material>(ShaderLibrary::Get("Flameberry_PBR"))) // TODO: This should be changed immediately
+        : m_Name(name), m_MaterialRef(CreateRef<Material>(ShaderLibrary::Get("Flameberry_PBR"))) // TODO: This should be changed immediately
     {
         // This is here to remind the developer to update the GPU representation of the Material Struct when it is updated in the shader
         FBY_ASSERT(sizeof(MaterialStructGPURepresentation) == m_MaterialRef->GetUniformDataSize(), "The GPU Representation of Material has a size ({}) which is not the same as actual Uniform size ({})", sizeof(MaterialStructGPURepresentation), m_MaterialRef->GetUniformDataSize());
+
+        // This is very frustrating to do, otherwise Vulkan complains about no vkUpdateDescriptorSet called on certain bindings
+        m_MaterialRef->Set("u_AlbedoMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_MaterialRef->Set("u_NormalMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_MaterialRef->Set("u_RoughnessMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_MaterialRef->Set("u_AmbientMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_MaterialRef->Set("u_MetallicMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
 
     void MaterialAsset::SetAlbedoMap(const Ref<Texture2D>& map)
@@ -34,7 +41,7 @@ namespace Flameberry {
         m_MaterialRef->Set("u_RoughnessMapSampler", m_RoughnessMap);
     }
 
-    void MaterialAsset::SetAmbientOcclusionMap(const Ref<Texture2D>& map)
+    void MaterialAsset::SetAmbientMap(const Ref<Texture2D>& map)
     {
         m_AmbientMap = map;
         m_MaterialRef->Set("u_AmbientMapSampler", m_AmbientMap);
@@ -64,8 +71,8 @@ namespace Flameberry {
         out << YAML::Key << "NormalMap" << YAML::Value << (materialAsset->m_NormalMap ? materialAsset->m_NormalMap->FilePath : "");
         out << YAML::Key << "UseRoughnessMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseRoughnessMap");
         out << YAML::Key << "RoughnessMap" << YAML::Value << (materialAsset->m_RoughnessMap ? materialAsset->m_RoughnessMap->FilePath : "");
-        out << YAML::Key << "UseAmbientOcclusionMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAmbientMap");
-        out << YAML::Key << "AmbientOcclusionMap" << YAML::Value << (materialAsset->m_AmbientMap ? materialAsset->m_AmbientMap->FilePath : "");
+        out << YAML::Key << "UseAmbientMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAmbientMap");
+        out << YAML::Key << "AmbientMap" << YAML::Value << (materialAsset->m_AmbientMap ? materialAsset->m_AmbientMap->FilePath : "");
         out << YAML::Key << "UseMetallicMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseMetallicMap");
         out << YAML::Key << "MetallicMap" << YAML::Value << (materialAsset->m_MetallicMap ? materialAsset->m_MetallicMap->FilePath : "");
         out << YAML::EndMap;
@@ -81,6 +88,7 @@ namespace Flameberry {
         ss << in.rdbuf();
 
         YAML::Node data = YAML::Load(ss.str());
+        FBY_ASSERT(data, "Failed to load Flameberry Material from path: {}", path);
 
         Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>(data["Name"].as<std::string>());
         materialAsset->Handle = data["Handle"].as<uint64_t>();
@@ -92,7 +100,7 @@ namespace Flameberry {
         materialAsset->SetUseAlbedoMap(data["UseAlbedoMap"].as<bool>());
         materialAsset->SetUseNormalMap(data["UseNormalMap"].as<bool>());
         materialAsset->SetUseRoughnessMap(data["UseRoughnessMap"].as<bool>());
-        materialAsset->SetUseAmbientMap(data["UseAmbientOcclusionMap"].as<bool>());
+        materialAsset->SetUseAmbientMap(data["UseAmbientMap"].as<bool>());
         materialAsset->SetUseMetallicMap(data["UseMetallicMap"].as<bool>());
 
         // TODO: Batch update the descriptor set of `m_MaterialRef`
@@ -105,8 +113,8 @@ namespace Flameberry {
         if (auto map = data["RoughnessMap"].as<std::string>(); !map.empty())
             materialAsset->SetRoughnessMap(AssetManager::TryGetOrLoadAsset<Texture2D>(map));
 
-        if (auto map = data["AmbientOcclusionMap"].as<std::string>(); !map.empty())
-            materialAsset->SetAmbientOcclusionMap(AssetManager::TryGetOrLoadAsset<Texture2D>(map));
+        if (auto map = data["AmbientMap"].as<std::string>(); !map.empty())
+            materialAsset->SetAmbientMap(AssetManager::TryGetOrLoadAsset<Texture2D>(map));
 
         if (auto map = data["MetallicMap"].as<std::string>(); !map.empty())
             materialAsset->SetMetallicMap(AssetManager::TryGetOrLoadAsset<Texture2D>(map));

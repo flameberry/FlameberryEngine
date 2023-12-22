@@ -153,8 +153,6 @@ namespace Flameberry {
             }
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_ShadowMapDescriptorSetLayout };
-
             pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_DirectionalShadowMap");
             pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
@@ -356,14 +354,7 @@ namespace Flameberry {
 
                 PipelineSpecification pipelineSpec{};
 
-                pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
-                    m_CameraBufferDescSetLayout,
-                    m_SceneDescriptorSetLayout,
-                    m_ShadowMapRefDescriptorSetLayout,
-                    Material::GetLayout()
-                };
-
-                pipelineSpec.Shader = ShaderLibrary::Get("mesh");
+                pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_PBR");
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {
@@ -392,8 +383,6 @@ namespace Flameberry {
             // Skybox Pipeline
             {
                 Flameberry::PipelineSpecification pipelineSpec{};
-                pipelineSpec.PipelineLayout.DescriptorSetLayouts = { Texture2D::GetDescriptorLayout() };
-
                 pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_SkyMap");
                 pipelineSpec.RenderPass = m_GeometryPass;
 
@@ -478,7 +467,7 @@ namespace Flameberry {
 #endif
 #pragma endregion CompositionResources
 
-        Renderer2D::Init(m_CameraBufferDescSetLayout, m_GeometryPass);
+        Renderer2D::Init(m_GeometryPass);
 
         // Textures
         m_LightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/BulbIcon.png");
@@ -589,7 +578,7 @@ namespace Flameberry {
         {
             m_ShadowMapRenderPass->Begin();
             m_ShadowMapPipeline->Bind();
-            Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetVulkanDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr);
                 }
@@ -643,14 +632,15 @@ namespace Flameberry {
         }
 
         // Mesh Rendering
-        m_MeshPipeline->Bind();
-
-        Renderer::Submit([=, pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([=, pipeline = m_MeshPipeline->GetVulkanPipeline(), pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
+                // Binding the pipeline here to reduce the amount of Renderer::Submit calls
+                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
                 VkDescriptorSet descriptorSets[] = {
-                    m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet(),
-                    m_SceneDataDescriptorSets[currentFrame]->GetDescriptorSet(), // TODO: This is the problem for shadow flickering
-                    m_ShadowMapRefDescSets[imageIndex]->GetDescriptorSet()
+                    m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+                    m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(), // TODO: This is the problem for shadow flickering
+                    m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet()
                 };
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
             }
@@ -660,10 +650,11 @@ namespace Flameberry {
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
-            SubmitMesh(mesh.MeshHandle, mesh.OverridenMaterialTable, transform.GetTransform());
+            if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle); staticMesh)
+                Renderer::SubmitMeshWithMaterial(staticMesh, m_MeshPipeline, mesh.OverridenMaterialTable, transform.GetTransform());
         }
 
-        Renderer2D::BeginScene(m_CameraBufferDescriptorSets[currentFrame]->GetDescriptorSet());
+        Renderer2D::BeginScene(m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet());
 
         if (renderDebugIcons)
         {
@@ -825,7 +816,7 @@ namespace Flameberry {
         renderPass->Begin(0, { (int)mousePos.x, (int)mousePos.y }, { 1, 1 });
         pipeline->Bind();
 
-        Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetDescriptorSet(), mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(), mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
             }
@@ -856,7 +847,7 @@ namespace Flameberry {
 
         uint32_t indexCount = 6 * Renderer2D::GetRendererData().VertexBufferOffset / (4 * sizeof(QuadVertex));
         Renderer::Submit([
-            descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetDescriptorSet(),
+            descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
                 mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
                 vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetBuffer(),
                 indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetBuffer(),
@@ -877,53 +868,6 @@ namespace Flameberry {
     void SceneRenderer::ReloadMeshShaders()
     {
         m_MeshPipeline->ReloadShaders();
-    }
-
-    void SceneRenderer::SubmitMesh(AssetHandle handle, const MaterialTable& materialTable, const glm::mat4& transform)
-    {
-        auto staticMesh = AssetManager::GetAsset<StaticMesh>(handle);
-        if (!staticMesh)
-            return;
-
-        staticMesh->Bind();
-
-        Renderer::Submit([pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(transform));
-            }
-        );
-
-        int submeshIndex = 0;
-        for (const auto& submesh : staticMesh->GetSubMeshes()) {
-            MeshData pushConstantMeshData;
-
-            Ref<Material> materialAsset;
-            if (auto it = materialTable.find(submeshIndex); it != materialTable.end())
-                materialAsset = AssetManager::GetAsset<Material>(it->second);
-            else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
-                materialAsset = AssetManager::GetAsset<Material>(submesh.MaterialHandle);
-
-            if (materialAsset)
-            {
-                pushConstantMeshData.Albedo = materialAsset->GetAlbedo();
-                pushConstantMeshData.Roughness = materialAsset->GetRoughness();
-                pushConstantMeshData.Metallic = materialAsset->GetMetallic();
-                pushConstantMeshData.AlbedoMapEnabled = materialAsset->IsAlbedoMapEnabled();
-                pushConstantMeshData.NormalMapEnabled = materialAsset->IsNormalMapEnabled();
-                pushConstantMeshData.RoughnessMapEnabled = materialAsset->IsRoughnessMapEnabled();
-                pushConstantMeshData.AmbientOcclusionMapEnabled = materialAsset->IsAmbientOcclusionMapEnabled();
-                pushConstantMeshData.MetallicMapEnabled = materialAsset->IsMetallicMapEnabled();
-            }
-
-            Renderer::Submit([pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(), descSet = materialAsset ? materialAsset->GetDescriptorSet() : Material::GetEmptyDesciptorSet(), pushConstantMeshData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-                {
-                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 3, 1, &descSet, 0, nullptr);
-                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), sizeof(MeshData), &pushConstantMeshData);
-                }
-            );
-            staticMesh->OnDrawSubMesh(submeshIndex);
-            submeshIndex++;
-        }
     }
 
     // TODO: Move this to EditorLayer.cpp ASAP

@@ -74,6 +74,8 @@ namespace Flameberry {
         std::vector<VkPushConstantRange> vulkanPushConstantRanges;
         {
             std::unordered_map<uint32_t, uint32_t> pcOffsetToIndex;
+            vulkanPushConstantRanges.reserve(m_PipelineSpec.Shader->GetPushConstantSpecifications().size());
+
             for (const auto& specification : m_PipelineSpec.Shader->GetPushConstantSpecifications())
             {
                 if (auto it = pcOffsetToIndex.find(specification.Offset); it != pcOffsetToIndex.end())
@@ -97,9 +99,39 @@ namespace Flameberry {
             }
         }
 
+        // Creating the Descriptor Set Layouts required for creating the Pipeline based on the Shader Reflection Data
+        const auto& reflectionDescriptorSets = m_PipelineSpec.Shader->GetDescriptorSetSpecifications();
+        const auto& descriptorBindings = m_PipelineSpec.Shader->GetDescriptorBindingSpecifications();
+
         std::vector<VkDescriptorSetLayout> vulkanDescriptorSetLayouts;
-        for (const auto& layout : m_PipelineSpec.PipelineLayout.DescriptorSetLayouts)
-            vulkanDescriptorSetLayouts.emplace_back(layout->GetLayout());
+        std::vector<VkDescriptorSetLayoutBinding> vulkanDescSetBindings;
+        uint32_t index = 0;
+
+        for (const auto& reflectionDescSet : reflectionDescriptorSets)
+        {
+            vulkanDescSetBindings.reserve(reflectionDescSet.BindingCount);
+            for (uint32_t i = 0; i < reflectionDescSet.BindingCount; i++)
+            {
+                vulkanDescSetBindings.emplace_back(VkDescriptorSetLayoutBinding{
+                    .binding = descriptorBindings[index].Binding,
+                    .descriptorCount = descriptorBindings[index].Count,
+                    .descriptorType = descriptorBindings[index].Type,
+                    .stageFlags = descriptorBindings[index].VulkanShaderStage,
+                    .pImmutableSamplers = nullptr
+                    }
+                );
+                index++;
+            }
+
+            // Create or Get the Cached descriptor set layout
+            if (vulkanDescSetBindings.size())
+            {
+                DescriptorSetLayoutSpecification layoutSpecification{ vulkanDescSetBindings };
+                auto& layout = m_DescriptorSetLayouts.emplace_back(DescriptorSetLayout::CreateOrGetCached(layoutSpecification));
+                vulkanDescriptorSetLayouts.push_back(layout->GetLayout());
+                vulkanDescSetBindings.clear();
+            }
+        }
 
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
         vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -190,17 +222,17 @@ namespace Flameberry {
 
         // Create the vertex attribute description structs based on the m_PipelineSpec.VertexLayout
         VkVertexInputAttributeDescription vertexAttributeDescriptions[m_PipelineSpec.VertexLayout.size()];
-        uint32_t offset = 0, index = 0;
+        uint32_t offset = 0, idx = 0;
         for (uint32_t loc = 0; loc < m_PipelineSpec.VertexLayout.size(); loc++)
         {
             const auto dataType = m_PipelineSpec.VertexLayout[loc];
             if (dataType < ShaderDataType::Dummy1)
             {
-                vertexAttributeDescriptions[index].binding = 0;
-                vertexAttributeDescriptions[index].location = loc;
-                vertexAttributeDescriptions[index].format = ShaderDataTypeToFormat(dataType);
-                vertexAttributeDescriptions[index].offset = offset;
-                index++;
+                vertexAttributeDescriptions[idx].binding = 0;
+                vertexAttributeDescriptions[idx].location = loc;
+                vertexAttributeDescriptions[idx].format = ShaderDataTypeToFormat(dataType);
+                vertexAttributeDescriptions[idx].offset = offset;
+                idx++;
             }
             offset += SizeOfShaderDataType(dataType);
         }
@@ -215,7 +247,7 @@ namespace Flameberry {
         pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = vertexInputBindingDescription.stride ? 1 : 0;
         pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = &vertexInputBindingDescription;
-        pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = index; // Index will represent Size after the last increment
+        pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = idx; // Index will represent Size after the last increment
         pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexAttributeDescriptions;
 
         VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo{};
@@ -329,6 +361,7 @@ namespace Flameberry {
         vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
     }
 
+#if 0
     ComputePipeline::ComputePipeline(const ComputePipelineSpecification& pipelineSpec)
         : m_PipelineSpec(pipelineSpec)
     {
@@ -396,5 +429,6 @@ namespace Flameberry {
                 vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
             }
         );
-    }
+}
+#endif
 }

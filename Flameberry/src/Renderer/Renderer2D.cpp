@@ -15,7 +15,7 @@
 namespace Flameberry {
     Renderer2DData Renderer2D::s_Renderer2DData;
 
-    void Renderer2D::Init(const Ref<DescriptorSetLayout>& globalDescriptorSetLayout, const Ref<RenderPass>& renderPass)
+    void Renderer2D::Init(const Ref<RenderPass>& renderPass)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         {
@@ -30,8 +30,6 @@ namespace Flameberry {
             s_Renderer2DData.LineVertexBuffer->MapMemory(bufferSpec.InstanceSize);
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout };
-
             pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_SolidColor");
             pipelineSpec.RenderPass = renderPass;
 
@@ -100,8 +98,6 @@ namespace Flameberry {
             delete[] indices;
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout, Texture2D::GetDescriptorLayout() };
-
             pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_Quad");
             pipelineSpec.RenderPass = renderPass;
 

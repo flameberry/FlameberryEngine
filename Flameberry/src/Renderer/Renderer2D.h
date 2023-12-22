@@ -37,7 +37,7 @@ namespace Flameberry {
     class Renderer2D
     {
     public:
-        static void Init(const Ref<DescriptorSetLayout>& globalDescriptorSetLayout, const Ref<RenderPass>& renderPass);
+        static void Init(const Ref<RenderPass>& renderPass);
         static void Shutdown();
 
         static void AddGrid(int gridSize);

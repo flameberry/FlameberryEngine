@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer/Material.h"
+#include "Renderer/MaterialAsset.h"
 
 namespace Flameberry {
     class MaterialLoader

@@ -263,8 +263,8 @@ namespace Flameberry {
             {
                 if (ImGui::MenuItem("Material"))
                 {
-                    auto mat = CreateRef<Material>();
-                    MaterialSerializer::Serialize(mat, (m_CurrentDirectory / "NewMaterial.fbmat").c_str());
+                    auto mat = CreateRef<MaterialAsset>("New Material");
+                    MaterialAssetSerializer::Serialize(mat, (m_CurrentDirectory / "NewMaterial.fbmat").c_str());
                 }
                 ImGui::EndMenu();
             }

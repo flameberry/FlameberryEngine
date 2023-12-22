@@ -8,7 +8,7 @@
 #include "Core/Core.h"
 
 #include "Renderer/StaticMesh.h"
-#include "Renderer/Material.h"
+#include "Renderer/MaterialAsset.h"
 
 #include "AssetLoader.h"
 

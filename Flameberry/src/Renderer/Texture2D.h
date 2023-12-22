@@ -32,9 +32,10 @@ namespace Flameberry {
         static void DestroyStaticResources();
 
         static Ref<DescriptorSetLayout> GetDescriptorLayout() { return s_DescriptorLayout; }
-        static VkDescriptorSet GetEmptyDescriptorSet() { return s_EmptyDescriptorSet->GetDescriptorSet(); }
+        static VkDescriptorSet GetEmptyDescriptorSet() { return s_EmptyDescriptorSet->GetVulkanDescriptorSet(); }
         static VkSampler GetDefaultSampler() { return s_DefaultSampler; }
         static VkImageView GetEmptyImageView() { return s_EmptyImage->GetImageView(); }
+        static Ref<Image> GetEmptyImage() { return s_EmptyImage; }
 
         static Ref<Texture2D> TryGetOrLoadTexture(const std::string& texturePath);
 

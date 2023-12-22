@@ -22,7 +22,7 @@ bool operator==(const VkDescriptorSetLayoutBinding& b1, const VkDescriptorSetLay
 namespace Flameberry {
 
     // This is to notify the developer about too many comparisons
-    uint32_t g_DescriptorSetLayoutSpecificationComparisons = 0;
+    static uint32_t g_DescriptorSetLayoutSpecificationComparisons = 0;
 
     bool operator==(const DescriptorSetLayoutSpecification& s1, const DescriptorSetLayoutSpecification& s2) {
         // This is to notify the developer about too many comparisons
@@ -107,7 +107,7 @@ namespace Flameberry {
         // Debug only
         static int calls = 0; calls++;
         FBY_WARN("DescriptorSetLayout Cache Stats: Layouts: {} vs Total calls : {}", s_CachedDescriptorSetLayouts.size(), calls);
-        FBY_ASSERT((float)g_DescriptorSetLayoutSpecificationComparisons <= calls, "Too many DescriptorSetLayoutSpecification comparisons, you might want to look into this");
+        FBY_ASSERT((float)g_DescriptorSetLayoutSpecificationComparisons < calls, "Too many DescriptorSetLayoutSpecification comparisons, you might want to look into this");
 #endif
         if (auto it = s_CachedDescriptorSetLayouts.find(specification); it != s_CachedDescriptorSetLayouts.end())
         {

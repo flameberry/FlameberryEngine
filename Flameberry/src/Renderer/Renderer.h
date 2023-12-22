@@ -6,6 +6,9 @@
 #include <vulkan/vulkan.h>
 
 #include "VulkanContext.h"
+#include "Pipeline.h"
+#include "StaticMesh.h"
+#include "ECS/Components.h"
 
 namespace Flameberry {
     class Renderer
@@ -22,6 +25,8 @@ namespace Flameberry {
 
         static uint32_t RT_GetCurrentFrameIndex() { return s_RT_FrameIndex; }
         static void RT_Render();
+
+        static void SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform);
     private:
         static uint32_t s_RT_FrameIndex, s_FrameIndex;
 

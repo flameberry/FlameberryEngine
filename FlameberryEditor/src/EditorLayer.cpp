@@ -135,10 +135,6 @@ namespace Flameberry {
         {
             // Pipeline Creation
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
-                m_MousePickingDescriptorSetLayout
-            };
-
             pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_MousePicking");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
@@ -156,10 +152,6 @@ namespace Flameberry {
         {
             // Pipeline Creation
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
-                m_MousePickingDescriptorSetLayout
-            };
-
             pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_MousePicking2D");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 

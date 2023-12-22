@@ -165,7 +165,7 @@ namespace Flameberry {
 
                     for (auto entry : mesh["OverridenMaterialTable"]) // TODO: Update with different format
                     {
-                        auto mat = AssetManager::TryGetOrLoadAsset<Material>(entry["Material"].as<std::string>());
+                        auto mat = AssetManager::TryGetOrLoadAsset<MaterialAsset>(entry["Material"].as<std::string>());
                         meshComp.OverridenMaterialTable[entry["SubmeshIndex"].as<uint32_t>()] = mat->Handle;
                     }
                 }
@@ -344,7 +344,7 @@ namespace Flameberry {
                 out << YAML::BeginMap;
                 out << YAML::Key << "SubmeshIndex" << YAML::Value << submeshIndex;
 
-                auto mat = AssetManager::GetAsset<Material>(materialHandle);
+                auto mat = AssetManager::GetAsset<MaterialAsset>(materialHandle);
                 out << YAML::Key << "Material" << YAML::Value << mat->FilePath;
                 out << YAML::EndMap;
             }

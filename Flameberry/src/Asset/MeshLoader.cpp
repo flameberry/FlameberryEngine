@@ -59,34 +59,32 @@ namespace Flameberry {
         std::vector<AssetHandle> materialHandles;
         std::unordered_map<MeshVertex, uint32_t> uniqueVertices{};
 
-        for (const auto& mat : materials) {
-            auto materialAsset = CreateRef<Material>();
-            materialAsset->SetName(mat.name.c_str());
+        for (const auto& mat : materials)
+        {
+            auto materialAsset = CreateRef<MaterialAsset>(mat.name.c_str());
             materialAsset->SetAlbedo({ mat.diffuse[0], mat.diffuse[1], mat.diffuse[2] });
             materialAsset->SetRoughness(mat.roughness);
             materialAsset->SetMetallic(mat.metallic);
 
-            materialAsset->SetAlbedoMapEnabled(!mat.diffuse_texname.empty());
-            if (materialAsset->IsAlbedoMapEnabled())
+            materialAsset->SetUseAlbedoMap(!mat.diffuse_texname.empty());
+            if (materialAsset->IsUsingAlbedoMap())
                 materialAsset->SetAlbedoMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.diffuse_texname));
 
-            materialAsset->SetNormalMapEnabled(!mat.displacement_texname.empty());
-            if (materialAsset->IsNormalMapEnabled())
+            materialAsset->SetUseNormalMap(!mat.displacement_texname.empty());
+            if (materialAsset->IsUsingNormalMap())
                 materialAsset->SetNormalMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.displacement_texname));
 
-            materialAsset->SetRoughnessMapEnabled(!mat.roughness_texname.empty());
-            if (materialAsset->IsRoughnessMapEnabled())
+            materialAsset->SetUseRoughnessMap(!mat.roughness_texname.empty());
+            if (materialAsset->IsUsingRoughnessMap())
                 materialAsset->SetRoughnessMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.roughness_texname));
 
-            materialAsset->SetMetallicMapEnabled(!mat.metallic_texname.empty());
-            if (materialAsset->IsMetallicMapEnabled())
+            materialAsset->SetUseMetallicMap(!mat.metallic_texname.empty());
+            if (materialAsset->IsUsingMetallicMap())
                 materialAsset->SetMetallicMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.metallic_texname));
 
-            materialAsset->SetAmbientOcclusionMapEnabled(!mat.ambient_texname.empty());
-            if (materialAsset->IsAmbientOcclusionMapEnabled())
-                materialAsset->SetAmbientOcclusionMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.ambient_texname));
-
-            materialAsset->Update();
+            materialAsset->SetUseAmbientMap(!mat.ambient_texname.empty());
+            if (materialAsset->IsUsingAmbientMap())
+                materialAsset->SetAmbientMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.ambient_texname));
 
             AssetManager::RegisterAsset(materialAsset);
             materialHandles.emplace_back(materialAsset->Handle);
@@ -249,10 +247,11 @@ namespace Flameberry {
     // Returns Flameberry Material Asset Handle
     static AssetHandle ProcessAndLoadMaterial(aiMaterial* material, const std::filesystem::path& path)
     {
-        auto materialAsset = CreateRef<Material>();
-
         aiString name;
         material->Get(AI_MATKEY_NAME, name);
+
+        auto materialAsset = CreateRef<MaterialAsset>(name.C_Str());
+
         aiColor3D albedo;
         material->Get(AI_MATKEY_COLOR_DIFFUSE, albedo);
         float roughness, metallic;
@@ -267,56 +266,54 @@ namespace Flameberry {
         aiString albedoMap, normalMap, roughnessMap, ambientMap, metallicMap;
         aiReturn result;
         result = material->Get(AI_MATKEY_TEXTURE_DIFFUSE(0), albedoMap);
-        materialAsset->SetAlbedoMapEnabled(result == AI_SUCCESS);
+        materialAsset->SetUseAlbedoMap(result == AI_SUCCESS);
 
         if (path.extension().string() == ".obj")
             result = material->Get(AI_MATKEY_TEXTURE_DISPLACEMENT(0), normalMap);
         else
             result = material->Get(AI_MATKEY_TEXTURE_NORMALS(0), normalMap);
-        materialAsset->SetNormalMapEnabled(result == AI_SUCCESS);
+        materialAsset->SetUseNormalMap(result == AI_SUCCESS);
 
         result = material->GetTexture(AI_MATKEY_ROUGHNESS_TEXTURE, &roughnessMap);
-        materialAsset->SetRoughnessMapEnabled(result == AI_SUCCESS);
+        materialAsset->SetUseRoughnessMap(result == AI_SUCCESS);
 
         result = material->Get(AI_MATKEY_TEXTURE_AMBIENT(0), ambientMap);
-        materialAsset->SetAmbientOcclusionMapEnabled(result == AI_SUCCESS);
+        materialAsset->SetUseAmbientMap(result == AI_SUCCESS);
 
         result = material->GetTexture(AI_MATKEY_METALLIC_TEXTURE, &metallicMap);
-        materialAsset->SetMetallicMapEnabled(result == AI_SUCCESS);
+        materialAsset->SetUseMetallicMap(result == AI_SUCCESS);
 
         std::string albedoStr(albedoMap.C_Str()), normalStr(normalMap.C_Str()), roughnessStr(roughnessMap.C_Str()), ambientStr(ambientMap.C_Str()), metallicStr(metallicMap.C_Str());
 
-        if (materialAsset->IsAlbedoMapEnabled())
+        if (materialAsset->IsUsingAlbedoMap())
         {
             std::replace(albedoStr.begin(), albedoStr.end(), '\\', '/');
             materialAsset->SetAlbedoMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / albedoStr));
         }
 
-        if (materialAsset->IsNormalMapEnabled())
+        if (materialAsset->IsUsingNormalMap())
         {
             std::replace(normalStr.begin(), normalStr.end(), '\\', '/');
             materialAsset->SetNormalMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / normalStr));
         }
 
-        if (materialAsset->IsRoughnessMapEnabled())
+        if (materialAsset->IsUsingRoughnessMap())
         {
             std::replace(roughnessStr.begin(), roughnessStr.end(), '\\', '/');
             materialAsset->SetRoughnessMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / roughnessStr));
         }
 
-        if (materialAsset->IsMetallicMapEnabled())
+        if (materialAsset->IsUsingMetallicMap())
         {
             std::replace(metallicStr.begin(), metallicStr.end(), '\\', '/');
             materialAsset->SetMetallicMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / metallicStr));
         }
 
-        if (materialAsset->IsAmbientOcclusionMapEnabled())
+        if (materialAsset->IsUsingAmbientMap())
         {
             std::replace(ambientStr.begin(), ambientStr.end(), '\\', '/');
-            materialAsset->SetAmbientOcclusionMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / ambientStr));
+            materialAsset->SetAmbientMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / ambientStr));
         }
-
-        materialAsset->Update();
 
         AssetManager::RegisterAsset(materialAsset);
         return materialAsset->Handle;

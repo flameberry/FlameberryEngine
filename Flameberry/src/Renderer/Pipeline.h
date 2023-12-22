@@ -12,14 +12,6 @@ namespace Flameberry {
 
     using VertexInputLayout = std::vector<ShaderDataType>;
 
-    struct PipelineLayoutSpecification
-    {
-        // This still exists as I haven't figured out a way to manage usage of common descriptor set layouts
-        // for multiple pipelines using the same descriptors
-        // So the current solution is to let the developer provide the layouts and make the descriptor sets out of them
-        std::vector<Ref<DescriptorSetLayout>> DescriptorSetLayouts;
-    };
-
     struct PipelineSpecification
     {
         Ref<RenderPass> RenderPass;
@@ -29,7 +21,6 @@ namespace Flameberry {
         // And for those that don't need to be used in the shader replace them with the equivalent Dummy Types
         VertexInputLayout VertexLayout;
 
-        PipelineLayoutSpecification PipelineLayout;
         uint32_t SubPass = 0;
         uint32_t Samples = 1;
         VkViewport Viewport = { 0, 0, 0, 0, 0.0f, 1.0f };
@@ -52,6 +43,7 @@ namespace Flameberry {
 
         const PipelineSpecification& GetSpecification() const { return m_PipelineSpec; }
         VkPipelineLayout GetVulkanPipelineLayout() const { return m_VkPipelineLayout; }
+        VkPipeline GetVulkanPipeline() const { return m_VkGraphicsPipeline; }
 
         void ReloadShaders();
         void Bind();
@@ -61,8 +53,11 @@ namespace Flameberry {
         PipelineSpecification m_PipelineSpec;
         VkPipeline m_VkGraphicsPipeline;
         VkPipelineLayout m_VkPipelineLayout;
+
+        std::vector<Ref<DescriptorSetLayout>> m_DescriptorSetLayouts;
     };
 
+#if 0
     struct ComputePipelineSpecification {
         std::string ComputeShaderFilePath;
         PipelineLayoutSpecification PipelineLayout;
@@ -83,5 +78,6 @@ namespace Flameberry {
         VkPipeline m_VkComputePipeline;
         VkPipelineLayout m_VkPipelineLayout;
     };
+#endif
 
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Asset/Asset.h"
-#include "__Material.h"
+#include "Material.h"
 #include "Texture2D.h"
 
 namespace Flameberry {
@@ -19,7 +19,7 @@ namespace Flameberry {
     public:
         MaterialAsset(const std::string& name);
 
-        Ref<__Material> GetUnderlyingMaterial() { return m_MaterialRef; }
+        Ref<Material> GetUnderlyingMaterial() { return m_MaterialRef; }
 
         // Getters
         std::string GetName() const { return m_Name; }
@@ -47,20 +47,23 @@ namespace Flameberry {
         void SetAlbedoMap(const Ref<Texture2D>& map);
         void SetNormalMap(const Ref<Texture2D>& map);
         void SetRoughnessMap(const Ref<Texture2D>& map);
-        void SetAmbientOcclusionMap(const Ref<Texture2D>& map);
+        void SetAmbientMap(const Ref<Texture2D>& map);
         void SetMetallicMap(const Ref<Texture2D>& map);
 
         AssetType GetAssetType() const override { return AssetType::Material; }
         static constexpr AssetType GetStaticAssetType() { return AssetType::Material; }
+    protected:
+        MaterialStructGPURepresentation& GetMaterialDataRef() { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>(); }
     private:
         std::string m_Name;
         // This is the core material which has a reference to the actual shader and stores the DescriptorSets and PushConstantData
-        Ref<__Material> m_MaterialRef;
+        Ref<Material> m_MaterialRef;
 
         // These textures are later then sent to the underlying `__Material` ref, i.e. `m_MaterialRef`
         Ref<Texture2D> m_AlbedoMap, m_NormalMap, m_RoughnessMap, m_AmbientMap, m_MetallicMap;
 
         friend class MaterialAssetSerializer;
+        friend class MaterialEditorPanel;
     };
 
     class MaterialAssetSerializer
