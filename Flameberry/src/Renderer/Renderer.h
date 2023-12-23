@@ -16,14 +16,20 @@ namespace Flameberry {
     public:
         using Command = std::function<void(VkCommandBuffer, uint32_t)>;
     public:
+        // Initialize and Shutdown the resources of all rendering related classes
         static void Init();
         static void Shutdown();
 
+        // This is a hot function which is most likely a bottleneck and cause of high CPU usage
         static void Submit(const Command& cmd);
+        // Currently just renders, the `Wait` part is for a future implementation of Multi-threading
         static void WaitAndRender();
-        static uint32_t GetCurrentFrameIndex() { return s_FrameIndex; }
 
+        // Get the current frame index in the update/main thread
+        static uint32_t GetCurrentFrameIndex() { return s_FrameIndex; }
+        // Get the current frame index in the render thread
         static uint32_t RT_GetCurrentFrameIndex() { return s_RT_FrameIndex; }
+        // The render function to be called in the Render Thread which does the actual rendering by execution of the submitted commands
         static void RT_Render();
 
         // Rendering Utilities
