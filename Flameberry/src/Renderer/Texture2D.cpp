@@ -85,7 +85,7 @@ namespace Flameberry {
         stagingBuffer.UnmapMemory();
 
         m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        m_TextureImage->WriteFromBuffer(stagingBuffer.GetBuffer());
+        m_TextureImage->WriteFromBuffer(stagingBuffer.GetVulkanBuffer());
 
         if (m_TextureImageSpecification.MipLevels > 1)
             m_TextureImage->GenerateMipMaps();

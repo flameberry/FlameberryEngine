@@ -77,10 +77,9 @@ namespace Flameberry {
 
     void Renderer::SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform)
     {
-        mesh->Bind();
-
-        Renderer::Submit([pipelineLayout = pipeline->GetVulkanPipelineLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
+                Renderer::RT_BindMesh(cmdBuffer, mesh);
                 vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
             }
         );
@@ -114,6 +113,19 @@ namespace Flameberry {
             );
             submeshIndex++;
         }
+    }
+
+    void Renderer::RT_BindMesh(VkCommandBuffer cmdBuffer, const Ref<StaticMesh>& mesh)
+    {
+        auto vertexBuffer = mesh->GetVertexBuffer()->GetVulkanBuffer(), indexBuffer = mesh->GetIndexBuffer()->GetVulkanBuffer();
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+        vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    }
+
+    void Renderer::RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline)
+    {
+        vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     }
 
 }

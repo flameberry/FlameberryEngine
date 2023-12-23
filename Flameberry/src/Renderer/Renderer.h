@@ -26,7 +26,10 @@ namespace Flameberry {
         static uint32_t RT_GetCurrentFrameIndex() { return s_RT_FrameIndex; }
         static void RT_Render();
 
+        // Rendering Utilities
         static void SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform);
+        static void RT_BindMesh(VkCommandBuffer cmdBuffer, const Ref<StaticMesh>& mesh);
+        static void RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline);
     private:
         static uint32_t s_RT_FrameIndex, s_FrameIndex;
 

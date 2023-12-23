@@ -15,10 +15,12 @@ namespace Flameberry {
         Material(const Ref<Shader>& shader);
         ~Material();
 
+        // These are the functions intended for the Renderer to use to submit the Vulkan Push Constants
         uint32_t GetUniformDataSize() const { return m_PushConstantBufferSize; }
         uint32_t GetPushConstantOffset() const { return m_PushConstantBufferOffset; }
         const uint8_t* GetUniformDataPtr() const { return m_PushConstantBuffer; }
 
+        // This function should be used to set any raw value like floats/ints etc.
         template<typename T>
         void Set(const std::string& uniformName, const T& value)
         {
@@ -29,6 +31,7 @@ namespace Flameberry {
             memcpy(m_PushConstantBuffer + uniformVar.LocalOffset, &value, uniformVar.Size);
         }
 
+        // This function can be used to set arrays or types like glm::vecx
         void Set(const std::string& uniformName, const void* data, std::size_t size)
         {
             const auto& uniformVar = m_Shader->GetUniform(uniformName);
@@ -78,7 +81,7 @@ namespace Flameberry {
             FBY_ASSERT(!binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not a Buffer Descriptor");
 
             VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = uniformBuffer->GetBuffer();
+            bufferInfo.buffer = uniformBuffer->GetVulkanBuffer();
             bufferInfo.offset = 0;
             bufferInfo.range = uniformBuffer->GetBufferSize();
 
@@ -112,7 +115,6 @@ namespace Flameberry {
         }
 #endif
     protected:
-
         // This function is to be used by MaterialAsset class to access the data easily every frame without having to refer uniforms by their names
         template<typename T>
         inline T& GetUniformDataReferenceAs() const { return (T&)*reinterpret_cast<T*>(m_PushConstantBuffer); }

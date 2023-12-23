@@ -269,7 +269,7 @@ namespace Flameberry {
         if (m_IsMousePickingBufferReady)
         {
             RenderCommand::WritePixelFromImageToBuffer(
-                m_MousePickingBuffer->GetBuffer(),
+                m_MousePickingBuffer->GetVulkanBuffer(),
                 m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetImage(),
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                 { m_MouseX, m_ViewportSize.y - m_MouseY - 1 }

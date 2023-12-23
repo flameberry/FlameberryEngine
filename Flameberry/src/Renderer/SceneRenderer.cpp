@@ -143,7 +143,7 @@ namespace Flameberry {
                 m_ShadowMapDescriptorSets[i] = CreateRef<DescriptorSet>(shadowMapDescSetSpec);
 
                 VkDescriptorBufferInfo bufferInfo{};
-                bufferInfo.buffer = m_ShadowMapUniformBuffers[i]->GetBuffer();
+                bufferInfo.buffer = m_ShadowMapUniformBuffers[i]->GetVulkanBuffer();
                 bufferInfo.range = bufferSize;
                 bufferInfo.offset = 0;
 
@@ -231,7 +231,7 @@ namespace Flameberry {
                 m_CameraBufferDescriptorSets[i] = CreateRef<DescriptorSet>(cameraBufferDescSetSpec);
 
                 VkDescriptorBufferInfo vk_descriptor_buffer_info{};
-                vk_descriptor_buffer_info.buffer = m_CameraUniformBuffers[i]->GetBuffer();
+                vk_descriptor_buffer_info.buffer = m_CameraUniformBuffers[i]->GetVulkanBuffer();
                 vk_descriptor_buffer_info.offset = 0;
                 vk_descriptor_buffer_info.range = uniformBufferSize;
 
@@ -318,7 +318,7 @@ namespace Flameberry {
                     VkDescriptorBufferInfo bufferInfo{};
                     bufferInfo.range = sizeof(SceneUniformBufferData);
                     bufferInfo.offset = 0;
-                    bufferInfo.buffer = m_SceneUniformBuffers[i]->GetBuffer();
+                    bufferInfo.buffer = m_SceneUniformBuffers[i]->GetVulkanBuffer();
 
                     m_SceneDataDescriptorSets[i]->WriteBuffer(0, bufferInfo);
                     m_SceneDataDescriptorSets[i]->Update();
@@ -577,9 +577,10 @@ namespace Flameberry {
         if (m_RendererSettings.EnableShadows)
         {
             m_ShadowMapRenderPass->Begin();
-            m_ShadowMapPipeline->Bind();
-            Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetVulkanDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetVulkanDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(), pipeline = m_ShadowMapPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
+                    // Binding the shadow map pipeline here instead of using the `Pipeline::Bind()` function to reduce `Renderer::Submit()` calls
+                    vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr);
                 }
             );
@@ -592,13 +593,14 @@ namespace Flameberry {
                 {
                     ModelMatrixPushConstantData pushContantData;
                     pushContantData.ModelMatrix = transform.GetTransform();
-                    Renderer::Submit([shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                    Renderer::Submit([staticMesh, shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                         {
                             vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
+                            Renderer::RT_BindMesh(cmdBuffer, staticMesh);
+                            const uint32_t size = staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
+                            vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
                         }
                     );
-                    staticMesh->Bind();
-                    staticMesh->OnDraw();
                 }
             }
             m_ShadowMapRenderPass->End();
@@ -615,14 +617,13 @@ namespace Flameberry {
         bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
         if (shouldRenderSkyMap)
         {
-            m_SkyboxPipeline->Bind();
-
             glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
             auto pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
             auto textureDescSet = AssetManager::GetAsset<Texture2D>(skyMap->SkyMap)->CreateOrGetDescriptorSet();
 
-            Renderer::Submit([pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([pipeline = m_SkyboxPipeline->GetVulkanPipeline(), pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
+                    Renderer::RT_BindPipeline(cmdBuffer, pipeline);
                     VkDescriptorSet descSets[] = { textureDescSet };
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
                     vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjectionMatrix);
@@ -635,7 +636,7 @@ namespace Flameberry {
         Renderer::Submit([=, pipeline = m_MeshPipeline->GetVulkanPipeline(), pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
                 // Binding the pipeline here to reduce the amount of Renderer::Submit calls
-                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+                Renderer::RT_BindPipeline(cmdBuffer, pipeline);
 
                 VkDescriptorSet descriptorSets[] = {
                     m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
@@ -814,10 +815,10 @@ namespace Flameberry {
     void SceneRenderer::RenderSceneForMousePicking(const Ref<Scene>& scene, const Ref<RenderPass>& renderPass, const Ref<Pipeline>& pipeline, const Ref<Pipeline>& pipeline2D, const glm::vec2& mousePos)
     {
         renderPass->Begin(0, { (int)mousePos.x, (int)mousePos.y }, { 1, 1 });
-        pipeline->Bind();
 
-        Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(), mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([pipeline = pipeline->GetVulkanPipeline(), descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(), mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
+                Renderer::RT_BindPipeline(cmdBuffer, pipeline);
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
             }
         );
@@ -832,28 +833,29 @@ namespace Flameberry {
                 pushContantData.ModelMatrix = transform.GetTransform();
                 pushContantData.EntityIndex = fbentt::to_index(entity);
 
-                Renderer::Submit([mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+                Renderer::Submit([staticMesh, mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                     {
                         vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);
+                        Renderer::RT_BindMesh(cmdBuffer, staticMesh);
+
+                        const uint32_t size = staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
+                        vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
                     }
                 );
-
-                staticMesh->Bind();
-                staticMesh->OnDraw();
             }
         }
-
-        pipeline2D->Bind();
 
         uint32_t indexCount = 6 * Renderer2D::GetRendererData().VertexBufferOffset / (4 * sizeof(QuadVertex));
         Renderer::Submit([
             descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
                 mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
-                vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetBuffer(),
-                indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetBuffer(),
+                vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
+                vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
+                indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
                 indexCount]
                 (VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
+                Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline2D);
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePicking2DPipelineLayout, 0, 1, &descSet, 0, nullptr);
 
                 VkDeviceSize offsets[] = { 0 };

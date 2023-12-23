@@ -46,7 +46,6 @@ namespace Flameberry {
         VkPipeline GetVulkanPipeline() const { return m_VkGraphicsPipeline; }
 
         void ReloadShaders();
-        void Bind();
     private:
         void CreatePipeline();
     private:
@@ -80,4 +79,4 @@ namespace Flameberry {
     };
 #endif
 
-}
+    }

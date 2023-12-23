@@ -76,8 +76,11 @@ namespace Flameberry {
                 ImGui::TableNextColumn();
                 ImGui::TextWrapped("%s", m_EditingContext->FilePath.c_str());
 
-                auto& uniformDataRef = m_EditingContext->GetMaterialDataRef();
+                MaterialStructGPURepresentation& uniformDataRef = m_EditingContext->GetMaterialDataRef();
 
+                // This part of the UI causes vulkan validation errors whenever any map is updated
+                // Because this leads to updating the DescriptorSet which is to be used by the current frame
+                // This didn't happen before with the old `Material` class, which used to update the same descriptor in this part of the code only
                 Ref<Texture2D> map;
                 map = m_EditingContext->m_AlbedoMap;
                 if (DrawMapControls("Texture Map", (bool&)uniformDataRef.UseAlbedoMap, map))

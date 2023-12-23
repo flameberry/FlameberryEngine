@@ -24,12 +24,13 @@ namespace Flameberry {
         StaticMesh(const Ref<Buffer>& vertexBuffer, const Ref<Buffer>& indexBuffer, const std::vector<SubMesh>& submeshes);
         ~StaticMesh();
 
-        void Bind() const;
         void OnDraw() const;
         void OnDrawSubMesh(uint32_t subMeshIndex) const;
 
         std::string GetName() const { return m_Name; }
         const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
+        const Ref<Buffer>& GetVertexBuffer() const { return m_VertexBuffer; }
+        const Ref<Buffer>& GetIndexBuffer() const { return m_IndexBuffer; }
 
         AssetType GetAssetType() const override { return AssetType::StaticMesh; }
         static constexpr AssetType GetStaticAssetType() { return AssetType::StaticMesh; }

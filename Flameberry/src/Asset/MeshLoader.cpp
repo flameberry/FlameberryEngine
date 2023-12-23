@@ -204,7 +204,7 @@ namespace Flameberry {
             vertexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
             vertexBuffer = std::make_unique<Buffer>(vertexBufferSpec);
-            RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), vertexBuffer->GetBuffer(), bufferSize);
+            RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), vertexBuffer->GetVulkanBuffer(), bufferSize);
         }
 
         {
@@ -230,7 +230,7 @@ namespace Flameberry {
             indexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
             indexBuffer = std::make_unique<Buffer>(indexBufferSpec);
-            RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), indexBuffer->GetBuffer(), bufferSize);
+            RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), indexBuffer->GetVulkanBuffer(), bufferSize);
         }
 
         auto meshAsset = CreateRef<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
@@ -430,7 +430,7 @@ namespace Flameberry {
             vertexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
             vertexBuffer = std::make_unique<Buffer>(vertexBufferSpec);
-            RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), vertexBuffer->GetBuffer(), bufferSize);
+            RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), vertexBuffer->GetVulkanBuffer(), bufferSize);
         }
 
         {
@@ -456,7 +456,7 @@ namespace Flameberry {
             indexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
             indexBuffer = std::make_unique<Buffer>(indexBufferSpec);
-            RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), indexBuffer->GetBuffer(), bufferSize);
+            RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), indexBuffer->GetVulkanBuffer(), bufferSize);
         }
 
         auto meshAsset = CreateRef<StaticMesh>(vertexBuffer, indexBuffer, submeshes);

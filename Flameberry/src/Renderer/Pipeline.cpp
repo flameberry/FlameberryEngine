@@ -345,15 +345,6 @@ namespace Flameberry {
         CreatePipeline();
     }
 
-    void Pipeline::Bind()
-    {
-        Renderer::Submit([pipeline = m_VkGraphicsPipeline](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-            }
-        );
-    }
-
     Pipeline::~Pipeline()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -429,6 +420,6 @@ namespace Flameberry {
                 vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
             }
         );
-}
+    }
 #endif
 }

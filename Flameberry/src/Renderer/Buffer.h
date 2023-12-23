@@ -31,7 +31,7 @@ namespace Flameberry {
 
         const void* GetMappedMemory() const { return m_VkBufferMappedMemory; }
         BufferSpecification GetSpecification() const { return m_BufferSpec; }
-        const VkBuffer& GetBuffer() const { return m_VkBuffer; }
+        const VkBuffer& GetVulkanBuffer() const { return m_VkBuffer; }
         VkDeviceSize GetBufferSize() const { return m_AlignmentSize * m_BufferSpec.InstanceCount; }
     private:
         VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
