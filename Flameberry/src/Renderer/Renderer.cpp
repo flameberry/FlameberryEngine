@@ -22,6 +22,8 @@ namespace Flameberry {
         // Create the generic texture descriptor layout
         Texture2D::InitStaticResources();
         ShaderLibrary::Init();
+
+        s_CommandQueue.reserve(5 * 1028 * 1028 / sizeof(Renderer::Command)); // 5 MB
     }
 
     void Renderer::Shutdown()
@@ -32,7 +34,7 @@ namespace Flameberry {
         DescriptorSetLayout::ClearCache(); // TODO: Maybe move this to somewhere obvious like VulkanDevice or Renderer
     }
 
-    void Renderer::Submit(const Command& cmd)
+    void Renderer::Submit(const Command&& cmd)
     {
         s_CommandQueue.push_back(cmd);
     }

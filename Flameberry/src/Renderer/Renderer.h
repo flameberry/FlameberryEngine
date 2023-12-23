@@ -21,7 +21,7 @@ namespace Flameberry {
         static void Shutdown();
 
         // This is a hot function which is most likely a bottleneck and cause of high CPU usage
-        static void Submit(const Command& cmd);
+        static void Submit(const Command&& cmd);
         // Currently just renders, the `Wait` part is for a future implementation of Multi-threading
         static void WaitAndRender();
 

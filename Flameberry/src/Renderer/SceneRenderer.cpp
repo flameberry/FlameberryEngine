@@ -490,13 +490,13 @@ namespace Flameberry {
                 {
                     m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass());
 
+#if 0
                     VkDescriptorImageInfo imageInfo{
                         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                         .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetImageView(),
                         .sampler = m_VkTextureSampler
                     };
 
-#if 0
                     m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, imageInfo);
 
                     m_CompositePassDescriptorSets[imageIndex]->Update();
