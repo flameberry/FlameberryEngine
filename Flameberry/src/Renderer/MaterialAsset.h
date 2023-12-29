@@ -50,8 +50,7 @@ namespace Flameberry {
         void SetAmbientMap(const Ref<Texture2D>& map);
         void SetMetallicMap(const Ref<Texture2D>& map);
 
-        AssetType GetAssetType() const override { return AssetType::Material; }
-        static constexpr AssetType GetStaticAssetType() { return AssetType::Material; }
+        FBY_DECLARE_ASSET_TYPE(AssetType::Material);
     protected:
         MaterialStructGPURepresentation& GetMaterialDataRef() { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>(); }
     private:

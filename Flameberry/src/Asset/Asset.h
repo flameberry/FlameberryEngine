@@ -7,13 +7,16 @@
 
 #include "Core/UUID.h"
 
+#define FBY_DECLARE_ASSET_TYPE(Type) ::Flameberry::AssetType GetAssetType() const override { return Type; }\
+static constexpr ::Flameberry::AssetType GetStaticAssetType() { return Type; }
+
 namespace Flameberry {
     using AssetHandle = UUID;
 
     enum class AssetType : uint16_t
     {
         None = 0,
-        Texture2D, StaticMesh, Material
+        Texture2D, StaticMesh, Material, Skymap
     };
 
     enum class AssetFlag : uint32_t

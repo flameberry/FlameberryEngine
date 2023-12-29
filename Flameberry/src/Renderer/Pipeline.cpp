@@ -7,8 +7,9 @@
 #include "VulkanDebug.h"
 
 namespace Flameberry {
+
     Pipeline::Pipeline(const PipelineSpecification& pipelineSpec)
-        : m_PipelineSpec(pipelineSpec)
+        : m_Specification(pipelineSpec)
     {
         CreatePipeline();
     }
@@ -66,44 +67,40 @@ namespace Flameberry {
         return 0;
     }
 
-    void Pipeline::CreatePipeline()
+    static void PopulateVulkanPushConstantRanges(std::vector<VkPushConstantRange>& outPushConstantRanges, const Ref<Shader>& shader)
     {
-        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        std::unordered_map<uint32_t, uint32_t> pcOffsetToIndex;
+        outPushConstantRanges.reserve(shader->GetPushConstantSpecifications().size());
 
-        // Creating Pipeline Layout
-        std::vector<VkPushConstantRange> vulkanPushConstantRanges;
+        for (const auto& specification : shader->GetPushConstantSpecifications())
         {
-            std::unordered_map<uint32_t, uint32_t> pcOffsetToIndex;
-            vulkanPushConstantRanges.reserve(m_PipelineSpec.Shader->GetPushConstantSpecifications().size());
-
-            for (const auto& specification : m_PipelineSpec.Shader->GetPushConstantSpecifications())
+            if (auto it = pcOffsetToIndex.find(specification.Offset); it != pcOffsetToIndex.end())
             {
-                if (auto it = pcOffsetToIndex.find(specification.Offset); it != pcOffsetToIndex.end())
-                {
-                    FBY_ASSERT(!(specification.VulkanShaderStage & vulkanPushConstantRanges[it->second].stageFlags), "Push constant blocks within the same shader stage must not have the same offset!");
-                    // TODO: Maybe make this be just a warning, so that the flexibility still remains
-                    FBY_ASSERT(specification.Size == vulkanPushConstantRanges[it->second].size, "Push constant blocks between different shader stages having the same offset must have the same size! (The assumption here is that both represent the same push constant block)");
-                    vulkanPushConstantRanges[it->second].stageFlags |= specification.VulkanShaderStage;
-                }
-                else
-                {
-                    vulkanPushConstantRanges.emplace_back(
-                        VkPushConstantRange{
-                        .offset = specification.Offset,
-                        .size = specification.Size,
-                        .stageFlags = (VkShaderStageFlags)specification.VulkanShaderStage
-                        }
-                    );
-                    pcOffsetToIndex[specification.Offset] = (uint32_t)vulkanPushConstantRanges.size() - 1;
-                }
+                FBY_ASSERT(!(specification.VulkanShaderStage & outPushConstantRanges[it->second].stageFlags), "Push constant blocks within the same shader stage must not have the same offset!");
+                // TODO: Maybe make this be just a warning, so that the flexibility still remains
+                FBY_ASSERT(specification.Size == outPushConstantRanges[it->second].size, "Push constant blocks between different shader stages having the same offset must have the same size! (The assumption here is that both represent the same push constant block)");
+                outPushConstantRanges[it->second].stageFlags |= specification.VulkanShaderStage;
+            }
+            else
+            {
+                outPushConstantRanges.emplace_back(
+                    VkPushConstantRange{
+                    .offset = specification.Offset,
+                    .size = specification.Size,
+                    .stageFlags = (VkShaderStageFlags)specification.VulkanShaderStage
+                    }
+                );
+                pcOffsetToIndex[specification.Offset] = (uint32_t)outPushConstantRanges.size() - 1;
             }
         }
+    }
 
+    static void PopulateVulkanDescriptorSetLayouts(std::vector<VkDescriptorSetLayout>& outVulkanDescriptorSetLayouts, std::vector<Ref<DescriptorSetLayout>>& outDescriptorSetLayouts, const Ref<Shader>& shader)
+    {
         // Creating the Descriptor Set Layouts required for creating the Pipeline based on the Shader Reflection Data
-        const auto& reflectionDescriptorSets = m_PipelineSpec.Shader->GetDescriptorSetSpecifications();
-        const auto& descriptorBindings = m_PipelineSpec.Shader->GetDescriptorBindingSpecifications();
+        const auto& reflectionDescriptorSets = shader->GetDescriptorSetSpecifications();
+        const auto& descriptorBindings = shader->GetDescriptorBindingSpecifications();
 
-        std::vector<VkDescriptorSetLayout> vulkanDescriptorSetLayouts;
         std::vector<VkDescriptorSetLayoutBinding> vulkanDescSetBindings;
         uint32_t index = 0;
 
@@ -127,11 +124,23 @@ namespace Flameberry {
             if (vulkanDescSetBindings.size())
             {
                 DescriptorSetLayoutSpecification layoutSpecification{ vulkanDescSetBindings };
-                auto& layout = m_DescriptorSetLayouts.emplace_back(DescriptorSetLayout::CreateOrGetCached(layoutSpecification));
-                vulkanDescriptorSetLayouts.push_back(layout->GetLayout());
+                auto& layout = outDescriptorSetLayouts.emplace_back(DescriptorSetLayout::CreateOrGetCached(layoutSpecification));
+                outVulkanDescriptorSetLayouts.push_back(layout->GetLayout());
                 vulkanDescSetBindings.clear();
             }
         }
+    }
+
+    void Pipeline::CreatePipeline()
+    {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
+        // Creating Pipeline Layout
+        std::vector<VkPushConstantRange> vulkanPushConstantRanges;
+        PopulateVulkanPushConstantRanges(vulkanPushConstantRanges, m_Specification.Shader);
+
+        std::vector<VkDescriptorSetLayout> vulkanDescriptorSetLayouts;
+        PopulateVulkanDescriptorSetLayouts(vulkanDescriptorSetLayouts, m_DescriptorSetLayouts, m_Specification.Shader);
 
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
         vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -140,11 +149,11 @@ namespace Flameberry {
         vk_pipeline_layout_create_info.pushConstantRangeCount = (uint32_t)vulkanPushConstantRanges.size();
         vk_pipeline_layout_create_info.pPushConstantRanges = vulkanPushConstantRanges.data();
 
-        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
+        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_PipelineLayout));
 
         // Creating Pipeline
         VkShaderModule vertexModule, fragmentModule;
-        m_PipelineSpec.Shader->GetVertexAndFragmentShaderModules(&vertexModule, &fragmentModule);
+        m_Specification.Shader->GetVertexAndFragmentShaderModules(&vertexModule, &fragmentModule);
 
         VkPipelineShaderStageCreateInfo vk_pipeline_vertex_shader_stage_create_info{};
         vk_pipeline_vertex_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -161,7 +170,7 @@ namespace Flameberry {
         VkPipelineShaderStageCreateInfo vk_shader_stages_create_infos[2] = { vk_pipeline_vertex_shader_stage_create_info , vk_pipeline_fragment_shader_stage_create_info };
 
         VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState{};
-        if (m_PipelineSpec.BlendingEnable)
+        if (m_Specification.BlendingEnable)
         {
             pipelineColorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
             pipelineColorBlendAttachmentState.blendEnable = VK_TRUE;
@@ -186,12 +195,12 @@ namespace Flameberry {
 
         VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo{};
         pipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        pipelineRasterizationStateCreateInfo.depthClampEnable = m_PipelineSpec.DepthClampEnable;
+        pipelineRasterizationStateCreateInfo.depthClampEnable = m_Specification.DepthClampEnable;
         pipelineRasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-        pipelineRasterizationStateCreateInfo.polygonMode = m_PipelineSpec.PolygonMode;
+        pipelineRasterizationStateCreateInfo.polygonMode = m_Specification.PolygonMode;
         pipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
-        pipelineRasterizationStateCreateInfo.cullMode = m_PipelineSpec.CullMode;
-        pipelineRasterizationStateCreateInfo.frontFace = m_PipelineSpec.FrontFace;
+        pipelineRasterizationStateCreateInfo.cullMode = m_Specification.CullMode;
+        pipelineRasterizationStateCreateInfo.frontFace = m_Specification.FrontFace;
         pipelineRasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
         pipelineRasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
         pipelineRasterizationStateCreateInfo.depthBiasClamp = 0.0f;
@@ -210,22 +219,22 @@ namespace Flameberry {
 
         VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo{};
         pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        pipelineDepthStencilStateCreateInfo.depthTestEnable = (VkBool32)m_PipelineSpec.DepthTestEnable;
-        pipelineDepthStencilStateCreateInfo.depthWriteEnable = (VkBool32)m_PipelineSpec.DepthWriteEnable;
-        pipelineDepthStencilStateCreateInfo.depthCompareOp = m_PipelineSpec.DepthCompareOp;
+        pipelineDepthStencilStateCreateInfo.depthTestEnable = (VkBool32)m_Specification.DepthTestEnable;
+        pipelineDepthStencilStateCreateInfo.depthWriteEnable = (VkBool32)m_Specification.DepthWriteEnable;
+        pipelineDepthStencilStateCreateInfo.depthCompareOp = m_Specification.DepthCompareOp;
         pipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
         pipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
         pipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
-        pipelineDepthStencilStateCreateInfo.stencilTestEnable = (VkBool32)m_PipelineSpec.StencilTestEnable;
-        pipelineDepthStencilStateCreateInfo.front = m_PipelineSpec.StencilOpState;
-        pipelineDepthStencilStateCreateInfo.back = m_PipelineSpec.StencilOpState;
+        pipelineDepthStencilStateCreateInfo.stencilTestEnable = (VkBool32)m_Specification.StencilTestEnable;
+        pipelineDepthStencilStateCreateInfo.front = m_Specification.StencilOpState;
+        pipelineDepthStencilStateCreateInfo.back = m_Specification.StencilOpState;
 
         // Create the vertex attribute description structs based on the m_PipelineSpec.VertexLayout
-        VkVertexInputAttributeDescription vertexAttributeDescriptions[m_PipelineSpec.VertexLayout.size()];
+        VkVertexInputAttributeDescription vertexAttributeDescriptions[m_Specification.VertexLayout.size()];
         uint32_t offset = 0, idx = 0;
-        for (uint32_t loc = 0; loc < m_PipelineSpec.VertexLayout.size(); loc++)
+        for (uint32_t loc = 0; loc < m_Specification.VertexLayout.size(); loc++)
         {
-            const auto dataType = m_PipelineSpec.VertexLayout[loc];
+            const auto dataType = m_Specification.VertexLayout[loc];
             if (dataType < ShaderDataType::Dummy1)
             {
                 vertexAttributeDescriptions[idx].binding = 0;
@@ -252,7 +261,7 @@ namespace Flameberry {
 
         VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo{};
         pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        pipelineInputAssemblyStateCreateInfo.topology = m_PipelineSpec.PrimitiveTopology;
+        pipelineInputAssemblyStateCreateInfo.topology = m_Specification.PrimitiveTopology;
         pipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo{};
@@ -260,12 +269,12 @@ namespace Flameberry {
 
         std::vector<VkDynamicState> dynamicStates;
 
-        if (m_PipelineSpec.DynamicStencilEnable)
+        if (m_Specification.DynamicStencilEnable)
             dynamicStates.emplace_back(VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE);
-        if (m_PipelineSpec.DynamicStencilOp)
+        if (m_Specification.DynamicStencilOp)
             dynamicStates.emplace_back(VK_DYNAMIC_STATE_STENCIL_OP);
 
-        if (m_PipelineSpec.Viewport.width == 0 || m_PipelineSpec.Viewport.width == 0)
+        if (m_Specification.Viewport.width == 0 || m_Specification.Viewport.width == 0)
         {
             pipelineViewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
             pipelineViewportStateCreateInfo.viewportCount = 1;
@@ -277,10 +286,10 @@ namespace Flameberry {
         {
             pipelineViewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
             pipelineViewportStateCreateInfo.viewportCount = 1;
-            pipelineViewportStateCreateInfo.pViewports = &m_PipelineSpec.Viewport;
+            pipelineViewportStateCreateInfo.pViewports = &m_Specification.Viewport;
         }
 
-        if (m_PipelineSpec.Scissor.extent.width == 0 || m_PipelineSpec.Scissor.extent.height == 0)
+        if (m_Specification.Scissor.extent.width == 0 || m_Specification.Scissor.extent.height == 0)
         {
             pipelineViewportStateCreateInfo.scissorCount = 1;
             pipelineViewportStateCreateInfo.pScissors = nullptr;
@@ -290,7 +299,7 @@ namespace Flameberry {
         else
         {
             pipelineViewportStateCreateInfo.scissorCount = 1;
-            pipelineViewportStateCreateInfo.pScissors = &m_PipelineSpec.Scissor;
+            pipelineViewportStateCreateInfo.pScissors = &m_Specification.Scissor;
         }
         pipelineDynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         pipelineDynamicStateCreateInfo.dynamicStateCount = (uint32_t)dynamicStates.size();
@@ -303,10 +312,10 @@ namespace Flameberry {
         pipelineMultisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
         pipelineMultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
 
-        if (m_PipelineSpec.Samples > 1)
+        if (m_Specification.Samples > 1)
         {
             pipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_TRUE;
-            pipelineMultisampleStateCreateInfo.rasterizationSamples = (VkSampleCountFlagBits)m_PipelineSpec.Samples;
+            pipelineMultisampleStateCreateInfo.rasterizationSamples = (VkSampleCountFlagBits)m_Specification.Samples;
         }
         else
         {
@@ -327,20 +336,20 @@ namespace Flameberry {
         vk_graphics_pipeline_create_info.pDepthStencilState = &pipelineDepthStencilStateCreateInfo;
         vk_graphics_pipeline_create_info.pColorBlendState = &pipelineColorBlendStateCreateInfo;
         vk_graphics_pipeline_create_info.pDynamicState = &pipelineDynamicStateCreateInfo;
-        vk_graphics_pipeline_create_info.layout = m_VkPipelineLayout;
-        vk_graphics_pipeline_create_info.renderPass = m_PipelineSpec.RenderPass->GetRenderPass();
-        vk_graphics_pipeline_create_info.subpass = m_PipelineSpec.SubPass;
+        vk_graphics_pipeline_create_info.layout = m_PipelineLayout;
+        vk_graphics_pipeline_create_info.renderPass = m_Specification.RenderPass->GetRenderPass();
+        vk_graphics_pipeline_create_info.subpass = m_Specification.SubPass;
         vk_graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
         vk_graphics_pipeline_create_info.basePipelineIndex = -1;
 
-        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_VkGraphicsPipeline));
+        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_GraphicsPipeline));
     }
 
     void Pipeline::ReloadShaders()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
+        vkDestroyPipeline(device, m_GraphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
 
         CreatePipeline();
     }
@@ -348,78 +357,51 @@ namespace Flameberry {
     Pipeline::~Pipeline()
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkDestroyPipeline(device, m_VkGraphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
+        vkDestroyPipeline(device, m_GraphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
     }
 
-#if 0
     ComputePipeline::ComputePipeline(const ComputePipelineSpecification& pipelineSpec)
-        : m_PipelineSpec(pipelineSpec)
+        : m_Specification(pipelineSpec)
     {
         const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        std::vector<VkPushConstantRange> pushConstantRanges;
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 
+        std::vector<VkPushConstantRange> vulkanPushConstantRanges;
+        PopulateVulkanPushConstantRanges(vulkanPushConstantRanges, m_Specification.Shader);
 
-        FBY_ASSERT(0, "Compute Pipeline Not implemented yet!");
-#if 0
-        // Creating Pipeline Layout
-        uint32_t offset = 0;
-        for (const auto& pushConstant : m_PipelineSpec.PipelineLayout.PushConstants)
-        {
-            auto& range = pushConstantRanges.emplace_back();
-            range.offset = offset;
-            range.size = pushConstant.Size;
-            range.stageFlags = pushConstant.ShaderStage;
-
-            offset += pushConstant.Size;
-        }
-#endif
-
-        for (const auto& layout : m_PipelineSpec.PipelineLayout.DescriptorSetLayouts)
-            descriptorSetLayouts.emplace_back(layout->GetLayout());
+        std::vector<VkDescriptorSetLayout> vulkanDescriptorSetLayouts;
+        PopulateVulkanDescriptorSetLayouts(vulkanDescriptorSetLayouts, m_DescriptorSetLayouts, m_Specification.Shader);
 
         VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
         vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        vk_pipeline_layout_create_info.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
-        vk_pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts.data();
-        vk_pipeline_layout_create_info.pushConstantRangeCount = (uint32_t)pushConstantRanges.size();
-        vk_pipeline_layout_create_info.pPushConstantRanges = pushConstantRanges.data();
+        vk_pipeline_layout_create_info.setLayoutCount = (uint32_t)vulkanDescriptorSetLayouts.size();
+        vk_pipeline_layout_create_info.pSetLayouts = vulkanDescriptorSetLayouts.data();
+        vk_pipeline_layout_create_info.pushConstantRangeCount = (uint32_t)vulkanPushConstantRanges.size();
+        vk_pipeline_layout_create_info.pPushConstantRanges = vulkanPushConstantRanges.data();
 
-        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_VkPipelineLayout));
+        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_PipelineLayout));
 
-        std::vector<char> compiledComputeShader = RenderCommand::LoadCompiledShaderCode(m_PipelineSpec.ComputeShaderFilePath);
-        VkShaderModule computeShaderModule = RenderCommand::CreateShaderModule(compiledComputeShader);
+        VkShaderModule computeShaderModule = m_Specification.Shader->GetVulkanShaderModule();
 
         VkPipelineShaderStageCreateInfo pipelineComputeShaderStageCreateInfo{};
         pipelineComputeShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        pipelineComputeShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        pipelineComputeShaderStageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
         pipelineComputeShaderStageCreateInfo.module = computeShaderModule;
         pipelineComputeShaderStageCreateInfo.pName = "main";
 
         VkComputePipelineCreateInfo computePipelineCreateInfo{};
         computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-        computePipelineCreateInfo.layout = m_VkPipelineLayout;
+        computePipelineCreateInfo.layout = m_PipelineLayout;
         computePipelineCreateInfo.stage = pipelineComputeShaderStageCreateInfo;
 
-        VK_CHECK_RESULT(vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_VkComputePipeline));
-        vkDestroyShaderModule(device, computeShaderModule, nullptr);
+        VK_CHECK_RESULT(vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_ComputePipeline));
     }
 
     ComputePipeline::~ComputePipeline()
     {
         const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-        vkDestroyPipeline(device, m_VkComputePipeline, nullptr);
-        vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
+        vkDestroyPipeline(device, m_ComputePipeline, nullptr);
+        vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
     }
 
-    void ComputePipeline::Bind()
-    {
-        Renderer::Submit([pipeline = m_VkComputePipeline](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-            }
-        );
-    }
-#endif
 }

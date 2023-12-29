@@ -122,13 +122,16 @@ namespace Flameberry {
     void DescriptorSetLayout::ClearCache() { s_CachedDescriptorSetLayouts.clear(); }
 
     DescriptorSet::DescriptorSet(const DescriptorSetSpecification& specification)
-        : m_DescSetSpec(specification)
+        : m_Specification(specification)
     {
-        auto layout = m_DescSetSpec.Layout->GetLayout();
+        auto layout = m_Specification.Layout->GetLayout();
+        
+        if (!m_Specification.Pool)
+            m_Specification.Pool = VulkanContext::GetCurrentGlobalDescriptorPool();
 
         VkDescriptorSetAllocateInfo vk_descriptor_set_allocate_info{};
         vk_descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        vk_descriptor_set_allocate_info.descriptorPool = m_DescSetSpec.Pool ? m_DescSetSpec.Pool->GetVulkanDescriptorPool() : VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool();
+        vk_descriptor_set_allocate_info.descriptorPool = m_Specification.Pool->GetVulkanDescriptorPool();
         vk_descriptor_set_allocate_info.descriptorSetCount = 1;
         vk_descriptor_set_allocate_info.pSetLayouts = &layout;
 
@@ -138,6 +141,8 @@ namespace Flameberry {
 
     DescriptorSet::~DescriptorSet()
     {
+        const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkFreeDescriptorSets(device, m_Specification.Pool->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
     }
 
     void DescriptorSet::WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo)
@@ -147,7 +152,7 @@ namespace Flameberry {
         vk_write_descriptor_set.dstSet = m_DescriptorSet;
         vk_write_descriptor_set.dstBinding = binding;
         vk_write_descriptor_set.dstArrayElement = 0;
-        vk_write_descriptor_set.descriptorType = m_DescSetSpec.Layout->GetSpecification().Bindings[binding].descriptorType;
+        vk_write_descriptor_set.descriptorType = m_Specification.Layout->GetSpecification().Bindings[binding].descriptorType;
         vk_write_descriptor_set.descriptorCount = 1;
         vk_write_descriptor_set.pBufferInfo = &bufferInfo;
         vk_write_descriptor_set.pImageInfo = nullptr;
@@ -163,7 +168,7 @@ namespace Flameberry {
         vk_write_descriptor_set.dstSet = m_DescriptorSet;
         vk_write_descriptor_set.dstBinding = binding;
         vk_write_descriptor_set.dstArrayElement = 0;
-        vk_write_descriptor_set.descriptorType = m_DescSetSpec.Layout->GetSpecification().Bindings[binding].descriptorType;
+        vk_write_descriptor_set.descriptorType = m_Specification.Layout->GetSpecification().Bindings[binding].descriptorType;
         vk_write_descriptor_set.descriptorCount = 1;
         vk_write_descriptor_set.pBufferInfo = nullptr;
         vk_write_descriptor_set.pImageInfo = &imageInfo;

@@ -382,6 +382,8 @@ namespace Flameberry {
 
             // Skybox Pipeline
             {
+                m_Skymap = CreateRef<Skymap>(FBY_PROJECT_DIR"SandboxProject/Content/Environment/industrial_sunset_puresky_4k.hdr");
+
                 Flameberry::PipelineSpecification pipelineSpec{};
                 pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_SkyMap");
                 pipelineSpec.RenderPass = m_GeometryPass;
@@ -527,6 +529,9 @@ namespace Flameberry {
             sceneUniformBufferData.SkyLightIntensity = skyMap->Intensity;
         }
 
+        // Important variable
+        bool shouldRenderShadows = false;
+
         // Update Directional Lights
         for (const auto& entity : scene->m_Registry->view<TransformComponent, DirectionalLightComponent>())
         {
@@ -535,9 +540,11 @@ namespace Flameberry {
             sceneUniformBufferData.directionalLight.Intensity = dirLight.Intensity;
             sceneUniformBufferData.directionalLight.Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f)); // NOTE: X direction is 0.000001f to avoid shadows being not rendered when directional light perspective camera is looking directly downwards
             sceneUniformBufferData.directionalLight.LightSize = dirLight.LightSize;
+
+            shouldRenderShadows = m_RendererSettings.EnableShadows && true;
         }
 
-        if (m_RendererSettings.EnableShadows)
+        if (shouldRenderShadows)
         {
             // TODO: Calculate these only when camera or directional light is updated
             CalculateShadowMapCascades(cameraBufferData.ViewProjectionMatrix, cameraNear, cameraFar, sceneUniformBufferData.directionalLight.Direction);
@@ -555,7 +562,7 @@ namespace Flameberry {
             sceneUniformBufferData.CascadeViewProjectionMatrices[i] = m_Cascades[i].ViewProjectionMatrix;
             sceneUniformBufferData.CascadeDepthSplits[i] = m_Cascades[i].DepthSplit;
         }
-        sceneUniformBufferData.RendererSettings.EnableShadows = (int)m_RendererSettings.EnableShadows;
+        sceneUniformBufferData.RendererSettings.EnableShadows = (int)shouldRenderShadows;
         sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
         sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
 
@@ -574,7 +581,7 @@ namespace Flameberry {
 
         // Render Passes
 #pragma region ShadowPass
-        if (m_RendererSettings.EnableShadows)
+        if (shouldRenderShadows)
         {
             m_ShadowMapRenderPass->Begin();
             Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetVulkanDescriptorSet(), shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(), pipeline = m_ShadowMapPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
@@ -614,12 +621,29 @@ namespace Flameberry {
         RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
         // Skybox Rendering
-        bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
-        if (shouldRenderSkyMap)
+        // bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
+        // if (shouldRenderSkyMap)
+        // {
+        //     glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
+        //     auto pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
+        //     auto textureDescSet = AssetManager::GetAsset<Texture2D>(skyMap->SkyMap)->CreateOrGetDescriptorSet();
+
+        //     Renderer::Submit([pipeline = m_SkyboxPipeline->GetVulkanPipeline(), pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        //         {
+        //             Renderer::RT_BindPipeline(cmdBuffer, pipeline);
+        //             VkDescriptorSet descSets[] = { textureDescSet };
+        //             vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
+        //             vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjectionMatrix);
+        //             vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
+        //         }
+        //     );
+        // }
+
         {
+            // Test
             glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
             auto pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
-            auto textureDescSet = AssetManager::GetAsset<Texture2D>(skyMap->SkyMap)->CreateOrGetDescriptorSet();
+            auto textureDescSet = m_Skymap->GetDescriptorSet()->GetVulkanDescriptorSet();
 
             Renderer::Submit([pipeline = m_SkyboxPipeline->GetVulkanPipeline(), pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {

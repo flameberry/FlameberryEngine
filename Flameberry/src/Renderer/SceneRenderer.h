@@ -8,6 +8,7 @@
 
 #include "Light.h"
 #include "PerspectiveCamera.h"
+#include "Skymap.h"
 
 #include "ECS/Scene.h"
 #include "ECS/Components.h"
@@ -81,5 +82,8 @@ namespace Flameberry {
 
         // Textures
         Ref<Texture2D> m_LightIcon, m_CameraIcon, m_DirectionalLightIcon;
+
+        // Test
+        Ref<Skymap> m_Skymap;
     };
 }

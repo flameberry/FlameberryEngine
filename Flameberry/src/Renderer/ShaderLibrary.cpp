@@ -10,7 +10,6 @@ namespace Flameberry {
         // Currently this is hardcoded as no new shaders are loaded dynamically at runtime
         const char* paths[][2] =
         {
-            {"mesh.vert.spv", "mesh.frag.spv"},
             {"Flameberry_PBR.vert.spv", "Flameberry_PBR.frag.spv"},
             {"Flameberry_MousePicking.vert.spv", "Flameberry_MousePicking.frag.spv"},
             {"Flameberry_MousePicking2D.vert.spv", "Flameberry_MousePicking2D.frag.spv"},

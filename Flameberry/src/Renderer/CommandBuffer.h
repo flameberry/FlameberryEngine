@@ -20,9 +20,9 @@ namespace Flameberry {
         void End();
 
         void Reset();
-        VkCommandBuffer GetCommandBuffer() const { return m_CommandBuffer; }
+        VkCommandBuffer GetVulkanCommandBuffer() const { return m_CommandBuffer; }
     private:
-        CommandBufferSpecification m_CommandBufferSpec;
+        CommandBufferSpecification m_Specification;
 
         VkCommandBuffer m_CommandBuffer;
     };

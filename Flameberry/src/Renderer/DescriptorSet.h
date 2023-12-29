@@ -54,7 +54,7 @@ namespace Flameberry {
         DescriptorSet(const DescriptorSetSpecification& specification);
         ~DescriptorSet();
 
-        DescriptorSetSpecification GetSpecification() const { return m_DescSetSpec; }
+        DescriptorSetSpecification GetSpecification() const { return m_Specification; }
         VkDescriptorSet GetVulkanDescriptorSet() const { return m_DescriptorSet; }
 
         void WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo);
@@ -63,7 +63,7 @@ namespace Flameberry {
     private:
         std::vector<VkWriteDescriptorSet> m_WriteInfos;
 
-        DescriptorSetSpecification m_DescSetSpec;
+        DescriptorSetSpecification m_Specification;
         VkDescriptorSet m_DescriptorSet;
     };
 }

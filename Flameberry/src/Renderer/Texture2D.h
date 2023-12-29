@@ -12,6 +12,7 @@
 #include "Asset/Asset.h"
 
 namespace Flameberry {
+
     class Texture2D : public Asset
     {
     public:
@@ -24,8 +25,7 @@ namespace Flameberry {
         VkSampler GetSampler() const { return m_VkTextureSampler; }
         ImageSpecification GetImageSpecification() const { return m_TextureImageSpecification; }
 
-        AssetType GetAssetType() const override { return AssetType::Texture2D; }
-        static constexpr AssetType GetStaticAssetType() { return AssetType::Texture2D; }
+        FBY_DECLARE_ASSET_TYPE(AssetType::Texture2D);
 
         // This function is to be used when initializing the Vulkan Renderer
         static void InitStaticResources();
@@ -58,4 +58,5 @@ namespace Flameberry {
 
         static std::unordered_map<std::string, Ref<Texture2D>> s_TextureCacheDirectory;
     };
+
 }

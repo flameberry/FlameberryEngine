@@ -20,10 +20,11 @@ namespace Flameberry {
         VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow);
         ~VulkanDevice();
 
-        VkDevice GetVulkanDevice() const { return m_VkDevice; }
-        VkQueue GetGraphicsQueue() const { return m_GraphicsAndComputeQueue; }
-        VkQueue GetPresentationQueue() const { return m_PresentationQueue; }
-        QueueFamilyIndices GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
+        inline VkDevice GetVulkanDevice() const { return m_VkDevice; }
+        inline VkQueue GetGraphicsQueue() const { return m_GraphicsAndComputeQueue; }
+        inline VkQueue GetComputeQueue() const { return m_GraphicsAndComputeQueue; }
+        inline VkQueue GetPresentationQueue() const { return m_PresentationQueue; }
+        inline QueueFamilyIndices GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
         VkCommandBuffer GetCommandBuffer(uint32_t bufferIndex) const { return m_VkCommandBuffers[bufferIndex]; }
         VkCommandPool GetComputeCommandPool() const { return m_VkCommandPool; }
 

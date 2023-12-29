@@ -8,6 +8,7 @@
 
 #include "Physics/PhysicsEngine.h"
 #include "Renderer/ShaderLibrary.h"
+#include "Renderer/Skymap.h"
 
 namespace Flameberry {
 
@@ -58,33 +59,6 @@ namespace Flameberry {
 
     void EditorLayer::OnCreate()
     {
-#if 1
-        {
-            Ref<Texture2D> texture = CreateRef<Texture2D>(FBY_PROJECT_DIR"SandboxProject/Content/Textures/brick.png");
-            Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>("Material_01");
-
-            glm::vec3 albedo(3.69f);
-            materialAsset->SetAlbedo(albedo);
-            FBY_LOG("Albedo of Material Asset: {}", materialAsset->GetAlbedo());
-            materialAsset->SetRoughness(2.69f);
-            FBY_LOG("Roughness of Material Asset: {}", materialAsset->GetRoughness());
-            materialAsset->SetMetallic(7.69f);
-            FBY_LOG("Metallic of Material Asset: {}", materialAsset->GetMetallic());
-            materialAsset->SetUseAlbedoMap(true);
-            FBY_LOG("AlbedoMapEnabled of Material Asset: {}", materialAsset->IsUsingAlbedoMap());
-            materialAsset->SetUseNormalMap(false);
-            FBY_LOG("Normal Enabled of Material Asset: {}", materialAsset->IsUsingNormalMap());
-            materialAsset->SetUseRoughnessMap(true);
-            FBY_LOG("Roughness Enabled of Material Asset: {}", materialAsset->IsUsingRoughnessMap());
-            materialAsset->SetUseAmbientMap(false);
-            FBY_LOG("Ambient Enabled of Material Asset: {}", materialAsset->IsUsingAmbientMap());
-            materialAsset->SetUseMetallicMap(true);
-            FBY_LOG("Metallic Enabled of Material Asset: {}", materialAsset->IsUsingMetallicMap());
-
-            materialAsset->SetAlbedoMap(texture);
-        }
-#endif
-
         m_CursorIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/cursor_icon.png");
         m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/translate_icon_2.png");
         m_RotateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/rotate_icon.png");
@@ -199,7 +173,7 @@ namespace Flameberry {
         // auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
         // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Content/Meshes/cube.obj")->Handle;
         // m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
-    }
+        }
 
     void EditorLayer::OnUpdate(float delta)
     {
@@ -590,8 +564,8 @@ namespace Flameberry {
                     }
                 }
                 break;
-        }
-    }
+                }
+                }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -951,4 +925,4 @@ namespace Flameberry {
         m_ActiveScene->OnStartRuntime();
     }
 
-}
+        }

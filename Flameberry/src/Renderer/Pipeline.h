@@ -41,25 +41,23 @@ namespace Flameberry {
         Pipeline(const PipelineSpecification& pipelineSpec);
         ~Pipeline();
 
-        const PipelineSpecification& GetSpecification() const { return m_PipelineSpec; }
-        VkPipelineLayout GetVulkanPipelineLayout() const { return m_VkPipelineLayout; }
-        VkPipeline GetVulkanPipeline() const { return m_VkGraphicsPipeline; }
+        const PipelineSpecification& GetSpecification() const { return m_Specification; }
+        VkPipelineLayout GetVulkanPipelineLayout() const { return m_PipelineLayout; }
+        VkPipeline GetVulkanPipeline() const { return m_GraphicsPipeline; }
 
         void ReloadShaders();
     private:
         void CreatePipeline();
     private:
-        PipelineSpecification m_PipelineSpec;
-        VkPipeline m_VkGraphicsPipeline;
-        VkPipelineLayout m_VkPipelineLayout;
+        PipelineSpecification m_Specification;
+        VkPipeline m_GraphicsPipeline;
+        VkPipelineLayout m_PipelineLayout;
 
         std::vector<Ref<DescriptorSetLayout>> m_DescriptorSetLayouts;
     };
 
-#if 0
     struct ComputePipelineSpecification {
-        std::string ComputeShaderFilePath;
-        PipelineLayoutSpecification PipelineLayout;
+        Ref<Shader> Shader;
     };
 
     class ComputePipeline
@@ -68,15 +66,17 @@ namespace Flameberry {
         ComputePipeline(const ComputePipelineSpecification& pipelineSpec);
         ~ComputePipeline();
 
-        ComputePipelineSpecification GetSpecification() const { return m_PipelineSpec; }
-        VkPipelineLayout GetLayout() const { return m_VkPipelineLayout; }
+        Ref<DescriptorSetLayout> GetDescriptorSetLayout(uint32_t setIndex) { return m_DescriptorSetLayouts[setIndex]; }
 
-        void Bind();
+        ComputePipelineSpecification GetSpecification() const { return m_Specification; }
+        VkPipelineLayout GetVulkanPipelineLayout() const { return m_PipelineLayout; }
+        VkPipeline GetVulkanPipeline() const { return m_ComputePipeline; }
     private:
-        ComputePipelineSpecification m_PipelineSpec;
-        VkPipeline m_VkComputePipeline;
-        VkPipelineLayout m_VkPipelineLayout;
-    };
-#endif
+        ComputePipelineSpecification m_Specification;
+        VkPipeline m_ComputePipeline;
+        VkPipelineLayout m_PipelineLayout;
 
-    }
+        std::vector<Ref<DescriptorSetLayout>> m_DescriptorSetLayouts;
+    };
+
+}

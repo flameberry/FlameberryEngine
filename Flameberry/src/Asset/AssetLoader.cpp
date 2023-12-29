@@ -7,6 +7,7 @@
 #include "TextureLoader.h"
 #include "MeshLoader.h"
 #include "MaterialLoader.h"
+#include "SkymapLoader.h"
 
 namespace Flameberry {
     struct AssetLoaderFunctionMapEntry {
@@ -14,11 +15,12 @@ namespace Flameberry {
         Ref<Asset>(*LoaderFunction)(const std::filesystem::path&);
     };
 
-    constexpr AssetLoaderFunctionMapEntry g_AssetLoaderFunctionMap[4] = {
+    constexpr AssetLoaderFunctionMapEntry g_AssetLoaderFunctionMap[] = {
         { AssetType::None,       nullptr },
         { AssetType::Texture2D,  TextureLoader::LoadTexture2D },
         { AssetType::StaticMesh, MeshLoader::LoadMesh },
-        { AssetType::Material,   MaterialLoader::LoadMaterial }
+        { AssetType::Material,   MaterialLoader::LoadMaterial },
+        { AssetType::Skymap,     SkymapLoader::LoadSkymap }
     };
 
     Ref<Asset> AssetLoader::LoadAsset(const std::filesystem::path& path, AssetType type)

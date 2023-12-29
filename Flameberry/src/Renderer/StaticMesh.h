@@ -32,8 +32,7 @@ namespace Flameberry {
         const Ref<Buffer>& GetVertexBuffer() const { return m_VertexBuffer; }
         const Ref<Buffer>& GetIndexBuffer() const { return m_IndexBuffer; }
 
-        AssetType GetAssetType() const override { return AssetType::StaticMesh; }
-        static constexpr AssetType GetStaticAssetType() { return AssetType::StaticMesh; }
+        FBY_DECLARE_ASSET_TYPE(AssetType::StaticMesh);
     private:
         Ref<Buffer> m_VertexBuffer, m_IndexBuffer;
         std::vector<SubMesh> m_SubMeshes;
