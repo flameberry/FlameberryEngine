@@ -621,29 +621,12 @@ namespace Flameberry {
         RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
         // Skybox Rendering
-        // bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
-        // if (shouldRenderSkyMap)
-        // {
-        //     glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
-        //     auto pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
-        //     auto textureDescSet = AssetManager::GetAsset<Texture2D>(skyMap->SkyMap)->CreateOrGetDescriptorSet();
-
-        //     Renderer::Submit([pipeline = m_SkyboxPipeline->GetVulkanPipeline(), pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-        //         {
-        //             Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-        //             VkDescriptorSet descSets[] = { textureDescSet };
-        //             vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
-        //             vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjectionMatrix);
-        //             vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
-        //         }
-        //     );
-        // }
-
+        bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
+        if (shouldRenderSkyMap)
         {
-            // Test
             glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
             auto pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
-            auto textureDescSet = m_Skymap->GetDescriptorSet()->GetVulkanDescriptorSet();
+            auto textureDescSet = AssetManager::GetAsset<Skymap>(skyMap->SkyMap)->GetDescriptorSet()->GetVulkanDescriptorSet();
 
             Renderer::Submit([pipeline = m_SkyboxPipeline->GetVulkanPipeline(), pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {

@@ -9,6 +9,7 @@
 #include "Renderer/VulkanContext.h"
 #include "Asset/AssetManager.h"
 #include "Asset/MeshLoader.h"
+#include "Renderer/Skymap.h"
 
 namespace Flameberry {
     static std::string ProjectionTypeEnumToString(ProjectionType type)
@@ -178,7 +179,7 @@ namespace Flameberry {
                     skyLightComp.EnableSkyMap = skyLight["EnableSkyMap"].as<bool>();
 
                     std::string skymapPath = skyLight["SkyMap"].as<std::string>();
-                    skyLightComp.SkyMap = ((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Texture2D>(skyLight["SkyMap"].as<std::string>())->Handle : AssetHandle(0));
+                    skyLightComp.SkyMap = ((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Skymap>(skyLight["SkyMap"].as<std::string>())->Handle : AssetHandle(0));
                 }
 
                 if (auto light = entity["DirectionalLightComponent"]; light)
@@ -361,7 +362,7 @@ namespace Flameberry {
             out << YAML::Key << "Color" << YAML::Value << skyLight.Color;
             out << YAML::Key << "Intensity" << YAML::Value << skyLight.Intensity;
             out << YAML::Key << "EnableSkyMap" << YAML::Value << skyLight.EnableSkyMap;
-            out << YAML::Key << "SkyMap" << YAML::Value << (AssetManager::IsAssetHandleValid(skyLight.SkyMap) ? AssetManager::GetAsset<Texture2D>(skyLight.SkyMap)->FilePath : "");
+            out << YAML::Key << "SkyMap" << YAML::Value << (AssetManager::IsAssetHandleValid(skyLight.SkyMap) ? AssetManager::GetAsset<Skymap>(skyLight.SkyMap)->FilePath : "");
             out << YAML::EndMap; // Sky Light Component
         }
 

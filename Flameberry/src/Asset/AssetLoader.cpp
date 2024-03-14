@@ -25,7 +25,7 @@ namespace Flameberry {
 
     Ref<Asset> AssetLoader::LoadAsset(const std::filesystem::path& path, AssetType type)
     {
-        if ((uint16_t)type >= 4)
+        if ((uint16_t)type >= sizeof(g_AssetLoaderFunctionMap) / sizeof(AssetLoaderFunctionMapEntry))
         {
             FBY_ERROR("Loader for the requested asset not present!");
             return nullptr;
