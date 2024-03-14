@@ -11,8 +11,8 @@ if %errorlevel% neq 0 (
     for /f "tokens=1,* delims==" %%a in (%metaFilePath%) do (
         set "%%a=%%b"
     )
-    call %cmake% -Wno-dev -DCMAKE_BUILD_TYPE="Release" -S. -Bbuild\Auto
-    call %cmake% --build build\Auto
+    call %cmakeCommand% -Wno-dev -DCMAKE_BUILD_TYPE="Release" -S. -Bbuild\Auto
+    call %cmakeCommand% --build build\Auto
 ) else (
     call cmake.exe -Wno-dev -DCMAKE_BUILD_TYPE="Release" -S. -Bbuild\Auto
     call cmake.exe --build build\Auto
