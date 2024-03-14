@@ -34,6 +34,9 @@ namespace Flameberry {
         Ref<Texture2D> TextureMap;
     };
 
+    // To be defined in Components.h
+    enum class AxisType : uint8_t;
+
     class Renderer2D
     {
     public:
@@ -41,6 +44,8 @@ namespace Flameberry {
         static void Shutdown();
 
         static void AddGrid(int gridSize);
+        static void AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments = 32);
+        static void AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments = 32);
         static void AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color);
         static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex = -1);
 

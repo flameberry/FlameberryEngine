@@ -139,6 +139,34 @@ namespace Flameberry {
         }
     }
 
+    void Renderer2D::AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
+    {
+        constexpr float PI = glm::pi<float>();
+        const float angle = 2 * PI / segments;
+
+        glm::vec3 lastVertex = position + rotation * glm::vec3(radius, 0.0f, 0.0f);
+        for (int i = 1; i <= segments; i++)
+        {
+            glm::vec3 vertex = position + rotation * glm::vec3(radius * cos(i * angle), 0.0f, radius * sin(i * angle));
+            Renderer2D::AddLine(lastVertex, vertex, color);
+            lastVertex = vertex;
+        }
+    }
+
+    void Renderer2D::AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
+    {
+        constexpr float PI = glm::pi<float>();
+        const float angle = PI / segments;
+
+        glm::vec3 lastVertex = position + rotation * glm::vec3(radius, 0.0f, 0.0f);
+        for (int i = 1; i <= segments; i++)
+        {
+            glm::vec3 vertex = position + rotation * glm::vec3(radius * cos(i * angle), 0.0f, radius * sin(i * angle));
+            Renderer2D::AddLine(lastVertex, vertex, color);
+            lastVertex = vertex;
+        }
+    }
+
     void Renderer2D::AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color)
     {
         s_Renderer2DData.LineVertices.push_back(LineVertex{ start, color });
