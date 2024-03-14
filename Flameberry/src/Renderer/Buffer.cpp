@@ -43,7 +43,15 @@ namespace Flameberry {
 
     Buffer::~Buffer()
     {
-        DestroyBuffer();
+        if (m_VkBuffer != VK_NULL_HANDLE && m_VkBufferDeviceMemory != VK_NULL_HANDLE)
+        {
+            const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+            vkDestroyBuffer(device, m_VkBuffer, nullptr);
+            vkFreeMemory(device, m_VkBufferDeviceMemory, nullptr);
+
+            m_VkBuffer = VK_NULL_HANDLE;
+            m_VkBufferDeviceMemory = VK_NULL_HANDLE;
+        }
     }
 
     VkResult Buffer::MapMemory(VkDeviceSize size, VkDeviceSize offset)
@@ -98,16 +106,4 @@ namespace Flameberry {
         return Flush(m_AlignmentSize, index * m_AlignmentSize);
     }
 
-    void Buffer::DestroyBuffer()
-    {
-        if (m_VkBuffer != VK_NULL_HANDLE && m_VkBufferDeviceMemory != VK_NULL_HANDLE)
-        {
-            const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-            vkDestroyBuffer(device, m_VkBuffer, nullptr);
-            vkFreeMemory(device, m_VkBufferDeviceMemory, nullptr);
-
-            m_VkBuffer = VK_NULL_HANDLE;
-            m_VkBufferDeviceMemory = VK_NULL_HANDLE;
-        }
-    }
 }

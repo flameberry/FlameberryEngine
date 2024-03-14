@@ -2,13 +2,13 @@
 
 namespace Flameberry {
 
-    std::shared_ptr<Asset> MaterialLoader::LoadMaterial(const std::filesystem::path& path)
+    Ref<Asset> MaterialLoader::LoadMaterial(const std::filesystem::path& path)
     {
-        auto materialAsset = MaterialSerializer::Deserialize(path.c_str());
+        auto materialAsset = MaterialAssetSerializer::Deserialize(path.c_str());
 
         // Set Asset Class Variables
         materialAsset->FilePath = path;
-        materialAsset->SizeInBytesOnCPU = sizeof(Material);
+        materialAsset->SizeInBytesOnCPU = materialAsset->GetUnderlyingMaterial()->GetUniformDataSize();
         // TODO: Fix this
 //        materialAsset->SizeInBytesOnGPU = materialAsset->AlbedoMap->SizeInBytesOnGPU
 //            + materialAsset->NormalMap->SizeInBytesOnGPU

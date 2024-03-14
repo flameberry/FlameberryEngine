@@ -3,7 +3,10 @@
 #include <memory>
 #include <vulkan/vulkan.h>
 
+#include "Core/Core.h"
+
 namespace Flameberry {
+
     struct BufferSpecification
     {
         VkDeviceSize InstanceSize;
@@ -19,22 +22,17 @@ namespace Flameberry {
         Buffer(const BufferSpecification& specification);
         ~Buffer();
 
-        const VkBuffer& GetBuffer() const { return m_VkBuffer; }
-        VkResult MapMemory(VkDeviceSize size, VkDeviceSize offset = 0);
         void WriteToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
         void WriteToIndex(const void* data, uint32_t index);
         VkResult Flush(VkDeviceSize size, VkDeviceSize offset);
         VkResult FlushIndex(int index);
+        VkResult MapMemory(VkDeviceSize size, VkDeviceSize offset = 0);
         void UnmapMemory();
 
-        void DestroyBuffer();
-
         const void* GetMappedMemory() const { return m_VkBufferMappedMemory; }
-
         BufferSpecification GetSpecification() const { return m_BufferSpec; }
-
-        template<typename... Args>
-        static std::shared_ptr<Buffer> Create(Args... args) { return std::make_shared<Buffer>(std::forward<Args>(args)...); }
+        const VkBuffer& GetVulkanBuffer() const { return m_VkBuffer; }
+        VkDeviceSize GetBufferSize() const { return m_AlignmentSize * m_BufferSpec.InstanceCount; }
     private:
         VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
     private:
@@ -46,4 +44,5 @@ namespace Flameberry {
 
         BufferSpecification m_BufferSpec;
     };
+
 }

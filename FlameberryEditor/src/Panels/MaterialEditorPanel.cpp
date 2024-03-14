@@ -59,7 +59,7 @@ namespace Flameberry {
                     FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
                     if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
-                        m_EditingContext = AssetManager::TryGetOrLoadAsset<Material>(matPath);
+                        m_EditingContext = AssetManager::TryGetOrLoadAsset<MaterialAsset>(matPath);
                     else
                         FBY_WARN("Bad File given as Material!");
                 }
@@ -76,11 +76,31 @@ namespace Flameberry {
                 ImGui::TableNextColumn();
                 ImGui::TextWrapped("%s", m_EditingContext->FilePath.c_str());
 
-                DrawMapControls("Texture Map", m_EditingContext->m_AlbedoMapEnabled, m_EditingContext->m_AlbedoMap);
-                DrawMapControls("Normal Map", m_EditingContext->m_NormalMapEnabled, m_EditingContext->m_NormalMap);
-                DrawMapControls("Roughness Map", m_EditingContext->m_RoughnessMapEnabled, m_EditingContext->m_RoughnessMap);
-                DrawMapControls("Ambient Occlusion Map", m_EditingContext->m_AmbientOcclusionMapEnabled, m_EditingContext->m_AmbientOcclusionMap);
-                DrawMapControls("Metallic Map", m_EditingContext->m_MetallicMapEnabled, m_EditingContext->m_MetallicMap);
+                MaterialStructGPURepresentation& uniformDataRef = m_EditingContext->GetMaterialDataRef();
+
+                // This part of the UI causes vulkan validation errors whenever any map is updated
+                // Because this leads to updating the DescriptorSet which is to be used by the current frame
+                // This didn't happen before with the old `Material` class, which used to update the same descriptor in this part of the code only
+                Ref<Texture2D> map;
+                map = m_EditingContext->m_AlbedoMap;
+                if (DrawMapControls("Texture Map", (bool&)uniformDataRef.UseAlbedoMap, map))
+                    m_EditingContext->SetAlbedoMap(map);
+
+                map = m_EditingContext->m_NormalMap;
+                if (DrawMapControls("Normal Map", (bool&)uniformDataRef.UseNormalMap, map))
+                    m_EditingContext->SetNormalMap(map);
+
+                map = m_EditingContext->m_RoughnessMap;
+                if (DrawMapControls("Roughness Map", (bool&)uniformDataRef.UseRoughnessMap, map))
+                    m_EditingContext->SetRoughnessMap(map);
+
+                map = m_EditingContext->m_AmbientMap;
+                if (DrawMapControls("Ambient Map", (bool&)uniformDataRef.UseAmbientMap, map))
+                    m_EditingContext->SetAmbientMap(map);
+
+                map = m_EditingContext->m_MetallicMap;
+                if (DrawMapControls("Metallic Map", (bool&)uniformDataRef.UseMetallicMap, map))
+                    m_EditingContext->SetMetallicMap(map);
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -89,7 +109,7 @@ namespace Flameberry {
                 ImGui::Text("Albedo");
                 ImGui::TableNextColumn();
                 ImGui::PushItemWidth(-1.0f);
-                ImGui::ColorEdit3("##Albedo", glm::value_ptr(m_EditingContext->m_Albedo));
+                ImGui::ColorEdit3("##Albedo", glm::value_ptr(uniformDataRef.Albedo));
                 m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -97,7 +117,7 @@ namespace Flameberry {
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Roughness");
                 ImGui::TableNextColumn();
-                ImGui::DragFloat("##Roughness", &m_EditingContext->m_Roughness, 0.01f, 0.0f, 1.0f);
+                ImGui::DragFloat("##Roughness", &uniformDataRef.Roughness, 0.01f, 0.0f, 1.0f);
                 m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -105,7 +125,7 @@ namespace Flameberry {
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Metallic");
                 ImGui::TableNextColumn();
-                ImGui::DragFloat("##Metallic", &m_EditingContext->m_Metallic, 0.005f, 0.0f, 1.0f);
+                ImGui::DragFloat("##Metallic", &uniformDataRef.Metallic, 0.005f, 0.0f, 1.0f);
                 ImGui::PopItemWidth();
                 m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
             }
@@ -118,10 +138,10 @@ namespace Flameberry {
         ImGui::End();
 
         if (m_IsMaterialEdited && !m_EditingContext->FilePath.empty())
-            MaterialSerializer::Serialize(m_EditingContext, m_EditingContext->FilePath.c_str());
+            MaterialAssetSerializer::Serialize(m_EditingContext, m_EditingContext->FilePath.c_str());
     }
 
-    void MaterialEditorPanel::DrawMapControls(const char* label, bool& mapEnabledVar, std::shared_ptr<Texture2D>& map)
+    bool MaterialEditorPanel::DrawMapControls(const char* label, bool& mapEnabledVar, Ref<Texture2D>& map)
     {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
@@ -136,6 +156,7 @@ namespace Flameberry {
 
         m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
+        bool isMapUpdated = false;
         if (mapEnabledVar)
         {
             if (!map)
@@ -154,7 +175,7 @@ namespace Flameberry {
                     if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path) && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
                     {
                         map = AssetManager::TryGetOrLoadAsset<Texture2D>(path.string());
-                        m_EditingContext->Update();
+                        isMapUpdated = true;
                         m_IsMaterialEdited = true;
                     }
                     else
@@ -163,5 +184,6 @@ namespace Flameberry {
                 ImGui::EndDragDropTarget();
             }
         }
+        return isMapUpdated;
     }
 }

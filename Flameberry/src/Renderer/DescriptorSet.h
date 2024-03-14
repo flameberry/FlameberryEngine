@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <vulkan/vulkan.h>
 
+#include "Core/Core.h"
+
 namespace Flameberry {
     class DescriptorPool
     {
@@ -28,20 +30,22 @@ namespace Flameberry {
         DescriptorSetLayout(const DescriptorSetLayoutSpecification& specification);
         ~DescriptorSetLayout();
 
+        static Ref<DescriptorSetLayout> CreateOrGetCached(const DescriptorSetLayoutSpecification& specification);
+        static void ClearCache();
+
         VkDescriptorSetLayout GetLayout() const { return m_Layout; }
         DescriptorSetLayoutSpecification GetSpecification() const { return m_DescSetLayoutSpec; }
-
-        template<typename... Args>
-        static std::shared_ptr<DescriptorSetLayout> Create(Args... args) { return std::make_shared<DescriptorSetLayout>(std::forward<Args>(args)...); }
     private:
         DescriptorSetLayoutSpecification m_DescSetLayoutSpec;
         VkDescriptorSetLayout m_Layout;
+
+        static std::unordered_map<DescriptorSetLayoutSpecification, Ref<DescriptorSetLayout>> s_CachedDescriptorSetLayouts;
     };
 
     struct DescriptorSetSpecification
     {
-        std::shared_ptr<DescriptorPool> Pool;
-        std::shared_ptr<DescriptorSetLayout> Layout;
+        Ref<DescriptorPool> Pool;
+        Ref<DescriptorSetLayout> Layout;
     };
 
     class DescriptorSet
@@ -50,19 +54,16 @@ namespace Flameberry {
         DescriptorSet(const DescriptorSetSpecification& specification);
         ~DescriptorSet();
 
-        DescriptorSetSpecification GetSpecification() const { return m_DescSetSpec; }
-        VkDescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
+        DescriptorSetSpecification GetSpecification() const { return m_Specification; }
+        VkDescriptorSet GetVulkanDescriptorSet() const { return m_DescriptorSet; }
 
         void WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo);
         void WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo);
         void Update();
-
-        template<typename... Args>
-        static std::shared_ptr<DescriptorSet> Create(Args... args) { return std::make_shared<DescriptorSet>(std::forward<Args>(args)...); }
     private:
         std::vector<VkWriteDescriptorSet> m_WriteInfos;
 
-        DescriptorSetSpecification m_DescSetSpec;
+        DescriptorSetSpecification m_Specification;
         VkDescriptorSet m_DescriptorSet;
     };
 }

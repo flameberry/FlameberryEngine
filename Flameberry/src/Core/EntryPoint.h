@@ -5,7 +5,7 @@
 
 int main(int argc, char const* argv[])
 {
-    std::shared_ptr<Flameberry::Logger> logger = Flameberry::Logger::Create("FLAMEBERRY");
+    Flameberry::Ref<Flameberry::Logger> logger = Flameberry::CreateRef<Flameberry::Logger>("FLAMEBERRY");
     Flameberry::Logger::SetCoreLogger(logger);
     logger->SetLogLevel(Flameberry::LogLevel::LOG);
     

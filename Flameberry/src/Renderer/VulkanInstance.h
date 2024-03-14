@@ -10,7 +10,6 @@ namespace Flameberry {
         VulkanInstance();
         ~VulkanInstance();
 
-        static std::shared_ptr<VulkanInstance> Create() { return std::make_shared<VulkanInstance>(); }
         VkInstance GetVulkanInstance() const { return m_VkInstance; }
 
         VkResult CreateDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pMessenger);

@@ -12,25 +12,25 @@ enum FileTypeIndex {
 };
 
 static std::vector<std::string> g_IconPaths = {
-    FBY_PROJECT_DIR"FlameberryEditor/icons/arrow_back.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/arrow_forward.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconDefault.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/folder_icon.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconBerry.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconOBJ.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconGLTF.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconFBX.png",
-    FBY_PROJECT_DIR"FlameberryEditor/icons/FileIconFBMAT.png"
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/arrow_back.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/arrow_forward.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconDefault.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/folder_icon.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconBerry.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconOBJ.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconGLTF.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconFBX.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconFBMAT.png"
 };
 
 namespace Flameberry {
     ContentBrowserPanel::ContentBrowserPanel()
         : m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory), // Getting Asset Directory via this method to get the relative path only
-        m_ThumbnailCache(std::make_shared<ThumbnailCache>(Project::GetActiveProject())),
+        m_ThumbnailCache(CreateRef<ThumbnailCache>(Project::GetActiveProject())),
         m_VkTextureSampler(Texture2D::GetDefaultSampler())
     {
         for (const auto& path : g_IconPaths)
-            m_IconTextures.emplace_back(std::make_shared<Texture2D>(path.c_str(), m_VkTextureSampler));
+            m_IconTextures.emplace_back(CreateRef<Texture2D>(path.c_str(), m_VkTextureSampler));
     }
 
     ContentBrowserPanel::~ContentBrowserPanel()
@@ -206,7 +206,7 @@ namespace Flameberry {
 
             if (m_SearchInputBuffer[0] != '\0') {
                 // TODO: Maybe some optimisation to not search again if the input string is same
-                int index = kmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer, true);
+                int index = Algorithm::KmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer, true);
                 if (index == -1)
                     continue;
             }
@@ -216,7 +216,7 @@ namespace Flameberry {
             int currentIconIndex;
             bool isFileSupported = true, isDirectory = directory.is_directory();
 
-            std::shared_ptr<Texture2D> thumbnail;
+            Ref<Texture2D> thumbnail;
             if (!isDirectory)
                 thumbnail = m_ThumbnailCache->TryGetOrCreateThumbnail(filePath);
             if (!thumbnail)
@@ -263,8 +263,8 @@ namespace Flameberry {
             {
                 if (ImGui::MenuItem("Material"))
                 {
-                    auto mat = std::make_shared<Material>();
-                    MaterialSerializer::Serialize(mat, (m_CurrentDirectory / "NewMaterial.fbmat").c_str());
+                    auto mat = CreateRef<MaterialAsset>("New Material");
+                    MaterialAssetSerializer::Serialize(mat, (m_CurrentDirectory / "NewMaterial.fbmat").c_str());
                 }
                 ImGui::EndMenu();
             }

@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "Core/optional.h"
 #include "VulkanVertex.h"
 #include "StaticMesh.h"
 

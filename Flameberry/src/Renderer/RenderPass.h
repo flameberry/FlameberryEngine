@@ -8,7 +8,7 @@
 namespace Flameberry {
     struct RenderPassSpecification
     {
-        std::vector<std::shared_ptr<Framebuffer>> TargetFramebuffers;
+        std::vector<Ref<Framebuffer>> TargetFramebuffers;
         std::vector<VkSubpassDependency> Dependencies;
     };
 
@@ -23,9 +23,6 @@ namespace Flameberry {
 
         RenderPassSpecification GetSpecification() const { return m_RenderPassSpec; }
         VkRenderPass GetRenderPass() const { return m_VkRenderPass; }
-
-        template<typename... Args>
-        static std::shared_ptr<RenderPass> Create(Args... args) { return std::make_shared<RenderPass>(std::forward<Args>(args)...); }
     private:
         RenderPassSpecification m_RenderPassSpec;
         VkRenderPass m_VkRenderPass;

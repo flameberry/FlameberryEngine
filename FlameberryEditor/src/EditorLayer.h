@@ -14,7 +14,7 @@ namespace Flameberry {
     class EditorLayer : public Layer
     {
     public:
-        EditorLayer(const std::shared_ptr<Project>& project);
+        EditorLayer(const Ref<Project>& project);
         virtual ~EditorLayer() = default;
 
         void OnCreate() override;
@@ -75,7 +75,7 @@ namespace Flameberry {
         bool m_ShouldOpenAnotherScene = false;
 
         // Texture Icons
-        std::shared_ptr<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon;
+        Ref<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon;
         static constexpr ImVec2 s_OverlayButtonSize = ImVec2(16, 16);
         static constexpr float s_OverlayPadding = 6.0f;
 
@@ -83,23 +83,23 @@ namespace Flameberry {
         std::unique_ptr<SceneRenderer> m_SceneRenderer;
 
         // ECS
-        std::shared_ptr<Scene> m_ActiveScene, m_ActiveSceneBackUpCopy;
+        Ref<Scene> m_ActiveScene, m_ActiveSceneBackUpCopy;
 
         std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
         std::vector<VkDescriptorSet> m_CompositePassViewportDescriptorSets;
 
         // UI
-        std::shared_ptr<SceneHierarchyPanel> m_SceneHierarchyPanel;
-        std::shared_ptr<ContentBrowserPanel> m_ContentBrowserPanel;
+        Ref<SceneHierarchyPanel> m_SceneHierarchyPanel;
+        Ref<ContentBrowserPanel> m_ContentBrowserPanel;
 
         // Mouse Picking
         std::unique_ptr<Buffer> m_MousePickingBuffer;
-        std::shared_ptr<RenderPass> m_MousePickingRenderPass;
+        Ref<RenderPass> m_MousePickingRenderPass;
 
-        std::shared_ptr<Pipeline> m_MousePickingPipeline, m_MousePicking2DPipeline;
-        std::shared_ptr<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
+        Ref<Pipeline> m_MousePickingPipeline, m_MousePicking2DPipeline;
+        Ref<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
 
-        std::shared_ptr<Project> m_Project;
+        Ref<Project> m_Project;
     };
 
     template<typename Fn>

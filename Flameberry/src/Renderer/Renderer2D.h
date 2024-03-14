@@ -20,24 +20,24 @@ namespace Flameberry {
 
     struct Renderer2DData {
         // Lines
-        std::shared_ptr<Pipeline> LinePipeline;
-        std::shared_ptr<Buffer> LineVertexBuffer;
+        Ref<Pipeline> LinePipeline;
+        Ref<Buffer> LineVertexBuffer;
         std::vector<LineVertex> LineVertices;
 
         // Quads
-        std::shared_ptr<Pipeline> QuadPipeline;
-        std::shared_ptr<Buffer> QuadVertexBuffer, QuadIndexBuffer;
+        Ref<Pipeline> QuadPipeline;
+        Ref<Buffer> QuadVertexBuffer, QuadIndexBuffer;
         std::vector<QuadVertex> QuadVertices;
         uint32_t VertexBufferOffset = 0;
 
         // TODO: Find a better way to do this
-        std::shared_ptr<Texture2D> TextureMap;
+        Ref<Texture2D> TextureMap;
     };
 
     class Renderer2D
     {
     public:
-        static void Init(const std::shared_ptr<DescriptorSetLayout>& globalDescriptorSetLayout, const std::shared_ptr<RenderPass>& renderPass);
+        static void Init(const Ref<RenderPass>& renderPass);
         static void Shutdown();
 
         static void AddGrid(int gridSize);
@@ -47,7 +47,7 @@ namespace Flameberry {
         static void BeginScene(VkDescriptorSet globalDescriptorSet);
         static void EndScene();
 
-        static void SetActiveTexture(const std::shared_ptr<Texture2D>& texture) { s_Renderer2DData.TextureMap = texture; }
+        static void SetActiveTexture(const Ref<Texture2D>& texture) { s_Renderer2DData.TextureMap = texture; }
         static void FlushQuads();
 
         static const Renderer2DData& GetRendererData() { return s_Renderer2DData; }

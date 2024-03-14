@@ -2,7 +2,9 @@
 
 #include <memory>
 #include <GLFW/glfw3.h>
+
 #include "Event.h"
+#include "Core/Core.h"
 
 #ifdef FBY_DEBUG
 #define FBY_WINDOW_TITLE "Flameberry Engine [Debug]"
@@ -29,7 +31,7 @@ namespace Flameberry {
     class Window
     {
     public:
-        static std::shared_ptr<Window> Create(const WindowSpecification& specification = WindowSpecification());
+        static Ref<Window> Create(const WindowSpecification& specification = WindowSpecification());
 
         virtual GLFWwindow* GetGLFWwindow() const = 0;
         virtual const WindowSpecification& GetSpecification() const = 0;

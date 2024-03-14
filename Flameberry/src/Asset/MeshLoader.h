@@ -9,8 +9,8 @@ namespace Flameberry {
     class MeshLoader
     {
     public:
-        static std::shared_ptr<Asset> LoadMesh(const std::filesystem::path& path);
-        static std::shared_ptr<Asset> LoadMeshOBJ(const std::filesystem::path& path);
+        static Ref<Asset> LoadMesh(const std::filesystem::path& path);
+        static Ref<Asset> LoadMeshOBJ(const std::filesystem::path& path);
     };
 
 }

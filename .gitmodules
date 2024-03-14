@@ -22,3 +22,6 @@
 [submodule "Flameberry/vendor/fmtlib"]
 	path = Flameberry/vendor/fmtlib
 	url = https://github.com/fmtlib/fmt
+[submodule "Flameberry/vendor/SPIRV-Reflect"]
+	path = Flameberry/vendor/SPIRV-Reflect
+	url = https://github.com/KhronosGroup/SPIRV-Reflect

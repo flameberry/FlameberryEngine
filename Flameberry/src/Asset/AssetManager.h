@@ -8,7 +8,7 @@
 #include "Core/Core.h"
 
 #include "Renderer/StaticMesh.h"
-#include "Renderer/Material.h"
+#include "Renderer/MaterialAsset.h"
 
 #include "AssetLoader.h"
 
@@ -18,9 +18,8 @@ namespace Flameberry {
     {
     public:
         template <typename Type>
-        static std::shared_ptr<Type> TryGetOrLoadAsset(const std::filesystem::path& path)
+        static Ref<Type> TryGetOrLoadAsset(const std::filesystem::path& path)
         {
-            FBY_ASSERT(!path.empty(), "Given file path is empty!");
             if (s_AssetFilePathToUUIDTable.find(path) != s_AssetFilePathToUUIDTable.end())
             {
                 auto asset = s_AssetTable[s_AssetFilePathToUUIDTable[path]];
@@ -46,7 +45,7 @@ namespace Flameberry {
         }
 
         template <typename Type>
-        static std::shared_ptr<Type> GetAsset(AssetHandle handle)
+        static Ref<Type> GetAsset(AssetHandle handle)
         {
             if (s_AssetTable.find(handle) != s_AssetTable.end())
             {
@@ -58,11 +57,11 @@ namespace Flameberry {
 
                 return std::static_pointer_cast<Type>(asset);
             }
-//            FBY_WARN("Failed to find the asset with handle: {}", handle);
+            // FBY_WARN("Failed to get the asset with handle: {}", handle);
             return nullptr;
         }
 
-        static void RegisterAsset(const std::shared_ptr<Asset>& asset)
+        static void RegisterAsset(const Ref<Asset>& asset)
         {
             if (s_AssetTable.find(asset->Handle) == s_AssetTable.end())
             {
@@ -91,9 +90,9 @@ namespace Flameberry {
             s_AssetCache.clear();
         }
 
-        static const std::unordered_map<AssetHandle, std::shared_ptr<Asset>>& GetAssetTable() { return s_AssetTable; }
+        static const std::unordered_map<AssetHandle, Ref<Asset>>& GetAssetTable() { return s_AssetTable; }
     private:
-        inline static std::unordered_map<AssetHandle, std::shared_ptr<Asset>> s_AssetTable;
+        inline static std::unordered_map<AssetHandle, Ref<Asset>> s_AssetTable;
         inline static std::unordered_map<std::string, AssetHandle> s_AssetFilePathToUUIDTable;
 
         inline static std::list<AssetHandle> s_AssetCache; // TODO: Implement this

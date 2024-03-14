@@ -6,7 +6,7 @@
 
 namespace Flameberry {
 
-    LauncherLayer::LauncherLayer(const std::function<void(const std::shared_ptr<Project>&)>& callback)
+    LauncherLayer::LauncherLayer(const std::function<void(const Ref<Project>&)>& callback)
         : m_OpenProjectCallback(callback)
     {
     }
@@ -144,7 +144,7 @@ namespace Flameberry {
                         projectConfig.Name = std::string(m_ProjectNameBuffer);
                         projectConfig.AssetDirectory = "Content";
 
-                        m_Project = Project::Create(projectParentPath / projectConfig.Name, projectConfig);
+                        m_Project = CreateRef<Project>(projectParentPath / projectConfig.Name, projectConfig);
 
                         // Setup
                         // 1. Create the project directory

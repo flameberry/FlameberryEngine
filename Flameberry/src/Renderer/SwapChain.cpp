@@ -7,13 +7,13 @@
 #include "Image.h"
 
 namespace Flameberry {
-    SwapChain::SwapChain(VkSurfaceKHR surface, const std::shared_ptr<SwapChain>& oldSwapChain)
+    SwapChain::SwapChain(VkSurfaceKHR surface, const Ref<SwapChain>& oldSwapChain)
         : m_VkSurface(surface)
     {
         CreateSwapChain(oldSwapChain);
     }
 
-    void SwapChain::CreateSwapChain(const std::shared_ptr<SwapChain>& oldSwapChain)
+    void SwapChain::CreateSwapChain(const Ref<SwapChain>& oldSwapChain)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();
@@ -42,7 +42,7 @@ namespace Flameberry {
         vk_swap_chain_create_info.imageArrayLayers = 1;
         vk_swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
+        uint32_t vk_queue_indices[2] = { (uint32_t)queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex, (uint32_t)queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
         if (queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
         {
@@ -218,7 +218,7 @@ namespace Flameberry {
         vk_swap_chain_create_info.imageArrayLayers = 1;
         vk_swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        uint32_t vk_queue_indices[2] = { queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex , queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
+        uint32_t vk_queue_indices[2] = { (uint32_t)queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex, (uint32_t)queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
         if (queueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
         {

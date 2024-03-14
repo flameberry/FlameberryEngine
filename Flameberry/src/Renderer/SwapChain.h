@@ -10,7 +10,7 @@ namespace Flameberry {
     class SwapChain
     {
     public:
-        SwapChain(VkSurfaceKHR surface, const std::shared_ptr<SwapChain>& oldSwapChain = nullptr);
+        SwapChain(VkSurfaceKHR surface, const Ref<SwapChain>& oldSwapChain = nullptr);
         ~SwapChain();
 
         VkExtent2D GetExtent2D() const { return m_VkSwapChainExtent2D; }
@@ -30,7 +30,7 @@ namespace Flameberry {
         static VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR& surface_capabilities);
         static VkFormat GetDepthFormat();
     private:
-        void CreateSwapChain(const std::shared_ptr<SwapChain>& oldSwapChain);
+        void CreateSwapChain(const Ref<SwapChain>& oldSwapChain);
         void CreateSyncObjects();
     private:
         VkSwapchainKHR m_VkSwapChain;

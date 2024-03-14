@@ -2,6 +2,7 @@
 
 #include "Renderer.h"
 
+#include "ShaderLibrary.h"
 #include "RenderPass.h"
 #include "VulkanDebug.h"
 #include "RenderCommand.h"
@@ -14,7 +15,7 @@
 namespace Flameberry {
     Renderer2DData Renderer2D::s_Renderer2DData;
 
-    void Renderer2D::Init(const std::shared_ptr<DescriptorSetLayout>& globalDescriptorSetLayout, const std::shared_ptr<RenderPass>& renderPass)
+    void Renderer2D::Init(const Ref<RenderPass>& renderPass)
     {
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         {
@@ -25,31 +26,25 @@ namespace Flameberry {
             bufferSpec.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             bufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-            s_Renderer2DData.LineVertexBuffer = Buffer::Create(bufferSpec);
+            s_Renderer2DData.LineVertexBuffer = CreateRef<Buffer>(bufferSpec);
             s_Renderer2DData.LineVertexBuffer->MapMemory(bufferSpec.InstanceSize);
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.PushConstants = {};
-            pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout };
-
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/solid_color.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/solid_color.frag.spv";
+            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_SolidColor");
             pipelineSpec.RenderPass = renderPass;
 
             pipelineSpec.VertexLayout = {
-                VertexInputAttribute::VEC3F, // a_Position
-                VertexInputAttribute::VEC3F  // a_Color
+                ShaderDataType::Float3, // a_Position
+                ShaderDataType::Float3  // a_Color
+
             };
-            pipelineSpec.VertexInputBindingDescription.binding = 0;
-            pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-            pipelineSpec.VertexInputBindingDescription.stride = sizeof(LineVertex);
             pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
             pipelineSpec.PolygonMode = VK_POLYGON_MODE_LINE;
             pipelineSpec.PrimitiveTopology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
             pipelineSpec.CullMode = VK_CULL_MODE_NONE;
 
-            s_Renderer2DData.LinePipeline = Pipeline::Create(pipelineSpec);
+            s_Renderer2DData.LinePipeline = CreateRef<Pipeline>(pipelineSpec);
         }
 
         {
@@ -60,7 +55,7 @@ namespace Flameberry {
             bufferSpec.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             bufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-            s_Renderer2DData.QuadVertexBuffer = Buffer::Create(bufferSpec);
+            s_Renderer2DData.QuadVertexBuffer = CreateRef<Buffer>(bufferSpec);
             s_Renderer2DData.QuadVertexBuffer->MapMemory(bufferSpec.InstanceSize);
 
             BufferSpecification indexBufferSpec{};
@@ -69,7 +64,7 @@ namespace Flameberry {
             indexBufferSpec.Usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
             indexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-            s_Renderer2DData.QuadIndexBuffer = Buffer::Create(indexBufferSpec);
+            s_Renderer2DData.QuadIndexBuffer = CreateRef<Buffer>(indexBufferSpec);
 
             uint32_t* indices = new uint32_t[MAX_QUAD_INDICES];
             uint32_t offset = 0;
@@ -98,31 +93,25 @@ namespace Flameberry {
             stagingBuffer.WriteToBuffer(indices, indexBufferSpec.InstanceSize, 0);
             stagingBuffer.UnmapMemory();
 
-            RenderCommand::CopyBuffer(stagingBuffer.GetBuffer(), s_Renderer2DData.QuadIndexBuffer->GetBuffer(), indexBufferSpec.InstanceSize);
+            RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), s_Renderer2DData.QuadIndexBuffer->GetVulkanBuffer(), indexBufferSpec.InstanceSize);
 
             delete[] indices;
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.PushConstants = {};
-            pipelineSpec.PipelineLayout.DescriptorSetLayouts = { globalDescriptorSetLayout, Texture2D::GetDescriptorLayout() };
-
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/quad.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/quad.frag.spv";
+            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_Quad");
             pipelineSpec.RenderPass = renderPass;
 
             pipelineSpec.VertexLayout = {
-                VertexInputAttribute::VEC3F, // a_Position
-                VertexInputAttribute::VEC3F, // a_Color
+                ShaderDataType::Float3, // a_Position
+                ShaderDataType::Float3, // a_Color
+                ShaderDataType::Dummy4  // EntityIndex (Unnecessary)
             };
-            pipelineSpec.VertexInputBindingDescription.binding = 0;
-            pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-            pipelineSpec.VertexInputBindingDescription.stride = sizeof(QuadVertex);
             pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
             pipelineSpec.BlendingEnable = true;
 
             pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
 
-            s_Renderer2DData.QuadPipeline = Pipeline::Create(pipelineSpec);
+            s_Renderer2DData.QuadPipeline = CreateRef<Pipeline>(pipelineSpec);
         }
     }
 
@@ -195,15 +184,16 @@ namespace Flameberry {
         {
             FBY_ASSERT(s_Renderer2DData.QuadVertices.size() <= MAX_QUAD_VERTICES, "MAX_QUAD_VERTICES limit reached!");
             s_Renderer2DData.QuadVertexBuffer->WriteToBuffer(s_Renderer2DData.QuadVertices.data(), s_Renderer2DData.QuadVertices.size() * sizeof(QuadVertex), s_Renderer2DData.VertexBufferOffset);
-            s_Renderer2DData.QuadPipeline->Bind();
 
-            auto vertexBuffer = s_Renderer2DData.QuadVertexBuffer->GetBuffer();
-            auto indexBuffer = s_Renderer2DData.QuadIndexBuffer->GetBuffer();
-            auto pipelineLayout = s_Renderer2DData.QuadPipeline->GetLayout();
+            auto vertexBuffer = s_Renderer2DData.QuadVertexBuffer->GetVulkanBuffer();
+            auto indexBuffer = s_Renderer2DData.QuadIndexBuffer->GetVulkanBuffer();
+            auto vulkanPipeline = s_Renderer2DData.QuadPipeline->GetVulkanPipeline();
+            auto pipelineLayout = s_Renderer2DData.QuadPipeline->GetVulkanPipelineLayout();
             auto indexCount = 6 * (uint32_t)s_Renderer2DData.QuadVertices.size() / 4;
 
-            Renderer::Submit([pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.TextureMap->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.VertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.TextureMap->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.VertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
+                    Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
                     VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
@@ -224,14 +214,15 @@ namespace Flameberry {
         {
             FBY_ASSERT(s_Renderer2DData.LineVertices.size() <= 2 * MAX_LINES, "MAX_LINES limit reached!");
             s_Renderer2DData.LineVertexBuffer->WriteToBuffer(s_Renderer2DData.LineVertices.data(), s_Renderer2DData.LineVertices.size() * sizeof(LineVertex), 0);
-            s_Renderer2DData.LinePipeline->Bind();
 
             uint32_t vertexCount = s_Renderer2DData.LineVertices.size();
-            auto vertexBuffer = s_Renderer2DData.LineVertexBuffer->GetBuffer();
-            auto pipelineLayout = s_Renderer2DData.LinePipeline->GetLayout();
+            auto vertexBuffer = s_Renderer2DData.LineVertexBuffer->GetVulkanBuffer();
+            auto pipelineLayout = s_Renderer2DData.LinePipeline->GetVulkanPipelineLayout();
+            auto vulkanPipeline = s_Renderer2DData.LinePipeline->GetVulkanPipeline();
 
-            Renderer::Submit([pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, vertexBuffer, vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, vertexBuffer, vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
+                    Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
 
                     VkDeviceSize offsets[] = { 0 };

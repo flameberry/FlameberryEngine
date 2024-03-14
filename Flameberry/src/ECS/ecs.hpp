@@ -166,7 +166,7 @@ namespace fbentt {
 
     struct pool_data {
         sparse_set<uint32_t> entity_set;
-        std::shared_ptr<void> handler{ nullptr };
+        std::shared_ptr<void> handler{ nullptr }; // Using std::shared_ptr as using Ref<> and CreateRef<> issues C++20 feature warning
         void (*remove)(const pool_data& pool, uint32_t index);
         void (*copy_handler_data)(const pool_data& src, pool_data& dest);
 

@@ -10,6 +10,7 @@ set_build_config_macro_for_target(FlameberryEditor)
 
 if(XCODE)
     target_compile_definitions(FlameberryEditor PRIVATE FBY_XCODE_PROJ)
+    set_target_properties(FlameberryEditor PROPERTIES XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE "Metal")
 endif()
 
 set_property(TARGET FlameberryEditor PROPERTY XCODE_SCHEME_ARGUMENTS "${FBY_SOURCE_DIR}/SandboxProject/SandboxProject.fbproj")

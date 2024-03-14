@@ -26,7 +26,7 @@ namespace Flameberry {
         m_Window = Window::Create(m_Specification.WindowSpec);
         m_Window->SetEventCallBack(FBY_BIND_EVENT_FN(Application::OnEvent));
 
-        m_VulkanContext = VulkanContext::Create((VulkanWindow*)m_Window.get());
+        m_VulkanContext = CreateRef<VulkanContext>((VulkanWindow*)m_Window.get());
         VulkanContext::SetCurrentContext(m_VulkanContext.get());
 
         m_Window->Init();
@@ -34,8 +34,7 @@ namespace Flameberry {
         auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
         VulkanContext::GetCurrentDevice()->AllocateCommandBuffers(swapchain->GetSwapChainImageCount());
 
-        // Create the generic texture descriptor layout
-        Texture2D::InitStaticResources();
+        Renderer::Init();
 
         m_ImGuiLayer = new ImGuiLayer();
         PushOverlay(m_ImGuiLayer);
@@ -44,17 +43,19 @@ namespace Flameberry {
     void Application::Run()
     {
         float last = 0.0f;
-
-        Renderer::Init();
         while (m_Window->IsRunning())
         {
             float now = glfwGetTime();
+            // This is the main delta time of the frame even though it's just a local variable :D
             float delta = now - last;
             last = now;
 
+            // This is where all the layers get updated and
+            // The layers submit render commands to a command queue present in `Renderer`
             for (auto& layer : m_LayerStack)
                 layer->OnUpdate(delta);
 
+            // ImGui Rendering is submitted as a render command because otherwise it behaves oddly and gives validation errors
             Renderer::Submit([app = this](VkCommandBuffer, uint32_t)
                 {
                     app->m_ImGuiLayer->Begin();
@@ -63,10 +64,11 @@ namespace Flameberry {
                     app->m_ImGuiLayer->End();
                 });
 
+            // This is where the rendering of the entire frame is done
+            // All the render commands are executed one by one here
             Renderer::WaitAndRender();
             glfwPollEvents();
         }
-        Renderer::Shutdown();
     }
 
     void Application::OnEvent(Event& e)
@@ -159,7 +161,7 @@ namespace Flameberry {
             delete layer;
         }
 
-        Texture2D::DestroyStaticResources();
+        Renderer::Shutdown();
         AssetManager::Clear();
 
         m_Window->Shutdown();

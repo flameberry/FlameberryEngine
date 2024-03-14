@@ -9,6 +9,7 @@
 #include "Renderer/VulkanContext.h"
 #include "Asset/AssetManager.h"
 #include "Asset/MeshLoader.h"
+#include "Renderer/Skymap.h"
 
 namespace Flameberry {
     static std::string ProjectionTypeEnumToString(ProjectionType type)
@@ -65,15 +66,15 @@ namespace Flameberry {
             return AxisType::Z;
     }
 
-    std::shared_ptr<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
+    Ref<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
     {
-        std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
+        Ref<Scene> newScene = CreateRef<Scene>();
         if (DeserializeIntoExistingScene(path, newScene))
             return newScene;
         return nullptr;
     }
 
-    bool SceneSerializer::DeserializeIntoExistingScene(const char* path, const std::shared_ptr<Scene>& destScene)
+    bool SceneSerializer::DeserializeIntoExistingScene(const char* path, const Ref<Scene>& destScene)
     {
         FBY_SCOPED_TIMER("Scene Deserialization");
 
@@ -165,7 +166,7 @@ namespace Flameberry {
 
                     for (auto entry : mesh["OverridenMaterialTable"]) // TODO: Update with different format
                     {
-                        auto mat = AssetManager::TryGetOrLoadAsset<Material>(entry["Material"].as<std::string>());
+                        auto mat = AssetManager::TryGetOrLoadAsset<MaterialAsset>(entry["Material"].as<std::string>());
                         meshComp.OverridenMaterialTable[entry["SubmeshIndex"].as<uint32_t>()] = mat->Handle;
                     }
                 }
@@ -178,7 +179,7 @@ namespace Flameberry {
                     skyLightComp.EnableSkyMap = skyLight["EnableSkyMap"].as<bool>();
 
                     std::string skymapPath = skyLight["SkyMap"].as<std::string>();
-                    skyLightComp.SkyMap = ((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Texture2D>(skyLight["SkyMap"].as<std::string>())->Handle : AssetHandle(0));
+                    skyLightComp.SkyMap = ((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Skymap>(skyLight["SkyMap"].as<std::string>())->Handle : AssetHandle(0));
                 }
 
                 if (auto light = entity["DirectionalLightComponent"]; light)
@@ -241,7 +242,7 @@ namespace Flameberry {
         return true;
     }
 
-    void SceneSerializer::SerializeSceneToFile(const char* path, const std::shared_ptr<Scene>& srcScene)
+    void SceneSerializer::SerializeSceneToFile(const char* path, const Ref<Scene>& srcScene)
     {
         FBY_SCOPED_TIMER("Serialization");
 
@@ -284,7 +285,7 @@ namespace Flameberry {
         fout << out.c_str();
     }
 
-    void SceneSerializer::SerializeEntity(YAML::Emitter& out, const fbentt::entity& entity, const std::shared_ptr<Scene>& scene, std::set<UUID>& meshUUIDs)
+    void SceneSerializer::SerializeEntity(YAML::Emitter& out, const fbentt::entity& entity, const Ref<Scene>& scene, std::set<UUID>& meshUUIDs)
     {
         out << YAML::BeginMap;
         out << YAML::Key << "Entity" << YAML::Value << scene->m_Registry->get<IDComponent>(entity).ID;
@@ -344,7 +345,7 @@ namespace Flameberry {
                 out << YAML::BeginMap;
                 out << YAML::Key << "SubmeshIndex" << YAML::Value << submeshIndex;
 
-                auto mat = AssetManager::GetAsset<Material>(materialHandle);
+                auto mat = AssetManager::GetAsset<MaterialAsset>(materialHandle);
                 out << YAML::Key << "Material" << YAML::Value << mat->FilePath;
                 out << YAML::EndMap;
             }
@@ -361,7 +362,7 @@ namespace Flameberry {
             out << YAML::Key << "Color" << YAML::Value << skyLight.Color;
             out << YAML::Key << "Intensity" << YAML::Value << skyLight.Intensity;
             out << YAML::Key << "EnableSkyMap" << YAML::Value << skyLight.EnableSkyMap;
-            out << YAML::Key << "SkyMap" << YAML::Value << (AssetManager::IsAssetHandleValid(skyLight.SkyMap) ? AssetManager::GetAsset<Texture2D>(skyLight.SkyMap)->FilePath : "");
+            out << YAML::Key << "SkyMap" << YAML::Value << (AssetManager::IsAssetHandleValid(skyLight.SkyMap) ? AssetManager::GetAsset<Skymap>(skyLight.SkyMap)->FilePath : "");
             out << YAML::EndMap; // Sky Light Component
         }
 

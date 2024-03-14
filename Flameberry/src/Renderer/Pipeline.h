@@ -4,31 +4,24 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-#include "VulkanVertex.h"
 #include "RenderPass.h"
 #include "DescriptorSet.h"
+#include "Shader.h"
 
 namespace Flameberry {
 
-    struct PushConstantSpecification {
-        VkShaderStageFlags ShaderStage;
-        uint32_t Size;
-    };
-
-    struct PipelineLayoutSpecification
-    {
-        std::vector<PushConstantSpecification> PushConstants;
-        std::vector<std::shared_ptr<DescriptorSetLayout>> DescriptorSetLayouts;
-    };
+    using VertexInputLayout = std::vector<ShaderDataType>;
 
     struct PipelineSpecification
     {
-        PipelineLayoutSpecification PipelineLayout;
-        std::string VertexShaderFilePath, FragmentShaderFilePath;
-        std::shared_ptr<RenderPass> RenderPass;
+        Ref<RenderPass> RenderPass;
+        Ref<Shader> Shader;
+
+        // Make sure to provide all the attributes present in the Vertex Buffer
+        // And for those that don't need to be used in the shader replace them with the equivalent Dummy Types
+        VertexInputLayout VertexLayout;
+
         uint32_t SubPass = 0;
-        VertexInputAttributeLayout VertexLayout;
-        VkVertexInputBindingDescription VertexInputBindingDescription;
         uint32_t Samples = 1;
         VkViewport Viewport = { 0, 0, 0, 0, 0.0f, 1.0f };
         VkRect2D Scissor;
@@ -48,25 +41,23 @@ namespace Flameberry {
         Pipeline(const PipelineSpecification& pipelineSpec);
         ~Pipeline();
 
-        PipelineSpecification GetSpecification() const { return m_PipelineSpec; }
-        VkPipelineLayout GetLayout() const { return m_VkPipelineLayout; }
+        const PipelineSpecification& GetSpecification() const { return m_Specification; }
+        VkPipelineLayout GetVulkanPipelineLayout() const { return m_PipelineLayout; }
+        VkPipeline GetVulkanPipeline() const { return m_GraphicsPipeline; }
 
         void ReloadShaders();
-        void Bind();
-
-        template<typename... Args>
-        static std::shared_ptr<Pipeline> Create(Args... args) { return std::make_shared<Pipeline>(std::forward<Args>(args)...); }
     private:
         void CreatePipeline();
     private:
-        PipelineSpecification m_PipelineSpec;
-        VkPipeline m_VkGraphicsPipeline;
-        VkPipelineLayout m_VkPipelineLayout;
+        PipelineSpecification m_Specification;
+        VkPipeline m_GraphicsPipeline;
+        VkPipelineLayout m_PipelineLayout;
+
+        std::vector<Ref<DescriptorSetLayout>> m_DescriptorSetLayouts;
     };
 
     struct ComputePipelineSpecification {
-        std::string ComputeShaderFilePath;
-        PipelineLayoutSpecification PipelineLayout;
+        Ref<Shader> Shader;
     };
 
     class ComputePipeline
@@ -75,17 +66,17 @@ namespace Flameberry {
         ComputePipeline(const ComputePipelineSpecification& pipelineSpec);
         ~ComputePipeline();
 
-        ComputePipelineSpecification GetSpecification() const { return m_PipelineSpec; }
-        VkPipelineLayout GetLayout() const { return m_VkPipelineLayout; }
+        Ref<DescriptorSetLayout> GetDescriptorSetLayout(uint32_t setIndex) { return m_DescriptorSetLayouts[setIndex]; }
 
-        void Bind();
-
-        template<typename... Args>
-        static std::shared_ptr<ComputePipeline> Create(Args... args) { return std::make_shared<ComputePipeline>(std::forward<Args>(args)...); }
+        ComputePipelineSpecification GetSpecification() const { return m_Specification; }
+        VkPipelineLayout GetVulkanPipelineLayout() const { return m_PipelineLayout; }
+        VkPipeline GetVulkanPipeline() const { return m_ComputePipeline; }
     private:
-        ComputePipelineSpecification m_PipelineSpec;
-        VkPipeline m_VkComputePipeline;
-        VkPipelineLayout m_VkPipelineLayout;
+        ComputePipelineSpecification m_Specification;
+        VkPipeline m_ComputePipeline;
+        VkPipelineLayout m_PipelineLayout;
+
+        std::vector<Ref<DescriptorSetLayout>> m_DescriptorSetLayouts;
     };
 
 }

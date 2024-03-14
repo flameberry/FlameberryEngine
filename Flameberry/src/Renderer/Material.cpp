@@ -1,180 +1,94 @@
 #include "Material.h"
 
-#include <fstream>
-#include "Core/YamlUtils.h"
-
-#include "Asset/AssetManager.h"
+#include "VulkanContext.h"
 
 namespace Flameberry {
-    std::shared_ptr<DescriptorSetLayout> Material::s_CommonDescSetLayout;
-    std::unique_ptr<DescriptorSet> Material::s_EmptyMaterialDescSet;
 
-    Material::Material()
+    Material::Material(const Ref<Shader>& shader)
+        : m_Shader(shader)
     {
-        if (!s_CommonDescSetLayout || !s_EmptyMaterialDescSet)
-            Init();
+        uint32_t totalSize = 0;
+        // Arranging resources for the push constants
+        // Currently the push constant blocks which are material specific (i.e. not Renderer Only) are accumulated and the combined data is stored together
+        // As of now I haven't encountered a case where multiple material specific push constant blocks are used
+        for (const auto& specification : m_Shader->GetPushConstantSpecifications())
+        {
+            // This is to remind the developer to implement this case properly when such a shader is written
+            FBY_ASSERT(!m_PushConstantBufferSize, "Multiple push constants not handled correctly yet!");
 
-        DescriptorSetSpecification descSetSpec;
-        descSetSpec.Layout = s_CommonDescSetLayout;
-        m_TextureMapSet = std::make_unique<DescriptorSet>(descSetSpec);
-        
-        VkDescriptorImageInfo imageInfo{
-            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            .sampler = Texture2D::GetDefaultSampler(),
-            .imageView = Texture2D::GetEmptyImageView()
-        };
+            if (!specification.RendererOnly)
+            {
+                // This is to ensure only the first time the offset should be set
+                if (m_PushConstantBufferOffset == 0)
+                    m_PushConstantBufferOffset = totalSize;
+                // This will be later used to allocate the push constant/uniform memory
+                m_PushConstantBufferSize += specification.Size;
+            }
+            // This variable is purely for calculating the starting offset of the push constant block
+            totalSize += specification.Size;
+        }
 
-        for (uint8_t i = 0; i < 5; i++)
-            m_TextureMapSet->WriteImage(i, imageInfo);
-        m_TextureMapSet->Update();
+        if (m_PushConstantBufferSize)
+            m_PushConstantBuffer = (uint8_t*)malloc(m_PushConstantBufferSize);
+
+        // Arranging resources for the other Uniforms like Images and Uniform Buffers
+        const auto& reflectionDescriptorSets = m_Shader->GetDescriptorSetSpecifications();
+        const auto& descriptorBindings = m_Shader->GetDescriptorBindingSpecifications();
+
+        std::vector<VkDescriptorSetLayoutBinding> vulkanDescSetBindings;
+        uint32_t index = 0;
+
+        for (const auto& reflectionDescSet : reflectionDescriptorSets)
+        {
+            for (uint32_t i = 0; i < reflectionDescSet.BindingCount; i++)
+            {
+                // This ensures that the Renderer Only Descriptor Sets are not handled or stored by the Material class
+                if (descriptorBindings[index].RendererOnly)
+                {
+                    index++;
+                    continue;
+                }
+
+                vulkanDescSetBindings.emplace_back(VkDescriptorSetLayoutBinding{
+                    .binding = descriptorBindings[index].Binding,
+                    .descriptorCount = descriptorBindings[index].Count,
+                    .descriptorType = descriptorBindings[index].Type,
+                    .stageFlags = descriptorBindings[index].VulkanShaderStage,
+                    .pImmutableSamplers = nullptr
+                    }
+                );
+
+                index++;
+            }
+
+            // Create the descriptor set if the descriptor bindings are not RendererOnly
+            if (vulkanDescSetBindings.size())
+            {
+                DescriptorSetSpecification descSetSpecification;
+                descSetSpecification.Pool = VulkanContext::GetCurrentGlobalDescriptorPool();
+
+                DescriptorSetLayoutSpecification layoutSpecification{ vulkanDescSetBindings };
+                descSetSpecification.Layout = DescriptorSetLayout::CreateOrGetCached(layoutSpecification);
+
+                auto descSet = CreateRef<DescriptorSet>(descSetSpecification);
+                m_DescriptorSets.push_back(descSet);
+
+                vulkanDescSetBindings.clear();
+
+                // Only set this the first time any set is created which will inherently store the start set index
+                if (m_StartSetIndex == -1)
+                    m_StartSetIndex = reflectionDescSet.Set;
+
+                // This will assert the assumption that all the material specific descriptor sets will have sequential set indices
+                FBY_ASSERT(reflectionDescSet.Set - m_StartSetIndex == m_DescriptorSets.size() - 1, "Material specific descriptor sets do not have sequentialy set indices!");
+            }
+        }
     }
 
-    void Material::Update()
+    Material::~Material()
     {
-        VkDescriptorImageInfo imageInfos[5] = {};
-
-        for (uint32_t i = 0; i < 5; i++)
-        {
-            imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        }
-
-        if (m_AlbedoMap)
-        {
-            imageInfos[0].imageView = m_AlbedoMap->GetImageView();
-            imageInfos[0].sampler = m_AlbedoMap->GetSampler();
-            m_TextureMapSet->WriteImage(0, imageInfos[0]);
-        }
-
-        if (m_NormalMap)
-        {
-            imageInfos[1].imageView = m_NormalMap->GetImageView();
-            imageInfos[1].sampler = m_NormalMap->GetSampler();
-            m_TextureMapSet->WriteImage(1, imageInfos[1]);
-        }
-
-        if (m_RoughnessMap)
-        {
-            imageInfos[2].imageView = m_RoughnessMap->GetImageView();
-            imageInfos[2].sampler = m_RoughnessMap->GetSampler();
-            m_TextureMapSet->WriteImage(2, imageInfos[2]);
-        }
-
-        if (m_AmbientOcclusionMap)
-        {
-            imageInfos[3].imageView = m_AmbientOcclusionMap->GetImageView();
-            imageInfos[3].sampler = m_AmbientOcclusionMap->GetSampler();
-            m_TextureMapSet->WriteImage(3, imageInfos[3]);
-        }
-
-        if (m_MetallicMap)
-        {
-            imageInfos[4].imageView = m_MetallicMap->GetImageView();
-            imageInfos[4].sampler = m_MetallicMap->GetSampler();
-            m_TextureMapSet->WriteImage(4, imageInfos[4]);
-        }
-
-        m_TextureMapSet->Update();
+        if (m_PushConstantBuffer)
+            free(m_PushConstantBuffer);
     }
 
-    void Material::Init()
-    {
-        DescriptorSetLayoutSpecification layoutSpec;
-        layoutSpec.Bindings.resize(5);
-
-        for (uint8_t i = 0; i < 5; i++)
-        {
-            layoutSpec.Bindings[i].binding = i;
-            layoutSpec.Bindings[i].descriptorCount = 1;
-            layoutSpec.Bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            layoutSpec.Bindings[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        }
-
-        s_CommonDescSetLayout = DescriptorSetLayout::Create(layoutSpec);
-
-        DescriptorSetSpecification descSetSpec;
-        descSetSpec.Layout = s_CommonDescSetLayout;
-
-        s_EmptyMaterialDescSet = std::make_unique<DescriptorSet>(descSetSpec);
-        
-        VkDescriptorImageInfo imageInfo{
-            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            .sampler = Texture2D::GetDefaultSampler(),
-            .imageView = Texture2D::GetEmptyImageView()
-        };
-
-        for (uint8_t i = 0; i < 5; i++)
-            s_EmptyMaterialDescSet->WriteImage(i, imageInfo);
-        s_EmptyMaterialDescSet->Update();
-    }
-
-    void Material::Shutdown()
-    {
-        s_EmptyMaterialDescSet.release();
-        s_CommonDescSetLayout = nullptr; // TODO: This is the current cause of the VK_ERROR
-    }
-
-    void MaterialSerializer::Serialize(const std::shared_ptr<Material>& material, const char* path)
-    {
-        YAML::Emitter out;
-        out << YAML::BeginMap;
-        out << YAML::Key << "Handle" << YAML::Value << material->Handle;
-        out << YAML::Key << "Name" << YAML::Value << material->m_Name;
-        out << YAML::Key << "Albedo" << YAML::Value << material->m_Albedo;
-        out << YAML::Key << "Roughness" << YAML::Value << material->m_Roughness;
-        out << YAML::Key << "Metallic" << YAML::Value << material->m_Metallic;
-        out << YAML::Key << "TextureMapEnabled" << YAML::Value << material->m_AlbedoMapEnabled;
-        out << YAML::Key << "TextureMap" << YAML::Value << (material->m_AlbedoMapEnabled ? material->m_AlbedoMap->FilePath : "");
-        out << YAML::Key << "NormalMapEnabled" << YAML::Value << material->m_NormalMapEnabled;
-        out << YAML::Key << "NormalMap" << YAML::Value << (material->m_NormalMapEnabled ? material->m_NormalMap->FilePath : "");
-        out << YAML::Key << "RoughnessMapEnabled" << YAML::Value << material->m_RoughnessMapEnabled;
-        out << YAML::Key << "RoughnessMap" << YAML::Value << (material->m_RoughnessMapEnabled ? material->m_RoughnessMap->FilePath : "");
-        out << YAML::Key << "AmbientOcclusionMapEnabled" << YAML::Value << material->m_AmbientOcclusionMapEnabled;
-        out << YAML::Key << "AmbientOcclusionMap" << YAML::Value << (material->m_AmbientOcclusionMapEnabled ? material->m_AmbientOcclusionMap->FilePath : "");
-        out << YAML::Key << "MetallicMapEnabled" << YAML::Value << material->m_MetallicMapEnabled;
-        out << YAML::Key << "MetallicMap" << YAML::Value << (material->m_MetallicMapEnabled ? material->m_MetallicMap->FilePath : "");
-        out << YAML::EndMap;
-
-        std::ofstream fout(path);
-        fout << out.c_str();
-    }
-
-    std::shared_ptr<Material> MaterialSerializer::Deserialize(const char* path)
-    {
-        std::ifstream in(path);
-        std::stringstream ss;
-        ss << in.rdbuf();
-
-        YAML::Node data = YAML::Load(ss.str());
-
-        std::shared_ptr<Material> material = std::make_shared<Material>();
-        material->Handle = data["Handle"].as<uint64_t>();
-
-        material->m_Name = data["Name"].as<std::string>();
-        material->m_Albedo = data["Albedo"].as<glm::vec3>();
-        material->m_Roughness = data["Roughness"].as<float>();
-        material->m_Metallic = data["Metallic"].as<float>();
-
-        material->m_AlbedoMapEnabled = data["TextureMapEnabled"].as<bool>();
-        if (auto map = data["TextureMap"].as<std::string>(); !map.empty())
-            material->m_AlbedoMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
-
-        material->m_NormalMapEnabled = data["NormalMapEnabled"].as<bool>();
-        if (auto map = data["NormalMap"].as<std::string>(); !map.empty())
-            material->m_NormalMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
-
-        material->m_RoughnessMapEnabled = data["RoughnessMapEnabled"].as<bool>();
-        if (auto map = data["RoughnessMap"].as<std::string>(); !map.empty())
-            material->m_RoughnessMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
-
-        material->m_AmbientOcclusionMapEnabled = data["AmbientOcclusionMapEnabled"].as<bool>();
-        if (auto map = data["AmbientOcclusionMap"].as<std::string>(); !map.empty())
-            material->m_AmbientOcclusionMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
-
-        material->m_MetallicMapEnabled = data["MetallicMapEnabled"].as<bool>();
-        if (auto map = data["MetallicMap"].as<std::string>(); !map.empty())
-            material->m_MetallicMap = AssetManager::TryGetOrLoadAsset<Texture2D>(map);
-
-        material->Update();
-        return material;
-    }
 }

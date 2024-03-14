@@ -9,20 +9,9 @@
 #include "Asset/AssetManager.h"
 
 namespace Flameberry {
-    StaticMesh::StaticMesh(const std::shared_ptr<Buffer>& vertexBuffer, const std::shared_ptr<Buffer>& indexBuffer, const std::vector<SubMesh>& submeshes)
+    StaticMesh::StaticMesh(const Ref<Buffer>& vertexBuffer, const Ref<Buffer>& indexBuffer, const std::vector<SubMesh>& submeshes)
         : m_VertexBuffer(vertexBuffer), m_IndexBuffer(indexBuffer), m_SubMeshes(std::move(submeshes))
     {
-    }
-
-    void StaticMesh::Bind() const
-    {
-        Renderer::Submit([vertexBuffer = m_VertexBuffer->GetBuffer(), indexBuffer = m_IndexBuffer->GetBuffer()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                VkDeviceSize offsets[] = { 0 };
-                vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
-                vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-            }
-        );
     }
 
     void StaticMesh::OnDraw() const

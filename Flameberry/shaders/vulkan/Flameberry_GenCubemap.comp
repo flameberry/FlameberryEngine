@@ -1,0 +1,59 @@
+#version 450
+
+layout(set = 0, binding = 0) uniform sampler2D _FBY_u_EquirectangularImage;
+layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_Cubemap;
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+#define PI 3.1415926535897932384626433832795
+
+vec3 NormalizedToWorldPosition(int face, vec2 uv)
+{
+    switch (face) 
+    {
+        case 0: return vec3( 1.0f,  uv.y,    -uv.x);
+        case 1: return vec3(-1.0f,  uv.y,     uv.x);
+        case 2: return vec3(+uv.x, -1.0f,    +uv.y);
+        case 3: return vec3(+uv.x,  1.0f,    -uv.y);
+        case 4: return vec3(+uv.x,  uv.y,     1.0f);
+        case 5: return vec3(-uv.x, +uv.y,    -1.0f);
+        default: return vec3(0.0f);
+    }
+}
+
+vec2 dirToUV(vec3 dir)
+{
+	return vec2(
+		0.5f + 0.5f * atan(dir.z, dir.x) / PI,
+		1.f - acos(dir.y) / PI
+    );
+}
+
+vec3 panoramaToCubeMap(int face, vec2 texCoord)
+{
+	vec2 texCoordNew = texCoord * 2.0 - 1.0; // < mapping vom 0,1 to -1,1 coords
+	vec3 scan = NormalizedToWorldPosition(face, texCoordNew); 
+	vec3 direction = normalize(scan);
+	vec2 src = dirToUV(direction);
+
+	return texture(_FBY_u_EquirectangularImage, src).rgb; // < get the color from the panorama
+}
+
+void main()
+{
+    // Get the size of the equirectangular image
+    const ivec2 imgSize = imageSize(_FBY_u_Cubemap);
+    
+    vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
+    // normalizedPixelCoords = normalizedPixelCoords * 2.0f - 1.0f;
+
+    // vec3 worldPosition = NormalizedToWorldPosition(int(gl_GlobalInvocationID), normalizedPixelCoords);
+
+    // vec2 equirectangularUV = SampleSphericalMap((worldPosition));
+    // vec3 sampledColor = texture(_FBY_u_EquirectangularImage, equirectangularUV).rgb;
+    
+    vec3 sampledColor = panoramaToCubeMap(int(gl_GlobalInvocationID.z), normalizedPixelCoords);
+
+    // Write the pixel value from the equirectangular image to the cube map
+    imageStore(_FBY_u_Cubemap, ivec3(gl_GlobalInvocationID.xyz), vec4(sampledColor, 1.0f));
+}

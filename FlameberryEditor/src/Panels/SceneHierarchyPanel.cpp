@@ -6,9 +6,9 @@
 #include "UI.h"
 
 namespace Flameberry {
-    SceneHierarchyPanel::SceneHierarchyPanel(const std::shared_ptr<Scene>& context)
+    SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
         : m_Context(context),
-        m_InspectorPanel(InspectorPanel::Create(m_Context))
+        m_InspectorPanel(CreateRef<InspectorPanel>(m_Context))
     {
     }
 
@@ -127,7 +127,7 @@ namespace Flameberry {
         ImGui::PopItemWidth();
     }
 
-    void SceneHierarchyPanel::SetContext(const std::shared_ptr<Scene>& context)
+    void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
     {
         m_Context = context;
         m_InspectorPanel->SetContext(m_Context);
@@ -147,7 +147,7 @@ namespace Flameberry {
 
         if (m_SearchInputBuffer[0] != '\0') {
             // TODO: Maybe some optimisation to not search again if the input string is same
-            if (kmpSearch(tag.c_str(), m_SearchInputBuffer, true) != -1)
+            if (Algorithm::KmpSearch(tag.c_str(), m_SearchInputBuffer, true) != -1)
                 highlight = true;
         }
 

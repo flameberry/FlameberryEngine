@@ -5,17 +5,17 @@
 
 namespace Flameberry {
     InspectorPanel::InspectorPanel()
-        : m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
-        m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png"))
+        : m_MaterialSelectorPanel(CreateRef<MaterialSelectorPanel>()),
+        m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()),
+        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon.png"))
     {
     }
 
-    InspectorPanel::InspectorPanel(const std::shared_ptr<Scene>& context)
+    InspectorPanel::InspectorPanel(const Ref<Scene>& context)
         : m_Context(context),
-        m_MaterialSelectorPanel(std::make_shared<MaterialSelectorPanel>()),
-        m_MaterialEditorPanel(std::make_shared<MaterialEditorPanel>()),
-        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon2.png"))
+        m_MaterialSelectorPanel(CreateRef<MaterialSelectorPanel>()),
+        m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()),
+        m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon2.png"))
     {
     }
 
@@ -58,7 +58,7 @@ namespace Flameberry {
                 DrawAddComponentEntry<BoxColliderComponent>("Box Collider Component");
                 DrawAddComponentEntry<SphereColliderComponent>("Sphere Collider Component");
                 DrawAddComponentEntry<CapsuleColliderComponent>("Capsule Collider Component");
-                
+
                 ImGui::EndPopup();
             }
 
@@ -124,79 +124,79 @@ namespace Flameberry {
                     }
                 }, false // removable = false
             );
-            
+
             DrawComponent<SkyLightComponent>("Sky Light", [=]()
-            {
-                auto& skyLightComp = m_Context->m_Registry->get<SkyLightComponent>(m_SelectionContext);
-                
-                if (ImGui::BeginTable("SkyLightComponentAttributes", 2, s_TableFlags))
                 {
-                    ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-                    ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-                    
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::AlignTextToFramePadding();
-                    ImGui::Text("Color");
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::PushItemWidth(-1.0f);
-                    ImGui::ColorEdit3("##Color", glm::value_ptr(skyLightComp.Color));
-                    
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::AlignTextToFramePadding();
-                    ImGui::Text("Intensity");
-                    ImGui::TableNextColumn();
-                    ImGui::DragFloat("##Intensity", &skyLightComp.Intensity, 0.01f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-                    ImGui::PopItemWidth();
-                    
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::AlignTextToFramePadding();
-                    ImGui::Text("Enable SkyMap");
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("##Enable_EnvMap", &skyLightComp.EnableSkyMap);
-                    
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    
-                    if (skyLightComp.EnableSkyMap)
+                    auto& skyLightComp = m_Context->m_Registry->get<SkyLightComponent>(m_SelectionContext);
+
+                    if (ImGui::BeginTable("SkyLightComponentAttributes", 2, s_TableFlags))
                     {
-                        ImGui::AlignTextToFramePadding();
-                        ImGui::Text("SkyMap");
-                        ImGui::TableNextColumn();
-                        
-                        auto skyMap = AssetManager::GetAsset<Texture2D>(skyLightComp.SkyMap);
-                        
-                        ImGui::Button(skyMap ? skyMap->FilePath.filename().c_str() : "Null", ImVec2(-1.0f, 0.0f));
-                        
-                        if (ImGui::BeginDragDropTarget())
-                        {
-                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
-                            {
-                                const char* path = (const char*)payload->Data;
-                                std::filesystem::path envPath{ path };
-                                const std::string& ext = envPath.extension().string();
-                                
-                                FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
-                                
-                                if (std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath) && (ext == ".hdr"))
-                                    skyLightComp.SkyMap = AssetManager::TryGetOrLoadAsset<Texture2D>(envPath)->Handle;
-                                else
-                                    FBY_WARN("Bad File given as Environment!");
-                            }
-                            ImGui::EndDragDropTarget();
-                        }
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Color");
+                        ImGui::TableNextColumn();
+
+                        ImGui::PushItemWidth(-1.0f);
+                        ImGui::ColorEdit3("##Color", glm::value_ptr(skyLightComp.Color));
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Intensity");
+                        ImGui::TableNextColumn();
+                        ImGui::DragFloat("##Intensity", &skyLightComp.Intensity, 0.01f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+                        ImGui::PopItemWidth();
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Enable SkyMap");
+                        ImGui::TableNextColumn();
+                        ImGui::Checkbox("##Enable_EnvMap", &skyLightComp.EnableSkyMap);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        if (skyLightComp.EnableSkyMap)
+                        {
+                            ImGui::AlignTextToFramePadding();
+                            ImGui::Text("SkyMap");
+                            ImGui::TableNextColumn();
+
+                            auto skyMap = AssetManager::GetAsset<Skymap>(skyLightComp.SkyMap);
+
+                            ImGui::Button(skyMap ? skyMap->FilePath.filename().c_str() : "Null", ImVec2(-1.0f, 0.0f));
+
+                            if (ImGui::BeginDragDropTarget())
+                            {
+                                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
+                                {
+                                    const char* path = (const char*)payload->Data;
+                                    std::filesystem::path envPath{ path };
+                                    const std::string& ext = envPath.extension().string();
+
+                                    FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
+
+                                    if (std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath) && (ext == ".hdr"))
+                                        skyLightComp.SkyMap = AssetManager::TryGetOrLoadAsset<Skymap>(envPath)->Handle;
+                                    else
+                                        FBY_WARN("Bad File given as Environment!");
+                                }
+                                ImGui::EndDragDropTarget();
+                            }
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+                        }
+                        ImGui::EndTable();
                     }
-                    ImGui::EndTable();
-                }
-            });
+                });
 
             DrawComponent<CameraComponent>("Camera", [&]()
                 {
@@ -359,11 +359,11 @@ namespace Flameberry {
                                     ImGui::Text("Element %d", submeshIndex);
                                     ImGui::TableNextColumn();
 
-                                    std::shared_ptr<Material> mat;
+                                    Ref<MaterialAsset> mat;
                                     if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
-                                        mat = AssetManager::GetAsset<Material>(it->second);
+                                        mat = AssetManager::GetAsset<MaterialAsset>(it->second);
                                     else
-                                        mat = AssetManager::GetAsset<Material>(submesh.MaterialHandle);
+                                        mat = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
 
                                     ImGui::Button(
                                         mat ? mat->GetName().c_str() : "Null",
@@ -385,7 +385,7 @@ namespace Flameberry {
 
                                             if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
                                             {
-                                                const auto& loadedMat = AssetManager::TryGetOrLoadAsset<Material>(matPath);
+                                                const auto& loadedMat = AssetManager::TryGetOrLoadAsset<MaterialAsset>(matPath);
                                                 mesh.OverridenMaterialTable[submeshIndex] = loadedMat->Handle;
                                             }
                                             else
@@ -405,7 +405,7 @@ namespace Flameberry {
 
                                     if (ImGui::IsItemClicked())
                                     {
-                                        m_MaterialSelectorPanel->OpenPanel([mesh, submeshIndex](const std::shared_ptr<Material>& material) mutable
+                                        m_MaterialSelectorPanel->OpenPanel([mesh, submeshIndex](const Ref<MaterialAsset>& material) mutable
                                             {
                                                 mesh.OverridenMaterialTable[submeshIndex] = material->Handle;
                                             }
@@ -420,47 +420,47 @@ namespace Flameberry {
                     }
                 }
             );
-            
+
             DrawComponent<DirectionalLightComponent>("Light", [&]()
-            {
-                auto& light = m_Context->m_Registry->get<DirectionalLightComponent>(m_SelectionContext);
-                
-                if (ImGui::BeginTable("DirectionalLightComponentAttributes", 2, s_TableFlags))
                 {
-                    ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-                    ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-                    
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::AlignTextToFramePadding();
-                    ImGui::Text("Color");
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::PushItemWidth(-1.0f);
-                    ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color));
-                    
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::AlignTextToFramePadding();
-                    ImGui::Text("Intensity");
-                    ImGui::TableNextColumn();
-                    ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f);
-                    
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::AlignTextToFramePadding();
-                    ImGui::Text("Light Size");
-                    ImGui::TableNextColumn();
-                    ImGui::DragFloat("##LightSize", &light.LightSize, 0.1f, 0.0f, 200.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-                    
-                    ImGui::PopItemWidth();
-                    
-                    ImGui::EndTable();
-                }
-            });
+                    auto& light = m_Context->m_Registry->get<DirectionalLightComponent>(m_SelectionContext);
+
+                    if (ImGui::BeginTable("DirectionalLightComponentAttributes", 2, s_TableFlags))
+                    {
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Color");
+                        ImGui::TableNextColumn();
+
+                        ImGui::PushItemWidth(-1.0f);
+                        ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color));
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Intensity");
+                        ImGui::TableNextColumn();
+                        ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Light Size");
+                        ImGui::TableNextColumn();
+                        ImGui::DragFloat("##LightSize", &light.LightSize, 0.1f, 0.0f, 200.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+
+                        ImGui::PopItemWidth();
+
+                        ImGui::EndTable();
+                    }
+                });
 
             DrawComponent<PointLightComponent>("Point Light", [&]()
                 {
@@ -494,7 +494,7 @@ namespace Flameberry {
                     }
                 }
             );
-            
+
             DrawComponent<RigidBodyComponent>("Rigid Body", [&]()
                 {
                     auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);

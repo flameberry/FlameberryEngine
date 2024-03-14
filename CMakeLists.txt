@@ -25,18 +25,18 @@ include(CMake/CMakeUtils.cmake)
 
 # Get all shader files in shaders directory
 file(GLOB_RECURSE GLSL_SOURCE_FILES
-    "${FBY_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.frag"
-    "${FBY_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.vert"
-    "${FBY_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/*.comp"
+    "${FBY_SOURCE_DIR}/Flameberry/shaders/vulkan/*.frag"
+    "${FBY_SOURCE_DIR}/Flameberry/shaders/vulkan/*.vert"
+    "${FBY_SOURCE_DIR}/Flameberry/shaders/vulkan/*.comp"
 )
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
     get_filename_component(FILE_NAME ${GLSL} NAME)
     message(STATUS "Adding ${FILE_NAME}.spv shader to compile target...")
-    set(SPIRV "${FBY_SOURCE_DIR}/Flameberry/assets/shaders/vulkan/bin/${FILE_NAME}.spv")
+    set(SPIRV "${FBY_SOURCE_DIR}/Flameberry/shaders/vulkan/bin/${FILE_NAME}.spv")
     add_custom_command(
         OUTPUT ${SPIRV}
-        COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} -V ${GLSL} -o ${SPIRV}
+        COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${GLSL} -o ${SPIRV}
         DEPENDS ${GLSL}
     )
     list(APPEND SPIRV_BINARY_FILES ${SPIRV})

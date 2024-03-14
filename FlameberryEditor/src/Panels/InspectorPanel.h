@@ -17,28 +17,25 @@ namespace Flameberry {
     {
     public:
         InspectorPanel();
-        InspectorPanel(const std::shared_ptr<Scene>& context);
+        InspectorPanel(const Ref<Scene>& context);
         ~InspectorPanel() = default;
 
-        void SetContext(const std::shared_ptr<Scene>& context) { m_Context = context; }
+        void SetContext(const Ref<Scene>& context) { m_Context = context; }
         void SetSelectionContext(const fbentt::entity& selectionContext) { m_SelectionContext = selectionContext; }
         void OnUIRender();
-
-        template<typename... Args>
-        static std::shared_ptr<InspectorPanel> Create(Args... args) { return std::make_shared<InspectorPanel>(std::forward<Args>(args)...); }
     private:
-        std::shared_ptr<fbentt::registry> GetContextRegistry() const { return m_Context->m_Registry; }
+        Ref<fbentt::registry> GetContextRegistry() const { return m_Context->m_Registry; }
     private:
         static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible;
         static constexpr float s_LabelWidth = 100.0f;
 
-        std::shared_ptr<MaterialEditorPanel> m_MaterialEditorPanel;
-        std::shared_ptr<MaterialSelectorPanel> m_MaterialSelectorPanel;
+        Ref<MaterialEditorPanel> m_MaterialEditorPanel;
+        Ref<MaterialSelectorPanel> m_MaterialSelectorPanel;
 
         fbentt::entity m_SelectionContext = {};
-        std::shared_ptr<Scene> m_Context;
+        Ref<Scene> m_Context;
 
-        std::shared_ptr<Texture2D> m_SettingsIcon;
+        Ref<Texture2D> m_SettingsIcon;
     private:
         template<typename ComponentType>
         void DrawAddComponentEntry(const char* name);

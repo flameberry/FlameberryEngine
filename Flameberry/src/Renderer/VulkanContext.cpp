@@ -27,12 +27,16 @@ namespace Flameberry {
     VulkanContext::VulkanContext(VulkanWindow* pWindow)
         : m_Window(pWindow)
     {
-        FBY_ASSERT(pWindow->GetGLFWwindow(), "Invalid Window given to Vulkan Context!");
+        FBY_ASSERT(pWindow->GetGLFWwindow(), "Null Window given to Vulkan Context!");
 
         if (s_EnableValidationLayers)
-            FBY_ASSERT(RenderCommand::CheckValidationLayerSupport(s_ValidationLayers), "Validation Layers are not supported!");
+        {
+            bool isSupported = RenderCommand::CheckValidationLayerSupport(s_ValidationLayers);
+            if (!isSupported)
+                FBY_ERROR("Validation Layers are not supported!");
+        }
 
-        m_VulkanInstance = VulkanInstance::Create();
+        m_VulkanInstance = CreateRef<VulkanInstance>();
 
         pWindow->CreateVulkanWindowSurface(m_VulkanInstance->GetVulkanInstance());
 
@@ -65,16 +69,17 @@ namespace Flameberry {
         vkGetPhysicalDeviceProperties(m_VkPhysicalDevice, &vk_physical_device_props);
         FBY_INFO("Selected Vulkan Physical Device: {}", vk_physical_device_props.deviceName);
 
-        m_VulkanDevice = VulkanDevice::Create(m_VkPhysicalDevice, pWindow);
+        m_VulkanDevice = CreateRef<VulkanDevice>(m_VkPhysicalDevice, pWindow);
 
         // const uint32_t maxDescSets = 300;
         const uint32_t maxDescSets = 500;
 
         std::vector<VkDescriptorPoolSize> poolSizes = {
             { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 * 8 },
-            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets }
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets },
+            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 2 }
         };
-        m_GlobalDescriptorPool = std::make_shared<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, maxDescSets);
+        m_GlobalDescriptorPool = CreateRef<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, maxDescSets);
     }
 
     VulkanContext::~VulkanContext()
@@ -112,8 +117,8 @@ namespace Flameberry {
             VkPhysicalDeviceFeatures supportedFeatures;
             vkGetPhysicalDeviceFeatures(vk_device, &supportedFeatures);
 
-            bool is_physical_device_valid = indices.GraphicsAndComputeSupportedQueueFamilyIndex.has_value()
-                && indices.PresentationSupportedQueueFamilyIndex.has_value()
+            bool is_physical_device_valid = indices.GraphicsAndComputeSupportedQueueFamilyIndex != -1
+                && indices.PresentationSupportedQueueFamilyIndex != -1
                 && found_required_extensions
                 && is_swap_chain_adequate
                 && supportedFeatures.samplerAnisotropy

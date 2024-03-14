@@ -7,13 +7,13 @@ namespace Flameberry {
     class SceneHierarchyPanel
     {
     public:
-        SceneHierarchyPanel(const std::shared_ptr<Scene>& context);
+        SceneHierarchyPanel(const Ref<Scene>& context);
         ~SceneHierarchyPanel();
 
         void OnUIRender();
 
         void RenameNode(std::string& tag);
-        void SetContext(const std::shared_ptr<Scene>& context);
+        void SetContext(const Ref<Scene>& context);
         void SetSelectionContext(fbentt::entity entity);
 
         fbentt::entity GetSelectionContext() const { return m_SelectionContext; }
@@ -21,13 +21,10 @@ namespace Flameberry {
 
         void DrawEntityNode(fbentt::entity entity);
         void DrawCreateEntityMenu(fbentt::entity parent = (fbentt::entity)fbentt::null);
-
-        template<typename... Args>
-        static std::shared_ptr<SceneHierarchyPanel> Create(Args... args) { return std::make_shared<SceneHierarchyPanel>(std::forward<Args>(args)...); }
     private:
         fbentt::entity m_SelectionContext = {}, m_RenamedEntity = {};
-        std::shared_ptr<Scene> m_Context;
-        std::shared_ptr<InspectorPanel> m_InspectorPanel;
+        Ref<Scene> m_Context;
+        Ref<InspectorPanel> m_InspectorPanel;
 
         static constexpr ImGuiPopupFlags m_PopupFlags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
         char m_RenameBuffer[256], m_SearchInputBuffer[256] = { '\0' };

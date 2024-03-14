@@ -13,8 +13,8 @@ namespace Flameberry {
 
         std::vector<VkDeviceQueueCreateInfo> vk_device_queue_create_infos = CreateDeviceQueueInfos(
             {
-                m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex,
-                m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex
+                (uint32_t)m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex,
+                (uint32_t)m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex
             }
         );
 

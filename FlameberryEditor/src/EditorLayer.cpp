@@ -7,6 +7,8 @@
 #include "UI.h"
 
 #include "Physics/PhysicsEngine.h"
+#include "Renderer/ShaderLibrary.h"
+#include "Renderer/Skymap.h"
 
 namespace Flameberry {
 
@@ -35,7 +37,7 @@ namespace Flameberry {
     };
 
     struct CameraUniformBufferObject { glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix; };
-    EditorLayer::EditorLayer(const std::shared_ptr<Project>& project)
+    EditorLayer::EditorLayer(const Ref<Project>& project)
         : m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{
             glm::vec3(0.0f, 2.0f, 4.0f),
             glm::vec3(0.0f, -0.3f, -1.0f),
@@ -46,7 +48,7 @@ namespace Flameberry {
             }
         )
     {
-#ifdef __APPLE__
+#ifdef FBY_PLATFORM_MACOS
         platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
         platform::SetSaveSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveScene));
         platform::SetSaveSceneAsCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
@@ -57,20 +59,20 @@ namespace Flameberry {
 
     void EditorLayer::OnCreate()
     {
-        m_CursorIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/cursor_icon.png");
-        m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/translate_icon_2.png");
-        m_RotateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/rotate_icon.png");
-        m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/scale_icon.png");
-        m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/PlayAndStopButtonIcon.png");
-        m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/icons/SettingsIcon.png");
+        m_CursorIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/cursor_icon.png");
+        m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/translate_icon_2.png");
+        m_RotateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/rotate_icon.png");
+        m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/scale_icon.png");
+        m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/PlayAndStopButtonIcon.png");
+        m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon.png");
 
         Project::SetActive(m_Project);
         std::filesystem::current_path(m_Project->GetProjectDirectory());
 
         PhysicsEngine::Init();
-        m_ActiveScene = Scene::Create();
-        m_SceneHierarchyPanel = SceneHierarchyPanel::Create(m_ActiveScene);
-        m_ContentBrowserPanel = ContentBrowserPanel::Create();
+        m_ActiveScene = CreateRef<Scene>();
+        m_SceneHierarchyPanel = CreateRef<SceneHierarchyPanel>(m_ActiveScene);
+        m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
 
 #pragma region MousePickingResources
         BufferSpecification mousePickingBufferSpec;
@@ -90,9 +92,9 @@ namespace Flameberry {
         mousePickingFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
 
         RenderPassSpecification mousePickingRenderPassSpec;
-        mousePickingRenderPassSpec.TargetFramebuffers = { Framebuffer::Create(mousePickingFramebufferSpec) };
+        mousePickingRenderPassSpec.TargetFramebuffers = { CreateRef<Framebuffer>(mousePickingFramebufferSpec) };
 
-        m_MousePickingRenderPass = RenderPass::Create(mousePickingRenderPassSpec);
+        m_MousePickingRenderPass = CreateRef<RenderPass>(mousePickingRenderPassSpec);
 
         // Creating Descriptors
         DescriptorSetLayoutSpecification mousePickingDescSetLayoutSpec;
@@ -103,47 +105,39 @@ namespace Flameberry {
         mousePickingDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         mousePickingDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
 
-        m_MousePickingDescriptorSetLayout = DescriptorSetLayout::Create(mousePickingDescSetLayoutSpec);
+        m_MousePickingDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(mousePickingDescSetLayoutSpec);
 
         {
             // Pipeline Creation
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.PushConstants = {
-                { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(MousePickingPushConstantData) }
-            };
-
-            pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
-                m_MousePickingDescriptorSetLayout
-            };
-
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking.frag.spv";
+            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_MousePicking");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
-            pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F };
-            pipelineSpec.VertexInputBindingDescription = MeshVertex::GetBindingDescription();
+            pipelineSpec.VertexLayout = {
+                ShaderDataType::Float3,  // a_Position
+                ShaderDataType::Dummy12, // Normal (Unnecessary)
+                ShaderDataType::Dummy8,  // TextureCoords (Unnecessary)
+                ShaderDataType::Dummy12, // Tangent (Unnecessary)
+                ShaderDataType::Dummy12  // BiTangent (Unnecessary)
+            };
 
-            m_MousePickingPipeline = Pipeline::Create(pipelineSpec);
+            m_MousePickingPipeline = CreateRef<Pipeline>(pipelineSpec);
         }
 
         {
             // Pipeline Creation
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.DescriptorSetLayouts = {
-                m_MousePickingDescriptorSetLayout
-            };
-
-            pipelineSpec.VertexShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.vert.spv";
-            pipelineSpec.FragmentShaderFilePath = FBY_PROJECT_DIR"Flameberry/assets/shaders/vulkan/bin/mousePicking2D.frag.spv";
+            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_MousePicking2D");
             pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
-            pipelineSpec.VertexLayout = { VertexInputAttribute::VEC3F, VertexInputAttribute::VEC3F, VertexInputAttribute::INT };
-            pipelineSpec.VertexInputBindingDescription.binding = 0;
-            pipelineSpec.VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-            pipelineSpec.VertexInputBindingDescription.stride = sizeof(QuadVertex);
+            pipelineSpec.VertexLayout = {
+                ShaderDataType::Float3,  // a_Position
+                ShaderDataType::Dummy12, // Color (Unnecessary)
+                ShaderDataType::Int      // a_EntityIndex
+            };
             pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
 
-            m_MousePicking2DPipeline = Pipeline::Create(pipelineSpec);
+            m_MousePicking2DPipeline = CreateRef<Pipeline>(pipelineSpec);
         }
 #pragma endregion MousePickingResources
 
@@ -162,11 +156,13 @@ namespace Flameberry {
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
 
+#if 0
             m_CompositePassViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
                 Texture2D::GetDefaultSampler(),
                 m_SceneRenderer->GetCompositePassOutputImageView(i),
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
+#endif
         }
 
         // Test
@@ -177,7 +173,7 @@ namespace Flameberry {
         // auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
         // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Content/Meshes/cube.obj")->Handle;
         // m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
-    }
+        }
 
     void EditorLayer::OnUpdate(float delta)
     {
@@ -239,14 +235,16 @@ namespace Flameberry {
             {
                 // TODO: Update these descriptors only when there corresponding framebuffer is updated
                 InvalidateViewportImGuiDescriptorSet(imageIndex);
+#if 0
                 InvalidateCompositePassImGuiDescriptorSet(imageIndex);
+#endif
             }
         );
 
         if (m_IsMousePickingBufferReady)
         {
             RenderCommand::WritePixelFromImageToBuffer(
-                m_MousePickingBuffer->GetBuffer(),
+                m_MousePickingBuffer->GetVulkanBuffer(),
                 m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetImage(),
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                 { m_MouseX, m_ViewportSize.y - m_MouseY - 1 }
@@ -308,7 +306,7 @@ namespace Flameberry {
 
     void EditorLayer::OnUIRender()
     {
-#ifndef __APPLE__
+#ifndef FBY_PLATFORM_MACOS
         UI_Menubar();
 #endif
         auto& io = ImGui::GetIO();
@@ -517,7 +515,7 @@ namespace Flameberry {
                 }
             case KeyCode::O:
                 if (ctrl_or_cmd) {
-#ifndef __APPLE__
+#ifndef FBY_PLATFORM_MACOS
                     // m_ShouldOpenAnotherScene = true;
                     // m_ScenePathToBeOpened = platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
                     OpenScene();
@@ -527,7 +525,7 @@ namespace Flameberry {
             case KeyCode::S:
                 if (ctrl_or_cmd)
                 {
-#ifndef __APPLE__
+#ifndef FBY_PLATFORM_MACOS
                     if (shift)
                         SaveSceneAs();
                     else
@@ -536,19 +534,19 @@ namespace Flameberry {
                 }
                 break;
             case KeyCode::Q:
-                if (!m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive)
                     m_GizmoType = -1;
                 break;
             case KeyCode::W:
-                if (!m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive)
                     m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
                 break;
             case KeyCode::E:
-                if (!m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive)
                     m_GizmoType = ImGuizmo::OPERATION::ROTATE;
                 break;
             case KeyCode::R:
-                if (!m_IsGizmoActive && m_IsViewportFocused)
+                if (!m_IsGizmoActive)
                     m_GizmoType = ImGuizmo::OPERATION::SCALE;
                 break;
             case KeyCode::G:
@@ -566,8 +564,8 @@ namespace Flameberry {
                     }
                 }
                 break;
-        }
-    }
+                }
+                }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -643,7 +641,7 @@ namespace Flameberry {
 
     void EditorLayer::NewScene()
     {
-        m_ActiveScene = Scene::Create();
+        m_ActiveScene = CreateRef<Scene>();
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
         m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
 
@@ -921,10 +919,10 @@ namespace Flameberry {
 
         std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
         // Copy m_ActiveSceneBackUpCopy to m_ActiveScene
-        m_ActiveScene = Scene::Create(m_ActiveSceneBackUpCopy);
+        m_ActiveScene = CreateRef<Scene>(m_ActiveSceneBackUpCopy);
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 
         m_ActiveScene->OnStartRuntime();
     }
 
-}
+        }

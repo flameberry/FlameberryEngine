@@ -6,13 +6,13 @@ namespace Flameberry {
     class MaterialSelectorPanel
     {
     public:
-        using CallBackType = std::function<void(const std::shared_ptr<Material>&)>;
+        using CallBackType = std::function<void(const Ref<MaterialAsset>&)>;
     public:
         void OpenPanel(const CallBackType& selectCallBack);
         void OnUIRender();
     private:
         bool m_Open = false;
-        std::shared_ptr<Material> m_SelectedMaterial;
+        Ref<MaterialAsset> m_SelectedMaterial;
         CallBackType m_SelectCallBack;
     };
 }

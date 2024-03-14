@@ -12,7 +12,7 @@ namespace Flameberry {
     struct Thumbnail
     {
         uint64_t Timestamp;
-        std::shared_ptr<Texture2D> Image;
+        Ref<Texture2D> Image;
     };
     
     struct ThumbnailCacheConfig
@@ -23,12 +23,12 @@ namespace Flameberry {
     class ThumbnailCache
     {
     public:
-        ThumbnailCache(const std::shared_ptr<Project>& project, const ThumbnailCacheConfig& config = ThumbnailCacheConfig());
+        ThumbnailCache(const Ref<Project>& project, const ThumbnailCacheConfig& config = ThumbnailCacheConfig());
         
-        std::shared_ptr<Texture2D> TryGetOrCreateThumbnail(const std::filesystem::path& assetPath);
+        Ref<Texture2D> TryGetOrCreateThumbnail(const std::filesystem::path& assetPath);
         void ResetThumbnailLoadedCounter() { m_ThumbnailsLoadedThisFrame = 0; }
     private:
-        std::shared_ptr<Project> m_Project;
+        Ref<Project> m_Project;
         std::filesystem::path m_ThumbnailCacheDirectory;
         ThumbnailCacheConfig m_Config;
         

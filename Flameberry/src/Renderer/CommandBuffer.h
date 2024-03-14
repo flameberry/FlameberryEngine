@@ -20,12 +20,9 @@ namespace Flameberry {
         void End();
 
         void Reset();
-        VkCommandBuffer GetCommandBuffer() const { return m_CommandBuffer; }
-        
-        template <typename ...Args>
-        static std::shared_ptr<CommandBuffer> Create(Args... args) { return std::make_shared<CommandBuffer>(std::forward<Args>(args)...); }
+        VkCommandBuffer GetVulkanCommandBuffer() const { return m_CommandBuffer; }
     private:
-        CommandBufferSpecification m_CommandBufferSpec;
+        CommandBufferSpecification m_Specification;
 
         VkCommandBuffer m_CommandBuffer;
     };
