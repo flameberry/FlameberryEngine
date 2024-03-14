@@ -120,8 +120,9 @@ namespace Flameberry {
         init_info.ImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         init_info.Allocator = VK_NULL_HANDLE;
+        init_info.RenderPass = m_ImGuiLayerRenderPass;
         // init_info.CheckVkResultFn = vk_check_result;
-        ImGui_ImplVulkan_Init(&init_info, m_ImGuiLayerRenderPass);
+        ImGui_ImplVulkan_Init(&init_info);
     }
 
     void ImGuiLayer::OnDestroy()
