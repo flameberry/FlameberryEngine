@@ -382,8 +382,6 @@ namespace Flameberry {
 
             // Skybox Pipeline
             {
-                m_Skymap = CreateRef<Skymap>(FBY_PROJECT_DIR"SandboxProject/Content/Environment/industrial_sunset_puresky_4k.hdr");
-
                 Flameberry::PipelineSpecification pipelineSpec{};
                 pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_SkyMap");
                 pipelineSpec.RenderPass = m_GeometryPass;
