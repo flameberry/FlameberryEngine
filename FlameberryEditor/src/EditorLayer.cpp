@@ -7,6 +7,7 @@
 #include "UI.h"
 
 #include "Physics/PhysicsEngine.h"
+#include "Renderer/ShaderLibrary.h"
 
 namespace Flameberry {
 

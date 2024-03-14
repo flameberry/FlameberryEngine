@@ -73,7 +73,7 @@ list(APPEND FBY_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 set(FBY_COMPILE_DEFINITIONS FBY_PROJECT_DIR="${FBY_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 # Setting the paths we require irrespective of the Graphics API
-list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt)
+list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt spirv-reflect-static)
 list(APPEND FBY_INCLUDE_DIRS
     ${FBY_SOURCE_DIR}/Flameberry/vendor
     ${FBY_SOURCE_DIR}/Flameberry/vendor/GLFW/include

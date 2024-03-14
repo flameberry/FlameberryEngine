@@ -38,6 +38,11 @@ add_subdirectory(vendor/GLFW)
 add_subdirectory(vendor/yaml-cpp)
 add_subdirectory(vendor/fmtlib)
 
+option(SPIRV_REFLECT_EXECUTABLE "Build spirv-reflect executable" OFF)
+option(SPIRV_REFLECT_STATIC_LIB "Build a SPIRV-Reflect static library" ON)
+
+add_subdirectory(vendor/SPIRV-Reflect)
+
 target_compile_definitions(Flameberry PRIVATE ${FBY_COMPILE_DEFINITIONS})
 
 # "FBY_LIBRARY_DEPENDENCIES" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
