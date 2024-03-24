@@ -43,3 +43,5 @@
 #include "ECS/ecs.hpp"
 
 #include "Project/Project.h"
+
+#include "Scripting/ScriptEngine.h"

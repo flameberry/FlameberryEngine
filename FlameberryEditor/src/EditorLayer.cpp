@@ -70,6 +70,8 @@ namespace Flameberry {
         std::filesystem::current_path(m_Project->GetProjectDirectory());
 
         PhysicsEngine::Init();
+        ScriptEngine::Init();
+
         m_ActiveScene = CreateRef<Scene>();
         m_SceneHierarchyPanel = CreateRef<SceneHierarchyPanel>(m_ActiveScene);
         m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
@@ -173,7 +175,7 @@ namespace Flameberry {
         // auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
         // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Content/Meshes/cube.obj")->Handle;
         // m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
-        }
+    }
 
     void EditorLayer::OnUpdate(float delta)
     {
@@ -300,6 +302,7 @@ namespace Flameberry {
 
     void EditorLayer::OnDestroy()
     {
+        ScriptEngine::Shutdown();
         PhysicsEngine::Shutdown();
         Renderer2D::Shutdown();
     }
@@ -564,8 +567,8 @@ namespace Flameberry {
                     }
                 }
                 break;
-                }
-                }
+        }
+    }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -925,4 +928,4 @@ namespace Flameberry {
         m_ActiveScene->OnStartRuntime();
     }
 
-        }
+}
