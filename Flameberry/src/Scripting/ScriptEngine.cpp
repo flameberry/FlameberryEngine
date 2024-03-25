@@ -265,6 +265,9 @@ namespace Flameberry {
 
     void Flameberry::ScriptEngine::OnRuntimeStop()
     {
+        for (const auto& managedActor : s_Data->ManagedActors)
+            managedActor->CallOnDestroyMethod();
+
         s_Data->ManagedActors.clear();
     }
 
@@ -308,6 +311,11 @@ namespace Flameberry {
         return method;
     }
 
+    MonoMethod* ManagedClass::TryGetClassMethod(const char* methodName, int paramCount)
+    {
+        return mono_class_get_method_from_name(m_Class, methodName, paramCount);
+    }
+
     MonoObject* ManagedClass::CreateInstance()
     {
         // Allocate an instance of our class
@@ -328,8 +336,9 @@ namespace Flameberry {
         : m_ManagedClass(managedClass)
     {
         m_Constructor = s_Data->ActorClass->GetClassMethod(".ctor", 1);
-        m_OnCreateMethod = m_ManagedClass->GetClassMethod("OnCreate", 0);
-        m_OnUpdateMethod = m_ManagedClass->GetClassMethod("OnUpdate", 1);
+        m_OnCreateMethod = m_ManagedClass->TryGetClassMethod("OnCreate", 0);
+        m_OnUpdateMethod = m_ManagedClass->TryGetClassMethod("OnUpdate", 1);
+        m_OnDestroyMethod = m_ManagedClass->TryGetClassMethod("OnDestroy", 0);
 
         // Allocating the managed instance
         m_Instance = m_ManagedClass->CreateInstance();
@@ -345,21 +354,39 @@ namespace Flameberry {
 
     void ManagedActor::CallOnCreateMethod()
     {
-        MonoObject* exception = nullptr;
-        mono_runtime_invoke(m_OnCreateMethod, m_Instance, nullptr, &exception);
+        if (m_OnCreateMethod)
+        {
+            MonoObject* exception = nullptr;
+            mono_runtime_invoke(m_OnCreateMethod, m_Instance, nullptr, &exception);
 
-        if (exception)
-            mono_unhandled_exception(exception);
+            if (exception)
+                mono_unhandled_exception(exception);
+        }
     }
 
     void ManagedActor::CallOnUpdateMethod(float delta)
     {
-        void* param = &delta;
-        MonoObject* exception = nullptr;
-        mono_runtime_invoke(m_OnUpdateMethod, m_Instance, &param, &exception);
+        if (m_OnUpdateMethod)
+        {
+            void* param = &delta;
+            MonoObject* exception = nullptr;
+            mono_runtime_invoke(m_OnUpdateMethod, m_Instance, &param, &exception);
 
-        if (exception)
-            mono_unhandled_exception(exception);
+            if (exception)
+                mono_unhandled_exception(exception);
+        }
+    }
+
+    void ManagedActor::CallOnDestroyMethod()
+    {
+        if (m_OnDestroyMethod)
+        {
+            MonoObject* exception = nullptr;
+            mono_runtime_invoke(m_OnDestroyMethod, m_Instance, nullptr, &exception);
+
+            if (exception)
+                mono_unhandled_exception(exception);
+        }
     }
 
     ManagedActor::~ManagedActor()

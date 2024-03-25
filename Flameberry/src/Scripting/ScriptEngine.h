@@ -23,6 +23,7 @@ namespace Flameberry {
 
         MonoObject* CreateInstance();
         MonoMethod* GetClassMethod(const char* methodName, int paramCount);
+        MonoMethod* TryGetClassMethod(const char* methodName, int paramCount);
 
         const std::string& GetFullName() const { return fmt::format("{}.{}", m_NamespaceName, m_ClassName); }
     private:
@@ -42,10 +43,12 @@ namespace Flameberry {
 
         void CallOnCreateMethod();
         void CallOnUpdateMethod(float delta);
+        void CallOnDestroyMethod();
     private:
-        MonoMethod* m_Constructor;
-        MonoMethod* m_OnCreateMethod;
-        MonoMethod* m_OnUpdateMethod;
+        MonoMethod* m_Constructor = nullptr;
+        MonoMethod* m_OnCreateMethod = nullptr;
+        MonoMethod* m_OnUpdateMethod = nullptr;
+        MonoMethod* m_OnDestroyMethod = nullptr;
 
         MonoObject* m_Instance;
         Ref<ManagedClass> m_ManagedClass;
