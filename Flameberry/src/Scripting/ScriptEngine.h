@@ -1,6 +1,55 @@
 #pragma once
 
+#include <string>
+
+#include "ECS/Scene.h"
+
+extern "C" {
+    typedef struct _MonoClass MonoClass;
+    typedef struct _MonoObject MonoObject;
+    typedef struct _MonoMethod MonoMethod;
+    typedef struct _MonoAssembly MonoAssembly;
+    typedef struct _MonoImage MonoImage;
+    typedef struct _MonoClassField MonoClassField;
+    typedef struct _MonoString MonoString;
+}
+
 namespace Flameberry {
+
+    class ManagedClass
+    {
+    public:
+        ManagedClass(MonoImage* assemblyImage, const char* namespaceName, const char* className);
+
+        MonoObject* CreateInstance();
+        MonoMethod* GetClassMethod(const char* methodName, int paramCount);
+
+        const std::string& GetFullName() const { return fmt::format("{}.{}", m_NamespaceName, m_ClassName); }
+    private:
+    private:
+        const char* m_NamespaceName;
+        const char* m_ClassName;
+
+        MonoClass* m_Class;
+        MonoImage* m_AssemblyImage;
+    };
+
+    class ManagedActor
+    {
+    public:
+        ManagedActor(const Ref<ManagedClass>& managedClass, fbentt::entity entity);
+        ~ManagedActor();
+
+        void CallOnCreateMethod();
+        void CallOnUpdateMethod(float delta);
+    private:
+        MonoMethod* m_Constructor;
+        MonoMethod* m_OnCreateMethod;
+        MonoMethod* m_OnUpdateMethod;
+
+        MonoObject* m_Instance;
+        Ref<ManagedClass> m_ManagedClass;
+    };
 
     struct ScriptEngineData;
 
@@ -9,10 +58,15 @@ namespace Flameberry {
     public:
         static void Init();
         static void Shutdown();
+
+        static void LoadAppAssembly(const std::string& assemblyPath);
+        static const std::unordered_map<std::string, Ref<ManagedClass>>& GetActorClassDictionary();
+
+        static void OnRuntimeStart(const Scene* scene);
+        static void OnRuntimeStop();
+        static void OnRuntimeUpdate(float delta);
     private:
         static void InitMono();
-    private:
-        static ScriptEngineData* s_Data;
     };
 
 }

@@ -1,7 +1,10 @@
 #include "InspectorPanel.h"
 
 #include <filesystem>
+
 #include "UI.h"
+
+#include "Scripting/ScriptEngine.h"
 
 namespace Flameberry {
     InspectorPanel::InspectorPanel()
@@ -54,6 +57,7 @@ namespace Flameberry {
                 DrawAddComponentEntry<SkyLightComponent>("Sky Light Component");
                 DrawAddComponentEntry<DirectionalLightComponent>("Directional Light Component");
                 DrawAddComponentEntry<PointLightComponent>("Point Light Component");
+                DrawAddComponentEntry<ScriptComponent>("Script Component");
                 DrawAddComponentEntry<RigidBodyComponent>("Rigid Body Component");
                 DrawAddComponentEntry<BoxColliderComponent>("Box Collider Component");
                 DrawAddComponentEntry<SphereColliderComponent>("Sphere Collider Component");
@@ -493,6 +497,44 @@ namespace Flameberry {
                         ImGui::EndTable();
                     }
                 }
+            );
+
+            DrawComponent<ScriptComponent>("Script", [&]()
+                {
+                    auto& sc = m_Context->m_Registry->get<ScriptComponent>(m_SelectionContext);
+
+                    if (ImGui::BeginTable("TransformComponentAttributes", 2, s_TableFlags))
+                    {
+                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
+                        ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::Text("Class Name");
+                        ImGui::TableNextColumn();
+
+                        const auto& actorClasses = ScriptEngine::GetActorClassDictionary();
+
+                        ImGui::PushItemWidth(-1.0f);
+                        if (ImGui::BeginCombo("##ScriptActorClasses", sc.AssemblyQualifiedClassName.c_str()))
+                        {
+                            for (const auto& [fullName, managedClass] : actorClasses)
+                            {
+                                bool isSelected = (fullName == sc.AssemblyQualifiedClassName);
+                                if (ImGui::Selectable(fullName.c_str(), &isSelected))
+                                    sc.AssemblyQualifiedClassName = fullName;
+
+                                if (isSelected)
+                                    ImGui::SetItemDefaultFocus();
+                            }
+                            ImGui::EndCombo();
+                        }
+
+                        ImGui::EndTable();
+                    }
+                }, false // removable = false
             );
 
             DrawComponent<RigidBodyComponent>("Rigid Body", [&]()

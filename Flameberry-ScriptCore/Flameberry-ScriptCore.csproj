@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>Flameberry_ScriptCore</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <BuildWithMSBuildOnMono>false</BuildWithMSBuildOnMono>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Runtime\" />
+    <None Remove="Managed\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Runtime\" />
+    <Folder Include="Managed\" />
+  </ItemGroup>
+</Project>

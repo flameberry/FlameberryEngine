@@ -12,7 +12,7 @@
 #include "Actor.h"
 
 namespace Flameberry {
-    
+
     struct IDComponent
     {
         UUID ID;
@@ -119,7 +119,12 @@ namespace Flameberry {
             DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Actor; nsc->Actor = nullptr; };
         }
     };
-    
+
+    struct ScriptComponent
+    {
+        std::string AssemblyQualifiedClassName;
+    };
+
     enum class AxisType : uint8_t { X = 0, Y, Z };
 
     struct RigidBodyComponent
@@ -158,6 +163,6 @@ namespace Flameberry {
     template <typename... Component>
     struct ComponentList {};
 
-    using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>;
+    using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, ScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>;
 
 }

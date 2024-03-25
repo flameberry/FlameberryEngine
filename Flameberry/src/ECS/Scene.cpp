@@ -7,6 +7,8 @@
 #include "Physics/PhysicsEngine.h"
 #include "PxPhysicsAPI.h"
 
+#include "Scripting/ScriptEngine.h"
+
 namespace Flameberry {
     Scene::Scene()
         : m_Registry(CreateRef<fbentt::registry>())
@@ -48,6 +50,8 @@ namespace Flameberry {
 
             nsc.Actor->OnInstanceCreated();
         }
+
+        ScriptEngine::OnRuntimeStart(this);
 
         // Create Physics Context
         physx::PxSceneDesc sceneDesc(PhysicsEngine::GetTolerancesScale());
@@ -149,6 +153,8 @@ namespace Flameberry {
     {
         m_PxScene->release();
 
+        ScriptEngine::OnRuntimeStop();
+
         // Delete Script Actors
         for (auto entity : m_Registry->view<NativeScriptComponent>())
         {
@@ -168,6 +174,9 @@ namespace Flameberry {
             auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
             nsc.Actor->OnUpdate(delta);
         }
+
+        // Update CSharp Scripts
+        ScriptEngine::OnRuntimeUpdate(delta);
 
         // Update Physics
         m_PxScene->simulate(delta);
@@ -280,7 +289,7 @@ namespace Flameberry {
     void Scene::ReparentEntity(fbentt::entity entity, fbentt::entity destParent)
     {
         FBY_ASSERT(entity != fbentt::null, "Can't reparent null entity!");
-        
+
         if (entity == destParent)
             return;
 
@@ -288,7 +297,7 @@ namespace Flameberry {
         {
             if (IsEntityRoot(entity))
                 return;
-            
+
             auto& relation = m_Registry->get<RelationshipComponent>(entity);
 
             if (relation.PrevSibling == fbentt::null)
