@@ -62,6 +62,7 @@ namespace Flameberry {
         static void Init();
         static void Shutdown();
 
+        static void ReloadAppAssembly();
         static void LoadAppAssembly(const std::string& assemblyPath);
         static const std::unordered_map<std::string, Ref<ManagedClass>>& GetActorClassDictionary();
 
@@ -69,7 +70,9 @@ namespace Flameberry {
         static void OnRuntimeStop();
         static void OnRuntimeUpdate(float delta);
     private:
+        static void LoadCoreAssembly();
         static void InitMono();
+        static void LoadAssembliesAndSetup();
     };
 
 }

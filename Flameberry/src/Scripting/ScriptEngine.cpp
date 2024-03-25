@@ -12,6 +12,7 @@
 
 namespace Flameberry {
 
+    // ------------------------------------ Mono Utils ------------------------------------
     namespace MonoUtils {
 
         char* ReadBytes(const std::string& filepath, uint32_t* outSize)
@@ -156,6 +157,8 @@ namespace Flameberry {
         MonoAssembly* AppAssembly;
         MonoImage* AppAssemblyImage;
 
+        std::string CoreAssemblyPath, AppAssemblyPath;
+
         const Scene* ActiveScene;
 
         // Stores the Flameberry.Actor class present in Flameberry-ScriptCore
@@ -172,8 +175,8 @@ namespace Flameberry {
 
     static ScriptEngineData* s_Data;
 
-    namespace InternalCalls
-    {
+    namespace InternalCalls {
+
         void TransformComponent_GetTranslation(uint64_t entity, glm::vec3& translation)
         {
             FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
@@ -192,13 +195,59 @@ namespace Flameberry {
         s_Data = new ScriptEngineData();
         InitMono();
 
-        // TODO: Load this from .fbproj
-        LoadAppAssembly(FBY_PROJECT_DIR"SandboxProject/Content/Scripting/Binaries/Release/net7.0/SandboxProject.dll");
+        // TODO: Set this from .fbproj
+        s_Data->AppAssemblyPath = FBY_PROJECT_DIR"SandboxProject/Content/Scripting/Binaries/Release/net7.0/SandboxProject.dll";
+        LoadAssembliesAndSetup();
+    }
+
+    void ScriptEngine::InitMono()
+    {
+        // TODO: Remove the absolute path usage
+        mono_set_dirs("/Users/flameberry/Installations/mono/install/lib", "/Users/flameberry/Installations/mono/install/etc");
+        mono_config_parse("/Users/flameberry/Installations/mono/install/etc/mono/config");
+
+        // Initialize Mono JIT Runtime
+        MonoDomain* rootDomain = mono_jit_init("Flameberry-ScriptCore");
+        if (!rootDomain)
+        {
+            FBY_ERROR("Failed to initialize mono jit runtime");
+            return;
+        }
+
+        // Store Root Domain
+        s_Data->RootDomain = rootDomain;
+        FBY_INFO("Initialized Mono JIT runtime");
+    }
+
+    void ScriptEngine::LoadAssembliesAndSetup()
+    {
+        LoadCoreAssembly();
+        LoadAppAssembly(s_Data->AppAssemblyPath);
+
+        // Load the core Flameberry.Actor class
+        s_Data->ActorClass = CreateRef<ManagedClass>(s_Data->CoreAssemblyImage, "Flameberry", "Actor");
+
+        // Set Internal Calls
+        mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_GetTranslation", (const void*)InternalCalls::TransformComponent_GetTranslation);
+        mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_SetTranslation", (const void*)InternalCalls::TransformComponent_SetTranslation);
+    }
+
+    void Flameberry::ScriptEngine::LoadCoreAssembly()
+    {
+        // Create App Domain
+        s_Data->AppDomain = mono_domain_create_appdomain("Flameberry-ScriptCoreRuntime", nullptr);
+        mono_domain_set(s_Data->AppDomain, true);
+
+        // Loading Core Mono Assembly
+        s_Data->CoreAssemblyPath = FBY_PROJECT_DIR"Flameberry-ScriptCore/bin/Release/net7.0/Flameberry-ScriptCore.dll";
+        s_Data->CoreAssembly = MonoUtils::LoadMonoAssembly(s_Data->CoreAssemblyPath);
+        s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
     }
 
     void ScriptEngine::LoadAppAssembly(const std::string& assemblyPath)
     {
-        s_Data->AppAssembly = MonoUtils::LoadMonoAssembly(assemblyPath);
+        s_Data->AppAssemblyPath = assemblyPath;
+        s_Data->AppAssembly = MonoUtils::LoadMonoAssembly(s_Data->AppAssemblyPath);
         s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 
         // Load also the user defined actor classes
@@ -230,41 +279,17 @@ namespace Flameberry {
         }
     }
 
-    void ScriptEngine::InitMono()
+    void ScriptEngine::ReloadAppAssembly()
     {
-        // TODO: Remove the absolute path usage
-        mono_set_dirs("/Users/flameberry/Installations/mono/install/lib", "/Users/flameberry/Installations/mono/install/etc");
-        mono_config_parse("/Users/flameberry/Installations/mono/install/etc/mono/config");
+        s_Data->ClassFullNameToManagedClass.clear();
 
-        // Initialize Mono JIT Runtime
-        MonoDomain* rootDomain = mono_jit_init("Flameberry-ScriptCore");
-        if (!rootDomain)
-        {
-            FBY_ERROR("Failed to initialize mono jit runtime");
-            return;
-        }
+        mono_domain_set(mono_get_root_domain(), false);
+        mono_domain_unload(s_Data->AppDomain);
 
-        // Store Root Domain
-        s_Data->RootDomain = rootDomain;
-        FBY_INFO("Initialized Mono JIT runtime");
-
-        // Create App Domain
-        s_Data->AppDomain = mono_domain_create_appdomain("Flameberry-ScriptCoreRuntime", nullptr);
-        mono_domain_set(s_Data->AppDomain, true);
-
-        // Loading Core Mono Assembly
-        s_Data->CoreAssembly = MonoUtils::LoadMonoAssembly(FBY_PROJECT_DIR"Flameberry-ScriptCore/bin/Release/net7.0/Flameberry-ScriptCore.dll");
-        s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
-
-        // Load the core Flameberry.Actor class
-        s_Data->ActorClass = CreateRef<ManagedClass>(s_Data->CoreAssemblyImage, "Flameberry", "Actor");
-
-        // Set Internal Calls
-        mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_GetTranslation", (const void*)InternalCalls::TransformComponent_GetTranslation);
-        mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_SetTranslation", (const void*)InternalCalls::TransformComponent_SetTranslation);
+        LoadAssembliesAndSetup();
     }
 
-    void Flameberry::ScriptEngine::OnRuntimeStart(const Scene* scene)
+    void ScriptEngine::OnRuntimeStart(const Scene* scene)
     {
         s_Data->ActiveScene = scene;
 
@@ -280,13 +305,13 @@ namespace Flameberry {
         }
     }
 
-    void Flameberry::ScriptEngine::OnRuntimeUpdate(float delta)
+    void ScriptEngine::OnRuntimeUpdate(float delta)
     {
         for (const auto& managedActor : s_Data->ManagedActors)
             managedActor->CallOnUpdateMethod(delta);
     }
 
-    void Flameberry::ScriptEngine::OnRuntimeStop()
+    void ScriptEngine::OnRuntimeStop()
     {
         s_Data->ActiveScene = nullptr;
 
