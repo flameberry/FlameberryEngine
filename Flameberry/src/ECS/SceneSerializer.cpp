@@ -197,6 +197,12 @@ namespace Flameberry {
                     lightComp.Intensity = light["Intensity"].as<float>();
                 }
 
+                if (auto script = entity["ScriptComponent"]; script)
+                {
+                    auto& scriptComp = destScene->m_Registry->emplace<ScriptComponent>(deserializedEntity);
+                    scriptComp.AssemblyQualifiedClassName = script["AssemblyQualifiedClassName"].as<std::string>();
+                }
+
                 if (auto rigidBody = entity["RigidBodyComponent"]; rigidBody)
                 {
                     auto& rbComp = destScene->m_Registry->emplace<RigidBodyComponent>(deserializedEntity);
@@ -383,6 +389,14 @@ namespace Flameberry {
             out << YAML::Key << "Color" << YAML::Value << light.Color;
             out << YAML::Key << "Intensity" << YAML::Value << light.Intensity;
             out << YAML::EndMap; // Point Light Component
+        }
+
+        if (scene->m_Registry->has<ScriptComponent>(entity))
+        {
+            auto& script = scene->m_Registry->get<ScriptComponent>(entity);
+            out << YAML::Key << "ScriptComponent" << YAML::BeginMap;
+            out << YAML::Key << "AssemblyQualifiedClassName" << YAML::Value << script.AssemblyQualifiedClassName;
+            out << YAML::EndMap; // Script Component
         }
 
         if (scene->m_Registry->has<RigidBodyComponent>(entity))

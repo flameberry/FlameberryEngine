@@ -160,7 +160,11 @@ namespace Flameberry {
         // Used to retrieve the .ctor constructor for initilizing user subclasses of `Actor`
         Ref<ManagedClass> ActorClass;
 
+        // Used to get the specific mono class of the class name
+        // Also used to keep track of all loaded user classes
         std::unordered_map<std::string, Ref<ManagedClass>> ClassFullNameToManagedClass;
+
+        // Used to manage runtime actors in the scene
         std::vector<Ref<ManagedActor>> ManagedActors;
     };
 
@@ -173,13 +177,6 @@ namespace Flameberry {
 
         // TODO: Load this from .fbproj
         LoadAppAssembly(FBY_PROJECT_DIR"SandboxProject/Content/Scripting/Binaries/Release/net7.0/SandboxProject.dll");
-
-        // for (const auto& [fullName, managedClass] : s_Data->ClassFullNameToManagedClass)
-        // {
-        //     Ref<ManagedActor> managedActor = CreateRef<ManagedActor>(managedClass, (fbentt::entity)16);
-        //     managedActor->CallOnCreateMethod();
-        //     managedActor->CallOnUpdateMethod(0.13f);
-        // }
     }
 
     void ScriptEngine::LoadAppAssembly(const std::string& assemblyPath)
