@@ -156,6 +156,8 @@ namespace Flameberry {
         MonoAssembly* AppAssembly;
         MonoImage* AppAssemblyImage;
 
+        const Scene* ActiveScene;
+
         // Stores the Flameberry.Actor class present in Flameberry-ScriptCore
         // Used to retrieve the .ctor constructor for initilizing user subclasses of `Actor`
         Ref<ManagedClass> ActorClass;
@@ -169,6 +171,21 @@ namespace Flameberry {
     };
 
     static ScriptEngineData* s_Data;
+
+    namespace InternalCalls
+    {
+        void TransformComponent_GetTranslation(uint64_t entity, glm::vec3& translation)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            translation = s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Translation;
+        }
+
+        void TransformComponent_SetTranslation(uint64_t entity, const glm::vec3& translation)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Translation = translation;
+        }
+    }
 
     void ScriptEngine::Init()
     {
@@ -241,13 +258,19 @@ namespace Flameberry {
 
         // Load the core Flameberry.Actor class
         s_Data->ActorClass = CreateRef<ManagedClass>(s_Data->CoreAssemblyImage, "Flameberry", "Actor");
+
+        // Set Internal Calls
+        mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_GetTranslation", (const void*)InternalCalls::TransformComponent_GetTranslation);
+        mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_SetTranslation", (const void*)InternalCalls::TransformComponent_SetTranslation);
     }
 
     void Flameberry::ScriptEngine::OnRuntimeStart(const Scene* scene)
     {
-        for (const auto entity : scene->GetRegistry()->view<ScriptComponent>())
+        s_Data->ActiveScene = scene;
+
+        for (const auto entity : s_Data->ActiveScene->GetRegistry()->view<ScriptComponent>())
         {
-            auto& sc = scene->GetRegistry()->get<ScriptComponent>(entity);
+            auto& sc = s_Data->ActiveScene->GetRegistry()->get<ScriptComponent>(entity);
 
             Ref<ManagedClass> managedClass = s_Data->ClassFullNameToManagedClass[sc.AssemblyQualifiedClassName];
             Ref<ManagedActor> managedActor = CreateRef<ManagedActor>(managedClass, entity);
@@ -265,6 +288,8 @@ namespace Flameberry {
 
     void Flameberry::ScriptEngine::OnRuntimeStop()
     {
+        s_Data->ActiveScene = nullptr;
+
         for (const auto& managedActor : s_Data->ManagedActors)
             managedActor->CallOnDestroyMethod();
 
