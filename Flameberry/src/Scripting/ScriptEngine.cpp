@@ -10,6 +10,8 @@
 
 #include "ECS/Components.h"
 
+#define FBY_REGISTER_COMPONENT(Type) ::Flameberry::RegisterComponent<Type>(#Type)
+
 namespace Flameberry {
 
     // ------------------------------------ Mono Utils ------------------------------------
@@ -169,6 +171,9 @@ namespace Flameberry {
         // Also used to keep track of all loaded user classes
         std::unordered_map<std::string, Ref<ManagedClass>> ClassFullNameToManagedClass;
 
+        using HasComponentFunction = bool(*)(fbentt::entity entity);
+        std::unordered_map<MonoType*, HasComponentFunction> ComponentTypeHashToHasComponentFunction;
+
         // Used to manage runtime actors in the scene
         std::vector<Ref<ManagedActor>> ManagedActors;
     };
@@ -176,6 +181,15 @@ namespace Flameberry {
     static ScriptEngineData* s_Data;
 
     namespace InternalCalls {
+
+        bool Entity_HasComponent(uint64_t entity, MonoReflectionType* componentType)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+
+            MonoType* managedType = mono_reflection_type_get_type(componentType);
+            FBY_ASSERT(s_Data->ComponentTypeHashToHasComponentFunction.find(managedType) != s_Data->ComponentTypeHashToHasComponentFunction.end(), "HasComponent: Unknown component type");
+            return s_Data->ComponentTypeHashToHasComponentFunction.at(managedType)(entity);
+        }
 
         void TransformComponent_GetTranslation(uint64_t entity, glm::vec3& translation)
         {
@@ -228,8 +242,11 @@ namespace Flameberry {
         s_Data->ActorClass = CreateRef<ManagedClass>(s_Data->CoreAssemblyImage, "Flameberry", "Actor");
 
         // Set Internal Calls
+        mono_add_internal_call("Flameberry.Managed.InternalCalls::Entity_HasComponent", (const void*)InternalCalls::Entity_HasComponent);
         mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_GetTranslation", (const void*)InternalCalls::TransformComponent_GetTranslation);
         mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_SetTranslation", (const void*)InternalCalls::TransformComponent_SetTranslation);
+
+        RegisterAllComponents();
     }
 
     void ScriptEngine::LoadCoreAssembly()
@@ -279,17 +296,43 @@ namespace Flameberry {
         }
     }
 
+    template<typename Component>
+    static void RegisterComponent(const char* name)
+    {
+        MonoType* managedType = mono_reflection_type_from_name((char*)fmt::format("Flameberry.{}", name).c_str(), s_Data->CoreAssemblyImage);
+        FBY_ASSERT(managedType != nullptr, "Internal Error: Component not available in Script-Core");
+
+        s_Data->ComponentTypeHashToHasComponentFunction[managedType] = [](fbentt::entity entity) -> bool {
+            FBY_ASSERT(s_Data->ActiveScene, "Internal Error: Scene should not be nullptr");
+            return s_Data->ActiveScene->GetRegistry()->has<Component>(entity);
+            };
+    }
+
+    void ScriptEngine::RegisterAllComponents()
+    {
+        FBY_REGISTER_COMPONENT(TransformComponent);
+        FBY_REGISTER_COMPONENT(CameraComponent);
+        FBY_REGISTER_COMPONENT(SkyLightComponent);
+        FBY_REGISTER_COMPONENT(MeshComponent);
+        FBY_REGISTER_COMPONENT(DirectionalLightComponent);
+        FBY_REGISTER_COMPONENT(PointLightComponent);
+        FBY_REGISTER_COMPONENT(RigidBodyComponent);
+        FBY_REGISTER_COMPONENT(BoxColliderComponent);
+        FBY_REGISTER_COMPONENT(SphereColliderComponent);
+        FBY_REGISTER_COMPONENT(CapsuleColliderComponent);
+    }
+
     void ScriptEngine::ReloadAppAssembly()
     {
         FBY_INFO("Reloading Script Assemblies...");
         s_Data->ClassFullNameToManagedClass.clear();
 
+        // This will crash if we try to unload a non-existent app domain
         if (s_Data->AppDomain)
         {
             mono_domain_set(mono_get_root_domain(), false);
             mono_domain_unload(s_Data->AppDomain);
         }
-
         LoadAssembliesAndSetup();
     }
 

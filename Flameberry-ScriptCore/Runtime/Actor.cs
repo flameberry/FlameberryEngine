@@ -15,9 +15,8 @@ namespace Flameberry
 
         public bool HasComponent<T>() where T : Component, new()
         {
-            //bool hasComponent = InternalCalls.Entity_HasComponent(ID, typeof(T).GetHashCode());
-            //return hasComponent;
-            return true;
+            bool hasComponent = InternalCalls.Entity_HasComponent(ID, typeof(T));
+            return hasComponent;
         }
 
         public T? GetComponent<T>() where T : Component, new()

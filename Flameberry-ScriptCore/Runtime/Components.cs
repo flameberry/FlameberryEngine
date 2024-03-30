@@ -25,4 +25,40 @@ namespace Flameberry
             }
         }
     }
+
+    public class CameraComponent : Component
+    {
+    }
+
+    public class SkyLightComponent : Component
+    {
+    }
+
+    public class MeshComponent : Component
+    {
+    }
+
+    public class DirectionalLightComponent : Component
+    {
+    }
+
+    public class PointLightComponent : Component
+    {
+    }
+
+    public class RigidBodyComponent : Component
+    {
+    }
+
+    public class BoxColliderComponent : Component
+    {
+    }
+
+    public class SphereColliderComponent : Component
+    {
+    }
+
+    public class CapsuleColliderComponent : Component
+    {
+    }
 }

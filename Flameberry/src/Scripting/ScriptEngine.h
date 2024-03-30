@@ -70,9 +70,10 @@ namespace Flameberry {
         static void OnRuntimeStop();
         static void OnRuntimeUpdate(float delta);
     private:
-        static void LoadCoreAssembly();
         static void InitMono();
+        static void LoadCoreAssembly();
         static void LoadAssembliesAndSetup();
+        static void RegisterAllComponents();
     };
 
 }
