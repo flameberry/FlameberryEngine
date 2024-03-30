@@ -11,6 +11,7 @@
 #include "ECS/Components.h"
 
 #define FBY_REGISTER_COMPONENT(Type) ::Flameberry::RegisterComponent<Type>(#Type)
+#define FBY_ADD_INTERNAL_CALL(InternalCall) mono_add_internal_call("Flameberry.Managed.InternalCalls::"#InternalCall, (const void*)InternalCalls::InternalCall);
 
 namespace Flameberry {
 
@@ -202,6 +203,42 @@ namespace Flameberry {
             FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
             s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Translation = translation;
         }
+
+        void TransformComponent_GetRotation(uint64_t entity, glm::vec3& rotation)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            rotation = s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Rotation;
+        }
+
+        void TransformComponent_SetRotation(uint64_t entity, const glm::vec3& rotation)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Rotation = rotation;
+        }
+
+        void TransformComponent_GetScale(uint64_t entity, glm::vec3& scale)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            scale = s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Scale;
+        }
+
+        void TransformComponent_SetScale(uint64_t entity, const glm::vec3& scale)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Scale = scale;
+        }
+
+        void CameraComponent_GetProjectionType(uint64_t entity, ProjectionType& projectionType)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            projectionType = s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.GetSettings().ProjectionType;
+        }
+
+        void CameraComponent_SetProjectionType(uint64_t entity, const ProjectionType& projectionType)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.SetProjectionType(projectionType);
+        }
     }
 
     void ScriptEngine::Init(const std::filesystem::path& appAssemblyPath)
@@ -242,9 +279,19 @@ namespace Flameberry {
         s_Data->ActorClass = CreateRef<ManagedClass>(s_Data->CoreAssemblyImage, "Flameberry", "Actor");
 
         // Set Internal Calls
-        mono_add_internal_call("Flameberry.Managed.InternalCalls::Entity_HasComponent", (const void*)InternalCalls::Entity_HasComponent);
-        mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_GetTranslation", (const void*)InternalCalls::TransformComponent_GetTranslation);
-        mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_SetTranslation", (const void*)InternalCalls::TransformComponent_SetTranslation);
+        using namespace InternalCalls;
+
+        FBY_ADD_INTERNAL_CALL(Entity_HasComponent);
+
+        FBY_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
+        FBY_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);
+        FBY_ADD_INTERNAL_CALL(TransformComponent_GetRotation);
+        FBY_ADD_INTERNAL_CALL(TransformComponent_SetRotation);
+        FBY_ADD_INTERNAL_CALL(TransformComponent_GetScale);
+        FBY_ADD_INTERNAL_CALL(TransformComponent_SetScale);
+
+        FBY_ADD_INTERNAL_CALL(CameraComponent_GetProjectionType);
+        FBY_ADD_INTERNAL_CALL(CameraComponent_SetProjectionType);
 
         RegisterAllComponents();
     }

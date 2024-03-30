@@ -24,10 +24,50 @@ namespace Flameberry
                 InternalCalls.TransformComponent_SetTranslation(Actor.ID, ref value);
             }
         }
+
+        public Vector3 Rotation
+        {
+            get
+            {
+                InternalCalls.TransformComponent_GetRotation(Actor.ID, out Vector3 rotation);
+                return rotation;
+            }
+            set
+            {
+                InternalCalls.TransformComponent_SetRotation(Actor.ID, ref value);
+            }
+        }
+
+        public Vector3 Scale
+        {
+            get
+            {
+                InternalCalls.TransformComponent_GetScale(Actor.ID, out Vector3 scale);
+                return scale;
+            }
+            set
+            {
+                InternalCalls.TransformComponent_SetScale(Actor.ID, ref value);
+            }
+        }
     }
+
+    public enum ProjectionType : byte { Orthographic = 0, Perspective };
 
     public class CameraComponent : Component
     {
+        public ProjectionType ProjectionType
+        {
+            get
+            {
+                InternalCalls.CameraComponent_GetProjectionType(Actor.ID, out ProjectionType projectionType);
+                return projectionType;
+            }
+            set
+            {
+                InternalCalls.CameraComponent_SetProjectionType(Actor.ID, ref value);
+            }
+        }
     }
 
     public class SkyLightComponent : Component
