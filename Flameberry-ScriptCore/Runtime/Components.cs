@@ -1,6 +1,4 @@
-﻿using System;
-using System.Numerics;
-using System.Transactions;
+﻿using System.Numerics;
 using Flameberry.Managed;
 
 namespace Flameberry
@@ -56,6 +54,19 @@ namespace Flameberry
 
     public class CameraComponent : Component
     {
+        public bool IsPrimary
+        {
+            get
+            {
+                InternalCalls.CameraComponent_GetIsPrimary(Actor.ID, out bool isPrimary);
+                return isPrimary;
+            }
+            set
+            {
+                InternalCalls.CameraComponent_SetIsPrimary(Actor.ID, ref value);
+            }
+        }
+
         public ProjectionType ProjectionType
         {
             get
@@ -66,6 +77,46 @@ namespace Flameberry
             set
             {
                 InternalCalls.CameraComponent_SetProjectionType(Actor.ID, ref value);
+            }
+        }
+
+        public float FOVOrZoom
+        {
+            get
+            {
+                InternalCalls.CameraComponent_GetFOVOrZoom(Actor.ID, out float fovOrZoom);
+                return fovOrZoom;
+            }
+            set
+            {
+                InternalCalls.CameraComponent_SetFOVOrZoom(Actor.ID, ref value);
+            }
+        }
+
+        public float Near
+        {
+            get
+            {
+                InternalCalls.CameraComponent_GetNear(Actor.ID, out float near);
+                return near;
+            }
+            set
+            {
+                InternalCalls.CameraComponent_SetNear(Actor.ID, ref value);
+            }
+        }
+
+
+        public float Far
+        {
+            get
+            {
+                InternalCalls.CameraComponent_GetFar(Actor.ID, out float far);
+                return far;
+            }
+            set
+            {
+                InternalCalls.CameraComponent_SetFar(Actor.ID, ref value);
             }
         }
     }

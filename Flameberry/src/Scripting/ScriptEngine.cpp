@@ -228,6 +228,19 @@ namespace Flameberry {
             s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Scale = scale;
         }
 
+        void CameraComponent_GetIsPrimary(uint64_t entity, bool& isPrimary)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            isPrimary = s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).IsPrimary;
+        }
+
+        // Need to take in uint8_t instead of bool for some reason to make it work
+        void CameraComponent_SetIsPrimary(uint64_t entity, uint8_t isPrimary)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).IsPrimary = (bool)isPrimary;
+        }
+
         void CameraComponent_GetProjectionType(uint64_t entity, ProjectionType& projectionType)
         {
             FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
@@ -238,6 +251,42 @@ namespace Flameberry {
         {
             FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
             s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.SetProjectionType(projectionType);
+        }
+
+        void CameraComponent_GetFOVOrZoom(uint64_t entity, float& fovOrZoom)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            fovOrZoom = s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.GetSettings().FOV;
+        }
+
+        void CameraComponent_SetFOVOrZoom(uint64_t entity, float fovOrZoom)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.UpdateWithFOVorZoom(fovOrZoom);
+        }
+
+        void CameraComponent_GetNear(uint64_t entity, float& near)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            near = s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.GetSettings().Near;
+        }
+
+        void CameraComponent_SetNear(uint64_t entity, float near)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.UpdateWithNear(near);
+        }
+
+        void CameraComponent_GetFar(uint64_t entity, float& far)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            far = s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.GetSettings().Far;
+        }
+
+        void CameraComponent_SetFar(uint64_t entity, float far)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.UpdateWithFar(far);
         }
     }
 
@@ -290,8 +339,16 @@ namespace Flameberry {
         FBY_ADD_INTERNAL_CALL(TransformComponent_GetScale);
         FBY_ADD_INTERNAL_CALL(TransformComponent_SetScale);
 
+        FBY_ADD_INTERNAL_CALL(CameraComponent_GetIsPrimary);
+        FBY_ADD_INTERNAL_CALL(CameraComponent_SetIsPrimary);
         FBY_ADD_INTERNAL_CALL(CameraComponent_GetProjectionType);
         FBY_ADD_INTERNAL_CALL(CameraComponent_SetProjectionType);
+        FBY_ADD_INTERNAL_CALL(CameraComponent_GetFOVOrZoom);
+        FBY_ADD_INTERNAL_CALL(CameraComponent_SetFOVOrZoom);
+        FBY_ADD_INTERNAL_CALL(CameraComponent_GetNear);
+        FBY_ADD_INTERNAL_CALL(CameraComponent_SetNear);
+        FBY_ADD_INTERNAL_CALL(CameraComponent_GetFar);
+        FBY_ADD_INTERNAL_CALL(CameraComponent_SetFar);
 
         RegisterAllComponents();
     }
