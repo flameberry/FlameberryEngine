@@ -19,7 +19,7 @@ namespace Flameberry {
   
   <ItemGroup>
     <Reference Include="Flameberry-ScriptCore">
-      <HintPath>..\..\..\Flameberry-ScriptCore\bin\Release\net7.0\Flameberry-ScriptCore.dll</HintPath>
+      <HintPath>{}/Flameberry-ScriptCore/bin/Release/net7.0/Flameberry-ScriptCore.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>
@@ -50,7 +50,7 @@ namespace Flameberry {
 
             // 5. Add a `.csproj` file to it
             std::ofstream csprojFile(project->GetAssetDirectory() / "Scripting" / fmt::format("{}.csproj", projectConfig.Name));
-            csprojFile << g_CsprojSource;
+            csprojFile << fmt::format(g_CsprojSource, FBY_PROJECT_DIR);
             csprojFile.close();
 
             // Build using dotnet?

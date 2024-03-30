@@ -284,8 +284,11 @@ namespace Flameberry {
         FBY_INFO("Reloading Script Assemblies...");
         s_Data->ClassFullNameToManagedClass.clear();
 
-        mono_domain_set(mono_get_root_domain(), false);
-        mono_domain_unload(s_Data->AppDomain);
+        if (s_Data->AppDomain)
+        {
+            mono_domain_set(mono_get_root_domain(), false);
+            mono_domain_unload(s_Data->AppDomain);
+        }
 
         LoadAssembliesAndSetup();
     }
@@ -294,15 +297,23 @@ namespace Flameberry {
     {
         s_Data->ActiveScene = scene;
 
+        // No need to create any actors if no assembly is loaded
+        if (!s_Data->AppAssemblyImage || !s_Data->CoreAssemblyImage)
+            return;
+
         for (const auto entity : s_Data->ActiveScene->GetRegistry()->view<ScriptComponent>())
         {
             auto& sc = s_Data->ActiveScene->GetRegistry()->get<ScriptComponent>(entity);
 
-            Ref<ManagedClass> managedClass = s_Data->ClassFullNameToManagedClass[sc.AssemblyQualifiedClassName];
-            Ref<ManagedActor> managedActor = CreateRef<ManagedActor>(managedClass, entity);
-            managedActor->CallOnCreateMethod();
+            // This should prevent any empty named entity from participating in the scripting process
+            if (!sc.AssemblyQualifiedClassName.empty())
+            {
+                Ref<ManagedClass> managedClass = s_Data->ClassFullNameToManagedClass[sc.AssemblyQualifiedClassName];
+                Ref<ManagedActor> managedActor = CreateRef<ManagedActor>(managedClass, entity);
+                managedActor->CallOnCreateMethod();
 
-            s_Data->ManagedActors.push_back(managedActor);
+                s_Data->ManagedActors.push_back(managedActor);
+            }
         }
     }
 

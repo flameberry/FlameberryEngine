@@ -140,44 +140,17 @@ namespace Flameberry {
                 {
                     if (strlen(m_ProjectNameBuffer))
                     {
-                        ProjectConfig projectConfig;
-                        projectConfig.Name = std::string(m_ProjectNameBuffer);
-                        projectConfig.AssetDirectory = "Content";
-
-                        m_Project = CreateRef<Project>(projectParentPath / projectConfig.Name, projectConfig);
-
-                        // Setup
-                        // 1. Create the project directory
-                        if (!std::filesystem::exists(m_Project->GetProjectDirectory()))
-                            std::filesystem::create_directory(m_Project->GetProjectDirectory());
-
-                        if (std::filesystem::is_empty(m_Project->GetProjectDirectory()))
-                        {
-                            // 2. Serialize the Project
-                            m_Project->Save();
-                            // 3. Create a Content folder
-                            std::filesystem::create_directory(m_Project->GetAssetDirectory());
-                            // 4. Add project entry to GlobalProjectRegistry
-                            ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
-
+                        if (m_Project = Project::CreateProjectOnDisk(projectParentPath, m_ProjectNameBuffer); m_Project)
                             // Signal callback to FlameberryEditor class
                             m_ShouldClose = true;
-                        }
                         else
-                        {
                             ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s is not empty!", m_Project->GetProjectDirectory().c_str());
-                            FBY_ERROR("Failed to create project: Project Directory: {} is not empty!", m_Project->GetProjectDirectory());
-                        }
                     }
                     else
-                    {
                         FBY_ERROR("Failed to create project: Project name is empty!");
-                    }
                 }
                 else
-                {
                     FBY_ERROR("Failed to create project: Either project path is empty or it does not exist!");
-                }
             }
             ImGui::SameLine();
             if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
