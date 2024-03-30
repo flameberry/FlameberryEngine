@@ -59,7 +59,7 @@ namespace Flameberry {
     class ScriptEngine
     {
     public:
-        static void Init();
+        static void Init(const std::filesystem::path& appAssemblyPath);
         static void Shutdown();
 
         static void ReloadAppAssembly();

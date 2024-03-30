@@ -1,5 +1,7 @@
 #pragma once
 
+#include <FileWatch/FileWatch.hpp>
+
 #include "Flameberry.h"
 
 #include "Panels/SceneHierarchyPanel.h"
@@ -53,6 +55,8 @@ namespace Flameberry {
         template<typename Fn>
         void UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func);
     private:
+        void ReloadAssemblySafely();
+    private:
         EditorCameraController m_ActiveCameraController;
 
         // Test
@@ -99,6 +103,14 @@ namespace Flameberry {
         Ref<Pipeline> m_MousePickingPipeline, m_MousePicking2DPipeline;
         Ref<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
 
+        // Script Assembly File Watcher
+        // This is present in the EditorLayer as it makes more sense to have it not be a part of core Flameberry
+        // As it is a editor only feature
+        Unique<filewatch::FileWatch<std::string>> m_AssemblyFileWatcher;
+        std::atomic<bool> m_AssemblyReloadPending = false;
+        std::chrono::steady_clock::time_point m_AssemblyFirstChangeTimePoint;
+
+        // The main project that the editor is working on
         Ref<Project> m_Project;
     };
 

@@ -8,6 +8,63 @@
 
 namespace Flameberry {
 
+    constexpr const char* g_CsprojSource = R"(
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputPath>Binaries</OutputPath>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Reference Include="Flameberry-ScriptCore">
+      <HintPath>..\..\..\Flameberry-ScriptCore\bin\Release\net7.0\Flameberry-ScriptCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
+    )";
+
+    Ref<Project> Project::CreateProjectOnDisk(const std::filesystem::path& targetFolder, const std::string& projectName)
+    {
+        ProjectConfig projectConfig;
+        projectConfig.Name = projectName;
+        projectConfig.AssetDirectory = "Content";
+        projectConfig.ScriptAssemblyPath = fmt::format("Content/Scripting/Binaries/net7.0/{}.dll", projectName);
+
+        Ref<Project> project = CreateRef<Project>(targetFolder / projectConfig.Name, projectConfig);
+
+        // Setup
+        // 1. Create the project directory
+        if (!std::filesystem::exists(project->GetProjectDirectory()))
+            std::filesystem::create_directory(project->GetProjectDirectory());
+
+        if (std::filesystem::is_empty(project->GetProjectDirectory()))
+        {
+            // 2. Serialize the Project
+            project->Save();
+            // 3. Create a Content folder
+            std::filesystem::create_directory(project->GetAssetDirectory());
+            // 4. Create a `Scripting` folder
+            std::filesystem::create_directory(project->GetAssetDirectory() / "Scripting");
+
+            // 5. Add a `.csproj` file to it
+            std::ofstream csprojFile(project->GetAssetDirectory() / "Scripting" / fmt::format("{}.csproj", projectConfig.Name));
+            csprojFile << g_CsprojSource;
+            csprojFile.close();
+
+            // Build using dotnet?
+
+            // 4. Add project entry to GlobalProjectRegistry
+            ProjectRegistryManager::AppendEntryToGlobalRegistry(project.get());
+            // 5. Return the project instance
+            return project;
+        }
+
+        FBY_ERROR("Failed to create project: Project Directory: {} is not empty!", project->GetProjectDirectory());
+        return nullptr;
+    }
+
     Project::Project(const std::filesystem::path& projectDirectory, const ProjectConfig& config)
         : m_ProjectDirectory(projectDirectory), m_Config(config)
     {
@@ -52,6 +109,7 @@ namespace Flameberry {
             return false;
         };
         dest->m_Config.AssetDirectory = config["AssetDirectory"].as<std::string>();
+        dest->m_Config.ScriptAssemblyPath = config["ScriptAssemblyPath"].as<std::string>();
         return true;
     }
 
@@ -64,6 +122,7 @@ namespace Flameberry {
         {
             out << YAML::BeginMap; // Configuration
             out << YAML::Key << "AssetDirectory" << YAML::Value << project->m_Config.AssetDirectory;
+            out << YAML::Key << "ScriptAssemblyPath" << YAML::Value << project->m_Config.ScriptAssemblyPath;
             out << YAML::EndMap; // Configuration
         }
         out << YAML::EndMap;

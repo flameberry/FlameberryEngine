@@ -70,7 +70,7 @@ namespace Flameberry {
         std::filesystem::current_path(m_Project->GetProjectDirectory());
 
         PhysicsEngine::Init();
-        ScriptEngine::Init();
+        ScriptEngine::Init(m_Project->GetScriptAssemblyPath());
 
         m_ActiveScene = CreateRef<Scene>();
         m_SceneHierarchyPanel = CreateRef<SceneHierarchyPanel>(m_ActiveScene);
@@ -167,19 +167,35 @@ namespace Flameberry {
 #endif
         }
 
-        // Test
-        // auto cubeEntity = m_ActiveScene->GetRegistry()->create();
-        // m_ActiveScene->GetRegistry()->emplace<IDComponent>(cubeEntity);
-        // m_ActiveScene->GetRegistry()->emplace<TagComponent>(cubeEntity).Tag = "PaidActor";
-        // m_ActiveScene->GetRegistry()->emplace<TransformComponent>(cubeEntity);
-        // auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
-        // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Content/Meshes/cube.obj")->Handle;
-        // m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
+        // Create the file watcher that will reload script assembly when modified
+        m_AssemblyFileWatcher = CreateUnique<filewatch::FileWatch<std::string>>(
+            m_Project->GetScriptAssemblyPath().string(),
+            [this](const std::string& path, const filewatch::Event change_type) {
+                FBY_LOG("AssemblyFileWatcher: Event: {} - {}", path, filewatch::event_to_string(change_type));
+
+                if (!m_AssemblyReloadPending)
+                {
+                    m_AssemblyFirstChangeTimePoint = std::chrono::high_resolution_clock::now();
+                    m_AssemblyReloadPending = true;
+                }
+            }
+        );
     }
 
     void EditorLayer::OnUpdate(float delta)
     {
         FBY_PROFILE_SCOPE("EditorLayer::OnUpdate");
+
+        // Reloading all pending Assets
+        ReloadAssemblySafely();
+
+        if (m_ShouldReloadMeshShaders)
+        {
+            VulkanContext::GetCurrentDevice()->WaitIdle();
+            m_SceneRenderer->ReloadMeshShaders();
+            m_ShouldReloadMeshShaders = false;
+        }
+
         if (m_HasViewportSizeChanged)
         {
             m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
@@ -190,13 +206,6 @@ namespace Flameberry {
         if (m_IsCameraMoving || m_IsViewportHovered)
             m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
         Application::Get().BlockAllEvents(m_IsCameraMoving);
-
-        if (m_ShouldReloadMeshShaders)
-        {
-            VulkanContext::GetCurrentDevice()->WaitIdle();
-            m_SceneRenderer->ReloadMeshShaders();
-            m_ShouldReloadMeshShaders = false;
-        }
 
         // Updating Scene
         switch (m_EditorState)
@@ -822,6 +831,21 @@ namespace Flameberry {
                 ImGui::EndPopup();
             }
             });
+    }
+
+    void EditorLayer::ReloadAssemblySafely()
+    {
+        constexpr auto waitTimeForPendingChanges = 100; // milliseconds
+        // Checking to see if we have waited for enough time since the first change in the file path
+        // To ensure we don't reload multiple times during the same update cycle
+        // Where multiple updates are made simultaneously by the C# compiler
+        if (m_AssemblyReloadPending && std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_AssemblyFirstChangeTimePoint).count() > waitTimeForPendingChanges)
+        {
+            m_AssemblyReloadPending.store(false);
+
+            // Reload or Load assembly (If it is not loaded before)
+            ScriptEngine::ReloadAppAssembly();
+        }
     }
 
     void EditorLayer::UI_CompositeView()

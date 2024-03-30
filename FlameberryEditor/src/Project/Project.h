@@ -7,42 +7,29 @@
 namespace Flameberry {
     struct ProjectConfig
     {
-        std::filesystem::path AssetDirectory /* = "Content" */;
+        std::filesystem::path AssetDirectory /* = "Content" */, ScriptAssemblyPath;
 
         std::string Name = "Flameberry-Project";
     };
 
-    struct ProjectRegistryEntry
-    {
-        std::string ProjectName;
-        std::filesystem::path ProjectFilePath;
-
-        const bool operator==(const ProjectRegistryEntry& other) {
-            // This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
-            return ProjectFilePath == other.ProjectFilePath;
-        }
-
-        const bool operator!=(const ProjectRegistryEntry& other) {
-            // This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
-            return !(*this == other);
-        }
-
-        // TODO: Add Timestamps, Project Type etc in the future
-    };
-
-    typedef std::vector<ProjectRegistryEntry> ProjectRegistry;
-
     class Project
     {
     public:
+        // Static Utilities
         static const std::filesystem::path& GetActiveProjectDirectory() {
             return s_ActiveProject->GetProjectDirectory();
         }
-
         static std::filesystem::path GetActiveAssetDirectory() {
             return s_ActiveProject->GetProjectDirectory() / s_ActiveProject->m_Config.AssetDirectory;
         }
+        static std::filesystem::path GetActiveScriptAssemblyPath() {
+            return s_ActiveProject->GetProjectDirectory() / s_ActiveProject->m_Config.ScriptAssemblyPath;
+        }
 
+        // Standard procedure for creating a project on disk
+        static Ref<Project> CreateProjectOnDisk(const std::filesystem::path& targetFolder, const std::string& projectName);
+
+        // Instance specific methods
         Project(const std::filesystem::path& projectDirectory, const ProjectConfig& config);
         Project() = default;
         ~Project();
@@ -51,6 +38,7 @@ namespace Flameberry {
 
         const std::filesystem::path& GetProjectDirectory() const { return m_ProjectDirectory; }
         std::filesystem::path GetAssetDirectory() const { return m_ProjectDirectory / m_Config.AssetDirectory; }
+        std::filesystem::path GetScriptAssemblyPath() const { return m_ProjectDirectory / m_Config.ScriptAssemblyPath; }
 
         ProjectConfig& GetConfig() { return m_Config; }
 
@@ -72,6 +60,26 @@ namespace Flameberry {
         static bool DeserializeIntoExistingProject(const std::filesystem::path& filePath, const Ref<Project>& dest);
         static void SerializeProject(const std::filesystem::path& filePath, const Project* project);
     };
+
+    struct ProjectRegistryEntry
+    {
+        std::string ProjectName;
+        std::filesystem::path ProjectFilePath;
+
+        const bool operator==(const ProjectRegistryEntry& other) {
+            // This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
+            return ProjectFilePath == other.ProjectFilePath;
+        }
+
+        const bool operator!=(const ProjectRegistryEntry& other) {
+            // This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
+            return !(*this == other);
+        }
+
+        // TODO: Add Timestamps, Project Type etc in the future
+    };
+
+    typedef std::vector<ProjectRegistryEntry> ProjectRegistry;
 
     class ProjectRegistryManager
     {

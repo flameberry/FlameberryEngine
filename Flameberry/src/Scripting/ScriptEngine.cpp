@@ -157,7 +157,7 @@ namespace Flameberry {
         MonoAssembly* AppAssembly;
         MonoImage* AppAssemblyImage;
 
-        std::string CoreAssemblyPath, AppAssemblyPath;
+        std::filesystem::path CoreAssemblyPath, AppAssemblyPath;
 
         const Scene* ActiveScene;
 
@@ -190,14 +190,14 @@ namespace Flameberry {
         }
     }
 
-    void ScriptEngine::Init()
+    void ScriptEngine::Init(const std::filesystem::path& appAssemblyPath)
     {
         s_Data = new ScriptEngineData();
         InitMono();
 
-        // TODO: Set this from .fbproj
-        s_Data->AppAssemblyPath = FBY_PROJECT_DIR"SandboxProject/Content/Scripting/Binaries/Release/net7.0/SandboxProject.dll";
-        LoadAssembliesAndSetup();
+        s_Data->AppAssemblyPath = appAssemblyPath;
+        if (std::filesystem::exists(s_Data->AppAssemblyPath))
+            LoadAssembliesAndSetup();
     }
 
     void ScriptEngine::InitMono()
@@ -232,7 +232,7 @@ namespace Flameberry {
         mono_add_internal_call("Flameberry.Managed.InternalCalls::TransformComponent_SetTranslation", (const void*)InternalCalls::TransformComponent_SetTranslation);
     }
 
-    void Flameberry::ScriptEngine::LoadCoreAssembly()
+    void ScriptEngine::LoadCoreAssembly()
     {
         // Create App Domain
         s_Data->AppDomain = mono_domain_create_appdomain("Flameberry-ScriptCoreRuntime", nullptr);
@@ -281,6 +281,7 @@ namespace Flameberry {
 
     void ScriptEngine::ReloadAppAssembly()
     {
+        FBY_INFO("Reloading Script Assemblies...");
         s_Data->ClassFullNameToManagedClass.clear();
 
         mono_domain_set(mono_get_root_domain(), false);
