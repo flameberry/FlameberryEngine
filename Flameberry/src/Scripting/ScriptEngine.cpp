@@ -288,6 +288,90 @@ namespace Flameberry {
             FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
             s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.UpdateWithFar(far);
         }
+
+        void SkyLightComponent_GetColor(uint64_t entity, glm::vec3& color)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            color = s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).Color;
+        }
+
+        void SkyLightComponent_SetColor(uint64_t entity, const glm::vec3& color)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).Color = color;
+        }
+
+        void SkyLightComponent_GetIntensity(uint64_t entity, float& intensity)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            intensity = s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).Intensity;
+        }
+
+        void SkyLightComponent_SetIntensity(uint64_t entity, float intensity)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).Intensity = intensity;
+        }
+
+        void SkyLightComponent_GetEnableSkyMap(uint64_t entity, bool& enableSkyMap)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            enableSkyMap = s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableSkyMap;
+        }
+
+        void SkyLightComponent_SetEnableSkyMap(uint64_t entity, uint8_t enableSkyMap)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableSkyMap = (bool)enableSkyMap;
+        }
+
+        void SkyLightComponent_GetEnableReflections(uint64_t entity, bool& enableReflections)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            enableReflections = s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableReflections;
+        }
+
+        void SkyLightComponent_SetEnableReflections(uint64_t entity, uint8_t enableReflections)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableReflections = (bool)enableReflections;
+        }
+
+        void DirectionalLightComponent_GetColor(uint64_t entity, glm::vec3& color)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            color = s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).Color;
+        }
+
+        void DirectionalLightComponent_SetColor(uint64_t entity, const glm::vec3& color)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).Color = color;
+        }
+
+        void DirectionalLightComponent_GetIntensity(uint64_t entity, float& intensity)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            intensity = s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).Intensity;
+        }
+
+        void DirectionalLightComponent_SetIntensity(uint64_t entity, const float& intensity)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).Intensity = intensity;
+        }
+
+        void DirectionalLightComponent_GetLightSize(uint64_t entity, float& lightSize)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            lightSize = s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).LightSize;
+        }
+
+        void DirectionalLightComponent_SetLightSize(uint64_t entity, const float& lightSize)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).LightSize = lightSize;
+        }
     }
 
     void ScriptEngine::Init(const std::filesystem::path& appAssemblyPath)
@@ -349,6 +433,22 @@ namespace Flameberry {
         FBY_ADD_INTERNAL_CALL(CameraComponent_SetNear);
         FBY_ADD_INTERNAL_CALL(CameraComponent_GetFar);
         FBY_ADD_INTERNAL_CALL(CameraComponent_SetFar);
+
+        FBY_ADD_INTERNAL_CALL(SkyLightComponent_GetColor);
+        FBY_ADD_INTERNAL_CALL(SkyLightComponent_SetColor);
+        FBY_ADD_INTERNAL_CALL(SkyLightComponent_GetIntensity);
+        FBY_ADD_INTERNAL_CALL(SkyLightComponent_SetIntensity);
+        FBY_ADD_INTERNAL_CALL(SkyLightComponent_GetEnableSkyMap);
+        FBY_ADD_INTERNAL_CALL(SkyLightComponent_SetEnableSkyMap);
+        FBY_ADD_INTERNAL_CALL(SkyLightComponent_GetEnableReflections);
+        FBY_ADD_INTERNAL_CALL(SkyLightComponent_SetEnableReflections);
+
+        FBY_ADD_INTERNAL_CALL(DirectionalLightComponent_GetColor);
+        FBY_ADD_INTERNAL_CALL(DirectionalLightComponent_SetColor);
+        FBY_ADD_INTERNAL_CALL(DirectionalLightComponent_GetIntensity);
+        FBY_ADD_INTERNAL_CALL(DirectionalLightComponent_SetIntensity);
+        FBY_ADD_INTERNAL_CALL(DirectionalLightComponent_GetLightSize);
+        FBY_ADD_INTERNAL_CALL(DirectionalLightComponent_SetLightSize);
 
         RegisterAllComponents();
     }

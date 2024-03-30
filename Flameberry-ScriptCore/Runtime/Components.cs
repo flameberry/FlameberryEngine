@@ -123,6 +123,57 @@ namespace Flameberry
 
     public class SkyLightComponent : Component
     {
+        public Vector3 Color
+        {
+            get
+            {
+                InternalCalls.SkyLightComponent_GetColor(Actor.ID, out Vector3 color);
+                return color;
+            }
+            set
+            {
+                InternalCalls.SkyLightComponent_SetColor(Actor.ID, ref value);
+            }
+        }
+
+        public float Intensity
+        {
+            get
+            {
+                InternalCalls.SkyLightComponent_GetIntensity(Actor.ID, out float intensity);
+                return intensity;
+            }
+            set
+            {
+                InternalCalls.SkyLightComponent_SetIntensity(Actor.ID, ref value);
+            }
+        }
+
+        public bool EnableSkyMap
+        {
+            get
+            {
+                InternalCalls.SkyLightComponent_GetEnableSkyMap(Actor.ID, out bool enableSkyMap);
+                return enableSkyMap;
+            }
+            set
+            {
+                InternalCalls.SkyLightComponent_SetEnableSkyMap(Actor.ID, ref value);
+            }
+        }
+
+        public bool EnableReflections
+        {
+            get
+            {
+                InternalCalls.SkyLightComponent_GetEnableReflections(Actor.ID, out bool enableReflections);
+                return enableReflections;
+            }
+            set
+            {
+                InternalCalls.SkyLightComponent_SetEnableReflections(Actor.ID, ref value);
+            }
+        }
     }
 
     public class MeshComponent : Component
@@ -131,6 +182,44 @@ namespace Flameberry
 
     public class DirectionalLightComponent : Component
     {
+        public Vector3 Color
+        {
+            get
+            {
+                InternalCalls.DirectionalLightComponent_GetColor(Actor.ID, out Vector3 color);
+                return color;
+            }
+            set
+            {
+                InternalCalls.DirectionalLightComponent_SetColor(Actor.ID, ref value);
+            }
+        }
+
+        public float Intensity
+        {
+            get
+            {
+                InternalCalls.DirectionalLightComponent_GetIntensity(Actor.ID, out float intensity);
+                return intensity;
+            }
+            set
+            {
+                InternalCalls.DirectionalLightComponent_SetIntensity(Actor.ID, ref value);
+            }
+        }
+
+        public float LightSize
+        {
+            get
+            {
+                InternalCalls.DirectionalLightComponent_GetLightSize(Actor.ID, out float lightSize);
+                return lightSize;
+            }
+            set
+            {
+                InternalCalls.DirectionalLightComponent_SetLightSize(Actor.ID, ref value);
+            }
+        }
     }
 
     public class PointLightComponent : Component
