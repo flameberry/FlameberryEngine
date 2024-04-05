@@ -372,6 +372,30 @@ namespace Flameberry {
             FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
             s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).LightSize = lightSize;
         }
+
+        void PointLightComponent_GetColor(uint64_t entity, glm::vec3& color)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            color = s_Data->ActiveScene->GetRegistry()->get<PointLightComponent>(entity).Color;
+        }
+
+        void PointLightComponent_SetColor(uint64_t entity, const glm::vec3& color)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<PointLightComponent>(entity).Color = color;
+        }
+
+        void PointLightComponent_GetIntensity(uint64_t entity, float& intensity)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            intensity = s_Data->ActiveScene->GetRegistry()->get<PointLightComponent>(entity).Intensity;
+        }
+
+        void PointLightComponent_SetIntensity(uint64_t entity, const float& intensity)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<PointLightComponent>(entity).Intensity = intensity;
+        }
     }
 
     void ScriptEngine::Init(const std::filesystem::path& appAssemblyPath)
@@ -449,6 +473,11 @@ namespace Flameberry {
         FBY_ADD_INTERNAL_CALL(DirectionalLightComponent_SetIntensity);
         FBY_ADD_INTERNAL_CALL(DirectionalLightComponent_GetLightSize);
         FBY_ADD_INTERNAL_CALL(DirectionalLightComponent_SetLightSize);
+
+        FBY_ADD_INTERNAL_CALL(PointLightComponent_GetColor);
+        FBY_ADD_INTERNAL_CALL(PointLightComponent_SetColor);
+        FBY_ADD_INTERNAL_CALL(PointLightComponent_GetIntensity);
+        FBY_ADD_INTERNAL_CALL(PointLightComponent_SetIntensity);
 
         RegisterAllComponents();
     }

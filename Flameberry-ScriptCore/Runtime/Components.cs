@@ -224,6 +224,31 @@ namespace Flameberry
 
     public class PointLightComponent : Component
     {
+        public Vector3 Color
+        {
+            get
+            {
+                InternalCalls.PointLightComponent_GetColor(Actor.ID, out Vector3 color);
+                return color;
+            }
+            set
+            {
+                InternalCalls.PointLightComponent_SetColor(Actor.ID, ref value);
+            }
+        }
+
+        public float Intensity
+        {
+            get
+            {
+                InternalCalls.PointLightComponent_GetIntensity(Actor.ID, out float intensity);
+                return intensity;
+            }
+            set
+            {
+                InternalCalls.PointLightComponent_SetIntensity(Actor.ID, ref value);
+            }
+        }
     }
 
     public class RigidBodyComponent : Component

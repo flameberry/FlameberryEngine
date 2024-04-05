@@ -81,6 +81,16 @@ namespace Flameberry.Managed
         public extern static void DirectionalLightComponent_GetLightSize(ulong entityID, out float lightSize);
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         public extern static void DirectionalLightComponent_SetLightSize(ulong entityID, ref float lightSize);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void PointLightComponent_GetColor(ulong entityID, out Vector3 color);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void PointLightComponent_SetColor(ulong entityID, ref Vector3 color);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void PointLightComponent_GetIntensity(ulong entityID, out float intensity);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void PointLightComponent_SetIntensity(ulong entityID, ref float intensity);
     }
 }
 
