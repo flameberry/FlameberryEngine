@@ -396,6 +396,120 @@ namespace Flameberry {
             FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
             s_Data->ActiveScene->GetRegistry()->get<PointLightComponent>(entity).Intensity = intensity;
         }
+
+        void RigidBodyComponent_GetRigidBodyType(uint64_t entity, RigidBodyComponent::RigidBodyType& rigidBodyType)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            rigidBodyType = s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Type;
+        }
+
+        void RigidBodyComponent_SetRigidBodyType(uint64_t entity, const RigidBodyComponent::RigidBodyType& rigidBodyType)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Type = rigidBodyType;
+        }
+
+        void RigidBodyComponent_GetDensity(uint64_t entity, float& density)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            density = s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Density;
+        }
+
+        void RigidBodyComponent_SetDensity(uint64_t entity, float density)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Density = density;
+        }
+
+        void RigidBodyComponent_GetStaticFriction(uint64_t entity, float& staticFriction)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            staticFriction = s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).StaticFriction;
+        }
+
+        void RigidBodyComponent_SetStaticFriction(uint64_t entity, float staticFriction)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).StaticFriction = staticFriction;
+        }
+
+        void RigidBodyComponent_GetDynamicFriction(uint64_t entity, float& dynamicFriction)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            dynamicFriction = s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).DynamicFriction;
+        }
+
+        void RigidBodyComponent_SetDynamicFriction(uint64_t entity, float dynamicFriction)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).DynamicFriction = dynamicFriction;
+        }
+
+        void RigidBodyComponent_GetRestitution(uint64_t entity, float& restitution)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            restitution = s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Restitution;
+        }
+
+        void RigidBodyComponent_SetRestitution(uint64_t entity, float restitution)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Restitution = restitution;
+        }
+
+        void BoxColliderComponent_GetSize(uint64_t entity, glm::vec3& size)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            size = s_Data->ActiveScene->GetRegistry()->get<BoxColliderComponent>(entity).Size;
+        }
+
+        void BoxColliderComponent_SetSize(uint64_t entity, const glm::vec3& size)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<BoxColliderComponent>(entity).Size = size;
+        }
+
+        void SphereColliderComponent_GetRadius(uint64_t entity, float& radius)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            radius = s_Data->ActiveScene->GetRegistry()->get<SphereColliderComponent>(entity).Radius;
+        }
+
+        void CapsuleColliderComponent_GetAxisType(uint64_t entity, AxisType& axisType)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            axisType = s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Axis;
+        }
+
+        void CapsuleColliderComponent_SetAxisType(uint64_t entity, const AxisType& axisType)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Axis = axisType;
+        }
+
+        void CapsuleColliderComponent_GetRadius(uint64_t entity, float& radius)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            radius = s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Radius;
+        }
+
+        void CapsuleColliderComponent_SetRadius(uint64_t entity, float radius)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Radius = radius;
+        }
+
+        void CapsuleColliderComponent_GetHeight(uint64_t entity, float& height)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            height = s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Height;
+        }
+
+        void CapsuleColliderComponent_SetHeight(uint64_t entity, float height)
+        {
+            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+            s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Height = height;
+        }
     }
 
     void ScriptEngine::Init(const std::filesystem::path& appAssemblyPath)
@@ -478,6 +592,30 @@ namespace Flameberry {
         FBY_ADD_INTERNAL_CALL(PointLightComponent_SetColor);
         FBY_ADD_INTERNAL_CALL(PointLightComponent_GetIntensity);
         FBY_ADD_INTERNAL_CALL(PointLightComponent_SetIntensity);
+
+        FBY_ADD_INTERNAL_CALL(RigidBodyComponent_GetRigidBodyType);
+        FBY_ADD_INTERNAL_CALL(RigidBodyComponent_SetRigidBodyType);
+        FBY_ADD_INTERNAL_CALL(RigidBodyComponent_GetDensity);
+        FBY_ADD_INTERNAL_CALL(RigidBodyComponent_SetDensity);
+        FBY_ADD_INTERNAL_CALL(RigidBodyComponent_GetStaticFriction);
+        FBY_ADD_INTERNAL_CALL(RigidBodyComponent_SetStaticFriction);
+        FBY_ADD_INTERNAL_CALL(RigidBodyComponent_GetDynamicFriction);
+        FBY_ADD_INTERNAL_CALL(RigidBodyComponent_SetDynamicFriction);
+        FBY_ADD_INTERNAL_CALL(RigidBodyComponent_GetRestitution);
+        FBY_ADD_INTERNAL_CALL(RigidBodyComponent_SetRestitution);
+
+        FBY_ADD_INTERNAL_CALL(BoxColliderComponent_GetSize);
+        // FBY_ADD_INTERNAL_CALL(BoxColliderComponent_SetSize);
+
+        FBY_ADD_INTERNAL_CALL(SphereColliderComponent_GetRadius);
+        // FBY_ADD_INTERNAL_CALL(SphereColliderComponent_SetRadius);
+
+        FBY_ADD_INTERNAL_CALL(CapsuleColliderComponent_GetAxisType);
+        FBY_ADD_INTERNAL_CALL(CapsuleColliderComponent_SetAxisType);
+        FBY_ADD_INTERNAL_CALL(CapsuleColliderComponent_GetRadius);
+        FBY_ADD_INTERNAL_CALL(CapsuleColliderComponent_SetRadius);
+        FBY_ADD_INTERNAL_CALL(CapsuleColliderComponent_GetHeight);
+        FBY_ADD_INTERNAL_CALL(CapsuleColliderComponent_SetHeight);
 
         RegisterAllComponents();
     }

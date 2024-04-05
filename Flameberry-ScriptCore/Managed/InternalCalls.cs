@@ -91,6 +91,54 @@ namespace Flameberry.Managed
         public extern static void PointLightComponent_GetIntensity(ulong entityID, out float intensity);
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         public extern static void PointLightComponent_SetIntensity(ulong entityID, ref float intensity);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_GetRigidBodyType(ulong entityID, out RigidBodyType projectionType);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_SetRigidBodyType(ulong entityID, ref RigidBodyType projectionType);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_GetDensity(ulong entityID, out float density);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_SetDensity(ulong entityID, ref float density);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_GetStaticFriction(ulong entityID, out float staticFriction);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_SetStaticFriction(ulong entityID, ref float staticFriction);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_GetDynamicFriction(ulong entityID, out float dynamicFriction);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_SetDynamicFriction(ulong entityID, ref float dynamicFriction);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_GetRestitution(ulong entityID, out float restitution);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_SetRestitution(ulong entityID, ref float restitution);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void BoxColliderComponent_GetSize(ulong entityID, out Vector3 size);
+        // [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        // public extern static void BoxColliderComponent_SetSize(ulong entityID, ref Vector3 size);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void SphereColliderComponent_GetRadius(ulong entityID, out float size);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void CapsuleColliderComponent_GetAxisType(ulong entityID, out AxisType axisType);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void CapsuleColliderComponent_SetAxisType(ulong entityID, ref AxisType axisType);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void CapsuleColliderComponent_GetRadius(ulong entityID, out float radius);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void CapsuleColliderComponent_SetRadius(ulong entityID, ref float radius);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void CapsuleColliderComponent_GetHeight(ulong entityID, out float height);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void CapsuleColliderComponent_SetHeight(ulong entityID, ref float height);
     }
 }
 

@@ -534,7 +534,7 @@ namespace Flameberry {
 
                         ImGui::EndTable();
                     }
-                }, false // removable = false
+                }, true // removable = true
             );
 
             DrawComponent<RigidBodyComponent>("Rigid Body", [&]()
