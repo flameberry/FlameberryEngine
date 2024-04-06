@@ -1,9 +1,13 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 namespace Flameberry.Managed
 {
     public class InternalCalls
     {
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static bool Input_IsKeyDown(KeyCode key);
+
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         public extern static bool Entity_HasComponent(ulong entityID, Type componentType);
 
@@ -116,6 +120,9 @@ namespace Flameberry.Managed
         public extern static void RigidBodyComponent_GetRestitution(ulong entityID, out float restitution);
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         public extern static void RigidBodyComponent_SetRestitution(ulong entityID, ref float restitution);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern static void RigidBodyComponent_ApplyForce(ulong entityID, ref Vector3 force, ref ForceMode mode, bool autowake);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         public extern static void BoxColliderComponent_GetSize(ulong entityID, out Vector3 size);

@@ -532,6 +532,36 @@ namespace Flameberry {
                             ImGui::EndCombo();
                         }
 
+                        Ref<ManagedActor> managedActor = ScriptEngine::GetManagedActor(m_SelectionContext);
+
+                        // Display Script Fields
+                        if (managedActor)
+                        {
+                            for (const auto& [name, field] : actorClasses.at(sc.AssemblyQualifiedClassName)->GetScriptFields())
+                            {
+                                ImGui::PushID(name.c_str());
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+
+                                ImGui::AlignTextToFramePadding();
+                                ImGui::Text("%s", name.c_str());
+
+                                ImGui::TableNextColumn();
+
+                                switch (field.Type)
+                                {
+                                    case ScriptFieldType::Float:
+                                    {
+                                        float value = managedActor->GetFieldValue<float>(name);
+                                        if (ImGui::DragFloat("##", &value, 0.1f))
+                                            managedActor->SetFieldValue(name, value);
+                                        break;
+                                    }
+                                }
+                                ImGui::PopID();
+                            }
+                        }
+
                         ImGui::EndTable();
                     }
                 }, true // removable = true

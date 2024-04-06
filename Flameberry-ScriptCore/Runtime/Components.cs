@@ -252,6 +252,7 @@ namespace Flameberry
     }
 
     public enum RigidBodyType : byte { Static = 0, Dynamic };
+    public enum ForceMode : byte { Force = 0, Impulse, VelocityChange, Acceleration };
 
     public class RigidBodyComponent : Component
     {
@@ -318,6 +319,11 @@ namespace Flameberry
             {
                 InternalCalls.RigidBodyComponent_SetRestitution(Actor.ID, ref value);
             }
+        }
+
+        public void AddForce(Vector3 force, ForceMode mode, bool autowake = true)
+        {
+            InternalCalls.RigidBodyComponent_ApplyForce(Actor.ID, ref force, ref mode, autowake);
         }
     }
 

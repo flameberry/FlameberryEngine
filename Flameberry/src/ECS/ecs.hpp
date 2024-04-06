@@ -489,4 +489,17 @@ namespace fbentt {
         std::vector<entity> entities;
         std::vector<uint32_t> free_entities;
     };
+
 }
+
+// Logging conversion definitions
+// Make fbentt::entity formattable
+template <>
+struct fmt::formatter<fbentt::entity> : formatter<std::string_view>
+{
+    template <typename FormatContext>
+    auto format(const fbentt::entity& entity, FormatContext& ctx)
+    {
+        return formatter<std::string_view>::format(std::to_string((fbentt::entity::handle_type)entity), ctx);
+    }
+};

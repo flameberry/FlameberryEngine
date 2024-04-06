@@ -16,6 +16,7 @@
 #define __FBY_LOGGER_STYLE_FLAG
 #endif
 
+// Make glm::vec3 formattable
 template <>
 struct fmt::formatter<glm::vec3> : formatter<std::string_view>
 {
