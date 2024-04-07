@@ -7,6 +7,7 @@
 namespace Flameberry {
     struct ProjectConfig
     {
+        std::filesystem::path StartScene;
         std::filesystem::path AssetDirectory /* = "Content" */, ScriptAssemblyPath;
 
         std::string Name = "Flameberry-Project";
@@ -38,6 +39,7 @@ namespace Flameberry {
 
         const std::filesystem::path& GetProjectDirectory() const { return m_ProjectDirectory; }
         std::filesystem::path GetAssetDirectory() const { return m_ProjectDirectory / m_Config.AssetDirectory; }
+        std::filesystem::path GetStartScenePath() const { return m_ProjectDirectory / m_Config.StartScene; }
         std::filesystem::path GetScriptAssemblyPath() const { return m_ProjectDirectory / m_Config.ScriptAssemblyPath; }
 
         ProjectConfig& GetConfig() { return m_Config; }

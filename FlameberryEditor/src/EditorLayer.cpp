@@ -76,6 +76,15 @@ namespace Flameberry {
         m_SceneHierarchyPanel = CreateRef<SceneHierarchyPanel>(m_ActiveScene);
         m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
 
+        // Open the start scene
+        if (const auto& scenePath = m_Project->GetStartScenePath(); !scenePath.empty())
+        {
+            if (std::filesystem::exists(scenePath))
+                OpenScene(scenePath);
+            else
+                FBY_ERROR("Start scene path: {} does not exist", scenePath);
+        }
+
 #pragma region MousePickingResources
         BufferSpecification mousePickingBufferSpec;
         mousePickingBufferSpec.InstanceCount = 1;

@@ -1,4 +1,5 @@
 Project: SandboxProject
 Configuration:
   AssetDirectory: Content
+  ScriptAssemblyPath: Content/Scripting/Binaries/net7.0/SandboxProject.dll  StartScene: Content/Scenes/Scripting.berry
   ScriptAssemblyPath: Content/Scripting/Binaries/net7.0/SandboxProject.dll
