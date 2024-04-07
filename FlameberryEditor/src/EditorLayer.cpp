@@ -66,6 +66,7 @@ namespace Flameberry {
         m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/PlayAndStopButtonIcon.png");
         m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon.png");
         m_PauseIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/PauseIcon.png");
+        m_StepIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/StepIcon.png");
 
         Project::SetActive(m_Project);
         std::filesystem::current_path(m_Project->GetProjectDirectory());
@@ -818,6 +819,16 @@ namespace Flameberry {
                     break;
                 }
             }
+
+            ImGui::SameLine();
+
+            ImGui::BeginDisabled(!m_ActiveScene->IsRuntimePaused());
+            if (ImGui::ImageButton("SceneStepButton", reinterpret_cast<ImTextureID>(m_StepIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0)))
+            {
+                FBY_LOG("Stepped");
+                m_ActiveScene->Step(1);
+            }
+            ImGui::EndDisabled();
 
             ImGui::SameLine();
 

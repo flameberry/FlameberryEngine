@@ -172,8 +172,14 @@ namespace Flameberry {
     {
         FBY_PROFILE_SCOPE("Scene::OnUpdateRuntime");
 
+        // Handle Pausing and Stepping
         if (m_IsRuntimePaused)
-            return;
+        {
+            if (m_StepFrames <= 0)
+                return;
+            else
+                m_StepFrames--;
+        }
 
         // Update Native Scripts
         for (auto entity : m_Registry->view<NativeScriptComponent>())

@@ -41,6 +41,7 @@ namespace Flameberry {
         bool IsRuntimePaused() const { return m_IsRuntimePaused; }
 
         void SetRuntimePaused(bool value) { m_IsRuntimePaused = value; }
+        void Step(int steps) { m_StepFrames = steps; }
 
         inline std::string GetName() const { return m_Name; }
         inline Ref<fbentt::registry> GetRegistry() const { return m_Registry; }
@@ -55,6 +56,7 @@ namespace Flameberry {
         glm::vec2 m_ViewportSize = { 1280, 720 };
 
         bool m_IsRuntimeActive = false, m_IsRuntimePaused = false;
+        int m_StepFrames = 0;
 
         friend class SceneHierarchyPanel;
         friend class InspectorPanel;
