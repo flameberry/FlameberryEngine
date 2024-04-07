@@ -7,8 +7,8 @@
 namespace Flameberry {
     struct ProjectConfig
     {
-        std::filesystem::path StartScene;
         std::filesystem::path AssetDirectory /* = "Content" */, ScriptAssemblyPath;
+        std::filesystem::path StartScene;
 
         std::string Name = "Flameberry-Project";
     };
@@ -19,12 +19,6 @@ namespace Flameberry {
         // Static Utilities
         static const std::filesystem::path& GetActiveProjectDirectory() {
             return s_ActiveProject->GetProjectDirectory();
-        }
-        static std::filesystem::path GetActiveAssetDirectory() {
-            return s_ActiveProject->GetProjectDirectory() / s_ActiveProject->m_Config.AssetDirectory;
-        }
-        static std::filesystem::path GetActiveScriptAssemblyPath() {
-            return s_ActiveProject->GetProjectDirectory() / s_ActiveProject->m_Config.ScriptAssemblyPath;
         }
 
         // Standard procedure for creating a project on disk
