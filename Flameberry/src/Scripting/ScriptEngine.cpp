@@ -871,6 +871,8 @@ namespace Flameberry {
             return nullptr;
         }
 
+        // Important
+        mono_runtime_object_init(instance);
         return instance;
     }
 
