@@ -537,7 +537,7 @@ namespace Flameberry {
 
                         if (ImGui::CollapsingHeader("Fields", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAllColumns))
                         {
-                            if (m_Context->IsRunning())
+                            if (m_Context->IsRuntimeActive())
                             {
                                 // Display Script Fields
                                 if (Ref<ManagedActor> managedActor = ScriptEngine::GetManagedActor(m_SelectionContext))

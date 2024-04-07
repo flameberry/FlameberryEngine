@@ -65,6 +65,7 @@ namespace Flameberry {
         m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/scale_icon.png");
         m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/PlayAndStopButtonIcon.png");
         m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon.png");
+        m_PauseIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/PauseIcon.png");
 
         Project::SetActive(m_Project);
         std::filesystem::current_path(m_Project->GetProjectDirectory());
@@ -795,15 +796,28 @@ namespace Flameberry {
             switch (m_EditorState)
             {
                 case EditorState::Edit:
-                    ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f));
+                {
+                    if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f)))
+                        OnScenePlay();
                     break;
+                }
                 case EditorState::Play:
-                    ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor);
+                {
+                    if (m_ActiveScene->IsRuntimePaused())
+                    {
+                        // UnPause the scene
+                        if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+                            m_ActiveScene->SetRuntimePaused(false);
+                    }
+                    else
+                    {
+                        // Pause the scene
+                        if (ImGui::ImageButton("ScenePauseButton", reinterpret_cast<ImTextureID>(m_PauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+                            m_ActiveScene->SetRuntimePaused(true);
+                    }
                     break;
+                }
             }
-
-            if (ImGui::IsItemClicked() && m_EditorState == EditorState::Edit)
-                OnScenePlay();
 
             ImGui::SameLine();
 
