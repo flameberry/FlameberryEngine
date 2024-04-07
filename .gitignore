@@ -31,6 +31,8 @@ shellscripts/
 !Scripts/*.sh
 Scripts/Setup.meta
 
+!Flameberry/vendor/mono/lib/*.dylib
+
 # Pycharm folders
 .idea/
 __pycache__/
