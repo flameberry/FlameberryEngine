@@ -814,15 +814,19 @@ namespace Flameberry {
             switch (m_EditorState)
             {
                 case EditorState::Edit:
+                {
+                    ImGui::BeginDisabled();
                     ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f));
+                    ImGui::EndDisabled();
                     break;
+                }
                 case EditorState::Play:
-                    ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1));
+                {
+                    if (ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1)))
+                        OnSceneEdit();
                     break;
+                }
             }
-
-            if (ImGui::IsItemClicked() && m_EditorState == EditorState::Play)
-                OnSceneEdit();
             });
     }
 
