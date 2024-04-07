@@ -33,6 +33,8 @@ namespace Flameberry {
 
     void Scene::OnStartRuntime()
     {
+        m_IsRunning = true;
+
         // Update Cameras
         for (auto entity : m_Registry->view<CameraComponent>())
         {
@@ -151,6 +153,8 @@ namespace Flameberry {
 
     void Scene::OnStopRuntime()
     {
+        m_IsRunning = false;
+
         m_PxScene->release();
 
         ScriptEngine::OnRuntimeStop();

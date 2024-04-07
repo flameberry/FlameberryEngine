@@ -532,33 +532,71 @@ namespace Flameberry {
                             ImGui::EndCombo();
                         }
 
-                        Ref<ManagedActor> managedActor = ScriptEngine::GetManagedActor(m_SelectionContext);
-
-                        // Display Script Fields
-                        if (managedActor)
+                        if (m_Context->IsRunning())
                         {
-                            for (const auto& [name, field] : actorClasses.at(sc.AssemblyQualifiedClassName)->GetScriptFields())
+                            // Display Script Fields
+                            if (Ref<ManagedActor> managedActor = ScriptEngine::GetManagedActor(m_SelectionContext))
                             {
-                                ImGui::PushID(name.c_str());
+                                for (const auto& field : managedActor->GetManagedClass()->GetScriptFields())
+                                {
+                                    ImGui::PushID(field.Name.c_str());
+                                    ImGui::TableNextRow();
+                                    ImGui::TableNextColumn();
+
+                                    ImGui::AlignTextToFramePadding();
+                                    ImGui::Text("%s", field.Name.c_str());
+
+                                    ImGui::TableNextColumn();
+
+                                    switch (field.Type)
+                                    {
+                                        case ScriptFieldType::Float:
+                                        {
+                                            float value = managedActor->GetFieldValue<float>(field);
+                                            if (ImGui::DragFloat("##", &value, 0.1f))
+                                                managedActor->SetFieldValue(field, value);
+                                            break;
+                                        }
+                                    }
+                                    ImGui::PopID();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            uint32_t i = 0;
+                            // Display Editor Only Script Fields
+                            for (const auto& field : actorClasses.at(sc.AssemblyQualifiedClassName)->GetScriptFields())
+                            {
+                                ImGui::PushID(field.Name.c_str());
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
 
                                 ImGui::AlignTextToFramePadding();
-                                ImGui::Text("%s", name.c_str());
+                                ImGui::Text("%s", field.Name.c_str());
 
                                 ImGui::TableNextColumn();
+
+                                auto& localScriptFieldBufferMap = ScriptEngine::GetLocalScriptFieldBufferMap();
+                                ScriptFieldBuffer* scriptFieldBufferPtr = nullptr;
+                                if (auto scriptFieldBufferMapIterator = localScriptFieldBufferMap.find(m_SelectionContext); scriptFieldBufferMapIterator != localScriptFieldBufferMap.end())
+                                {
+                                    if (auto scriptFieldBufferIterator = scriptFieldBufferMapIterator->second.find(i); scriptFieldBufferIterator != scriptFieldBufferMapIterator->second.end())
+                                        scriptFieldBufferPtr = &scriptFieldBufferIterator->second;
+                                }
 
                                 switch (field.Type)
                                 {
                                     case ScriptFieldType::Float:
                                     {
-                                        float value = managedActor->GetFieldValue<float>(name);
+                                        float value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<float>() : 0.0f;
                                         if (ImGui::DragFloat("##", &value, 0.1f))
-                                            managedActor->SetFieldValue(name, value);
+                                            scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
                                         break;
                                     }
                                 }
                                 ImGui::PopID();
+                                i++;
                             }
                         }
 

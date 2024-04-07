@@ -164,12 +164,14 @@ namespace Flameberry {
         // Used to get the specific mono class of the class name
         // Also used to keep track of all loaded user classes
         std::unordered_map<std::string, Ref<ManagedClass>> ClassFullNameToManagedClass;
+        // Used to manage runtime actors in the scene
+        std::unordered_map<fbentt::entity::handle_type, Ref<ManagedActor>> ManagedActors;
 
         using HasComponentFunction = bool(*)(fbentt::entity entity);
         std::unordered_map<MonoType*, HasComponentFunction> ComponentTypeHashToHasComponentFunction;
 
-        // Used to manage runtime actors in the scene
-        std::unordered_map<fbentt::entity::handle_type, Ref<ManagedActor>> ManagedActors;
+        // Editor Specific Field Buffers
+        std::unordered_map<fbentt::entity::handle_type, ScriptFieldBufferMap> LocalScriptFieldBufferMap;
     };
 
     static ScriptEngineData* s_Data;
@@ -466,15 +468,7 @@ namespace Flameberry {
                 case ForceMode::VelocityChange: pxMode = physx::PxForceMode::eVELOCITY_CHANGE; break;
                 case ForceMode::Acceleration: pxMode = physx::PxForceMode::eACCELERATION; break;
             }
-            FBY_LOG("{}, {}, {}", force, (uint8_t)mode, autowake);
             rigidBodyRuntimePtr->addForce(physx::PxVec3(force.x, force.y, force.z), pxMode, autowake);
-        }
-
-        void RigidBodyComponent_ApplyImpulse(uint64_t entity, const glm::vec3& force, bool autowake)
-        {
-            FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-            physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).RuntimeRigidBody;
-            rigidBodyRuntimePtr->addForce(physx::PxVec3(force.x, force.y, force.z), physx::PxForceMode::eIMPULSE, autowake);
         }
 
         void BoxColliderComponent_GetSize(uint64_t entity, glm::vec3& size)
@@ -719,7 +713,9 @@ namespace Flameberry {
     void ScriptEngine::ReloadAppAssembly()
     {
         FBY_INFO("Reloading Script Assemblies...");
+        s_Data->ComponentTypeHashToHasComponentFunction.clear();
         s_Data->ClassFullNameToManagedClass.clear();
+        s_Data->LocalScriptFieldBufferMap.clear();
 
         // This will crash if we try to unload a non-existent app domain
         if (s_Data->AppDomain)
@@ -747,6 +743,17 @@ namespace Flameberry {
             {
                 Ref<ManagedClass> managedClass = s_Data->ClassFullNameToManagedClass[sc.AssemblyQualifiedClassName];
                 Ref<ManagedActor> managedActor = CreateRef<ManagedActor>(managedClass, entity);
+
+                // Copy all local script field buffer values to mono runtime objects
+                if (auto it = s_Data->LocalScriptFieldBufferMap.find(entity); it != s_Data->LocalScriptFieldBufferMap.end())
+                {
+                    for (const auto& [index, scriptFieldBuffer] : it->second)
+                    {
+                        const auto& field = managedClass->GetScriptFields()[index];
+                        managedActor->SetFieldBuffer(field, (void*)scriptFieldBuffer.GetBuffer());
+                    }
+                }
+
                 managedActor->CallOnCreateMethod();
 
                 s_Data->ManagedActors[entity] = managedActor;
@@ -786,6 +793,11 @@ namespace Flameberry {
         return it->second;
     }
 
+    std::unordered_map<fbentt::entity::handle_type, ScriptFieldBufferMap>& ScriptEngine::GetLocalScriptFieldBufferMap()
+    {
+        return s_Data->LocalScriptFieldBufferMap;
+    }
+
     void ScriptEngine::Shutdown()
     {
         delete s_Data;
@@ -823,7 +835,9 @@ namespace Flameberry {
                 MonoType* fieldType = mono_field_get_type(field);
                 ScriptFieldType scriptFieldType = MonoUtils::MonoTypeToScriptFieldType(fieldType);
 
-                m_ScriptFields[name] = { scriptFieldType, name, field };
+                m_ScriptFields.push_back(
+                    ScriptField{ scriptFieldType, name, field }
+                );
             }
         }
     }
@@ -882,33 +896,20 @@ namespace Flameberry {
             mono_unhandled_exception(exception);
     }
 
-    bool ManagedActor::GetFieldValueInternal(const std::string& name, void* buffer)
+    void ManagedActor::SetFieldBuffer(const ScriptField& scriptField, void* buffer)
     {
-        const auto& fields = m_ManagedClass->GetScriptFields();
+        SetFieldValueInternal(scriptField, buffer);
+    }
 
-        auto it = fields.find(name);
-        if (it == fields.end())
-        {
-            FBY_ERROR("Failed to get field value: Unknown field: {}", name);
-            return false;
-        }
-
-        mono_field_get_value(m_Instance, it->second.ClassField, buffer);
+    bool ManagedActor::GetFieldValueInternal(const ScriptField& scriptField, void* buffer)
+    {
+        mono_field_get_value(m_Instance, scriptField.ClassField, buffer);
         return true;
     }
 
-    void ManagedActor::SetFieldValueInternal(const std::string& name, void* value)
+    void ManagedActor::SetFieldValueInternal(const ScriptField& scriptField, void* value)
     {
-        const auto& fields = m_ManagedClass->GetScriptFields();
-
-        auto it = fields.find(name);
-        if (it == fields.end())
-        {
-            FBY_ERROR("Failed to set field value: Unknown field: {}", name);
-            return;
-        }
-
-        mono_field_set_value(m_Instance, it->second.ClassField, value);
+        mono_field_set_value(m_Instance, scriptField.ClassField, value);
     }
 
     void ManagedActor::CallOnCreateMethod()

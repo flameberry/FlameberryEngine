@@ -37,6 +37,8 @@ namespace Flameberry {
         fbentt::entity DuplicateSingleEntity(fbentt::entity src);
         fbentt::entity DuplicateEntityTree(fbentt::entity src);
 
+        bool IsRunning() const { return m_IsRunning; }
+
         inline std::string GetName() const { return m_Name; }
         inline Ref<fbentt::registry> GetRegistry() const { return m_Registry; }
         fbentt::entity GetPrimaryCameraEntity() const;
@@ -48,6 +50,7 @@ namespace Flameberry {
 
         std::string m_Name = "Untitled";
         glm::vec2 m_ViewportSize = { 1280, 720 };
+        bool m_IsRunning = false;
 
         friend class SceneHierarchyPanel;
         friend class InspectorPanel;

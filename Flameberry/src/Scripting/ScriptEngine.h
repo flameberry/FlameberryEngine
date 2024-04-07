@@ -31,7 +31,37 @@ namespace Flameberry {
         ScriptFieldType Type;
         std::string Name;
         MonoClassField* ClassField;
+
+        ScriptField(const ScriptFieldType& type, const std::string& name, MonoClassField* field)
+            : Type(type), Name(name), ClassField(field)
+        {
+        }
     };
+
+    struct ScriptFieldBuffer
+    {
+        template<typename T>
+        T GetValue()
+        {
+            static_assert(sizeof(T) <= 16, "Type size too large");
+            return *(T*)m_Buffer;
+        }
+
+        template<typename T>
+        void SetValue(const T& value)
+        {
+            static_assert(sizeof(T) <= 16, "Type size too large");
+            memcpy(m_Buffer, &value, sizeof(T));
+        }
+
+        const uint8_t* GetBuffer() const { return m_Buffer; }
+    private:
+        // Editor-Specific buffer
+        uint8_t m_Buffer[16]; // 16 is the max a field can be currently, i.e., a Vector4
+    };
+
+    // Map of the field index to the corresponding editor-specific buffer
+    using ScriptFieldBufferMap = std::unordered_map<uint32_t, ScriptFieldBuffer>;
 
     class ManagedClass
     {
@@ -43,13 +73,12 @@ namespace Flameberry {
         MonoMethod* TryGetClassMethod(const char* methodName, int paramCount);
 
         std::string GetFullName() const { return fmt::format("{}.{}", m_NamespaceName, m_ClassName); }
-        const std::unordered_map<std::string, ScriptField>& GetScriptFields() const { return m_ScriptFields; }
-    private:
+        const std::vector<ScriptField>& GetScriptFields() const { return m_ScriptFields; }
     private:
         const char* m_NamespaceName;
         const char* m_ClassName;
 
-        std::unordered_map<std::string, ScriptField> m_ScriptFields;
+        std::vector<ScriptField> m_ScriptFields;
 
         MonoClass* m_Class;
         MonoImage* m_AssemblyImage;
@@ -61,27 +90,32 @@ namespace Flameberry {
         ManagedActor(const Ref<ManagedClass>& managedClass, fbentt::entity entity);
         ~ManagedActor();
 
+        Ref<ManagedClass> GetManagedClass() const { return m_ManagedClass; }
+
         void CallOnCreateMethod();
         void CallOnUpdateMethod(float delta);
         void CallOnDestroyMethod();
 
         template<typename T>
-        T GetFieldValue(const std::string& name)
+        T GetFieldValue(const ScriptField& scriptField)
         {
-            bool success = GetFieldValueInternal(name, s_ScriptFieldBuffer);
+            static_assert(sizeof(T) <= 16, "Type size too large");
+            bool success = GetFieldValueInternal(scriptField, s_ScriptFieldBuffer);
             if (!success)
                 return T();
             return *(T*)s_ScriptFieldBuffer;
         }
 
         template<typename T>
-        void SetFieldValue(const std::string& name, const T& value)
+        void SetFieldValue(const ScriptField& scriptField, const T& value)
         {
-            SetFieldValueInternal(name, (void*)&value);
+            static_assert(sizeof(T) <= 16, "Type size too large");
+            SetFieldValueInternal(scriptField, (void*)&value);
         }
     private:
-        bool GetFieldValueInternal(const std::string& name, void* buffer);
-        void SetFieldValueInternal(const std::string& name, void* value);
+        void SetFieldBuffer(const ScriptField& scriptField, void* buffer);
+        bool GetFieldValueInternal(const ScriptField& scriptField, void* buffer);
+        void SetFieldValueInternal(const ScriptField& scriptField, void* value);
     private:
         MonoMethod* m_Constructor = nullptr;
         MonoMethod* m_OnCreateMethod = nullptr;
@@ -92,6 +126,8 @@ namespace Flameberry {
         Ref<ManagedClass> m_ManagedClass;
 
         inline static uint8_t s_ScriptFieldBuffer[16];
+
+        friend class ScriptEngine;
     };
 
     struct ScriptEngineData;
@@ -111,6 +147,7 @@ namespace Flameberry {
         static void OnRuntimeUpdate(float delta);
 
         static Ref<ManagedActor> GetManagedActor(fbentt::entity entity);
+        static std::unordered_map<fbentt::entity::handle_type, ScriptFieldBufferMap>& GetLocalScriptFieldBufferMap();
     private:
         static void InitMono();
         static void LoadCoreAssembly();
