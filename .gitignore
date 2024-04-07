@@ -1,5 +1,8 @@
 SandboxProject/Content/**
 
+compile_commands.json
+.cache/
+
 # Mac Specific
 .DS_Store
 
