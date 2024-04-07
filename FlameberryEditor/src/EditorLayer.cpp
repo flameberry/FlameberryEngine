@@ -74,6 +74,15 @@ namespace Flameberry {
         m_SceneHierarchyPanel = CreateRef<SceneHierarchyPanel>(m_ActiveScene);
         m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
 
+        // Open the start scene
+        if (const auto& scenePath = m_Project->GetStartScenePath(); !scenePath.empty())
+        {
+            if (std::filesystem::exists(scenePath))
+                OpenScene(scenePath);
+            else
+                FBY_ERROR("Start scene path: {} does not exist", scenePath);
+        }
+
 #pragma region MousePickingResources
         BufferSpecification mousePickingBufferSpec;
         mousePickingBufferSpec.InstanceCount = 1;
@@ -164,16 +173,7 @@ namespace Flameberry {
             );
 #endif
         }
-
-        // Test
-        // auto cubeEntity = m_ActiveScene->GetRegistry()->create();
-        // m_ActiveScene->GetRegistry()->emplace<IDComponent>(cubeEntity);
-        // m_ActiveScene->GetRegistry()->emplace<TagComponent>(cubeEntity).Tag = "PaidActor";
-        // m_ActiveScene->GetRegistry()->emplace<TransformComponent>(cubeEntity);
-        // auto& mesh = m_ActiveScene->GetRegistry()->emplace<MeshComponent>(cubeEntity);
-        // mesh.MeshHandle = AssetManager::TryGetOrLoadAsset<StaticMesh>("Content/Meshes/cube.obj")->Handle;
-        // m_ActiveScene->GetRegistry()->emplace<NativeScriptComponent>(cubeEntity).Bind<MovingActor>();
-        }
+    }
 
     void EditorLayer::OnUpdate(float delta)
     {
@@ -564,8 +564,8 @@ namespace Flameberry {
                     }
                 }
                 break;
-                }
-                }
+        }
+    }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -925,4 +925,4 @@ namespace Flameberry {
         m_ActiveScene->OnStartRuntime();
     }
 
-        }
+}
