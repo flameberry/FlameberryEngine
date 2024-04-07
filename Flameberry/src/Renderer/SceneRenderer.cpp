@@ -960,7 +960,6 @@ namespace Flameberry {
         }
         else if (auto* capsuleCollider = scene->m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
         {
-            // TODO: Fix the wrong vertices
             // Define the radius and half height of the capsule
             float halfHeight = 0.5f * capsuleCollider->Height * transform.Scale.y;
             float radius = capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z) + bias;
@@ -970,56 +969,14 @@ namespace Flameberry {
             Renderer2D::AddLine(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, radius), transform.Translation + rotationMatrix * glm::vec3(0, -halfHeight, radius), greenColor);
             Renderer2D::AddLine(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, -radius), transform.Translation + rotationMatrix * glm::vec3(0, -halfHeight, -radius), greenColor);
 
-            // Define the number of lines
-            constexpr int numLines = 32;
+            Renderer2D::AddCircle(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, 0), radius, glm::quat(transform.Rotation), greenColor);
+            Renderer2D::AddCircle(transform.Translation + rotationMatrix * glm::vec3(0, -halfHeight, 0), radius, glm::quat(transform.Rotation), greenColor);
 
-            // Calculate the angle between each line segment
-            constexpr float segmentAngle = 2 * M_PI / numLines;
-
-            glm::vec3 vertices[2] = {};
-            vertices[0] = { radius, 0.0f, 0.0f };
-
-            uint8_t index = 1;
-            // Calculate the vertices for the circle
-            for (int i = 0; i < numLines; i++)
-            {
-                float theta = i * segmentAngle;
-                vertices[index].x = radius * cos(theta);
-                vertices[index].y = 0.0f;
-                vertices[index].z = radius * sin(theta);
-
-                const auto& pos = vertices[(index + 1) % 2];
-                const auto& pos2 = vertices[index];
-                Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, halfHeight, 0)) + transform.Translation, rotationMatrix * (pos2 + glm::vec3(0, halfHeight, 0)) + transform.Translation, greenColor);
-                Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, -halfHeight, 0)) + transform.Translation, rotationMatrix * (pos2 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, greenColor);
-
-                // Hemispheres
-                const glm::vec3& vertex1 = { vertices[(index + 1) % 2].x, vertices[(index + 1) % 2].z, vertices[(index + 1) % 2].y };
-                const glm::vec3& vertex2 = { vertices[index].x, vertices[index].z, vertices[index].y };
-                const glm::vec3& vertex3 = { vertices[(index + 1) % 2].y, vertices[(index + 1) % 2].x, vertices[(index + 1) % 2].z };
-                const glm::vec3& vertex4 = { vertices[index].y, vertices[index].x, vertices[index].z };
-                if (i < numLines / 2)
-                {
-                    Renderer2D::AddLine(rotationMatrix * (vertex1 + glm::vec3(0, halfHeight, 0)) + transform.Translation, rotationMatrix * (vertex2 + glm::vec3(0, halfHeight, 0)) + transform.Translation, greenColor);
-                    Renderer2D::AddLine(rotationMatrix * (vertex3 + glm::vec3(0, halfHeight, 0)) + transform.Translation, rotationMatrix * (vertex4 + glm::vec3(0, halfHeight, 0)) + transform.Translation, greenColor);
-                }
-                else
-                {
-                    Renderer2D::AddLine(rotationMatrix * (vertex1 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, rotationMatrix * (vertex2 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, greenColor);
-                    Renderer2D::AddLine(rotationMatrix * (vertex3 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, rotationMatrix * (vertex4 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, greenColor);
-                }
-                index = (index + 1) % 2;
-            }
-
-            const auto& pos = vertices[(index + 1) % 2];
-            Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, halfHeight, 0)) + transform.Translation, transform.Translation + rotationMatrix * glm::vec3{ radius, halfHeight, 0.0f }, greenColor);
-            Renderer2D::AddLine(rotationMatrix * (pos + glm::vec3(0, -halfHeight, 0)) + transform.Translation, transform.Translation + rotationMatrix * glm::vec3{ radius, -halfHeight, 0.0f }, greenColor);
-
-            const glm::vec3& vertex = { vertices[(index + 1) % 2].x, vertices[(index + 1) % 2].z, vertices[(index + 1) % 2].y };
-            const glm::vec3& vertex2 = { vertices[(index + 1) % 2].y, vertices[(index + 1) % 2].x, vertices[(index + 1) % 2].z };
-
-            Renderer2D::AddLine(rotationMatrix * (vertex + glm::vec3(0, halfHeight, 0)) + transform.Translation, transform.Translation + rotationMatrix * glm::vec3{ 0.0f, halfHeight, radius }, greenColor);
-            Renderer2D::AddLine(rotationMatrix * (vertex2 + glm::vec3(0, -halfHeight, 0)) + transform.Translation, transform.Translation + rotationMatrix * glm::vec3{ 0.0f, -halfHeight, radius }, greenColor);
+            // Hemispheres
+            Renderer2D::AddSemiCircle(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, 0, glm::pi<float>())), greenColor);
+            Renderer2D::AddSemiCircle(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, glm::pi<float>() / 2.0f, glm::pi<float>())), greenColor);
+            Renderer2D::AddSemiCircle(transform.Translation - rotationMatrix * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, 0, 0)), greenColor);
+            Renderer2D::AddSemiCircle(transform.Translation - rotationMatrix * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, glm::pi<float>() / 2.0f, 0)), greenColor);
         }
     }
 
