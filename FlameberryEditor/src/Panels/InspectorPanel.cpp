@@ -532,12 +532,67 @@ namespace Flameberry {
                             ImGui::EndCombo();
                         }
 
-                        if (m_Context->IsRunning())
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        if (ImGui::CollapsingHeader("Fields", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAllColumns))
                         {
-                            // Display Script Fields
-                            if (Ref<ManagedActor> managedActor = ScriptEngine::GetManagedActor(m_SelectionContext))
+                            if (m_Context->IsRunning())
                             {
-                                for (const auto& field : managedActor->GetManagedClass()->GetScriptFields())
+                                // Display Script Fields
+                                if (Ref<ManagedActor> managedActor = ScriptEngine::GetManagedActor(m_SelectionContext))
+                                {
+                                    for (const auto& field : managedActor->GetManagedClass()->GetScriptFields())
+                                    {
+                                        ImGui::PushID(field.Name.c_str());
+                                        ImGui::TableNextRow();
+                                        ImGui::TableNextColumn();
+
+                                        ImGui::AlignTextToFramePadding();
+                                        ImGui::Text("%s", field.Name.c_str());
+
+                                        ImGui::TableNextColumn();
+
+                                        switch (field.Type)
+                                        {
+                                            case ScriptFieldType::Float:
+                                            {
+                                                float value = managedActor->GetFieldValue<float>(field);
+                                                if (ImGui::DragFloat("##", &value, 0.1f))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::Vector2:
+                                            {
+                                                auto value = managedActor->GetFieldValue<glm::vec2>(field);
+                                                if (ImGui::DragFloat2("##", glm::value_ptr(value), 0.1f))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::Vector3:
+                                            {
+                                                auto value = managedActor->GetFieldValue<glm::vec3>(field);
+                                                if (ImGui::DragFloat3("##", glm::value_ptr(value), 0.1f))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::Vector4:
+                                            {
+                                                auto value = managedActor->GetFieldValue<glm::vec4>(field);
+                                                if (ImGui::DragFloat4("##", glm::value_ptr(value), 0.1f))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                        }
+                                        ImGui::PopID();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                uint32_t i = 0;
+                                // Display Editor Only Script Fields
+                                for (const auto& field : actorClasses.at(sc.AssemblyQualifiedClassName)->GetScriptFields())
                                 {
                                     ImGui::PushID(field.Name.c_str());
                                     ImGui::TableNextRow();
@@ -548,58 +603,50 @@ namespace Flameberry {
 
                                     ImGui::TableNextColumn();
 
+                                    auto& localScriptFieldBufferMap = ScriptEngine::GetLocalScriptFieldBufferMap();
+                                    ScriptFieldBuffer* scriptFieldBufferPtr = nullptr;
+                                    if (auto scriptFieldBufferMapIterator = localScriptFieldBufferMap.find(m_SelectionContext); scriptFieldBufferMapIterator != localScriptFieldBufferMap.end())
+                                    {
+                                        if (auto scriptFieldBufferIterator = scriptFieldBufferMapIterator->second.find(i); scriptFieldBufferIterator != scriptFieldBufferMapIterator->second.end())
+                                            scriptFieldBufferPtr = &scriptFieldBufferIterator->second;
+                                    }
+
                                     switch (field.Type)
                                     {
                                         case ScriptFieldType::Float:
                                         {
-                                            float value = managedActor->GetFieldValue<float>(field);
+                                            float value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<float>() : 0.0f;
                                             if (ImGui::DragFloat("##", &value, 0.1f))
-                                                managedActor->SetFieldValue(field, value);
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::Vector2:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<glm::vec2>() : glm::vec2(0.0f);
+                                            if (ImGui::DragFloat2("##", glm::value_ptr(value), 0.1f))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::Vector3:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<glm::vec3>() : glm::vec3(0.0f);
+                                            if (ImGui::DragFloat3("##", glm::value_ptr(value), 0.1f))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::Vector4:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<glm::vec4>() : glm::vec4(0.0f);
+                                            if (ImGui::DragFloat4("##", glm::value_ptr(value), 0.1f))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
                                             break;
                                         }
                                     }
                                     ImGui::PopID();
+                                    i++;
                                 }
                             }
                         }
-                        else
-                        {
-                            uint32_t i = 0;
-                            // Display Editor Only Script Fields
-                            for (const auto& field : actorClasses.at(sc.AssemblyQualifiedClassName)->GetScriptFields())
-                            {
-                                ImGui::PushID(field.Name.c_str());
-                                ImGui::TableNextRow();
-                                ImGui::TableNextColumn();
-
-                                ImGui::AlignTextToFramePadding();
-                                ImGui::Text("%s", field.Name.c_str());
-
-                                ImGui::TableNextColumn();
-
-                                auto& localScriptFieldBufferMap = ScriptEngine::GetLocalScriptFieldBufferMap();
-                                ScriptFieldBuffer* scriptFieldBufferPtr = nullptr;
-                                if (auto scriptFieldBufferMapIterator = localScriptFieldBufferMap.find(m_SelectionContext); scriptFieldBufferMapIterator != localScriptFieldBufferMap.end())
-                                {
-                                    if (auto scriptFieldBufferIterator = scriptFieldBufferMapIterator->second.find(i); scriptFieldBufferIterator != scriptFieldBufferMapIterator->second.end())
-                                        scriptFieldBufferPtr = &scriptFieldBufferIterator->second;
-                                }
-
-                                switch (field.Type)
-                                {
-                                    case ScriptFieldType::Float:
-                                    {
-                                        float value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<float>() : 0.0f;
-                                        if (ImGui::DragFloat("##", &value, 0.1f))
-                                            scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
-                                        break;
-                                    }
-                                }
-                                ImGui::PopID();
-                                i++;
-                            }
-                        }
-
                         ImGui::EndTable();
                     }
                 }, true // removable = true
