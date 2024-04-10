@@ -41,7 +41,7 @@ namespace Flameberry {
     struct ScriptFieldBuffer
     {
         template<typename T>
-        T GetValue()
+        T GetValue() const
         {
             static_assert(sizeof(T) <= 16, "Type size too large");
             return *(T*)m_Buffer;

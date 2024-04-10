@@ -11,6 +11,8 @@
 #include "Asset/MeshLoader.h"
 #include "Renderer/Skymap.h"
 
+#include "Scripting/ScriptEngine.h"
+
 namespace Flameberry {
     static std::string ProjectionTypeEnumToString(ProjectionType type)
     {
@@ -66,6 +68,68 @@ namespace Flameberry {
             return AxisType::Z;
     }
 
+    std::string ScriptFieldTypeEnumToString(ScriptFieldType fieldType)
+    {
+        switch (fieldType)
+        {
+            case ScriptFieldType::Invalid: return "Invalid";
+            case ScriptFieldType::Char:    return "Char";
+            case ScriptFieldType::Byte:    return "Byte";
+            case ScriptFieldType::Short:   return "Short";
+            case ScriptFieldType::Int:     return "Int";
+            case ScriptFieldType::Long:    return "Long";
+            case ScriptFieldType::UByte:   return "UByte";
+            case ScriptFieldType::UShort:  return "UShort";
+            case ScriptFieldType::UInt:    return "UInt";
+            case ScriptFieldType::ULong:   return "ULong";
+            case ScriptFieldType::Float:   return "Float";
+            case ScriptFieldType::Double:  return "Double";
+            case ScriptFieldType::Boolean: return "Boolean";
+            case ScriptFieldType::Vector2: return "Vector2";
+            case ScriptFieldType::Vector3: return "Vector3";
+            case ScriptFieldType::Vector4: return "Vector4";
+            case ScriptFieldType::Actor:   return "Actor";
+        }
+    }
+
+    ScriptFieldType ScriptFieldTypeStringToEnum(const std::string& fieldType)
+    {
+        if (fieldType == "Char")
+            return ScriptFieldType::Char;
+        else if (fieldType == "Byte")
+            return ScriptFieldType::Byte;
+        else if (fieldType == "Short")
+            return ScriptFieldType::Short;
+        else if (fieldType == "Int")
+            return ScriptFieldType::Int;
+        else if (fieldType == "Long")
+            return ScriptFieldType::Long;
+        else if (fieldType == "UByte")
+            return ScriptFieldType::UByte;
+        else if (fieldType == "UShort")
+            return ScriptFieldType::UShort;
+        else if (fieldType == "UInt")
+            return ScriptFieldType::UInt;
+        else if (fieldType == "ULong")
+            return ScriptFieldType::ULong;
+        else if (fieldType == "Float")
+            return ScriptFieldType::Float;
+        else if (fieldType == "Double")
+            return ScriptFieldType::Double;
+        else if (fieldType == "Boolean")
+            return ScriptFieldType::Boolean;
+        else if (fieldType == "Vector2")
+            return ScriptFieldType::Vector2;
+        else if (fieldType == "Vector3")
+            return ScriptFieldType::Vector3;
+        else if (fieldType == "Vector4")
+            return ScriptFieldType::Vector4;
+        else if (fieldType == "Actor")
+            return ScriptFieldType::Actor;
+        else
+            return ScriptFieldType::Invalid;
+    }
+
     Ref<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
     {
         Ref<Scene> newScene = CreateRef<Scene>();
@@ -114,13 +178,13 @@ namespace Flameberry {
                 auto& IDComp = destScene->m_Registry->emplace<IDComponent>(deserializedEntity);
                 IDComp.ID = ID;
 
-                if (auto tag = entity["TagComponent"]; tag)
+                if (auto tag = entity["TagComponent"])
                 {
                     auto& tagComp = destScene->m_Registry->emplace<TagComponent>(deserializedEntity);
                     tagComp.Tag = tag.as<std::string>();
                 }
 
-                if (auto transform = entity["TransformComponent"]; transform)
+                if (auto transform = entity["TransformComponent"])
                 {
                     auto& transformComp = destScene->m_Registry->emplace<TransformComponent>(deserializedEntity);
                     transformComp.Translation = transform["Translation"].as<glm::vec3>();
@@ -128,7 +192,7 @@ namespace Flameberry {
                     transformComp.Scale = transform["Scale"].as<glm::vec3>();
                 }
 
-                if (auto relation = entity["RelationshipComponent"]; relation)
+                if (auto relation = entity["RelationshipComponent"])
                 {
                     auto& relationComp = destScene->m_Registry->emplace<RelationshipComponent>(deserializedEntity);
                     relationComp.Parent = UUIDToEntityMap[relation["Parent"].as<uint64_t>()];
@@ -137,7 +201,7 @@ namespace Flameberry {
                     relationComp.FirstChild = UUIDToEntityMap[relation["FirstChild"].as<uint64_t>()];
                 }
 
-                if (auto camera = entity["CameraComponent"]; camera)
+                if (auto camera = entity["CameraComponent"])
                 {
                     auto& cameraComp = destScene->m_Registry->emplace<CameraComponent>(deserializedEntity);
                     cameraComp.IsPrimary = camera["IsPrimary"].as<bool>();
@@ -159,7 +223,7 @@ namespace Flameberry {
                     }
                 }
 
-                if (auto mesh = entity["MeshComponent"]; mesh)
+                if (auto mesh = entity["MeshComponent"])
                 {
                     auto& meshComp = destScene->m_Registry->emplace<MeshComponent>(deserializedEntity, 0);
                     meshComp.MeshHandle = mesh["MeshHandle"].as<uint64_t>();
@@ -171,7 +235,7 @@ namespace Flameberry {
                     }
                 }
 
-                if (auto skyLight = entity["SkyLightComponent"]; skyLight)
+                if (auto skyLight = entity["SkyLightComponent"])
                 {
                     auto& skyLightComp = destScene->m_Registry->emplace<SkyLightComponent>(deserializedEntity);
                     skyLightComp.Color = skyLight["Color"].as<glm::vec3>();
@@ -182,7 +246,7 @@ namespace Flameberry {
                     skyLightComp.SkyMap = ((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Skymap>(skyLight["SkyMap"].as<std::string>())->Handle : AssetHandle(0));
                 }
 
-                if (auto light = entity["DirectionalLightComponent"]; light)
+                if (auto light = entity["DirectionalLightComponent"])
                 {
                     auto& lightComp = destScene->m_Registry->emplace<DirectionalLightComponent>(deserializedEntity);
                     lightComp.Color = light["Color"].as<glm::vec3>();
@@ -190,20 +254,104 @@ namespace Flameberry {
                     lightComp.LightSize = light["LightSize"].as<float>();
                 }
 
-                if (auto light = entity["PointLightComponent"]; light)
+                if (auto light = entity["PointLightComponent"])
                 {
                     auto& lightComp = destScene->m_Registry->emplace<PointLightComponent>(deserializedEntity);
                     lightComp.Color = light["Color"].as<glm::vec3>();
                     lightComp.Intensity = light["Intensity"].as<float>();
                 }
 
-                if (auto script = entity["ScriptComponent"]; script)
+                if (auto script = entity["ScriptComponent"])
                 {
                     auto& scriptComp = destScene->m_Registry->emplace<ScriptComponent>(deserializedEntity);
                     scriptComp.AssemblyQualifiedClassName = script["AssemblyQualifiedClassName"].as<std::string>();
+
+                    if (auto scriptFields = script["ScriptFields"])
+                    {
+                        const auto& actorClasses = ScriptEngine::GetActorClassDictionary();
+                        if (auto it = actorClasses.find(scriptComp.AssemblyQualifiedClassName); it != actorClasses.end())
+                        {
+                            // Filling a temporary script field map for convenience
+                            struct ScriptFieldIndex
+                            {
+                                const ScriptField* Field = nullptr;
+                                uint32_t Index = 0;
+                            };
+
+                            std::unordered_map<std::string, ScriptFieldIndex> scriptFieldMap;
+                            uint32_t i = 0;
+                            for (const auto& scriptField : it->second->GetScriptFields())
+                            {
+                                scriptFieldMap[scriptField.Name] = { &scriptField, i };
+                                i++;
+                            }
+
+                            // Loading the script fields
+                            auto& localScriptFieldBufferMap = ScriptEngine::GetLocalScriptFieldBufferMap();
+                            auto& bufferMap = localScriptFieldBufferMap[deserializedEntity];
+                            for (auto scriptField : scriptFields)
+                            {
+                                const auto& name = scriptField["Name"].as<std::string>();
+
+                                if (auto it = scriptFieldMap.find(name); it != scriptFieldMap.end())
+                                {
+                                    ScriptFieldType fieldType = ScriptFieldTypeStringToEnum(scriptField["Type"].as<std::string>());
+                                    if (it->second.Field->Type == fieldType)
+                                    {
+                                        switch (fieldType)
+                                        {
+                                            case ScriptFieldType::Boolean:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<bool>());
+                                                break;
+                                            case ScriptFieldType::Char:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<int8_t>());
+                                                break;
+                                            case ScriptFieldType::Short:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<int16_t>());
+                                                break;
+                                            case ScriptFieldType::Int:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<int32_t>());
+                                                break;
+                                            case ScriptFieldType::Long:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<int64_t>());
+                                                break;
+                                            case ScriptFieldType::Byte:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<uint8_t>());
+                                                break;
+                                            case ScriptFieldType::UShort:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<uint16_t>());
+                                                break;
+                                            case ScriptFieldType::UInt:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<uint32_t>());
+                                                break;
+                                            case ScriptFieldType::ULong:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<uint64_t>());
+                                                break;
+                                            case ScriptFieldType::Float:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<float>());
+                                                break;
+                                            case ScriptFieldType::Double:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<double>());
+                                                break;
+                                            case ScriptFieldType::Vector2:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<glm::vec2>());
+                                                break;
+                                            case ScriptFieldType::Vector3:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<glm::vec3>());
+                                                break;
+                                            case ScriptFieldType::Vector4:
+                                                bufferMap[it->second.Index].SetValue(scriptField["Data"].as<glm::vec4>());
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                    }
                 }
 
-                if (auto rigidBody = entity["RigidBodyComponent"]; rigidBody)
+                if (auto rigidBody = entity["RigidBodyComponent"])
                 {
                     auto& rbComp = destScene->m_Registry->emplace<RigidBodyComponent>(deserializedEntity);
                     rbComp.Type = RigidBodyTypeStringToEnum(rigidBody["Type"].as<std::string>());
@@ -213,19 +361,19 @@ namespace Flameberry {
                     rbComp.Restitution = rigidBody["Restitution"].as<float>();
                 }
 
-                if (auto boxCollider = entity["BoxColliderComponent"]; boxCollider)
+                if (auto boxCollider = entity["BoxColliderComponent"])
                 {
                     auto& bcComp = destScene->m_Registry->emplace<BoxColliderComponent>(deserializedEntity);
                     bcComp.Size = boxCollider["Size"].as<glm::vec3>();
                 }
 
-                if (auto sphereCollider = entity["SphereColliderComponent"]; sphereCollider)
+                if (auto sphereCollider = entity["SphereColliderComponent"])
                 {
                     auto& scComp = destScene->m_Registry->emplace<SphereColliderComponent>(deserializedEntity);
                     scComp.Radius = sphereCollider["Radius"].as<float>();
                 }
 
-                if (auto capsuleCollider = entity["CapsuleColliderComponent"]; capsuleCollider)
+                if (auto capsuleCollider = entity["CapsuleColliderComponent"])
                 {
                     auto& ccComp = destScene->m_Registry->emplace<CapsuleColliderComponent>(deserializedEntity);
                     ccComp.Axis = AxisTypeStringToEnum(capsuleCollider["Axis"].as<std::string>());
@@ -396,6 +544,52 @@ namespace Flameberry {
             auto& script = scene->m_Registry->get<ScriptComponent>(entity);
             out << YAML::Key << "ScriptComponent" << YAML::BeginMap;
             out << YAML::Key << "AssemblyQualifiedClassName" << YAML::Value << script.AssemblyQualifiedClassName;
+
+            // Serialize fields
+            const auto& bufferMap = ScriptEngine::GetLocalScriptFieldBufferMap();
+            if (auto it = bufferMap.find(entity); it != bufferMap.end())
+            {
+                out << YAML::Key << "ScriptFields" << YAML::Value;
+                out << YAML::BeginSeq;
+
+                Ref<ManagedClass> managedClass = ScriptEngine::GetActorClassDictionary().at(script.AssemblyQualifiedClassName);
+                const auto& scriptFields = managedClass->GetScriptFields();
+                for (const auto& [index, scriptFieldBuffer] : it->second)
+                {
+                    out << YAML::BeginMap;
+                    out << YAML::Key << "Name" << YAML::Value << scriptFields[index].Name;
+                    out << YAML::Key << "Type" << YAML::Value << ScriptFieldTypeEnumToString(scriptFields[index].Type);
+                    out << YAML::Key << "Data" << YAML::Value;
+
+                    switch (scriptFields[index].Type)
+                    {
+                        case ScriptFieldType::Boolean: out << scriptFieldBuffer.GetValue<bool>(); break;
+                        case ScriptFieldType::Char:    out << scriptFieldBuffer.GetValue<int8_t>(); break;
+                        case ScriptFieldType::Short:   out << scriptFieldBuffer.GetValue<int16_t>(); break;
+                        case ScriptFieldType::Int:     out << scriptFieldBuffer.GetValue<int32_t>(); break;
+                        case ScriptFieldType::Long:    out << scriptFieldBuffer.GetValue<int64_t>(); break;
+                        case ScriptFieldType::Byte:
+                            // This is stored as uint16_t instead of uint8_t, 
+                            // because YAML conversion stores it as a character and while deserializing it,
+                            // throws a BadConversion Exception
+                            out << scriptFieldBuffer.GetValue<uint16_t>();
+                            break;
+                        case ScriptFieldType::UShort:  out << scriptFieldBuffer.GetValue<uint16_t>(); break;
+                        case ScriptFieldType::UInt:    out << scriptFieldBuffer.GetValue<uint32_t>(); break;
+                        case ScriptFieldType::ULong:   out << scriptFieldBuffer.GetValue<uint64_t>(); break;
+                        case ScriptFieldType::Float:   out << scriptFieldBuffer.GetValue<float>(); break;
+                        case ScriptFieldType::Double:  out << scriptFieldBuffer.GetValue<double>(); break;
+                        case ScriptFieldType::Vector2: out << scriptFieldBuffer.GetValue<glm::vec2>(); break;
+                        case ScriptFieldType::Vector3: out << scriptFieldBuffer.GetValue<glm::vec3>(); break;
+                        case ScriptFieldType::Vector4: out << scriptFieldBuffer.GetValue<glm::vec4>(); break;
+                        default: FBY_DEBUGBREAK(); break;
+                    }
+                    out << YAML::EndMap;
+                }
+
+                out << YAML::EndSeq; // Script Field Map
+            }
+
             out << YAML::EndMap; // Script Component
         }
 

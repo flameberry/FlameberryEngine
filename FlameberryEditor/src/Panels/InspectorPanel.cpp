@@ -557,8 +557,78 @@ namespace Flameberry {
                                         {
                                             case ScriptFieldType::Float:
                                             {
-                                                float value = managedActor->GetFieldValue<float>(field);
+                                                auto value = managedActor->GetFieldValue<float>(field);
                                                 if (ImGui::DragFloat("##", &value, 0.1f))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::Double:
+                                            {
+                                                auto value = managedActor->GetFieldValue<double>(field);
+                                                if (ImGui::DragScalar("##", ImGuiDataType_Double, &value, 0.1f))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::Boolean:
+                                            {
+                                                auto value = managedActor->GetFieldValue<bool>(field);
+                                                if (ImGui::Checkbox("##", &value))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::Char:
+                                            {
+                                                auto value = managedActor->GetFieldValue<int8_t>(field);
+                                                if (ImGui::DragScalar("##", ImGuiDataType_S8, &value, 1))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::Short:
+                                            {
+                                                auto value = managedActor->GetFieldValue<int16_t>(field);
+                                                if (ImGui::DragScalar("##", ImGuiDataType_S16, &value, 1))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::Int:
+                                            {
+                                                auto value = managedActor->GetFieldValue<int32_t>(field);
+                                                if (ImGui::DragScalar("##", ImGuiDataType_S32, &value, 1))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::Long:
+                                            {
+                                                auto value = managedActor->GetFieldValue<int64_t>(field);
+                                                if (ImGui::DragScalar("##", ImGuiDataType_S64, &value, 1))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::Byte:
+                                            {
+                                                auto value = managedActor->GetFieldValue<uint8_t>(field);
+                                                if (ImGui::DragScalar("##", ImGuiDataType_U8, &value, 1))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::UShort:
+                                            {
+                                                auto value = managedActor->GetFieldValue<uint16_t>(field);
+                                                if (ImGui::DragScalar("##", ImGuiDataType_U16, &value, 1))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::UInt:
+                                            {
+                                                auto value = managedActor->GetFieldValue<uint32_t>(field);
+                                                if (ImGui::DragScalar("##", ImGuiDataType_U32, &value, 1))
+                                                    managedActor->SetFieldValue(field, value);
+                                                break;
+                                            }
+                                            case ScriptFieldType::ULong:
+                                            {
+                                                auto value = managedActor->GetFieldValue<uint64_t>(field);
+                                                if (ImGui::DragScalar("##", ImGuiDataType_U64, &value, 1))
                                                     managedActor->SetFieldValue(field, value);
                                                 break;
                                             }
@@ -615,8 +685,78 @@ namespace Flameberry {
                                     {
                                         case ScriptFieldType::Float:
                                         {
-                                            float value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<float>() : 0.0f;
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<float>() : 0.0f;
                                             if (ImGui::DragFloat("##", &value, 0.1f))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::Double:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<double>() : 0.0f;
+                                            if (ImGui::DragScalar("##", ImGuiDataType_Double, &value, 0.1f))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::Boolean:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<bool>() : false;
+                                            if (ImGui::Checkbox("##", &value))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::Char:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<int8_t>() : 0;
+                                            if (ImGui::DragScalar("##", ImGuiDataType_S8, &value, 1))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::Short:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<int16_t>() : 0;
+                                            if (ImGui::DragScalar("##", ImGuiDataType_S16, &value, 1))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::Int:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<int32_t>() : 0;
+                                            if (ImGui::DragScalar("##", ImGuiDataType_S32, &value, 1))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::Long:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<int64_t>() : 0;
+                                            if (ImGui::DragScalar("##", ImGuiDataType_S64, &value, 1))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::Byte:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<uint8_t>() : 0;
+                                            if (ImGui::DragScalar("##", ImGuiDataType_U8, &value, 1))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::UShort:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<uint16_t>() : 0;
+                                            if (ImGui::DragScalar("##", ImGuiDataType_U16, &value, 1))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::UInt:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<uint32_t>() : 0;
+                                            if (ImGui::DragScalar("##", ImGuiDataType_U32, &value, 1))
+                                                scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
+                                            break;
+                                        }
+                                        case ScriptFieldType::ULong:
+                                        {
+                                            auto value = scriptFieldBufferPtr ? scriptFieldBufferPtr->GetValue<uint64_t>() : 0;
+                                            if (ImGui::DragScalar("##", ImGuiDataType_U64, &value, 1))
                                                 scriptFieldBufferPtr ? scriptFieldBufferPtr->SetValue(value) : localScriptFieldBufferMap[m_SelectionContext][i].SetValue(value);
                                             break;
                                         }
