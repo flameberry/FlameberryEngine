@@ -2,6 +2,7 @@
 
 #include "Flameberry.h"
 #include "UI.h"
+#include "imgui.h"
 
 #define FBY_BACK_ARROW_ICON 0
 #define FBY_FORWARD_ARROW_ICON 1
@@ -12,8 +13,8 @@ enum FileTypeIndex {
 };
 
 static std::vector<std::string> g_IconPaths = {
-    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/arrow_back.png",
-    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/arrow_forward.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/ArrowBackIcon.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/ArrowNextIcon.png",
     FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconDefault.png",
     FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/folder_icon.png",
     FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconBerry.png",
@@ -144,16 +145,22 @@ namespace Flameberry {
 
         ImGui::SameLine();
 
-        float topChildHeight = 38.0f;
+        float topChildHeight = 34.0f;
         float bottomChildHeight = ImGui::GetContentRegionAvail().y - topChildHeight;
 
         ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
-        float arrowSize = 18.0f;
+        constexpr float arrowSize = 14.0f;
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+
         if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
         ImGui::SameLine();
         if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
+
+        ImGui::PopStyleColor();
+
         ImGui::SameLine();
         if (m_IsSearchBoxFocused)
         {
@@ -162,7 +169,7 @@ namespace Flameberry {
         }
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 3));
         UI::InputBox("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, "Search...");
         ImGui::PopStyleVar(2);
 
@@ -178,7 +185,7 @@ namespace Flameberry {
         ImGui::Text("%s", m_CurrentDirectory.c_str());
 
         ImVec2 pos = ImVec2(ImGui::GetWindowPos().x, ImGui::GetWindowHeight() + ImGui::GetWindowPos().y);
-        ImGui::GetWindowDrawList()->AddLine(pos, ImVec2{ pos.x + ImGui::GetWindowWidth(), pos.y }, 0xff101010, 4.0f);
+        ImGui::GetWindowDrawList()->AddLine(pos, ImVec2{ pos.x + ImGui::GetWindowWidth(), pos.y }, 0xff141414, 2.0f);
         ImGui::EndChild();
 
         ImGui::SetNextWindowPos(pos);
