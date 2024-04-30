@@ -658,7 +658,7 @@ namespace Flameberry {
                                     }
                                 }
                             }
-                            else
+                            else if (!sc.AssemblyQualifiedClassName.empty())
                             {
                                 uint32_t i = 0;
                                 // Display Editor Only Script Fields
