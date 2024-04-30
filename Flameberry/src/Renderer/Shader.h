@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include <unordered_map>
 
 // TODO: Should this include be in the cpp file only with forward declaration and heap allocation of spv_reflect::ShaderModule?
 #include <SPIRV-Reflect/spirv_reflect.h>

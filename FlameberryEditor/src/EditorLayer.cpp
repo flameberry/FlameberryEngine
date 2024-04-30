@@ -2,6 +2,8 @@
 
 #include <fmt/format.h>
 
+#include <imgui.h>
+
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
 #include "UI.h"
@@ -458,11 +460,60 @@ namespace Flameberry {
         UI_ToolbarOverlay(workPos, workSize);
         UI_ViewportSettingsOverlay(workPos, workSize);
 
-        UI_RendererSettings();
         // UI_CompositeView();
 
         m_SceneHierarchyPanel->OnUIRender();
-        m_ContentBrowserPanel->OnUIRender();
+
+        static bool toggleContentBrowser = false, toggleRendererSettings = false;
+        {
+            ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
+                | ImGuiWindowFlags_NoResize
+                | ImGuiWindowFlags_NoMove
+                | ImGuiWindowFlags_NoCollapse
+                | ImGuiWindowFlags_NoTitleBar
+                | ImGuiWindowFlags_NoScrollWithMouse
+                | ImGuiWindowFlags_NoScrollbar;
+
+            ImGuiWindowClass windowClass;
+            windowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoResize;
+            ImGui::SetNextWindowClass(&windowClass);
+
+            // Bottom Panel
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(10, 10));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
+            ImGui::Begin("##PanelToggler", nullptr, windowFlags);
+            ImGui::PopStyleVar(2);
+
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, -1.0f));
+
+            ImGui::PushStyleColor(ImGuiCol_Button, Theme::DarkThemeColor);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, Theme::DarkThemeColor);
+
+            if (ImGui::Button("Content Browser", ImVec2(0.0f, -1.0f)))
+                toggleContentBrowser = !toggleContentBrowser;
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Renderer Settings", ImVec2(0.0f, -1.0f)))
+                toggleRendererSettings = !toggleRendererSettings;
+
+            ImGui::PopStyleColor(2);
+
+            ImGui::SameLine();
+            ImGui::End();
+            ImGui::PopStyleVar(4);
+        }
+
+        if (toggleContentBrowser)
+            m_ContentBrowserPanel->OnUIRender();
+        if (toggleRendererSettings)
+            UI_RendererSettings();
+
+        // ImGui::ShowDemoWindow();
     }
 
     void EditorLayer::InvalidateViewportImGuiDescriptorSet(uint32_t index)
@@ -587,8 +638,8 @@ namespace Flameberry {
                     }
                 }
                 break;
-        }
-    }
+                }
+                }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -1003,4 +1054,4 @@ namespace Flameberry {
         m_ActiveScene->OnStartRuntime();
     }
 
-}
+        }
