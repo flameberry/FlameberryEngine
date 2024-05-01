@@ -32,15 +32,16 @@ namespace Flameberry {
         void SetPosition(int xpos, int ypos) override;
         void SetSize(int width, int height) override;
         void SetTitle(const char* title) override;
+        void SetSecondaryTitle(const char* secondaryTitle) override;
         void MoveToCenter() override;
-        
+
         void Resize() override;
     private:
         GLFWwindow* m_Window;
         VkSurfaceKHR m_WindowSurface = VK_NULL_HANDLE;
-        
+
         WindowSpecification m_Specification;
-        
+
         uint32_t m_PrimaryMonitorWidth = 0, m_PrimaryMonitorHeight = 0;
 
         Ref<SwapChain> m_SwapChain;

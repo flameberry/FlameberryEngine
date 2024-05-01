@@ -73,7 +73,7 @@ namespace Flameberry {
         if (UI::AlignedButton("Open Project", buttonSize))
         {
             // Open a project browser window and if an existing project is selected then...
-            std::string path = platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
+            std::string path = Platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
             if (!path.empty())
             {
                 m_Project = ProjectSerializer::DeserializeIntoNewProject(path);
@@ -126,7 +126,7 @@ namespace Flameberry {
             ImGui::SameLine();
             if (ImGui::Button("..."))
             {
-                std::string directoryPath = platform::OpenFolder();
+                std::string directoryPath = Platform::OpenFolder();
                 if (!directoryPath.empty())
                     strcpy(m_ProjectPathBuffer, directoryPath.c_str());
             }
