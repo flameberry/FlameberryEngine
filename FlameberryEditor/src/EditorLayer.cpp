@@ -51,11 +51,11 @@ namespace Flameberry {
         )
     {
 #ifdef FBY_PLATFORM_MACOS
-        platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
-        platform::SetSaveSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveScene));
-        platform::SetSaveSceneAsCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
-        platform::SetOpenSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::OpenScene));
-        platform::CreateMenuBar();
+        Platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
+        Platform::SetSaveSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveScene));
+        Platform::SetSaveSceneAsCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
+        Platform::SetOpenSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::OpenScene));
+        Platform::CreateMenuBar();
 #endif
     }
 
@@ -638,8 +638,8 @@ namespace Flameberry {
                     }
                 }
                 break;
-                }
-                }
+        }
+    }
 
     void EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
@@ -656,7 +656,7 @@ namespace Flameberry {
 
     void EditorLayer::OpenProject()
     {
-        std::string path = platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
+        std::string path = Platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
         if (!path.empty())
             OpenProject(path);
     }
@@ -680,7 +680,7 @@ namespace Flameberry {
 
     void EditorLayer::SaveSceneAs()
     {
-        std::string savePath = platform::SaveFile("Flameberry Scene File (*.berry)\0.berry\0");
+        std::string savePath = Platform::SaveFile("Flameberry Scene File (*.berry)\0.berry\0");
         if (savePath != "")
         {
             SceneSerializer::SerializeSceneToFile(savePath.c_str(), m_ActiveScene);
@@ -693,7 +693,7 @@ namespace Flameberry {
 
     void EditorLayer::OpenScene()
     {
-        std::string sceneToBeLoaded = platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
+        std::string sceneToBeLoaded = Platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
         OpenScene(sceneToBeLoaded);
     }
 
@@ -909,7 +909,7 @@ namespace Flameberry {
         window_pos.y = workPos.y + s_OverlayPadding;
 
         UI_Overlay("##ViewportSettingsOverlay", window_pos, [=]() {
-            ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
+            ImGui::ImageButton("##ViewportSettingsButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
 
             if (ImGui::IsItemClicked())
                 ImGui::OpenPopup("##ViewportSettingsPopup");
@@ -1054,4 +1054,4 @@ namespace Flameberry {
         m_ActiveScene->OnStartRuntime();
     }
 
-        }
+}

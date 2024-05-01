@@ -8,7 +8,7 @@
 #include "Core/Application.h"
 
 namespace Flameberry {
-    namespace platform {
+    namespace Platform {
 
         void CreateMenuBar() {}
 
