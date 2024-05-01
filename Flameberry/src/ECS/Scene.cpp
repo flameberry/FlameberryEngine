@@ -31,6 +31,8 @@ namespace Flameberry {
 
     void Scene::OnStartRuntime()
     {
+        m_IsRuntimeActive = true;
+
         // Update Cameras
         for (auto entity : m_Registry->view<CameraComponent>())
         {
@@ -147,6 +149,8 @@ namespace Flameberry {
 
     void Scene::OnStopRuntime()
     {
+        m_IsRuntimeActive = m_IsRuntimePaused = false;
+
         m_PxScene->release();
 
         // Delete Script Actors
@@ -161,6 +165,15 @@ namespace Flameberry {
     void Scene::OnUpdateRuntime(float delta)
     {
         FBY_PROFILE_SCOPE("Scene::OnUpdateRuntime");
+
+        // Handle Pausing and Stepping
+        if (m_IsRuntimePaused)
+        {
+            if (m_StepFrames <= 0)
+                return;
+            else
+                m_StepFrames--;
+        }
 
         // Update Native Scripts
         for (auto entity : m_Registry->view<NativeScriptComponent>())

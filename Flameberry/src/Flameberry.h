@@ -22,7 +22,10 @@
 #include "Core/Algorithm.h"
 
 #include "Platform/PlatformUtils.h"
+
 #include "ImGui/ImGuiLayer.h"
+#include "ImGui/Theme.h"
+
 #include "Asset/AssetManager.h"
 
 #include "Renderer/RenderCommand.h"

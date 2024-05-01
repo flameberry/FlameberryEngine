@@ -28,6 +28,10 @@ namespace Flameberry {
                 {
                     auto project = ProjectSerializer::DeserializeIntoNewProject(projectPath);
 
+                    // Set the secondary title of the window to be the name of the project
+                    auto& window = Application::Get().GetWindow();
+                    window.SetSecondaryTitle(project->GetConfig().Name.c_str());
+
                     // Create an Editor Instance and push it to Application Layers
                     m_EditorLayer = new EditorLayer(project);
                     PushLayer(m_EditorLayer);
@@ -39,10 +43,6 @@ namespace Flameberry {
                 m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(FlameberryEditor::OpenProjectWithEditor));
                 PushLayer(m_LauncherLayer);
             }
-
-#ifdef FBY_PLATFORM_MACOS
-            platform::UI_CustomTitleBar();
-#endif
         }
 
         ~FlameberryEditor()
@@ -59,6 +59,7 @@ namespace Flameberry {
             // Resize the window from the previous launcher size to the new editor suitable size
             auto& window = Application::Get().GetWindow();
             window.SetTitle(fmt::format("Flameberry Engine [{}]", FBY_CONFIG_STR).c_str());
+            window.SetSecondaryTitle(projectRef->GetConfig().Name.c_str());
             window.SetSize(1280, 720);
             window.MoveToCenter();
 
@@ -76,7 +77,7 @@ namespace Flameberry {
         ApplicationSpecification applicationSpec;
         applicationSpec.Name = "Flameberry-Editor";
         applicationSpec.WindowSpec.Width = 1280;
-        applicationSpec.WindowSpec.Height = 720;
+        applicationSpec.WindowSpec.Height = 800;
         applicationSpec.WorkingDirectory = FBY_PROJECT_DIR;
         applicationSpec.CommandLineArgs = appCmdLineArgs;
 

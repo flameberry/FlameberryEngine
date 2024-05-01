@@ -11,9 +11,13 @@ set_build_config_macro_for_target(FlameberryEditor)
 if(XCODE)
     target_compile_definitions(FlameberryEditor PRIVATE FBY_XCODE_PROJ)
     set_target_properties(FlameberryEditor PROPERTIES XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE "Metal")
+
+    set_property(TARGET FlameberryEditor PROPERTY XCODE_SCHEME_ARGUMENTS "${FBY_SOURCE_DIR}/SandboxProject/SandboxProject.fbproj")
+    # Set the environment variables required for vulkan, because Xcode doesn't seem to respect them
+    # TODO: In the future when shipping the FlameberryEditor, it should be a good idea to have these baked in, rather than relying on the environment variables
+    set_property(TARGET FlameberryEditor PROPERTY XCODE_SCHEME_ENVIRONMENT VK_ICD_FILENAMES=$ENV{VK_ICD_FILENAMES} VK_DRIVER_FILES=$ENV{VK_DRIVER_FILES} VK_ADD_LAYER_PATH=$ENV{VK_ADD_LAYER_PATH})
 endif()
 
-set_property(TARGET FlameberryEditor PROPERTY XCODE_SCHEME_ARGUMENTS "${FBY_SOURCE_DIR}/SandboxProject/SandboxProject.fbproj")
 
 target_compile_definitions(FlameberryEditor PRIVATE ${FBY_COMPILE_DEFINITIONS})
 

@@ -5,11 +5,19 @@
 #include <GLFW/glfw3.h>
 
 namespace Flameberry {
-    namespace platform {
-        void CreateMenuBar();
-        void CreateCustomTitleBar();
-        void UI_CustomTitleBar();
 
+    namespace Platform {
+
+        class TitlebarNative
+        {
+        public:
+            static void CreateForGLFWwindow(GLFWwindow* window, float titleBarHeight);
+            static void InvalidateFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight);
+            static void SetPrimaryTitle(const std::string& title);
+            static void SetSecondaryTitle(const std::string& secondaryTitle);
+        };
+
+        void CreateMenuBar();
         void SetNewSceneCallbackMenuBar(const std::function<void()>& callback);
         void SetSaveSceneCallbackMenuBar(const std::function<void()>& callback);
         void SetSaveSceneAsCallbackMenuBar(const std::function<void()>& callback);
@@ -21,5 +29,7 @@ namespace Flameberry {
         std::string OpenFile(const char* filter);
         std::string OpenFolder();
         std::string SaveFile(const char* filter);
+
     }
+
 }

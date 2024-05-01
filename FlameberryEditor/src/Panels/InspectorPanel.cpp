@@ -371,7 +371,7 @@ namespace Flameberry {
                                     );
 
                                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                                        m_MaterialEditorPanel->SetEditingContext(mat);
+                                        m_MaterialEditorPanel->DisplayMaterial(mat);
 
                                     if (ImGui::BeginDragDropTarget())
                                     {

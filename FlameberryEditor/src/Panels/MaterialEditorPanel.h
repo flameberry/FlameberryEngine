@@ -6,7 +6,7 @@ namespace Flameberry {
     class MaterialEditorPanel
     {
     public:
-        void SetEditingContext(const Ref<MaterialAsset>& editingContext) { m_EditingContext = editingContext; }
+        inline void DisplayMaterial(const Ref<MaterialAsset>& material) { m_Open = true; m_EditingContext = material; }
         void OnUIRender();
         bool DrawMapControls(const char* label, bool& mapEnabledVar, Ref<Texture2D>& map);
     private:
@@ -14,7 +14,7 @@ namespace Flameberry {
         static constexpr float s_LabelWidth = 100.0f;
 
         Ref<MaterialAsset> m_EditingContext;
-        bool m_IsMaterialEdited = false, m_ShouldRename = false;
+        bool m_IsMaterialEdited = false, m_ShouldRename = false, m_Open = false;
         char m_RenameBuffer[256] = { '\0' };
     };
 }

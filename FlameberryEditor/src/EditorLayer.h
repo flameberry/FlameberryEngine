@@ -75,7 +75,7 @@ namespace Flameberry {
         bool m_ShouldOpenAnotherScene = false;
 
         // Texture Icons
-        Ref<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon;
+        Ref<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon, m_PauseIcon, m_StepIcon;
         static constexpr ImVec2 s_OverlayButtonSize = ImVec2(16, 16);
         static constexpr float s_OverlayPadding = 6.0f;
 

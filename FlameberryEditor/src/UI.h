@@ -24,17 +24,4 @@ namespace Flameberry {
         static bool ContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension = false);
     };
 
-    class Theme
-    {
-    public:
-        static constexpr ImVec4 AccentColor = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-        static constexpr ImVec4 AccentColorLight = ImVec4(254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f);
-        static constexpr ImVec4 WindowBg = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
-        static constexpr ImVec4 WindowBgGrey = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
-        static constexpr ImVec4 TableBorder = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
-        static constexpr ImVec4 FrameBg = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
-        static constexpr ImVec4 WindowBorder = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
-        static constexpr ImVec4 FrameBorder = ImVec4(0.24f, 0.24f, 0.24f, 1.0f);
-    };
-
 }

@@ -9,8 +9,6 @@
 #include "Renderer/Texture2D.h"
 #include "Asset/AssetManager.h"
 
-#include "Platform/PlatformUtils.h"
-
 namespace Flameberry {
     Application* Application::s_Instance;
 

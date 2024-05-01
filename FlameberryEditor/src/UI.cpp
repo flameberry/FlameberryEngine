@@ -4,6 +4,7 @@
 #include <imgui/imgui_internal.h>
 
 #include "Core/Core.h"
+#include "ImGui/Theme.h"
 
 namespace Flameberry {
 

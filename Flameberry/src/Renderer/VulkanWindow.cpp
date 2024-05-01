@@ -4,6 +4,7 @@
 #include "Renderer/VulkanContext.h"
 
 #include "Renderer/Renderer.h"
+#include "Platform/PlatformUtils.h"
 
 namespace Flameberry {
     Ref<Window> Window::Create(const WindowSpecification& specification)
@@ -39,6 +40,13 @@ namespace Flameberry {
 
     void VulkanWindow::Init()
     {
+        if (!m_Specification.NativeTitlebar)
+        {
+            Platform::TitlebarNative::CreateForGLFWwindow(m_Window, m_Specification.TitlebarHeight);
+            Platform::TitlebarNative::SetPrimaryTitle(m_Specification.Title);
+            Platform::TitlebarNative::SetSecondaryTitle(m_Specification.SecondaryTitle);
+        }
+
         m_SwapChain = CreateRef<SwapChain>(m_WindowSurface);
     }
 
@@ -124,6 +132,9 @@ namespace Flameberry {
 
     void VulkanWindow::Resize()
     {
+        if (!m_Specification.NativeTitlebar)
+            Platform::TitlebarNative::InvalidateFrameAndContentFrameRect(m_Window, m_Specification.TitlebarHeight);
+
         m_SwapChain->Invalidate();
     }
 
@@ -141,7 +152,18 @@ namespace Flameberry {
 
     void VulkanWindow::SetTitle(const char* title)
     {
-        glfwSetWindowTitle(m_Window, title);
+        m_Specification.Title = title;
+        if (m_Specification.NativeTitlebar)
+            glfwSetWindowTitle(m_Window, m_Specification.Title);
+        else
+            Platform::TitlebarNative::SetPrimaryTitle(m_Specification.Title);
+    }
+
+    void VulkanWindow::SetSecondaryTitle(const char* title)
+    {
+        m_Specification.Title = title;
+        if (!m_Specification.NativeTitlebar)
+            Platform::TitlebarNative::SetSecondaryTitle(m_Specification.Title);
     }
 
     void VulkanWindow::MoveToCenter()

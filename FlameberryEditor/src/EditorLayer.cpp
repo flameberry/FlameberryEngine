@@ -2,6 +2,8 @@
 
 #include <fmt/format.h>
 
+#include <imgui.h>
+
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
 #include "UI.h"
@@ -49,11 +51,11 @@ namespace Flameberry {
         )
     {
 #ifdef FBY_PLATFORM_MACOS
-        platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
-        platform::SetSaveSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveScene));
-        platform::SetSaveSceneAsCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
-        platform::SetOpenSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::OpenScene));
-        platform::CreateMenuBar();
+        Platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
+        Platform::SetSaveSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveScene));
+        Platform::SetSaveSceneAsCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::SaveSceneAs));
+        Platform::SetOpenSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::OpenScene));
+        Platform::CreateMenuBar();
 #endif
     }
 
@@ -65,6 +67,8 @@ namespace Flameberry {
         m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/scale_icon.png");
         m_PlayAndStopIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/PlayAndStopButtonIcon.png");
         m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon.png");
+        m_PauseIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/PauseIcon.png");
+        m_StepIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/StepIcon.png");
 
         Project::SetActive(m_Project);
         std::filesystem::current_path(m_Project->GetProjectDirectory());
@@ -435,11 +439,60 @@ namespace Flameberry {
         UI_ToolbarOverlay(workPos, workSize);
         UI_ViewportSettingsOverlay(workPos, workSize);
 
-        UI_RendererSettings();
         // UI_CompositeView();
 
         m_SceneHierarchyPanel->OnUIRender();
-        m_ContentBrowserPanel->OnUIRender();
+
+        static bool toggleContentBrowser = false, toggleRendererSettings = false;
+        {
+            ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
+                | ImGuiWindowFlags_NoResize
+                | ImGuiWindowFlags_NoMove
+                | ImGuiWindowFlags_NoCollapse
+                | ImGuiWindowFlags_NoTitleBar
+                | ImGuiWindowFlags_NoScrollWithMouse
+                | ImGuiWindowFlags_NoScrollbar;
+
+            ImGuiWindowClass windowClass;
+            windowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoResize;
+            ImGui::SetNextWindowClass(&windowClass);
+
+            // Bottom Panel
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(10, 10));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
+            ImGui::Begin("##PanelToggler", nullptr, windowFlags);
+            ImGui::PopStyleVar(2);
+
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, -1.0f));
+
+            ImGui::PushStyleColor(ImGuiCol_Button, Theme::DarkThemeColor);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, Theme::DarkThemeColor);
+
+            if (ImGui::Button("Content Browser", ImVec2(0.0f, -1.0f)))
+                toggleContentBrowser = !toggleContentBrowser;
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Renderer Settings", ImVec2(0.0f, -1.0f)))
+                toggleRendererSettings = !toggleRendererSettings;
+
+            ImGui::PopStyleColor(2);
+
+            ImGui::SameLine();
+            ImGui::End();
+            ImGui::PopStyleVar(4);
+        }
+
+        if (toggleContentBrowser)
+            m_ContentBrowserPanel->OnUIRender();
+        if (toggleRendererSettings)
+            UI_RendererSettings();
+
+        // ImGui::ShowDemoWindow();
     }
 
     void EditorLayer::InvalidateViewportImGuiDescriptorSet(uint32_t index)
@@ -582,7 +635,7 @@ namespace Flameberry {
 
     void EditorLayer::OpenProject()
     {
-        std::string path = platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
+        std::string path = Platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
         if (!path.empty())
             OpenProject(path);
     }
@@ -606,7 +659,7 @@ namespace Flameberry {
 
     void EditorLayer::SaveSceneAs()
     {
-        std::string savePath = platform::SaveFile("Flameberry Scene File (*.berry)\0.berry\0");
+        std::string savePath = Platform::SaveFile("Flameberry Scene File (*.berry)\0.berry\0");
         if (savePath != "")
         {
             SceneSerializer::SerializeSceneToFile(savePath.c_str(), m_ActiveScene);
@@ -619,7 +672,7 @@ namespace Flameberry {
 
     void EditorLayer::OpenScene()
     {
-        std::string sceneToBeLoaded = platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
+        std::string sceneToBeLoaded = Platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
         OpenScene(sceneToBeLoaded);
     }
 
@@ -774,30 +827,57 @@ namespace Flameberry {
             switch (m_EditorState)
             {
                 case EditorState::Edit:
-                    ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f));
+                {
+                    if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f)))
+                        OnScenePlay();
                     break;
+                }
                 case EditorState::Play:
-                    ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor);
+                {
+                    if (m_ActiveScene->IsRuntimePaused())
+                    {
+                        // UnPause the scene
+                        if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+                            m_ActiveScene->SetRuntimePaused(false);
+                    }
+                    else
+                    {
+                        // Pause the scene
+                        if (ImGui::ImageButton("ScenePauseButton", reinterpret_cast<ImTextureID>(m_PauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+                            m_ActiveScene->SetRuntimePaused(true);
+                    }
                     break;
+                }
             }
 
-            if (ImGui::IsItemClicked() && m_EditorState == EditorState::Edit)
-                OnScenePlay();
+            ImGui::SameLine();
+
+            ImGui::BeginDisabled(!m_ActiveScene->IsRuntimePaused());
+            if (ImGui::ImageButton("SceneStepButton", reinterpret_cast<ImTextureID>(m_StepIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0)))
+            {
+                FBY_LOG("Stepped");
+                m_ActiveScene->Step(1);
+            }
+            ImGui::EndDisabled();
 
             ImGui::SameLine();
 
             switch (m_EditorState)
             {
                 case EditorState::Edit:
+                {
+                    ImGui::BeginDisabled();
                     ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f));
+                    ImGui::EndDisabled();
                     break;
+                }
                 case EditorState::Play:
-                    ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1));
+                {
+                    if (ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1)))
+                        OnSceneEdit();
                     break;
+                }
             }
-
-            if (ImGui::IsItemClicked() && m_EditorState == EditorState::Play)
-                OnSceneEdit();
             });
     }
 
@@ -808,7 +888,7 @@ namespace Flameberry {
         window_pos.y = workPos.y + s_OverlayPadding;
 
         UI_Overlay("##ViewportSettingsOverlay", window_pos, [=]() {
-            ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
+            ImGui::ImageButton("##ViewportSettingsButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
 
             if (ImGui::IsItemClicked())
                 ImGui::OpenPopup("##ViewportSettingsPopup");
