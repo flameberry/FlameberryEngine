@@ -26,7 +26,7 @@ namespace Flameberry {
         int TitleBarHeight;
 
         WindowSpecification(int width = 1280, int height = 720, const char* title = FBY_WINDOW_TITLE)
-            : Width(width), Height(height), Title(title), NativeTitleBar(false), TitleBarHeight(40)
+            : Width(width), Height(height), Title(title), NativeTitleBar(false), TitleBarHeight(36)
         {
         }
     };
