@@ -90,46 +90,43 @@ static NSView* g_TitleBarView;
 
 namespace Flameberry {
     namespace platform {
-        static void SetTitleBarProperties()
+        void InvalidateTitleBarFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight)
         {
-            GLFWwindow* glfwWindow = Application::Get().GetWindow().GetGLFWwindow();
-            NSWindow* window = glfwGetCocoaWindow(glfwWindow);
-            NSView* nativeView = glfwGetCocoaView(glfwWindow);
+            NSWindow* nativeWindow = glfwGetCocoaWindow(window);
+            NSView* nativeView = glfwGetCocoaView(window);
             
-            [window setTitlebarAppearsTransparent:YES];
-            window.titleVisibility = NSWindowTitleHidden;
-            
-            NSWindowStyleMask windowMask = NSWindowStyleMaskFullSizeContentView | NSWindowStyleMaskBorderless | NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
-            [window setStyleMask: windowMask];
-
-            CGFloat windowWidth = NSWidth(window.frame);
-            CGFloat windowHeight = NSHeight(window.frame);
-            CGFloat titleBarHeight = Application::Get().GetWindow().GetSpecification().TitleBarHeight;
+            CGFloat windowWidth = NSWidth(nativeWindow.frame);
+            CGFloat windowHeight = NSHeight(nativeWindow.frame);
             
             // Calculate the y-coordinate of the title bar
-            CGFloat titleBarY = windowHeight - titleBarHeight;
+            CGFloat contentHeight = windowHeight - titleBarHeight;
             
-            NSRect contentRect = NSMakeRect(0, 0, windowWidth, titleBarY);
+            NSRect contentRect = NSMakeRect(0, 0, windowWidth, contentHeight);
             [nativeView setFrame:contentRect];
             
             // Create a custom NSView for the title bar
-            NSRect titleBarRect = NSMakeRect(0, titleBarY, windowWidth, titleBarHeight);
+            NSRect titleBarRect = NSMakeRect(0, contentHeight, windowWidth, titleBarHeight);
             [g_TitleBarView setFrame:titleBarRect];
             [g_TitleBarView setWantsLayer:YES]; // Enable layer-backed views for better performance or custom drawing
+        }
+
+        void SetupWindowForCustomTitleBar(GLFWwindow* window, float titleBarHeight)
+        {
+            NSWindow* nativeWindow = glfwGetCocoaWindow(window);
+            NSView* nativeView = glfwGetCocoaView(window);
+            
+            [nativeWindow setTitlebarAppearsTransparent:YES];
+            nativeWindow.titleVisibility = NSWindowTitleHidden;
+            
+            NSWindowStyleMask windowMask = NSWindowStyleMaskFullSizeContentView | NSWindowStyleMaskBorderless | NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
+            [nativeWindow setStyleMask: windowMask];
+
+            g_TitleBarView = [[NSView alloc] init];
+            
+            InvalidateTitleBarFrameAndContentFrameRect(window, titleBarHeight);
             
             // Customize the appearance of the title bar
             [g_TitleBarView setBackgroundColor:[NSColor blackColor]]; // Set the background color
-        }
-
-        void UI_CustomTitleBar()
-        {
-            GLFWwindow* glfwWindow = Application::Get().GetWindow().GetGLFWwindow();
-            NSWindow* window = glfwGetCocoaWindow(glfwWindow);
-            NSView* nativeView = glfwGetCocoaView(glfwWindow);
-            
-            g_TitleBarView = [[NSView alloc] init];
-            
-            SetTitleBarProperties();
             
             // Add title label to the title bar
             NSTextField *titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(80,4, 200, 20)];
@@ -140,73 +137,9 @@ namespace Flameberry {
             [g_TitleBarView addSubview:titleLabel];
             
             // Add the title bar view to the NSWindow's content view
-            [[window contentView] addSubview:g_TitleBarView];
-            
-//            [window setTitlebarAppearsTransparent:YES];
-//            window.titleVisibility = NSWindowTitleHidden;
-//            
-//            NSWindowStyleMask windowMask = NSWindowStyleMaskFullSizeContentView | NSWindowStyleMaskBorderless | NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
-//            [window setStyleMask: windowMask];
-//
-//            CGFloat windowWidth = NSWidth(window.frame);
-//            CGFloat windowHeight = NSHeight(window.frame);
-//            CGFloat titleBarHeight = Application::Get().GetWindow().GetSpecification().TitleBarHeight;
-//            
-//            // Calculate the y-coordinate of the title bar
-//            CGFloat titleBarY = windowHeight - titleBarHeight;
-//            
-//            NSRect contentRect = NSMakeRect(0, 0, windowWidth, titleBarY);
-//            [nativeView setFrame:contentRect];
-//            
-//            // Create a custom NSView for the title bar
-//            NSRect titleBarRect = NSMakeRect(0, titleBarY, windowWidth, titleBarHeight);
-//            g_TitleBarView = [[NSView alloc] initWithFrame:titleBarRect];
-//            [g_TitleBarView setWantsLayer:YES]; // Enable layer-backed views for better performance or custom drawing
-//            
-//            // Customize the appearance of the title bar
-//            [g_TitleBarView setBackgroundColor:[NSColor blackColor]]; // Set the background color
-//            
-//            // Add title label to the title bar
-//            NSTextField *titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(80,4, 200, 20)];
-//            [titleLabel setStringValue:@"Flameberry Engine"];
-//            [titleLabel setEditable:NO];
-//            [titleLabel setBordered:NO];
-//            [titleLabel setBackgroundColor:[NSColor clearColor]];
-//            [g_TitleBarView addSubview:titleLabel];
-//            
-//            // Add the title bar view to the NSWindow's content view
-//            [[window contentView] addSubview:g_TitleBarView];
+            [[nativeWindow contentView] addSubview:g_TitleBarView];
         }
 
-        void UI_InvalidateCustomTitleBar()
-        {
-            SetTitleBarProperties();
-        }
-        
-        void CreateCustomTitleBar()
-        {
-            NSWindow* window = glfwGetCocoaWindow(Application::Get().GetWindow().GetGLFWwindow());
-            
-            [window setStyleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView];
-            [window setBackingType:NSBackingStoreBuffered];
-            [window setTitleVisibility:NSWindowTitleHidden];
-            
-//            NSView *accessoryView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, window.contentView.frame.size.width, 36)];
-//            [accessoryView setWantsLayer:YES];
-//            [accessoryView.layer setBackgroundColor:[[NSColor redColor] CGColor]];
-//            [accessoryView addSubview:textField];
-//            [accessoryView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
-
-//            NSViewController *accessoryViewController = [[NSTitlebarAccessoryViewController alloc] init];
-//            [accessoryViewController setView:accessoryView];
-
-//            [window addTitlebarAccessoryViewController:accessoryViewController];
-            [window setTitlebarAppearsTransparent:YES];
-//            [window.contentView addSubview:accessoryView];
-//
-//            [window makeKeyAndOrderFront:nil];
-        }
-        
         void CreateMenuBar()
         {
             g_MenuBar = [[MenuBar alloc]init];

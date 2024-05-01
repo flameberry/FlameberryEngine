@@ -7,9 +7,8 @@
 namespace Flameberry {
     namespace platform {
         void CreateMenuBar();
-        void CreateCustomTitleBar();
-        void UI_CustomTitleBar();
-        void UI_InvalidateCustomTitleBar();
+        void SetupWindowForCustomTitleBar(GLFWwindow* window, float titleBarHeight);
+        void InvalidateTitleBarFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight);
 
         void SetNewSceneCallbackMenuBar(const std::function<void()>& callback);
         void SetSaveSceneCallbackMenuBar(const std::function<void()>& callback);
