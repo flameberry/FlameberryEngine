@@ -41,7 +41,7 @@ namespace Flameberry {
             }
 
 #ifdef FBY_PLATFORM_MACOS
-            platform::UI_CustomTitleBar();
+            // platform::UI_CustomTitleBar();
 #endif
         }
 

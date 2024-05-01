@@ -29,6 +29,9 @@ namespace Flameberry {
         m_VulkanContext = CreateRef<VulkanContext>((VulkanWindow*)m_Window.get());
         VulkanContext::SetCurrentContext(m_VulkanContext.get());
 
+        // Custom Titlebar
+        platform::UI_CustomTitleBar();
+
         m_Window->Init();
 
         auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
@@ -101,6 +104,10 @@ namespace Flameberry {
     void Application::OnWindowResizedEvent(WindowResizedEvent& e)
     {
         // TODO: Wait for Render Thread to finish Rendering
+
+        // Create the custom titlebar
+        platform::UI_InvalidateCustomTitleBar();
+
         m_Window->Resize();
         m_ImGuiLayer->InvalidateResources();
     }
