@@ -6,6 +6,7 @@
 
 #define FBY_BACK_ARROW_ICON 0
 #define FBY_FORWARD_ARROW_ICON 1
+#define FBY_SETTINGS_ICON 9
 
 enum FileTypeIndex {
     DEFAULT = 2,
@@ -16,12 +17,13 @@ static std::vector<std::string> g_IconPaths = {
     FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/ArrowBackIcon.png",
     FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/ArrowNextIcon.png",
     FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconDefault.png",
-    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/folder_icon.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FolderIconYellow.png",
     FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconBerry.png",
     FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconOBJ.png",
     FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconGLTF.png",
     FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconFBX.png",
-    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconFBMAT.png"
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FileIconFBMAT.png",
+    FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/SettingsIcon.png"
 };
 
 namespace Flameberry {
@@ -149,6 +151,8 @@ namespace Flameberry {
         float bottomChildHeight = ImGui::GetContentRegionAvail().y - topChildHeight;
 
         ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::PopStyleVar();
+
         constexpr float arrowSize = 14.0f;
 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
@@ -158,8 +162,6 @@ namespace Flameberry {
         ImGui::SameLine();
         if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
-
-        ImGui::PopStyleColor();
 
         ImGui::SameLine();
         if (m_IsSearchBoxFocused)
@@ -184,21 +186,43 @@ namespace Flameberry {
 
         ImGui::Text("%s", m_CurrentDirectory.c_str());
 
+        // Icon Size controller
+        const auto& style = ImGui::GetStyle();
+        const float totalIconWidth = arrowSize + 2.0f * style.FramePadding.x + style.ItemSpacing.x;
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(ImGui::GetWindowSize().x - totalIconWidth);
+
+        ImGui::ImageButton("##ContentBrowserPanelSettingsButton", reinterpret_cast<ImTextureID>(m_IconTextures[FBY_SETTINGS_ICON]->CreateOrGetDescriptorSet()), ImVec2(arrowSize, arrowSize), ImVec2(0, 0), ImVec2(1.0f, 1.0f));
+
+        ImGui::PopStyleColor();
+
+        if (ImGui::IsItemClicked())
+            ImGui::OpenPopup("##ContentBrowserPanelSettingsPopup");
+
+        if (ImGui::BeginPopup("##ContentBrowserPanelSettingsPopup"))
+        {
+            ImGui::PushItemWidth(50.0f);
+            ImGui::DragInt("Thumbnail Size", (int32_t*)&m_ThumbnailSize, 1.0f, 50, 400);
+            ImGui::PopItemWidth();
+            ImGui::EndPopup();
+        }
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 7 });
+
+        // Separator
         ImVec2 pos = ImVec2(ImGui::GetWindowPos().x, ImGui::GetWindowHeight() + ImGui::GetWindowPos().y);
         ImGui::GetWindowDrawList()->AddLine(pos, ImVec2{ pos.x + ImGui::GetWindowWidth(), pos.y }, 0xff141414, 2.0f);
+
         ImGui::EndChild();
 
         ImGui::SetNextWindowPos(pos);
-
         ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, bottomChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::PopStyleVar();
 
-        float iconWidth = 90.0f;
-        float cellSize = iconWidth + ImGui::GetStyle().ItemSpacing.x;
+        const float spacing = ImGui::GetStyle().ItemSpacing.x;
+        const float cellSize = m_ThumbnailSize + spacing;
         uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize, rowIndex = 0;
         columns = columns >= 1 ? columns : 1;
         ImGui::Columns(columns, (const char*)__null, false);
-
 
         ImVec2 itemSize;
 
@@ -247,7 +271,7 @@ namespace Flameberry {
                 thumbnail = m_IconTextures[currentIconIndex];
             }
 
-            if (UI::ContentBrowserItem(filePath, iconWidth, thumbnail, itemSize, !isFileSupported) && isDirectory)
+            if (UI::ContentBrowserItem(filePath, m_ThumbnailSize, thumbnail, itemSize, !isFileSupported) && isDirectory)
                 m_CurrentDirectory = directory.path();
 
             if (ImGui::GetColumnIndex() == columns - 1)
@@ -276,7 +300,7 @@ namespace Flameberry {
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Open In Finder"))
-                platform::OpenInExplorerOrFinder((Project::GetActiveProjectDirectory() / m_CurrentDirectory).string().c_str());
+                Platform::OpenInExplorerOrFinder((Project::GetActiveProjectDirectory() / m_CurrentDirectory).string().c_str());
             ImGui::EndPopup();
         }
         ImGui::EndChild();
