@@ -77,7 +77,7 @@ namespace Flameberry {
         ApplicationSpecification applicationSpec;
         applicationSpec.Name = "Flameberry-Editor";
         applicationSpec.WindowSpec.Width = 1280;
-        applicationSpec.WindowSpec.Height = 720;
+        applicationSpec.WindowSpec.Height = 800;
         applicationSpec.WorkingDirectory = FBY_PROJECT_DIR;
         applicationSpec.CommandLineArgs = appCmdLineArgs;
 
