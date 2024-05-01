@@ -4,6 +4,7 @@
 #include "Renderer/VulkanContext.h"
 
 #include "Renderer/Renderer.h"
+#include "Platform/PlatformUtils.h"
 
 namespace Flameberry {
     Ref<Window> Window::Create(const WindowSpecification& specification)
@@ -39,6 +40,9 @@ namespace Flameberry {
 
     void VulkanWindow::Init()
     {
+        if (!m_Specification.NativeTitleBar)
+            platform::SetupWindowForCustomTitleBar(m_Window, m_Specification.TitleBarHeight);
+
         m_SwapChain = CreateRef<SwapChain>(m_WindowSurface);
     }
 
@@ -124,6 +128,9 @@ namespace Flameberry {
 
     void VulkanWindow::Resize()
     {
+        if (!m_Specification.NativeTitleBar)
+            platform::InvalidateTitleBarFrameAndContentFrameRect(m_Window, m_Specification.TitleBarHeight);
+
         m_SwapChain->Invalidate();
     }
 
