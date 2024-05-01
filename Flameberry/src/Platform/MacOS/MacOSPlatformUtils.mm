@@ -1,8 +1,6 @@
 #include "Platform/PlatformUtils.h"
 
-#include <AppKit/AppKit.h>
 #import <Cocoa/Cocoa.h>
-#import <objc/objc-class.h>
 
 #import <string>
 
@@ -120,16 +118,24 @@ namespace Flameberry {
             
             NSWindowStyleMask windowMask = NSWindowStyleMaskFullSizeContentView | NSWindowStyleMaskBorderless | NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
             [nativeWindow setStyleMask: windowMask];
+            
+//            nativeWindow.toolbar = [NSToolbar new]; // <-- Note this is `new` and not `init`
+//            nativeWindow.toolbarStyle = NSWindowToolbarStyleUnified;
+            
+            // Remove the whitish border from default macos window
+            [nativeWindow setOpaque:NO];
+            [nativeWindow setBackgroundColor:[NSColor clearColor]];
 
+            // Create a title bar view
             g_TitleBarView = [[NSView alloc] init];
             
             InvalidateTitleBarFrameAndContentFrameRect(window, titleBarHeight);
             
             // Customize the appearance of the title bar
-            [g_TitleBarView setBackgroundColor:[NSColor blackColor]]; // Set the background color
+            [g_TitleBarView setBackgroundColor:[NSColor colorWithRed:28.0f/255.0f green:28.0f/255.0f blue:28.0f/255.0f alpha:1.0f]]; // Set the background color
             
             // Add title label to the title bar
-            NSTextField *titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(80,4, 200, 20)];
+            NSTextField *titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(110, titleBarHeight / 2 - 12, 200, 20)];
             [titleLabel setStringValue:@"Flameberry Engine"];
             [titleLabel setEditable:NO];
             [titleLabel setBordered:NO];
@@ -138,6 +144,28 @@ namespace Flameberry {
             
             // Add the title bar view to the NSWindow's content view
             [[nativeWindow contentView] addSubview:g_TitleBarView];
+            
+            // Icon
+            NSImage* iconImage = [[NSImage alloc] initWithContentsOfFile:@"/Users/flameberry/Developer/FlameberryEngine/FlameberryEditor/Assets/Icons/FlameberryIcon.png"];
+            
+            if (iconImage) {
+                // Resize the image if needed
+                [iconImage setSize:NSMakeSize(30, 30)]; // Adjust the size as per your requirement
+            }
+            
+            // Icon Button
+            NSButton* iconButton = [[NSButton alloc] initWithFrame:NSMakeRect(75, 5, 30, 30)]; // Adjust the frame as needed
+            [iconButton setImage:iconImage];
+            [iconButton setButtonType:NSButtonTypeMomentaryPushIn];
+            [iconButton setBordered:NO];
+            
+            [g_TitleBarView addSubview:iconButton];
+            
+            // Project Title
+            NSTextView* projectNameView = [[NSTextView alloc] initWithFrame:NSMakeRect(1100, 8, 100, 20)];
+            projectNameView.string = @"SandboxProject";
+            
+            [g_TitleBarView addSubview:projectNameView];
         }
 
         void CreateMenuBar()
