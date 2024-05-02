@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 
 #include <imgui.h>
+#include <IconFontCppHeaders/IconsFontAwesome6.h>
 
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"

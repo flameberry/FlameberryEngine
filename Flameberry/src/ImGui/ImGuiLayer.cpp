@@ -4,6 +4,8 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
+#include <IconFontCppHeaders/IconsFontAwesome6.h>
+
 #include "Theme.h"
 
 #include "Renderer/RenderCommand.h"
@@ -50,6 +52,16 @@ namespace Flameberry {
         io.FontDefault = io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"FlameberryEditor/Assets/Fonts/arial/Arial.ttf", fontSize, &config);
         io.FontGlobalScale = 1 / DPI_SCALE;
 
+        // Merging Font-Awesome fonts into the default font
+        ImFontConfig iconFontConfig;
+        iconFontConfig.MergeMode = true;
+        iconFontConfig.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
+        static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+
+        io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"FlameberryEditor/Assets/Fonts/fontawesome/fa-regular-400.ttf", fontSize, &iconFontConfig, iconRanges);
+        io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"FlameberryEditor/Assets/Fonts/fontawesome/fa-solid-900.ttf", fontSize, &iconFontConfig, iconRanges);
+
+        // ImGui layout save location
         io.IniFilename = NULL;
         ImGui::LoadIniSettingsFromDisk(FBY_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
 
@@ -301,7 +313,7 @@ namespace Flameberry {
         // colors[ImGuiCol_WindowBg] = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
         colors[ImGuiCol_WindowBg] = Theme::WindowBgGrey;
         colors[ImGuiCol_Border] = Theme::WindowBg;
-        
+
         // Frame
         colors[ImGuiCol_FrameBg] = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
         colors[ImGuiCol_FrameBgHovered] = ImVec4{ 0.11f, 0.11f, 0.11f, 1.0f };

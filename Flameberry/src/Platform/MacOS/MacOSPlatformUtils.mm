@@ -147,12 +147,14 @@ namespace Flameberry {
             s_TitlebarData.PrimaryTitleTextView = [[NSTextView alloc] initWithFrame:NSMakeRect(110, titleBarHeight / 2 - 12, 200, 20)];
             s_TitlebarData.PrimaryTitleTextView.string = @"Flameberry Engine";
             s_TitlebarData.PrimaryTitleTextView.font = defaultUIFont;
+            s_TitlebarData.PrimaryTitleTextView.backgroundColor = [NSColor clearColor];
             [s_TitlebarData.TitlebarView addSubview:s_TitlebarData.PrimaryTitleTextView];
             
             // Project Title
             s_TitlebarData.SecondaryTitleTextView = [[NSTextView alloc] initWithFrame:NSMakeRect(1100, 8, 150, 20)];
             s_TitlebarData.SecondaryTitleTextView.string = @"";
             s_TitlebarData.SecondaryTitleTextView.font = defaultUIFont;
+            s_TitlebarData.SecondaryTitleTextView.backgroundColor = [NSColor clearColor];
             [s_TitlebarData.TitlebarView addSubview:s_TitlebarData.SecondaryTitleTextView];
             
             // Add the title bar view to the NSWindow's content view

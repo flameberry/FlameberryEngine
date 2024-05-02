@@ -1,7 +1,9 @@
 #include "SceneHierarchyPanel.h"
 
-#include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
+
+#include <glm/gtc/type_ptr.hpp>
+#include <IconFontCppHeaders/IconsFontAwesome6.h>
 
 #include "UI.h"
 
@@ -39,7 +41,7 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
 
-        UI::InputBox("##SceneHierarchySearchBar", width, m_SearchInputBuffer, 256, "Search...");
+        UI::InputBox("##SceneHierarchySearchBar", width, m_SearchInputBuffer, 256, ICON_FA_MAGNIFYING_GLASS" Search...");
 
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
