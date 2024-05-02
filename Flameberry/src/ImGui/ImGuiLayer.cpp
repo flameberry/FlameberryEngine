@@ -4,7 +4,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
-#include <IconFontCppHeaders/IconsFontAwesome6.h>
+#include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Theme.h"
 
@@ -56,10 +56,10 @@ namespace Flameberry {
         ImFontConfig iconFontConfig;
         iconFontConfig.MergeMode = true;
         iconFontConfig.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
-        static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+        iconFontConfig.GlyphOffset = ImVec2(0, 5);
+        static const ImWchar iconRanges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
 
-        io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"FlameberryEditor/Assets/Fonts/fontawesome/fa-regular-400.ttf", fontSize, &iconFontConfig, iconRanges);
-        io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"FlameberryEditor/Assets/Fonts/fontawesome/fa-solid-900.ttf", fontSize, &iconFontConfig, iconRanges);
+        io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"FlameberryEditor/Assets/Fonts/lucide/lucide.ttf", fontSize, &iconFontConfig, iconRanges);
 
         // ImGui layout save location
         io.IniFilename = NULL;

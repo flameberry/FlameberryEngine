@@ -3,7 +3,7 @@
 #include <fmt/format.h>
 
 #include <imgui.h>
-#include <IconFontCppHeaders/IconsFontAwesome6.h>
+#include <IconFontCppHeaders/IconsLucide.h>
 
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
@@ -444,6 +444,7 @@ namespace Flameberry {
 
         m_SceneHierarchyPanel->OnUIRender();
 
+        // Bottom Panel
         static bool toggleContentBrowser = false, toggleRendererSettings = false;
         {
             ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
@@ -458,7 +459,6 @@ namespace Flameberry {
             windowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoResize;
             ImGui::SetNextWindowClass(&windowClass);
 
-            // Bottom Panel
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(10, 10));
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -473,12 +473,12 @@ namespace Flameberry {
             ImGui::PushStyleColor(ImGuiCol_Button, Theme::DarkThemeColor);
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, Theme::DarkThemeColor);
 
-            if (ImGui::Button("Content Browser", ImVec2(0.0f, -1.0f)))
+            if (ImGui::Button(ICON_LC_FOLDER_TREE"  Content Browser", ImVec2(0.0f, -1.0f)))
                 toggleContentBrowser = !toggleContentBrowser;
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Renderer Settings", ImVec2(0.0f, -1.0f)))
+            if (ImGui::Button(ICON_LC_SETTINGS"  Renderer Settings", ImVec2(0.0f, -1.0f)))
                 toggleRendererSettings = !toggleRendererSettings;
 
             ImGui::PopStyleColor(2);
