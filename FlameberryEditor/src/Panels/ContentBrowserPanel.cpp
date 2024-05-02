@@ -2,7 +2,7 @@
 
 #include <imgui.h>
 
-#include <IconFontCppHeaders/IconsFontAwesome6.h>
+#include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Flameberry.h"
 #include "UI.h"
@@ -175,7 +175,7 @@ namespace Flameberry {
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 3));
-        UI::InputBox("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, ICON_FA_MAGNIFYING_GLASS" Search...");
+        UI::InputBox("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, ICON_LC_SEARCH" Search...");
         ImGui::PopStyleVar(2);
 
         if (m_IsSearchBoxFocused)
