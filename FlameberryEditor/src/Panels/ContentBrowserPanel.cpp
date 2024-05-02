@@ -1,8 +1,11 @@
 #include "ContentBrowserPanel.h"
 
+#include <imgui.h>
+
+#include <IconFontCppHeaders/IconsFontAwesome6.h>
+
 #include "Flameberry.h"
 #include "UI.h"
-#include "imgui.h"
 
 #define FBY_BACK_ARROW_ICON 0
 #define FBY_FORWARD_ARROW_ICON 1
@@ -172,7 +175,7 @@ namespace Flameberry {
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 3));
-        UI::InputBox("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, "Search...");
+        UI::InputBox("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, ICON_FA_MAGNIFYING_GLASS" Search...");
         ImGui::PopStyleVar(2);
 
         if (m_IsSearchBoxFocused)

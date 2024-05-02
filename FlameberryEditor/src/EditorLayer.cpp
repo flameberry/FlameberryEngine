@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 
 #include <imgui.h>
+#include <IconFontCppHeaders/IconsFontAwesome6.h>
 
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
@@ -1011,18 +1012,6 @@ namespace Flameberry {
                 ImGui::Text("Lambda Split");
                 ImGui::TableNextColumn();
                 FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Reload Assembly");
-                ImGui::TableNextColumn();
-
-
-                ImGui::Button("Reload Assembly");
-                if (ImGui::IsItemClicked())
-                    ScriptEngine::ReloadAppAssembly();
 
                 ImGui::EndTable();
             }
