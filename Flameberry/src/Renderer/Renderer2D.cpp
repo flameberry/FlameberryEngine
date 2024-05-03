@@ -124,7 +124,7 @@ namespace Flameberry {
 
         float current = start;
 
-        constexpr glm::vec3 lineColor(0.35f);
+        constexpr glm::vec3 lineColor(0.3f);
         constexpr glm::vec3 boldLineColor(0.7f);
         constexpr glm::vec3 redLineColor(1.0f, 0.235f, 0.286f);
         constexpr glm::vec3 blueLineColor(0.286f, 0.235f, 1.0f);

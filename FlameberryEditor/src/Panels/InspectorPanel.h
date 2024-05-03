@@ -1,5 +1,7 @@
 #pragma once
 
+#include <IconFontCppHeaders/IconsLucide.h>
+
 #include "Flameberry.h"
 #include "MaterialEditorPanel.h"
 #include "MaterialSelectorPanel.h"
@@ -65,7 +67,7 @@ namespace Flameberry {
             ImVec2 contentRegionAvail = ImGui::GetContentRegionAvail();
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2, 4 });
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 4));
 
             auto& style = ImGui::GetStyle();
             float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
