@@ -19,10 +19,6 @@ namespace fbentt {
         return componentCounter;
     }
 
-    template<typename T, typename... Types> decltype(auto) get_first_of_variadic_template() {
-        return T();
-    }
-
     template<typename Type> class sparse_set {
     public:
         void add(Type value) {
@@ -373,12 +369,11 @@ namespace fbentt {
             return handler.emplace(std::forward<Args>(args)...);
         }
 
-        template<typename... Type> decltype(auto) try_get(const entity& entity) const {
-            if constexpr (sizeof...(Type) == 1) {
+        template<typename Type, typename... MoreTypes> decltype(auto) try_get(const entity& entity) const {
+            if constexpr (sizeof...(MoreTypes) == 0) {
                 const uint32_t index = to_index(entity);
 
-                using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
-                uint32_t typeID = type_id<ComponentType>();
+                uint32_t typeID = type_id<Type>();
                 if (entity == null
                     || index > entities.size()
                     || to_version(entities[index]) != to_version(entity)
@@ -387,28 +382,27 @@ namespace fbentt {
                     || pools[typeID].entity_set.empty()
                     || pools[typeID].entity_set.find(index) == -1
                     ) {
-                    return static_cast<ComponentType*>(nullptr);
+                    return static_cast<Type*>(nullptr);
                 }
                 else {
                     int set_index = pools[typeID].entity_set.find(index);
-                    auto& handler = (*((pool_handler<ComponentType>*)pools[typeID].handler.get()));
-                    return static_cast<ComponentType*>(&handler.get(set_index));
+                    auto& handler = (*((pool_handler<Type>*)pools[typeID].handler.get()));
+                    return static_cast<Type*>(&handler.get(set_index));
                 }
             }
             else {
-                return std::forward_as_tuple(try_get<Type>(entity)...);
+                return std::forward_as_tuple(try_get<Type>(entity), try_get<MoreTypes>(entity)...);
             }
         }
 
-        template<typename... Type> decltype(auto) get(const entity& entity) const {
+        template<typename Type, typename... MoreTypes> decltype(auto) get(const entity& entity) const {
             FBY_ASSERT(entity != null, "Failed to get component: Entity is null!");
             const uint32_t index = to_index(entity);
             const uint32_t version = to_version(entities[index]);
             FBY_ASSERT(index < entities.size() && version == to_version(entity), "Failed to get component: Invalid/Outdated handle!");
 
-            if constexpr (sizeof...(Type) == 1) {
-                using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
-                uint32_t typeID = type_id<ComponentType>();
+            if constexpr (sizeof...(MoreTypes) == 0) {
+                uint32_t typeID = type_id<Type>();
                 if (pools.size() <= typeID
                     || pools[typeID].handler == nullptr
                     || pools[typeID].entity_set.empty()
@@ -419,24 +413,23 @@ namespace fbentt {
                 }
                 else {
                     int set_index = pools[typeID].entity_set.find(index);
-                    auto& handler = (*((pool_handler<ComponentType>*)pools[typeID].handler.get()));
-                    return static_cast<ComponentType&>(handler.get(set_index));
+                    auto& handler = (*((pool_handler<Type>*)pools[typeID].handler.get()));
+                    return static_cast<Type&>(handler.get(set_index));
                 }
             }
             else {
-                return std::forward_as_tuple(get<Type>(entity)...);
+                return std::forward_as_tuple(get<Type>(entity), get<MoreTypes>(entity)...);
             }
         }
 
-        template<typename... Type> bool has(const entity& entity) const {
+        template<typename Type, typename... MoreTypes> bool has(const entity& entity) const {
             FBY_ASSERT(entity != null, "Failed to check component: Entity is null!");
             const uint32_t index = to_index(entity);
             const uint32_t version = to_version(entities[index]);
             FBY_ASSERT(index < entities.size() && version == to_version(entity), "Failed to check component: Invalid/Outdated handle!");
 
-            if constexpr (sizeof...(Type) == 1) {
-                using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
-                uint32_t typeID = type_id<ComponentType>();
+            if constexpr (sizeof...(MoreTypes) == 0) {
+                uint32_t typeID = type_id<Type>();
                 if (pools.size() <= typeID
                     || pools[typeID].handler == nullptr
                     || pools[typeID].entity_set.empty()
@@ -447,19 +440,18 @@ namespace fbentt {
                 return true;
             }
             else {
-                return (has<Type>(entity) && ...);
+                return (has<Type>(entity) && (has<MoreTypes>(entity) && ...));
             }
         }
 
-        template<typename... Type> void erase(const entity& entity) const {
+        template<typename Type, typename... MoreTypes> void erase(const entity& entity) const {
             FBY_ASSERT(entity != null, "Failed to erase component: Entity is null!");
             const uint32_t index = to_index(entity);
             const uint32_t version = to_version(entities[index]);
             FBY_ASSERT(index < entities.size() && version == to_version(entity), "Failed to erase component: Invalid/Outdated handle!");
 
-            if constexpr (sizeof...(Type) == 1) {
-                using ComponentType = decltype((*get_first_of_variadic_template<Type...>)());
-                uint32_t typeID = type_id<ComponentType>();
+            if constexpr (sizeof...(MoreTypes) == 0) {
+                uint32_t typeID = type_id<Type>();
                 if (pools.size() <= typeID
                     || pools[typeID].handler == nullptr
                     || pools[typeID].entity_set.empty()
@@ -475,7 +467,8 @@ namespace fbentt {
                 }
             }
             else {
-                ((void)erase<Type>(entity), ...);
+                erase<Type>(entity);
+                ((void)erase<MoreTypes>(entity), ...);
             }
         }
 
