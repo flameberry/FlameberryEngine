@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
+#include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/Core.h"
 #include "ImGui/Theme.h"
@@ -127,8 +128,12 @@ namespace Flameberry {
 
         if (ImGui::BeginPopupContextItem(filepath.c_str()))
         {
-            if (ImGui::MenuItem("Delete"))
+            if (ImGui::MenuItem(ICON_LC_DELETE"\tDelete"))
+            {
+                // Add a confirm popup
+                // std::filesystem::remove(filepath);
                 FBY_LOG("Delete");
+            }
             ImGui::EndMenu();
         }
 

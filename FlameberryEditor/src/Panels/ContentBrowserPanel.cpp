@@ -293,16 +293,16 @@ namespace Flameberry {
 
         if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))
         {
-            if (ImGui::BeginMenu("Create"))
+            if (ImGui::BeginMenu(ICON_LC_PLUS"\tCreate"))
             {
-                if (ImGui::MenuItem("Material"))
+                if (ImGui::MenuItem(ICON_LC_DRIBBBLE"\tMaterial"))
                 {
                     auto mat = CreateRef<MaterialAsset>("New Material");
                     MaterialAssetSerializer::Serialize(mat, (m_CurrentDirectory / "NewMaterial.fbmat").c_str());
                 }
                 ImGui::EndMenu();
             }
-            if (ImGui::MenuItem("Open In Finder"))
+            if (ImGui::MenuItem(ICON_LC_EXTERNAL_LINK"\tOpen In Finder"))
                 Platform::OpenInExplorerOrFinder((Project::GetActiveProjectDirectory() / m_CurrentDirectory).string().c_str());
             ImGui::EndPopup();
         }

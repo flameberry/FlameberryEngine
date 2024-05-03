@@ -216,8 +216,6 @@ namespace Flameberry {
         {
             DrawCreateEntityMenu(entity);
 
-            ImGui::SeparatorText("Actions");
-
             if (ImGui::MenuItem(ICON_LC_TEXT_CURSOR_INPUT"\tRename"))
                 m_RenamedEntity = entity;
 
@@ -288,7 +286,7 @@ namespace Flameberry {
 
     void SceneHierarchyPanel::DrawCreateEntityMenu(fbentt::entity parent)
     {
-        if (ImGui::BeginMenu("Create"))
+        if (ImGui::BeginMenu(ICON_LC_PLUS"\tCreate"))
         {
             if (ImGui::MenuItem(ICON_LC_SQUARE"\tEmpty"))
             {

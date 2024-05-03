@@ -290,7 +290,7 @@ namespace Flameberry {
         style.WindowRounding = 5;
         style.FrameRounding = 2;
         style.PopupRounding = 3;
-        style.CellPadding = ImVec2(8, 5);
+        style.CellPadding = ImVec2(8, 7);
         style.ScrollbarSize = 12;
         style.DockingSeparatorSize = 3;
         style.WindowMenuButtonPosition = ImGuiDir_Left;
