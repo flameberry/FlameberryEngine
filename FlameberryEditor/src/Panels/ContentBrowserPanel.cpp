@@ -1,5 +1,6 @@
 #include "ContentBrowserPanel.h"
 
+#include <filesystem>
 #include <imgui.h>
 
 #include <IconFontCppHeaders/IconsLucide.h>
@@ -153,7 +154,7 @@ namespace Flameberry {
         float topChildHeight = 34.0f;
         float bottomChildHeight = ImGui::GetContentRegionAvail().y - topChildHeight;
 
-        ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
         ImGui::PopStyleVar();
 
         constexpr float arrowSize = 14.0f;
@@ -187,10 +188,10 @@ namespace Flameberry {
 
         ImGui::SameLine();
 
-        ImGui::Text("%s", m_CurrentDirectory.c_str());
+        UI_CurrentPathBar();
 
         // Icon Size controller
-        const auto& style = ImGui::GetStyle();
+        auto& style = ImGui::GetStyle();
         const float totalIconWidth = arrowSize + 2.0f * style.FramePadding.x + style.ItemSpacing.x;
         ImGui::SameLine();
         ImGui::SetCursorPosX(ImGui::GetWindowSize().x - totalIconWidth);
@@ -240,13 +241,13 @@ namespace Flameberry {
 
             if (m_SearchInputBuffer[0] != '\0') {
                 // TODO: Maybe some optimisation to not search again if the input string is same
-                int index = Algorithm::KmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer, true);
+                const int index = Algorithm::KmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer, true);
                 if (index == -1)
                     continue;
             }
 
             ImGui::PushID(filePath.filename().c_str());
-            std::string ext = filePath.extension().string();
+            const std::string ext = filePath.extension().string();
             int currentIconIndex;
             bool isFileSupported = true, isDirectory = directory.is_directory();
 
@@ -308,5 +309,81 @@ namespace Flameberry {
         }
         ImGui::EndChild();
         ImGui::End();
+    }
+
+    void ContentBrowserPanel::UI_CurrentPathBar()
+    {
+        const auto& style = ImGui::GetStyle();
+        const float totalIconWidth = 14.0f + 2.0f * style.FramePadding.x + 2.0f * style.ItemSpacing.x;
+        const float currentPathItemWidth = ImGui::GetContentRegionAvail().x - totalIconWidth;
+
+        const ImRect clipRect(ImGui::GetCursorScreenPos(), ImGui::GetCursorScreenPos() + ImVec2(currentPathItemWidth, ImGui::GetContentRegionMax().y));
+        ImGui::PushClipRect(clipRect.Min, clipRect.Max, true);
+
+        std::string_view currentPath(m_CurrentDirectory.c_str());
+
+        const ImVec2 cursorPositionRelativeStart = ImGui::GetCursorScreenPos();
+
+        ImGui::GetWindowDrawList()->AddRectFilled(cursorPositionRelativeStart,
+            cursorPositionRelativeStart
+            + ImVec2(currentPathItemWidth, ImGui::GetFontSize() + 2.0f * style.FramePadding.y),
+            ImGui::ColorConvertFloat4ToU32(Theme::FrameBg),
+            style.FrameRounding
+        );
+
+        ImGui::SetCursorScreenPos(cursorPositionRelativeStart + ImVec2(style.FramePadding.x, 0.0f));
+
+        ImGui::AlignTextToFramePadding();
+
+        std::size_t end = 0;
+
+        // Initial path is "Content"
+        // Later on path can be "Content/Textures", "Content/Textures/Texture1", "Content/Textures/Texture1/Texture2" etc.
+        while (!currentPath.empty())
+        {
+            std::size_t position = currentPath.find_first_of(std::filesystem::path::preferred_separator);
+            if (position == std::string::npos)
+                position = currentPath.length();
+
+            // Keeping the count of characters skipped throughout the entire string
+            end += position;
+
+            // Displaying the folder name
+            const ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
+            ImGui::TextUnformatted(currentPath.begin(), currentPath.begin() + position);
+            ImGui::SameLine();
+
+            const ImRect buttonRect(cursorScreenPos - ImVec2(style.FramePadding.x, 0.0f),
+                ImVec2(ImGui::GetCursorScreenPos().x - style.ItemSpacing.x + style.FramePadding.x,
+                    ImGui::GetCursorScreenPos().y + ImGui::GetFontSize() + 2.0f * style.FramePadding.y));
+
+            const bool hovered = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(buttonRect.Min, buttonRect.Max, false);
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && hovered)
+            {
+                m_CurrentDirectory = m_CurrentDirectory.string().substr(0, end);
+                break;
+            }
+
+            if (hovered)
+            {
+                ImGui::GetWindowDrawList()->AddRect(
+                    buttonRect.Min, buttonRect.Max,
+                    ImGui::ColorConvertFloat4ToU32(Theme::AccentColor),
+                    style.FrameRounding
+                );
+            }
+
+            currentPath.remove_prefix(position);
+
+            if (!currentPath.empty())
+            {
+                end++;
+                currentPath.remove_prefix(1);
+                ImGui::Button(ICON_LC_CHEVRON_RIGHT);
+                ImGui::SameLine();
+            }
+        }
+
+        ImGui::PopClipRect();
     }
 }

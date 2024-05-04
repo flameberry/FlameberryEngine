@@ -28,7 +28,6 @@ namespace Flameberry {
 
                 if (m_EditingContext && m_ShouldRename)
                 {
-
                     strcpy(m_RenameBuffer, m_EditingContext->GetName().c_str());
                     ImGui::SetKeyboardFocusHere();
 

@@ -7,13 +7,6 @@
 #include "MaterialSelectorPanel.h"
 
 namespace Flameberry {
-    inline ImVec4 operator*(const ImVec4& a, const ImVec4& b) {
-        return ImVec4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
-    }
-
-    inline ImVec4 operator*(const ImVec4& a, float b) {
-        return ImVec4(a.x * b, a.y * b, a.z * b, a.w * b);
-    }
 
     class InspectorPanel
     {
