@@ -9,10 +9,6 @@
 
 namespace Flameberry {
 
-    ImVec2 operator+(const ImVec2& a, const ImVec2& b) {
-        return ImVec2{ a.x + b.x, a.y + b.y };
-    }
-
     bool UI::Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size)
     {
         using namespace ImGui;
