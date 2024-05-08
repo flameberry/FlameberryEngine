@@ -4,8 +4,6 @@
 
 #include <IconFontCppHeaders/IconsLucide.h>
 
-#include "Scripting/ScriptEngine.h"
-
 #include "UI.h"
 
 namespace Flameberry {
