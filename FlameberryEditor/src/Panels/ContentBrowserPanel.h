@@ -8,6 +8,7 @@
 #include "ThumbnailCache.h"
 
 namespace Flameberry {
+
     class ContentBrowserPanel
     {
     public:
@@ -34,4 +35,5 @@ namespace Flameberry {
         bool m_IsSearchBoxFocused = false;
         char m_SearchInputBuffer[256] = { '\0' };
     };
+
 }

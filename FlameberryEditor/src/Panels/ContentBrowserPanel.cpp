@@ -163,7 +163,7 @@ namespace Flameberry {
 
         if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
-        ImGui::SameLine();
+        ImGui::SameLine(0.0f, 0.0f);
         if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
             m_CurrentDirectory = m_CurrentDirectory.parent_path();
 
@@ -317,21 +317,23 @@ namespace Flameberry {
         const float totalIconWidth = 14.0f + 2.0f * style.FramePadding.x + 2.0f * style.ItemSpacing.x;
         const float currentPathItemWidth = ImGui::GetContentRegionAvail().x - totalIconWidth;
 
-        const ImRect clipRect(ImGui::GetCursorScreenPos(), ImGui::GetCursorScreenPos() + ImVec2(currentPathItemWidth, ImGui::GetContentRegionMax().y));
+        const ImVec2 cursorPositionRelativeStart = ImGui::GetCursorScreenPos();
+        const ImRect clipRect(cursorPositionRelativeStart, cursorPositionRelativeStart + ImVec2(currentPathItemWidth, ImGui::GetFontSize() + 2.0f * style.FramePadding.y));
+
         ImGui::PushClipRect(clipRect.Min, clipRect.Max, true);
 
         std::string_view currentPath(m_CurrentDirectory.c_str());
 
-        const ImVec2 cursorPositionRelativeStart = ImGui::GetCursorScreenPos();
-
-        ImGui::GetWindowDrawList()->AddRectFilled(cursorPositionRelativeStart,
-            cursorPositionRelativeStart
-            + ImVec2(currentPathItemWidth, ImGui::GetFontSize() + 2.0f * style.FramePadding.y),
+        ImGui::GetWindowDrawList()->AddRectFilled(clipRect.Min, clipRect.Max,
             ImGui::ColorConvertFloat4ToU32(Theme::FrameBg),
             style.FrameRounding
         );
+        ImGui::GetWindowDrawList()->AddRect(clipRect.Min, clipRect.Max,
+            IM_COL32(70, 70, 70, 255),
+            style.FrameRounding, 0, 0.5f
+        );
 
-        ImGui::SetCursorScreenPos(cursorPositionRelativeStart + ImVec2(style.FramePadding.x, 0.0f));
+        ImGui::SetCursorScreenPos(cursorPositionRelativeStart + ImVec2(2.0f * style.FramePadding.x, 0.0f));
 
         ImGui::AlignTextToFramePadding();
 
