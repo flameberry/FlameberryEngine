@@ -59,7 +59,7 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_TableBorderLight, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
         if (ImGui::BeginTable("TypeBar", 2, ImGuiTableFlags_Borders))
         {
-            ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn(ICON_LC_TAG" Label", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, ImGui::GetWindowWidth() / 4.0f);
             ImGui::TableHeadersRow();
             ImGui::EndTable();
