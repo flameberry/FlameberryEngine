@@ -498,7 +498,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<RigidBodyComponent>("Rigid Body", [&]()
+            DrawComponent<RigidBodyComponent>(ICON_LC_BOXES" Rigid Body", [&]()
                 {
                     auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);
 

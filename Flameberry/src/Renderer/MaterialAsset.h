@@ -13,7 +13,7 @@ namespace Flameberry {
         uint32_t UseAlbedoMap, UseNormalMap, UseRoughnessMap, UseAmbientMap, UseMetallicMap;
     };
 
-    // This class is basically a wrapper for the `__Material` class to add utilities for using Materials for Meshes
+    // This class is basically a wrapper for the `Material` class to add utilities for using Materials for Meshes
     class MaterialAsset : public Asset
     {
     public:
