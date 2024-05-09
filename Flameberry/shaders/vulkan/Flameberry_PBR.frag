@@ -99,7 +99,7 @@ float GetRoughnessFactor()
 
 float GetAmbientFactor()
 {
-    if (u_UseAlbedoMap == 1)
+    if (u_UseAmbientMap == 1)
         return texture(u_AmbientMapSampler, v_TextureCoords).x;
     return 1.0;
 }
@@ -191,7 +191,7 @@ float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius,
     const vec2 texelSize = scale / textureSize(_FBY_u_ShadowMapSamplerArray, 0).xy;
 
     float shadowFactor = 0.0f;
-	for (uint i = 0; i < sampleCount; i++) 
+	for (uint i = 0; i < sampleCount; i++)
     {
         // vec2 offset = vec2(g_PoissonSamples[i]);
         vec2 offset = VogelDiskSample(i, sampleCount, interleavedNoise);
@@ -218,7 +218,7 @@ float FilterPCFBilinear_DirectionalLight(vec4 sc, uint cascadeIndex, int kernelS
         for (int j = -kernelSize; j <= kernelSize; j++) {
             vec2 offset = vec2(i, j) * vec2(pixelSize, pixelSize);
             vec4 tmp = textureGather(_FBY_u_ShadowMapSamplerArray, vec3(sc.xy + offset, cascadeIndex));
-            
+
             // Assuming texels outside the shadow map are treated as fully lit
             tmp = step(sc.z - bias, tmp);
 
@@ -269,14 +269,14 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float in
     float searchWidth = PCSS_SearchWidth(u_SceneData.DirectionalLight.LightSize, receiverDepth, cascadeIndex);
 
     const vec2 blockerInfo = PCSS_BlockerDistance(shadowCoord.xyz, searchWidth, cascadeIndex, interleavedNoise, bias);
-    
+
     if (blockerInfo.y == 0.0f)
         return 1.0f;
 
     float penumbraSize = receiverDepth - blockerInfo.x;
     if (penumbraSize == 0.0f)
         return 1.0f;
-    
+
     // float softnessFallOff = 2.0f;
     // penumbraSize = 1.0 - pow(1.0 - penumbraSize, softnessFallOff);
 

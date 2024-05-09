@@ -1,17 +1,12 @@
 #pragma once
 
+#include <IconFontCppHeaders/IconsLucide.h>
+
 #include "Flameberry.h"
 #include "MaterialEditorPanel.h"
 #include "MaterialSelectorPanel.h"
 
 namespace Flameberry {
-    inline ImVec4 operator*(const ImVec4& a, const ImVec4& b) {
-        return ImVec4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
-    }
-
-    inline ImVec4 operator*(const ImVec4& a, float b) {
-        return ImVec4(a.x * b, a.y * b, a.z * b, a.w * b);
-    }
 
     class InspectorPanel
     {
@@ -26,7 +21,7 @@ namespace Flameberry {
     private:
         Ref<fbentt::registry> GetContextRegistry() const { return m_Context->m_Registry; }
     private:
-        static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible;
+        static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
         static constexpr float s_LabelWidth = 100.0f;
 
         Ref<MaterialEditorPanel> m_MaterialEditorPanel;
@@ -65,7 +60,7 @@ namespace Flameberry {
             ImVec2 contentRegionAvail = ImGui::GetContentRegionAvail();
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2, 4 });
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 4));
 
             auto& style = ImGui::GetStyle();
             float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
@@ -73,17 +68,15 @@ namespace Flameberry {
             bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
             ImGui::PopStyleVar();
 
-            float imageSize = lineHeight - 2.0f * style.FramePadding.y;
-            ImGui::SameLine(contentRegionAvail.x - lineHeight * 0.5f);
-
-            ImGui::ImageButton("ComponentSettingsToggle", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), ImVec2(imageSize, imageSize));
+            ImGui::SameLine(contentRegionAvail.x - lineHeight);
+            ImGui::Button(ICON_LC_SETTINGS, ImVec2(0.0f, lineHeight));
             ImGui::PopStyleVar();
 
             bool shouldRemoveComp = false;
             if (ImGui::BeginPopupContextItem("ComponentSettings", ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonLeft))
             {
                 ImGui::BeginDisabled(!removable);
-                if (ImGui::MenuItem("Remove Component"))
+                if (ImGui::MenuItem(ICON_LC_DELETE"\tRemove Component"))
                     shouldRemoveComp = true;
                 ImGui::EndDisabled();
 

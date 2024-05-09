@@ -1,11 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <memory>
 #include <string>
-#include <unordered_map>
 
-#include "VulkanVertex.h"
 #include "Buffer.h"
 #include "Asset/Asset.h"
 

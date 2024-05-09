@@ -1,7 +1,9 @@
 #include "SceneHierarchyPanel.h"
 
-#include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
+
+#include <glm/gtc/type_ptr.hpp>
+#include <IconFontCppHeaders/IconsLucide.h>
 
 #include "UI.h"
 
@@ -39,7 +41,7 @@ namespace Flameberry {
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
 
-        UI::InputBox("##SceneHierarchySearchBar", width, m_SearchInputBuffer, 256, "Search...");
+        UI::InputBox("##SceneHierarchySearchBar", width, m_SearchInputBuffer, 256, ICON_LC_SEARCH" Search...");
 
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
@@ -57,7 +59,7 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_TableBorderLight, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
         if (ImGui::BeginTable("TypeBar", 2, ImGuiTableFlags_Borders))
         {
-            ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn(ICON_LC_TAG" Label", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, ImGui::GetWindowWidth() / 4.0f);
             ImGui::TableHeadersRow();
             ImGui::EndTable();
@@ -212,15 +214,15 @@ namespace Flameberry {
 
         if (ImGui::BeginPopupContextItem("EntityNodeContextMenu", m_PopupFlags))
         {
-            if (ImGui::MenuItem("Rename"))
-                m_RenamedEntity = entity;
-
             DrawCreateEntityMenu(entity);
 
-            if (ImGui::MenuItem("Duplicate Entity"))
+            if (ImGui::MenuItem(ICON_LC_TEXT_CURSOR_INPUT"\tRename"))
+                m_RenamedEntity = entity;
+
+            if (ImGui::MenuItem(ICON_LC_COPY"\tDuplicate Entity"))
                 should_duplicate_entity = true;
 
-            if (ImGui::MenuItem("Delete Entity"))
+            if (ImGui::MenuItem(ICON_LC_DELETE"\tDelete Entity"))
                 should_delete_entity = true;
 
             ImGui::EndPopup();
@@ -284,20 +286,20 @@ namespace Flameberry {
 
     void SceneHierarchyPanel::DrawCreateEntityMenu(fbentt::entity parent)
     {
-        if (ImGui::BeginMenu("Create"))
+        if (ImGui::BeginMenu(ICON_LC_PLUS"\tCreate"))
         {
-            if (ImGui::MenuItem("Empty"))
+            if (ImGui::MenuItem(ICON_LC_SQUARE"\tEmpty"))
             {
                 auto entity = m_Context->CreateEntityWithTagAndParent("Empty", parent);
                 m_SelectionContext = entity;
             }
-            if (ImGui::MenuItem("Mesh"))
+            if (ImGui::MenuItem(ICON_LC_CUBOID"\tMesh"))
             {
                 auto entity = m_Context->CreateEntityWithTagAndParent("StaticMesh", parent);
                 m_Context->m_Registry->emplace<MeshComponent>(entity);
                 m_SelectionContext = entity;
             }
-            if (ImGui::MenuItem("Camera"))
+            if (ImGui::MenuItem(ICON_LC_CAMERA"\tCamera"))
             {
                 auto entity = m_Context->CreateEntityWithTagAndParent("Camera", parent);
                 m_Context->m_Registry->emplace<CameraComponent>(entity);
@@ -305,19 +307,19 @@ namespace Flameberry {
             }
             if (ImGui::BeginMenu("Light"))
             {
-                if (ImGui::MenuItem("Sky Light"))
+                if (ImGui::MenuItem(ICON_LC_SUNRISE"\tSky Light"))
                 {
                     auto entity = m_Context->CreateEntityWithTagAndParent("Sky Light", parent);
                     m_Context->m_Registry->emplace<SkyLightComponent>(entity);
                     m_SelectionContext = entity;
                 }
-                if (ImGui::MenuItem("Directional Light"))
+                if (ImGui::MenuItem(ICON_LC_SUN"\tDirectional Light"))
                 {
                     auto entity = m_Context->CreateEntityWithTagAndParent("Directional Light", parent);
                     m_Context->m_Registry->emplace<DirectionalLightComponent>(entity);
                     m_SelectionContext = entity;
                 }
-                if (ImGui::MenuItem("Point Light"))
+                if (ImGui::MenuItem(ICON_LC_LIGHTBULB"\tPoint Light"))
                 {
                     auto entity = m_Context->CreateEntityWithTagAndParent("Point Light", parent);
                     m_Context->m_Registry->emplace<PointLightComponent>(entity);

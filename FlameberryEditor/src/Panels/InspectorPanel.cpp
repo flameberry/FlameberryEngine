@@ -1,6 +1,9 @@
 #include "InspectorPanel.h"
 
 #include <filesystem>
+
+#include <IconFontCppHeaders/IconsLucide.h>
+
 #include "UI.h"
 
 namespace Flameberry {
@@ -43,28 +46,34 @@ namespace Flameberry {
 
             ImGui::SameLine();
 
-            if (ImGui::Button("+ Add"))
+            if (ImGui::Button(ICON_LC_PLUS" Add"))
                 ImGui::OpenPopup("AddComponentPopUp");
 
             if (ImGui::BeginPopup("AddComponentPopUp"))
             {
-                DrawAddComponentEntry<TransformComponent>("Transform Component");
-                DrawAddComponentEntry<CameraComponent>("Camera Component");
-                DrawAddComponentEntry<MeshComponent>("Mesh Component");
-                DrawAddComponentEntry<SkyLightComponent>("Sky Light Component");
-                DrawAddComponentEntry<DirectionalLightComponent>("Directional Light Component");
-                DrawAddComponentEntry<PointLightComponent>("Point Light Component");
-                DrawAddComponentEntry<RigidBodyComponent>("Rigid Body Component");
-                DrawAddComponentEntry<BoxColliderComponent>("Box Collider Component");
-                DrawAddComponentEntry<SphereColliderComponent>("Sphere Collider Component");
-                DrawAddComponentEntry<CapsuleColliderComponent>("Capsule Collider Component");
+                DrawAddComponentEntry<TransformComponent>(ICON_LC_SCALE_3D"\tTransform Component");
+                DrawAddComponentEntry<CameraComponent>(ICON_LC_CAMERA"\tCamera Component");
+                DrawAddComponentEntry<MeshComponent>(ICON_LC_CUBOID"\tMesh Component");
+                DrawAddComponentEntry<SkyLightComponent>(ICON_LC_SUNRISE"\tSky Light Component");
+                DrawAddComponentEntry<DirectionalLightComponent>(ICON_LC_SUN"\tDirectional Light Component");
+                DrawAddComponentEntry<PointLightComponent>(ICON_LC_LIGHTBULB"\tPoint Light Component");
+                DrawAddComponentEntry<RigidBodyComponent>(ICON_LC_BOXES"\tRigid Body Component");
+                DrawAddComponentEntry<BoxColliderComponent>(ICON_LC_BOX"\tBox Collider Component");
+                DrawAddComponentEntry<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED"\tSphere Collider Component");
+                DrawAddComponentEntry<CapsuleColliderComponent>(ICON_LC_PILL"\tCapsule Collider Component");
 
                 ImGui::EndPopup();
             }
 
+            ImGui::Spacing();
+
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
             ImGui::PushStyleColor(ImGuiCol_Border, Theme::WindowBorder);
             ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX);
             ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
+
+            ImGui::Spacing();
 #if 0
             DrawComponent<IDComponent>("ID Component", this, [&]()
                 {
@@ -86,7 +95,7 @@ namespace Flameberry {
             );
 #endif
 
-            DrawComponent<TransformComponent>("Transform", [&]()
+            DrawComponent<TransformComponent>(ICON_LC_SCALE_3D" Transform", [&]()
                 {
                     auto& transform = m_Context->m_Registry->get<TransformComponent>(m_SelectionContext);
 
@@ -125,7 +134,7 @@ namespace Flameberry {
                 }, false // removable = false
             );
 
-            DrawComponent<SkyLightComponent>("Sky Light", [=]()
+            DrawComponent<SkyLightComponent>(ICON_LC_SUNRISE" Sky Light", [=]()
                 {
                     auto& skyLightComp = m_Context->m_Registry->get<SkyLightComponent>(m_SelectionContext);
 
@@ -198,7 +207,7 @@ namespace Flameberry {
                     }
                 });
 
-            DrawComponent<CameraComponent>("Camera", [&]()
+            DrawComponent<CameraComponent>(ICON_LC_CAMERA" Camera", [&]()
                 {
                     auto& cameraComp = m_Context->m_Registry->get<CameraComponent>(m_SelectionContext);
 
@@ -283,7 +292,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<MeshComponent>("Mesh", [&]()
+            DrawComponent<MeshComponent>(ICON_LC_CUBOID" Mesh", [&]()
                 {
                     auto& mesh = m_Context->m_Registry->get<MeshComponent>(m_SelectionContext);
 
@@ -326,7 +335,7 @@ namespace Flameberry {
                     }
 
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-                    bool is_open = ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+                    bool is_open = ImGui::CollapsingHeader(ICON_LC_DRIBBBLE" Materials", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth);
                     ImGui::PopStyleVar();
                     if (is_open)
                     {
@@ -344,19 +353,23 @@ namespace Flameberry {
                             ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), false, window_flags);
                             ImGui::PopStyleVar();
 
-                            if (ImGui::BeginTable("MaterialTable", 2, s_TableFlags))
+                            if (ImGui::BeginTable("MaterialTable", 4, s_TableFlags))
                             {
-                                ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
+                                ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 60.0f);
                                 ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
+                                ImGui::TableSetupColumn("Material_LoadFromAssetsButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
+                                ImGui::TableSetupColumn("Material_ResetButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
 
                                 uint32_t submeshIndex = 0;
                                 for (const auto& submesh : staticMesh->GetSubMeshes())
                                 {
+                                    ImGui::PushID(submeshIndex);
+
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
 
                                     ImGui::AlignTextToFramePadding();
-                                    ImGui::Text("Element %d", submeshIndex);
+                                    ImGui::Text("Item %d", submeshIndex);
                                     ImGui::TableNextColumn();
 
                                     Ref<MaterialAsset> mat;
@@ -367,8 +380,11 @@ namespace Flameberry {
 
                                     ImGui::Button(
                                         mat ? mat->GetName().c_str() : "Null",
-                                        ImVec2(ImGui::GetContentRegionAvail().x - textLineHeightWithSpacing, 0.0f)
+                                        ImVec2(-1.0f, 0.0f)
                                     );
+
+                                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+                                        ImGui::SetTooltip("%s", mat ? mat->GetName().c_str() : "Null");
 
                                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                                         m_MaterialEditorPanel->DisplayMaterial(mat);
@@ -394,15 +410,9 @@ namespace Flameberry {
                                         ImGui::EndDragDropTarget();
                                     }
 
-                                    ImGui::SameLine();
-                                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() - ImGui::GetStyle().ItemSpacing.x - ImGui::GetStyle().FrameRounding);
+                                    ImGui::TableNextColumn();
 
-                                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
-                                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
-                                    ImGui::Button("O", ImVec2(0.0f, 0.0f));
-                                    ImGui::PopStyleColor();
-                                    ImGui::PopStyleVar();
-
+                                    ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f));
                                     if (ImGui::IsItemClicked())
                                     {
                                         m_MaterialSelectorPanel->OpenPanel([mesh, submeshIndex](const Ref<MaterialAsset>& material) mutable
@@ -411,6 +421,13 @@ namespace Flameberry {
                                             }
                                         );
                                     }
+
+                                    ImGui::TableNextColumn();
+                                    if (ImGui::Button(ICON_LC_ROTATE_CCW))
+                                        mesh.OverridenMaterialTable.erase(submeshIndex);
+
+                                    ImGui::PopID();
+
                                     submeshIndex++;
                                 }
                                 ImGui::EndTable();
@@ -421,7 +438,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<DirectionalLightComponent>("Light", [&]()
+            DrawComponent<DirectionalLightComponent>(ICON_LC_SUN" Directional Light", [&]()
                 {
                     auto& light = m_Context->m_Registry->get<DirectionalLightComponent>(m_SelectionContext);
 
@@ -462,7 +479,7 @@ namespace Flameberry {
                     }
                 });
 
-            DrawComponent<PointLightComponent>("Point Light", [&]()
+            DrawComponent<PointLightComponent>(ICON_LC_LIGHTBULB" Point Light", [&]()
                 {
                     auto& light = m_Context->m_Registry->get<PointLightComponent>(m_SelectionContext);
 
@@ -495,7 +512,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<RigidBodyComponent>("Rigid Body", [&]()
+            DrawComponent<RigidBodyComponent>(ICON_LC_BOXES" Rigid Body", [&]()
                 {
                     auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);
 
@@ -570,7 +587,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<BoxColliderComponent>("Box Collider", [&]()
+            DrawComponent<BoxColliderComponent>(ICON_LC_BOX" Box Collider", [&]()
                 {
                     auto& boxCollider = m_Context->m_Registry->get<BoxColliderComponent>(m_SelectionContext);
 
@@ -593,7 +610,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<SphereColliderComponent>("Sphere Collider", [&]()
+            DrawComponent<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED" Sphere Collider", [&]()
                 {
                     auto& sphereCollider = m_Context->m_Registry->get<SphereColliderComponent>(m_SelectionContext);
 
@@ -616,7 +633,7 @@ namespace Flameberry {
                 }
             );
 
-            DrawComponent<CapsuleColliderComponent>("Capsule Collider", [&]()
+            DrawComponent<CapsuleColliderComponent>(ICON_LC_PILL" Capsule Collider", [&]()
                 {
                     auto& capsuleCollider = m_Context->m_Registry->get<CapsuleColliderComponent>(m_SelectionContext);
 

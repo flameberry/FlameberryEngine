@@ -4,6 +4,8 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
+#include <IconFontCppHeaders/IconsLucide.h>
+
 #include "Theme.h"
 
 #include "Renderer/RenderCommand.h"
@@ -50,6 +52,16 @@ namespace Flameberry {
         io.FontDefault = io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"FlameberryEditor/Assets/Fonts/arial/Arial.ttf", fontSize, &config);
         io.FontGlobalScale = 1 / DPI_SCALE;
 
+        // Merging Font-Awesome fonts into the default font
+        ImFontConfig iconFontConfig;
+        iconFontConfig.MergeMode = true;
+        iconFontConfig.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
+        iconFontConfig.GlyphOffset = ImVec2(0, 5);
+        static const ImWchar iconRanges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
+
+        io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR"FlameberryEditor/Assets/Fonts/lucide/lucide.ttf", fontSize, &iconFontConfig, iconRanges);
+
+        // ImGui layout save location
         io.IniFilename = NULL;
         ImGui::LoadIniSettingsFromDisk(FBY_PROJECT_DIR"Flameberry/src/ImGui/imgui.ini");
 
@@ -278,7 +290,7 @@ namespace Flameberry {
         style.WindowRounding = 5;
         style.FrameRounding = 2;
         style.PopupRounding = 3;
-        style.CellPadding = ImVec2(8, 5);
+        style.CellPadding = ImVec2(8, 7);
         style.ScrollbarSize = 12;
         style.DockingSeparatorSize = 3;
         style.WindowMenuButtonPosition = ImGuiDir_Left;
@@ -301,7 +313,7 @@ namespace Flameberry {
         // colors[ImGuiCol_WindowBg] = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
         colors[ImGuiCol_WindowBg] = Theme::WindowBgGrey;
         colors[ImGuiCol_Border] = Theme::WindowBg;
-        
+
         // Frame
         colors[ImGuiCol_FrameBg] = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
         colors[ImGuiCol_FrameBgHovered] = ImVec4{ 0.11f, 0.11f, 0.11f, 1.0f };

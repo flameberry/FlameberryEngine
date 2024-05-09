@@ -2,15 +2,12 @@
 
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
+#include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/Core.h"
 #include "ImGui/Theme.h"
 
 namespace Flameberry {
-
-    ImVec2 operator+(const ImVec2& a, const ImVec2& b) {
-        return ImVec2{ a.x + b.x, a.y + b.y };
-    }
 
     bool UI::Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size)
     {
@@ -127,8 +124,12 @@ namespace Flameberry {
 
         if (ImGui::BeginPopupContextItem(filepath.c_str()))
         {
-            if (ImGui::MenuItem("Delete"))
+            if (ImGui::MenuItem(ICON_LC_DELETE"\tDelete"))
+            {
+                // Add a confirm popup
+                // std::filesystem::remove(filepath);
                 FBY_LOG("Delete");
+            }
             ImGui::EndMenu();
         }
 
