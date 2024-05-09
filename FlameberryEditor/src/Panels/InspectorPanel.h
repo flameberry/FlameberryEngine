@@ -76,7 +76,7 @@ namespace Flameberry {
             if (ImGui::BeginPopupContextItem("ComponentSettings", ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonLeft))
             {
                 ImGui::BeginDisabled(!removable);
-                if (ImGui::MenuItem(ICON_LC_DELETE" Remove Component"))
+                if (ImGui::MenuItem(ICON_LC_DELETE"\tRemove Component"))
                     shouldRemoveComp = true;
                 ImGui::EndDisabled();
 
