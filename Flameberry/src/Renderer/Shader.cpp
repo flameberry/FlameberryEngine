@@ -63,7 +63,8 @@ namespace Flameberry {
 
     Shader::Shader(const char* spvBinaryPath)
     {
-        m_Name = std::filesystem::path(spvBinaryPath).stem();
+        const auto& stem = std::filesystem::path(spvBinaryPath).stem().string();
+        m_Name = stem.substr(0, stem.find('.'));
 
         std::vector<char> shaderSpvBinaryCode = LoadShaderSpvCode(spvBinaryPath);
         Reflect(shaderSpvBinaryCode);
