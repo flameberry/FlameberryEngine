@@ -21,7 +21,7 @@ namespace Flameberry {
     private:
         Ref<fbentt::registry> GetContextRegistry() const { return m_Context->m_Registry; }
     private:
-        static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible;
+        static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
         static constexpr float s_LabelWidth = 100.0f;
 
         Ref<MaterialEditorPanel> m_MaterialEditorPanel;
@@ -68,17 +68,15 @@ namespace Flameberry {
             bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
             ImGui::PopStyleVar();
 
-            float imageSize = lineHeight - 2.0f * style.FramePadding.y;
-            ImGui::SameLine(contentRegionAvail.x - lineHeight * 0.5f);
-
-            ImGui::ImageButton("ComponentSettingsToggle", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), ImVec2(imageSize, imageSize));
+            ImGui::SameLine(contentRegionAvail.x - lineHeight);
+            ImGui::Button(ICON_LC_SETTINGS, ImVec2(0.0f, lineHeight));
             ImGui::PopStyleVar();
 
             bool shouldRemoveComp = false;
             if (ImGui::BeginPopupContextItem("ComponentSettings", ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonLeft))
             {
                 ImGui::BeginDisabled(!removable);
-                if (ImGui::MenuItem("Remove Component"))
+                if (ImGui::MenuItem(ICON_LC_DELETE"\tRemove Component"))
                     shouldRemoveComp = true;
                 ImGui::EndDisabled();
 

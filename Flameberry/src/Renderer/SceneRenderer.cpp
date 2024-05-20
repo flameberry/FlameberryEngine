@@ -37,17 +37,6 @@ namespace Flameberry {
         alignas(16) SceneRendererSettingsUniform RendererSettings;
     };
 
-    struct MeshData {
-        glm::vec3 Albedo{ 1.0f };
-        float Roughness = 0.2f;
-        float Metallic = 0.0f;
-        float AlbedoMapEnabled = 0.0f,
-            NormalMapEnabled = 0.0f,
-            RoughnessMapEnabled = 0.0f,
-            AmbientOcclusionMapEnabled = 0.0f,
-            MetallicMapEnabled = 0.0f;
-    };
-
     SceneRenderer::SceneRenderer(const glm::vec2& viewportSize)
         : m_ViewportSize(viewportSize)
     {
@@ -61,13 +50,6 @@ namespace Flameberry {
         auto imageCount = swapchain->GetSwapChainImageCount();
         auto sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
         auto swapchainImageFormat = swapchain->GetSwapChainImageFormat();
-
-        // CommandBufferSpecification commandBufferSpec{};
-
-        // m_CommandBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-        // for (auto& commandBuffer : m_CommandBuffers)
-        // {
-        // }
 
 #pragma region ShadowMapResources
         {
@@ -101,7 +83,6 @@ namespace Flameberry {
                     VK_DEPENDENCY_BY_REGION_BIT                     // VkDependencyFlags          dependencyFlags
                 }
             };
-
 
             for (uint32_t i = 0; i < imageCount; i++)
                 shadowMapRenderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(shadowMapFramebufferSpec);

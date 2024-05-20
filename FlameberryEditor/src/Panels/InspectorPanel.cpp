@@ -68,9 +68,15 @@ namespace Flameberry {
                 ImGui::EndPopup();
             }
 
+            ImGui::Spacing();
+
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
             ImGui::PushStyleColor(ImGuiCol_Border, Theme::WindowBorder);
             ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX);
             ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
+
+            ImGui::Spacing();
 #if 0
             DrawComponent<IDComponent>("ID Component", this, [&]()
                 {
@@ -350,19 +356,23 @@ namespace Flameberry {
                             ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), false, window_flags);
                             ImGui::PopStyleVar();
 
-                            if (ImGui::BeginTable("MaterialTable", 2, s_TableFlags))
+                            if (ImGui::BeginTable("MaterialTable", 4, s_TableFlags))
                             {
-                                ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
+                                ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 60.0f);
                                 ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
+                                ImGui::TableSetupColumn("Material_LoadFromAssetsButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
+                                ImGui::TableSetupColumn("Material_ResetButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
 
                                 uint32_t submeshIndex = 0;
                                 for (const auto& submesh : staticMesh->GetSubMeshes())
                                 {
+                                    ImGui::PushID(submeshIndex);
+
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
 
                                     ImGui::AlignTextToFramePadding();
-                                    ImGui::Text("Element %d", submeshIndex);
+                                    ImGui::Text("Item %d", submeshIndex);
                                     ImGui::TableNextColumn();
 
                                     Ref<MaterialAsset> mat;
@@ -373,8 +383,11 @@ namespace Flameberry {
 
                                     ImGui::Button(
                                         mat ? mat->GetName().c_str() : "Null",
-                                        ImVec2(ImGui::GetContentRegionAvail().x - textLineHeightWithSpacing, 0.0f)
+                                        ImVec2(-1.0f, 0.0f)
                                     );
+
+                                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+                                        ImGui::SetTooltip("%s", mat ? mat->GetName().c_str() : "Null");
 
                                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                                         m_MaterialEditorPanel->DisplayMaterial(mat);
@@ -400,15 +413,9 @@ namespace Flameberry {
                                         ImGui::EndDragDropTarget();
                                     }
 
-                                    ImGui::SameLine();
-                                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() - ImGui::GetStyle().ItemSpacing.x - ImGui::GetStyle().FrameRounding);
+                                    ImGui::TableNextColumn();
 
-                                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
-                                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
-                                    ImGui::Button("O", ImVec2(0.0f, 0.0f));
-                                    ImGui::PopStyleColor();
-                                    ImGui::PopStyleVar();
-
+                                    ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f));
                                     if (ImGui::IsItemClicked())
                                     {
                                         m_MaterialSelectorPanel->OpenPanel([mesh, submeshIndex](const Ref<MaterialAsset>& material) mutable
@@ -417,6 +424,13 @@ namespace Flameberry {
                                             }
                                         );
                                     }
+
+                                    ImGui::TableNextColumn();
+                                    if (ImGui::Button(ICON_LC_ROTATE_CCW))
+                                        mesh.OverridenMaterialTable.erase(submeshIndex);
+
+                                    ImGui::PopID();
+
                                     submeshIndex++;
                                 }
                                 ImGui::EndTable();

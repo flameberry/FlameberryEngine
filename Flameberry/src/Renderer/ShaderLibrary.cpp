@@ -19,9 +19,19 @@ namespace Flameberry {
             {"Flameberry_SolidColor.vert.spv", "Flameberry_SolidColor.frag.spv"}
         };
 
+        const char* computeShaderPaths[] =
+        {
+        };
+
         for (const auto& path : paths)
         {
             Ref<Shader> shader = CreateRef<Shader>((s_ShaderBaseDirectory / path[0]).c_str(), (s_ShaderBaseDirectory / path[1]).c_str());
+            s_ShaderStorage[shader->GetName()] = shader;
+        }
+
+        for (const auto& path : computeShaderPaths)
+        {
+            Ref<Shader> shader = CreateRef<Shader>((s_ShaderBaseDirectory / path).c_str());
             s_ShaderStorage[shader->GetName()] = shader;
         }
     }
