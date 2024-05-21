@@ -23,6 +23,8 @@ class PhysXSDKRequirements:
         if preset != '': presetParam = [preset]
         else: presetParam = []
 
+        cls.__UpdatePackman()
+
         try:
             cwd = os.getcwd()
             os.chdir(cls.__PhysXRootDirectory / 'physx')
@@ -34,7 +36,7 @@ class PhysXSDKRequirements:
             else:
                 params = ['sh', cls.__PhysXRootDirectory / 'physx/generate_projects.sh'] + presetParam
                 subprocess.run(params)
-            
+
             # Build PhysX Libraries
             compilerDir = cls.__PhysXRootDirectory / 'physx/compiler'
             innerCompilerDirs = [x for x in os.listdir(compilerDir) if (compilerDir / x).is_dir() and preset in x]
@@ -74,6 +76,20 @@ set(PHYSX_COMPILE_DEFINITIONS NDEBUG)
         cmakeEnvPhysXFile.write(outputString)
         cmakeEnvPhysXFile.close()
     
+    @classmethod
+    def __UpdatePackman(cls):
+        cwd = os.getcwd()
+        os.chdir('physx/buildtools/packman')
+
+        try:
+            packman = 'packman.cmd' if os.name == 'nt' else 'packman'
+            params = [packman, 'update', '-y']
+            subprocess.run(params)
+        except Exception as e:
+            raise e
+
+        os.chdir(cwd)
+
     @classmethod
     def __FindPreset(cls, parent):
         if platform.system() == 'Windows':

@@ -21,7 +21,7 @@ class CMakeRequirements:
         if os.name == 'nt':
             windowsExecutablePath = shutil.which(cmakeExe)
             if windowsExecutablePath:
-                possiblePaths.append(windowsExecutablePath)
+                possiblePaths.add(windowsExecutablePath)
         else:
             # Check common installation directories for non-Windows platforms
             possibleInstallPaths = [
