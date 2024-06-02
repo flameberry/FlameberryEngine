@@ -38,7 +38,6 @@ namespace std {
     template<>
     struct hash<Flameberry::DescriptorSetLayoutSpecification> {
         size_t operator()(const Flameberry::DescriptorSetLayoutSpecification& specification) const {
-            FBY_SCOPED_TIMER("Murmur3_Hash");
             // Should 32 bit murmur hash be used? Or should 128 bits hash be used and sliced back to 64 bits?
             uint32_t hashValue;
             MurmurHash3_x86_32(specification.Bindings.data(), sizeof(VkDescriptorSetLayoutBinding) * specification.Bindings.size(), 0, &hashValue);
@@ -111,7 +110,7 @@ namespace Flameberry {
 #endif
         if (auto it = s_CachedDescriptorSetLayouts.find(specification); it != s_CachedDescriptorSetLayouts.end())
         {
-            FBY_INFO("DescriptorSetLayout retrieved from cache!");
+            FBY_TRACE("DescriptorSetLayout retrieved from cache!");
             return it->second;
         }
         auto layout = CreateRef<DescriptorSetLayout>(specification);
@@ -125,7 +124,7 @@ namespace Flameberry {
         : m_Specification(specification)
     {
         auto layout = m_Specification.Layout->GetLayout();
-        
+
         if (!m_Specification.Pool)
             m_Specification.Pool = VulkanContext::GetCurrentGlobalDescriptorPool();
 

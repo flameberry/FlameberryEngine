@@ -161,13 +161,13 @@ namespace Flameberry {
     Ref<Texture2D> Texture2D::TryGetOrLoadTexture(const std::string& texturePath)
     {
         if (s_TextureCacheDirectory.find(texturePath) != s_TextureCacheDirectory.end()) {
-            FBY_INFO("Successfully retrieved vulkan texture from cache!");
+            FBY_TRACE("Successfully retrieved vulkan texture from cache: {}", texturePath);
             return s_TextureCacheDirectory[texturePath];
         }
         else {
             Ref<Texture2D> texture = CreateRef<Texture2D>(texturePath.c_str());
             s_TextureCacheDirectory[texturePath] = texture;
-            FBY_WARN("Texture not found in cache! Loading texture from disk!");
+            FBY_TRACE("Texture not found in cache! Loading texture from disk: {}", texturePath);
             return texture;
         }
     }

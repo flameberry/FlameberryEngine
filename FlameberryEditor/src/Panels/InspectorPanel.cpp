@@ -88,7 +88,7 @@ namespace Flameberry {
 
                         ImGui::Text("ID");
                         ImGui::TableNextColumn();
-                        ImGui::Text("%llu", (uint64_t)ID);
+                        ImGui::Text("%llu", (UUID::value_type)ID);
                         ImGui::EndTable();
                     }
                 }, true // removable = false

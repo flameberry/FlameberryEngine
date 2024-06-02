@@ -16,6 +16,7 @@ namespace Flameberry {
 
     std::vector<Renderer::Command> Renderer::s_CommandQueue;
     uint32_t Renderer::s_RT_FrameIndex = 0, Renderer::s_FrameIndex = 0;
+    RendererFrameStats Renderer::s_RendererFrameStats;
 
     void Renderer::Init()
     {
@@ -71,12 +72,20 @@ namespace Flameberry {
             window.SwapBuffers();
         }
 
+        ResetStats();
+
         s_CommandQueue.clear();
 
         // Update the Frame Index of the Render Thread
         s_RT_FrameIndex = (s_RT_FrameIndex + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 
+    /// @brief Obsolete: This function is used to render a single mesh by individually binding it's resources.
+    /// It shouldn't be preferred anymore, as redundant bindings are a problem using this.
+    /// @param mesh - The mesh to be rendered
+    /// @param pipeline - The mesh pipeline
+    /// @param materialTable - The corresponding material table
+    /// @param transform - The transform matrix
     void Renderer::SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform)
     {
         Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
@@ -86,7 +95,7 @@ namespace Flameberry {
             }
         );
 
-        int submeshIndex = 0;
+        uint32_t submeshIndex = 0;
         for (const auto& submesh : mesh->GetSubMeshes())
         {
             // The Assumption here is every mesh loaded will have a Material, i.e. materialAsset won't be nullptr
@@ -98,23 +107,37 @@ namespace Flameberry {
 
             Renderer::Submit([pipelineLayout = pipeline->GetVulkanPipelineLayout(), materialAsset, submesh = mesh->GetSubMeshes()[submeshIndex]](VkCommandBuffer cmdBuffer, uint32_t)
                 {
-                    VkDescriptorSet descSetArray[materialAsset->GetUnderlyingMaterial()->m_DescriptorSets.size()];
-                    int idx = 0;
-                    for (const auto& set : materialAsset->GetUnderlyingMaterial()->m_DescriptorSets)
-                    {
-                        descSetArray[idx] = set->GetVulkanDescriptorSet();
-                        idx++;
-                    }
-                    auto setNumber = materialAsset->GetUnderlyingMaterial()->m_StartSetIndex;
-                    uint32_t count = idx;
-
-                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, materialAsset->GetUnderlyingMaterial()->GetPushConstantOffset(), materialAsset->GetUnderlyingMaterial()->GetUniformDataSize(), materialAsset->GetUnderlyingMaterial()->GetUniformDataPtr());
-                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, setNumber, count, &descSetArray[0], 0, nullptr);
+                    RT_BindMaterial(cmdBuffer, pipelineLayout, materialAsset->GetUnderlyingMaterial());
                     vkCmdDrawIndexed(cmdBuffer, submesh.IndexCount, 1, submesh.IndexOffset, 0, 0);
                 }
             );
             submeshIndex++;
+
+            // Record Statistics
+            s_RendererFrameStats.SubMeshCount++;
+            s_RendererFrameStats.DrawCallCount++;
+            s_RendererFrameStats.IndexCount += submesh.IndexCount;
         }
+        s_RendererFrameStats.MeshCount++;
+    }
+
+    void Renderer::RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material)
+    {
+        VkDescriptorSet descSetArray[material->m_DescriptorSets.size()];
+        int idx = 0;
+        for (const auto& set : material->m_DescriptorSets)
+        {
+            descSetArray[idx] = set->GetVulkanDescriptorSet();
+            idx++;
+        }
+        uint32_t setNumber = material->m_StartSetIndex;
+        uint32_t count = idx;
+
+        vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, material->GetPushConstantOffset(), material->GetUniformDataSize(), material->GetUniformDataPtr());
+        vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, setNumber, count, &descSetArray[0], 0, nullptr);
+
+        // Record Statistics
+        s_RendererFrameStats.BoundMaterials++;
     }
 
     void Renderer::RT_BindMesh(VkCommandBuffer cmdBuffer, const Ref<StaticMesh>& mesh)
@@ -125,9 +148,28 @@ namespace Flameberry {
         vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
     }
 
+    void Renderer::RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer)
+    {
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+        vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+        s_RendererFrameStats.VertexAndIndexBufferStateSwitches++;
+    }
+
     void Renderer::RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline)
     {
         vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    }
+
+    void Renderer::ResetStats()
+    {
+        s_RendererFrameStats.MeshCount = 0;
+        s_RendererFrameStats.SubMeshCount = 0;
+        s_RendererFrameStats.BoundMaterials = 0;
+        s_RendererFrameStats.DrawCallCount = 0;
+        s_RendererFrameStats.IndexCount = 0;
+        s_RendererFrameStats.VertexAndIndexBufferStateSwitches = 0;
     }
 
 }

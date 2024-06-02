@@ -339,4 +339,5 @@ namespace Flameberry {
         stream.close();
         return buffer;
     }
+
 }

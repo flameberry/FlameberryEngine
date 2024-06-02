@@ -100,9 +100,11 @@ namespace Flameberry {
             vkEnumerateDeviceExtensionProperties(vk_device, nullptr, &extensionCount, available_extensions.data());
 
             std::set<std::string> required_extensions(s_VkDeviceExtensions.begin(), s_VkDeviceExtensions.end());
+
+            FBY_INFO("Available Extensions:");
             for (const auto& extension : available_extensions)
             {
-                FBY_LOG(extension.extensionName);
+                FBY_INFO("\t{}", extension.extensionName);
                 required_extensions.erase(extension.extensionName);
             }
             bool found_required_extensions = required_extensions.empty();
@@ -112,6 +114,12 @@ namespace Flameberry {
             {
                 SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(vk_device, surface);
                 is_swap_chain_adequate = (!vk_swap_chain_details.SurfaceFormats.empty()) && (!vk_swap_chain_details.PresentationModes.empty());
+            }
+            else
+            {
+                FBY_ERROR("Failed to find the following extension(s):");
+                for (const auto& name : required_extensions)
+                    FBY_ERROR("\t{}", name);
             }
 
             VkPhysicalDeviceFeatures supportedFeatures;

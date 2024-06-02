@@ -91,7 +91,7 @@ namespace Flameberry {
         FBY_ASSERT(data, "Failed to load Flameberry Material from path: {}", path);
 
         Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>(data["Name"].as<std::string>());
-        materialAsset->Handle = data["Handle"].as<uint64_t>();
+        materialAsset->Handle = data["Handle"].as<UUID::value_type>();
 
         materialAsset->SetAlbedo(data["Albedo"].as<glm::vec3>());
         materialAsset->SetRoughness(data["Roughness"].as<float>());

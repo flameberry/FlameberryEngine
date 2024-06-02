@@ -5,12 +5,15 @@
 
 #include "Buffer.h"
 #include "Asset/Asset.h"
+#include "AABB.h"
 
 namespace Flameberry {
+
     struct SubMesh
     {
         AssetHandle MaterialHandle = 0;
         uint32_t IndexOffset, IndexCount;
+        AABB AABB;
     };
 
     /// @brief This class deals with Static Meshes, i.e., 
@@ -37,4 +40,5 @@ namespace Flameberry {
         std::string m_Name = "StaticMesh";
         friend class SceneSerializer;
     };
+
 }

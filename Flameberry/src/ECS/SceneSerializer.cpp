@@ -101,14 +101,14 @@ namespace Flameberry {
             for (const auto entity : entities)
             {
                 const auto deserializedEntity = destScene->m_Registry->create();
-                const UUID ID = entity["Entity"].as<uint64_t>();
+                const UUID ID = entity["Entity"].as<UUID::value_type>();
                 UUIDToEntityMap[ID] = deserializedEntity;
             }
 
             // Deserialize entities
             for (const auto entity : entities)
             {
-                const UUID ID = entity["Entity"].as<uint64_t>();
+                const UUID ID = entity["Entity"].as<UUID::value_type>();
                 const fbentt::entity deserializedEntity = UUIDToEntityMap[ID];
 
                 auto& IDComp = destScene->m_Registry->emplace<IDComponent>(deserializedEntity);
@@ -131,10 +131,10 @@ namespace Flameberry {
                 if (auto relation = entity["RelationshipComponent"]; relation)
                 {
                     auto& relationComp = destScene->m_Registry->emplace<RelationshipComponent>(deserializedEntity);
-                    relationComp.Parent = UUIDToEntityMap[relation["Parent"].as<uint64_t>()];
-                    relationComp.PrevSibling = UUIDToEntityMap[relation["PrevSibling"].as<uint64_t>()];
-                    relationComp.NextSibling = UUIDToEntityMap[relation["NextSibling"].as<uint64_t>()];
-                    relationComp.FirstChild = UUIDToEntityMap[relation["FirstChild"].as<uint64_t>()];
+                    relationComp.Parent = UUIDToEntityMap[relation["Parent"].as<UUID::value_type>()];
+                    relationComp.PrevSibling = UUIDToEntityMap[relation["PrevSibling"].as<UUID::value_type>()];
+                    relationComp.NextSibling = UUIDToEntityMap[relation["NextSibling"].as<UUID::value_type>()];
+                    relationComp.FirstChild = UUIDToEntityMap[relation["FirstChild"].as<UUID::value_type>()];
                 }
 
                 if (auto camera = entity["CameraComponent"]; camera)
@@ -162,7 +162,7 @@ namespace Flameberry {
                 if (auto mesh = entity["MeshComponent"]; mesh)
                 {
                     auto& meshComp = destScene->m_Registry->emplace<MeshComponent>(deserializedEntity, 0);
-                    meshComp.MeshHandle = mesh["MeshHandle"].as<uint64_t>();
+                    meshComp.MeshHandle = mesh["MeshHandle"].as<UUID::value_type>();
 
                     for (auto entry : mesh["OverridenMaterialTable"]) // TODO: Update with different format
                     {
@@ -235,7 +235,7 @@ namespace Flameberry {
             for (auto mesh : meshes)
             {
                 auto meshAsset = MeshLoader::LoadMesh(mesh["FilePath"].as<std::string>().c_str());
-                meshAsset->Handle = mesh["Mesh"].as<uint64_t>();
+                meshAsset->Handle = mesh["Mesh"].as<UUID::value_type>();
                 AssetManager::RegisterAsset(meshAsset);
             }
         }
@@ -337,7 +337,7 @@ namespace Flameberry {
         {
             auto& mesh = scene->m_Registry->get<MeshComponent>(entity);
             out << YAML::Key << "MeshComponent" << YAML::BeginMap;
-            out << YAML::Key << "MeshHandle" << YAML::Value << (uint64_t)(mesh.MeshHandle);
+            out << YAML::Key << "MeshHandle" << YAML::Value << (UUID::value_type)(mesh.MeshHandle);
 
             out << YAML::Key << "OverridenMaterialTable" << YAML::BeginSeq;
             for (const auto& [submeshIndex, materialHandle] : mesh.OverridenMaterialTable)

@@ -7,13 +7,15 @@ namespace Flameberry {
     class UUID
     {
     public:
+        using value_type = uint64_t;
+    public:
         explicit UUID();
-        UUID(uint64_t uuid);
+        UUID(value_type uuid);
         ~UUID();
 
-        operator uint64_t() const { return m_UUID; }
+        operator value_type() const { return m_UUID; }
     private:
-        uint64_t m_UUID;
+        value_type m_UUID;
     };
 }
 
@@ -23,7 +25,7 @@ namespace std {
     {
         size_t operator()(const Flameberry::UUID& key) const
         {
-            return hash<uint64_t>()((uint64_t)key);
+            return hash<Flameberry::UUID::value_type>()((Flameberry::UUID::value_type)key);
         }
     };
 }

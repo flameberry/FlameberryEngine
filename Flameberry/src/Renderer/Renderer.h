@@ -11,6 +11,15 @@
 #include "ECS/Components.h"
 
 namespace Flameberry {
+
+    struct RendererFrameStats
+    {
+        uint32_t MeshCount = 0, SubMeshCount = 0, BoundMaterials = 0;
+        uint32_t DrawCallCount = 0, IndexCount = 0;
+
+        uint32_t VertexAndIndexBufferStateSwitches = 0;
+    };
+
     class Renderer
     {
     public:
@@ -25,6 +34,8 @@ namespace Flameberry {
         // Currently just renders, the `Wait` part is for a future implementation of Multi-threading
         static void WaitAndRender();
 
+        // Get the Renderer Stats
+        static const RendererFrameStats& GetRendererFrameStats() { return s_RendererFrameStats; }
         // Get the current frame index in the update/main thread
         static uint32_t GetCurrentFrameIndex() { return s_FrameIndex; }
         // Get the current frame index in the render thread
@@ -36,10 +47,17 @@ namespace Flameberry {
         static void SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform);
         static void RT_BindMesh(VkCommandBuffer cmdBuffer, const Ref<StaticMesh>& mesh);
         static void RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline);
+        static void RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material);
+        static void RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer);
+    private:
+        static void ResetStats();
     private:
         static uint32_t s_RT_FrameIndex, s_FrameIndex;
+
+        static RendererFrameStats s_RendererFrameStats;
 
         // Critical Variables
         static std::vector<Command> s_CommandQueue;
     };
+
 }
