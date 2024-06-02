@@ -13,7 +13,10 @@
 #include "ECS/Scene.h"
 #include "ECS/Components.h"
 
+#include "MaterialAsset.h"
+
 namespace Flameberry {
+
     struct ModelMatrixPushConstantData { glm::mat4 ModelMatrix; };
     struct MousePickingPushConstantData { glm::mat4 ModelMatrix; int EntityIndex; };
 
@@ -27,6 +30,26 @@ namespace Flameberry {
         glm::mat4 ViewProjectionMatrix;
         float DepthSplit;
     };
+
+    ///////////////////////////////////////////////////////////////////////////////////
+    ///////// Data Structures for storing all Rendering Information Per Frame /////////
+
+    struct RenderObject
+    {
+        VkBuffer VertexBuffer, IndexBuffer;
+        uint32_t IndexOffset, IndexCount;
+
+        TransformComponent* Transform;
+
+        Ref<MaterialAsset> MaterialAsset;
+    };
+
+    struct RendererData
+    {
+        std::vector<RenderObject> RenderObjects;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////////////
 
     class SceneRenderer
     {
@@ -83,7 +106,8 @@ namespace Flameberry {
         // Textures
         Ref<Texture2D> m_LightIcon, m_CameraIcon, m_DirectionalLightIcon;
 
-        // Test
-        Ref<Skymap> m_Skymap;
+        // Batching
+        Unique<RendererData> m_RendererData;
     };
+
 }

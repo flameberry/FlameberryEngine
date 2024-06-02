@@ -109,7 +109,7 @@ namespace Flameberry {
         submitInfo.pSignalSemaphores = signalSemaphores;
 
         vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex]);
-        
+
         VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrameIndex]));
 
         VkSwapchainKHR swapchains[] = { m_VkSwapChain };
@@ -185,14 +185,14 @@ namespace Flameberry {
     void SwapChain::Invalidate()
     {
         FBY_INFO("Invalidating SwapChain...");
-        
+
         const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
         const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
         const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();
 
         VulkanContext::GetCurrentDevice()->WaitIdle();
         VulkanContext::GetCurrentDevice()->WaitIdleGraphicsQueue();
-        
+
         vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
 
         SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(physicalDevice, m_VkSurface);

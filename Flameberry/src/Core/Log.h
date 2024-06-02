@@ -98,12 +98,12 @@ namespace Flameberry {
         void log_assert(const char* file, int line, const T& message, const Args&... args)
         {
             std::string msg = fmt::format(message, args...);
-            fmt::print(fmt::fg(fmt::terminal_color::red), "{}[ASSERT] Assertion failed: {} (file: {}, line: {})", GetCurrentTimeString(), msg, file, line);
+            fmt::print(fmt::fg(fmt::terminal_color::red), "{} [ASSERT] Assertion failed: {} (file: {}, line: {})", GetCurrentTimeString(), msg, file, line);
         }
 
         void log_assert(const char* file, int line)
         {
-            fmt::print(fmt::fg(fmt::terminal_color::red), "{}[ASSERT] Assertion failed: (file: {}, line: {})", GetCurrentTimeString(), file, line);
+            fmt::print(fmt::fg(fmt::terminal_color::red), "{} [ASSERT] Assertion failed: (file: {}, line: {})", GetCurrentTimeString(), file, line);
         }
     private:
         std::string GetCurrentTimeString();

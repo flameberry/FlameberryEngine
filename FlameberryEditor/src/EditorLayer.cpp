@@ -958,10 +958,20 @@ namespace Flameberry {
         constexpr ImGuiTableFlags flags = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible;
 
         ImGui::Begin("Renderer Settings");
-        ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        FBY_DISPLAY_SCOPE_DETAILS_IMGUI();
 
-        ImGui::Separator();
+        if (ImGui::CollapsingHeader("Renderer Frame Statistics (Geometry Pass Only)", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
+        {
+            ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            FBY_DISPLAY_SCOPE_DETAILS_IMGUI();
+
+            const auto& rendererFrameStats = Renderer::GetRendererFrameStats();
+            // ImGui::Text("Mesh Count: %u", rendererFrameStats.MeshCount);
+            // ImGui::Text("SubMesh Count: %u", rendererFrameStats.SubMeshCount);
+            ImGui::Text("Bound Materials: %u", rendererFrameStats.BoundMaterials);
+            ImGui::Text("Vertex and IndexBuffer State Switches: %u", rendererFrameStats.VertexAndIndexBufferStateSwitches);
+            // ImGui::Text("Mesh Draw Calls: %u", rendererFrameStats.DrawCallCount);
+            // ImGui::Text("Indices: %u", rendererFrameStats.IndexCount);
+        }
 
         if (ImGui::CollapsingHeader("Scene Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
         {

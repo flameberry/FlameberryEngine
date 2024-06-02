@@ -173,7 +173,7 @@ namespace fbentt {
             if (pool.copy_handler_data != NULL) {
                 // TODO: Check if this needs optimisation, currently the handler data is only copied upon loading the first scene and pressing the play button
                 pool.copy_handler_data(pool, *this);
-                FBY_LOG("Copied ecs component pool handler data!");
+                FBY_TRACE("Copied ecs component pool handler data!");
             }
         }
     };

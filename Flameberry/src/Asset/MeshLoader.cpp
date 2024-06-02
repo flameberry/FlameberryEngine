@@ -349,7 +349,8 @@ namespace Flameberry {
         refSubMeshes.emplace_back(SubMesh{
             .IndexOffset = indexOffset,
             .IndexCount = (uint32_t)refIndices.size() - indexOffset,
-            .MaterialHandle = refMatHandles[mesh->mMaterialIndex]
+            .MaterialHandle = refMatHandles[mesh->mMaterialIndex],
+            .AABB = AABB(glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z), glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z))
             });
     }
 
@@ -378,8 +379,9 @@ namespace Flameberry {
         // probably to request more postprocessing than we do in this example.
         const aiScene* scene = importer.ReadFile(path,
             aiProcessPreset_TargetRealtime_Fast
-            //            aiProcessPreset_TargetRealtime_Quality
+            // aiProcessPreset_TargetRealtime_Quality
             | aiProcess_FlipUVs
+            | aiProcess_GenBoundingBoxes
         );
 
         // If the import failed, report it
@@ -394,6 +396,8 @@ namespace Flameberry {
         std::vector<uint32_t> indices;
         std::vector<SubMesh> submeshes;
         std::vector<AssetHandle> materialHandles;
+
+        FBY_LOG("Number of materials in mesh: {}: {}", path, scene->mNumMaterials);
 
         // Load Materials
         for (uint32_t i = 0; i < scene->mNumMaterials; i++)

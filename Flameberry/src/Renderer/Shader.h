@@ -94,7 +94,7 @@ namespace Flameberry {
         std::vector<ReflectionDescriptorBindingSpecification> m_DescriptorBindingSpecifications;
         std::vector<ReflectionDescriptorSetSpecification> m_DescriptorSetSpecifications;
 
-        // This should only be accessed while initalisation of material or while editing it.
+        // This should only be accessed while initialisation of material or while editing it.
         // Don't access this during rendering every frame. As std::string hashing causes overhead
         // Note: The full names of the uniforms are used to access it, for e.g.: `u_Material.Roughness` instead of just `Roughness`
         // If no alias is given to the push constant block, then only the variable name is considered as full name, e.g.: `u_Roughness`

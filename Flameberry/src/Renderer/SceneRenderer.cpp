@@ -1,10 +1,13 @@
 #include "SceneRenderer.h"
 
+#include <map>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Core/Core.h"
+#include "Core/Profiler.h"
 
 #include "VulkanDebug.h"
 #include "VulkanContext.h"
@@ -50,6 +53,8 @@ namespace Flameberry {
         auto imageCount = swapchain->GetSwapChainImageCount();
         auto sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
         auto swapchainImageFormat = swapchain->GetSwapChainImageFormat();
+
+        m_RendererData = CreateUnique<RendererData>();
 
 #pragma region ShadowMapResources
         {
@@ -618,28 +623,125 @@ namespace Flameberry {
             );
         }
 
-        // Mesh Rendering
-        Renderer::Submit([=, pipeline = m_MeshPipeline->GetVulkanPipeline(), pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                // Binding the pipeline here to reduce the amount of Renderer::Submit calls
-                Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-
-                VkDescriptorSet descriptorSets[] = {
-                    m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-                    m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(), // TODO: This is the problem for shadow flickering
-                    m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet()
-                };
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
-            }
-        );
-
-        // Render All Scene Meshes
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////// Mesh Rendering /////////////////////////////////////////////
+#if 0
+        // Without sorting
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
             if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle); staticMesh)
                 Renderer::SubmitMeshWithMaterial(staticMesh, m_MeshPipeline, mesh.OverridenMaterialTable, transform.GetTransform());
         }
+#else
+        // With sorting
+
+        // TODO: Temporarily placing this code here, it is inefficient to keep this array filled till the next frame
+        m_RendererData->RenderObjects.clear();
+
+        /////////////////////////////////////// Gathering All Render Objects ///////////////////////////////////////
+
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        {
+            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+
+            if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
+            {
+                // TODO: Frustum Culling
+
+                // If Visible
+                uint32_t submeshIndex = 0;
+
+                m_RendererData->RenderObjects.reserve(m_RendererData->RenderObjects.size() + staticMesh->GetSubMeshes().size());
+
+                for (const auto& submesh : staticMesh->GetSubMeshes())
+                {
+                    // The Assumption here is every mesh loaded will have a Material, i.e. materialAsset won't be nullptr
+                    Ref<MaterialAsset> materialAsset;
+                    if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
+                        materialAsset = AssetManager::GetAsset<MaterialAsset>(it->second);
+                    else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
+                        materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
+
+                    // Add it to final list of render objects
+                    m_RendererData->RenderObjects.emplace_back(RenderObject{
+                            .VertexBuffer = staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
+                            .IndexBuffer = staticMesh->GetIndexBuffer()->GetVulkanBuffer(),
+                            .IndexOffset = submesh.IndexOffset,
+                            .IndexCount = submesh.IndexCount,
+                            .Transform = &transform,
+                            .MaterialAsset = materialAsset
+                        });
+
+                    submeshIndex++;
+                }
+            }
+        }
+
+        ///////////////////////////////////////////////// Sorting /////////////////////////////////////////////////
+        {
+            FBY_PROFILE_SCOPE("Sort_RenderObjects");
+            /// Sorting the render objects according to the material IDs
+            auto cmp = [](const RenderObject& a, const RenderObject& b) { return a.MaterialAsset->Handle < b.MaterialAsset->Handle; };
+            std::stable_sort(m_RendererData->RenderObjects.begin(), m_RendererData->RenderObjects.end(), cmp);
+        }
+
+        ///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
+
+        Renderer::Submit([=, pipeline = m_MeshPipeline->GetVulkanPipeline(), pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                VkDescriptorSet descriptorSets[] =
+                {
+                    m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+                    m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+                    m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet()
+                };
+
+                Renderer::RT_BindPipeline(cmdBuffer, pipeline);
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+            }
+        );
+
+        //////////////////////////////////////////////// Rendering ////////////////////////////////////////////////
+
+        AssetHandle boundMaterialHandle = 0;
+        VkBuffer boundVertexBuffer = VK_NULL_HANDLE;
+        TransformComponent* boundTransform = nullptr;
+
+        for (const auto& obj : m_RendererData->RenderObjects)
+        {
+            Renderer::Submit([bindMaterial = boundMaterialHandle != obj.MaterialAsset->Handle,
+                bindVertexAndIndexBuffers = boundVertexBuffer != obj.VertexBuffer,
+                bindTransform = boundTransform != obj.Transform,
+                pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(),
+                material = obj.MaterialAsset->GetUnderlyingMaterial(),
+                vertexBuffer = obj.VertexBuffer,
+                indexBuffer = obj.IndexBuffer,
+                transform = obj.Transform->GetTransform(),
+                indexCount = obj.IndexCount,
+                indexOffset = obj.IndexOffset
+            ](VkCommandBuffer cmdBuffer, uint32_t)
+                {
+                    if (bindMaterial)
+                        Renderer::RT_BindMaterial(cmdBuffer, pipelineLayout, material);
+
+                    if (bindVertexAndIndexBuffers)
+                        Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
+
+                    if (bindTransform)
+                        vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
+
+                    // Draw the object
+                    vkCmdDrawIndexed(cmdBuffer, indexCount, 1, indexOffset, 0, 0);
+                }
+            );
+
+            boundMaterialHandle = obj.MaterialAsset->Handle;
+            boundVertexBuffer = obj.VertexBuffer;
+            boundTransform = obj.Transform;
+        }
+#endif
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         Renderer2D::BeginScene(m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet());
 

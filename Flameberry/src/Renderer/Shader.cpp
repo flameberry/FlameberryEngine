@@ -175,11 +175,13 @@ namespace Flameberry {
             for (uint32_t i = 0; i < count; i++)
             {
                 uint32_t absoluteSize = 0;
+                FBY_LOG("Shader `{}` - PushConstantBlock:", m_Name, i);
+
                 for (uint32_t j = 0; j < pcblocks[i]->member_count; j++)
                 {
                     auto& member = pcblocks[i]->members[j];
                     absoluteSize += member.size;
-                    FBY_LOG("Member Name: {}", member.name);
+                    FBY_LOG("\tMember Name: {}", member.name);
 
                     std::string fullName(pcblocks[i]->name);
                     if (!fullName.empty())
