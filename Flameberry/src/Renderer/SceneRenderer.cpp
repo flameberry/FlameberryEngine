@@ -579,15 +579,15 @@ namespace Flameberry {
             for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
             {
                 const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
-                auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-                if (staticMesh)
+
+                if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
                 {
                     ModelMatrixPushConstantData pushContantData;
                     pushContantData.ModelMatrix = transform.GetTransform();
                     Renderer::Submit([staticMesh, shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                         {
                             vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
-                            Renderer::RT_BindMesh(cmdBuffer, staticMesh);
+                            Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(), staticMesh->GetIndexBuffer()->GetVulkanBuffer());
                             const uint32_t size = staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
                             vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
                         }
@@ -624,7 +624,22 @@ namespace Flameberry {
         }
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////// Mesh Rendering /////////////////////////////////////////////
+        ///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
+
+        Renderer::Submit([=, pipeline = m_MeshPipeline->GetVulkanPipeline(), pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                VkDescriptorSet descriptorSets[] =
+                {
+                    m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+                    m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+                    m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet()
+                };
+
+                Renderer::RT_BindPipeline(cmdBuffer, pipeline);
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+            }
+        );
+
 #if 0
         // Without sorting
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
@@ -685,22 +700,6 @@ namespace Flameberry {
             auto cmp = [](const RenderObject& a, const RenderObject& b) { return a.MaterialAsset->Handle < b.MaterialAsset->Handle; };
             std::stable_sort(m_RendererData->RenderObjects.begin(), m_RendererData->RenderObjects.end(), cmp);
         }
-
-        ///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
-
-        Renderer::Submit([=, pipeline = m_MeshPipeline->GetVulkanPipeline(), pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                VkDescriptorSet descriptorSets[] =
-                {
-                    m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-                    m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-                    m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet()
-                };
-
-                Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
-            }
-        );
 
         //////////////////////////////////////////////// Rendering ////////////////////////////////////////////////
 
@@ -924,7 +923,7 @@ namespace Flameberry {
                 Renderer::Submit([staticMesh, mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                     {
                         vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);
-                        Renderer::RT_BindMesh(cmdBuffer, staticMesh);
+                        Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(), staticMesh->GetIndexBuffer()->GetVulkanBuffer());
 
                         const uint32_t size = staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
                         vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);

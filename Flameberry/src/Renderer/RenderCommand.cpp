@@ -253,7 +253,7 @@ namespace Flameberry {
         for (const auto& queue : queueFamilyProps)
         {
             // TOOD: Check for separate compute device available
-            if ((queue.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queue.queueFlags & VK_QUEUE_COMPUTE_BIT))
+            if ((queue.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queue.queueFlags & VK_QUEUE_COMPUTE_BIT) && (queue.timestampValidBits != 0))
                 indices.GraphicsAndComputeSupportedQueueFamilyIndex = index;
 
             VkBool32 is_presentation_supported = false;
