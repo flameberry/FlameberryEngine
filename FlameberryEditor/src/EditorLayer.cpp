@@ -648,6 +648,7 @@ namespace Flameberry {
         m_ActiveScene = CreateRef<Scene>();
         m_SceneHierarchyPanel->SetContext(m_ActiveScene);
         m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
+        m_EditorScenePath = "";
 
         if (m_EditorState == EditorState::Play)
             m_ActiveSceneBackUpCopy = nullptr;

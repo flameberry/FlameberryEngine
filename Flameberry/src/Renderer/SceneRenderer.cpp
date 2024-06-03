@@ -608,7 +608,7 @@ namespace Flameberry {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         /////////////////////////////////////////// SkyMap Rendering ////////////////////////////////////////////
 
-        bool shouldRenderSkyMap = skyMap->EnableSkyMap && skyMap && skyMap->SkyMap;
+        bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
         if (shouldRenderSkyMap)
         {
             glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
