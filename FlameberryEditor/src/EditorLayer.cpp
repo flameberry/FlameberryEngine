@@ -960,6 +960,13 @@ namespace Flameberry {
                 ImGui::TableNextColumn();
 
                 ImGui::AlignTextToFramePadding();
+                ImGui::Text("Frustum Culling");
+                ImGui::TableNextColumn();
+                ImGui::Checkbox("##Frustum_Culling", &settings.FrustumCulling);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::AlignTextToFramePadding();
                 ImGui::Text("Enable Shadows");
                 ImGui::TableNextColumn();
                 ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows);

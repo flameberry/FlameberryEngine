@@ -16,6 +16,7 @@
 #include "RenderCommand.h"
 #include "ShaderLibrary.h"
 #include "Material.h"
+#include "Frustum.h"
 
 #include "Asset/AssetManager.h"
 
@@ -604,13 +605,15 @@ namespace Flameberry {
         RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
         RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
-        // Skybox Rendering
-        bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////// SkyMap Rendering ////////////////////////////////////////////
+
+        bool shouldRenderSkyMap = skyMap->EnableSkyMap && skyMap && skyMap->SkyMap;
         if (shouldRenderSkyMap)
         {
             glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
-            auto pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
-            auto textureDescSet = AssetManager::GetAsset<Skymap>(skyMap->SkyMap)->GetDescriptorSet()->GetVulkanDescriptorSet();
+            VkPipelineLayout pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
+            VkDescriptorSet textureDescSet = AssetManager::GetAsset<Skymap>(skyMap->SkyMap)->GetDescriptorSet()->GetVulkanDescriptorSet();
 
             Renderer::Submit([pipeline = m_SkyboxPipeline->GetVulkanPipeline(), pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
@@ -656,21 +659,33 @@ namespace Flameberry {
 
         /////////////////////////////////////// Gathering All Render Objects ///////////////////////////////////////
 
+        // TODO: Move this someplace better
+        Frustum cameraFrustum;
+
+        if (m_RendererSettings.FrustumCulling)
+            cameraFrustum.ExtractFrustumPlanes(cameraBufferData.ViewProjectionMatrix);
+
         for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
             if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
             {
-                // TODO: Frustum Culling
-
-                // If Visible
                 uint32_t submeshIndex = 0;
 
                 m_RendererData->RenderObjects.reserve(m_RendererData->RenderObjects.size() + staticMesh->GetSubMeshes().size());
 
                 for (const auto& submesh : staticMesh->GetSubMeshes())
                 {
+                    if (m_RendererSettings.FrustumCulling)
+                    {
+                        const auto modelMatrix = transform.GetTransform();
+                        AABB worldSpaceAABB(modelMatrix * glm::vec4(submesh.AABB.Min, 1.0f), modelMatrix * glm::vec4(submesh.AABB.Max, 1.0f));
+
+                        if (!IsAABBInsideFrustum(worldSpaceAABB, cameraFrustum))
+                            continue;
+                    }
+
                     // The Assumption here is every mesh loaded will have a Material, i.e. materialAsset won't be nullptr
                     Ref<MaterialAsset> materialAsset;
                     if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
