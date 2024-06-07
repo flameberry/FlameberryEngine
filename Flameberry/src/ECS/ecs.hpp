@@ -6,6 +6,11 @@
 
 #include "Core/Core.h"
 
+/*
+    Developer Note (Aditya): This file has a snake_case style, which is written by my naive young self to try out new styles.
+    Someday this will be refactored to have the same style as rest of the codebase :D
+*/
+
 /* This is a header only implementation of the ecs system */
 /* Formatting for this file includes brackets on the same line as the function to keep it compact */
 namespace fbentt {
@@ -69,7 +74,6 @@ namespace fbentt {
             return packed[index];
         }
 
-        // Debug
 #ifdef FBY_DEBUG
         void print() const {
             for (const auto& element : packed)
@@ -148,7 +152,7 @@ namespace fbentt {
             return component;
         }
 
-        Type& get(uint32_t index) {
+        [[nodiscard]] inline Type& get(uint32_t index) {
             return component_buffer[index];
         }
 
@@ -157,7 +161,11 @@ namespace fbentt {
             component_buffer.pop_back();
         }
     private:
+        [[nodiscard]] inline std::vector<Type>& buffer() { return component_buffer; }
+    private:
         std::vector<Type> component_buffer;
+
+        friend class registry;
     };
 
     struct pool_data {
@@ -180,7 +188,32 @@ namespace fbentt {
 
     class registry {
     public:
-        template<typename... Type> class registry_view {
+        template<typename Type> class registry_view {
+        public:
+            registry_view() {}
+            registry_view(const registry* reg, const pool_data* pool) : ref_registry(reg), ref_pool(pool) {}
+
+            std::vector<Type>::iterator begin() {
+                if (ref_registry && ref_pool) {
+                    auto& handler = (*((pool_handler<Type>*)ref_pool->handler.get()));
+                    return handler.buffer().begin();
+                }
+                return {};
+            }
+
+            std::vector<Type>::iterator end() {
+                if (ref_registry && ref_pool) {
+                    auto& handler = (*((pool_handler<Type>*)ref_pool->handler.get()));
+                    return handler.buffer().end();
+                }
+                return {};
+            }
+        private:
+            const registry* ref_registry = nullptr;
+            const pool_data* ref_pool = nullptr;
+        };
+
+        template<typename... Type> class registry_group {
         public:
             template<typename... iter_type> class iterator {
             public:
@@ -214,8 +247,9 @@ namespace fbentt {
                 uint32_t index;
             };
         public:
-            registry_view() : begin_index(0), end_index(0) {}
-            registry_view(const registry* reg, const pool_data* pool) : ref_registry(reg), ref_pool(pool), begin_index(0), end_index(0) {
+            registry_group() : begin_index(0), end_index(0) {}
+
+            registry_group(const registry* reg, const pool_data* pool) : ref_registry(reg), ref_pool(pool), begin_index(0), end_index(0) {
                 while (begin_index < pool->entity_set.size() && !reg->has<Type...>(reg->entities[pool->entity_set[begin_index]]))
                     begin_index++;
                 end_index = pool->entity_set.size();
@@ -276,7 +310,16 @@ namespace fbentt {
             }
         }
 
-        template<typename... Type> registry_view<Type...> view() {
+        template<typename Type> registry_view<Type> view() {
+            uint32_t typeID = type_id<Type>();
+
+            if (typeID >= pools.size()) {
+                return registry_view<Type>();
+            }
+            return registry_view<Type>(this, &pools[typeID]);
+        }
+
+        template<typename... Type> registry_group<Type...> group() {
             static_assert(sizeof...(Type) > 0);
 
             uint32_t typeIDs[] = { type_id<Type>()... };
@@ -285,14 +328,14 @@ namespace fbentt {
 
             for (const auto& typeID : typeIDs) {
                 if (typeID >= pools.size()) {
-                    return registry_view<Type...>();
+                    return registry_group<Type...>();
                 }
                 if (uint32_t poolSize = pools[typeID].entity_set.size(); poolSize < smallestPoolSize) {
                     smallestPoolSize = poolSize;
                     smallestPoolIndex = typeID;
                 }
             }
-            return registry_view<Type...>(this, &pools[smallestPoolIndex]);
+            return registry_group<Type...>(this, &pools[smallestPoolIndex]);
         }
 
         entity create() {

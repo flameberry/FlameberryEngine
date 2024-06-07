@@ -508,7 +508,7 @@ namespace Flameberry {
 
         // Keep the skylight ready
         SkyLightComponent* skyMap = nullptr;
-        for (const auto entity : scene->m_Registry->view<TransformComponent, SkyLightComponent>())
+        for (const auto entity : scene->m_Registry->group<TransformComponent, SkyLightComponent>())
         {
             skyMap = scene->m_Registry->try_get<SkyLightComponent>(entity);
             sceneUniformBufferData.SkyLightIntensity = skyMap->Intensity;
@@ -518,7 +518,7 @@ namespace Flameberry {
         bool shouldRenderShadows = false;
 
         // Update Directional Lights
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, DirectionalLightComponent>())
+        for (const auto& entity : scene->m_Registry->group<TransformComponent, DirectionalLightComponent>())
         {
             auto [transform, dirLight] = scene->m_Registry->get<TransformComponent, DirectionalLightComponent>(entity);
             sceneUniformBufferData.directionalLight.Color = dirLight.Color;
@@ -551,7 +551,7 @@ namespace Flameberry {
         sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
         sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
 
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, PointLightComponent>())
+        for (const auto& entity : scene->m_Registry->group<TransformComponent, PointLightComponent>())
         {
             const auto& [transform, light] = scene->m_Registry->get<TransformComponent, PointLightComponent>(entity);
             sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform.Translation;
@@ -577,14 +577,14 @@ namespace Flameberry {
                 }
             );
 
-            for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+            for (const auto& entity : scene->m_Registry->group<TransformComponent, MeshComponent>())
             {
                 const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
                 if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
                 {
                     ModelMatrixPushConstantData pushContantData;
-                    pushContantData.ModelMatrix = transform.GetTransform();
+                    pushContantData.ModelMatrix = transform.CalculateTransform();
                     Renderer::Submit([staticMesh, shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                         {
                             vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
@@ -665,7 +665,7 @@ namespace Flameberry {
         if (m_RendererSettings.FrustumCulling)
             cameraFrustum.ExtractFrustumPlanes(cameraBufferData.ViewProjectionMatrix);
 
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        for (const auto& entity : scene->m_Registry->group<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
 
@@ -679,7 +679,7 @@ namespace Flameberry {
                 {
                     if (m_RendererSettings.FrustumCulling)
                     {
-                        const auto modelMatrix = transform.GetTransform();
+                        const auto modelMatrix = transform.CalculateTransform();
 
                         // TODO: Move this outside of the `if (m_RendererSettings.FrustumCulling)`
                         if (m_RendererSettings.ShowBoundingBoxes)
@@ -698,14 +698,14 @@ namespace Flameberry {
                         materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
 
                     // Add it to final list of render objects
-                    m_RendererData->RenderObjects.emplace_back(RenderObject{
-                            .VertexBuffer = staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
-                            .IndexBuffer = staticMesh->GetIndexBuffer()->GetVulkanBuffer(),
-                            .IndexOffset = submesh.IndexOffset,
-                            .IndexCount = submesh.IndexCount,
-                            .Transform = &transform,
-                            .MaterialAsset = materialAsset
-                        });
+                    m_RendererData->RenderObjects.emplace_back(
+                        staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
+                        staticMesh->GetIndexBuffer()->GetVulkanBuffer(),
+                        submesh.IndexOffset,
+                        submesh.IndexCount,
+                        &transform,
+                        materialAsset
+                    );
 
                     submeshIndex++;
                 }
@@ -735,7 +735,7 @@ namespace Flameberry {
                 material = obj.MaterialAsset->GetUnderlyingMaterial(),
                 vertexBuffer = obj.VertexBuffer,
                 indexBuffer = obj.IndexBuffer,
-                transform = obj.Transform->GetTransform(),
+                transform = obj.Transform->CalculateTransform(),
                 indexCount = obj.IndexCount,
                 indexOffset = obj.IndexOffset
             ](VkCommandBuffer cmdBuffer, uint32_t)
@@ -772,7 +772,7 @@ namespace Flameberry {
             Renderer2D::FlushQuads();
 
             Renderer2D::SetActiveTexture(m_CameraIcon);
-            for (auto entity : scene->m_Registry->view<TransformComponent, CameraComponent>())
+            for (auto entity : scene->m_Registry->group<TransformComponent, CameraComponent>())
             {
                 auto& transform = scene->m_Registry->get<TransformComponent>(entity);
                 Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
@@ -780,7 +780,7 @@ namespace Flameberry {
             Renderer2D::FlushQuads();
 
             Renderer2D::SetActiveTexture(m_DirectionalLightIcon);
-            for (auto entity : scene->m_Registry->view<TransformComponent, DirectionalLightComponent>())
+            for (auto entity : scene->m_Registry->group<TransformComponent, DirectionalLightComponent>())
             {
                 auto& transform = scene->m_Registry->get<TransformComponent>(entity);
                 Renderer2D::AddBillboard(transform.Translation, 1.2f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
@@ -929,14 +929,14 @@ namespace Flameberry {
             }
         );
 
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        for (const auto& entity : scene->m_Registry->group<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
             auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
             if (staticMesh)
             {
                 MousePickingPushConstantData pushContantData;
-                pushContantData.ModelMatrix = transform.GetTransform();
+                pushContantData.ModelMatrix = transform.CalculateTransform();
                 pushContantData.EntityIndex = fbentt::to_index(entity);
 
                 Renderer::Submit([staticMesh, mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)

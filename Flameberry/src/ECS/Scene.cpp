@@ -34,14 +34,11 @@ namespace Flameberry {
         m_IsRuntimeActive = true;
 
         // Update Cameras
-        for (auto entity : m_Registry->view<CameraComponent>())
-        {
-            auto& cameraComp = m_Registry->get<CameraComponent>(entity);
+        for (auto& cameraComp : m_Registry->view<CameraComponent>())
             cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
-        }
 
         // Create Script Actors
-        for (auto entity : m_Registry->view<NativeScriptComponent>())
+        for (auto entity : m_Registry->group<NativeScriptComponent>())
         {
             auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
             nsc.Actor = nsc.InitScript();
@@ -61,7 +58,7 @@ namespace Flameberry {
         m_PxScene = PhysicsEngine::GetPhysics()->createScene(sceneDesc);
 
         // Create Physics Actors
-        for (auto entity : m_Registry->view<TransformComponent, RigidBodyComponent>())
+        for (auto entity : m_Registry->group<TransformComponent, RigidBodyComponent>())
         {
             auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
 
@@ -154,9 +151,8 @@ namespace Flameberry {
         m_PxScene->release();
 
         // Delete Script Actors
-        for (auto entity : m_Registry->view<NativeScriptComponent>())
+        for (auto& nsc : m_Registry->view<NativeScriptComponent>())
         {
-            auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
             nsc.Actor->OnInstanceDeleted();
             nsc.DestroyScript(&nsc);
         }
@@ -176,17 +172,14 @@ namespace Flameberry {
         }
 
         // Update Native Scripts
-        for (auto entity : m_Registry->view<NativeScriptComponent>())
-        {
-            auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
+        for (auto& nsc : m_Registry->view<NativeScriptComponent>())
             nsc.Actor->OnUpdate(delta);
-        }
 
         // Update Physics
         m_PxScene->simulate(delta);
         m_PxScene->fetchResults(true);
 
-        for (auto entity : m_Registry->view<RigidBodyComponent>())
+        for (auto entity : m_Registry->group<RigidBodyComponent>())
         {
             auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
             physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
@@ -201,10 +194,8 @@ namespace Flameberry {
     {
         m_ViewportSize = viewportSize;
 
-        // TODO: ECS: Implement iterating over single pool without having the knowledge of entity
-        for (auto entity : m_Registry->view<CameraComponent>())
+        for (auto& cameraComp : m_Registry->view<CameraComponent>())
         {
-            auto& cameraComp = m_Registry->get<CameraComponent>(entity);
             // TODO: This is fishy, maybe update this only when runtime is started
             cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
         }
@@ -212,7 +203,7 @@ namespace Flameberry {
 
     fbentt::entity Scene::GetPrimaryCameraEntity() const
     {
-        for (auto entity : m_Registry->view<CameraComponent>())
+        for (auto entity : m_Registry->group<CameraComponent>())
         {
             auto& cameraComp = m_Registry->get<CameraComponent>(entity);
             if (cameraComp.IsPrimary)
@@ -293,7 +284,7 @@ namespace Flameberry {
     void Scene::ReparentEntity(fbentt::entity entity, fbentt::entity destParent)
     {
         FBY_ASSERT(entity != fbentt::null, "Can't reparent null entity!");
-        
+
         if (entity == destParent)
             return;
 
@@ -301,7 +292,7 @@ namespace Flameberry {
         {
             if (IsEntityRoot(entity))
                 return;
-            
+
             auto& relation = m_Registry->get<RelationshipComponent>(entity);
 
             if (relation.PrevSibling == fbentt::null)

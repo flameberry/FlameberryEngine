@@ -405,7 +405,7 @@ namespace Flameberry {
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
 
             auto& transformComp = m_ActiveScene->GetRegistry()->get<TransformComponent>(selectedEntity);
-            glm::mat4 transform = transformComp.GetTransform();
+            glm::mat4 transform = transformComp.CalculateTransform();
 
             bool snap = Input::IsKeyPressed(KeyCode::LeftControl);
             float snapValue = 0.5f;

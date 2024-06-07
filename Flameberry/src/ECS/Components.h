@@ -12,7 +12,7 @@
 #include "Actor.h"
 
 namespace Flameberry {
-    
+
     struct IDComponent
     {
         UUID ID;
@@ -23,8 +23,10 @@ namespace Flameberry {
     struct TransformComponent
     {
         glm::vec3 Translation, Rotation, Scale;
+
         TransformComponent() : Translation(0.0f), Rotation(0.0f), Scale(1.0f) {};
-        glm::mat4 GetTransform() const
+
+        glm::mat4 CalculateTransform() const
         {
             return glm::translate(glm::mat4(1.0f), Translation)
                 * glm::toMat4(glm::quat(Rotation))
@@ -112,7 +114,7 @@ namespace Flameberry {
             DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Actor; nsc->Actor = nullptr; };
         }
     };
-    
+
     enum class AxisType : uint8_t { X = 0, Y, Z };
 
     struct RigidBodyComponent

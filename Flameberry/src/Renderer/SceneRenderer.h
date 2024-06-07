@@ -44,6 +44,10 @@ namespace Flameberry {
         TransformComponent* Transform;
 
         Ref<MaterialAsset> MaterialAsset;
+
+        RenderObject(VkBuffer vertexBuffer, VkBuffer indexBuffer, uint32_t indexOffset, uint32_t indexCount, TransformComponent* transform, Ref<Flameberry::MaterialAsset> materialAsset)
+            : VertexBuffer(vertexBuffer), IndexBuffer(indexBuffer), IndexOffset(indexOffset), IndexCount(indexCount), Transform(transform), MaterialAsset(materialAsset)
+        {}
     };
 
     struct RendererData
