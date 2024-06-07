@@ -25,7 +25,6 @@ namespace Flameberry {
         void OnStopRuntime();
 
         void OnUpdateRuntime(float delta);
-        void RenderScene(const glm::mat4& cameraMatrix);
         void OnViewportResize(const glm::vec2& viewportSize);
 
         fbentt::entity CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent);

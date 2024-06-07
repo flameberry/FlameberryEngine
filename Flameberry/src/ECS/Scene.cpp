@@ -8,6 +8,7 @@
 #include "PxPhysicsAPI.h"
 
 namespace Flameberry {
+
     Scene::Scene()
         : m_Registry(CreateRef<fbentt::registry>())
     {
@@ -16,7 +17,7 @@ namespace Flameberry {
     Scene::Scene(const Ref<Scene>& other)
         : m_Registry(CreateRef<fbentt::registry>(*other->m_Registry)), m_Name(other->m_Name), m_ViewportSize(other->m_ViewportSize)
     {
-        FBY_LOG("Copying Scene...");
+        FBY_TRACE("Copying Scene...");
     }
 
     Scene::Scene(const Scene& other)
@@ -26,7 +27,7 @@ namespace Flameberry {
 
     Scene::~Scene()
     {
-        FBY_LOG("Deleting Scene...");
+        FBY_TRACE("Deleting Scene...");
     }
 
     void Scene::OnStartRuntime()
@@ -85,7 +86,7 @@ namespace Flameberry {
 
             physx::PxShape* shape = nullptr;
 
-            if (auto* boxCollider = m_Registry->try_get<BoxColliderComponent>(entity); boxCollider)
+            if (auto* boxCollider = m_Registry->try_get<BoxColliderComponent>(entity))
             {
                 auto geometry = physx::PxBoxGeometry(
                     0.5f * boxCollider->Size.x * transform.Scale.x,
@@ -97,7 +98,7 @@ namespace Flameberry {
                 boxCollider->RuntimeShape = shape;
             }
 
-            if (auto* sphereCollider = m_Registry->try_get<SphereColliderComponent>(entity); sphereCollider)
+            if (auto* sphereCollider = m_Registry->try_get<SphereColliderComponent>(entity))
             {
                 auto geometry = physx::PxSphereGeometry(sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z));
                 auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
@@ -105,7 +106,7 @@ namespace Flameberry {
                 sphereCollider->RuntimeShape = shape;
             }
 
-            if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
+            if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity))
             {
                 auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
                 auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
@@ -210,10 +211,6 @@ namespace Flameberry {
                 return entity;
         }
         return {};
-    }
-
-    void Scene::RenderScene(const glm::mat4& cameraMatrix)
-    {
     }
 
     fbentt::entity Scene::CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent)
