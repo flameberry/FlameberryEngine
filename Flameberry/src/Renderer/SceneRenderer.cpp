@@ -57,7 +57,7 @@ namespace Flameberry {
 
         m_RendererData = CreateUnique<RendererData>();
 
-#pragma region ShadowMapResources
+        /////////////////////////////////////// Preparing Shadow Mapping Pass ///////////////////////////////////////
         {
             FramebufferSpecification shadowMapFramebufferSpec;
             shadowMapFramebufferSpec.Width = SceneRendererSettings::CascadeSize;
@@ -178,9 +178,9 @@ namespace Flameberry {
 
             VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_ShadowMapSampler));
         }
-#pragma endregion ShadowMapResources
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#pragma region GeometryPassResources
+        ////////////////////////////////////////// Preparing Geometry Pass //////////////////////////////////////////
         {
             // Scene
             VkDeviceSize uniformBufferSize = sizeof(CameraUniformBufferObject);
@@ -388,10 +388,10 @@ namespace Flameberry {
             }
             m_VkTextureSampler = Texture2D::GetDefaultSampler();
         }
-#pragma endregion GeometryPassResources
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#pragma region CompositionResources
 #if 0
+        ////////////////////////////////////////// Preparing Composite Pass /////////////////////////////////////////
         {
             // Create render pass
             FramebufferSpecification framebufferSpec{};
@@ -451,8 +451,8 @@ namespace Flameberry {
 
             m_CompositePipeline = CreateRef<Pipeline>(pipelineSpec);
         }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
-#pragma endregion CompositionResources
 
         Renderer2D::Init(m_GeometryPass);
 
@@ -564,8 +564,9 @@ namespace Flameberry {
 
         m_SceneUniformBuffers[currentFrame]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData));
 
-        // Render Passes
-#pragma region ShadowPass
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////// Shadow Mapping Pass ///////////////////////////////////////////
+
         if (shouldRenderShadows)
         {
             m_ShadowMapRenderPass->Begin();
@@ -597,15 +598,15 @@ namespace Flameberry {
             }
             m_ShadowMapRenderPass->End();
         }
-#pragma endregion ShadowPass
 
-#pragma region GeometryPass
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////// Geometry Pass //////////////////////////////////////////////
+
         m_GeometryPass->Begin();
 
         RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
         RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
         /////////////////////////////////////////// SkyMap Rendering ////////////////////////////////////////////
 
         bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
@@ -626,7 +627,6 @@ namespace Flameberry {
             );
         }
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
 
         Renderer::Submit([=, pipeline = m_MeshPipeline->GetVulkanPipeline(), pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
@@ -759,7 +759,7 @@ namespace Flameberry {
             boundTransform = obj.Transform;
         }
 #endif
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////// 2D Rendering //////////////////////////////////////////////
 
         Renderer2D::BeginScene(m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet());
 
@@ -804,24 +804,28 @@ namespace Flameberry {
         Renderer2D::EndScene();
 
         m_GeometryPass->End();
-#pragma endregion GeometryPass
 
-#pragma region CompositePass
-        // m_CompositePass->Begin();
-        // m_CompositePipeline->Bind();
+#if 0
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////// Composite Pass /////////////////////////////////////////////
 
-        // std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
-        // for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-        //     descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
+        m_CompositePass->Begin();
+        m_CompositePipeline->Bind();
 
-        // Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-        //     {
-        //         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
-        //         vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
-        //     }
-        // );
-        // m_CompositePass->End();
-#pragma endregion CompositePass
+        std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+            descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
+
+        Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
+                vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+            }
+        );
+        m_CompositePass->End();
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+#endif
     }
 
     void SceneRenderer::CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection)
@@ -891,13 +895,13 @@ namespace Flameberry {
                 float distance = glm::length(frustumCorners[i] - frustumCenter);
                 radius = glm::max(radius, distance);
             }
-            //            radius = std::ceil(radius * 16.0f) / 16.0f;
+            // radius = std::ceil(radius * 16.0f) / 16.0f;
 
             const float width = frustumCorners[5].x - frustumCorners[4].x;
             const float height = frustumCorners[7].y - frustumCorners[5].y;
 
-            //            const float fWorldUnitsPerTexel = 2.0f * radius * 0.70710678118f / (float)SceneRendererSettings::CascadeSize;
-            //            const float fInvWorldUnitsPerTexel = 1.0f / fWorldUnitsPerTexel;
+            // const float fWorldUnitsPerTexel = 2.0f * radius * 0.70710678118f / (float)SceneRendererSettings::CascadeSize;
+            // const float fInvWorldUnitsPerTexel = 1.0f / fWorldUnitsPerTexel;
 
             const glm::vec3 vWorldUnitsPerTexel(width / (float)SceneRendererSettings::CascadeSize, height / (float)SceneRendererSettings::CascadeSize, 1.0f);
             const glm::vec3 vInvWorldUnitsPerTexel = 1.0f / vWorldUnitsPerTexel;
@@ -932,8 +936,8 @@ namespace Flameberry {
         for (const auto& entity : scene->m_Registry->group<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
-            auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-            if (staticMesh)
+
+            if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
             {
                 MousePickingPushConstantData pushContantData;
                 pushContantData.ModelMatrix = transform.CalculateTransform();
@@ -952,21 +956,18 @@ namespace Flameberry {
         }
 
         uint32_t indexCount = 6 * Renderer2D::GetRendererData().VertexBufferOffset / (4 * sizeof(QuadVertex));
-        Renderer::Submit([
-            descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
-                mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
-                vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
-                vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
-                indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
-                indexCount]
-                (VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
+            mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
+            vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
+            vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
+            indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
+            indexCount
+        ](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
                 Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline2D);
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePicking2DPipelineLayout, 0, 1, &descSet, 0, nullptr);
 
-                VkDeviceSize offsets[] = { 0 };
-                vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
-                vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
                 vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
             }
         );
@@ -1166,4 +1167,4 @@ namespace Flameberry {
         vkDestroySampler(device, m_ShadowMapSampler, nullptr);
     }
 
-}
+    }

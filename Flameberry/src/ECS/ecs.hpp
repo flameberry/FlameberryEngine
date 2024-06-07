@@ -52,9 +52,12 @@ namespace fbentt {
             return sparse[value];
         }
 
-        /// @brief 
-        /// @param value The value to be searched in the sparse set
-        /// @return Returns the location of the value found in packed array, or returns -1 if the value is not found
+        /**
+         * Find the location of the value found in packed array
+         *
+         * @param value The value to be searched in the sparse set
+         * @return Location or -1 if the value is not found
+         */
         int find(Type value) const {
             if (value >= sparse.size() || sparse[value] >= packed.size() || packed[sparse[value]] != value) {
                 return -1;
@@ -88,7 +91,9 @@ namespace fbentt {
     struct null_t;
     extern null_t null;
 
-    /// @brief Contains a 64 bit integer -> Layout of handle: | 32-bit index | 31-bit version | 1-bit validity |
+    /**
+     * Contains a 64 bit integer -> Layout of handle: | 32-bit index | 31-bit version | 1-bit validity |
+     */
     class entity {
     public:
         using handle_type = std::uint64_t;
@@ -274,8 +279,10 @@ namespace fbentt {
             return entities[index];
         }
 
-        /// @brief: Iterates over all entities in the scene
-        /// @param _Fn: A function with a param of type `const ecs::entity&` which represents the current entity being iterated
+        /**
+         * Iterates over all entities in the scene
+         * @param _Fn: A function with a param of type `const ecs::entity&` which represents the current entity being iterated
+         */
         template<typename Fn> void for_each(Fn&& _Fn) {
             static_assert(std::is_invocable_v<Fn, entity>);
             for (auto entity : entities) {
@@ -285,9 +292,11 @@ namespace fbentt {
             }
         }
 
-        /// @brief: Iterates over all components in the scene
-        /// @param _Fn: A function with a param of type `void*` which represents the current component being iterated
-        /// And `uint32_t` which gives the typeID of the component
+        /**
+         * Iterates over all components in the scene
+         *
+         * @param _Fn: A function with a param of type `void*` which represents the current component being iterated and `uint32_t` which gives the typeID of the component
+         */
         template<typename Fn> void for_each_component(entity entity, Fn&& _Fn) {
             FBY_ASSERT(0, "for_each_component() Not Yet Implemented!");
 
@@ -310,6 +319,12 @@ namespace fbentt {
             }
         }
 
+        /**
+         * Returns a registry view for the specified type.
+         *
+         * @tparam Type The type of components to retrieve from the registry.
+         * @return A registry view for the specified type.
+         */
         template<typename Type> registry_view<Type> view() {
             uint32_t typeID = type_id<Type>();
 
@@ -319,6 +334,12 @@ namespace fbentt {
             return registry_view<Type>(this, &pools[typeID]);
         }
 
+        /**
+         * Creates a registry group containing entities that have components of the specified types.
+         *
+         * @tparam Type The component types to filter entities by.
+         * @return A registry group containing entities with the specified component types.
+         */
         template<typename... Type> registry_group<Type...> group() {
             static_assert(sizeof...(Type) > 0);
 

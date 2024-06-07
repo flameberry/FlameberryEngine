@@ -88,7 +88,8 @@ namespace Flameberry {
                 FBY_ERROR("Start scene path: {} does not exist", scenePath);
         }
 
-#pragma region MousePickingResources
+        /////////////////////////////////////// Preparing Mouse Picking Pass ////////////////////////////////////////
+
         BufferSpecification mousePickingBufferSpec;
         mousePickingBufferSpec.InstanceCount = 1;
         mousePickingBufferSpec.InstanceSize = sizeof(int32_t);
@@ -153,7 +154,8 @@ namespace Flameberry {
 
             m_MousePicking2DPipeline = CreateRef<Pipeline>(pipelineSpec);
         }
-#pragma endregion MousePickingResources
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         m_SceneRenderer = std::make_unique<SceneRenderer>(m_RenderViewportSize);
 
@@ -364,12 +366,15 @@ namespace Flameberry {
 
                 FBY_LOG("Payload recieved: {}, with extension {}", path, ext);
 
-                if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath)) {
-                    if (ext == ".scene" || ext == ".berry") {
+                if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath))
+                {
+                    if (ext == ".scene" || ext == ".berry")
+                    {
                         m_ShouldOpenAnotherScene = true;
                         m_ScenePathToBeOpened = filePath;
                     }
-                    else if (ext == ".obj" || ext == ".fbx" || ext == ".gltf") { // TODO: Don't limit this
+                    else if (ext == ".obj" || ext == ".fbx" || ext == ".gltf") // TODO: Don't limit this to these 3 extensions
+                    {
                         const auto& staticMesh = AssetManager::TryGetOrLoadAsset<StaticMesh>(path);
                         auto entity = m_ActiveScene->GetRegistry()->create();
                         m_ActiveScene->GetRegistry()->emplace<IDComponent>(entity);
@@ -518,7 +523,8 @@ namespace Flameberry {
                     break;
                 }
             case KeyCode::O:
-                if (ctrl_or_cmd) {
+                if (ctrl_or_cmd)
+                {
 #ifndef FBY_PLATFORM_MACOS
                     // m_ShouldOpenAnotherScene = true;
                     // m_ScenePathToBeOpened = platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
@@ -742,30 +748,31 @@ namespace Flameberry {
         window_pos.x = workPos.x + s_OverlayPadding;
         window_pos.y = workPos.y + s_OverlayPadding;
 
-        UI_Overlay("##GizmoOverlay", window_pos, [=]() {
-            if (ImGui::ImageButton("SelectModeButton", reinterpret_cast<ImTextureID>(m_CursorIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == -1 ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+        UI_Overlay("##GizmoOverlay", window_pos, [=]()
             {
-                m_GizmoType = -1;
-                ImGui::SetWindowFocus("Viewport");
-            }
-            ImGui::SameLine();
-            if (ImGui::ImageButton("TranslateModeButton", reinterpret_cast<ImTextureID>(m_TranslateIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::TRANSLATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
-            {
-                m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-                ImGui::SetWindowFocus("Viewport");
-            }
-            ImGui::SameLine();
-            if (ImGui::ImageButton("RotateModeButton", reinterpret_cast<ImTextureID>(m_RotateIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::ROTATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
-            {
-                m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-                ImGui::SetWindowFocus("Viewport");
-            }
-            ImGui::SameLine();
-            if (ImGui::ImageButton("ScaleModeButton", reinterpret_cast<ImTextureID>(m_ScaleIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::SCALE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
-            {
-                m_GizmoType = ImGuizmo::OPERATION::SCALE;
-                ImGui::SetWindowFocus("Viewport");
-            }
+                if (ImGui::ImageButton("SelectModeButton", reinterpret_cast<ImTextureID>(m_CursorIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == -1 ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+                {
+                    m_GizmoType = -1;
+                    ImGui::SetWindowFocus("Viewport");
+                }
+                ImGui::SameLine();
+                if (ImGui::ImageButton("TranslateModeButton", reinterpret_cast<ImTextureID>(m_TranslateIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::TRANSLATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+                {
+                    m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                    ImGui::SetWindowFocus("Viewport");
+                }
+                ImGui::SameLine();
+                if (ImGui::ImageButton("RotateModeButton", reinterpret_cast<ImTextureID>(m_RotateIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::ROTATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+                {
+                    m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+                    ImGui::SetWindowFocus("Viewport");
+                }
+                ImGui::SameLine();
+                if (ImGui::ImageButton("ScaleModeButton", reinterpret_cast<ImTextureID>(m_ScaleIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::SCALE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+                {
+                    m_GizmoType = ImGuizmo::OPERATION::SCALE;
+                    ImGui::SetWindowFocus("Viewport");
+                }
             });
     }
 
@@ -775,61 +782,62 @@ namespace Flameberry {
         window_pos.x = workPos.x + workSize.x / 2.0f - 2 * s_OverlayButtonSize.x;
         window_pos.y = workPos.y + s_OverlayPadding;
 
-        UI_Overlay("##ToolbarOverlay", window_pos, [=]() {
-            switch (m_EditorState)
+        UI_Overlay("##ToolbarOverlay", window_pos, [=]()
             {
-                case EditorState::Edit:
+                switch (m_EditorState)
                 {
-                    if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f)))
-                        OnScenePlay();
-                    break;
-                }
-                case EditorState::Play:
-                {
-                    if (m_ActiveScene->IsRuntimePaused())
+                    case EditorState::Edit:
                     {
-                        // UnPause the scene
-                        if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
-                            m_ActiveScene->SetRuntimePaused(false);
+                        if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f)))
+                            OnScenePlay();
+                        break;
                     }
-                    else
+                    case EditorState::Play:
                     {
-                        // Pause the scene
-                        if (ImGui::ImageButton("ScenePauseButton", reinterpret_cast<ImTextureID>(m_PauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
-                            m_ActiveScene->SetRuntimePaused(true);
+                        if (m_ActiveScene->IsRuntimePaused())
+                        {
+                            // UnPause the scene
+                            if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+                                m_ActiveScene->SetRuntimePaused(false);
+                        }
+                        else
+                        {
+                            // Pause the scene
+                            if (ImGui::ImageButton("ScenePauseButton", reinterpret_cast<ImTextureID>(m_PauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+                                m_ActiveScene->SetRuntimePaused(true);
+                        }
+                        break;
                     }
-                    break;
                 }
-            }
 
-            ImGui::SameLine();
+                ImGui::SameLine();
 
-            ImGui::BeginDisabled(!m_ActiveScene->IsRuntimePaused());
-            if (ImGui::ImageButton("SceneStepButton", reinterpret_cast<ImTextureID>(m_StepIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0)))
-            {
-                FBY_LOG("Stepped");
-                m_ActiveScene->Step(1);
-            }
-            ImGui::EndDisabled();
-
-            ImGui::SameLine();
-
-            switch (m_EditorState)
-            {
-                case EditorState::Edit:
+                ImGui::BeginDisabled(!m_ActiveScene->IsRuntimePaused());
+                if (ImGui::ImageButton("SceneStepButton", reinterpret_cast<ImTextureID>(m_StepIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0)))
                 {
-                    ImGui::BeginDisabled();
-                    ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f));
-                    ImGui::EndDisabled();
-                    break;
+                    FBY_LOG("Stepped");
+                    m_ActiveScene->Step(1);
                 }
-                case EditorState::Play:
+                ImGui::EndDisabled();
+
+                ImGui::SameLine();
+
+                switch (m_EditorState)
                 {
-                    if (ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1)))
-                        OnSceneEdit();
-                    break;
+                    case EditorState::Edit:
+                    {
+                        ImGui::BeginDisabled();
+                        ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f));
+                        ImGui::EndDisabled();
+                        break;
+                    }
+                    case EditorState::Play:
+                    {
+                        if (ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1)))
+                            OnSceneEdit();
+                        break;
+                    }
                 }
-            }
             });
     }
 
@@ -839,17 +847,18 @@ namespace Flameberry {
         window_pos.x = workPos.x + workSize.x - 1.5f * s_OverlayPadding - 2 * s_OverlayButtonSize.x;
         window_pos.y = workPos.y + s_OverlayPadding;
 
-        UI_Overlay("##ViewportSettingsOverlay", window_pos, [=]() {
-            ImGui::ImageButton("##ViewportSettingsButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
-
-            if (ImGui::IsItemClicked())
-                ImGui::OpenPopup("##ViewportSettingsPopup");
-
-            if (ImGui::BeginPopup("##ViewportSettingsPopup"))
+        UI_Overlay("##ViewportSettingsOverlay", window_pos, [=]()
             {
-                ImGui::Checkbox("Display Grid", &m_EnableGrid);
-                ImGui::EndPopup();
-            }
+                ImGui::ImageButton("##ViewportSettingsButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
+
+                if (ImGui::IsItemClicked())
+                    ImGui::OpenPopup("##ViewportSettingsPopup");
+
+                if (ImGui::BeginPopup("##ViewportSettingsPopup"))
+                {
+                    ImGui::Checkbox("Display Grid", &m_EnableGrid);
+                    ImGui::EndPopup();
+                }
             });
     }
 
