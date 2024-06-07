@@ -53,22 +53,36 @@ namespace Flameberry {
         );
     }
 
-    bool IsAABBInsideFrustum(const AABB& aabb, const Frustum& frustum)
+    bool IsAABBInsideFrustum(const AABB& aabb, const glm::mat4& transform, const Frustum& frustum)
     {
+        std::array<glm::vec4, 8> vertices = {
+            transform * glm::vec4(aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f),
+            transform * glm::vec4(aabb.Max.x, aabb.Min.y, aabb.Min.z, 1.0f),
+            transform * glm::vec4(aabb.Max.x, aabb.Max.y, aabb.Min.z, 1.0f),
+            transform * glm::vec4(aabb.Min.x, aabb.Max.y, aabb.Min.z, 1.0f),
+            transform * glm::vec4(aabb.Min.x, aabb.Min.y, aabb.Max.z, 1.0f),
+            transform * glm::vec4(aabb.Max.x, aabb.Min.y, aabb.Max.z, 1.0f),
+            transform * glm::vec4(aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f),
+            transform * glm::vec4(aabb.Min.x, aabb.Max.y, aabb.Max.z, 1.0f)
+        };
+
         for (const auto& plane : frustum.Planes)
         {
-            glm::vec3 normal(plane);
-            float distance = plane.w;
+            bool allOutside = true;
 
-            glm::vec3 positiveVertex = aabb.Min;
-            if (normal.x >= 0) positiveVertex.x = aabb.Max.x;
-            if (normal.y >= 0) positiveVertex.y = aabb.Max.y;
-            if (normal.z >= 0) positiveVertex.z = aabb.Max.z;
-
-            if (glm::dot(normal, positiveVertex) + distance < 0) {
-                return false;
+            for (const auto& vertex : vertices)
+            {
+                if (glm::dot(glm::vec3(plane), glm::vec3(vertex)) + plane.w > 0)
+                {
+                    allOutside = false;
+                    break;
+                }
             }
+
+            if (allOutside)
+                return false;
         }
+
         return true;
     }
 

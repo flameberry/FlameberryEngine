@@ -7,7 +7,7 @@
 #include "VulkanDebug.h"
 #include "RenderCommand.h"
 
-#define MAX_LINES 500
+#define MAX_LINES 10000
 #define MAX_QUADS 100
 #define MAX_QUAD_VERTICES MAX_QUADS * 4
 #define MAX_QUAD_INDICES MAX_QUADS * 6
@@ -115,42 +115,10 @@ namespace Flameberry {
         }
     }
 
-    void Renderer2D::AddGrid(int gridSize)
+    void Renderer2D::AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color)
     {
-        constexpr float squareSize = 1.0f;
-        const float length = 2 * gridSize * squareSize;
-
-        const float start = -gridSize * squareSize;
-
-        float current = start;
-
-        constexpr glm::vec3 lineColor(0.3f);
-        constexpr glm::vec3 boldLineColor(0.7f);
-        constexpr glm::vec3 redLineColor(1.0f, 0.235f, 0.286f);
-        constexpr glm::vec3 blueLineColor(0.286f, 0.235f, 1.0f);
-
-        for (int i = -gridSize; i <= gridSize; i++)
-        {
-            bool is_bold = i == 0;
-
-            Renderer2D::AddLine({ current, 0.0f, start }, { current, 0.0f, start + length }, is_bold ? blueLineColor : lineColor);
-            Renderer2D::AddLine({ start, 0.0f, current }, { start + length, 0.0f, current }, is_bold ? redLineColor : lineColor);
-            current += squareSize;
-        }
-    }
-
-    void Renderer2D::AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
-    {
-        constexpr float PI = glm::pi<float>();
-        const float angle = 2 * PI / segments;
-
-        glm::vec3 lastVertex = position + rotation * glm::vec3(radius, 0.0f, 0.0f);
-        for (int i = 1; i <= segments; i++)
-        {
-            glm::vec3 vertex = position + rotation * glm::vec3(radius * cos(i * angle), 0.0f, radius * sin(i * angle));
-            Renderer2D::AddLine(lastVertex, vertex, color);
-            lastVertex = vertex;
-        }
+        s_Renderer2DData.LineVertices.push_back(LineVertex{ start, color });
+        s_Renderer2DData.LineVertices.push_back(LineVertex{ end, color });
     }
 
     void Renderer2D::AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
@@ -167,10 +135,18 @@ namespace Flameberry {
         }
     }
 
-    void Renderer2D::AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color)
+    void Renderer2D::AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
     {
-        s_Renderer2DData.LineVertices.push_back(LineVertex{ start, color });
-        s_Renderer2DData.LineVertices.push_back(LineVertex{ end, color });
+        constexpr float PI = glm::pi<float>();
+        const float angle = 2 * PI / segments;
+
+        glm::vec3 lastVertex = position + rotation * glm::vec3(radius, 0.0f, 0.0f);
+        for (int i = 1; i <= segments; i++)
+        {
+            glm::vec3 vertex = position + rotation * glm::vec3(radius * cos(i * angle), 0.0f, radius * sin(i * angle));
+            Renderer2D::AddLine(lastVertex, vertex, color);
+            lastVertex = vertex;
+        }
     }
 
     void Renderer2D::AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex)
@@ -197,6 +173,54 @@ namespace Flameberry {
                 }
             );
         }
+    }
+
+    void Renderer2D::AddGrid(int gridSize)
+    {
+        constexpr float squareSize = 1.0f;
+        const float length = 2 * gridSize * squareSize;
+
+        const float start = -gridSize * squareSize;
+
+        float current = start;
+
+        constexpr glm::vec3 lineColor(0.3f);
+        constexpr glm::vec3 boldLineColor(0.7f);
+        constexpr glm::vec3 redLineColor(1.0f, 0.235f, 0.286f);
+        constexpr glm::vec3 blueLineColor(0.286f, 0.235f, 1.0f);
+
+        for (int i = -gridSize; i <= gridSize; i++)
+        {
+            bool is_bold = i == 0;
+
+            Renderer2D::AddLine({ current, 0.0f, start }, { current, 0.0f, start + length }, is_bold ? blueLineColor : lineColor);
+            Renderer2D::AddLine({ start, 0.0f, current }, { start + length, 0.0f, current }, is_bold ? redLineColor : lineColor);
+            current += squareSize;
+        }
+    }
+
+    void Renderer2D::AddAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color)
+    {
+        const glm::vec3 vertices[] = {
+            transform * glm::vec4(aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f),
+            transform * glm::vec4(aabb.Max.x, aabb.Min.y, aabb.Min.z, 1.0f),
+            transform * glm::vec4(aabb.Max.x, aabb.Max.y, aabb.Min.z, 1.0f),
+            transform * glm::vec4(aabb.Min.x, aabb.Max.y, aabb.Min.z, 1.0f),
+            transform * glm::vec4(aabb.Min.x, aabb.Min.y, aabb.Max.z, 1.0f),
+            transform * glm::vec4(aabb.Max.x, aabb.Min.y, aabb.Max.z, 1.0f),
+            transform * glm::vec4(aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f),
+            transform * glm::vec4(aabb.Min.x, aabb.Max.y, aabb.Max.z, 1.0f),
+        };
+
+        // Define the edges as pairs of vertex indices
+        const uint32_t edges[][2] = {
+            {0, 1}, {1, 2}, {2, 3}, {3, 0},
+            {4, 5}, {5, 6}, {6, 7}, {7, 4},
+            {0, 4}, {1, 5}, {2, 6}, {3, 7}
+        };
+
+        for (uint8_t i = 0; i < 12; i++)
+            Renderer2D::AddLine(vertices[edges[i][0]], vertices[edges[i][1]], color);
     }
 
     void Renderer2D::BeginScene(VkDescriptorSet globalDescriptorSet)

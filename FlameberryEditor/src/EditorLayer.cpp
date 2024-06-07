@@ -968,6 +968,13 @@ namespace Flameberry {
                 ImGui::TableNextColumn();
 
                 ImGui::AlignTextToFramePadding();
+                ImGui::Text("Show Bounding Boxes");
+                ImGui::TableNextColumn();
+                ImGui::Checkbox("##Show_Bounding_Boxes", &settings.ShowBoundingBoxes);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::AlignTextToFramePadding();
                 ImGui::Text("Enable Shadows");
                 ImGui::TableNextColumn();
                 ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows);

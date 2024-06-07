@@ -680,15 +680,19 @@ namespace Flameberry {
                     if (m_RendererSettings.FrustumCulling)
                     {
                         const auto modelMatrix = transform.GetTransform();
-                        AABB worldSpaceAABB(modelMatrix * glm::vec4(submesh.AABB.Min, 1.0f), modelMatrix * glm::vec4(submesh.AABB.Max, 1.0f));
 
-                        if (!IsAABBInsideFrustum(worldSpaceAABB, cameraFrustum))
+                        // TODO: Move this outside of the `if (m_RendererSettings.FrustumCulling)`
+                        if (m_RendererSettings.ShowBoundingBoxes)
+                            Renderer2D::AddAABB(submesh.AABB, modelMatrix, glm::vec4(1, 1, 0, 1));
+
+                        // Skip processing the mesh if it is out of the camera frustum
+                        if (!IsAABBInsideFrustum(submesh.AABB, modelMatrix, cameraFrustum))
                             continue;
                     }
 
                     // The Assumption here is every mesh loaded will have a Material, i.e. materialAsset won't be nullptr
                     Ref<MaterialAsset> materialAsset;
-                    if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
+                    if (const auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
                         materialAsset = AssetManager::GetAsset<MaterialAsset>(it->second);
                     else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
                         materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);

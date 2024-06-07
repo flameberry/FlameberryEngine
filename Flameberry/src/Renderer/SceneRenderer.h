@@ -21,7 +21,7 @@ namespace Flameberry {
     struct MousePickingPushConstantData { glm::mat4 ModelMatrix; int EntityIndex; };
 
     struct SceneRendererSettings {
-        bool FrustumCulling = true;
+        bool FrustumCulling = true, ShowBoundingBoxes = false;
 
         bool EnableShadows = true, ShowCascades = false, SoftShadows = true;
         float CascadeLambdaSplit = 0.91f;
