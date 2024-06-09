@@ -49,12 +49,16 @@ namespace Flameberry {
 
         ImGuiStyle& style = ImGui::GetStyle();
 
+        const auto& specification = thumbnail->GetImageSpecification();
+        const float aspectRatio = (float)specification.Width / (float)specification.Height;
+
         const float width = size;
         float height = size;
 
         const float borderThickness = 1.5f;
-        const float thumbnailWidth = size - 2.0f * borderThickness;
-        const float thumbnailHeight = width * thumbnail->GetImageSpecification().Height / thumbnail->GetImageSpecification().Width;
+
+        const float thumbnailWidth = specification.Width >= specification.Height ? size - 2.0f * borderThickness : height * aspectRatio;
+        const float thumbnailHeight = specification.Width >= specification.Height ? width / aspectRatio : size - 2.0f * borderThickness;
 
         const auto& framePadding = style.FramePadding;
         height += framePadding.y;
@@ -83,9 +87,10 @@ namespace Flameberry {
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 
-        float centerTranslationHeight = height / 2.0f - thumbnailHeight / 2.0f;
+        const float centerTranslationWidth = width / 2.0f - thumbnailWidth / 2.0f;
+        const float centerTranslationHeight = height / 2.0f - thumbnailHeight / 2.0f;
 
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() - framePadding.x + borderThickness);
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + centerTranslationWidth - framePadding.x);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + centerTranslationHeight - framePadding.y);
 
         ImGui::ImageButton(filepath.c_str(), reinterpret_cast<ImTextureID>(thumbnail->CreateOrGetDescriptorSet()), ImVec2(thumbnailWidth, thumbnailHeight));
