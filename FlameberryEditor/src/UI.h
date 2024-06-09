@@ -27,6 +27,14 @@ namespace Flameberry {
         return ImVec2(a.x - b.x, a.y - b.y);
     }
 
+    inline ImVec2 operator*(const ImVec2& a, float b) {
+        return ImVec2(a.x * b, a.y * b);
+    }
+
+    inline ImVec2 operator/(const ImVec2& a, float b) {
+        return ImVec2(a.x / b, a.y / b);
+    }
+
     class UI
     {
     public:

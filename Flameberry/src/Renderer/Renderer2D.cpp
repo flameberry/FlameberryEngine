@@ -267,7 +267,7 @@ namespace Flameberry {
             FBY_ASSERT(s_Renderer2DData.LineVertices.size() <= 2 * MAX_LINES, "MAX_LINES limit reached!");
             s_Renderer2DData.LineVertexBuffer->WriteToBuffer(s_Renderer2DData.LineVertices.data(), s_Renderer2DData.LineVertices.size() * sizeof(LineVertex), 0);
 
-            uint32_t vertexCount = s_Renderer2DData.LineVertices.size();
+            uint32_t vertexCount = (uint32_t)s_Renderer2DData.LineVertices.size();
             auto vertexBuffer = s_Renderer2DData.LineVertexBuffer->GetVulkanBuffer();
             auto pipelineLayout = s_Renderer2DData.LinePipeline->GetVulkanPipelineLayout();
             auto vulkanPipeline = s_Renderer2DData.LinePipeline->GetVulkanPipeline();

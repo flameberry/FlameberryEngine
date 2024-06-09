@@ -35,7 +35,8 @@ namespace Flameberry {
             ImGui::PushStyleColor(ImGuiCol_Border, Theme::FrameBorder);
 
             auto& tag = m_Context->m_Registry->get<TagComponent>(m_SelectionContext);
-            auto bigFont = ImGui::GetIO().Fonts->Fonts[0];
+            ImFont* bigFont = ImGui::GetIO().Fonts->Fonts[0];
+            ImGuiStyle& style = ImGui::GetStyle();
 
             const auto& windowPadding = ImGui::GetStyle().WindowPadding;
             ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPos().x + windowPadding.x, ImGui::GetCursorPos().y + windowPadding.y));
@@ -44,9 +45,12 @@ namespace Flameberry {
             ImGui::Text("%s", tag.Tag.c_str());
             ImGui::PopFont();
 
-            ImGui::SameLine();
+            const char* addComponentText = ICON_LC_PLUS" Add";
 
-            if (ImGui::Button(ICON_LC_PLUS" Add"))
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - style.FramePadding.x * 2.0f - ImGui::CalcTextSize(addComponentText).x - style.ItemSpacing.x);
+
+            if (ImGui::Button(addComponentText))
                 ImGui::OpenPopup("AddComponentPopUp");
 
             if (ImGui::BeginPopup("AddComponentPopUp"))
