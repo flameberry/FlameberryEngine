@@ -16,6 +16,7 @@
 #include "RenderCommand.h"
 #include "ShaderLibrary.h"
 #include "Material.h"
+#include "Frustum.h"
 
 #include "Asset/AssetManager.h"
 
@@ -56,7 +57,7 @@ namespace Flameberry {
 
         m_RendererData = CreateUnique<RendererData>();
 
-#pragma region ShadowMapResources
+        /////////////////////////////////////// Preparing Shadow Mapping Pass ///////////////////////////////////////
         {
             FramebufferSpecification shadowMapFramebufferSpec;
             shadowMapFramebufferSpec.Width = SceneRendererSettings::CascadeSize;
@@ -177,9 +178,9 @@ namespace Flameberry {
 
             VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_ShadowMapSampler));
         }
-#pragma endregion ShadowMapResources
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#pragma region GeometryPassResources
+        ////////////////////////////////////////// Preparing Geometry Pass //////////////////////////////////////////
         {
             // Scene
             VkDeviceSize uniformBufferSize = sizeof(CameraUniformBufferObject);
@@ -387,10 +388,10 @@ namespace Flameberry {
             }
             m_VkTextureSampler = Texture2D::GetDefaultSampler();
         }
-#pragma endregion GeometryPassResources
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#pragma region CompositionResources
 #if 0
+        ////////////////////////////////////////// Preparing Composite Pass /////////////////////////////////////////
         {
             // Create render pass
             FramebufferSpecification framebufferSpec{};
@@ -450,8 +451,8 @@ namespace Flameberry {
 
             m_CompositePipeline = CreateRef<Pipeline>(pipelineSpec);
         }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
-#pragma endregion CompositionResources
 
         Renderer2D::Init(m_GeometryPass);
 
@@ -507,7 +508,7 @@ namespace Flameberry {
 
         // Keep the skylight ready
         SkyLightComponent* skyMap = nullptr;
-        for (const auto entity : scene->m_Registry->view<TransformComponent, SkyLightComponent>())
+        for (const auto entity : scene->m_Registry->group<TransformComponent, SkyLightComponent>())
         {
             skyMap = scene->m_Registry->try_get<SkyLightComponent>(entity);
             sceneUniformBufferData.SkyLightIntensity = skyMap->Intensity;
@@ -517,7 +518,7 @@ namespace Flameberry {
         bool shouldRenderShadows = false;
 
         // Update Directional Lights
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, DirectionalLightComponent>())
+        for (const auto& entity : scene->m_Registry->group<TransformComponent, DirectionalLightComponent>())
         {
             auto [transform, dirLight] = scene->m_Registry->get<TransformComponent, DirectionalLightComponent>(entity);
             sceneUniformBufferData.directionalLight.Color = dirLight.Color;
@@ -550,7 +551,7 @@ namespace Flameberry {
         sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
         sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
 
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, PointLightComponent>())
+        for (const auto& entity : scene->m_Registry->group<TransformComponent, PointLightComponent>())
         {
             const auto& [transform, light] = scene->m_Registry->get<TransformComponent, PointLightComponent>(entity);
             sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform.Translation;
@@ -563,8 +564,9 @@ namespace Flameberry {
 
         m_SceneUniformBuffers[currentFrame]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData));
 
-        // Render Passes
-#pragma region ShadowPass
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////// Shadow Mapping Pass ///////////////////////////////////////////
+
         if (shouldRenderShadows)
         {
             m_ShadowMapRenderPass->Begin();
@@ -576,18 +578,18 @@ namespace Flameberry {
                 }
             );
 
-            for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+            for (const auto& entity : scene->m_Registry->group<TransformComponent, MeshComponent>())
             {
                 const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
-                auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-                if (staticMesh)
+
+                if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
                 {
                     ModelMatrixPushConstantData pushContantData;
-                    pushContantData.ModelMatrix = transform.GetTransform();
+                    pushContantData.ModelMatrix = transform.CalculateTransform();
                     Renderer::Submit([staticMesh, shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                         {
                             vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
-                            Renderer::RT_BindMesh(cmdBuffer, staticMesh);
+                            Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(), staticMesh->GetIndexBuffer()->GetVulkanBuffer());
                             const uint32_t size = staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
                             vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
                         }
@@ -596,21 +598,23 @@ namespace Flameberry {
             }
             m_ShadowMapRenderPass->End();
         }
-#pragma endregion ShadowPass
 
-#pragma region GeometryPass
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////// Geometry Pass //////////////////////////////////////////////
+
         m_GeometryPass->Begin();
 
         RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
         RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
-        // Skybox Rendering
+        /////////////////////////////////////////// SkyMap Rendering ////////////////////////////////////////////
+
         bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
         if (shouldRenderSkyMap)
         {
             glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
-            auto pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
-            auto textureDescSet = AssetManager::GetAsset<Skymap>(skyMap->SkyMap)->GetDescriptorSet()->GetVulkanDescriptorSet();
+            VkPipelineLayout pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
+            VkDescriptorSet textureDescSet = AssetManager::GetAsset<Skymap>(skyMap->SkyMap)->GetDescriptorSet()->GetVulkanDescriptorSet();
 
             Renderer::Submit([pipeline = m_SkyboxPipeline->GetVulkanPipeline(), pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
@@ -621,69 +625,6 @@ namespace Flameberry {
                     vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
                 }
             );
-        }
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////// Mesh Rendering /////////////////////////////////////////////
-#if 0
-        // Without sorting
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
-        {
-            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
-            if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle); staticMesh)
-                Renderer::SubmitMeshWithMaterial(staticMesh, m_MeshPipeline, mesh.OverridenMaterialTable, transform.GetTransform());
-        }
-#else
-        // With sorting
-
-        // TODO: Temporarily placing this code here, it is inefficient to keep this array filled till the next frame
-        m_RendererData->RenderObjects.clear();
-
-        /////////////////////////////////////// Gathering All Render Objects ///////////////////////////////////////
-
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
-        {
-            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
-
-            if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
-            {
-                // TODO: Frustum Culling
-
-                // If Visible
-                uint32_t submeshIndex = 0;
-
-                m_RendererData->RenderObjects.reserve(m_RendererData->RenderObjects.size() + staticMesh->GetSubMeshes().size());
-
-                for (const auto& submesh : staticMesh->GetSubMeshes())
-                {
-                    // The Assumption here is every mesh loaded will have a Material, i.e. materialAsset won't be nullptr
-                    Ref<MaterialAsset> materialAsset;
-                    if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
-                        materialAsset = AssetManager::GetAsset<MaterialAsset>(it->second);
-                    else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
-                        materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
-
-                    // Add it to final list of render objects
-                    m_RendererData->RenderObjects.emplace_back(RenderObject{
-                            .VertexBuffer = staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
-                            .IndexBuffer = staticMesh->GetIndexBuffer()->GetVulkanBuffer(),
-                            .IndexOffset = submesh.IndexOffset,
-                            .IndexCount = submesh.IndexCount,
-                            .Transform = &transform,
-                            .MaterialAsset = materialAsset
-                        });
-
-                    submeshIndex++;
-                }
-            }
-        }
-
-        ///////////////////////////////////////////////// Sorting /////////////////////////////////////////////////
-        {
-            FBY_PROFILE_SCOPE("Sort_RenderObjects");
-            /// Sorting the render objects according to the material IDs
-            auto cmp = [](const RenderObject& a, const RenderObject& b) { return a.MaterialAsset->Handle < b.MaterialAsset->Handle; };
-            std::stable_sort(m_RendererData->RenderObjects.begin(), m_RendererData->RenderObjects.end(), cmp);
         }
 
         ///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
@@ -702,6 +643,83 @@ namespace Flameberry {
             }
         );
 
+#if 0
+        // Without sorting
+        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        {
+            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+            if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle); staticMesh)
+                Renderer::SubmitMeshWithMaterial(staticMesh, m_MeshPipeline, mesh.OverridenMaterialTable, transform.GetTransform());
+        }
+#else
+        // With sorting
+
+        // TODO: Temporarily placing this code here, it is inefficient to keep this array filled till the next frame
+        m_RendererData->RenderObjects.clear();
+
+        /////////////////////////////////////// Gathering All Render Objects ///////////////////////////////////////
+
+        // TODO: Move this someplace better
+        Frustum cameraFrustum;
+
+        if (m_RendererSettings.FrustumCulling)
+            cameraFrustum.ExtractFrustumPlanes(cameraBufferData.ViewProjectionMatrix);
+
+        for (const auto& entity : scene->m_Registry->group<TransformComponent, MeshComponent>())
+        {
+            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+
+            if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
+            {
+                uint32_t submeshIndex = 0;
+
+                m_RendererData->RenderObjects.reserve(m_RendererData->RenderObjects.size() + staticMesh->GetSubMeshes().size());
+
+                for (const auto& submesh : staticMesh->GetSubMeshes())
+                {
+                    if (m_RendererSettings.FrustumCulling)
+                    {
+                        const auto modelMatrix = transform.CalculateTransform();
+
+                        // TODO: Move this outside of the `if (m_RendererSettings.FrustumCulling)`
+                        if (m_RendererSettings.ShowBoundingBoxes)
+                            Renderer2D::AddAABB(submesh.AABB, modelMatrix, glm::vec4(1, 1, 0, 1));
+
+                        // Skip processing the mesh if it is out of the camera frustum
+                        if (!IsAABBInsideFrustum(submesh.AABB, modelMatrix, cameraFrustum))
+                            continue;
+                    }
+
+                    // The Assumption here is every mesh loaded will have a Material, i.e. materialAsset won't be nullptr
+                    Ref<MaterialAsset> materialAsset;
+                    if (const auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
+                        materialAsset = AssetManager::GetAsset<MaterialAsset>(it->second);
+                    else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
+                        materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
+
+                    // Add it to final list of render objects
+                    m_RendererData->RenderObjects.emplace_back(
+                        staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
+                        staticMesh->GetIndexBuffer()->GetVulkanBuffer(),
+                        submesh.IndexOffset,
+                        submesh.IndexCount,
+                        &transform,
+                        materialAsset
+                    );
+
+                    submeshIndex++;
+                }
+            }
+        }
+
+        ///////////////////////////////////////////////// Sorting /////////////////////////////////////////////////
+        {
+            FBY_PROFILE_SCOPE("Sort_RenderObjects");
+            /// Sorting the render objects according to the material IDs
+            auto cmp = [](const RenderObject& a, const RenderObject& b) { return a.MaterialAsset->Handle < b.MaterialAsset->Handle; };
+            std::stable_sort(m_RendererData->RenderObjects.begin(), m_RendererData->RenderObjects.end(), cmp);
+        }
+
         //////////////////////////////////////////////// Rendering ////////////////////////////////////////////////
 
         AssetHandle boundMaterialHandle = 0;
@@ -717,7 +735,7 @@ namespace Flameberry {
                 material = obj.MaterialAsset->GetUnderlyingMaterial(),
                 vertexBuffer = obj.VertexBuffer,
                 indexBuffer = obj.IndexBuffer,
-                transform = obj.Transform->GetTransform(),
+                transform = obj.Transform->CalculateTransform(),
                 indexCount = obj.IndexCount,
                 indexOffset = obj.IndexOffset
             ](VkCommandBuffer cmdBuffer, uint32_t)
@@ -741,7 +759,7 @@ namespace Flameberry {
             boundTransform = obj.Transform;
         }
 #endif
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////// 2D Rendering //////////////////////////////////////////////
 
         Renderer2D::BeginScene(m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet());
 
@@ -754,7 +772,7 @@ namespace Flameberry {
             Renderer2D::FlushQuads();
 
             Renderer2D::SetActiveTexture(m_CameraIcon);
-            for (auto entity : scene->m_Registry->view<TransformComponent, CameraComponent>())
+            for (auto entity : scene->m_Registry->group<TransformComponent, CameraComponent>())
             {
                 auto& transform = scene->m_Registry->get<TransformComponent>(entity);
                 Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
@@ -762,7 +780,7 @@ namespace Flameberry {
             Renderer2D::FlushQuads();
 
             Renderer2D::SetActiveTexture(m_DirectionalLightIcon);
-            for (auto entity : scene->m_Registry->view<TransformComponent, DirectionalLightComponent>())
+            for (auto entity : scene->m_Registry->group<TransformComponent, DirectionalLightComponent>())
             {
                 auto& transform = scene->m_Registry->get<TransformComponent>(entity);
                 Renderer2D::AddBillboard(transform.Translation, 1.2f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
@@ -786,24 +804,28 @@ namespace Flameberry {
         Renderer2D::EndScene();
 
         m_GeometryPass->End();
-#pragma endregion GeometryPass
 
-#pragma region CompositePass
-        // m_CompositePass->Begin();
-        // m_CompositePipeline->Bind();
+#if 0
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////// Composite Pass /////////////////////////////////////////////
 
-        // std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
-        // for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-        //     descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
+        m_CompositePass->Begin();
+        m_CompositePipeline->Bind();
 
-        // Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-        //     {
-        //         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
-        //         vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
-        //     }
-        // );
-        // m_CompositePass->End();
-#pragma endregion CompositePass
+        std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+            descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
+
+        Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            {
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
+                vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+            }
+        );
+        m_CompositePass->End();
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+#endif
     }
 
     void SceneRenderer::CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection)
@@ -873,13 +895,13 @@ namespace Flameberry {
                 float distance = glm::length(frustumCorners[i] - frustumCenter);
                 radius = glm::max(radius, distance);
             }
-            //            radius = std::ceil(radius * 16.0f) / 16.0f;
+            // radius = std::ceil(radius * 16.0f) / 16.0f;
 
             const float width = frustumCorners[5].x - frustumCorners[4].x;
             const float height = frustumCorners[7].y - frustumCorners[5].y;
 
-            //            const float fWorldUnitsPerTexel = 2.0f * radius * 0.70710678118f / (float)SceneRendererSettings::CascadeSize;
-            //            const float fInvWorldUnitsPerTexel = 1.0f / fWorldUnitsPerTexel;
+            // const float fWorldUnitsPerTexel = 2.0f * radius * 0.70710678118f / (float)SceneRendererSettings::CascadeSize;
+            // const float fInvWorldUnitsPerTexel = 1.0f / fWorldUnitsPerTexel;
 
             const glm::vec3 vWorldUnitsPerTexel(width / (float)SceneRendererSettings::CascadeSize, height / (float)SceneRendererSettings::CascadeSize, 1.0f);
             const glm::vec3 vInvWorldUnitsPerTexel = 1.0f / vWorldUnitsPerTexel;
@@ -911,20 +933,20 @@ namespace Flameberry {
             }
         );
 
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        for (const auto& entity : scene->m_Registry->group<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
-            auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-            if (staticMesh)
+
+            if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
             {
                 MousePickingPushConstantData pushContantData;
-                pushContantData.ModelMatrix = transform.GetTransform();
+                pushContantData.ModelMatrix = transform.CalculateTransform();
                 pushContantData.EntityIndex = fbentt::to_index(entity);
 
                 Renderer::Submit([staticMesh, mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                     {
                         vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData), &pushContantData);
-                        Renderer::RT_BindMesh(cmdBuffer, staticMesh);
+                        Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(), staticMesh->GetIndexBuffer()->GetVulkanBuffer());
 
                         const uint32_t size = staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
                         vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
@@ -934,21 +956,18 @@ namespace Flameberry {
         }
 
         uint32_t indexCount = 6 * Renderer2D::GetRendererData().VertexBufferOffset / (4 * sizeof(QuadVertex));
-        Renderer::Submit([
-            descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
-                mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
-                vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
-                vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
-                indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
-                indexCount]
-                (VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+        Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
+            mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
+            vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
+            vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
+            indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
+            indexCount
+        ](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
                 Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline2D);
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePicking2DPipelineLayout, 0, 1, &descSet, 0, nullptr);
 
-                VkDeviceSize offsets[] = { 0 };
-                vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
-                vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
                 vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
             }
         );
@@ -1148,4 +1167,4 @@ namespace Flameberry {
         vkDestroySampler(device, m_ShadowMapSampler, nullptr);
     }
 
-}
+    }

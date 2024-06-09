@@ -23,8 +23,10 @@ namespace Flameberry {
     struct TransformComponent
     {
         glm::vec3 Translation, Rotation, Scale;
+
         TransformComponent() : Translation(0.0f), Rotation(0.0f), Scale(1.0f) {};
-        glm::mat4 GetTransform() const
+
+        glm::mat4 CalculateTransform() const
         {
             return glm::translate(glm::mat4(1.0f), Translation)
                 * glm::toMat4(glm::quat(Rotation))

@@ -14,25 +14,6 @@ namespace Flameberry {
     {
     }
 
-    void StaticMesh::OnDraw() const
-    {
-        const uint32_t size = m_SubMeshes.back().IndexOffset + m_SubMeshes.back().IndexCount;
-        Renderer::Submit([size](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
-            }
-        );
-    }
-
-    void StaticMesh::OnDrawSubMesh(uint32_t subMeshIndex) const
-    {
-        Renderer::Submit([submesh = m_SubMeshes[subMeshIndex]](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdDrawIndexed(cmdBuffer, submesh.IndexCount, 1, submesh.IndexOffset, 0, 0);
-            }
-        );
-    }
-
     StaticMesh::~StaticMesh()
     {
     }

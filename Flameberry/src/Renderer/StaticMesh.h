@@ -24,9 +24,6 @@ namespace Flameberry {
         StaticMesh(const Ref<Buffer>& vertexBuffer, const Ref<Buffer>& indexBuffer, const std::vector<SubMesh>& submeshes);
         ~StaticMesh();
 
-        void OnDraw() const;
-        void OnDrawSubMesh(uint32_t subMeshIndex) const;
-
         std::string GetName() const { return m_Name; }
         const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
         const Ref<Buffer>& GetVertexBuffer() const { return m_VertexBuffer; }

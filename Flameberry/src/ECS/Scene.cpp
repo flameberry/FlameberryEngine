@@ -10,6 +10,7 @@
 #include "Scripting/ScriptEngine.h"
 
 namespace Flameberry {
+
     Scene::Scene()
         : m_Registry(CreateRef<fbentt::registry>())
     {
@@ -18,7 +19,7 @@ namespace Flameberry {
     Scene::Scene(const Ref<Scene>& other)
         : m_Registry(CreateRef<fbentt::registry>(*other->m_Registry)), m_Name(other->m_Name), m_ViewportSize(other->m_ViewportSize)
     {
-        FBY_LOG("Copying Scene...");
+        FBY_TRACE("Copying Scene...");
     }
 
     Scene::Scene(const Scene& other)
@@ -28,7 +29,7 @@ namespace Flameberry {
 
     Scene::~Scene()
     {
-        FBY_LOG("Deleting Scene...");
+        FBY_TRACE("Deleting Scene...");
     }
 
     void Scene::OnStartRuntime()
@@ -36,14 +37,11 @@ namespace Flameberry {
         m_IsRuntimeActive = true;
 
         // Update Cameras
-        for (auto entity : m_Registry->view<CameraComponent>())
-        {
-            auto& cameraComp = m_Registry->get<CameraComponent>(entity);
+        for (auto& cameraComp : m_Registry->view<CameraComponent>())
             cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
-        }
 
         // Create Script Actors
-        for (auto entity : m_Registry->view<NativeScriptComponent>())
+        for (auto entity : m_Registry->group<NativeScriptComponent>())
         {
             auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
             nsc.Actor = nsc.InitScript();
@@ -65,7 +63,7 @@ namespace Flameberry {
         m_PxScene = PhysicsEngine::GetPhysics()->createScene(sceneDesc);
 
         // Create Physics Actors
-        for (auto entity : m_Registry->view<TransformComponent, RigidBodyComponent>())
+        for (auto entity : m_Registry->group<TransformComponent, RigidBodyComponent>())
         {
             auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
 
@@ -92,7 +90,7 @@ namespace Flameberry {
 
             physx::PxShape* shape = nullptr;
 
-            if (auto* boxCollider = m_Registry->try_get<BoxColliderComponent>(entity); boxCollider)
+            if (auto* boxCollider = m_Registry->try_get<BoxColliderComponent>(entity))
             {
                 auto geometry = physx::PxBoxGeometry(
                     0.5f * boxCollider->Size.x * transform.Scale.x,
@@ -104,7 +102,7 @@ namespace Flameberry {
                 boxCollider->RuntimeShape = shape;
             }
 
-            if (auto* sphereCollider = m_Registry->try_get<SphereColliderComponent>(entity); sphereCollider)
+            if (auto* sphereCollider = m_Registry->try_get<SphereColliderComponent>(entity))
             {
                 auto geometry = physx::PxSphereGeometry(sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z));
                 auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
@@ -112,7 +110,7 @@ namespace Flameberry {
                 sphereCollider->RuntimeShape = shape;
             }
 
-            if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
+            if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity))
             {
                 auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
                 auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
@@ -160,9 +158,8 @@ namespace Flameberry {
         ScriptEngine::OnRuntimeStop();
 
         // Delete Script Actors
-        for (auto entity : m_Registry->view<NativeScriptComponent>())
+        for (auto& nsc : m_Registry->view<NativeScriptComponent>())
         {
-            auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
             nsc.Actor->OnInstanceDeleted();
             nsc.DestroyScript(&nsc);
         }
@@ -182,11 +179,8 @@ namespace Flameberry {
         }
 
         // Update Native Scripts
-        for (auto entity : m_Registry->view<NativeScriptComponent>())
-        {
-            auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
+        for (auto& nsc : m_Registry->view<NativeScriptComponent>())
             nsc.Actor->OnUpdate(delta);
-        }
 
         // Update CSharp Scripts
         ScriptEngine::OnRuntimeUpdate(delta);
@@ -195,7 +189,7 @@ namespace Flameberry {
         m_PxScene->simulate(delta);
         m_PxScene->fetchResults(true);
 
-        for (auto entity : m_Registry->view<RigidBodyComponent>())
+        for (auto entity : m_Registry->group<RigidBodyComponent>())
         {
             auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
             physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
@@ -210,10 +204,8 @@ namespace Flameberry {
     {
         m_ViewportSize = viewportSize;
 
-        // TODO: ECS: Implement iterating over single pool without having the knowledge of entity
-        for (auto entity : m_Registry->view<CameraComponent>())
+        for (auto& cameraComp : m_Registry->view<CameraComponent>())
         {
-            auto& cameraComp = m_Registry->get<CameraComponent>(entity);
             // TODO: This is fishy, maybe update this only when runtime is started
             cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
         }
@@ -221,17 +213,13 @@ namespace Flameberry {
 
     fbentt::entity Scene::GetPrimaryCameraEntity() const
     {
-        for (auto entity : m_Registry->view<CameraComponent>())
+        for (auto entity : m_Registry->group<CameraComponent>())
         {
             auto& cameraComp = m_Registry->get<CameraComponent>(entity);
             if (cameraComp.IsPrimary)
                 return entity;
         }
         return {};
-    }
-
-    void Scene::RenderScene(const glm::mat4& cameraMatrix)
-    {
     }
 
     fbentt::entity Scene::CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent)

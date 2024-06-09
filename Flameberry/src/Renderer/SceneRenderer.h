@@ -21,6 +21,8 @@ namespace Flameberry {
     struct MousePickingPushConstantData { glm::mat4 ModelMatrix; int EntityIndex; };
 
     struct SceneRendererSettings {
+        bool FrustumCulling = true, ShowBoundingBoxes = false;
+
         bool EnableShadows = true, ShowCascades = false, SoftShadows = true;
         float CascadeLambdaSplit = 0.91f;
         static const uint32_t CascadeCount = 4, CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
@@ -42,6 +44,10 @@ namespace Flameberry {
         TransformComponent* Transform;
 
         Ref<MaterialAsset> MaterialAsset;
+
+        RenderObject(VkBuffer vertexBuffer, VkBuffer indexBuffer, uint32_t indexOffset, uint32_t indexCount, TransformComponent* transform, Ref<Flameberry::MaterialAsset> materialAsset)
+            : VertexBuffer(vertexBuffer), IndexBuffer(indexBuffer), IndexOffset(indexOffset), IndexCount(indexCount), Transform(transform), MaterialAsset(materialAsset)
+        {}
     };
 
     struct RendererData

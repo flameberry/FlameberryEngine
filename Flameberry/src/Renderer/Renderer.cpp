@@ -6,17 +6,23 @@
 #include "Core/Profiler.h"
 
 #include "VulkanContext.h"
+#include "VulkanDebug.h"
 #include "Asset/AssetManager.h"
 #include "SwapChain.h"
 #include "ShaderLibrary.h"
 #include "Texture2D.h"
 #include "MaterialAsset.h"
 
+// #define FBY_ENABLE_QUERY_TIMESTAMP
+
 namespace Flameberry {
 
     std::vector<Renderer::Command> Renderer::s_CommandQueue;
     uint32_t Renderer::s_RT_FrameIndex = 0, Renderer::s_FrameIndex = 0;
     RendererFrameStats Renderer::s_RendererFrameStats;
+
+    VkQueryPool Renderer::s_QueryPool;
+    std::array<uint64_t, 4 * SwapChain::MAX_FRAMES_IN_FLIGHT> Renderer::s_Timestamps;
 
     void Renderer::Init()
     {
@@ -25,29 +31,41 @@ namespace Flameberry {
         ShaderLibrary::Init();
 
         s_CommandQueue.reserve(5 * 1028 * 1028 / sizeof(Renderer::Command)); // 5 MB
+
+#ifdef FBY_ENABLE_QUERY_TIMESTAMP
+
+        // Creating the query pool for recording GPU timestamps
+        VkQueryPoolCreateInfo queryPoolCreateInfo = {};
+        queryPoolCreateInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+        queryPoolCreateInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+        queryPoolCreateInfo.queryCount = s_Timestamps.size();
+
+        VK_CHECK_RESULT(vkCreateQueryPool(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &queryPoolCreateInfo, nullptr, &s_QueryPool));
+
+#endif
     }
 
     void Renderer::Shutdown()
     {
+#ifdef FBY_ENABLE_QUERY_TIMESTAMP
+
+        vkDestroyQueryPool(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), s_QueryPool, nullptr);
+
+#endif
         ShaderLibrary::Shutdown();
         Texture2D::DestroyStaticResources();
 
         DescriptorSetLayout::ClearCache(); // TODO: Maybe move this to somewhere obvious like VulkanDevice or Renderer
     }
 
-    void Renderer::Submit(const Command&& cmd)
-    {
-        s_CommandQueue.push_back(cmd);
-    }
-
     void Renderer::WaitAndRender()
     {
         // Update the Frame Index of the Main Thread
         s_FrameIndex = (s_FrameIndex + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
-        RT_Render();
+        RT_RenderFrame();
     }
 
-    void Renderer::RT_Render()
+    void Renderer::RT_RenderFrame()
     {
         FBY_PROFILE_SCOPE("RT_RenderLoop");
         auto& window = Application::Get().GetWindow();
@@ -62,18 +80,33 @@ namespace Flameberry {
             VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(s_RT_FrameIndex);
             uint32_t imageIndex = window.GetImageIndex();
 
-            int i = 0;
+#ifdef FBY_ENABLE_QUERY_TIMESTAMP
+
+            vkCmdResetQueryPool(commandBuffer, s_QueryPool, s_RT_FrameIndex * 2, 2);
+            vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, s_QueryPool, s_RT_FrameIndex * 2);
+
+#endif
+
             for (auto& cmd : s_CommandQueue)
-            {
                 cmd(commandBuffer, imageIndex);
-                i++;
-            }
+
+#ifdef FBY_ENABLE_QUERY_TIMESTAMP
+
+            vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, s_QueryPool, s_RT_FrameIndex * 2 + 1);
+
+#endif
+
             device->EndCommandBuffer(s_RT_FrameIndex);
             window.SwapBuffers();
         }
 
-        ResetStats();
+#ifdef FBY_ENABLE_QUERY_TIMESTAMP
 
+        QueryTimestampResults();
+
+#endif
+
+        ResetStats();
         s_CommandQueue.clear();
 
         // Update the Frame Index of the Render Thread
@@ -90,7 +123,7 @@ namespace Flameberry {
     {
         Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             {
-                Renderer::RT_BindMesh(cmdBuffer, mesh);
+                Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, mesh->GetVertexBuffer()->GetVulkanBuffer(), mesh->GetIndexBuffer()->GetVulkanBuffer());
                 vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
             }
         );
@@ -140,12 +173,13 @@ namespace Flameberry {
         s_RendererFrameStats.BoundMaterials++;
     }
 
-    void Renderer::RT_BindMesh(VkCommandBuffer cmdBuffer, const Ref<StaticMesh>& mesh)
+    void Renderer::RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer)
     {
-        auto vertexBuffer = mesh->GetVertexBuffer()->GetVulkanBuffer(), indexBuffer = mesh->GetIndexBuffer()->GetVulkanBuffer();
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
         vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+        s_RendererFrameStats.VertexAndIndexBufferStateSwitches++;
     }
 
     void Renderer::RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer)
@@ -170,6 +204,32 @@ namespace Flameberry {
         s_RendererFrameStats.DrawCallCount = 0;
         s_RendererFrameStats.IndexCount = 0;
         s_RendererFrameStats.VertexAndIndexBufferStateSwitches = 0;
+    }
+
+    void Renderer::QueryTimestampResults()
+    {
+        vkGetQueryPoolResults(
+            VulkanContext::GetCurrentDevice()->GetVulkanDevice(),
+            s_QueryPool,
+            s_RT_FrameIndex * 2,
+            2,
+            2 * sizeof(uint64_t),
+            &s_Timestamps[s_RT_FrameIndex * 2],
+            sizeof(uint64_t),
+            VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT
+        );
+
+        uint64_t startTime = s_Timestamps[s_RT_FrameIndex * 2];
+        uint64_t endTime = s_Timestamps[s_RT_FrameIndex * 2 + 1];
+        uint64_t duration = endTime - startTime;
+
+        // Convert the duration to milliseconds (or the desired unit)
+        VkPhysicalDeviceProperties properties = VulkanContext::GetPhysicalDeviceProperties();
+
+        double timestampPeriod = properties.limits.timestampPeriod;
+        double gpuTime = duration * timestampPeriod / 1e6; // Convert to milliseconds
+
+        FBY_LOG("GPU Time: {} ms", gpuTime);
     }
 
 }

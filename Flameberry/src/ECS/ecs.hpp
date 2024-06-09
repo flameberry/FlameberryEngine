@@ -6,6 +6,11 @@
 
 #include "Core/Core.h"
 
+/*
+    Developer Note (Aditya): This file has a snake_case style, which is written by my naive young self to try out new styles.
+    Someday this will be refactored to have the same style as rest of the codebase :D
+*/
+
 /* This is a header only implementation of the ecs system */
 /* Formatting for this file includes brackets on the same line as the function to keep it compact */
 namespace fbentt {
@@ -47,9 +52,12 @@ namespace fbentt {
             return sparse[value];
         }
 
-        /// @brief 
-        /// @param value The value to be searched in the sparse set
-        /// @return Returns the location of the value found in packed array, or returns -1 if the value is not found
+        /**
+         * Find the location of the value found in packed array
+         *
+         * @param value The value to be searched in the sparse set
+         * @return Location or -1 if the value is not found
+         */
         int find(Type value) const {
             if (value >= sparse.size() || sparse[value] >= packed.size() || packed[sparse[value]] != value) {
                 return -1;
@@ -69,7 +77,6 @@ namespace fbentt {
             return packed[index];
         }
 
-        // Debug
 #ifdef FBY_DEBUG
         void print() const {
             for (const auto& element : packed)
@@ -84,7 +91,9 @@ namespace fbentt {
     struct null_t;
     extern null_t null;
 
-    /// @brief Contains a 64 bit integer -> Layout of handle: | 32-bit index | 31-bit version | 1-bit validity |
+    /**
+     * Contains a 64 bit integer -> Layout of handle: | 32-bit index | 31-bit version | 1-bit validity |
+     */
     class entity {
     public:
         using handle_type = std::uint64_t;
@@ -148,7 +157,7 @@ namespace fbentt {
             return component;
         }
 
-        Type& get(uint32_t index) {
+        [[nodiscard]] inline Type& get(uint32_t index) {
             return component_buffer[index];
         }
 
@@ -157,7 +166,11 @@ namespace fbentt {
             component_buffer.pop_back();
         }
     private:
+        [[nodiscard]] inline std::vector<Type>& buffer() { return component_buffer; }
+    private:
         std::vector<Type> component_buffer;
+
+        friend class registry;
     };
 
     struct pool_data {
@@ -180,7 +193,32 @@ namespace fbentt {
 
     class registry {
     public:
-        template<typename... Type> class registry_view {
+        template<typename Type> class registry_view {
+        public:
+            registry_view() {}
+            registry_view(const registry* reg, const pool_data* pool) : ref_registry(reg), ref_pool(pool) {}
+
+            std::vector<Type>::iterator begin() {
+                if (ref_registry && ref_pool) {
+                    auto& handler = (*((pool_handler<Type>*)ref_pool->handler.get()));
+                    return handler.buffer().begin();
+                }
+                return {};
+            }
+
+            std::vector<Type>::iterator end() {
+                if (ref_registry && ref_pool) {
+                    auto& handler = (*((pool_handler<Type>*)ref_pool->handler.get()));
+                    return handler.buffer().end();
+                }
+                return {};
+            }
+        private:
+            const registry* ref_registry = nullptr;
+            const pool_data* ref_pool = nullptr;
+        };
+
+        template<typename... Type> class registry_group {
         public:
             template<typename... iter_type> class iterator {
             public:
@@ -214,8 +252,9 @@ namespace fbentt {
                 uint32_t index;
             };
         public:
-            registry_view() : begin_index(0), end_index(0) {}
-            registry_view(const registry* reg, const pool_data* pool) : ref_registry(reg), ref_pool(pool), begin_index(0), end_index(0) {
+            registry_group() : begin_index(0), end_index(0) {}
+
+            registry_group(const registry* reg, const pool_data* pool) : ref_registry(reg), ref_pool(pool), begin_index(0), end_index(0) {
                 while (begin_index < pool->entity_set.size() && !reg->has<Type...>(reg->entities[pool->entity_set[begin_index]]))
                     begin_index++;
                 end_index = pool->entity_set.size();
@@ -240,8 +279,10 @@ namespace fbentt {
             return entities[index];
         }
 
-        /// @brief: Iterates over all entities in the scene
-        /// @param _Fn: A function with a param of type `const ecs::entity&` which represents the current entity being iterated
+        /**
+         * Iterates over all entities in the scene
+         * @param _Fn: A function with a param of type `const ecs::entity&` which represents the current entity being iterated
+         */
         template<typename Fn> void for_each(Fn&& _Fn) {
             static_assert(std::is_invocable_v<Fn, entity>);
             for (auto entity : entities) {
@@ -251,9 +292,11 @@ namespace fbentt {
             }
         }
 
-        /// @brief: Iterates over all components in the scene
-        /// @param _Fn: A function with a param of type `void*` which represents the current component being iterated
-        /// And `uint32_t` which gives the typeID of the component
+        /**
+         * Iterates over all components in the scene
+         *
+         * @param _Fn: A function with a param of type `void*` which represents the current component being iterated and `uint32_t` which gives the typeID of the component
+         */
         template<typename Fn> void for_each_component(entity entity, Fn&& _Fn) {
             FBY_ASSERT(0, "for_each_component() Not Yet Implemented!");
 
@@ -276,7 +319,28 @@ namespace fbentt {
             }
         }
 
-        template<typename... Type> registry_view<Type...> view() {
+        /**
+         * Returns a registry view for the specified type.
+         *
+         * @tparam Type The type of components to retrieve from the registry.
+         * @return A registry view for the specified type.
+         */
+        template<typename Type> registry_view<Type> view() {
+            uint32_t typeID = type_id<Type>();
+
+            if (typeID >= pools.size()) {
+                return registry_view<Type>();
+            }
+            return registry_view<Type>(this, &pools[typeID]);
+        }
+
+        /**
+         * Creates a registry group containing entities that have components of the specified types.
+         *
+         * @tparam Type The component types to filter entities by.
+         * @return A registry group containing entities with the specified component types.
+         */
+        template<typename... Type> registry_group<Type...> group() {
             static_assert(sizeof...(Type) > 0);
 
             uint32_t typeIDs[] = { type_id<Type>()... };
@@ -285,14 +349,14 @@ namespace fbentt {
 
             for (const auto& typeID : typeIDs) {
                 if (typeID >= pools.size()) {
-                    return registry_view<Type...>();
+                    return registry_group<Type...>();
                 }
                 if (uint32_t poolSize = pools[typeID].entity_set.size(); poolSize < smallestPoolSize) {
                     smallestPoolSize = poolSize;
                     smallestPoolIndex = typeID;
                 }
             }
-            return registry_view<Type...>(this, &pools[smallestPoolIndex]);
+            return registry_group<Type...>(this, &pools[smallestPoolIndex]);
         }
 
         entity create() {

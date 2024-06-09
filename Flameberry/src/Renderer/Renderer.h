@@ -30,7 +30,7 @@ namespace Flameberry {
         static void Shutdown();
 
         // This is a hot function which is most likely a bottleneck and cause of high CPU usage
-        static void Submit(const Command&& cmd);
+        inline static void Submit(const Command&& cmd) { s_CommandQueue.push_back(cmd); }
         // Currently just renders, the `Wait` part is for a future implementation of Multi-threading
         static void WaitAndRender();
 
@@ -41,16 +41,16 @@ namespace Flameberry {
         // Get the current frame index in the render thread
         static uint32_t RT_GetCurrentFrameIndex() { return s_RT_FrameIndex; }
         // The render function to be called in the Render Thread which does the actual rendering by execution of the submitted commands
-        static void RT_Render();
+        static void RT_RenderFrame();
 
         // Rendering Utilities
         static void SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform);
-        static void RT_BindMesh(VkCommandBuffer cmdBuffer, const Ref<StaticMesh>& mesh);
         static void RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline);
         static void RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material);
         static void RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer);
     private:
         static void ResetStats();
+        static void QueryTimestampResults();
     private:
         static uint32_t s_RT_FrameIndex, s_FrameIndex;
 
@@ -58,6 +58,10 @@ namespace Flameberry {
 
         // Critical Variables
         static std::vector<Command> s_CommandQueue;
+
+        // Query Pool
+        static VkQueryPool s_QueryPool;
+        static std::array<uint64_t, 4 * SwapChain::MAX_FRAMES_IN_FLIGHT> s_Timestamps;
     };
 
 }

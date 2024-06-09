@@ -105,7 +105,7 @@ namespace Flameberry {
 #ifdef FBY_DEBUG
         // Debug only
         static int calls = 0; calls++;
-        FBY_WARN("DescriptorSetLayout Cache Stats: Layouts: {} vs Total calls : {}", s_CachedDescriptorSetLayouts.size(), calls);
+        FBY_TRACE("DescriptorSetLayout Cache Stats: Layouts: {} vs Total calls : {}", s_CachedDescriptorSetLayouts.size(), calls);
         FBY_ASSERT((float)g_DescriptorSetLayoutSpecificationComparisons < calls, "Too many DescriptorSetLayoutSpecification comparisons, you might want to look into this");
 #endif
         if (auto it = s_CachedDescriptorSetLayouts.find(specification); it != s_CachedDescriptorSetLayouts.end())
