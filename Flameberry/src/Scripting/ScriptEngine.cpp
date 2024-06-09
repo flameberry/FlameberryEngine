@@ -734,7 +734,7 @@ namespace Flameberry {
         if (!s_Data->AppAssemblyImage || !s_Data->CoreAssemblyImage)
             return;
 
-        for (const auto entity : s_Data->ActiveScene->GetRegistry()->view<ScriptComponent>())
+        for (const auto entity : s_Data->ActiveScene->GetRegistry()->group<ScriptComponent>())
         {
             auto& sc = s_Data->ActiveScene->GetRegistry()->get<ScriptComponent>(entity);
 

@@ -182,15 +182,6 @@ namespace Flameberry {
         s_RendererFrameStats.VertexAndIndexBufferStateSwitches++;
     }
 
-    void Renderer::RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer)
-    {
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
-        vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-        s_RendererFrameStats.VertexAndIndexBufferStateSwitches++;
-    }
-
     void Renderer::RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline)
     {
         vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
