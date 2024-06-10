@@ -346,8 +346,7 @@ namespace Flameberry {
                     ImGui::PopStyleVar();
                     if (is_open)
                     {
-                        const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-                        if (staticMesh)
+                        if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
                         {
                             const uint32_t limit = glm::min<uint32_t>(staticMesh->GetSubMeshes().size(), 8);
                             const float textLineHeightWithSpacing = ImGui::GetTextLineHeightWithSpacing() + 2.0f;
@@ -420,13 +419,30 @@ namespace Flameberry {
                                     ImGui::TableNextColumn();
 
                                     ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f));
+
                                     if (ImGui::IsItemClicked())
+                                        UI::OpenSelectionWidget("##MaterialSelectionWidget");
+
+                                    if (UI::BeginSelectionWidget("##MaterialSelectionWidget", m_SearchInputBuffer2, 256))
                                     {
-                                        m_MaterialSelectorPanel->OpenPanel([mesh, submeshIndex](const Ref<MaterialAsset>& material) mutable
+                                        for (const auto& [handle, asset] : AssetManager::GetAssetTable())
+                                        {
+                                            if (asset->GetAssetType() == AssetType::Material)
                                             {
-                                                mesh.OverridenMaterialTable[submeshIndex] = material->Handle;
+                                                Ref<MaterialAsset> m = std::static_pointer_cast<MaterialAsset>(asset);
+
+                                                if (m_SearchInputBuffer2[0] != '\0')
+                                                {
+                                                    const int index = Algorithm::KmpSearch(m->GetName().c_str(), m_SearchInputBuffer2, true);
+                                                    if (index == -1)
+                                                        continue;
+                                                }
+
+                                                if (UI::SelectionWidgetElement(m->GetName().c_str(), m->Handle == mat->Handle))
+                                                    mesh.OverridenMaterialTable[submeshIndex] = m->Handle;
                                             }
-                                        );
+                                        }
+                                        UI::EndSelectionWidget();
                                     }
 
                                     ImGui::TableNextColumn();
@@ -538,18 +554,29 @@ namespace Flameberry {
                         const auto& actorClasses = ScriptEngine::GetActorClassDictionary();
 
                         ImGui::PushItemWidth(-1.0f);
-                        if (ImGui::BeginCombo("##ScriptActorClasses", sc.AssemblyQualifiedClassName.c_str()))
-                        {
-                            for (const auto& [fullName, managedClass] : actorClasses)
-                            {
-                                bool isSelected = (fullName == sc.AssemblyQualifiedClassName);
-                                if (ImGui::Selectable(fullName.c_str(), &isSelected))
-                                    sc.AssemblyQualifiedClassName = fullName;
 
-                                if (isSelected)
-                                    ImGui::SetItemDefaultFocus();
+                        ImGui::Button(sc.AssemblyQualifiedClassName.c_str(), ImVec2(-1.0f, 0.0f));
+
+                        if (ImGui::IsItemClicked())
+                            UI::OpenSelectionWidget("##ScriptActorClasses");
+
+                        if (UI::BeginSelectionWidget("##ScriptActorClasses", m_SearchInputBuffer1, 256))
+                        {
+                            for (const auto& [actorClassName, _] : actorClasses)
+                            {
+                                if (m_SearchInputBuffer1[0] != '\0')
+                                {
+                                    const int index = Algorithm::KmpSearch(actorClassName.c_str(), m_SearchInputBuffer1, true);
+                                    if (index == -1)
+                                        continue;
+                                }
+
+                                bool isSelected = (actorClassName == sc.AssemblyQualifiedClassName);
+
+                                if (UI::SelectionWidgetElement(actorClassName.c_str(), isSelected))
+                                    sc.AssemblyQualifiedClassName = actorClassName;
                             }
-                            ImGui::EndCombo();
+                            UI::EndSelectionWidget();
                         }
 
                         ImGui::TableNextRow();

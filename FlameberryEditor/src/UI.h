@@ -43,8 +43,13 @@ namespace Flameberry {
         static bool AlignedButton(const char* label, const ImVec2& size = ImVec2(0.0f, 0.0f), float alignment = 0.5f);
         static void InputBox(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint = (const char*)__null);
 
-        // Returns full width and height of the group including text and file icon
+        static void OpenSelectionWidget(const char* label);
+        static bool BeginSelectionWidget(const char* label, char* inputBuffer, const uint32_t inputLength);
+        static bool SelectionWidgetElement(const char* label, bool isSelected);
+        static void EndSelectionWidget();
+
         static bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled = false);
+        // Returns full width and height of the group including text and file icon
         static bool ContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension = false);
     };
 

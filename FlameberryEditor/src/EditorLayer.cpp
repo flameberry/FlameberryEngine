@@ -886,45 +886,56 @@ namespace Flameberry {
     void EditorLayer::UI_BottomPanel()
     {
         static bool toggleContentBrowser = false, toggleRendererSettings = false;
-        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
-            | ImGuiWindowFlags_NoResize
-            | ImGuiWindowFlags_NoMove
-            | ImGuiWindowFlags_NoCollapse
-            | ImGuiWindowFlags_NoTitleBar
+        ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
+
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse
             | ImGuiWindowFlags_NoScrollWithMouse
+            | ImGuiWindowFlags_NoSavedSettings
+            | ImGuiWindowFlags_MenuBar
             | ImGuiWindowFlags_NoScrollbar;
 
-        ImGuiWindowClass windowClass;
-        windowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoResize;
-        ImGui::SetNextWindowClass(&windowClass);
+        float height = 2.5f * ImGui::GetFontSize();
+        float paddingY = (height - ImGui::GetFontSize()) / 2.0f;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(10, 10));
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-
-        ImGui::Begin("##PanelToggler", nullptr, windowFlags);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, paddingY));
+        ImGui::PushStyleColor(ImGuiCol_MenuBarBg, Theme::WindowBgGrey);
+        bool begin = ImGui::BeginViewportSideBar("##MainStatusBar", viewport, ImGuiDir_Down, height, windowFlags);
+        ImGui::PopStyleColor();
         ImGui::PopStyleVar(2);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, -1.0f));
+        if (begin)
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, paddingY));
+            begin = ImGui::BeginMenuBar();
+            ImGui::PopStyleVar();
 
-        ImGui::PushStyleColor(ImGuiCol_Button, Theme::DarkThemeColor);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, Theme::DarkThemeColor);
+            if (begin)
+            {
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, -1.0f));
 
-        if (ImGui::Button(ICON_LC_FOLDER_TREE"  Content Browser", ImVec2(0.0f, -1.0f)))
-            toggleContentBrowser = !toggleContentBrowser;
+                ImGui::PushStyleColor(ImGuiCol_Button, Theme::DarkThemeColor);
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, Theme::DarkThemeColor);
 
-        ImGui::SameLine();
+                ImGui::SetCursorPosX(0.0f);
 
-        if (ImGui::Button(ICON_LC_SETTINGS"  Renderer Settings", ImVec2(0.0f, -1.0f)))
-            toggleRendererSettings = !toggleRendererSettings;
+                if (ImGui::Button(ICON_LC_FOLDER_TREE"  Content Browser", ImVec2(0.0f, -1.0f)))
+                    toggleContentBrowser = !toggleContentBrowser;
 
-        ImGui::PopStyleColor(2);
+                ImGui::SameLine();
 
-        ImGui::SameLine();
+                if (ImGui::Button(ICON_LC_SETTINGS"  Renderer Settings", ImVec2(0.0f, -1.0f)))
+                    toggleRendererSettings = !toggleRendererSettings;
+
+                ImGui::PopStyleColor(2);
+                ImGui::EndMenuBar();
+            }
+            ImGui::PopStyleVar(4);
+        }
         ImGui::End();
-        ImGui::PopStyleVar(4);
 
         if (toggleContentBrowser)
             m_ContentBrowserPanel->OnUIRender();

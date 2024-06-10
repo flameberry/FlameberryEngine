@@ -174,10 +174,7 @@ namespace Flameberry {
             ImGui::PushStyleColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
         }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 3));
         UI::InputBox("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, ICON_LC_SEARCH" Search...");
-        ImGui::PopStyleVar(2);
 
         if (m_IsSearchBoxFocused)
         {

@@ -250,7 +250,11 @@ namespace Flameberry {
         aiString name;
         material->Get(AI_MATKEY_NAME, name);
 
-        auto materialAsset = CreateRef<MaterialAsset>(name.C_Str());
+        std::string matName(name.C_Str());
+        if (matName.empty())
+            matName = "<unnamed>";
+
+        auto materialAsset = CreateRef<MaterialAsset>(matName);
 
         aiColor3D albedo;
         material->Get(AI_MATKEY_COLOR_DIFFUSE, albedo);
@@ -258,7 +262,6 @@ namespace Flameberry {
         material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
         material->Get(AI_MATKEY_METALLIC_FACTOR, metallic);
 
-        materialAsset->SetName(name.C_Str());
         materialAsset->SetAlbedo({ albedo.r, albedo.g, albedo.b });
         materialAsset->SetRoughness(roughness);
         materialAsset->SetMetallic(metallic);
