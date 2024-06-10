@@ -343,8 +343,7 @@ namespace Flameberry {
                     ImGui::PopStyleVar();
                     if (is_open)
                     {
-                        const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-                        if (staticMesh)
+                        if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
                         {
                             const uint32_t limit = glm::min<uint32_t>(staticMesh->GetSubMeshes().size(), 8);
                             const float textLineHeightWithSpacing = ImGui::GetTextLineHeightWithSpacing() + 2.0f;
@@ -417,13 +416,30 @@ namespace Flameberry {
                                     ImGui::TableNextColumn();
 
                                     ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f));
+
                                     if (ImGui::IsItemClicked())
+                                        UI::OpenSelectionWidget("##MaterialSelectionWidget");
+
+                                    if (UI::BeginSelectionWidget("##MaterialSelectionWidget", m_SearchInputBuffer2, 256))
                                     {
-                                        m_MaterialSelectorPanel->OpenPanel([mesh, submeshIndex](const Ref<MaterialAsset>& material) mutable
+                                        for (const auto& [handle, asset] : AssetManager::GetAssetTable())
+                                        {
+                                            if (asset->GetAssetType() == AssetType::Material)
                                             {
-                                                mesh.OverridenMaterialTable[submeshIndex] = material->Handle;
+                                                Ref<MaterialAsset> m = std::static_pointer_cast<MaterialAsset>(asset);
+
+                                                if (m_SearchInputBuffer2[0] != '\0')
+                                                {
+                                                    const int index = Algorithm::KmpSearch(m->GetName().c_str(), m_SearchInputBuffer2, true);
+                                                    if (index == -1)
+                                                        continue;
+                                                }
+
+                                                if (UI::SelectionWidgetElement(m->GetName().c_str(), m->Handle == mat->Handle))
+                                                    mesh.OverridenMaterialTable[submeshIndex] = m->Handle;
                                             }
-                                        );
+                                        }
+                                        UI::EndSelectionWidget();
                                     }
 
                                     ImGui::TableNextColumn();

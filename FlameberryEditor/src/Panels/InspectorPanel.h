@@ -31,6 +31,9 @@ namespace Flameberry {
         Ref<Scene> m_Context;
 
         Ref<Texture2D> m_SettingsIcon;
+
+        char m_SearchInputBuffer1[256] = { '\0' };
+        char m_SearchInputBuffer2[256] = { '\0' };
     private:
         template<typename ComponentType>
         void DrawAddComponentEntry(const char* name);

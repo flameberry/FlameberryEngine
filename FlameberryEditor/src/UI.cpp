@@ -5,9 +5,19 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/Core.h"
+#include "Core/Algorithm.h"
+
 #include "ImGui/Theme.h"
 
 namespace Flameberry {
+
+    struct UIState
+    {
+        // Selection Widget
+        bool IsSelectionWidgetJustOpened = false, IsSelectionWidgetSearchBoxFocused = false, HasSelectionWidgetListBoxBegun = false;
+    };
+
+    static UIState g_UIState;
 
     bool UI::Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size)
     {
@@ -37,9 +47,80 @@ namespace Flameberry {
 
     void UI::InputBox(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint)
     {
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 3));
         ImGui::PushItemWidth(width);
         ImGui::InputTextWithHint(label, inputHint, inputBuffer, inputLength);
         ImGui::PopItemWidth();
+        ImGui::PopStyleVar(2);
+    }
+
+    void UI::OpenSelectionWidget(const char* label)
+    {
+        std::string labelFmt = fmt::format("{}Popup", label);
+        ImGui::OpenPopup(labelFmt.c_str());
+
+        g_UIState.IsSelectionWidgetJustOpened = true;
+    }
+
+    bool UI::BeginSelectionWidget(const char* label, char* inputBuffer, const uint32_t inputLength)
+    {
+        std::string labelFmt = fmt::format("{}Popup", label);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(2, 2));
+        bool beginPopup = ImGui::BeginPopup(labelFmt.c_str());
+        ImGui::PopStyleVar();
+
+        if (beginPopup)
+        {
+            if (g_UIState.IsSelectionWidgetJustOpened)
+            {
+                ImGui::SetKeyboardFocusHere();
+                g_UIState.IsSelectionWidgetJustOpened = false;
+            }
+
+            if (g_UIState.IsSelectionWidgetSearchBoxFocused)
+            {
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+                ImGui::PushStyleColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+            }
+
+            std::string inputBoxLabel = fmt::format("{}SearchBar", label);
+            UI::InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, inputLength, ICON_LC_SEARCH" Search...");
+
+            if (g_UIState.IsSelectionWidgetSearchBoxFocused)
+            {
+                ImGui::PopStyleColor();
+                ImGui::PopStyleVar();
+            }
+
+            g_UIState.IsSelectionWidgetSearchBoxFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
+            g_UIState.HasSelectionWidgetListBoxBegun = ImGui::BeginListBox("##ScriptActorClassesListBox");
+        }
+
+        return beginPopup;
+    }
+
+    bool UI::SelectionWidgetElement(const char* label, bool isSelected)
+    {
+        if (ImGui::Selectable(label, &isSelected))
+        {
+            ImGui::CloseCurrentPopup();
+            return true;
+        }
+
+        if (isSelected)
+            ImGui::SetItemDefaultFocus();
+
+        return false;
+    }
+
+    void UI::EndSelectionWidget()
+    {
+        if (g_UIState.HasSelectionWidgetListBoxBegun)
+            ImGui::EndListBox();
+
+        ImGui::EndPopup();
     }
 
     // TODO: Call one of 2 functions one for Folder Thumbnail and other for file
