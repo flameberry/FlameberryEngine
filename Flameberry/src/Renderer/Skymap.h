@@ -16,11 +16,18 @@ namespace Flameberry {
 
         Ref<DescriptorSet> GetDescriptorSet() { return m_SkymapDescriptorSet; }
 
+        static void Init();
+        static void Destroy();
+        static Ref<DescriptorSet> GetEmptyDescriptorSet() { return s_EmptyDescriptorSet; }
+
         FBY_DECLARE_ASSET_TYPE(AssetType::Skymap);
     private:
         Ref<Image> m_CubemapImage, m_IrradianceMap, m_PrefilteredMap;
 
         Ref<DescriptorSet> m_SkymapDescriptorSet;
+
+        static Ref<DescriptorSet> s_EmptyDescriptorSet;
+        static Ref<Image> s_EmptyCubemap;
     };
 
 }

@@ -5,7 +5,13 @@ layout (location = 1) in vec2 v_TextureCoords;
 
 layout (location = 0) out vec4 o_FragColor;
 
+// These are the uniforms that are set by Renderer and are not exposed to the Material class
+// How do we decide that? The classes which are marked by _FBY_ prefix are considered Renderer only
 layout (set = 0, binding = 0) uniform samplerCube _FBY_u_Skymap;
+
+// These are not used in this shader but present so that Flameberry can generate the correct descriptor set layout containing all bindings
+layout (set = 0, binding = 1) uniform samplerCube _FBY_u_IrradianceMap;
+layout (set = 0, binding = 2) uniform samplerCube _FBY_u_PrefilteredMap;
 
 void main()
 {

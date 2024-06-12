@@ -13,6 +13,9 @@
 
 namespace Flameberry {
 
+    Ref<DescriptorSet> Skymap::s_EmptyDescriptorSet;
+    Ref<Image> Skymap::s_EmptyCubemap;
+
     Skymap::Skymap(const std::filesystem::path& filepath)
     {
         FBY_SCOPED_TIMER("Cubemap_IrradianceMap_Prefiltered_Gen");
@@ -354,8 +357,9 @@ namespace Flameberry {
 
         // Now that all the processing is done, we need to bring all the skymap resources into a descriptor set to be used later by the PBR pipeline
         std::vector<VkDescriptorSetLayoutBinding> descBindings = {
-             {.binding = 0, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
-             {.binding = 1, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT}
+            {.binding = 0, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
+            {.binding = 1, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
+            {.binding = 2, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT}
         };
 
         DescriptorSetSpecification skymapDescSetSpec;
@@ -372,8 +376,14 @@ namespace Flameberry {
         irrImageInfo.imageView = m_IrradianceMap->GetImageView();
         irrImageInfo.sampler = Texture2D::GetDefaultSampler();
 
+        VkDescriptorImageInfo prefilteredMapImageInfo{};
+        prefilteredMapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        prefilteredMapImageInfo.imageView = m_PrefilteredMap->GetImageView();
+        prefilteredMapImageInfo.sampler = Texture2D::GetDefaultSampler();
+
         m_SkymapDescriptorSet->WriteImage(0, skymapImageInfo);
         m_SkymapDescriptorSet->WriteImage(1, irrImageInfo);
+        m_SkymapDescriptorSet->WriteImage(2, prefilteredMapImageInfo);
         m_SkymapDescriptorSet->Update();
 
         // TODO: Remove this in the future
@@ -382,6 +392,61 @@ namespace Flameberry {
 
     Skymap::~Skymap()
     {
+    }
+
+    void Skymap::Init()
+    {
+        // Creation of the destination cubemap where our main skymap will be stored
+        ImageSpecification imageSpec;
+        imageSpec.Width = 1;
+        imageSpec.Height = 1;
+        imageSpec.Format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        // 6 Layers for 6 faces
+        imageSpec.ArrayLayers = 6;
+        imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        // Storage Image for the compute shaders to store data from equirectangular map
+        // Sampled by the PBR fragment shader for rendering
+        imageSpec.Usage = VK_IMAGE_USAGE_SAMPLED_BIT;
+        // Important flag to ensure that we can sample the image as a cube
+        imageSpec.Flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+        imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+        // VkImageView type should be VK_IMAGE_VIEW_TYPE_CUBE
+        imageSpec.ViewSpecification.ViewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        // 6 Layers for 6 faces
+        imageSpec.ViewSpecification.LayerCount = 6;
+
+        // Creation of the cubemap image
+        s_EmptyCubemap = CreateRef<Image>(imageSpec);
+
+        DescriptorSetLayoutSpecification descSetLayoutSpec;
+        descSetLayoutSpec.Bindings = {
+            {.binding = 0, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
+            {.binding = 1, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
+            {.binding = 2, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT}
+        };
+
+        Ref<DescriptorSetLayout> descSetLayout = DescriptorSetLayout::CreateOrGetCached(descSetLayoutSpec);
+
+        DescriptorSetSpecification descSetSpec;
+        descSetSpec.Layout = descSetLayout;
+        
+        s_EmptyDescriptorSet = CreateRef<DescriptorSet>(descSetSpec);
+        
+        VkDescriptorImageInfo skymapImageInfo{};
+        skymapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        skymapImageInfo.imageView = s_EmptyCubemap->GetImageView();
+        skymapImageInfo.sampler = Texture2D::GetDefaultSampler();
+
+        s_EmptyDescriptorSet->WriteImage(0, skymapImageInfo);
+        s_EmptyDescriptorSet->WriteImage(1, skymapImageInfo);
+        s_EmptyDescriptorSet->WriteImage(2, skymapImageInfo);
+        s_EmptyDescriptorSet->Update();
+    }
+
+    void Skymap::Destroy()
+    {
+        s_EmptyCubemap = nullptr;
+        s_EmptyDescriptorSet = nullptr;
     }
 
 }

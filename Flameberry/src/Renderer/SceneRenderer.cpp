@@ -610,11 +610,13 @@ namespace Flameberry {
         /////////////////////////////////////////// SkyMap Rendering ////////////////////////////////////////////
 
         bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
+        VkDescriptorSet textureDescSet = VK_NULL_HANDLE;
+
         if (shouldRenderSkyMap)
         {
             glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
             VkPipelineLayout pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
-            VkDescriptorSet textureDescSet = AssetManager::GetAsset<Skymap>(skyMap->SkyMap)->GetDescriptorSet()->GetVulkanDescriptorSet();
+            textureDescSet = AssetManager::GetAsset<Skymap>(skyMap->SkyMap)->GetDescriptorSet()->GetVulkanDescriptorSet();
 
             Renderer::Submit([pipeline = m_SkyboxPipeline->GetVulkanPipeline(), pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
@@ -635,7 +637,8 @@ namespace Flameberry {
                 {
                     m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
                     m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-                    m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet()
+                    m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet(),
+                    shouldRenderSkyMap ? textureDescSet : Skymap::GetEmptyDescriptorSet()->GetVulkanDescriptorSet()
                 };
 
                 Renderer::RT_BindPipeline(cmdBuffer, pipeline);
@@ -1167,4 +1170,4 @@ namespace Flameberry {
         vkDestroySampler(device, m_ShadowMapSampler, nullptr);
     }
 
-    }
+}
