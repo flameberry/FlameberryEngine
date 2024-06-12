@@ -18,7 +18,7 @@ namespace Flameberry {
 
         FBY_DECLARE_ASSET_TYPE(AssetType::Skymap);
     private:
-        Ref<Image> m_CubemapImage;
+        Ref<Image> m_CubemapImage, m_IrradianceMap, m_PrefilteredMap;
 
         Ref<DescriptorSet> m_SkymapDescriptorSet;
     };

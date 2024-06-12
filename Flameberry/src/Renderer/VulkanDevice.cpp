@@ -5,6 +5,7 @@
 #include "RenderCommand.h"
 
 namespace Flameberry {
+
     VulkanDevice::VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow)
         : m_VkPhysicalDevice(physicalDevice)
     {
@@ -18,12 +19,20 @@ namespace Flameberry {
             }
         );
 
-        VkPhysicalDeviceFeatures vk_physical_device_features{};
-        vk_physical_device_features.samplerAnisotropy = VK_TRUE;
-        vk_physical_device_features.sampleRateShading = VK_TRUE;
-        vk_physical_device_features.fillModeNonSolid = VK_TRUE;
-        vk_physical_device_features.tessellationShader = VK_TRUE;
-        vk_physical_device_features.depthClamp = VK_TRUE;
+        VkPhysicalDeviceFeatures2 deviceFeatures2{};
+        deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+
+        deviceFeatures2.features.samplerAnisotropy = VK_TRUE;
+        deviceFeatures2.features.sampleRateShading = VK_TRUE;
+        deviceFeatures2.features.fillModeNonSolid = VK_TRUE;
+        deviceFeatures2.features.tessellationShader = VK_TRUE;
+        deviceFeatures2.features.depthClamp = VK_TRUE;
+
+        VkPhysicalDeviceVulkan12Features vulkan12Features{};
+        vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        vulkan12Features.descriptorIndexing = VK_TRUE;
+
+        deviceFeatures2.pNext = &vulkan12Features;
 
         // Creating Vulkan Logical Device
         VkDeviceCreateInfo vk_device_create_info{};
@@ -31,10 +40,10 @@ namespace Flameberry {
         vk_device_create_info.queueCreateInfoCount = static_cast<uint32_t>(vk_device_queue_create_infos.size());
         vk_device_create_info.pQueueCreateInfos = vk_device_queue_create_infos.data();
 
-        vk_device_create_info.pEnabledFeatures = &vk_physical_device_features;
+        vk_device_create_info.pEnabledFeatures = nullptr;
 
-        vk_device_create_info.enabledExtensionCount = static_cast<uint32_t>(m_VkDeviceExtensions.size());
-        vk_device_create_info.ppEnabledExtensionNames = m_VkDeviceExtensions.data();
+        vk_device_create_info.enabledExtensionCount = static_cast<uint32_t>(VulkanContext::GetVulkanDeviceExtensions().size());
+        vk_device_create_info.ppEnabledExtensionNames = VulkanContext::GetVulkanDeviceExtensions().data();
 
         // Enable multiview
         VkPhysicalDeviceMultiviewFeaturesKHR physicalDeviceMultiviewFeatures{};
@@ -43,6 +52,9 @@ namespace Flameberry {
 
         vk_device_create_info.pNext = &physicalDeviceMultiviewFeatures;
 
+        physicalDeviceMultiviewFeatures.pNext = &deviceFeatures2;
+
+        // Validation Layers
         auto validationLayers = VulkanContext::GetValidationLayerNames();
         if (VulkanContext::EnableValidationLayers())
         {
@@ -164,4 +176,5 @@ namespace Flameberry {
     {
         vkQueueWaitIdle(m_GraphicsAndComputeQueue);
     }
+
 }

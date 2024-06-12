@@ -1,0 +1,163 @@
+#version 450
+
+#extension GL_EXT_nonuniform_qualifier : enable
+
+layout(set = 0, binding = 0) uniform samplerCube _FBY_u_Cubemap;
+layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_PrefilteredMapMipArray[8];
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+#include "include/CubemapUtils.glsl"
+
+int g_SampleCount = 32;
+
+float max3(vec3 a) 
+{
+	return max(a.x, max(a.y, a.z));
+}
+
+// Based omn http://byteblacksmith.com/improvements-to-the-canonical-one-liner-glsl-rand-for-opengl-es-2-0/
+float random(vec2 co)
+{
+	float a = 12.9898;
+	float b = 78.233;
+	float c = 43758.5453;
+	float dt= dot(co.xy ,vec2(a,b));
+	float sn= mod(dt,3.14);
+	return fract(sin(sn) * c);
+}
+
+vec2 hammersley2d(uint i, uint N) 
+{
+	// Radical inverse based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+	uint bits = (i << 16u) | (i >> 16u);
+	bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+	bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+	bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+	bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+	float rdi = float(bits) * 2.3283064365386963e-10;
+	return vec2(float(i) /float(N), rdi);
+}
+
+// Based on http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_slides.pdf
+vec3 importanceSample_GGX(vec2 Xi, float roughness, vec3 normal) 
+{
+	// Maps a 2D point to a hemisphere with spread based on roughness
+	float alpha = roughness * roughness;
+	float phi = 2.0 * PI * Xi.x + random(normal.xz) * 0.1;
+	float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (alpha*alpha - 1.0) * Xi.y));
+	float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+	vec3 H = vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+
+	// Tangent space
+	vec3 up = abs(normal.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+	vec3 tangentX = normalize(cross(up, normal));
+	vec3 tangentY = normalize(cross(normal, tangentX));
+
+	// Convert to world Space
+	return normalize(tangentX * H.x + tangentY * H.y + normal * H.z);
+}
+
+// Normal Distribution function
+float D_GGX(float dotNH, float roughness)
+{
+	float alpha = roughness * roughness;
+	float alpha2 = alpha * alpha;
+	float denom = dotNH * dotNH * (alpha2 - 1.0) + 1.0;
+	return (alpha2)/(PI * denom*denom); 
+}
+
+ivec3 texCoordToCube(vec3 texCoord, vec2 cubemapSize)
+{
+	vec3 abst = abs(texCoord);
+	texCoord /= max3(abst);
+
+	float cubeFace;
+	vec2 uvCoord;
+	if (abst.x > abst.y && abst.x > abst.z) 
+	{
+		// x major
+		float negx = step(texCoord.x, 0.0);
+		uvCoord = mix(-texCoord.zy, vec2(texCoord.z, -texCoord.y), negx);
+		cubeFace = negx;
+	} 
+	else if (abst.y > abst.z) 
+	{
+		// y major
+		float negy = step(texCoord.y, 0.0);
+		uvCoord = mix(texCoord.xz, vec2(texCoord.x, -texCoord.z), negy);
+		cubeFace = 2.0 + negy;
+	} 
+	else 
+	{
+		// z major
+		float negz = step(texCoord.z, 0.0);
+		uvCoord = mix(vec2(texCoord.x, -texCoord.y), -texCoord.xy, negz);
+		cubeFace = 4.0 + negz;
+	}
+	uvCoord = (uvCoord + 1.0) * 0.5; // 0..1
+	uvCoord = uvCoord * cubemapSize;
+	uvCoord = clamp(uvCoord, vec2(0.0), cubemapSize - vec2(1.0));
+
+	return ivec3(ivec2(uvCoord), int(cubeFace));
+}
+
+vec3 prefilterEnvMap(vec3 R, float roughness, vec2 mipMapSize)
+{
+	vec3 N = R;
+	vec3 V = R;
+
+	float totalWeight = 0.0;   
+	vec3 prefilteredColor = vec3(0.0);
+	float envMapDim = float(textureSize(_FBY_u_Cubemap, 0).s);
+	for(uint i = 0u; i < g_SampleCount; ++i)
+	{
+		// generate sample vector towards the alignment of the specular lobe
+		vec2 Xi = hammersley2d(i, g_SampleCount);
+		vec3 H = importanceSample_GGX(Xi, roughness, N);
+		float dotHV = dot(H, V);
+		vec3 L = normalize(2.0 * dotHV * H - V);
+
+		float dotNL = max(dot(N, L), 0.0);
+		if (dotNL > 0.0)
+		{
+			float dotNH = max(dot(N, H), 0.0);
+			dotHV = max(dotHV, 0.0);
+			// sample from the environment's mip level based on roughness/pdf
+			float D = D_GGX(dotNH, roughness);
+			float pdf = D * dotNH / (4.0 * dotHV) + 0.0001; 
+
+			float saTexel  = 4.0 * PI / (6.0 * envMapDim * envMapDim);
+			float saSample = 1.0 / (g_SampleCount * pdf + 0.0001);
+
+			float mipLevel = roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel); 
+			prefilteredColor += textureLod(_FBY_u_Cubemap, L, mipLevel).rgb * dotNL;
+			totalWeight += dotNL;
+		}
+	}
+	return prefilteredColor / totalWeight;
+}
+
+void main()
+{
+    int mipCount = 8;
+
+    for (int i = 0; i < mipCount; i++)
+    {
+        const ivec2 imgSize = imageSize(_FBY_u_PrefilteredMapMipArray[i]);
+
+        if (any(greaterThanEqual(gl_GlobalInvocationID.xy, imgSize))) {
+            continue; // Skip out-of-bounds threads
+        }
+
+        vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
+        normalizedPixelCoords = normalizedPixelCoords * 2.0f - 1.0f;
+        vec3 normal = normalize(NormalizedToWorldPosition(int(gl_GlobalInvocationID.z), normalizedPixelCoords));
+
+		float roughness = float(i) / float(mipCount - 1);
+		vec4 color = vec4(prefilterEnvMap(normal, roughness, vec2(imgSize)), 1.0);
+
+		// Store the color
+		imageStore(_FBY_u_PrefilteredMapMipArray[i], ivec3(gl_GlobalInvocationID.xyz), color);
+	}
+}

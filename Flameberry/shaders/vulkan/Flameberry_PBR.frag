@@ -401,6 +401,8 @@ void main()
 
     o_FragColor = vec4(intermediateColor, 1.0f);
 
+    // o_FragColor.rgb = texture(_FBY_u_IrradianceMap, normal).rgb;
+
     if (u_SceneData.SceneRendererSettings.ShowCascades == 1)
     {
         uint cascadeIndex = 0;

@@ -14,7 +14,6 @@
 #include "Renderer/Skymap.h"
 
 namespace Flameberry {
-
     class MovingActor : public Flameberry::Actor {
     public:
         void OnInstanceCreated() override {
@@ -252,7 +251,7 @@ namespace Flameberry {
         {
             RenderCommand::WritePixelFromImageToBuffer(
                 m_MousePickingBuffer->GetVulkanBuffer(),
-                m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetImage(),
+                m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetVulkanImage(),
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                 { m_MouseX, m_ViewportSize.y - m_MouseY - 1 }
             );

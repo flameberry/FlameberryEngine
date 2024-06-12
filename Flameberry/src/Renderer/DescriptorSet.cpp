@@ -160,7 +160,23 @@ namespace Flameberry {
         m_WriteInfos.push_back(vk_write_descriptor_set);
     }
 
-    void DescriptorSet::WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo)
+    void DescriptorSet::WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo, uint32_t dstArrayElement)
+    {
+        VkWriteDescriptorSet vk_write_descriptor_set{};
+        vk_write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        vk_write_descriptor_set.dstSet = m_DescriptorSet;
+        vk_write_descriptor_set.dstBinding = binding;
+        vk_write_descriptor_set.dstArrayElement = dstArrayElement;
+        vk_write_descriptor_set.descriptorType = m_Specification.Layout->GetSpecification().Bindings[binding].descriptorType;
+        vk_write_descriptor_set.descriptorCount = 1;
+        vk_write_descriptor_set.pBufferInfo = nullptr;
+        vk_write_descriptor_set.pImageInfo = &imageInfo;
+        vk_write_descriptor_set.pTexelBufferView = nullptr;
+
+        m_WriteInfos.push_back(vk_write_descriptor_set);
+    }
+
+    void DescriptorSet::WriteImageArray(uint32_t binding, VkDescriptorImageInfo* imageInfos, uint32_t imageInfoCount)
     {
         VkWriteDescriptorSet vk_write_descriptor_set{};
         vk_write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -168,9 +184,9 @@ namespace Flameberry {
         vk_write_descriptor_set.dstBinding = binding;
         vk_write_descriptor_set.dstArrayElement = 0;
         vk_write_descriptor_set.descriptorType = m_Specification.Layout->GetSpecification().Bindings[binding].descriptorType;
-        vk_write_descriptor_set.descriptorCount = 1;
+        vk_write_descriptor_set.descriptorCount = imageInfoCount;
         vk_write_descriptor_set.pBufferInfo = nullptr;
-        vk_write_descriptor_set.pImageInfo = &imageInfo;
+        vk_write_descriptor_set.pImageInfo = imageInfos;
         vk_write_descriptor_set.pTexelBufferView = nullptr;
 
         m_WriteInfos.push_back(vk_write_descriptor_set);

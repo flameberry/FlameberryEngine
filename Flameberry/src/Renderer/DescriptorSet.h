@@ -58,7 +58,8 @@ namespace Flameberry {
         VkDescriptorSet GetVulkanDescriptorSet() const { return m_DescriptorSet; }
 
         void WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo);
-        void WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo);
+        void WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo, uint32_t dstArrayElement = 0);
+        void WriteImageArray(uint32_t binding, VkDescriptorImageInfo* imageInfos, uint32_t imageInfoCount);
         void Update();
     private:
         std::vector<VkWriteDescriptorSet> m_WriteInfos;

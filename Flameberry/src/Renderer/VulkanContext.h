@@ -31,6 +31,8 @@ namespace Flameberry {
         static VkPhysicalDevice GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices, VkSurfaceKHR surface);
         static std::vector<const char*> GetValidationLayerNames() { return s_ValidationLayers; }
 
+        static const std::vector<const char*>& GetVulkanDeviceExtensions() { return s_VulkanDeviceExtensions; }
+
         static void SetCurrentContext(VulkanContext* pContext) { s_CurrentContext = pContext; }
         static VulkanContext* GetCurrentContext() {
             if (!s_CurrentContext)
@@ -45,7 +47,7 @@ namespace Flameberry {
 
         Ref<DescriptorPool> m_GlobalDescriptorPool;
     private:
-        static std::vector<const char*> s_VkDeviceExtensions;
+        static std::vector<const char*> s_VulkanDeviceExtensions;
         static const std::vector<const char*> s_ValidationLayers;
         static bool s_EnableValidationLayers;
     private:

@@ -267,7 +267,7 @@ namespace Flameberry {
 
                     // This unordered_map is stored only for convenience of setting the Uniform Buffers/Images using their names in the shader
                     // It shouldn't be accessed every frame
-                    m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] = m_DescriptorBindingSpecifications.size() - 1;
+                    m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] = static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
                 }
                 m_DescriptorSetSpecifications.emplace_back(ReflectionDescriptorSetSpecification{ .Set = descSets[i]->set, .BindingCount = descSets[i]->binding_count });
             }
