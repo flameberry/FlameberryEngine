@@ -60,6 +60,7 @@ layout (set = 2, binding = 0) uniform sampler2DArray _FBY_u_ShadowMapSamplerArra
 layout (set = 3, binding = 0) uniform samplerCube _FBY_u_Skymap;
 layout (set = 3, binding = 1) uniform samplerCube _FBY_u_IrradianceMap;
 layout (set = 3, binding = 2) uniform samplerCube _FBY_u_PrefilteredMap;
+layout (set = 3, binding = 3) uniform sampler2D   _FBY_u_BRDFLUTMap;
 
 // These are the uniforms that are exposed to the Material class
 // How do we decide that? The classes which are not marked by _FBY_ prefix are exposed to the Material class
@@ -347,8 +348,8 @@ vec3 PBR_ImageBasedLighting(vec3 normal)
     float metallic = GetMetallicFactor();
     vec3 albedo = GetPixelColor();
 
-    vec2 brdf = vec2(1.0, 0.0);
-    // vec2 brdf = texture(samplerBRDFLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+    // vec2 brdf = vec2(1.0, 0.0);
+    vec2 brdf = texture(_FBY_u_BRDFLUTMap, vec2(max(dot(N, V), 0.0), roughness)).rg;
 	vec3 reflection = PrefilteredReflection(R, roughness).rgb;
 	vec3 irradiance = texture(_FBY_u_IrradianceMap, N).rgb;
 

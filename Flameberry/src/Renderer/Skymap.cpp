@@ -15,6 +15,7 @@ namespace Flameberry {
 
     Ref<DescriptorSet> Skymap::s_EmptyDescriptorSet;
     Ref<Image> Skymap::s_EmptyCubemap;
+    std::unordered_map<uint32_t, Ref<Image>> Skymap::s_CubemapSizeToBRDFLUTMap;
 
     Skymap::Skymap(const std::filesystem::path& filepath)
     {
@@ -179,6 +180,28 @@ namespace Flameberry {
             }
         }
 
+        const auto brdflutMap = s_CubemapSizeToBRDFLUTMap.find(width / 4);
+        const bool shouldGenBRDFLUT = brdflutMap == s_CubemapSizeToBRDFLUTMap.end();
+
+        if (shouldGenBRDFLUT)
+        {
+            ImageSpecification imageSpec;
+            imageSpec.Width = width / 4; // Questionable
+            imageSpec.Height = width / 4; // Questionable
+            imageSpec.Format = VK_FORMAT_R16G16_SFLOAT;
+            imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+            imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+
+            m_BRDFLUTMap = CreateRef<Image>(imageSpec);
+
+            s_CubemapSizeToBRDFLUTMap[width / 4] = m_BRDFLUTMap;
+        }
+        else
+        {
+            m_BRDFLUTMap = brdflutMap->second;
+        }
+
         // Free the equirectangular map pixels loaded on the CPU
         stbi_image_free(pixels);
 
@@ -287,6 +310,34 @@ namespace Flameberry {
             prefilteredMapGenerationDescriptorSet->Update();
         }
 
+        // Creation of the BRDFLUT generation pipeline ---------------------------------------------------------------------------
+        Ref<ComputePipeline> pipelineBRDFLUT;
+        Ref<DescriptorSet> descSetBRDFLUT;
+
+        if (shouldGenBRDFLUT)
+        {
+            ComputePipelineSpecification brdflutPipelineSpec;
+            brdflutPipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/Flameberry_GenBRDFLUT.comp.spv");
+            pipelineBRDFLUT = CreateRef<ComputePipeline>(brdflutPipelineSpec);
+
+            // BRDFLUT Descriptor Set
+            DescriptorSetSpecification brdflutDescSetSpec;
+            // Get the DescriptorSetLayout for the Set of Index: 0 from the pipeline
+            brdflutDescSetSpec.Layout = pipelineBRDFLUT->GetDescriptorSetLayout(0);
+            // Create a descriptor set using that layout
+            descSetBRDFLUT = CreateRef<DescriptorSet>(brdflutDescSetSpec);
+
+            // First binding will be the m_BRDFLUTMap to which we are gonna write to in the first step
+            VkDescriptorImageInfo brdflutMapImageInfo{};
+            brdflutMapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            brdflutMapImageInfo.imageView = m_BRDFLUTMap->GetImageView();
+            brdflutMapImageInfo.sampler = Texture2D::GetDefaultSampler();
+
+            // Write the binding to it's binding index and update the descriptor set
+            descSetBRDFLUT->WriteImage(0, brdflutMapImageInfo);
+            descSetBRDFLUT->Update();
+        }
+
         // The command buffer to run the whole process --------------------------------------------------------------------------------
         CommandBufferSpecification cmdBufferSpecification;
         cmdBufferSpecification.CommandPool = VulkanContext::GetCurrentDevice()->GetComputeCommandPool();
@@ -344,6 +395,21 @@ namespace Flameberry {
         // After we have written to the prefiltered map, we make it read only
         m_PrefilteredMap->CmdTransitionLayout(vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
+        if (shouldGenBRDFLUT)
+        {
+            // Step 4: Generation of the BRDFLUT map
+            vulkanComputePipelineLayout = pipelineBRDFLUT->GetVulkanPipelineLayout();
+            vulkanComputePipeline = pipelineBRDFLUT->GetVulkanPipeline();
+            vulkanDescSet = descSetBRDFLUT->GetVulkanDescriptorSet();
+
+            // Bind the pipeline and dispatch the compute shader for the fourth step
+            vkCmdBindPipeline(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipeline);
+            vkCmdBindDescriptorSets(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0);
+            vkCmdDispatch(vulkanCmdBuffer, (width / 4) / 8, (width / 4) / 8, 1);
+
+            m_BRDFLUTMap->CmdTransitionLayout(vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
+
         // End the command buffer recording
         cmdBuffer.End();
 
@@ -359,7 +425,8 @@ namespace Flameberry {
         std::vector<VkDescriptorSetLayoutBinding> descBindings = {
             {.binding = 0, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
             {.binding = 1, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
-            {.binding = 2, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT}
+            {.binding = 2, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
+            {.binding = 3, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT}
         };
 
         DescriptorSetSpecification skymapDescSetSpec;
@@ -381,9 +448,15 @@ namespace Flameberry {
         prefilteredMapImageInfo.imageView = m_PrefilteredMap->GetImageView();
         prefilteredMapImageInfo.sampler = Texture2D::GetDefaultSampler();
 
+        VkDescriptorImageInfo brdflutMapImageInfo{};
+        brdflutMapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        brdflutMapImageInfo.imageView = m_BRDFLUTMap->GetImageView();
+        brdflutMapImageInfo.sampler = Texture2D::GetDefaultSampler();
+
         m_SkymapDescriptorSet->WriteImage(0, skymapImageInfo);
         m_SkymapDescriptorSet->WriteImage(1, irrImageInfo);
         m_SkymapDescriptorSet->WriteImage(2, prefilteredMapImageInfo);
+        m_SkymapDescriptorSet->WriteImage(3, brdflutMapImageInfo);
         m_SkymapDescriptorSet->Update();
 
         // TODO: Remove this in the future
@@ -429,9 +502,9 @@ namespace Flameberry {
 
         DescriptorSetSpecification descSetSpec;
         descSetSpec.Layout = descSetLayout;
-        
+
         s_EmptyDescriptorSet = CreateRef<DescriptorSet>(descSetSpec);
-        
+
         VkDescriptorImageInfo skymapImageInfo{};
         skymapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         skymapImageInfo.imageView = s_EmptyCubemap->GetImageView();

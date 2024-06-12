@@ -198,7 +198,7 @@ namespace fbentt {
             registry_view() {}
             registry_view(const registry* reg, const pool_data* pool) : ref_registry(reg), ref_pool(pool) {}
 
-            std::vector<Type>::iterator begin() {
+            typename std::vector<Type>::iterator begin() {
                 if (ref_registry && ref_pool && !ref_pool->entity_set.empty()) {
                     auto& handler = (*((pool_handler<Type>*)ref_pool->handler.get()));
                     return handler.buffer().begin();
@@ -206,7 +206,7 @@ namespace fbentt {
                 return {};
             }
 
-            std::vector<Type>::iterator end() {
+            typename std::vector<Type>::iterator end() {
                 if (ref_registry && ref_pool && !ref_pool->entity_set.empty()) {
                     auto& handler = (*((pool_handler<Type>*)ref_pool->handler.get()));
                     return handler.buffer().end();

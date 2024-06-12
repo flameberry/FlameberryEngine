@@ -22,12 +22,14 @@ namespace Flameberry {
 
         FBY_DECLARE_ASSET_TYPE(AssetType::Skymap);
     private:
-        Ref<Image> m_CubemapImage, m_IrradianceMap, m_PrefilteredMap;
+        Ref<Image> m_CubemapImage, m_IrradianceMap, m_PrefilteredMap, m_BRDFLUTMap;
 
         Ref<DescriptorSet> m_SkymapDescriptorSet;
 
         static Ref<DescriptorSet> s_EmptyDescriptorSet;
         static Ref<Image> s_EmptyCubemap;
+
+        static std::unordered_map<uint32_t, Ref<Image>> s_CubemapSizeToBRDFLUTMap;
     };
 
 }
