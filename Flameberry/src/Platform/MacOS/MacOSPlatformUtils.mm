@@ -113,7 +113,9 @@ namespace Flameberry {
             [s_TitlebarData.TitlebarView setBackgroundColor:[NSColor colorWithRed:28.0f/255.0f green:28.0f/255.0f blue:28.0f/255.0f alpha:1.0f]]; // Set the background color
             
             // Icon
-            NSImage* iconImage = [[NSImage alloc] initWithContentsOfFile:@"/Users/flameberry/Developer/FlameberryEngine/FlameberryEditor/Assets/Icons/FlameberryIcon.png"];
+            const char* flameberryIcon = FBY_PROJECT_DIR"FlameberryEditor/Assets/Icons/FlameberryIcon.png";
+            NSString* flameberryIconPath = [[NSString alloc] initWithCString:flameberryIcon encoding:NSASCIIStringEncoding];
+            NSImage* iconImage = [[NSImage alloc] initWithContentsOfFile:flameberryIconPath];
             
             if (iconImage)
             {
