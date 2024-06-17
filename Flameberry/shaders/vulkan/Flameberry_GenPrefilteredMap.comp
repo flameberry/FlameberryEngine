@@ -2,8 +2,10 @@
 
 #extension GL_EXT_nonuniform_qualifier : enable
 
+layout (constant_id = 0) const int c_MipLevels = 8;
+
 layout(set = 0, binding = 0) uniform samplerCube _FBY_u_Cubemap;
-layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_PrefilteredMapMipArray[8];
+layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_PrefilteredMapMipArray[c_MipLevels];
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -63,9 +65,7 @@ vec3 PrefilterEnvMap(vec3 R, float roughness, float envMapDim)
 
 void main()
 {
-    const int mipCount = 8;
-
-    for (int i = 0; i < mipCount; i++)
+    for (int i = 0; i < c_MipLevels; i++)
     {
         const ivec2 imgSize = imageSize(_FBY_u_PrefilteredMapMipArray[i]);
 
@@ -78,7 +78,7 @@ void main()
 		vec3 worldPosition = NormalizedToWorldPosition(int(gl_GlobalInvocationID.z), normalizedPixelCoords);
         vec3 normal = normalize(worldPosition);
 
-		float roughness = float(i) / float(mipCount - 1);
+		float roughness = float(i) / float(c_MipLevels - 1);
 		vec4 color = vec4(PrefilterEnvMap(normal, roughness, float(imgSize.x)), 1.0);
 
 		// Store the color

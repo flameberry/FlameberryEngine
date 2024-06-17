@@ -300,6 +300,11 @@ namespace Flameberry {
         {
             ComputePipelineSpecification prefilteredPipelineSpec;
             prefilteredPipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/Flameberry_GenPrefilteredMap.comp.spv");
+            prefilteredPipelineSpec.SpecializationConstantLayout = {
+                { 0, ShaderDataType::Int }
+            };
+            prefilteredPipelineSpec.SpecializationConstantData = &mipLevels;
+
             prefilteredMapGenerationPipeline = CreateRef<ComputePipeline>(prefilteredPipelineSpec);
 
             // Prefiltered Map Descriptor Set

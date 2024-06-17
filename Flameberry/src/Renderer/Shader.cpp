@@ -171,7 +171,9 @@ namespace Flameberry {
             result = reflectionShaderModule.EnumerateSpecializationConstants(&count, specializationConstants.data());
             FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
 
-            FBY_LOG("Specialization Constants:");
+            if (count)
+                FBY_LOG("Shader `{}` - Specialization Constants:", m_Name);
+
             for (uint32_t i = 0; i < count; i++)
             {
                 FBY_LOG("\t{}", specializationConstants[i]->name);
@@ -194,7 +196,7 @@ namespace Flameberry {
             for (uint32_t i = 0; i < count; i++)
             {
                 uint32_t absoluteSize = 0;
-                FBY_LOG("Shader `{}` - PushConstantBlock:", m_Name, i);
+                FBY_LOG("Shader `{}` - PushConstantBlock:", m_Name);
 
                 for (uint32_t j = 0; j < pcblocks[i]->member_count; j++)
                 {
