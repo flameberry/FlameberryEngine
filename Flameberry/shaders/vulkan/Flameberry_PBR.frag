@@ -36,6 +36,7 @@ struct PointLight {
 
 struct SceneRendererSettingsUniform {
     int EnableShadows, ShowCascades, SoftShadows, SkyReflections;
+    float GammaCorrectionFactor;
 };
 
 // These are the uniforms that are set by Renderer and are not exposed to the Material class
@@ -459,7 +460,8 @@ void main()
     intermediateColor = intermediateColor / (intermediateColor + vec3(1.0f));
 
     // Gamma correction
-	// intermediateColor = pow(intermediateColor, vec3(1.0f / 2.2f));
+    if (u_SceneData.SceneRendererSettings.GammaCorrectionFactor != 1.0f)
+	    intermediateColor = pow(intermediateColor, vec3(1.0f / u_SceneData.SceneRendererSettings.GammaCorrectionFactor));
 
     o_FragColor = vec4(intermediateColor, 1.0f);
 
