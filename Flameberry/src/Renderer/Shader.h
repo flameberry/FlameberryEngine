@@ -1,7 +1,9 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
 #include <unordered_map>
+#include <set>
+
+#include <vulkan/vulkan.h>
 
 // TODO: Should this include be in the cpp file only with forward declaration and heap allocation of spv_reflect::ShaderModule?
 #include <SPIRV-Reflect/spirv_reflect.h>
@@ -63,6 +65,7 @@ namespace Flameberry {
         const std::string& GetName() const { return m_Name; }
         VkShaderModule GetVulkanShaderModule() const;
         const std::vector<ShaderDataType>& GetInputVariableDataTypes() const { return m_InputDataTypes; }
+        const std::set<uint32_t>& GetSpecializationConstantIDSet() const { return m_SpecializationConstantIDSet; }
         const std::vector<ReflectionPushConstantSpecification>& GetPushConstantSpecifications() const { return m_PushConstantSpecifications; }
         const std::vector<ReflectionDescriptorBindingSpecification>& GetDescriptorBindingSpecifications() const { return m_DescriptorBindingSpecifications; }
         const std::vector<ReflectionDescriptorSetSpecification>& GetDescriptorSetSpecifications() const { return m_DescriptorSetSpecifications; }
@@ -88,6 +91,8 @@ namespace Flameberry {
         };
 
         VkShaderStageFlags m_VulkanShaderStageFlags = 0;
+
+        std::set<uint32_t> m_SpecializationConstantIDSet;
 
         std::vector<ShaderDataType> m_InputDataTypes;
         std::vector<ReflectionPushConstantSpecification> m_PushConstantSpecifications;

@@ -22,7 +22,7 @@ namespace Flameberry {
 
     struct SceneRendererSettings {
         bool FrustumCulling = true, ShowBoundingBoxes = false;
-        float GammaCorrectionFactor = 1.0f;
+        float GammaCorrectionFactor = 2.2f;
 
         bool EnableShadows = true, ShowCascades = false, SoftShadows = true, SkyReflections = true;
         float CascadeLambdaSplit = 0.91f;

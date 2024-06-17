@@ -339,6 +339,13 @@ namespace Flameberry {
         {
             ComputePipelineSpecification brdflutPipelineSpec;
             brdflutPipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/Flameberry_GenBRDFLUT.comp.spv");
+            brdflutPipelineSpec.SpecializationConstantLayout = {
+                { 0, ShaderDataType::Int }
+            };
+
+            const int brdflutImageSize = width / 4;
+            brdflutPipelineSpec.SpecializationConstantData = &brdflutImageSize;
+
             pipelineBRDFLUT = CreateRef<ComputePipeline>(brdflutPipelineSpec);
 
             // BRDFLUT Descriptor Set
@@ -545,6 +552,9 @@ namespace Flameberry {
 
         // Creation of the cubemap image
         s_EmptyCubemap = CreateRef<Image>(imageSpec);
+
+        // Avoid Validation Errors while accessing an empty image
+        s_EmptyCubemap->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         DescriptorSetLayoutSpecification descSetLayoutSpec;
         descSetLayoutSpec.Bindings = {

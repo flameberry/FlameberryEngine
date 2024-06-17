@@ -2,6 +2,8 @@
 
 layout(set = 0, binding = 0, rg16f) uniform writeonly image2D _FBY_u_BRDFLUTMap;
 
+layout (constant_id = 0) const int c_ImageSize = 512;
+
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 #include "include/CubemapUtils.glsl"
@@ -46,9 +48,7 @@ vec2 BRDF(float NoV, float roughness)
 
 void main() 
 {
-    const ivec2 imgSize = ivec2(512);
-    vec2 uv = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
-    // uv = 1.0 - uv;
+    vec2 uv = vec2(gl_GlobalInvocationID.xy) / vec2(c_ImageSize);
     vec2 brdf = BRDF(uv.s, uv.t);
     imageStore(_FBY_u_BRDFLUTMap, ivec2(gl_GlobalInvocationID.xy), vec4(brdf, 0.0f, 0.0f));
 }

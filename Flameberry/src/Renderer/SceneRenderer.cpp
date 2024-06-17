@@ -28,7 +28,7 @@ namespace Flameberry {
 
     struct SceneRendererSettingsUniform {
         int EnableShadows = 1, ShowCascades = 0, SoftShadows = 1, SkyReflections = 1;
-        float GammaCorrectionFactor = 1.0f;
+        float GammaCorrectionFactor;
     };
 
     struct SceneUniformBufferData {

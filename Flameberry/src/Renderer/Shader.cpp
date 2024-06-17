@@ -162,6 +162,25 @@ namespace Flameberry {
         }
 #endif
 
+        // Specialization Constants
+        {
+            uint32_t count = 0;
+            auto result = reflectionShaderModule.EnumerateSpecializationConstants(&count, NULL);
+            FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
+            std::vector<SpvReflectSpecializationConstant*> specializationConstants(count);
+            result = reflectionShaderModule.EnumerateSpecializationConstants(&count, specializationConstants.data());
+            FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
+
+            FBY_LOG("Specialization Constants:");
+            for (uint32_t i = 0; i < count; i++)
+            {
+                FBY_LOG("\t{}", specializationConstants[i]->name);
+                FBY_ASSERT(m_SpecializationConstantIDSet.find(specializationConstants[i]->constant_id) == m_SpecializationConstantIDSet.end(), "Specialization Constant IDs must be unique");
+
+                m_SpecializationConstantIDSet.insert(specializationConstants[i]->constant_id);
+            }
+        }
+
         {
             // The information about push constants is collected here
             uint32_t count = 0;
