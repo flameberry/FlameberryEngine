@@ -35,7 +35,7 @@ struct PointLight {
 };
 
 struct SceneRendererSettingsUniform {
-    int EnableShadows, ShowCascades, SoftShadows;
+    int EnableShadows, ShowCascades, SoftShadows, SkyReflections;
 };
 
 // These are the uniforms that are set by Renderer and are not exposed to the Material class
@@ -441,7 +441,12 @@ vec3 PBR_TotalLight(vec3 normal)
     for (int i = 0; i < u_SceneData.LightCount; i++)
         totalLight += PBR_PointLight(u_SceneData.PointLights[i], normal);
 
-    const vec3 ambient = PBR_ImageBasedLighting(normal) * GetAmbientFactor();
+    vec3 ambient = vec3(0.0);
+    if (u_SceneData.SceneRendererSettings.SkyReflections == 1)
+        ambient += PBR_ImageBasedLighting(normal) * GetAmbientFactor();
+    else
+        ambient += 0.2f * u_SceneData.SkyLightIntensity * GetAmbientFactor() * GetPixelColor();
+
     return totalLight + ambient;
 }
 

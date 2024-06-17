@@ -27,7 +27,7 @@ namespace Flameberry {
     };
 
     struct SceneRendererSettingsUniform {
-        int EnableShadows = 1, ShowCascades = 0, SoftShadows = 1;
+        int EnableShadows = 1, ShowCascades = 0, SoftShadows = 1, SkyReflections = 1;
     };
 
     struct SceneUniformBufferData {
@@ -550,6 +550,7 @@ namespace Flameberry {
         sceneUniformBufferData.RendererSettings.EnableShadows = (int)shouldRenderShadows;
         sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
         sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
+        sceneUniformBufferData.RendererSettings.SkyReflections = (int)m_RendererSettings.SkyReflections;
 
         for (const auto& entity : scene->m_Registry->group<TransformComponent, PointLightComponent>())
         {

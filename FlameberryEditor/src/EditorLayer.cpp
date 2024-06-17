@@ -1018,6 +1018,15 @@ namespace Flameberry {
                 ImGui::Text("Lambda Split");
                 ImGui::TableNextColumn();
                 FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Sky Reflections");
+                ImGui::TableNextColumn();
+                ImGui::Checkbox("##Sky_Reflections", &settings.SkyReflections);
+
                 ImGui::EndTable();
             }
         }
