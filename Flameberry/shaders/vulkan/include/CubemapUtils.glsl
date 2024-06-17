@@ -21,3 +21,10 @@ vec2 DirToUV(vec3 dir)
 		1.f - acos(dir.y) / PI
     );
 }
+
+vec3 ToneMap(vec3 color)
+{
+    // Tone Mapping
+    vec3 newColor = color / (color + 1.0f);
+    return newColor;
+}

@@ -133,6 +133,8 @@ namespace Flameberry {
         const uint32_t mipLevels = 8;
         // The image views for accessing each mip in the compute shader
         VkImageView prefilteredMipMapImageViews[mipLevels];
+        // The sampler that allows sampling multiple LODs, which is very important for this pipeline
+        VkSampler multipleLODSampler;
         {
             // Creation of the Prefiltered Map
             // This process is almost the same as the creation of the m_CubemapImage
@@ -178,6 +180,27 @@ namespace Flameberry {
                 const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
                 VK_CHECK_RESULT(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &prefilteredMipMapImageViews[i]));
             }
+
+            // Create Sampler that enables sampling multiple LODs
+            VkSamplerCreateInfo samplerInfo{};
+            samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+            samplerInfo.magFilter = VK_FILTER_LINEAR;
+            samplerInfo.minFilter = VK_FILTER_LINEAR;
+            samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.anisotropyEnable = VK_TRUE;
+
+            VkPhysicalDeviceProperties properties;
+            vkGetPhysicalDeviceProperties(VulkanContext::GetPhysicalDevice(), &properties);
+
+            samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+            samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+            samplerInfo.minLod = 0.0f;
+            samplerInfo.maxLod = static_cast<float>(m_PrefilteredMap->GetSpecification().MipLevels);
+
+            VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &samplerInfo, nullptr, &multipleLODSampler));
         }
 
         const auto brdflutMap = s_CubemapSizeToBRDFLUTMap.find(width / 4);
@@ -259,7 +282,7 @@ namespace Flameberry {
             VkDescriptorImageInfo cubemapSamplerInfo{};
             cubemapSamplerInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             cubemapSamplerInfo.imageView = m_CubemapImage->GetImageView();
-            cubemapSamplerInfo.sampler = Texture2D::GetDefaultSampler();
+            cubemapSamplerInfo.sampler = multipleLODSampler;
 
             // Second binding will be the target irradiance map
             VkDescriptorImageInfo irradianceMapImageInfo{};
@@ -292,7 +315,7 @@ namespace Flameberry {
             VkDescriptorImageInfo cubemapSamplerInfo{};
             cubemapSamplerInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             cubemapSamplerInfo.imageView = m_CubemapImage->GetImageView();
-            cubemapSamplerInfo.sampler = Texture2D::GetDefaultSampler();
+            cubemapSamplerInfo.sampler = multipleLODSampler;
 
             // Write both the bindings to their binding indices and update the descriptor set
             prefilteredMapGenerationDescriptorSet->WriteImage(0, cubemapSamplerInfo);
@@ -329,7 +352,7 @@ namespace Flameberry {
 
             // First binding will be the m_BRDFLUTMap to which we are gonna write to in the first step
             VkDescriptorImageInfo brdflutMapImageInfo{};
-            brdflutMapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            brdflutMapImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
             brdflutMapImageInfo.imageView = m_BRDFLUTMap->GetImageView();
             brdflutMapImageInfo.sampler = Texture2D::GetDefaultSampler();
 
@@ -356,7 +379,7 @@ namespace Flameberry {
         auto vulkanComputePipeline = cubemapGenerationPipeline->GetVulkanPipeline();
         auto vulkanDescSet = cubemapGenerationDescriptorSet->GetVulkanDescriptorSet();
 
-        // First transition both the images into a layout that can be read from or written to
+        // First transition all the images into a layout that can be read from or written to
         m_CubemapImage->CmdTransitionLayout(vulkanCmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
         m_IrradianceMap->CmdTransitionLayout(vulkanCmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
         m_PrefilteredMap->CmdTransitionLayout(vulkanCmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
@@ -397,6 +420,8 @@ namespace Flameberry {
 
         if (shouldGenBRDFLUT)
         {
+            m_BRDFLUTMap->CmdTransitionLayout(vulkanCmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+
             // Step 4: Generation of the BRDFLUT map
             vulkanComputePipelineLayout = pipelineBRDFLUT->GetVulkanPipelineLayout();
             vulkanComputePipeline = pipelineBRDFLUT->GetVulkanPipeline();
@@ -436,7 +461,7 @@ namespace Flameberry {
         VkDescriptorImageInfo skymapImageInfo{};
         skymapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         skymapImageInfo.imageView = m_CubemapImage->GetImageView();
-        skymapImageInfo.sampler = Texture2D::GetDefaultSampler();
+        skymapImageInfo.sampler = multipleLODSampler;
 
         VkDescriptorImageInfo irrImageInfo{};
         irrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -446,12 +471,36 @@ namespace Flameberry {
         VkDescriptorImageInfo prefilteredMapImageInfo{};
         prefilteredMapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         prefilteredMapImageInfo.imageView = m_PrefilteredMap->GetImageView();
-        prefilteredMapImageInfo.sampler = Texture2D::GetDefaultSampler();
+        prefilteredMapImageInfo.sampler = multipleLODSampler;
+
+        VkSampler brdfLUTSampler;
+        {
+            // Create Sampler that enables sampling multiple LODs
+            VkSamplerCreateInfo samplerInfo{};
+            samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+            samplerInfo.magFilter = VK_FILTER_LINEAR;
+            samplerInfo.minFilter = VK_FILTER_LINEAR;
+            samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.anisotropyEnable = VK_TRUE;
+
+            VkPhysicalDeviceProperties properties;
+            vkGetPhysicalDeviceProperties(VulkanContext::GetPhysicalDevice(), &properties);
+
+            samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+            samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+            samplerInfo.minLod = 0.0f;
+            samplerInfo.maxLod = 1.0f;
+
+            VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &samplerInfo, nullptr, &brdfLUTSampler));
+        }
 
         VkDescriptorImageInfo brdflutMapImageInfo{};
         brdflutMapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         brdflutMapImageInfo.imageView = m_BRDFLUTMap->GetImageView();
-        brdflutMapImageInfo.sampler = Texture2D::GetDefaultSampler();
+        brdflutMapImageInfo.sampler = brdfLUTSampler;
 
         m_SkymapDescriptorSet->WriteImage(0, skymapImageInfo);
         m_SkymapDescriptorSet->WriteImage(1, irrImageInfo);
@@ -495,7 +544,8 @@ namespace Flameberry {
         descSetLayoutSpec.Bindings = {
             {.binding = 0, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
             {.binding = 1, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
-            {.binding = 2, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT}
+            {.binding = 2, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT},
+            {.binding = 3, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT}
         };
 
         Ref<DescriptorSetLayout> descSetLayout = DescriptorSetLayout::CreateOrGetCached(descSetLayoutSpec);
@@ -510,9 +560,15 @@ namespace Flameberry {
         skymapImageInfo.imageView = s_EmptyCubemap->GetImageView();
         skymapImageInfo.sampler = Texture2D::GetDefaultSampler();
 
+        VkDescriptorImageInfo empty2DTextureInfo{};
+        empty2DTextureInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        empty2DTextureInfo.imageView = Texture2D::GetEmptyImageView();
+        empty2DTextureInfo.sampler = Texture2D::GetDefaultSampler();
+
         s_EmptyDescriptorSet->WriteImage(0, skymapImageInfo);
         s_EmptyDescriptorSet->WriteImage(1, skymapImageInfo);
         s_EmptyDescriptorSet->WriteImage(2, skymapImageInfo);
+        s_EmptyDescriptorSet->WriteImage(3, empty2DTextureInfo);
         s_EmptyDescriptorSet->Update();
     }
 

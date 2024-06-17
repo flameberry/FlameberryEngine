@@ -278,6 +278,10 @@ vec3 SchlickFresnel(float v_dot_h, vec3 F0)
     return F0 + (1.0f - F0) * pow(1.0f - v_dot_h, 5.0f);
 }
 
+/**
+* Calculates the SchlickFresnel Roughness Factor
+* @param v_dot_h Must be normalized
+*/
 vec3 SchlickFresnel_Roughness(float v_dot_h, vec3 F0, float roughness)
 {
 	return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - v_dot_h, 5.0);
@@ -300,8 +304,8 @@ float GGXDistribution(float n_dot_h)
 
 vec3 PrefilteredReflection(vec3 R, float roughness)
 {
-	const float MAX_REFLECTION_LOD = 9.0; // todo: param/const
-	float lod = roughness * MAX_REFLECTION_LOD;
+	const float MAX_REFLECTION_LOD = 7.0; // TODO: param/const
+	const float lod = roughness * MAX_REFLECTION_LOD;
 	float lodf = floor(lod);
 	float lodc = ceil(lod);
 	vec3 a = textureLod(_FBY_u_PrefilteredMap, R, lodf).rgb;
@@ -344,16 +348,19 @@ vec3 PBR_ImageBasedLighting(vec3 normal)
     vec3 N = normal;
     vec3 V = normalize(u_SceneData.CameraPosition - v_WorldSpacePosition);
     vec3 R = reflect(-V, N);
+
+    // Why should this be needed?
+    R.y *= -1.0;
+
     float roughness = GetRoughnessFactor();
     float metallic = GetMetallicFactor();
     vec3 albedo = GetPixelColor();
 
-    // vec2 brdf = vec2(1.0, 0.0);
     vec2 brdf = texture(_FBY_u_BRDFLUTMap, vec2(max(dot(N, V), 0.0), roughness)).rg;
 	vec3 reflection = PrefilteredReflection(R, roughness).rgb;
 	vec3 irradiance = texture(_FBY_u_IrradianceMap, N).rgb;
 
-	// Diffuse based on irradiance
+	const // Diffuse based on irradiance
 	vec3 diffuse = irradiance * albedo;
 
     vec3 F0 = vec3(0.04f);
@@ -367,6 +374,7 @@ vec3 PBR_ImageBasedLighting(vec3 normal)
 	vec3 kD = 1.0 - F;
 	kD *= 1.0 - metallic;
 
+    // return vec3(brdf, 0.0);
 	return kD * diffuse + specular;
 }
 
@@ -430,7 +438,7 @@ vec3 PBR_TotalLight(vec3 normal)
         totalLight += PBR_PointLight(u_SceneData.PointLights[i], normal);
 
     // const vec3 ambient = u_SceneData.SkyLightIntensity * GetAmbientFactor() * GetPixelColor();
-    const vec3 ambient = PBR_ImageBasedLighting(normal);
+    const vec3 ambient = PBR_ImageBasedLighting(normal) * GetAmbientFactor();
     return totalLight + ambient;
 }
 
@@ -441,6 +449,9 @@ void main()
 
     // HDR tone mapping
     intermediateColor = intermediateColor / (intermediateColor + vec3(1.0f));
+
+    // Gamma correction
+	// intermediateColor = pow(intermediateColor, vec3(1.0f / 2.2f));
 
     o_FragColor = vec4(intermediateColor, 1.0f);
 

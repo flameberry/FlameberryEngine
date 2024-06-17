@@ -90,7 +90,7 @@ void main()
 {
     const ivec2 imgSize = ivec2(512);
     vec2 uv = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
-    uv = 1.0 - uv;
+    // uv = 1.0 - uv;
     vec2 brdf = BRDF(uv.s, uv.t);
     imageStore(_FBY_u_BRDFLUTMap, ivec2(gl_GlobalInvocationID.xy), vec4(brdf, 0.0f, 0.0f));
 }

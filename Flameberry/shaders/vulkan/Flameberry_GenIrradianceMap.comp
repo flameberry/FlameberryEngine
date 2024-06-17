@@ -7,13 +7,6 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 #include "include/CubemapUtils.glsl"
 
-vec3 ToneMap(vec3 color)
-{
-    // Tone Mapping
-    vec3 newColor = color / (color + 1.0f);
-    return newColor;
-}
-
 void main()
 {
     // Get the size of the Irradiance Map
