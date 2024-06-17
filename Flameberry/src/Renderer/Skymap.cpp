@@ -133,8 +133,6 @@ namespace Flameberry {
         const uint32_t mipLevels = 8;
         // The image views for accessing each mip in the compute shader
         VkImageView prefilteredMipMapImageViews[mipLevels];
-        // The sampler that allows sampling multiple LODs, which is very important for this pipeline
-        VkSampler multipleLODSampler;
         {
             // Creation of the Prefiltered Map
             // This process is almost the same as the creation of the m_CubemapImage
@@ -200,7 +198,7 @@ namespace Flameberry {
             samplerInfo.minLod = 0.0f;
             samplerInfo.maxLod = static_cast<float>(m_PrefilteredMap->GetSpecification().MipLevels);
 
-            VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &samplerInfo, nullptr, &multipleLODSampler));
+            VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &samplerInfo, nullptr, &m_MultiLODSampler));
         }
 
         const auto brdflutMap = s_CubemapSizeToBRDFLUTMap.find(width / 4);
@@ -282,7 +280,7 @@ namespace Flameberry {
             VkDescriptorImageInfo cubemapSamplerInfo{};
             cubemapSamplerInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             cubemapSamplerInfo.imageView = m_CubemapImage->GetImageView();
-            cubemapSamplerInfo.sampler = multipleLODSampler;
+            cubemapSamplerInfo.sampler = m_MultiLODSampler;
 
             // Second binding will be the target irradiance map
             VkDescriptorImageInfo irradianceMapImageInfo{};
@@ -315,7 +313,7 @@ namespace Flameberry {
             VkDescriptorImageInfo cubemapSamplerInfo{};
             cubemapSamplerInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             cubemapSamplerInfo.imageView = m_CubemapImage->GetImageView();
-            cubemapSamplerInfo.sampler = multipleLODSampler;
+            cubemapSamplerInfo.sampler = m_MultiLODSampler;
 
             // Write both the bindings to their binding indices and update the descriptor set
             prefilteredMapGenerationDescriptorSet->WriteImage(0, cubemapSamplerInfo);
@@ -461,7 +459,7 @@ namespace Flameberry {
         VkDescriptorImageInfo skymapImageInfo{};
         skymapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         skymapImageInfo.imageView = m_CubemapImage->GetImageView();
-        skymapImageInfo.sampler = multipleLODSampler;
+        skymapImageInfo.sampler = m_MultiLODSampler;
 
         VkDescriptorImageInfo irrImageInfo{};
         irrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -471,11 +469,9 @@ namespace Flameberry {
         VkDescriptorImageInfo prefilteredMapImageInfo{};
         prefilteredMapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         prefilteredMapImageInfo.imageView = m_PrefilteredMap->GetImageView();
-        prefilteredMapImageInfo.sampler = multipleLODSampler;
+        prefilteredMapImageInfo.sampler = m_MultiLODSampler;
 
-        VkSampler brdfLUTSampler;
         {
-            // Create Sampler that enables sampling multiple LODs
             VkSamplerCreateInfo samplerInfo{};
             samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
             samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -494,13 +490,13 @@ namespace Flameberry {
             samplerInfo.minLod = 0.0f;
             samplerInfo.maxLod = 1.0f;
 
-            VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &samplerInfo, nullptr, &brdfLUTSampler));
+            VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &samplerInfo, nullptr, &m_BRDFLUTSampler));
         }
 
         VkDescriptorImageInfo brdflutMapImageInfo{};
         brdflutMapImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         brdflutMapImageInfo.imageView = m_BRDFLUTMap->GetImageView();
-        brdflutMapImageInfo.sampler = brdfLUTSampler;
+        brdflutMapImageInfo.sampler = m_BRDFLUTSampler;
 
         m_SkymapDescriptorSet->WriteImage(0, skymapImageInfo);
         m_SkymapDescriptorSet->WriteImage(1, irrImageInfo);
@@ -510,10 +506,20 @@ namespace Flameberry {
 
         // TODO: Remove this in the future
         VulkanContext::GetCurrentDevice()->WaitIdle();
+
+        const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
+        // Destroy temporary resources
+        for (const auto& imageView : prefilteredMipMapImageViews)
+            vkDestroyImageView(device, imageView, nullptr);
+
     }
 
     Skymap::~Skymap()
     {
+        const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+        vkDestroySampler(device, m_BRDFLUTSampler, nullptr);
+        vkDestroySampler(device, m_MultiLODSampler, nullptr);
     }
 
     void Skymap::Init()
@@ -574,6 +580,7 @@ namespace Flameberry {
 
     void Skymap::Destroy()
     {
+        s_CubemapSizeToBRDFLUTMap.clear();
         s_EmptyCubemap = nullptr;
         s_EmptyDescriptorSet = nullptr;
     }

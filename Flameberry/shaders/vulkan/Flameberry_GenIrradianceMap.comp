@@ -39,7 +39,6 @@ void main()
             vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal; 
 
             vec3 sampledColor = ToneMap(texture(_FBY_u_Cubemap, sampleVec).rgb);
-            // vec3 sampledColor = texture(_FBY_u_Cubemap, sampleVec).rgb;
             irradiance += sampledColor * cos_theta * sin_theta;
             nrSamples++;
         }

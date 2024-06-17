@@ -26,6 +26,11 @@ namespace Flameberry {
 
         Ref<DescriptorSet> m_SkymapDescriptorSet;
 
+        // The sampler that allows sampling multiple LODs, which is very important for this pipeline
+        VkSampler m_MultiLODSampler;
+        // The sampler that is essential for BDRFLUT pipeline, to ensure no weird artefacts
+        VkSampler m_BRDFLUTSampler;
+
         static Ref<DescriptorSet> s_EmptyDescriptorSet;
         static Ref<Image> s_EmptyCubemap;
 

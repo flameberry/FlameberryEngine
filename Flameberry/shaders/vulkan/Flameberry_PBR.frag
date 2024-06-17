@@ -360,6 +360,10 @@ vec3 PBR_ImageBasedLighting(vec3 normal)
 	vec3 reflection = PrefilteredReflection(R, roughness).rgb;
 	vec3 irradiance = texture(_FBY_u_IrradianceMap, N).rgb;
 
+    // I think it makes sense to multiply the reflected color and irradiance to be multiplied by `u_SceneData.SkyLightIntensity` here
+    reflection *= u_SceneData.SkyLightIntensity;
+    irradiance *= u_SceneData.SkyLightIntensity;
+
 	const // Diffuse based on irradiance
 	vec3 diffuse = irradiance * albedo;
 
@@ -437,7 +441,6 @@ vec3 PBR_TotalLight(vec3 normal)
     for (int i = 0; i < u_SceneData.LightCount; i++)
         totalLight += PBR_PointLight(u_SceneData.PointLights[i], normal);
 
-    // const vec3 ambient = u_SceneData.SkyLightIntensity * GetAmbientFactor() * GetPixelColor();
     const vec3 ambient = PBR_ImageBasedLighting(normal) * GetAmbientFactor();
     return totalLight + ambient;
 }
