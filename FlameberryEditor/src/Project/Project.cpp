@@ -131,8 +131,9 @@ namespace Flameberry {
                 data.remove(entry.first.as<std::string>());
         }
 
+        std::ofstream fout(c_GlobalProjectRegistryPath, std::ios_base::out | std::ios::trunc);
+        if (data.size())
         {
-            std::ofstream fout(c_GlobalProjectRegistryPath, std::ios::trunc);
             fout << data << '\n';
         }
     }
