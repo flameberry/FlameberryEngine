@@ -55,7 +55,7 @@ vec3 PrefilterEnvMap(vec3 R, float roughness, float envMapDim)
 			const float mipLevel = roughness == 0.0 ? 0.0 : max(0.5 * log2(omegaS / omegaP) + 1.0, 0.0f);
 
 			// The original _FBY_u_Cubemap contains HDR values
-			const vec3 toneMaped = ToneMap(textureLod(_FBY_u_Cubemap, L, mipLevel).rgb * dotNL);
+			const vec3 toneMaped = ToneMap(textureLod(_FBY_u_Cubemap, L, mipLevel).rgb) * dotNL;
 			color += toneMaped;
 			totalWeight += dotNL;
 		}

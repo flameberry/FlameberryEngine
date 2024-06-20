@@ -379,7 +379,6 @@ vec3 PBR_ImageBasedLighting(vec3 normal)
 	vec3 kD = 1.0 - F;
 	kD *= 1.0 - metallic;
 
-    // return vec3(brdf, 0.0);
 	return kD * diffuse + specular;
 }
 
