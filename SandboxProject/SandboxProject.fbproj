@@ -1,5 +1,5 @@
 Project: SandboxProject
 Configuration:
   AssetDirectory: Content
-  StartScene: Content/Scenes/Sponza.berry
+  StartScene: Content/Scenes/Scripting.berry
   ScriptAssemblyPath: Content/Scripting/Binaries/net7.0/SandboxProject.dll

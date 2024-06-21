@@ -1035,6 +1035,14 @@ namespace Flameberry {
                 ImGui::TableNextColumn();
                 FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Gamma_Correction_Factor", &settings.GammaCorrectionFactor, 0.001f, 0.0f, 10.0f));
 
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Exposure");
+                ImGui::TableNextColumn();
+                FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f));
+
                 ImGui::EndTable();
             }
         }

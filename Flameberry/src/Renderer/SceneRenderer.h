@@ -22,7 +22,7 @@ namespace Flameberry {
 
     struct SceneRendererSettings {
         bool FrustumCulling = true, ShowBoundingBoxes = false;
-        float GammaCorrectionFactor = 2.2f;
+        float GammaCorrectionFactor = 2.2f, Exposure = 1.0f;
 
         bool EnableShadows = true, ShowCascades = false, SoftShadows = true, SkyReflections = true;
         float CascadeLambdaSplit = 0.91f;
@@ -91,7 +91,7 @@ namespace Flameberry {
         Ref<DescriptorSetLayout> m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
         std::vector<Ref<DescriptorSet>> m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
         std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
-        Ref<Pipeline> m_MeshPipeline, m_SkyboxPipeline;
+        Ref<Pipeline> m_MeshPipeline, m_SkymapPipeline;
         VkSampler m_VkTextureSampler;
 
         // Shadow Map

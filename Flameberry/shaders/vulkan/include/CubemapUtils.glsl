@@ -27,6 +27,11 @@ vec3 ToneMap(vec3 color)
     return color / (color + 1.0f);
 }
 
+vec3 ToneMapWithExposure(vec3 color, float exposure)
+{
+    return vec3(1.0) - exp(-color * exposure);
+}
+
 // Based omn http://byteblacksmith.com/improvements-to-the-canonical-one-liner-glsl-rand-for-opengl-es-2-0/
 float Random(vec2 co)
 {

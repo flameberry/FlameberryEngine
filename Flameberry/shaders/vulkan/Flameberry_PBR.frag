@@ -15,6 +15,8 @@ layout (location = 0) out vec4 o_FragColor;
 #define POISSON_PROVIDE_32_SAMPLES
 #include "include/poisson.glsl"
 
+#include "include/CubemapUtils.glsl"
+
 const mat4 g_BiasMatrix = mat4(
     0.5, 0.0, 0.0, 0.0,
 	0.0, 0.5, 0.0, 0.0,
@@ -36,7 +38,7 @@ struct PointLight {
 
 struct SceneRendererSettingsUniform {
     int EnableShadows, ShowCascades, SoftShadows, SkyReflections;
-    float GammaCorrectionFactor;
+    float GammaCorrectionFactor, Exposure;
 };
 
 // These are the uniforms that are set by Renderer and are not exposed to the Material class
@@ -456,7 +458,7 @@ void main()
     vec3 intermediateColor = PBR_TotalLight(normal);
 
     // HDR tone mapping
-    intermediateColor = intermediateColor / (intermediateColor + vec3(1.0f));
+    intermediateColor = ToneMapWithExposure(intermediateColor, u_SceneData.SceneRendererSettings.Exposure);
 
     // Gamma correction
     if (u_SceneData.SceneRendererSettings.GammaCorrectionFactor != 1.0f)

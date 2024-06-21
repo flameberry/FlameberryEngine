@@ -26,9 +26,14 @@ namespace Flameberry {
         glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
     };
 
+    struct SkymapPushConstantObject {
+        glm::mat4 ViewProjectionMatrix;
+        float Exposure;
+    };
+
     struct SceneRendererSettingsUniform {
         int EnableShadows = 1, ShowCascades = 0, SoftShadows = 1, SkyReflections = 1;
-        float GammaCorrectionFactor;
+        float GammaCorrectionFactor, Exposure;
     };
 
     struct SceneUniformBufferData {
@@ -385,7 +390,7 @@ namespace Flameberry {
                 pipelineSpec.DepthWriteEnable = false;
                 pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 
-                m_SkyboxPipeline = CreateRef<Pipeline>(pipelineSpec);
+                m_SkymapPipeline = CreateRef<Pipeline>(pipelineSpec);
             }
             m_VkTextureSampler = Texture2D::GetDefaultSampler();
         }
@@ -553,6 +558,7 @@ namespace Flameberry {
         sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
         sceneUniformBufferData.RendererSettings.SkyReflections = (int)m_RendererSettings.SkyReflections;
         sceneUniformBufferData.RendererSettings.GammaCorrectionFactor = m_RendererSettings.GammaCorrectionFactor;
+        sceneUniformBufferData.RendererSettings.Exposure = m_RendererSettings.Exposure;
 
         for (const auto& entity : scene->m_Registry->group<TransformComponent, PointLightComponent>())
         {
@@ -617,16 +623,19 @@ namespace Flameberry {
 
         if (shouldRenderSkyMap)
         {
-            glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
-            VkPipelineLayout pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
+            VkPipelineLayout pipelineLayout = m_SkymapPipeline->GetVulkanPipelineLayout();
             textureDescSet = AssetManager::GetAsset<Skymap>(skyMap->SkyMap)->GetDescriptorSet()->GetVulkanDescriptorSet();
 
-            Renderer::Submit([pipeline = m_SkyboxPipeline->GetVulkanPipeline(), pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+            SkymapPushConstantObject pco;
+            pco.ViewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
+            pco.Exposure = m_RendererSettings.Exposure;
+
+            Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
                 {
                     Renderer::RT_BindPipeline(cmdBuffer, pipeline);
                     VkDescriptorSet descSets[] = { textureDescSet };
                     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
-                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjectionMatrix);
+                    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SkymapPushConstantObject), &pco);
                     vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
                 }
             );

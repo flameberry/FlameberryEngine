@@ -5,6 +5,7 @@ layout (location = 1) out vec2 v_TextureCoords;
 
 layout (push_constant) uniform UniformBufferObject {
     mat4 u_ViewProjectionMatrix;
+    float u_Exposure;
 };
 
 struct Vertex {

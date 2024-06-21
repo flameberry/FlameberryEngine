@@ -14,13 +14,20 @@ layout (set = 0, binding = 1) uniform samplerCube _FBY_u_IrradianceMap;
 layout (set = 0, binding = 2) uniform samplerCube _FBY_u_PrefilteredMap;
 layout (set = 0, binding = 3) uniform sampler2D   _FBY_u_BRDFLUTMap;
 
+layout (push_constant) uniform UniformBufferObject {
+    mat4 u_ViewProjectionMatrix;
+    float u_Exposure;
+};
+
+#include "include/CubemapUtils.glsl"
+
 void main()
 {
     // Directly sample from the skymap which happens to be a cubemap :D
     vec3 color = texture(_FBY_u_Skymap, v_Position).rgb;
 
     // Tone Mapping
-    color = color / (color + vec3(1.0f));
+    color = ToneMapWithExposure(color, u_Exposure);
 
     const float gamma = 2.2f;
     color = pow(color, vec3(1.0f / gamma));
