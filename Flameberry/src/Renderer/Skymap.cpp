@@ -2,6 +2,7 @@
 
 #include <stb_image/stb_image.h>
 
+#include "Core/Core.h"
 #include "Core/Timer.h"
 
 #include "Renderer/VulkanContext.h"

@@ -1,4 +1,6 @@
-import sys, logging
+import sys
+import logging
+
 
 class ColoredFormatterSpecification:
     RESET_SEQUENCE = "\033[0m"
@@ -17,15 +19,18 @@ class ColoredFormatterSpecification:
 
     FORMAT_STR = "[%(asctime)s] [%(name)s] [%(levelname)s]: %(message)s"
 
+
 class ColoredFormatter(logging.Formatter):
-    __FormatDictionary = {loglevelno:''.join([ColoredFormatterSpecification.COLOR_SEQUENCE % (30 + ColoredFormatterSpecification.COLOR_SCHEME[loglevelno]), ColoredFormatterSpecification.FORMAT_STR, ColoredFormatterSpecification.RESET_SEQUENCE]) 
-            for loglevelno in (logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL)}
+    __FormatDictionary = {loglevelno: ''.join([ColoredFormatterSpecification.COLOR_SEQUENCE % (30 + ColoredFormatterSpecification.COLOR_SCHEME[loglevelno]), ColoredFormatterSpecification.FORMAT_STR, ColoredFormatterSpecification.RESET_SEQUENCE])
+                          for loglevelno in (logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL)}
     __DateFMT = "%H:%M:%S"
 
     def format(self, record):
         log_fmt = ColoredFormatter.__FormatDictionary.get(record.levelno)
-        formatter = logging.Formatter(log_fmt, datefmt=ColoredFormatter.__DateFMT)
+        formatter = logging.Formatter(
+            log_fmt, datefmt=ColoredFormatter.__DateFMT)
         return formatter.format(record)
+
 
 class ColoredLogger:
     Logger = logging.getLogger("FLAMEBERRY")
