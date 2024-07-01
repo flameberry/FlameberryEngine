@@ -25,9 +25,6 @@ void main()
     vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
     vec3 sampledColor = PanoramaToCubeMap(int(gl_GlobalInvocationID.z), normalizedPixelCoords);
 
-    // Clamp extremely high values that have the potential to mess up the Irradiance and Prefiltered Map Generation
-    // sampledColor = clamp(sampledColor, vec3(0.0), vec3(1000.0));
-
     // Write the pixel value from the equirectangular image to the cube map
     imageStore(_FBY_u_Cubemap, ivec3(gl_GlobalInvocationID.xyz), vec4(sampledColor, 1.0f));
 }

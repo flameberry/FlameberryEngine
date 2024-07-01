@@ -365,7 +365,7 @@ namespace Flameberry {
             VkDescriptorImageInfo brdflutMapImageInfo{};
             brdflutMapImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
             brdflutMapImageInfo.imageView = m_BRDFLUTMap->GetImageView();
-            brdflutMapImageInfo.sampler = Texture2D::GetDefaultSampler();
+            brdflutMapImageInfo.sampler = VK_NULL_HANDLE;
 
             // Write the binding to it's binding index and update the descriptor set
             descSetBRDFLUT->WriteImage(0, brdflutMapImageInfo);

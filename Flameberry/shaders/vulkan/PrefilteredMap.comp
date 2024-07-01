@@ -1,7 +1,5 @@
 #version 450
 
-#extension GL_EXT_nonuniform_qualifier : enable
-
 layout(constant_id = 0) const int c_MipLevels = 8;
 
 layout(set = 0, binding = 0) uniform samplerCube _FBY_u_Cubemap;
@@ -10,8 +8,6 @@ layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_Prefilt
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 #include "include/CubemapCommon.glsl"
-
-int g_SampleCount = 2048;
 
 float max3(vec3 a)
 {
@@ -27,16 +23,16 @@ float D_GGX(float dotNH, float roughness)
     return (alpha2) / (PI * denom * denom);
 }
 
-vec3 PrefilterEnvMap(vec3 R, float roughness, float envMapDim)
+vec3 PrefilterEnvMap(vec3 R, float roughness, float resolution, uint sampleCount)
 {
     vec3 N = R;
     vec3 V = R;
     vec3 color = vec3(0.0);
     float weight = 0.0;
 
-    for (uint i = 0u; i < g_SampleCount; i++)
+    for (uint i = 0u; i < sampleCount; i++)
     {
-        const vec2 Xi = Hammersley2d(i, g_SampleCount);
+        const vec2 Xi = Hammersley2d(i, sampleCount);
         const vec3 H = ImportanceSample_GGX(Xi, roughness, N);
         const vec3 L = 2.0 * dot(V, H) * H - V;
         const float dotNL = max(dot(N, L), 0.0);
@@ -50,9 +46,9 @@ vec3 PrefilterEnvMap(vec3 R, float roughness, float envMapDim)
             // Probability Distribution Function
             const float pdf = D_GGX(dotNH, roughness) * dotNH / (4.0 * dotVH) + 0.0001;
             // Slid angle of current smple
-            const float omegaS = 1.0 / (float(g_SampleCount) * pdf);
+            const float omegaS = 1.0 / (float(sampleCount) * pdf);
             // Solid angle of 1 pixel across all cube faces
-            const float omegaP = 4.0 * PI / (6.0 * envMapDim * envMapDim);
+            const float omegaP = 4.0 * PI / (6.0 * resolution * resolution);
             // Biased (+1.0) mip level for better result
             const float lodBias = 1.0;
             const float lod = roughness == 0.0 ? 0.0 : max(0.5 * log2(omegaS / omegaP) + lodBias, 0.0f);
@@ -66,6 +62,10 @@ vec3 PrefilterEnvMap(vec3 R, float roughness, float envMapDim)
 
 void main()
 {
+    const uint sampleCount = 1024u;
+    const ivec2 resolution = imageSize(_FBY_u_PrefilteredMapMipArray[0]);
+    const float resolutionMultiplier = 2.0f;
+
     for (int i = 0; i < c_MipLevels; i++)
     {
         const ivec2 imgSize = imageSize(_FBY_u_PrefilteredMapMipArray[i]);
@@ -81,8 +81,7 @@ void main()
 
         const float roughness = float(i) / float(c_MipLevels - 1);
 
-        const float multiplier = 2.0f;
-        const vec3 color = PrefilterEnvMap(normal, roughness, float(imgSize.x) * multiplier);
+        const vec3 color = PrefilterEnvMap(normal, roughness, float(resolution.x) * resolutionMultiplier, sampleCount);
 
         // Store the color
         imageStore(_FBY_u_PrefilteredMapMipArray[i], ivec3(gl_GlobalInvocationID.xyz), vec4(color, 1.0));
