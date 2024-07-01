@@ -307,7 +307,7 @@ float GGXDistribution(float n_dot_h)
 
 vec3 PrefilteredReflection(vec3 R, float roughness)
 {
-    const float MAX_REFLECTION_LOD = 7.0; // TODO: param/const
+    const float MAX_REFLECTION_LOD = 9.0; // TODO: param/const
     const float lod = roughness * MAX_REFLECTION_LOD;
     float lodf = floor(lod);
     float lodc = ceil(lod);

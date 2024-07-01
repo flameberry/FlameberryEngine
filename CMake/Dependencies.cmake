@@ -70,7 +70,13 @@ list(APPEND FBY_LIBRARY_DEPENDENCIES ${Vulkan_LIBRARY})
 list(APPEND FBY_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 
 # Setting All the required compile definitions
-set(FBY_COMPILE_DEFINITIONS FBY_PROJECT_DIR="${FBY_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
+set(FBY_COMPILE_DEFINITIONS 
+
+    VK_USE_PLATFORM_MACOS_MVK
+    GLFW_INCLUDE_VULKAN
+    GLM_FORCE_DEPTH_ZERO_TO_ONE
+    FBY_PROJECT_DIR="${FBY_SOURCE_DIR}/"
+)
 
 # Setting the paths we require irrespective of the Graphics API
 list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt spirv-reflect-static)

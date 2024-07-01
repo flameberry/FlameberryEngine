@@ -11,6 +11,7 @@
 #include "Renderer/Pipeline.h"
 #include "Renderer/Texture2D.h"
 #include "Renderer/VulkanDebug.h"
+#include "Renderer/Material.h"
 
 namespace Flameberry {
 
@@ -81,6 +82,11 @@ namespace Flameberry {
             equirectangularImage->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
 
+        // Calculate the number of mip levels based upon the image dimensions
+        // Each mip will represent a roughness level that we will calculate the prefiltered map for
+        const uint32_t mipLevels = static_cast<uint32_t>(floor(log2(width / 4))) + 1;
+        // const uint32_t mipLevels = 8;
+
         // Creation of the destination cubemap where our main skymap will be stored
         {
             ImageSpecification imageSpec;
@@ -102,7 +108,7 @@ namespace Flameberry {
             imageSpec.ViewSpecification.LayerCount = 6;
 
             // TODO: Figure out mip levels
-            imageSpec.MipLevels = 8;
+            imageSpec.MipLevels = mipLevels;
 
             // Creation of the cubemap image
             m_CubemapImage = CreateRef<Image>(imageSpec);
@@ -128,10 +134,6 @@ namespace Flameberry {
             m_IrradianceMap = CreateRef<Image>(imageSpec);
         }
 
-        // Calculate the number of mip levels based upon the image dimensions
-        // Each mip will represent a roughness level that we will calculate the prefiltered map for
-        // const uint32_t mipLevels = static_cast<uint32_t>(floor(log2(width / 4))) + 1;
-        const uint32_t mipLevels = 8;
         // The image views for accessing each mip in the compute shader
         VkImageView prefilteredMipMapImageViews[mipLevels];
         {
@@ -297,7 +299,9 @@ namespace Flameberry {
 
         // Creation of the PrefilteredMap generation pipeline ---------------------------------------------------------------------------
         Ref<ComputePipeline> prefilteredMapGenerationPipeline;
-        Ref<DescriptorSet> prefilteredMapGenerationDescriptorSet;
+        Ref<Material> prefilteredMapMaterial;
+        Ref<DescriptorSet> prefilteredMapGenerationDescriptorSets[mipLevels];
+        VkDescriptorImageInfo prefilteredMapImageInfos[mipLevels];
         {
             ComputePipelineSpecification prefilteredPipelineSpec;
             prefilteredPipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/PrefilteredMap.comp.spv");
@@ -308,33 +312,33 @@ namespace Flameberry {
 
             prefilteredMapGenerationPipeline = CreateRef<ComputePipeline>(prefilteredPipelineSpec);
 
-            // Prefiltered Map Descriptor Set
-            DescriptorSetSpecification prefilteredDescSetSpec;
-            // Get the DescriptorSetLayout for the Set of Index: 0 from the pipeline
-            prefilteredDescSetSpec.Layout = prefilteredMapGenerationPipeline->GetDescriptorSetLayout(0);
-            // Create a descriptor set using that layout
-            prefilteredMapGenerationDescriptorSet = CreateRef<DescriptorSet>(prefilteredDescSetSpec);
+            prefilteredMapMaterial = CreateRef<Material>(prefilteredMapGenerationPipeline->GetSpecification().Shader);
 
-            // First binding will be the m_CubemapImage to which we are gonna write to in the first step
-            VkDescriptorImageInfo cubemapSamplerInfo{};
-            cubemapSamplerInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            cubemapSamplerInfo.imageView = m_CubemapImage->GetImageView();
-            cubemapSamplerInfo.sampler = m_MultiLODSampler;
-
-            // Write both the bindings to their binding indices and update the descriptor set
-            prefilteredMapGenerationDescriptorSet->WriteImage(0, cubemapSamplerInfo);
-
-            VkDescriptorImageInfo prefilteredMapImageInfos[m_PrefilteredMap->GetSpecification().MipLevels];
-
-            for (uint8_t i = 0; i < m_PrefilteredMap->GetSpecification().MipLevels; i++)
+            for (uint8_t i = 0; i < mipLevels; i++)
             {
+                // Prefiltered Map Descriptor Set
+                DescriptorSetSpecification prefilteredDescSetSpec;
+                // Get the DescriptorSetLayout for the Set of Index: 0 from the pipeline
+                prefilteredDescSetSpec.Layout = prefilteredMapGenerationPipeline->GetDescriptorSetLayout(0);
+                // Create a descriptor set using that layout
+                prefilteredMapGenerationDescriptorSets[i] = CreateRef<DescriptorSet>(prefilteredDescSetSpec);
+
+                // First binding will be the m_CubemapImage to which we are gonna write to in the first step
+                VkDescriptorImageInfo cubemapSamplerInfo{};
+                cubemapSamplerInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                cubemapSamplerInfo.imageView = m_CubemapImage->GetImageView();
+                cubemapSamplerInfo.sampler = m_MultiLODSampler;
+
+                // Write both the bindings to their binding indices and update the descriptor set
+                prefilteredMapGenerationDescriptorSets[i]->WriteImage(0, cubemapSamplerInfo);
+
                 prefilteredMapImageInfos[i].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
                 prefilteredMapImageInfos[i].imageView = prefilteredMipMapImageViews[i];
                 prefilteredMapImageInfos[i].sampler = VK_NULL_HANDLE;
-            }
 
-            prefilteredMapGenerationDescriptorSet->WriteImageArray(1, prefilteredMapImageInfos, m_PrefilteredMap->GetSpecification().MipLevels);
-            prefilteredMapGenerationDescriptorSet->Update();
+                prefilteredMapGenerationDescriptorSets[i]->WriteImage(1, prefilteredMapImageInfos[i]);
+                prefilteredMapGenerationDescriptorSets[i]->Update();
+            }
         }
 
         // Creation of the BRDFLUT generation pipeline ---------------------------------------------------------------------------
@@ -419,12 +423,24 @@ namespace Flameberry {
         // Step 3: Generation of the prefiltered map using the cubemap image
         vulkanComputePipelineLayout = prefilteredMapGenerationPipeline->GetVulkanPipelineLayout();
         vulkanComputePipeline = prefilteredMapGenerationPipeline->GetVulkanPipeline();
-        vulkanDescSet = prefilteredMapGenerationDescriptorSet->GetVulkanDescriptorSet();
 
-        // Bind the pipeline, descriptor sets and dispatch the compute shader for the third step
         vkCmdBindPipeline(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipeline);
-        vkCmdBindDescriptorSets(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0);
-        vkCmdDispatch(vulkanCmdBuffer, (width / 4) / 8, (width / 4) / 8, 6);
+
+        uint32_t workGroupSize = width / 4;
+        for (uint8_t i = 0; i < mipLevels; i++)
+        {
+            // Push Constants
+            prefilteredMapMaterial->Set("u_Data.Resolution", (float)width / 4.0f);
+            prefilteredMapMaterial->Set("u_Data.MipLevel", (float)i);
+            vkCmdPushConstants(vulkanCmdBuffer, vulkanComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, prefilteredMapMaterial->GetPushConstantOffset(), prefilteredMapMaterial->GetUniformDataSize(), prefilteredMapMaterial->GetUniformDataPtr());
+
+            // Bind the descriptor sets and dispatch the compute shader for the third step
+            vulkanDescSet = prefilteredMapGenerationDescriptorSets[i]->GetVulkanDescriptorSet();
+            vkCmdBindDescriptorSets(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0);
+            vkCmdDispatch(vulkanCmdBuffer, workGroupSize / 8, workGroupSize / 8, 6);
+
+            workGroupSize = glm::max<uint32_t>(workGroupSize / 2, 8);
+        }
 
         // After we have written to the prefiltered map, we make it read only
         m_PrefilteredMap->CmdTransitionLayout(vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

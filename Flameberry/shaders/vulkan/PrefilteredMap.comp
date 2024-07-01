@@ -1,9 +1,13 @@
 #version 450
 
-layout(constant_id = 0) const int c_MipLevels = 8;
+layout(constant_id = 0) const int c_MipLevels = 10;
 
 layout(set = 0, binding = 0) uniform samplerCube _FBY_u_Cubemap;
-layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_PrefilteredMapMipArray[c_MipLevels];
+layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_PrefilteredMap;
+
+layout(push_constant) uniform Data {
+    float Resolution, MipLevel;
+} u_Data;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -63,27 +67,21 @@ vec3 PrefilterEnvMap(vec3 R, float roughness, float resolution, uint sampleCount
 void main()
 {
     const uint sampleCount = 1024u;
-    const ivec2 resolution = imageSize(_FBY_u_PrefilteredMapMipArray[0]);
     const float resolutionMultiplier = 2.0f;
+    const ivec2 imgSize = imageSize(_FBY_u_PrefilteredMap);
 
-    for (int i = 0; i < c_MipLevels; i++)
-    {
-        const ivec2 imgSize = imageSize(_FBY_u_PrefilteredMapMipArray[i]);
+    // if (any(greaterThanEqual(gl_GlobalInvocationID.xy, imgSize))) {
+    //     return; // Skip out-of-bounds threads
+    // }
 
-        if (any(greaterThanEqual(gl_GlobalInvocationID.xy, imgSize))) {
-            continue; // Skip out-of-bounds threads
-        }
+    vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
+    normalizedPixelCoords = normalizedPixelCoords * 2.0f - 1.0f;
+    const vec3 worldPosition = NormalizedToWorldPosition(int(gl_GlobalInvocationID.z), normalizedPixelCoords);
+    const vec3 normal = normalize(worldPosition);
 
-        vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
-        normalizedPixelCoords = normalizedPixelCoords * 2.0f - 1.0f;
-        const vec3 worldPosition = NormalizedToWorldPosition(int(gl_GlobalInvocationID.z), normalizedPixelCoords);
-        const vec3 normal = normalize(worldPosition);
+    const float roughness = u_Data.MipLevel / float(c_MipLevels - 1);
+    const vec3 color = PrefilterEnvMap(normal, roughness, u_Data.Resolution * resolutionMultiplier, sampleCount);
 
-        const float roughness = float(i) / float(c_MipLevels - 1);
-
-        const vec3 color = PrefilterEnvMap(normal, roughness, float(resolution.x) * resolutionMultiplier, sampleCount);
-
-        // Store the color
-        imageStore(_FBY_u_PrefilteredMapMipArray[i], ivec3(gl_GlobalInvocationID.xyz), vec4(color, 1.0));
-    }
+    // Store the color
+    imageStore(_FBY_u_PrefilteredMap, ivec3(gl_GlobalInvocationID.xyz), vec4(color, 1.0));
 }

@@ -81,6 +81,12 @@ namespace Flameberry {
             { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 50 }
         };
         m_GlobalDescriptorPool = CreateRef<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, maxDescSets);
+
+#if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
+		// SRS - on macOS set environment variable to configure MoltenVK for using Metal argument buffers (needed for descriptor indexing)
+		//     - MoltenVK supports Metal argument buffers on macOS, iOS possible in future (see https://github.com/KhronosGroup/MoltenVK/issues/1651)
+		setenv("MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS", "1", 1);
+#endif
     }
 
     VulkanContext::~VulkanContext()
