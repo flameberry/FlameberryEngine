@@ -10,7 +10,7 @@
 namespace Flameberry {
 
     MaterialAsset::MaterialAsset(const std::string& name)
-        : m_Name(name), m_MaterialRef(CreateRef<Material>(ShaderLibrary::Get("Flameberry_PBR"))) // TODO: This should be changed immediately
+        : m_Name(name), m_MaterialRef(CreateRef<Material>(ShaderLibrary::Get("PBR"))) // TODO: This should be changed immediately
     {
         // This is here to remind the developer to update the GPU representation of the Material Struct when it is updated in the shader
         FBY_ASSERT(sizeof(MaterialStructGPURepresentation) == m_MaterialRef->GetUniformDataSize(), "The GPU Representation of Material has a size ({}) which is not the same as actual Uniform size ({})", sizeof(MaterialStructGPURepresentation), m_MaterialRef->GetUniformDataSize());

@@ -30,7 +30,7 @@ namespace Flameberry {
             s_Renderer2DData.LineVertexBuffer->MapMemory(bufferSpec.InstanceSize);
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_SolidColor");
+            pipelineSpec.Shader = ShaderLibrary::Get("SolidColor");
             pipelineSpec.RenderPass = renderPass;
 
             pipelineSpec.VertexLayout = {
@@ -98,7 +98,7 @@ namespace Flameberry {
             delete[] indices;
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_Quad");
+            pipelineSpec.Shader = ShaderLibrary::Get("Quad");
             pipelineSpec.RenderPass = renderPass;
 
             pipelineSpec.VertexLayout = {

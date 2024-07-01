@@ -233,7 +233,7 @@ namespace Flameberry {
         {
             ComputePipelineSpecification pipelineSpec;
             // TODO: Should this be moved into ShaderLibrary?
-            pipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/Flameberry_GenCubemap.comp.spv");
+            pipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/HDRToCubemap.comp.spv");
             cubemapGenerationPipeline = CreateRef<ComputePipeline>(pipelineSpec);
 
             // Cubemap Generation DescriptorSet
@@ -267,7 +267,7 @@ namespace Flameberry {
         {
             // Irradiance Map will be generated using the m_CubemapImage
             ComputePipelineSpecification irrPipelineSpec;
-            irrPipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/Flameberry_GenIrradianceMap.comp.spv");
+            irrPipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/IrradianceMap.comp.spv");
             irrandianceMapGenerationPipeline = CreateRef<ComputePipeline>(irrPipelineSpec);
 
             // Irradiance Descriptor Set
@@ -300,7 +300,7 @@ namespace Flameberry {
         Ref<DescriptorSet> prefilteredMapGenerationDescriptorSet;
         {
             ComputePipelineSpecification prefilteredPipelineSpec;
-            prefilteredPipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/Flameberry_GenPrefilteredMap.comp.spv");
+            prefilteredPipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/PrefilteredMap.comp.spv");
             prefilteredPipelineSpec.SpecializationConstantLayout = {
                 { 0, ShaderDataType::Int }
             };
@@ -344,7 +344,7 @@ namespace Flameberry {
         if (shouldGenBRDFLUT)
         {
             ComputePipelineSpecification brdflutPipelineSpec;
-            brdflutPipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/Flameberry_GenBRDFLUT.comp.spv");
+            brdflutPipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/BRDFLUT.comp.spv");
             brdflutPipelineSpec.SpecializationConstantLayout = {
                 { 0, ShaderDataType::Int }
             };

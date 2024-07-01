@@ -146,7 +146,7 @@ namespace Flameberry {
             }
 
             PipelineSpecification pipelineSpec{};
-            pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_DirectionalShadowMap");
+            pipelineSpec.Shader = ShaderLibrary::Get("DirectionalShadowMap");
             pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
             pipelineSpec.VertexLayout = {
@@ -347,7 +347,7 @@ namespace Flameberry {
 
                 PipelineSpecification pipelineSpec{};
 
-                pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_PBR");
+                pipelineSpec.Shader = ShaderLibrary::Get("PBR");
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {
@@ -376,7 +376,7 @@ namespace Flameberry {
             // Skybox Pipeline
             {
                 Flameberry::PipelineSpecification pipelineSpec{};
-                pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_SkyMap");
+                pipelineSpec.Shader = ShaderLibrary::Get("SkyMap");
                 pipelineSpec.RenderPass = m_GeometryPass;
 
                 pipelineSpec.VertexLayout = {};
