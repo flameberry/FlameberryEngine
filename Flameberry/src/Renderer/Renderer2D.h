@@ -7,61 +7,63 @@
 #include "Texture2D.h"
 
 namespace Flameberry {
-    struct LineVertex
-    {
-        glm::vec3 Position{ 0.0f };
-        glm::vec3 Color{ 1.0f };
-    };
+	struct LineVertex
+	{
+		glm::vec3 Position{ 0.0f };
+		glm::vec3 Color{ 1.0f };
+	};
 
-    struct QuadVertex
-    {
-        glm::vec3 Position{ 0.0f };
-        glm::vec3 Color{ 1.0f };
-        int EntityIndex = -1;
-    };
+	struct QuadVertex
+	{
+		glm::vec3 Position{ 0.0f };
+		glm::vec3 Color{ 1.0f };
+		int		  EntityIndex = -1;
+	};
 
-    struct Renderer2DData {
-        // Lines
-        Ref<Pipeline> LinePipeline;
-        Ref<Buffer> LineVertexBuffer;
-        std::vector<LineVertex> LineVertices;
+	struct Renderer2DData
+	{
+		// Lines
+		Ref<Pipeline>			LinePipeline;
+		Ref<Buffer>				LineVertexBuffer;
+		std::vector<LineVertex> LineVertices;
 
-        // Quads
-        Ref<Pipeline> QuadPipeline;
-        Ref<Buffer> QuadVertexBuffer, QuadIndexBuffer;
-        std::vector<QuadVertex> QuadVertices;
-        uint32_t VertexBufferOffset = 0;
+		// Quads
+		Ref<Pipeline>			QuadPipeline;
+		Ref<Buffer>				QuadVertexBuffer, QuadIndexBuffer;
+		std::vector<QuadVertex> QuadVertices;
+		uint32_t				VertexBufferOffset = 0;
 
-        // TODO: Find a better way to do this
-        Ref<Texture2D> TextureMap;
-    };
+		// TODO: Find a better way to do this
+		Ref<Texture2D> TextureMap;
+	};
 
-    // To be defined in Components.h
-    enum class AxisType : uint8_t;
+	// To be defined in Components.h
+	enum class AxisType : uint8_t;
 
-    class Renderer2D
-    {
-    public:
-        static void Init(const Ref<RenderPass>& renderPass);
-        static void Shutdown();
+	class Renderer2D
+	{
+	public:
+		static void Init(const Ref<RenderPass>& renderPass);
+		static void Shutdown();
 
-        static void AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color);
-        static void AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments = 32);
-        static void AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments = 32);
-        static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex = -1);
-        static void AddGrid(int gridSize);
-        static void AddAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color);
+		static void AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color);
+		static void AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments = 32);
+		static void AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments = 32);
+		static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex = -1);
+		static void AddGrid(int gridSize);
+		static void AddAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color);
 
-        static void BeginScene(VkDescriptorSet globalDescriptorSet);
-        static void EndScene();
+		static void BeginScene(VkDescriptorSet globalDescriptorSet);
+		static void EndScene();
 
-        static void SetActiveTexture(const Ref<Texture2D>& texture) { s_Renderer2DData.TextureMap = texture; }
-        static void FlushQuads();
+		static void SetActiveTexture(const Ref<Texture2D>& texture) { s_Renderer2DData.TextureMap = texture; }
+		static void FlushQuads();
 
-        static const Renderer2DData& GetRendererData() { return s_Renderer2DData; }
-    private:
-        static Renderer2DData s_Renderer2DData;
+		static const Renderer2DData& GetRendererData() { return s_Renderer2DData; }
 
-        inline static VkDescriptorSet s_GlobalDescriptorSet = VK_NULL_HANDLE;
-    };
-}
+	private:
+		static Renderer2DData s_Renderer2DData;
+
+		inline static VkDescriptorSet s_GlobalDescriptorSet = VK_NULL_HANDLE;
+	};
+} // namespace Flameberry

@@ -7,10 +7,10 @@
 
 namespace Flameberry {
 
-    class SkymapLoader
-    {
-    public:
-        static Ref<Asset> LoadSkymap(const std::filesystem::path& path);
-    };
+	class SkymapLoader
+	{
+	public:
+		static Ref<Asset> LoadSkymap(const std::filesystem::path& path);
+	};
 
-}
+} // namespace Flameberry
