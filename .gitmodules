@@ -1,27 +1,27 @@
 [submodule "Flameberry/vendor/GLFW"]
-	path = Flameberry/vendor/GLFW
+	path = Flameberry/Source/ThirdParty/GLFW
 	url = https://github.com/glfw/glfw
 [submodule "Flameberry/vendor/glm"]
-	path = Flameberry/vendor/glm
+	path = Flameberry/Source/ThirdParty/glm
 	url = https://github.com/g-truc/glm
 [submodule "Flameberry/vendor/imgui"]
-	path = Flameberry/vendor/imgui
+	path = Flameberry/Source/ThirdParty/imgui
 	url = https://github.com/ocornut/imgui
 [submodule "Flameberry/vendor/yaml-cpp"]
-	path = Flameberry/vendor/yaml-cpp
+	path = Flameberry/Source/ThirdParty/YamlCpp
 	url = https://github.com/jbeder/yaml-cpp
 [submodule "Flameberry/vendor/ImGuizmo"]
-	path = Flameberry/vendor/ImGuizmo
+	path = Flameberry/Source/ThirdParty/ImGuizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo
 [submodule "Flameberry/vendor/Assimp"]
-	path = Flameberry/vendor/Assimp
+	path = Flameberry/Source/ThirdParty/Assimp
 	url = https://github.com/assimp/assimp
 [submodule "Flameberry/vendor/PhysX"]
-	path = Flameberry/vendor/PhysX
+	path = Flameberry/Source/ThirdParty/PhysX
 	url = https://github.com/flameberry/PhysX
 [submodule "Flameberry/vendor/fmtlib"]
-	path = Flameberry/vendor/fmtlib
+	path = Flameberry/Source/ThirdParty/fmtlib
 	url = https://github.com/fmtlib/fmt
 [submodule "Flameberry/vendor/SPIRV-Reflect"]
-	path = Flameberry/vendor/SPIRV-Reflect
+	path = Flameberry/Source/ThirdParty/SPIRV-Reflect
 	url = https://github.com/KhronosGroup/SPIRV-Reflect
