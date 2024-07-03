@@ -85,7 +85,7 @@ namespace Flameberry {
 		static constexpr float	s_OverlayPadding = 6.0f;
 
 		// Renderer
-		std::unique_ptr<SceneRenderer> m_SceneRenderer;
+		Unique<SceneRenderer> m_SceneRenderer;
 
 		// ECS
 		Ref<Scene> m_ActiveScene, m_ActiveSceneBackUpCopy;
@@ -98,8 +98,8 @@ namespace Flameberry {
 		Ref<ContentBrowserPanel> m_ContentBrowserPanel;
 
 		// Mouse Picking
-		std::unique_ptr<Buffer> m_MousePickingBuffer;
-		Ref<RenderPass>			m_MousePickingRenderPass;
+		Unique<Buffer>	m_MousePickingBuffer;
+		Ref<RenderPass> m_MousePickingRenderPass;
 
 		Ref<Pipeline>			 m_MousePickingPipeline, m_MousePicking2DPipeline;
 		Ref<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;

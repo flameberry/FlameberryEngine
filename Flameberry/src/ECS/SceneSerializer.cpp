@@ -6,12 +6,12 @@
 #include "Core/Timer.h"
 #include "Components.h"
 
-#include "Renderer/VulkanContext.h"
 #include "Asset/AssetManager.h"
 #include "Asset/MeshLoader.h"
 #include "Renderer/Skymap.h"
 
 namespace Flameberry {
+
 	static std::string ProjectionTypeEnumToString(ProjectionType type)
 	{
 		switch (type)

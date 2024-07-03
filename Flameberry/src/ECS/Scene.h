@@ -1,11 +1,6 @@
 #pragma once
 
-#include <unordered_map>
-#include <memory>
-
 #include "ecs.hpp"
-#include "Renderer/Light.h"
-#include "Renderer/Material.h"
 #include "Renderer/StaticMesh.h"
 
 namespace physx {
@@ -13,6 +8,7 @@ namespace physx {
 }
 
 namespace Flameberry {
+
 	class Scene
 	{
 	public:
@@ -67,4 +63,5 @@ namespace Flameberry {
 		friend class SceneSerializer;
 		friend class SceneRenderer;
 	};
+
 } // namespace Flameberry

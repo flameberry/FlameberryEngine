@@ -21,6 +21,7 @@ namespace Flameberry {
 	{
 		glm::mat4 ModelMatrix;
 	};
+
 	struct MousePickingPushConstantData
 	{
 		glm::mat4 ModelMatrix;
@@ -97,20 +98,20 @@ namespace Flameberry {
 		std::vector<Ref<CommandBuffer>> m_CommandBuffers;
 
 		// Geometry
-		Ref<RenderPass>						 m_GeometryPass;
-		Ref<DescriptorSetLayout>			 m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
-		std::vector<Ref<DescriptorSet>>		 m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
-		std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
-		Ref<Pipeline>						 m_MeshPipeline, m_SkyboxPipeline;
-		VkSampler							 m_VkTextureSampler;
+		Ref<RenderPass>					m_GeometryPass;
+		Ref<DescriptorSetLayout>		m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
+		std::vector<Ref<DescriptorSet>> m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
+		std::vector<Unique<Buffer>>		m_CameraUniformBuffers, m_SceneUniformBuffers;
+		Ref<Pipeline>					m_MeshPipeline, m_SkyboxPipeline;
+		VkSampler						m_VkTextureSampler;
 
 		// Shadow Map
-		Ref<RenderPass>						 m_ShadowMapRenderPass;
-		Ref<Pipeline>						 m_ShadowMapPipeline;
-		Ref<DescriptorSetLayout>			 m_ShadowMapDescriptorSetLayout;
-		std::vector<Ref<DescriptorSet>>		 m_ShadowMapDescriptorSets;
-		std::vector<std::unique_ptr<Buffer>> m_ShadowMapUniformBuffers;
-		VkSampler							 m_ShadowMapSampler;
+		Ref<RenderPass>					m_ShadowMapRenderPass;
+		Ref<Pipeline>					m_ShadowMapPipeline;
+		Ref<DescriptorSetLayout>		m_ShadowMapDescriptorSetLayout;
+		std::vector<Ref<DescriptorSet>> m_ShadowMapDescriptorSets;
+		std::vector<Unique<Buffer>>		m_ShadowMapUniformBuffers;
+		VkSampler						m_ShadowMapSampler;
 
 		Cascade				  m_Cascades[SceneRendererSettings::CascadeCount];
 		SceneRendererSettings m_RendererSettings;

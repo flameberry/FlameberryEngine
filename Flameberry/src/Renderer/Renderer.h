@@ -5,7 +5,7 @@
 #include <functional>
 #include <vulkan/vulkan.h>
 
-#include "VulkanContext.h"
+#include "Material.h"
 #include "Pipeline.h"
 #include "StaticMesh.h"
 #include "ECS/Components.h"
