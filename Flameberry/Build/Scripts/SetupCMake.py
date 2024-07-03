@@ -35,7 +35,7 @@ class CMakeRequirements:
             possiblePaths.update([path for path in possibleInstallPaths if os.path.isfile(path)])
         
         # Search this in case CMake has been downloaded by this script in the previous runs
-        localCMakeDir = Utils.GetProjectDirectory() / 'vendor/cmake'
+        localCMakeDir = Utils.GetProjectDirectory() / 'Flameberry/Intermediate/ThirdParty/CMake'
         # This is the search pattern required by the glob.glob function to search for cmake file
         found = glob.glob(str(localCMakeDir / '**' / f'bin/{cmakeExe}'), recursive=True)
         for path in found:
@@ -59,7 +59,7 @@ class CMakeRequirements:
         extension = 'zip' if platform.system() == 'Windows' else 'tar.gz'
         URL = cls.__ConstructCMakeURL()
 
-        preferredPath = Utils.GetProjectDirectory() / f'vendor/cmake/CMake.{extension}'
+        preferredPath = Utils.GetProjectDirectory() / f'Flameberry/Intermediate/ThirdParty/CMake/CMake.{extension}'
         Utils.DownloadFile(URL, preferredPath)
         Utils.UnzipFile(extension, preferredPath, preferredPath.parent)
         os.remove(preferredPath)
@@ -75,7 +75,7 @@ class CMakeRequirements:
     
     @classmethod
     def WriteChosenDirectoryToMeta(cls):
-        f = open(Utils.GetProjectDirectory() / 'Scripts/Setup.meta', 'w')
+        f = open(Utils.GetProjectDirectory() / 'Flameberry/Build/Scripts/Setup.meta', 'w')
         f.write(f'cmake={cls.CMakeChosenPath}\n')
         f.close()
 

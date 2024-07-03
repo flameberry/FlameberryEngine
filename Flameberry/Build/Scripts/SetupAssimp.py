@@ -3,7 +3,7 @@ from Logger import ColoredLogger
 from Utils import Utils
 
 class AssimpRequirements:
-    __AssimpRootDirectory = Utils.GetProjectDirectory() / 'Flameberry/vendor/Assimp'
+    __AssimpRootDirectory = Utils.GetProjectDirectory() / 'Flameberry/Source/ThirdParty/Assimp'
 
     @classmethod
     def Validate(cls) -> bool:

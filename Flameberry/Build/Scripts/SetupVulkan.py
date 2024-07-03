@@ -6,7 +6,7 @@ class VulkanSDKRequirements:
     __VulkanMinimumVersionRequired = '1.3.'
     __VulkanVersionPreferred = '1.3.268.0'
     __MacOSVulkanSDKInstallPathGlobal = os.path.expanduser(f'~/VulkanSDK/{__VulkanVersionPreferred}')
-    __VulkanSDKInstallPathLocal = Utils.GetProjectDirectory() / f'Flameberry/vendor/VulkanSDK/{__VulkanVersionPreferred}'
+    __VulkanSDKInstallPathLocal = Utils.GetProjectDirectory() / f'Flameberry/Intermediate/ThirdParty/VulkanSDK/{__VulkanVersionPreferred}'
     __ShouldInstallVulkanSDKLocally = True
 
     @classmethod
@@ -27,7 +27,7 @@ class VulkanSDKRequirements:
     def InstallVulkanSDK(cls):
         URL, extension = cls.__ConstructVulkanSDKURL()
         filename = f'VulkanSDKInstaller{extension}'
-        installerPath = Utils.GetProjectDirectory() / 'Flameberry/vendor/VulkanSDK' / filename
+        installerPath = Utils.GetProjectDirectory() / 'Flameberry/Intermediate/ThirdParty/VulkanSDK' / filename
         Utils.DownloadFile(URL, installerPath)
 
         # For Windows installation only
