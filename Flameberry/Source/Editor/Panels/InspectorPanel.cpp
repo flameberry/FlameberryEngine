@@ -7,6 +7,7 @@
 #include "Core/UI.h"
 
 namespace Flameberry {
+
 	InspectorPanel::InspectorPanel()
 		: m_MaterialSelectorPanel(CreateRef<MaterialSelectorPanel>()), m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()), m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon.png"))
 	{
@@ -699,4 +700,5 @@ namespace Flameberry {
 		m_MaterialSelectorPanel->OnUIRender();
 		m_MaterialEditorPanel->OnUIRender();
 	}
+
 } // namespace Flameberry

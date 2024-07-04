@@ -1,6 +1,7 @@
 #include "MaterialSelectorPanel.h"
 
 namespace Flameberry {
+
 	void MaterialSelectorPanel::OpenPanel(const CallBackType& selectCallBack)
 	{
 		m_Open = true;
@@ -30,4 +31,5 @@ namespace Flameberry {
 			ImGui::End();
 		}
 	}
+
 } // namespace Flameberry

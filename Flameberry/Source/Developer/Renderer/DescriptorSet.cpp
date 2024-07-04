@@ -193,4 +193,5 @@ namespace Flameberry {
 			m_WriteInfos.clear();
 		}
 	}
+
 } // namespace Flameberry

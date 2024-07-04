@@ -3,10 +3,11 @@
 #include <glm/glm.hpp>
 
 namespace Flameberry {
+
 	struct PerspectiveCameraSpecification
 	{
 		glm::vec3 Position, Direction;
-		float	  AspectRatio, FOV, zNear, zFar;
+		float AspectRatio, FOV, zNear, zFar;
 
 		PerspectiveCameraSpecification()
 			: Position(0, 0, 0), Direction(0, 0, -1), AspectRatio(1280.0f / 720.0f), FOV(45.0f), zNear(0.1f), zFar(1000.0f)
@@ -37,8 +38,9 @@ namespace Flameberry {
 
 	private:
 		PerspectiveCameraSpecification m_CameraSpec;
-		glm::mat4					   m_ProjectionMatrix, m_ViewMatrix, m_ViewProjectionMatrix;
+		glm::mat4 m_ProjectionMatrix, m_ViewMatrix, m_ViewProjectionMatrix;
 
 		friend class EditorCameraController;
 	};
+
 } // namespace Flameberry

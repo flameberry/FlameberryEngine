@@ -5,6 +5,7 @@
 #include "RenderCommand.h"
 
 namespace Flameberry {
+
 	Framebuffer::Framebuffer(const FramebufferSpecification& specification)
 		: m_FramebufferSpec(specification)
 	{
@@ -110,4 +111,5 @@ namespace Flameberry {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkDestroyFramebuffer(device, m_VkFramebuffer, nullptr);
 	}
+
 } // namespace Flameberry

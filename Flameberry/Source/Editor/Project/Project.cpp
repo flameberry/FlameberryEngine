@@ -31,7 +31,7 @@ namespace Flameberry {
 
 	bool ProjectSerializer::DeserializeIntoExistingProject(const std::filesystem::path& filePath, const Ref<Project>& dest)
 	{
-		std::ifstream	  in(filePath);
+		std::ifstream in(filePath);
 		std::stringstream ss;
 		ss << in.rdbuf();
 
@@ -77,7 +77,7 @@ namespace Flameberry {
 	void ProjectRegistryManager::AppendEntryToGlobalRegistry(Project* project)
 	{
 		YAML::Emitter out;
-		const auto&	  filepath = fmt::format("{}/{}.fbproj", project->GetProjectDirectory(), project->GetConfig().Name);
+		const auto& filepath = fmt::format("{}/{}.fbproj", project->GetProjectDirectory(), project->GetConfig().Name);
 		out << YAML::BeginMap;
 		{
 			out << YAML::Key << filepath << YAML::Value << YAML::BeginMap;
@@ -97,7 +97,7 @@ namespace Flameberry {
 
 	ProjectRegistry ProjectRegistryManager::LoadEntireProjectRegistry()
 	{
-		std::ifstream	  in(c_GlobalProjectRegistryPath);
+		std::ifstream in(c_GlobalProjectRegistryPath);
 		std::stringstream ss;
 		ss << in.rdbuf();
 

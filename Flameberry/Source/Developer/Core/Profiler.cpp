@@ -3,6 +3,7 @@
 #include <imgui/imgui.h>
 
 namespace Flameberry {
+
 	std::unordered_map<std::string, double> Profiler::s_ScopeExecutionTimes;
 
 	Profiler::Profiler(const std::string& scopeName)
@@ -22,4 +23,5 @@ namespace Flameberry {
 		for (auto& [scope, time] : s_ScopeExecutionTimes)
 			ImGui::Text("%s: %.4f ms", scope.c_str(), time * 0.001 * 0.001);
 	}
+
 } // namespace Flameberry

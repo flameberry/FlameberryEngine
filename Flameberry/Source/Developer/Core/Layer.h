@@ -3,6 +3,7 @@
 #include "Event.h"
 
 namespace Flameberry {
+
 	class Layer
 	{
 	public:
@@ -14,4 +15,5 @@ namespace Flameberry {
 		virtual void OnEvent(Event& e) = 0;
 		virtual void OnDestroy() = 0;
 	};
+
 } // namespace Flameberry

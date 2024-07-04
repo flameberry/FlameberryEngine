@@ -3,6 +3,7 @@
 #include "Flameberry.h"
 
 namespace Flameberry {
+
 	class MaterialSelectorPanel
 	{
 	public:
@@ -13,8 +14,9 @@ namespace Flameberry {
 		void OnUIRender();
 
 	private:
-		bool			   m_Open = false;
+		bool m_Open = false;
 		Ref<MaterialAsset> m_SelectedMaterial;
-		CallBackType	   m_SelectCallBack;
+		CallBackType m_SelectCallBack;
 	};
+
 } // namespace Flameberry

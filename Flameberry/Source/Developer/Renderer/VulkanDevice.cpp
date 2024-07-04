@@ -5,6 +5,7 @@
 #include "RenderCommand.h"
 
 namespace Flameberry {
+
 	VulkanDevice::VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow)
 		: m_VkPhysicalDevice(physicalDevice)
 	{
@@ -138,7 +139,7 @@ namespace Flameberry {
 
 	std::vector<VkDeviceQueueCreateInfo> VulkanDevice::CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices)
 	{
-		float								 queuePriority = 1.0f;
+		float queuePriority = 1.0f;
 		std::vector<VkDeviceQueueCreateInfo> vk_device_queue_create_infos;
 		for (uint32_t uniqueQueueFamilyIndex : uniqueQueueFamilyIndices)
 		{
@@ -161,4 +162,5 @@ namespace Flameberry {
 	{
 		vkQueueWaitIdle(m_GraphicsAndComputeQueue);
 	}
+
 } // namespace Flameberry

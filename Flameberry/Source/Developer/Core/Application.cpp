@@ -10,6 +10,7 @@
 #include "Asset/AssetManager.h"
 
 namespace Flameberry {
+
 	Application* Application::s_Instance;
 
 	Application::Application(const ApplicationSpecification& specification)
@@ -166,4 +167,5 @@ namespace Flameberry {
 		glfwTerminate();
 		FBY_INFO("Ended Application!");
 	}
+
 } // namespace Flameberry

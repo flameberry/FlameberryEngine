@@ -5,6 +5,7 @@
 #include "Core/EntryPoint.h"
 
 namespace Flameberry {
+
 	class FlameberryEditor : public Application
 	{
 	public:
@@ -84,4 +85,5 @@ namespace Flameberry {
 
 		return new FlameberryEditor(applicationSpec);
 	}
+
 } // namespace Flameberry

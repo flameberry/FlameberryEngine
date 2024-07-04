@@ -172,7 +172,7 @@ namespace Flameberry {
 		{
 			// The information about push constants is collected here
 			uint32_t count = 0;
-			auto	 result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
+			auto result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
 			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 			std::vector<SpvReflectBlockVariable*> pcblocks(count);
 			result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
@@ -216,7 +216,7 @@ namespace Flameberry {
 		{
 			// The information about descriptor sets is collected here
 			uint32_t count = 0;
-			auto	 result = reflectionShaderModule.EnumerateDescriptorSets(&count, NULL);
+			auto result = reflectionShaderModule.EnumerateDescriptorSets(&count, NULL);
 			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 			std::vector<SpvReflectDescriptorSet*> descSets(count);
 			result = reflectionShaderModule.EnumerateDescriptorSets(&count, descSets.data());
@@ -232,7 +232,7 @@ namespace Flameberry {
 					auto& binding = descSets[i]->bindings[j];
 
 					std::string fullName = binding->name;
-					bool		rendererOnly, isDescriptorTypeImage;
+					bool rendererOnly, isDescriptorTypeImage;
 
 					if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER
 						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
@@ -283,7 +283,7 @@ namespace Flameberry {
 		shaderModuleCreateInfo.codeSize = shaderSpvBinaryCode.size();
 		shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderSpvBinaryCode.data());
 
-		const auto	   device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VkShaderModule vulkanShaderModule = VK_NULL_HANDLE;
 		VK_CHECK_RESULT(vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &vulkanShaderModule));
 		return vulkanShaderModule;

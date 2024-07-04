@@ -46,14 +46,14 @@ namespace Flameberry {
 	struct CameraComponent
 	{
 		GenericCamera Camera;
-		bool		  IsPrimary = false;
+		bool IsPrimary = false;
 	};
 
 	struct SkyLightComponent
 	{
 		glm::vec3 Color{ 0.0f };
-		float	  Intensity = 0.2f;
-		bool	  EnableSkyMap = false, EnableReflections = false;
+		float Intensity = 0.2f;
+		bool EnableSkyMap = false, EnableReflections = false;
 
 		AssetHandle SkyMap = 0;
 	};
@@ -73,7 +73,7 @@ namespace Flameberry {
 	struct DirectionalLightComponent
 	{
 		glm::vec3 Color;
-		float	  Intensity, LightSize;
+		float Intensity, LightSize;
 
 		DirectionalLightComponent()
 			: Color(1.0f), Intensity(10.0f), LightSize(20.0f) {}
@@ -82,7 +82,7 @@ namespace Flameberry {
 	struct PointLightComponent
 	{
 		glm::vec3 Color;
-		float	  Intensity;
+		float Intensity;
 
 		PointLightComponent()
 			: Color(1.0f), Intensity(10.0f) {}
@@ -160,7 +160,7 @@ namespace Flameberry {
 	struct CapsuleColliderComponent
 	{
 		AxisType Axis = AxisType::Y;
-		float	 Radius = 0.5f, Height = 1.0f;
+		float Radius = 0.5f, Height = 1.0f;
 
 		void* RuntimeShape = nullptr;
 	};

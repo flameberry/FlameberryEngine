@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 namespace Flameberry {
+
 	class UUID
 	{
 	public:
@@ -19,9 +20,11 @@ namespace Flameberry {
 	private:
 		value_type m_UUID;
 	};
+
 } // namespace Flameberry
 
 namespace std {
+
 	template <>
 	struct hash<Flameberry::UUID>
 	{
@@ -30,4 +33,5 @@ namespace std {
 			return hash<Flameberry::UUID::value_type>()((Flameberry::UUID::value_type)key);
 		}
 	};
+
 } // namespace std

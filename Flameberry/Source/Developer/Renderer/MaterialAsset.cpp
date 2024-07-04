@@ -83,7 +83,7 @@ namespace Flameberry {
 
 	Ref<MaterialAsset> MaterialAssetSerializer::Deserialize(const char* path)
 	{
-		std::ifstream	  in(path);
+		std::ifstream in(path);
 		std::stringstream ss;
 		ss << in.rdbuf();
 

@@ -5,6 +5,7 @@
 #include "VulkanContext.h"
 
 namespace Flameberry {
+
 	Image::Image(const ImageSpecification& specification)
 		: m_Specification(specification), m_ReferenceCount(new uint32_t(1))
 	{
@@ -67,7 +68,7 @@ namespace Flameberry {
 	{
 		m_Specification.ViewSpecification = viewSpecification;
 
-		const auto&			  device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VkImageViewCreateInfo vk_image_view_create_info{};
 		vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		vk_image_view_create_info.image = m_VkImage;
@@ -106,7 +107,7 @@ namespace Flameberry {
 		vkGetPhysicalDeviceFormatProperties(VulkanContext::GetPhysicalDevice(), m_Specification.Format, &formatProperties);
 		FBY_ASSERT(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT, "Texture Image Format does not support linear blitting!");
 
-		const auto&		device = VulkanContext::GetCurrentDevice();
+		const auto& device = VulkanContext::GetCurrentDevice();
 		VkCommandBuffer commandBuffer;
 		device->BeginSingleTimeCommandBuffer(commandBuffer);
 
@@ -338,4 +339,5 @@ namespace Flameberry {
 			1, &imageMemoryBarrier);
 		device->EndSingleTimeCommandBuffer(cmdBuffer);
 	}
+
 } // namespace Flameberry

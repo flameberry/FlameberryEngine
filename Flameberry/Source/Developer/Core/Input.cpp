@@ -2,6 +2,7 @@
 #include "Core/Application.h"
 
 namespace Flameberry {
+
 	bool Input::IsKeyPressed(KeyCode key)
 	{
 		GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
@@ -17,7 +18,7 @@ namespace Flameberry {
 	glm::vec2 Input::GetCursorPosition()
 	{
 		GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
-		double		x, y;
+		double x, y;
 		glfwGetCursorPos(window, &x, &y);
 		return glm::vec2((float)x, (float)y);
 	}
@@ -33,4 +34,5 @@ namespace Flameberry {
 		GLFWwindow* window = Application::Get().GetWindow().GetGLFWwindow();
 		glfwSetInputMode(window, GLFW_CURSOR, mode);
 	}
+
 } // namespace Flameberry

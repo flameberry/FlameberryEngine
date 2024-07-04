@@ -1,6 +1,7 @@
 #include "YamlUtils.h"
 
 namespace Flameberry {
+
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
 	{
 		out << YAML::Flow;
@@ -14,4 +15,5 @@ namespace Flameberry {
 		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
 		return out;
 	}
+
 } // namespace Flameberry

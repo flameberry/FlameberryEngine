@@ -23,7 +23,7 @@ namespace Flameberry {
 		virtual void OnUpdate(float delta) = 0;
 
 	private:
-		Scene*		   m_SceneRef;
+		Scene* m_SceneRef;
 		fbentt::entity m_Entity;
 
 		friend class Scene;

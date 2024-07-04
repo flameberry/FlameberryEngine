@@ -85,7 +85,7 @@ namespace Flameberry {
 	{
 		FBY_SCOPED_TIMER("Scene Deserialization");
 
-		std::ifstream	  in(path);
+		std::ifstream in(path);
 		std::stringstream ss;
 		ss << in.rdbuf();
 
@@ -115,7 +115,7 @@ namespace Flameberry {
 			// Deserialize entities
 			for (const auto entity : entities)
 			{
-				const UUID			 ID = entity["Entity"].as<UUID::value_type>();
+				const UUID ID = entity["Entity"].as<UUID::value_type>();
 				const fbentt::entity deserializedEntity = UUIDToEntityMap[ID];
 
 				auto& IDComp = destScene->m_Registry->emplace<IDComponent>(deserializedEntity);
@@ -150,10 +150,10 @@ namespace Flameberry {
 					cameraComp.IsPrimary = camera["IsPrimary"].as<bool>();
 
 					ProjectionType type = ProjectionTypeStringToEnum(camera["ProjectionType"].as<std::string>());
-					float		   aspectRatio = camera["AspectRatio"].as<float>();
-					float		   FOV_or_Zoom = camera["FOV/Zoom"].as<float>();
-					float		   near = camera["Near"].as<float>();
-					float		   far = camera["Far"].as<float>();
+					float aspectRatio = camera["AspectRatio"].as<float>();
+					float FOV_or_Zoom = camera["FOV/Zoom"].as<float>();
+					float near = camera["Near"].as<float>();
+					float far = camera["Far"].as<float>();
 
 					switch (type)
 					{
@@ -254,8 +254,8 @@ namespace Flameberry {
 		FBY_SCOPED_TIMER("Serialization");
 
 		std::string scenePath(path);
-		uint32_t	lastSlashPosition = scenePath.find_last_of('/') + 1;
-		uint32_t	lastDotPosition = scenePath.find_last_of('.');
+		uint32_t lastSlashPosition = scenePath.find_last_of('/') + 1;
+		uint32_t lastDotPosition = scenePath.find_last_of('.');
 		std::string sceneName = scenePath.substr(lastSlashPosition, lastDotPosition - lastSlashPosition);
 
 		YAML::Emitter out;
@@ -326,7 +326,7 @@ namespace Flameberry {
 
 		if (scene->m_Registry->has<CameraComponent>(entity))
 		{
-			auto&		cameraComp = scene->m_Registry->get<CameraComponent>(entity);
+			auto& cameraComp = scene->m_Registry->get<CameraComponent>(entity);
 			const auto& settings = cameraComp.Camera.GetSettings();
 			out << YAML::Key << "CameraComponent" << YAML::BeginMap;
 			out << YAML::Key << "IsPrimary" << YAML::Value << cameraComp.IsPrimary;
@@ -430,4 +430,5 @@ namespace Flameberry {
 
 		out << YAML::EndMap; // Entity
 	}
+
 } // namespace Flameberry

@@ -93,11 +93,11 @@ namespace Flameberry {
 		static const std::unordered_map<AssetHandle, Ref<Asset>>& GetAssetTable() { return s_AssetTable; }
 
 	private:
-		inline static std::unordered_map<AssetHandle, Ref<Asset>>  s_AssetTable;
+		inline static std::unordered_map<AssetHandle, Ref<Asset>> s_AssetTable;
 		inline static std::unordered_map<std::string, AssetHandle> s_AssetFilePathToUUIDTable;
 
 		inline static std::list<AssetHandle> s_AssetCache; // TODO: Implement this
-		inline static const std::size_t		 s_MaxCPUCacheSizeInBytes = 4096, s_MaxGPUCacheSizeInBytes = 4096;
+		inline static const std::size_t s_MaxCPUCacheSizeInBytes = 4096, s_MaxGPUCacheSizeInBytes = 4096;
 	};
 
 } // namespace Flameberry

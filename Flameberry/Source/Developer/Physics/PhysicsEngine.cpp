@@ -7,11 +7,11 @@
 namespace Flameberry {
 
 	physx::PxDefaultErrorCallback PhysicsEngine::s_DefaultErrorCallback;
-	physx::PxDefaultAllocator	  PhysicsEngine::s_DefaultAllocatorCallback;
-	physx::PxFoundation*		  PhysicsEngine::s_Foundation;
-	physx::PxPhysics*			  PhysicsEngine::s_Physics;
-	physx::PxCooking*			  PhysicsEngine::s_Cooking;
-	physx::PxCpuDispatcher*		  PhysicsEngine::s_CPUDispatcher;
+	physx::PxDefaultAllocator PhysicsEngine::s_DefaultAllocatorCallback;
+	physx::PxFoundation* PhysicsEngine::s_Foundation;
+	physx::PxPhysics* PhysicsEngine::s_Physics;
+	physx::PxCooking* PhysicsEngine::s_Cooking;
+	physx::PxCpuDispatcher* PhysicsEngine::s_CPUDispatcher;
 
 	physx::PxTolerancesScale PhysicsEngine::s_TolerancesScale;
 

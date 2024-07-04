@@ -20,7 +20,7 @@ namespace Flameberry {
 
 	private:
 		// Is this a sign of laziness to not make this a const char* ?
-		static const std::filesystem::path					s_ShaderBaseDirectory;
+		static const std::filesystem::path s_ShaderBaseDirectory;
 		static std::unordered_map<std::string, Ref<Shader>> s_ShaderStorage;
 	};
 

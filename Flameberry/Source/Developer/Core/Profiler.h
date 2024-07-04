@@ -5,6 +5,7 @@
 #include <chrono>
 
 namespace Flameberry {
+
 	class Profiler
 	{
 	public:
@@ -12,14 +13,15 @@ namespace Flameberry {
 		~Profiler();
 
 		static double GetExecutionTime(const std::string& scopeName) { return s_ScopeExecutionTimes[scopeName]; }
-		static void	  DisplayScopeDetailsImGui();
+		static void DisplayScopeDetailsImGui();
 
 	private:
-		std::string											m_ScopeName;
+		std::string m_ScopeName;
 		decltype(std::chrono::high_resolution_clock::now()) m_Start;
 
 		static std::unordered_map<std::string, double> s_ScopeExecutionTimes;
 	};
+
 } // namespace Flameberry
 
 #ifdef FBY_DEBUG

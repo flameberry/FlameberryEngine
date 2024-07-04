@@ -3,6 +3,7 @@
 #include <fmt/chrono.h>
 
 namespace Flameberry {
+
 	Ref<Logger> Logger::s_CoreLogger;
 
 	Logger::Logger(const char* instanceName)
@@ -42,4 +43,5 @@ namespace Flameberry {
 		}
 		return fmt::format("{} [{}] {}", GetCurrentTimeString(), m_InstanceName, logLevelStr);
 	}
+
 } // namespace Flameberry

@@ -7,6 +7,7 @@
 #include "Texture2D.h"
 
 namespace Flameberry {
+
 	struct LineVertex
 	{
 		glm::vec3 Position{ 0.0f };
@@ -17,21 +18,21 @@ namespace Flameberry {
 	{
 		glm::vec3 Position{ 0.0f };
 		glm::vec3 Color{ 1.0f };
-		int		  EntityIndex = -1;
+		int EntityIndex = -1;
 	};
 
 	struct Renderer2DData
 	{
 		// Lines
-		Ref<Pipeline>			LinePipeline;
-		Ref<Buffer>				LineVertexBuffer;
+		Ref<Pipeline> LinePipeline;
+		Ref<Buffer> LineVertexBuffer;
 		std::vector<LineVertex> LineVertices;
 
 		// Quads
-		Ref<Pipeline>			QuadPipeline;
-		Ref<Buffer>				QuadVertexBuffer, QuadIndexBuffer;
+		Ref<Pipeline> QuadPipeline;
+		Ref<Buffer> QuadVertexBuffer, QuadIndexBuffer;
 		std::vector<QuadVertex> QuadVertices;
-		uint32_t				VertexBufferOffset = 0;
+		uint32_t VertexBufferOffset = 0;
 
 		// TODO: Find a better way to do this
 		Ref<Texture2D> TextureMap;
@@ -66,4 +67,5 @@ namespace Flameberry {
 
 		inline static VkDescriptorSet s_GlobalDescriptorSet = VK_NULL_HANDLE;
 	};
+
 } // namespace Flameberry

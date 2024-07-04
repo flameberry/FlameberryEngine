@@ -176,7 +176,7 @@ namespace Flameberry {
 		const auto& descriptorBindings = shader->GetDescriptorBindingSpecifications();
 
 		std::vector<VkDescriptorSetLayoutBinding> vulkanDescSetBindings;
-		uint32_t								  index = 0;
+		uint32_t index = 0;
 
 		for (const auto& reflectionDescSet : reflectionDescriptorSets)
 		{
@@ -196,7 +196,7 @@ namespace Flameberry {
 			if (vulkanDescSetBindings.size())
 			{
 				DescriptorSetLayoutSpecification layoutSpecification{ vulkanDescSetBindings };
-				auto&							 layout = outDescriptorSetLayouts.emplace_back(DescriptorSetLayout::CreateOrGetCached(layoutSpecification));
+				auto& layout = outDescriptorSetLayouts.emplace_back(DescriptorSetLayout::CreateOrGetCached(layoutSpecification));
 				outVulkanDescriptorSetLayouts.push_back(layout->GetLayout());
 				vulkanDescSetBindings.clear();
 			}
@@ -303,7 +303,7 @@ namespace Flameberry {
 
 		// Create the vertex attribute description structs based on the m_PipelineSpec.VertexLayout
 		VkVertexInputAttributeDescription vertexAttributeDescriptions[m_Specification.VertexLayout.size()];
-		uint32_t						  offset = 0, idx = 0;
+		uint32_t offset = 0, idx = 0;
 		for (uint32_t loc = 0; loc < m_Specification.VertexLayout.size(); loc++)
 		{
 			const auto dataType = m_Specification.VertexLayout[loc];
@@ -337,7 +337,7 @@ namespace Flameberry {
 		pipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
 		VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo{};
-		VkPipelineDynamicStateCreateInfo  pipelineDynamicStateCreateInfo{};
+		VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo{};
 
 		std::vector<VkDynamicState> dynamicStates;
 

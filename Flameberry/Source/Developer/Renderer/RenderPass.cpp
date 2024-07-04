@@ -8,6 +8,7 @@
 #include "Renderer/Renderer.h"
 
 namespace Flameberry {
+
 	RenderPass::RenderPass(const RenderPassSpecification& specification)
 		: m_RenderPassSpec(specification)
 	{
@@ -81,10 +82,10 @@ namespace Flameberry {
 		std::vector<VkAttachmentDescription> attachments(count);
 
 		std::vector<VkAttachmentReference> colorRefs;
-		VkAttachmentReference			   depthRef;
+		VkAttachmentReference depthRef;
 		std::vector<VkAttachmentReference> resolveRefs;
 
-		bool	 useMultiView = false;
+		bool useMultiView = false;
 		uint32_t layerCount = framebufferSpec.Attachments[0].LayerCount;
 
 		int i = 0;
@@ -193,7 +194,7 @@ namespace Flameberry {
 	void RenderPass::Begin(uint32_t framebufferInstance, VkOffset2D renderAreaOffset, VkExtent2D renderAreaExtent)
 	{
 		Renderer::Submit([renderPass = this, framebufferInstance, renderAreaOffset, renderAreaExtent](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-			uint32_t	index = (framebufferInstance == -1) ? imageIndex : framebufferInstance;
+			uint32_t index = (framebufferInstance == -1) ? imageIndex : framebufferInstance;
 			const auto& framebufferSpec = renderPass->m_RenderPassSpec.TargetFramebuffers[index]->GetSpecification();
 
 			std::vector<VkClearValue> clearValues;
@@ -239,4 +240,5 @@ namespace Flameberry {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkDestroyRenderPass(device, m_VkRenderPass, nullptr);
 	}
+
 } // namespace Flameberry

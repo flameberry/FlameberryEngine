@@ -13,6 +13,7 @@
 #define MAX_QUAD_INDICES MAX_QUADS * 6
 
 namespace Flameberry {
+
 	Renderer2DData Renderer2D::s_Renderer2DData;
 
 	void Renderer2D::Init(const Ref<RenderPass>& renderPass)
@@ -67,7 +68,7 @@ namespace Flameberry {
 			s_Renderer2DData.QuadIndexBuffer = CreateRef<Buffer>(indexBufferSpec);
 
 			uint32_t* indices = new uint32_t[MAX_QUAD_INDICES];
-			uint32_t  offset = 0;
+			uint32_t offset = 0;
 			for (uint32_t i = 0; i < MAX_QUAD_INDICES; i += 6)
 			{
 				indices[i + 0] = offset + 0;
@@ -124,7 +125,7 @@ namespace Flameberry {
 	void Renderer2D::AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
 	{
 		constexpr float PI = glm::pi<float>();
-		const float		angle = PI / segments;
+		const float angle = PI / segments;
 
 		glm::vec3 lastVertex = position + rotation * glm::vec3(radius, 0.0f, 0.0f);
 		for (int i = 1; i <= segments; i++)
@@ -138,7 +139,7 @@ namespace Flameberry {
 	void Renderer2D::AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
 	{
 		constexpr float PI = glm::pi<float>();
-		const float		angle = 2 * PI / segments;
+		const float angle = 2 * PI / segments;
 
 		glm::vec3 lastVertex = position + rotation * glm::vec3(radius, 0.0f, 0.0f);
 		for (int i = 1; i <= segments; i++)
@@ -176,7 +177,7 @@ namespace Flameberry {
 	void Renderer2D::AddGrid(int gridSize)
 	{
 		constexpr float squareSize = 1.0f;
-		const float		length = 2 * gridSize * squareSize;
+		const float length = 2 * gridSize * squareSize;
 
 		const float start = -gridSize * squareSize;
 
@@ -264,9 +265,9 @@ namespace Flameberry {
 			s_Renderer2DData.LineVertexBuffer->WriteToBuffer(s_Renderer2DData.LineVertices.data(), s_Renderer2DData.LineVertices.size() * sizeof(LineVertex), 0);
 
 			uint32_t vertexCount = (uint32_t)s_Renderer2DData.LineVertices.size();
-			auto	 vertexBuffer = s_Renderer2DData.LineVertexBuffer->GetVulkanBuffer();
-			auto	 pipelineLayout = s_Renderer2DData.LinePipeline->GetVulkanPipelineLayout();
-			auto	 vulkanPipeline = s_Renderer2DData.LinePipeline->GetVulkanPipeline();
+			auto vertexBuffer = s_Renderer2DData.LineVertexBuffer->GetVulkanBuffer();
+			auto pipelineLayout = s_Renderer2DData.LinePipeline->GetVulkanPipelineLayout();
+			auto vulkanPipeline = s_Renderer2DData.LinePipeline->GetVulkanPipeline();
 
 			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, vertexBuffer, vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 				Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
@@ -292,4 +293,5 @@ namespace Flameberry {
 		s_Renderer2DData.QuadIndexBuffer = nullptr;
 		s_Renderer2DData.TextureMap = nullptr;
 	}
+
 } // namespace Flameberry

@@ -37,6 +37,7 @@ static std::vector<std::string> g_IconPaths = {
 };
 
 namespace Flameberry {
+
 	ContentBrowserPanel::ContentBrowserPanel()
 		: m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory), // Getting Asset Directory via this method to get the relative path only
 		m_ThumbnailCache(CreateRef<ThumbnailCache>(Project::GetActiveProject()))
@@ -397,4 +398,5 @@ namespace Flameberry {
 
 		ImGui::PopClipRect();
 	}
+
 } // namespace Flameberry

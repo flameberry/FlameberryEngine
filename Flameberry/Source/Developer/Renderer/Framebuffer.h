@@ -6,6 +6,7 @@
 #include "Image.h"
 
 namespace Flameberry {
+
 	struct FramebufferAttachmentSpecification
 	{
 		VkFormat Format;
@@ -29,13 +30,13 @@ namespace Flameberry {
 
 	struct FramebufferSpecification
 	{
-		uint32_t										Width, Height;
+		uint32_t Width, Height;
 		std::vector<FramebufferAttachmentSpecification> Attachments;
-		uint32_t										Samples;
-		VkClearColorValue								ClearColorValue;
-		VkClearDepthStencilValue						DepthStencilClearValue;
-		VkAttachmentLoadOp								ColorLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, DepthLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		VkAttachmentStoreOp								ColorStoreOp = VK_ATTACHMENT_STORE_OP_STORE, DepthStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE, StencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		uint32_t Samples;
+		VkClearColorValue ClearColorValue;
+		VkClearDepthStencilValue DepthStencilClearValue;
+		VkAttachmentLoadOp ColorLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, DepthLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		VkAttachmentStoreOp ColorStoreOp = VK_ATTACHMENT_STORE_OP_STORE, DepthStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE, StencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	};
 
 	class Framebuffer
@@ -48,7 +49,7 @@ namespace Flameberry {
 		void OnResize(uint32_t width, uint32_t height, VkRenderPass renderPass);
 
 		FramebufferSpecification GetSpecification() const { return m_FramebufferSpec; }
-		VkFramebuffer			 GetVulkanFramebuffer() const { return m_VkFramebuffer; }
+		VkFramebuffer GetVulkanFramebuffer() const { return m_VkFramebuffer; }
 
 		Ref<Image> GetColorAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[attachmentIndex]; }
 		Ref<Image> GetColorResolveAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[m_DepthAttachmentIndex + 1 + attachmentIndex]; }
@@ -61,9 +62,10 @@ namespace Flameberry {
 
 	private:
 		std::vector<Ref<Image>> m_FramebufferImages;
-		uint32_t				m_DepthAttachmentIndex = -1;
+		uint32_t m_DepthAttachmentIndex = -1;
 
 		FramebufferSpecification m_FramebufferSpec;
-		VkFramebuffer			 m_VkFramebuffer = VK_NULL_HANDLE;
+		VkFramebuffer m_VkFramebuffer = VK_NULL_HANDLE;
 	};
+
 } // namespace Flameberry

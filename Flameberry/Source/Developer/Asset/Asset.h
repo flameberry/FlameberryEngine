@@ -41,10 +41,10 @@ namespace Flameberry {
 	public:
 		AssetHandle Handle;
 
-		AssetFlags						 Flags = 0;
-		std::filesystem::path			 FilePath;
+		AssetFlags Flags = 0;
+		std::filesystem::path FilePath;
 		std::list<AssetHandle>::iterator CacheIterator;
-		std::size_t						 SizeInBytesOnCPU, SizeInBytesOnGPU;
+		std::size_t SizeInBytesOnCPU, SizeInBytesOnGPU;
 
 		virtual AssetType GetAssetType() const = 0;
 	};

@@ -25,22 +25,22 @@ namespace Flameberry {
 	struct MousePickingPushConstantData
 	{
 		glm::mat4 ModelMatrix;
-		int		  EntityIndex;
+		int EntityIndex;
 	};
 
 	struct SceneRendererSettings
 	{
 		bool FrustumCulling = true, ShowBoundingBoxes = false;
 
-		bool				  EnableShadows = true, ShowCascades = false, SoftShadows = true;
-		float				  CascadeLambdaSplit = 0.91f;
+		bool EnableShadows = true, ShowCascades = false, SoftShadows = true;
+		float CascadeLambdaSplit = 0.91f;
 		static const uint32_t CascadeCount = 4, CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
 	};
 
 	struct Cascade
 	{
 		glm::mat4 ViewProjectionMatrix;
-		float	  DepthSplit;
+		float DepthSplit;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ namespace Flameberry {
 		VkImageView GetCompositePassOutputImageView(uint32_t index) const { return m_CompositePass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetImageView(); }
 
 		SceneRendererSettings& GetRendererSettingsRef() { return m_RendererSettings; }
-		void				   RenderSceneForMousePicking(const Ref<Scene>& scene, const Ref<RenderPass>& renderPass, const Ref<Pipeline>& pipeline, const Ref<Pipeline>& pipeline2D, const glm::vec2& mousePos);
+		void RenderSceneForMousePicking(const Ref<Scene>& scene, const Ref<RenderPass>& renderPass, const Ref<Pipeline>& pipeline, const Ref<Pipeline>& pipeline2D, const glm::vec2& mousePos);
 
 		void ReloadMeshShaders();
 
@@ -98,28 +98,28 @@ namespace Flameberry {
 		std::vector<Ref<CommandBuffer>> m_CommandBuffers;
 
 		// Geometry
-		Ref<RenderPass>					m_GeometryPass;
-		Ref<DescriptorSetLayout>		m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
+		Ref<RenderPass> m_GeometryPass;
+		Ref<DescriptorSetLayout> m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
 		std::vector<Ref<DescriptorSet>> m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
-		std::vector<Unique<Buffer>>		m_CameraUniformBuffers, m_SceneUniformBuffers;
-		Ref<Pipeline>					m_MeshPipeline, m_SkyboxPipeline;
-		VkSampler						m_VkTextureSampler;
+		std::vector<Unique<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
+		Ref<Pipeline> m_MeshPipeline, m_SkyboxPipeline;
+		VkSampler m_VkTextureSampler;
 
 		// Shadow Map
-		Ref<RenderPass>					m_ShadowMapRenderPass;
-		Ref<Pipeline>					m_ShadowMapPipeline;
-		Ref<DescriptorSetLayout>		m_ShadowMapDescriptorSetLayout;
+		Ref<RenderPass> m_ShadowMapRenderPass;
+		Ref<Pipeline> m_ShadowMapPipeline;
+		Ref<DescriptorSetLayout> m_ShadowMapDescriptorSetLayout;
 		std::vector<Ref<DescriptorSet>> m_ShadowMapDescriptorSets;
-		std::vector<Unique<Buffer>>		m_ShadowMapUniformBuffers;
-		VkSampler						m_ShadowMapSampler;
+		std::vector<Unique<Buffer>> m_ShadowMapUniformBuffers;
+		VkSampler m_ShadowMapSampler;
 
-		Cascade				  m_Cascades[SceneRendererSettings::CascadeCount];
+		Cascade m_Cascades[SceneRendererSettings::CascadeCount];
 		SceneRendererSettings m_RendererSettings;
 
 		// Post processing
-		Ref<RenderPass>					m_CompositePass;
-		Ref<Pipeline>					m_CompositePipeline;
-		Ref<DescriptorSetLayout>		m_CompositePassDescriptorSetLayout;
+		Ref<RenderPass> m_CompositePass;
+		Ref<Pipeline> m_CompositePipeline;
+		Ref<DescriptorSetLayout> m_CompositePassDescriptorSetLayout;
 		std::vector<Ref<DescriptorSet>> m_CompositePassDescriptorSets;
 
 		// Textures

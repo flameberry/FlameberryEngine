@@ -5,6 +5,7 @@
 #include "VulkanContext.h"
 
 namespace Flameberry {
+
 	VkDeviceSize Buffer::GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment)
 	{
 		if (minOffsetAlignment > 0)

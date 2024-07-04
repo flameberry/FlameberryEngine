@@ -11,10 +11,11 @@
 #include <filesystem>
 
 namespace Flameberry {
+
 	Ref<DescriptorSetLayout> Texture2D::s_DescriptorLayout;
-	Ref<DescriptorSet>		 Texture2D::s_EmptyDescriptorSet;
-	Ref<Image>				 Texture2D::s_EmptyImage;
-	VkSampler				 Texture2D::s_DefaultSampler;
+	Ref<DescriptorSet> Texture2D::s_EmptyDescriptorSet;
+	Ref<Image> Texture2D::s_EmptyImage;
+	VkSampler Texture2D::s_DefaultSampler;
 
 	std::unordered_map<std::string, Ref<Texture2D>> Texture2D::s_TextureCacheDirectory;
 
@@ -22,9 +23,9 @@ namespace Flameberry {
 	{
 		int width, height, channels, bytes_per_channel;
 
-		void*		 pixels = nullptr;
-		uint32_t	 mipLevels = 1;
-		VkFormat	 format = VK_FORMAT_UNDEFINED;
+		void* pixels = nullptr;
+		uint32_t mipLevels = 1;
+		VkFormat format = VK_FORMAT_UNDEFINED;
 		VkDeviceSize imageSize = 0;
 
 		if (stbi_is_hdr(texturePath.c_str()))
@@ -51,7 +52,7 @@ namespace Flameberry {
 	Texture2D::Texture2D(const void* data, const float width, const float height, const uint8_t bytesPerChannel, VkFormat format, bool canGenerateMipMaps, VkSampler sampler)
 	{
 		FBY_ASSERT(data, "Texture pixels are empty!");
-		uint32_t	 mipLevels = canGenerateMipMaps ? static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1 : 1;
+		uint32_t mipLevels = canGenerateMipMaps ? static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1 : 1;
 		VkDeviceSize imageSize = 4 * width * height * bytesPerChannel;
 		SetupTexture(data, width, height, imageSize, mipLevels, format, sampler);
 	}

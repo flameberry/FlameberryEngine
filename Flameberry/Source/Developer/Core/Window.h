@@ -15,14 +15,15 @@
 #endif
 
 namespace Flameberry {
+
 	struct WindowSpecification
 	{
-		int			Width, Height;
+		int Width, Height;
 		const char* Title = "";
 		const char* SecondaryTitle = "";
-		bool		VSync;
+		bool VSync;
 
-		bool				 NativeTitlebar;
+		bool NativeTitlebar;
 		static constexpr int TitlebarHeight = 36;
 
 		WindowSpecification(int width = 1280, int height = 720, const char* title = FBY_WINDOW_TITLE)
@@ -36,9 +37,9 @@ namespace Flameberry {
 	public:
 		static Ref<Window> Create(const WindowSpecification& specification = WindowSpecification());
 
-		virtual GLFWwindow*				   GetGLFWwindow() const = 0;
+		virtual GLFWwindow* GetGLFWwindow() const = 0;
 		virtual const WindowSpecification& GetSpecification() const = 0;
-		virtual uint32_t				   GetImageIndex() const = 0;
+		virtual uint32_t GetImageIndex() const = 0;
 
 		virtual bool IsRunning() = 0;
 		virtual void SwapBuffers() = 0;

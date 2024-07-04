@@ -7,6 +7,7 @@
 #include "Platform/PlatformUtils.h"
 
 namespace Flameberry {
+
 	Ref<Window> Window::Create(const WindowSpecification& specification)
 	{
 		return CreateRef<VulkanWindow>(specification);
@@ -82,7 +83,7 @@ namespace Flameberry {
 		});
 
 		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset) {
-			VulkanWindow*	 ptr = (VulkanWindow*)glfwGetWindowUserPointer(window);
+			VulkanWindow* ptr = (VulkanWindow*)glfwGetWindowUserPointer(window);
 			MouseScrollEvent event(xoffset, yoffset);
 			ptr->m_EventCallBack(event);
 		});
@@ -118,7 +119,7 @@ namespace Flameberry {
 	void VulkanWindow::SwapBuffers()
 	{
 		const auto& device = VulkanContext::GetCurrentDevice();
-		VkResult	queuePresentStatus = m_SwapChain->SubmitCommandBuffer(device->GetCommandBuffer(Renderer::RT_GetCurrentFrameIndex()));
+		VkResult queuePresentStatus = m_SwapChain->SubmitCommandBuffer(device->GetCommandBuffer(Renderer::RT_GetCurrentFrameIndex()));
 
 		// TODO: This code should be enabled when ensured that all the resources that depend upon the swapchain are also updated
 		// if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR)

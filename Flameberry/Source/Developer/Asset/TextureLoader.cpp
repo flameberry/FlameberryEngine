@@ -9,8 +9,8 @@ namespace Flameberry {
 
 	Ref<Asset> TextureLoader::LoadTexture2D(const std::filesystem::path& path)
 	{
-		int		 width, height, channels, bytesPerChannel;
-		void*	 pixels = nullptr;
+		int width, height, channels, bytesPerChannel;
+		void* pixels = nullptr;
 		VkFormat format = VK_FORMAT_UNDEFINED;
 
 		if (stbi_is_hdr(path.c_str()))
@@ -53,9 +53,9 @@ namespace Flameberry {
 			}
 		};
 
-		int		 width, height, channels, bytesPerChannel;
-		void*	 pixels = nullptr;
-		void*	 resizedPixels = nullptr;
+		int width, height, channels, bytesPerChannel;
+		void* pixels = nullptr;
+		void* resizedPixels = nullptr;
 		VkFormat format = VK_FORMAT_UNDEFINED;
 
 		if (stbi_is_hdr(path.c_str()))

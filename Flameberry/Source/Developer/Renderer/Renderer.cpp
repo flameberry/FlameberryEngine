@@ -18,10 +18,10 @@
 namespace Flameberry {
 
 	std::vector<Renderer::Command> Renderer::s_CommandQueue;
-	uint32_t					   Renderer::s_RT_FrameIndex = 0, Renderer::s_FrameIndex = 0;
-	RendererFrameStats			   Renderer::s_RendererFrameStats;
+	uint32_t Renderer::s_RT_FrameIndex = 0, Renderer::s_FrameIndex = 0;
+	RendererFrameStats Renderer::s_RendererFrameStats;
 
-	VkQueryPool												  Renderer::s_QueryPool;
+	VkQueryPool Renderer::s_QueryPool;
 	std::array<uint64_t, 4 * SwapChain::MAX_FRAMES_IN_FLIGHT> Renderer::s_Timestamps;
 
 	void Renderer::Init()
@@ -68,7 +68,7 @@ namespace Flameberry {
 	void Renderer::RT_RenderFrame()
 	{
 		FBY_PROFILE_SCOPE("RT_RenderLoop");
-		auto&		window = Application::Get().GetWindow();
+		auto& window = Application::Get().GetWindow();
 		const auto& device = VulkanContext::GetCurrentDevice();
 
 		// Execute all Render Commands
@@ -78,7 +78,7 @@ namespace Flameberry {
 			device->BeginCommandBuffer(s_RT_FrameIndex);
 
 			VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(s_RT_FrameIndex);
-			uint32_t		imageIndex = window.GetImageIndex();
+			uint32_t imageIndex = window.GetImageIndex();
 
 #ifdef FBY_ENABLE_QUERY_TIMESTAMP
 
@@ -153,7 +153,7 @@ namespace Flameberry {
 	void Renderer::RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material)
 	{
 		VkDescriptorSet descSetArray[material->m_DescriptorSets.size()];
-		int				idx = 0;
+		int idx = 0;
 		for (const auto& set : material->m_DescriptorSets)
 		{
 			descSetArray[idx] = set->GetVulkanDescriptorSet();

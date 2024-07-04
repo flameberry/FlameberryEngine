@@ -24,13 +24,13 @@ namespace Flameberry {
 
 	private:
 		static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
-		static constexpr float			 s_LabelWidth = 100.0f;
+		static constexpr float s_LabelWidth = 100.0f;
 
-		Ref<MaterialEditorPanel>   m_MaterialEditorPanel;
+		Ref<MaterialEditorPanel> m_MaterialEditorPanel;
 		Ref<MaterialSelectorPanel> m_MaterialSelectorPanel;
 
 		fbentt::entity m_SelectionContext = {};
-		Ref<Scene>	   m_Context;
+		Ref<Scene> m_Context;
 
 		Ref<Texture2D> m_SettingsIcon;
 

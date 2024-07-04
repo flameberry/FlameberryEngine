@@ -63,7 +63,7 @@ namespace Flameberry {
 		static std::vector<Command> s_CommandQueue;
 
 		// Query Pool
-		static VkQueryPool												 s_QueryPool;
+		static VkQueryPool s_QueryPool;
 		static std::array<uint64_t, 4 * SwapChain::MAX_FRAMES_IN_FLIGHT> s_Timestamps;
 	};
 

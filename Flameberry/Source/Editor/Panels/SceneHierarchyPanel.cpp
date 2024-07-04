@@ -8,6 +8,7 @@
 #include "Core/UI.h"
 
 namespace Flameberry {
+
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 		: m_Context(context), m_InspectorPanel(CreateRef<InspectorPanel>(m_Context))
 	{
@@ -327,4 +328,5 @@ namespace Flameberry {
 			ImGui::EndMenu();
 		}
 	}
+
 } // namespace Flameberry

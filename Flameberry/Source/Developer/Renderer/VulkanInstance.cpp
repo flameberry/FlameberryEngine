@@ -8,11 +8,12 @@
 #include "VulkanContext.h"
 
 namespace Flameberry {
+
 	static VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
-		VkDebugUtilsMessageSeverityFlagBitsEXT		messageSeverity,
-		VkDebugUtilsMessageTypeFlagsEXT				messageType,
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-		void*										userData)
+		void* userData)
 	{
 #if 1
 		switch (messageSeverity)
@@ -73,7 +74,7 @@ namespace Flameberry {
 		vk_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		vk_create_info.pApplicationInfo = &vk_app_info;
 
-		uint32_t	 glfwExtensionCount = 0;
+		uint32_t glfwExtensionCount = 0;
 		const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
 		std::vector<const char*> vk_extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
@@ -88,7 +89,7 @@ namespace Flameberry {
 		vk_create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 
 		VkDebugUtilsMessengerCreateInfoEXT vk_debug_create_info{};
-		auto							   validationLayers = VulkanContext::GetValidationLayerNames();
+		auto validationLayers = VulkanContext::GetValidationLayerNames();
 
 		if (enableValidationLayers)
 		{
@@ -152,4 +153,5 @@ namespace Flameberry {
 			DestroyDebugUtilsMessengerEXT(m_VkDebugMessenger, nullptr);
 		vkDestroyInstance(m_VkInstance, nullptr);
 	}
+
 } // namespace Flameberry

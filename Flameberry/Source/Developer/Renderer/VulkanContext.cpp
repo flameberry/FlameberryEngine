@@ -9,6 +9,7 @@
 #include "SwapChain.h"
 
 namespace Flameberry {
+
 	const std::vector<const char*> VulkanContext::s_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
 
 	std::vector<const char*> VulkanContext::s_VkDeviceExtensions = {
@@ -141,4 +142,5 @@ namespace Flameberry {
 		FBY_ASSERT(0, "Failed to find valid physical device!");
 		return VK_NULL_HANDLE;
 	}
+
 } // namespace Flameberry
