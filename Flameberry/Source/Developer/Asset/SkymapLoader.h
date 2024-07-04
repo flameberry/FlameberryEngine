@@ -2,15 +2,15 @@
 
 #include <filesystem>
 
-#include "Core/Core.h"
 #include "Asset.h"
+#include "Core/Core.h"
 
 namespace Flameberry {
 
-    class SkymapLoader
-    {
-    public:
-        static Ref<Asset> LoadSkymap(const std::filesystem::path& path);
-    };
+	class SkymapLoader
+	{
+	public:
+		static Ref<Asset> LoadSkymap(const std::filesystem::path& path);
+	};
 
-}
+} // namespace Flameberry

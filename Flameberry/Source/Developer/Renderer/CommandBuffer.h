@@ -5,26 +5,28 @@
 
 namespace Flameberry {
 
-    struct CommandBufferSpecification {
-        VkCommandPool CommandPool;
-        bool IsPrimary = true, SingleTimeUsage = false;
-    };
+	struct CommandBufferSpecification
+	{
+		VkCommandPool CommandPool;
+		bool IsPrimary = true, SingleTimeUsage = false;
+	};
 
-    class CommandBuffer
-    {
-    public:
-        CommandBuffer(const CommandBufferSpecification& specification);
-        ~CommandBuffer();
+	class CommandBuffer
+	{
+	public:
+		CommandBuffer(const CommandBufferSpecification& specification);
+		~CommandBuffer();
 
-        void Begin();
-        void End();
+		void Begin();
+		void End();
 
-        void Reset();
-        VkCommandBuffer GetVulkanCommandBuffer() const { return m_CommandBuffer; }
-    private:
-        CommandBufferSpecification m_Specification;
+		void Reset();
+		VkCommandBuffer GetVulkanCommandBuffer() const { return m_CommandBuffer; }
 
-        VkCommandBuffer m_CommandBuffer;
-    };
+	private:
+		CommandBufferSpecification m_Specification;
 
-}
+		VkCommandBuffer m_CommandBuffer;
+	};
+
+} // namespace Flameberry

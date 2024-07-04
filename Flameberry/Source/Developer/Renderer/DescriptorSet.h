@@ -1,69 +1,84 @@
 #pragma once
 
-#include <vector>
 #include <unordered_map>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 #include "Core/Core.h"
 
 namespace Flameberry {
-    class DescriptorPool
-    {
-    public:
-        DescriptorPool(VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets);
-        ~DescriptorPool();
+	class DescriptorPool
+	{
+	public:
+		DescriptorPool(VkDevice device,
+			const std::vector<VkDescriptorPoolSize>& poolSizes,
+			uint32_t maxSets);
+		~DescriptorPool();
 
-        VkDescriptorPool GetVulkanDescriptorPool() { return m_VkDescriptorPool; }
-        bool AllocateDescriptorSet(VkDescriptorSet* descriptorSet, VkDescriptorSetLayout descriptorSetLayout);
-    private:
-        VkDescriptorPool m_VkDescriptorPool = VK_NULL_HANDLE;
-    };
+		VkDescriptorPool GetVulkanDescriptorPool() { return m_VkDescriptorPool; }
+		bool AllocateDescriptorSet(VkDescriptorSet* descriptorSet,
+			VkDescriptorSetLayout descriptorSetLayout);
 
-    struct DescriptorSetLayoutSpecification
-    {
-        std::vector<VkDescriptorSetLayoutBinding> Bindings;
-    };
+	private:
+		VkDescriptorPool m_VkDescriptorPool = VK_NULL_HANDLE;
+	};
 
-    class DescriptorSetLayout
-    {
-    public:
-        DescriptorSetLayout(const DescriptorSetLayoutSpecification& specification);
-        ~DescriptorSetLayout();
+	struct DescriptorSetLayoutSpecification
+	{
+		std::vector<VkDescriptorSetLayoutBinding> Bindings;
+	};
 
-        static Ref<DescriptorSetLayout> CreateOrGetCached(const DescriptorSetLayoutSpecification& specification);
-        static void ClearCache();
+	class DescriptorSetLayout
+	{
+	public:
+		DescriptorSetLayout(const DescriptorSetLayoutSpecification& specification);
+		~DescriptorSetLayout();
 
-        VkDescriptorSetLayout GetLayout() const { return m_Layout; }
-        DescriptorSetLayoutSpecification GetSpecification() const { return m_DescSetLayoutSpec; }
-    private:
-        DescriptorSetLayoutSpecification m_DescSetLayoutSpec;
-        VkDescriptorSetLayout m_Layout;
+		static Ref<DescriptorSetLayout>
+		CreateOrGetCached(const DescriptorSetLayoutSpecification& specification);
+		static void ClearCache();
 
-        static std::unordered_map<DescriptorSetLayoutSpecification, Ref<DescriptorSetLayout>> s_CachedDescriptorSetLayouts;
-    };
+		VkDescriptorSetLayout GetLayout() const { return m_Layout; }
+		DescriptorSetLayoutSpecification GetSpecification() const
+		{
+			return m_DescSetLayoutSpec;
+		}
 
-    struct DescriptorSetSpecification
-    {
-        Ref<DescriptorPool> Pool;
-        Ref<DescriptorSetLayout> Layout;
-    };
+	private:
+		DescriptorSetLayoutSpecification m_DescSetLayoutSpec;
+		VkDescriptorSetLayout m_Layout;
 
-    class DescriptorSet
-    {
-    public:
-        DescriptorSet(const DescriptorSetSpecification& specification);
-        ~DescriptorSet();
+		static std::unordered_map<DescriptorSetLayoutSpecification,
+			Ref<DescriptorSetLayout>>
+			s_CachedDescriptorSetLayouts;
+	};
 
-        DescriptorSetSpecification GetSpecification() const { return m_Specification; }
-        VkDescriptorSet GetVulkanDescriptorSet() const { return m_DescriptorSet; }
+	struct DescriptorSetSpecification
+	{
+		Ref<DescriptorPool> Pool;
+		Ref<DescriptorSetLayout> Layout;
+	};
 
-        void WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo);
-        void WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo);
-        void Update();
-    private:
-        std::vector<VkWriteDescriptorSet> m_WriteInfos;
+	class DescriptorSet
+	{
+	public:
+		DescriptorSet(const DescriptorSetSpecification& specification);
+		~DescriptorSet();
 
-        DescriptorSetSpecification m_Specification;
-        VkDescriptorSet m_DescriptorSet;
-    };
-}
+		DescriptorSetSpecification GetSpecification() const
+		{
+			return m_Specification;
+		}
+		VkDescriptorSet GetVulkanDescriptorSet() const { return m_DescriptorSet; }
+
+		void WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo);
+		void WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo);
+		void Update();
+
+	private:
+		std::vector<VkWriteDescriptorSet> m_WriteInfos;
+
+		DescriptorSetSpecification m_Specification;
+		VkDescriptorSet m_DescriptorSet;
+	};
+} // namespace Flameberry

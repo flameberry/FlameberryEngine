@@ -2,10 +2,10 @@
 
 namespace Flameberry {
 
-    namespace Algorithm {
+	namespace Algorithm {
 
-        int KmpSearch(const char* txt, const char* pat, bool ignoreCase = false);
+		int KmpSearch(const char* txt, const char* pat, bool ignoreCase = false);
 
-    }
+	}
 
-}
+} // namespace Flameberry
