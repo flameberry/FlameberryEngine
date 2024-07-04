@@ -1,5 +1,3 @@
-<<<<<<<< HEAD:Flameberry/CMakeLists.txt
-========
 file(GLOB_RECURSE SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
@@ -39,4 +37,3 @@ target_compile_definitions(Flameberry PRIVATE ${FBY_COMPILE_DEFINITIONS})
 
 # "FBY_LIBRARY_DEPENDENCIES" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
 target_link_libraries(Flameberry PRIVATE ${FBY_LIBRARY_DEPENDENCIES})
->>>>>>>> dev:Flameberry/Source/Developer/CMakeLists.txt

@@ -1,18 +1,26 @@
-import os, time, pathlib, requests, tarfile, subprocess, re
+import os
+import time
+import pathlib
+import requests
+import tarfile
+import subprocess
+import re
 from zipfile import ZipFile
 from Logger import ColoredLogger
 from requests.exceptions import RequestException
 
+
 class Utils:
     @classmethod
     def GetProjectDirectory(cls) -> pathlib.Path:
-        return pathlib.Path(__file__).parent.parent
+        return pathlib.Path(__file__).parent.parent.parent.parent
 
     @classmethod
     def GetVisualStudioVersionIfInstalled(cls):
         try:
             # Run the reg command to query the Windows Registry for Visual Studio installation
-            result = subprocess.run(['reg', 'query', 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio'], capture_output=True, text=True)
+            result = subprocess.run(
+                ['reg', 'query', 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio'], capture_output=True, text=True)
 
             # Check if the command was successful (return code 0) and if Visual Studio keys are present in the output
             if result.returncode == 0 and 'VisualStudio' in result.stdout:
@@ -30,7 +38,8 @@ class Utils:
     def IsXcodeInstalled(cls):
         try:
             # Run the xcode-select command to check if Xcode is installed
-            result = subprocess.run(['xcode-select', '--print-path'], capture_output=True, text=True)
+            result = subprocess.run(
+                ['xcode-select', '--print-path'], capture_output=True, text=True)
 
             # Check if the command was successful (return code 0) and if Xcode path is present in the output
             return result.returncode == 0 and '/Applications/Xcode.app' in result.stdout.strip()
@@ -48,7 +57,8 @@ class Utils:
         try:
             os.chdir(path)
             # Check if the remote URL matches the provided GitHub URL
-            remoteURL = subprocess.check_output(["git", "config", "--get", "remote.origin.url"], universal_newlines=True)
+            remoteURL = subprocess.check_output(
+                ["git", "config", "--get", "remote.origin.url"], universal_newlines=True)
             os.chdir(cwd)
             return githubURL in remoteURL
         except subprocess.CalledProcessError:
@@ -67,7 +77,8 @@ class Utils:
             length      - Optional  : character length of bar (Int)
             fill        - Optional  : bar fill character (Str)
         """
-        percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+        percent = ("{0:." + str(decimals) + "f}").format(100 *
+                                                         (iteration / float(total)))
         filledLength = int(length * iteration // total)
         bar = fill * filledLength + '-' * (length - filledLength)
         print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
@@ -81,11 +92,12 @@ class Utils:
         if type(URL) is not str:
             ColoredLogger.Logger.error("Download URL should be a str!")
             return False
-        
+
         filename = str(filepath).split("/")[-1]
         filepath = os.path.abspath(filepath)
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        ColoredLogger.Logger.info(f"Preparing to download: {URL} to path: {filepath}")
+        ColoredLogger.Logger.info(
+            f"Preparing to download: {URL} to path: {filepath}")
 
         try:
             response = requests.get(URL, stream=True)
@@ -96,8 +108,10 @@ class Utils:
             return False
 
         if total == 0:
-            ColoredLogger.Logger.warning("Server did not provide Content-Length header.")
-        ColoredLogger.Logger.info(f"{filename} Download Size: {total / 1024 / 1024:.2f} Mb")
+            ColoredLogger.Logger.warning(
+                "Server did not provide Content-Length header.")
+        ColoredLogger.Logger.info(
+            f"{filename} Download Size: {total / 1024 / 1024:.2f} Mb")
 
         downloaded = 0
         with open(filepath, "wb") as f:
@@ -122,8 +136,9 @@ class Utils:
                         width = 75
                         printEnd = ''
 
-                    cls.PrintProgressBar(downloaded, total, length=width, suffix=suffix, printEnd=printEnd)
-        
+                    cls.PrintProgressBar(
+                        downloaded, total, length=width, suffix=suffix, printEnd=printEnd)
+
         if total != downloaded:
             ColoredLogger.Logger.error(f'Failed to download {filename}!')
             return False
@@ -140,6 +155,7 @@ class Utils:
             file.extractall(dest)
             file.close()
         else:
-            ColoredLogger.Logger.error("Compressed file extension is not supported!")
+            ColoredLogger.Logger.error(
+                "Compressed file extension is not supported!")
             return
         ColoredLogger.Logger.info(f"Done!")

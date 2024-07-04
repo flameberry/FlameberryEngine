@@ -9,6 +9,7 @@
 #include "Asset/AssetManager.h"
 #include "Asset/MeshLoader.h"
 #include "Renderer/Skymap.h"
+#include "Scripting/ScriptEngine.h"
 
 namespace Flameberry {
 

@@ -12,6 +12,7 @@
 #include "Physics/PhysicsEngine.h"
 #include "Renderer/ShaderLibrary.h"
 #include "Renderer/Skymap.h"
+#include "Scripting/ScriptEngine.h"
 
 namespace Flameberry {
 

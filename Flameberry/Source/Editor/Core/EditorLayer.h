@@ -2,6 +2,8 @@
 
 #include "Flameberry.h"
 
+#include <FileWatch/FileWatch.hpp>
+
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/InspectorPanel.h"

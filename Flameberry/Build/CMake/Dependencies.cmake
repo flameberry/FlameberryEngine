@@ -83,7 +83,7 @@ list(APPEND FBY_INCLUDE_DIRS
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/fmtlib/include
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/include
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/build/include
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/mono/include
+	${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Mono/include
 )
 
 # Nvidia PhysX
@@ -126,7 +126,7 @@ list(APPEND FBY_LIBRARY_DEPENDENCIES ${Assimp_LIBRARY})
 file(GLOB IMGUI_SRC ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/*.cpp ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/*.h)
 
 # Mono library
-find_library(Monosgen_LIBRARY NAMES monosgen-2.0 HINTS "${FBY_SOURCE_DIR}/Flameberry/vendor/mono/lib" REQUIRED)
+find_library(Monosgen_LIBRARY NAMES monosgen-2.0 HINTS "${FBY_SOURCE_DIR}/Flameberry/Binaries/ThirdParty/Mono/MacOS" REQUIRED)
 list(APPEND FBY_LIBRARY_DEPENDENCIES ${Monosgen_LIBRARY})
 
 set(FBY_DEPENDENCY_SOURCE

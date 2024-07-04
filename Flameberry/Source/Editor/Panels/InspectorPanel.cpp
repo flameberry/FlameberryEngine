@@ -5,6 +5,7 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/UI.h"
+#include "Scripting/ScriptEngine.h"
 
 namespace Flameberry {
 	InspectorPanel::InspectorPanel()

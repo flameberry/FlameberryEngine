@@ -1,11 +1,12 @@
 #include "Scene.h"
 
+#include "PxPhysicsAPI.h"
+
 #include "Core/Timer.h"
 #include "Core/Profiler.h"
 #include "Components.h"
-
 #include "Physics/PhysicsEngine.h"
-#include "PxPhysicsAPI.h"
+#include "Scripting/ScriptEngine.h"
 
 namespace Flameberry {
 
