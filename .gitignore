@@ -71,9 +71,6 @@ Flameberry/Build/Scripts/Setup.meta
 # Local Nvidia PhysX "config"
 Flameberry/Build/CMake/envPhysX.cmake
 
-# CSharp scripting binaries
-Flameberry-ScriptCore/Binaries
-
 # Local project registry
 Flameberry/Config/ProjectRegistry.yaml
 

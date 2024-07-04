@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-    <RootNamespace>Flameberry_ScriptCore</RootNamespace>
+    <RootNamespace>FlameberryScriptCore</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <BuildWithMSBuildOnMono>false</BuildWithMSBuildOnMono>
