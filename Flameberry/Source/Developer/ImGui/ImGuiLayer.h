@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <vulkan/vulkan.h>
+#include <vector>
 
 #include "Core/Layer.h"
 
@@ -29,9 +29,9 @@ namespace Flameberry {
 		void CreateResources();
 
 	private:
-		bool m_BlockEvents = false;
-		VkRenderPass m_ImGuiLayerRenderPass;
+		bool					   m_BlockEvents = false;
+		VkRenderPass			   m_ImGuiLayerRenderPass;
 		std::vector<VkFramebuffer> m_ImGuiFramebuffers;
-		std::vector<VkImageView> m_ImGuiImageViews;
+		std::vector<VkImageView>   m_ImGuiImageViews;
 	};
 } // namespace Flameberry

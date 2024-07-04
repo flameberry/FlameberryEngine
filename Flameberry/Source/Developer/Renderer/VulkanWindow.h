@@ -9,8 +9,7 @@ namespace Flameberry {
 	class VulkanWindow : public Window
 	{
 	public:
-		VulkanWindow(
-			const WindowSpecification& specification = WindowSpecification());
+		VulkanWindow(const WindowSpecification& specification = WindowSpecification());
 		~VulkanWindow();
 
 		void Init() override;
@@ -19,14 +18,11 @@ namespace Flameberry {
 		bool BeginFrame() override;
 		void SwapBuffers() override;
 
-		GLFWwindow* GetGLFWwindow() const override { return m_Window; }
-		const WindowSpecification& GetSpecification() const override
-		{
-			return m_Specification;
-		}
-		VkSurfaceKHR GetWindowSurface() const { return m_WindowSurface; }
-		uint32_t GetImageIndex() const override { return m_ImageIndex; }
-		Ref<SwapChain> GetSwapChain() const { return m_SwapChain; }
+		GLFWwindow*				   GetGLFWwindow() const override { return m_Window; }
+		const WindowSpecification& GetSpecification() const override { return m_Specification; }
+		VkSurfaceKHR			   GetWindowSurface() const { return m_WindowSurface; }
+		uint32_t				   GetImageIndex() const override { return m_ImageIndex; }
+		Ref<SwapChain>			   GetSwapChain() const { return m_SwapChain; }
 
 		bool IsRunning() override { return !glfwWindowShouldClose(m_Window); }
 		void CreateVulkanWindowSurface(VkInstance instance);
@@ -42,7 +38,7 @@ namespace Flameberry {
 		void Resize() override;
 
 	private:
-		GLFWwindow* m_Window;
+		GLFWwindow*	 m_Window;
 		VkSurfaceKHR m_WindowSurface = VK_NULL_HANDLE;
 
 		WindowSpecification m_Specification;
@@ -50,8 +46,8 @@ namespace Flameberry {
 		uint32_t m_PrimaryMonitorWidth = 0, m_PrimaryMonitorHeight = 0;
 
 		Ref<SwapChain> m_SwapChain;
-		uint32_t m_ImageIndex = 0;
-		bool m_WindowResizedFlag = false;
+		uint32_t	   m_ImageIndex = 0;
+		bool		   m_WindowResizedFlag = false;
 
 		std::function<void(Event&)> m_EventCallBack;
 	};

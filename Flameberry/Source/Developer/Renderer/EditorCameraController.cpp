@@ -2,19 +2,22 @@
 
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 #include "Core/Core.h"
 #include "Core/Input.h"
 
 namespace Flameberry {
-	EditorCameraController::EditorCameraController(
-		const PerspectiveCameraSpecification& specification)
-		: m_Camera(CreateRef<PerspectiveCamera>(specification)) {}
+	EditorCameraController::EditorCameraController(const PerspectiveCameraSpecification& specification)
+		: m_Camera(CreateRef<PerspectiveCamera>(specification))
+	{
+	}
 
-	EditorCameraController::~EditorCameraController() {}
+	EditorCameraController::~EditorCameraController()
+	{
+	}
 
 	bool EditorCameraController::OnUpdate(float delta)
 	{
@@ -34,7 +37,7 @@ namespace Flameberry {
 		if (Input::IsKeyPressed(KeyCode::LeftShift) || Input::IsKeyPressed(KeyCode::RightShift))
 			speed *= 2.0f;
 
-		bool moved = false;
+		bool  moved = false;
 		auto& cameraSpec = m_Camera->m_CameraSpec;
 		if (Input::IsKeyPressed(KeyCode::W))
 		{
@@ -72,8 +75,9 @@ namespace Flameberry {
 			float pitchDelta = rotationDelta.y * rotationSpeed;
 			float yawDelta = rotationDelta.x * rotationSpeed;
 
-			glm::quat q =
-				glm::normalize(glm::cross(glm::angleAxis(-pitchDelta, m_RightDirection),
+			glm::quat q = glm::normalize(
+				glm::cross(
+					glm::angleAxis(-pitchDelta, m_RightDirection),
 					glm::angleAxis(-yawDelta, m_UpDirection)));
 			cameraSpec.Direction = glm::rotate(q, cameraSpec.Direction);
 

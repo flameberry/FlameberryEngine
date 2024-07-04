@@ -9,12 +9,11 @@
 #include "SwapChain.h"
 
 namespace Flameberry {
-	const std::vector<const char*> VulkanContext::s_ValidationLayers = {
-		"VK_LAYER_KHRONOS_validation"
-	};
+	const std::vector<const char*> VulkanContext::s_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
 
 	std::vector<const char*> VulkanContext::s_VkDeviceExtensions = {
-		"VK_KHR_portability_subset", VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		"VK_KHR_portability_subset",
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		VK_KHR_MULTIVIEW_EXTENSION_NAME
 	};
 
@@ -32,8 +31,7 @@ namespace Flameberry {
 
 		if (s_EnableValidationLayers)
 		{
-			bool isSupported =
-				RenderCommand::CheckValidationLayerSupport(s_ValidationLayers);
+			bool isSupported = RenderCommand::CheckValidationLayerSupport(s_ValidationLayers);
 			if (!isSupported)
 				FBY_ERROR("Validation Layers are not supported!");
 		}
@@ -44,21 +42,18 @@ namespace Flameberry {
 
 		// Setting up Valid Vulkan Physical Device
 		uint32_t deviceCount = 0;
-		vkEnumeratePhysicalDevices(m_VulkanInstance->GetVulkanInstance(),
-			&deviceCount, nullptr);
+		vkEnumeratePhysicalDevices(m_VulkanInstance->GetVulkanInstance(), &deviceCount, nullptr);
 		FBY_ASSERT(deviceCount, "Failed to find GPUs which support Vulkan!");
 
 		std::vector<VkPhysicalDevice> vk_physical_devices(deviceCount);
-		vkEnumeratePhysicalDevices(m_VulkanInstance->GetVulkanInstance(),
-			&deviceCount, vk_physical_devices.data());
+		vkEnumeratePhysicalDevices(m_VulkanInstance->GetVulkanInstance(), &deviceCount, vk_physical_devices.data());
 
 		// Print Physical Devices Names
 		std::string physical_device_list = "";
 		for (uint16_t i = 0; i < deviceCount; i++)
 		{
 			VkPhysicalDeviceProperties vk_physical_device_props;
-			vkGetPhysicalDeviceProperties(vk_physical_devices[i],
-				&vk_physical_device_props);
+			vkGetPhysicalDeviceProperties(vk_physical_devices[i], &vk_physical_device_props);
 			physical_device_list += vk_physical_device_props.deviceName;
 			if (i < deviceCount - 1)
 				physical_device_list += ", ";
@@ -67,15 +62,12 @@ namespace Flameberry {
 		FBY_TRACE("{} Physical devices found: {}", deviceCount, physical_device_list);
 
 		// Accessing the actual physical device
-		m_VkPhysicalDevice =
-			GetValidPhysicalDevice(vk_physical_devices, pWindow->GetWindowSurface());
-		FBY_ASSERT(m_VkPhysicalDevice != VK_NULL_HANDLE,
-			"Vulkan physical device is null!");
+		m_VkPhysicalDevice = GetValidPhysicalDevice(vk_physical_devices, pWindow->GetWindowSurface());
+		FBY_ASSERT(m_VkPhysicalDevice != VK_NULL_HANDLE, "Vulkan physical device is null!");
 
 		VkPhysicalDeviceProperties vk_physical_device_props;
 		vkGetPhysicalDeviceProperties(m_VkPhysicalDevice, &vk_physical_device_props);
-		FBY_INFO("Selected Vulkan Physical Device: {}",
-			vk_physical_device_props.deviceName);
+		FBY_INFO("Selected Vulkan Physical Device: {}", vk_physical_device_props.deviceName);
 
 		m_VulkanDevice = CreateRef<VulkanDevice>(m_VkPhysicalDevice, pWindow);
 
@@ -87,8 +79,7 @@ namespace Flameberry {
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets },
 			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 2 }
 		};
-		m_GlobalDescriptorPool = CreateRef<DescriptorPool>(
-			m_VulkanDevice->GetVulkanDevice(), poolSizes, maxDescSets);
+		m_GlobalDescriptorPool = CreateRef<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, maxDescSets);
 	}
 
 	VulkanContext::~VulkanContext()
@@ -96,25 +87,19 @@ namespace Flameberry {
 		m_Window->DestroyVulkanWindowSurface(m_VulkanInstance->GetVulkanInstance());
 	}
 
-	VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(
-		const std::vector<VkPhysicalDevice>& vk_physical_devices,
-		VkSurfaceKHR surface)
+	VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices, VkSurfaceKHR surface)
 	{
 		for (auto vk_device : vk_physical_devices)
 		{
-			QueueFamilyIndices indices =
-				RenderCommand::GetQueueFamilyIndices(vk_device, surface);
+			QueueFamilyIndices indices = RenderCommand::GetQueueFamilyIndices(vk_device, surface);
 
 			uint32_t extensionCount = 0;
-			vkEnumerateDeviceExtensionProperties(vk_device, nullptr, &extensionCount,
-				nullptr);
+			vkEnumerateDeviceExtensionProperties(vk_device, nullptr, &extensionCount, nullptr);
 
 			std::vector<VkExtensionProperties> available_extensions(extensionCount);
-			vkEnumerateDeviceExtensionProperties(vk_device, nullptr, &extensionCount,
-				available_extensions.data());
+			vkEnumerateDeviceExtensionProperties(vk_device, nullptr, &extensionCount, available_extensions.data());
 
-			std::set<std::string> required_extensions(s_VkDeviceExtensions.begin(),
-				s_VkDeviceExtensions.end());
+			std::set<std::string> required_extensions(s_VkDeviceExtensions.begin(), s_VkDeviceExtensions.end());
 
 			FBY_INFO("Available Extensions:");
 			for (const auto& extension : available_extensions)
@@ -127,10 +112,8 @@ namespace Flameberry {
 
 			if (found_required_extensions)
 			{
-				SwapChainDetails vk_swap_chain_details =
-					RenderCommand::GetSwapChainDetails(vk_device, surface);
-				is_swap_chain_adequate =
-					(!vk_swap_chain_details.SurfaceFormats.empty()) && (!vk_swap_chain_details.PresentationModes.empty());
+				SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(vk_device, surface);
+				is_swap_chain_adequate = (!vk_swap_chain_details.SurfaceFormats.empty()) && (!vk_swap_chain_details.PresentationModes.empty());
 			}
 			else
 			{
@@ -142,8 +125,15 @@ namespace Flameberry {
 			VkPhysicalDeviceFeatures supportedFeatures;
 			vkGetPhysicalDeviceFeatures(vk_device, &supportedFeatures);
 
-			bool is_physical_device_valid =
-				indices.GraphicsAndComputeSupportedQueueFamilyIndex != -1 && indices.PresentationSupportedQueueFamilyIndex != -1 && found_required_extensions && is_swap_chain_adequate && supportedFeatures.samplerAnisotropy && supportedFeatures.sampleRateShading && supportedFeatures.fillModeNonSolid && supportedFeatures.tessellationShader && supportedFeatures.depthClamp;
+			bool is_physical_device_valid = indices.GraphicsAndComputeSupportedQueueFamilyIndex != -1
+				&& indices.PresentationSupportedQueueFamilyIndex != -1
+				&& found_required_extensions
+				&& is_swap_chain_adequate
+				&& supportedFeatures.samplerAnisotropy
+				&& supportedFeatures.sampleRateShading
+				&& supportedFeatures.fillModeNonSolid
+				&& supportedFeatures.tessellationShader
+				&& supportedFeatures.depthClamp;
 
 			if (is_physical_device_valid)
 				return vk_device;

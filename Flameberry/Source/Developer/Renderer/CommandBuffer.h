@@ -8,7 +8,7 @@ namespace Flameberry {
 	struct CommandBufferSpecification
 	{
 		VkCommandPool CommandPool;
-		bool IsPrimary = true, SingleTimeUsage = false;
+		bool		  IsPrimary = true, SingleTimeUsage = false;
 	};
 
 	class CommandBuffer
@@ -20,7 +20,7 @@ namespace Flameberry {
 		void Begin();
 		void End();
 
-		void Reset();
+		void			Reset();
 		VkCommandBuffer GetVulkanCommandBuffer() const { return m_CommandBuffer; }
 
 	private:

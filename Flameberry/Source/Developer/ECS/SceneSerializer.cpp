@@ -2,18 +2,16 @@
 
 #include <fstream>
 
-#include "Components.h"
-#include "Core/Timer.h"
 #include "Core/YamlUtils.h"
+#include "Core/Timer.h"
+#include "Components.h"
 
 #include "Asset/AssetManager.h"
 #include "Asset/MeshLoader.h"
 #include "Renderer/Skymap.h"
-#include "Renderer/VulkanContext.h"
-
-#include "Scripting/ScriptEngine.h"
 
 namespace Flameberry {
+
 	static std::string ProjectionTypeEnumToString(ProjectionType type)
 	{
 		switch (type)
@@ -33,8 +31,7 @@ namespace Flameberry {
 			return ProjectionType::Perspective;
 	}
 
-	static std::string
-	RigidBodyTypeEnumToString(RigidBodyComponent::RigidBodyType type)
+	static std::string RigidBodyTypeEnumToString(RigidBodyComponent::RigidBodyType type)
 	{
 		switch (type)
 		{
@@ -45,8 +42,7 @@ namespace Flameberry {
 		}
 	}
 
-	static RigidBodyComponent::RigidBodyType
-	RigidBodyTypeStringToEnum(const std::string& type)
+	static RigidBodyComponent::RigidBodyType RigidBodyTypeStringToEnum(const std::string& type)
 	{
 		if (type == "Static")
 			return RigidBodyComponent::RigidBodyType::Static;
@@ -164,21 +160,18 @@ namespace Flameberry {
 		return nullptr;
 	}
 
-	bool SceneSerializer::DeserializeIntoExistingScene(
-		const char* path, const Ref<Scene>& destScene)
+	bool SceneSerializer::DeserializeIntoExistingScene(const char* path, const Ref<Scene>& destScene)
 	{
 		FBY_SCOPED_TIMER("Scene Deserialization");
 
-		std::ifstream in(path);
+		std::ifstream	  in(path);
 		std::stringstream ss;
 		ss << in.rdbuf();
 
 		YAML::Node data = YAML::Load(ss.str());
 		if (!data["Scene"])
 		{
-			FBY_ERROR(
-				"Failed to load scene [{}]: 'Scene' attribute not present in file!",
-				path);
+			FBY_ERROR("Failed to load scene [{}]: 'Scene' attribute not present in file!", path);
 			return false;
 		};
 
@@ -201,63 +194,50 @@ namespace Flameberry {
 			// Deserialize entities
 			for (const auto entity : entities)
 			{
-				const UUID ID = entity["Entity"].as<UUID::value_type>();
+				const UUID			 ID = entity["Entity"].as<UUID::value_type>();
 				const fbentt::entity deserializedEntity = UUIDToEntityMap[ID];
 
-				auto& IDComp =
-					destScene->m_Registry->emplace<IDComponent>(deserializedEntity);
+				auto& IDComp = destScene->m_Registry->emplace<IDComponent>(deserializedEntity);
 				IDComp.ID = ID;
 
-				if (auto tag = entity["TagComponent"])
+				if (auto tag = entity["TagComponent"]; tag)
 				{
-					auto& tagComp =
-						destScene->m_Registry->emplace<TagComponent>(deserializedEntity);
+					auto& tagComp = destScene->m_Registry->emplace<TagComponent>(deserializedEntity);
 					tagComp.Tag = tag.as<std::string>();
 				}
 
-				if (auto transform = entity["TransformComponent"])
+				if (auto transform = entity["TransformComponent"]; transform)
 				{
-					auto& transformComp =
-						destScene->m_Registry->emplace<TransformComponent>(
-							deserializedEntity);
+					auto& transformComp = destScene->m_Registry->emplace<TransformComponent>(deserializedEntity);
 					transformComp.Translation = transform["Translation"].as<glm::vec3>();
 					transformComp.Rotation = transform["Rotation"].as<glm::vec3>();
 					transformComp.Scale = transform["Scale"].as<glm::vec3>();
 				}
 
-				if (auto relation = entity["RelationshipComponent"])
+				if (auto relation = entity["RelationshipComponent"]; relation)
 				{
-					auto& relationComp =
-						destScene->m_Registry->emplace<RelationshipComponent>(
-							deserializedEntity);
-					relationComp.Parent =
-						UUIDToEntityMap[relation["Parent"].as<UUID::value_type>()];
-					relationComp.PrevSibling =
-						UUIDToEntityMap[relation["PrevSibling"].as<UUID::value_type>()];
-					relationComp.NextSibling =
-						UUIDToEntityMap[relation["NextSibling"].as<UUID::value_type>()];
-					relationComp.FirstChild =
-						UUIDToEntityMap[relation["FirstChild"].as<UUID::value_type>()];
+					auto& relationComp = destScene->m_Registry->emplace<RelationshipComponent>(deserializedEntity);
+					relationComp.Parent = UUIDToEntityMap[relation["Parent"].as<UUID::value_type>()];
+					relationComp.PrevSibling = UUIDToEntityMap[relation["PrevSibling"].as<UUID::value_type>()];
+					relationComp.NextSibling = UUIDToEntityMap[relation["NextSibling"].as<UUID::value_type>()];
+					relationComp.FirstChild = UUIDToEntityMap[relation["FirstChild"].as<UUID::value_type>()];
 				}
 
-				if (auto camera = entity["CameraComponent"])
+				if (auto camera = entity["CameraComponent"]; camera)
 				{
-					auto& cameraComp =
-						destScene->m_Registry->emplace<CameraComponent>(deserializedEntity);
+					auto& cameraComp = destScene->m_Registry->emplace<CameraComponent>(deserializedEntity);
 					cameraComp.IsPrimary = camera["IsPrimary"].as<bool>();
 
-					ProjectionType type = ProjectionTypeStringToEnum(
-						camera["ProjectionType"].as<std::string>());
-					float aspectRatio = camera["AspectRatio"].as<float>();
-					float FOV_or_Zoom = camera["FOV/Zoom"].as<float>();
-					float near = camera["Near"].as<float>();
-					float far = camera["Far"].as<float>();
+					ProjectionType type = ProjectionTypeStringToEnum(camera["ProjectionType"].as<std::string>());
+					float		   aspectRatio = camera["AspectRatio"].as<float>();
+					float		   FOV_or_Zoom = camera["FOV/Zoom"].as<float>();
+					float		   near = camera["Near"].as<float>();
+					float		   far = camera["Far"].as<float>();
 
 					switch (type)
 					{
 						case ProjectionType::Orthographic:
-							cameraComp.Camera.SetOrthographic(aspectRatio, FOV_or_Zoom, near,
-								far);
+							cameraComp.Camera.SetOrthographic(aspectRatio, FOV_or_Zoom, near, far);
 							break;
 						case ProjectionType::Perspective:
 							cameraComp.Camera.SetPerspective(aspectRatio, FOV_or_Zoom, near, far);
@@ -265,53 +245,40 @@ namespace Flameberry {
 					}
 				}
 
-				if (auto mesh = entity["MeshComponent"])
+				if (auto mesh = entity["MeshComponent"]; mesh)
 				{
-					auto& meshComp = destScene->m_Registry->emplace<MeshComponent>(
-						deserializedEntity, 0);
+					auto& meshComp = destScene->m_Registry->emplace<MeshComponent>(deserializedEntity, 0);
 					meshComp.MeshHandle = mesh["MeshHandle"].as<UUID::value_type>();
 
-					for (auto entry : mesh["OverridenMaterialTable"]) // TODO: Update with
-																	  // different format
+					for (auto entry : mesh["OverridenMaterialTable"]) // TODO: Update with different format
 					{
-						auto mat = AssetManager::TryGetOrLoadAsset<MaterialAsset>(
-							entry["Material"].as<std::string>());
-						meshComp
-							.OverridenMaterialTable[entry["SubmeshIndex"].as<uint32_t>()] =
-							mat->Handle;
+						auto mat = AssetManager::TryGetOrLoadAsset<MaterialAsset>(entry["Material"].as<std::string>());
+						meshComp.OverridenMaterialTable[entry["SubmeshIndex"].as<uint32_t>()] = mat->Handle;
 					}
 				}
 
-				if (auto skyLight = entity["SkyLightComponent"])
+				if (auto skyLight = entity["SkyLightComponent"]; skyLight)
 				{
-					auto& skyLightComp = destScene->m_Registry->emplace<SkyLightComponent>(
-						deserializedEntity);
+					auto& skyLightComp = destScene->m_Registry->emplace<SkyLightComponent>(deserializedEntity);
 					skyLightComp.Color = skyLight["Color"].as<glm::vec3>();
 					skyLightComp.Intensity = skyLight["Intensity"].as<float>();
 					skyLightComp.EnableSkyMap = skyLight["EnableSkyMap"].as<bool>();
 
 					std::string skymapPath = skyLight["SkyMap"].as<std::string>();
-					skyLightComp.SkyMap =
-						((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Skymap>(
-												  skyLight["SkyMap"].as<std::string>())
-												  ->Handle
-											: AssetHandle(0));
+					skyLightComp.SkyMap = ((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Skymap>(skyLight["SkyMap"].as<std::string>())->Handle : AssetHandle(0));
 				}
 
-				if (auto light = entity["DirectionalLightComponent"])
+				if (auto light = entity["DirectionalLightComponent"]; light)
 				{
-					auto& lightComp =
-						destScene->m_Registry->emplace<DirectionalLightComponent>(
-							deserializedEntity);
+					auto& lightComp = destScene->m_Registry->emplace<DirectionalLightComponent>(deserializedEntity);
 					lightComp.Color = light["Color"].as<glm::vec3>();
 					lightComp.Intensity = light["Intensity"].as<float>();
 					lightComp.LightSize = light["LightSize"].as<float>();
 				}
 
-				if (auto light = entity["PointLightComponent"])
+				if (auto light = entity["PointLightComponent"]; light)
 				{
-					auto& lightComp = destScene->m_Registry->emplace<PointLightComponent>(
-						deserializedEntity);
+					auto& lightComp = destScene->m_Registry->emplace<PointLightComponent>(deserializedEntity);
 					lightComp.Color = light["Color"].as<glm::vec3>();
 					lightComp.Intensity = light["Intensity"].as<float>();
 				}
@@ -438,26 +405,22 @@ namespace Flameberry {
 					rbComp.Restitution = rigidBody["Restitution"].as<float>();
 				}
 
-				if (auto boxCollider = entity["BoxColliderComponent"])
+				if (auto boxCollider = entity["BoxColliderComponent"]; boxCollider)
 				{
-					auto& bcComp = destScene->m_Registry->emplace<BoxColliderComponent>(
-						deserializedEntity);
+					auto& bcComp = destScene->m_Registry->emplace<BoxColliderComponent>(deserializedEntity);
 					bcComp.Size = boxCollider["Size"].as<glm::vec3>();
 				}
 
-				if (auto sphereCollider = entity["SphereColliderComponent"])
+				if (auto sphereCollider = entity["SphereColliderComponent"]; sphereCollider)
 				{
-					auto& scComp = destScene->m_Registry->emplace<SphereColliderComponent>(
-						deserializedEntity);
+					auto& scComp = destScene->m_Registry->emplace<SphereColliderComponent>(deserializedEntity);
 					scComp.Radius = sphereCollider["Radius"].as<float>();
 				}
 
-				if (auto capsuleCollider = entity["CapsuleColliderComponent"])
+				if (auto capsuleCollider = entity["CapsuleColliderComponent"]; capsuleCollider)
 				{
-					auto& ccComp = destScene->m_Registry->emplace<CapsuleColliderComponent>(
-						deserializedEntity);
-					ccComp.Axis =
-						AxisTypeStringToEnum(capsuleCollider["Axis"].as<std::string>());
+					auto& ccComp = destScene->m_Registry->emplace<CapsuleColliderComponent>(deserializedEntity);
+					ccComp.Axis = AxisTypeStringToEnum(capsuleCollider["Axis"].as<std::string>());
 					ccComp.Radius = capsuleCollider["Radius"].as<float>();
 					ccComp.Height = capsuleCollider["Height"].as<float>();
 				}
@@ -469,8 +432,7 @@ namespace Flameberry {
 		{
 			for (auto mesh : meshes)
 			{
-				auto meshAsset =
-					MeshLoader::LoadMesh(mesh["FilePath"].as<std::string>().c_str());
+				auto meshAsset = MeshLoader::LoadMesh(mesh["FilePath"].as<std::string>().c_str());
 				meshAsset->Handle = mesh["Mesh"].as<UUID::value_type>();
 				AssetManager::RegisterAsset(meshAsset);
 			}
@@ -478,16 +440,14 @@ namespace Flameberry {
 		return true;
 	}
 
-	void SceneSerializer::SerializeSceneToFile(const char* path,
-		const Ref<Scene>& srcScene)
+	void SceneSerializer::SerializeSceneToFile(const char* path, const Ref<Scene>& srcScene)
 	{
 		FBY_SCOPED_TIMER("Serialization");
 
 		std::string scenePath(path);
-		uint32_t lastSlashPosition = scenePath.find_last_of('/') + 1;
-		uint32_t lastDotPosition = scenePath.find_last_of('.');
-		std::string sceneName =
-			scenePath.substr(lastSlashPosition, lastDotPosition - lastSlashPosition);
+		uint32_t	lastSlashPosition = scenePath.find_last_of('/') + 1;
+		uint32_t	lastDotPosition = scenePath.find_last_of('.');
+		std::string sceneName = scenePath.substr(lastSlashPosition, lastDotPosition - lastSlashPosition);
 
 		YAML::Emitter out;
 		out << YAML::BeginMap;
@@ -521,17 +481,12 @@ namespace Flameberry {
 		fout << out.c_str();
 	}
 
-	void SceneSerializer::SerializeEntity(YAML::Emitter& out,
-		const fbentt::entity& entity,
-		const Ref<Scene>& scene,
-		std::set<UUID>& meshUUIDs)
+	void SceneSerializer::SerializeEntity(YAML::Emitter& out, const fbentt::entity& entity, const Ref<Scene>& scene, std::set<UUID>& meshUUIDs)
 	{
 		out << YAML::BeginMap;
-		out << YAML::Key << "Entity" << YAML::Value
-			<< scene->m_Registry->get<IDComponent>(entity).ID;
+		out << YAML::Key << "Entity" << YAML::Value << scene->m_Registry->get<IDComponent>(entity).ID;
 
-		out << YAML::Key << "TagComponent" << YAML::Value
-			<< scene->m_Registry->get<TagComponent>(entity).Tag;
+		out << YAML::Key << "TagComponent" << YAML::Value << scene->m_Registry->get<TagComponent>(entity).Tag;
 
 		if (scene->m_Registry->has<TransformComponent>(entity))
 		{
@@ -548,22 +503,10 @@ namespace Flameberry {
 			auto& relation = scene->m_Registry->get<RelationshipComponent>(entity);
 			out << YAML::Key << "RelationshipComponent" << YAML::BeginMap;
 
-			const UUID parentID =
-				relation.Parent != fbentt::null
-				? scene->m_Registry->get<IDComponent>(relation.Parent).ID
-				: UUID(0);
-			const UUID prevSiblingID =
-				relation.PrevSibling != fbentt::null
-				? scene->m_Registry->get<IDComponent>(relation.PrevSibling).ID
-				: UUID(0);
-			const UUID nextSiblingID =
-				relation.NextSibling != fbentt::null
-				? scene->m_Registry->get<IDComponent>(relation.NextSibling).ID
-				: UUID(0);
-			const UUID firstChildID =
-				relation.FirstChild != fbentt::null
-				? scene->m_Registry->get<IDComponent>(relation.FirstChild).ID
-				: UUID(0);
+			const UUID parentID = relation.Parent != fbentt::null ? scene->m_Registry->get<IDComponent>(relation.Parent).ID : UUID(0);
+			const UUID prevSiblingID = relation.PrevSibling != fbentt::null ? scene->m_Registry->get<IDComponent>(relation.PrevSibling).ID : UUID(0);
+			const UUID nextSiblingID = relation.NextSibling != fbentt::null ? scene->m_Registry->get<IDComponent>(relation.NextSibling).ID : UUID(0);
+			const UUID firstChildID = relation.FirstChild != fbentt::null ? scene->m_Registry->get<IDComponent>(relation.FirstChild).ID : UUID(0);
 
 			out << YAML::Key << "Parent" << YAML::Value << parentID;
 			out << YAML::Key << "PrevSibling" << YAML::Value << prevSiblingID;
@@ -574,12 +517,11 @@ namespace Flameberry {
 
 		if (scene->m_Registry->has<CameraComponent>(entity))
 		{
-			auto& cameraComp = scene->m_Registry->get<CameraComponent>(entity);
+			auto&		cameraComp = scene->m_Registry->get<CameraComponent>(entity);
 			const auto& settings = cameraComp.Camera.GetSettings();
 			out << YAML::Key << "CameraComponent" << YAML::BeginMap;
 			out << YAML::Key << "IsPrimary" << YAML::Value << cameraComp.IsPrimary;
-			out << YAML::Key << "ProjectionType" << YAML::Value
-				<< ProjectionTypeEnumToString(settings.ProjectionType);
+			out << YAML::Key << "ProjectionType" << YAML::Value << ProjectionTypeEnumToString(settings.ProjectionType);
 			out << YAML::Key << "AspectRatio" << YAML::Value << settings.AspectRatio;
 			out << YAML::Key << "FOV/Zoom" << YAML::Value << settings.FOV;
 			out << YAML::Key << "Near" << YAML::Value << settings.Near;
@@ -591,12 +533,10 @@ namespace Flameberry {
 		{
 			auto& mesh = scene->m_Registry->get<MeshComponent>(entity);
 			out << YAML::Key << "MeshComponent" << YAML::BeginMap;
-			out << YAML::Key << "MeshHandle" << YAML::Value
-				<< (UUID::value_type)(mesh.MeshHandle);
+			out << YAML::Key << "MeshHandle" << YAML::Value << (UUID::value_type)(mesh.MeshHandle);
 
 			out << YAML::Key << "OverridenMaterialTable" << YAML::BeginSeq;
-			for (const auto& [submeshIndex, materialHandle] :
-				mesh.OverridenMaterialTable)
+			for (const auto& [submeshIndex, materialHandle] : mesh.OverridenMaterialTable)
 			{
 				out << YAML::BeginMap;
 				out << YAML::Key << "SubmeshIndex" << YAML::Value << submeshIndex;
@@ -618,10 +558,7 @@ namespace Flameberry {
 			out << YAML::Key << "Color" << YAML::Value << skyLight.Color;
 			out << YAML::Key << "Intensity" << YAML::Value << skyLight.Intensity;
 			out << YAML::Key << "EnableSkyMap" << YAML::Value << skyLight.EnableSkyMap;
-			out << YAML::Key << "SkyMap" << YAML::Value
-				<< (AssetManager::IsAssetHandleValid(skyLight.SkyMap)
-						   ? AssetManager::GetAsset<Skymap>(skyLight.SkyMap)->FilePath
-						   : "");
+			out << YAML::Key << "SkyMap" << YAML::Value << (AssetManager::IsAssetHandleValid(skyLight.SkyMap) ? AssetManager::GetAsset<Skymap>(skyLight.SkyMap)->FilePath : "");
 			out << YAML::EndMap; // Sky Light Component
 		}
 
@@ -734,13 +671,10 @@ namespace Flameberry {
 		{
 			auto& rigidBody = scene->m_Registry->get<RigidBodyComponent>(entity);
 			out << YAML::Key << "RigidBodyComponent" << YAML::BeginMap;
-			out << YAML::Key << "Type" << YAML::Value
-				<< RigidBodyTypeEnumToString(rigidBody.Type);
+			out << YAML::Key << "Type" << YAML::Value << RigidBodyTypeEnumToString(rigidBody.Type);
 			out << YAML::Key << "Density" << YAML::Value << rigidBody.Density;
-			out << YAML::Key << "StaticFriction" << YAML::Value
-				<< rigidBody.StaticFriction;
-			out << YAML::Key << "DynamicFriction" << YAML::Value
-				<< rigidBody.DynamicFriction;
+			out << YAML::Key << "StaticFriction" << YAML::Value << rigidBody.StaticFriction;
+			out << YAML::Key << "DynamicFriction" << YAML::Value << rigidBody.DynamicFriction;
 			out << YAML::Key << "Restitution" << YAML::Value << rigidBody.Restitution;
 			out << YAML::Key << YAML::EndMap; // Rigid Body Component
 		}
@@ -755,8 +689,7 @@ namespace Flameberry {
 
 		if (scene->m_Registry->has<SphereColliderComponent>(entity))
 		{
-			auto& sphereCollider =
-				scene->m_Registry->get<SphereColliderComponent>(entity);
+			auto& sphereCollider = scene->m_Registry->get<SphereColliderComponent>(entity);
 			out << YAML::Key << "SphereColliderComponent" << YAML::BeginMap;
 			out << YAML::Key << "Radius" << YAML::Value << sphereCollider.Radius;
 			out << YAML::Key << YAML::EndMap; // Sphere Collider Component
@@ -764,11 +697,9 @@ namespace Flameberry {
 
 		if (scene->m_Registry->has<CapsuleColliderComponent>(entity))
 		{
-			auto& capsuleCollider =
-				scene->m_Registry->get<CapsuleColliderComponent>(entity);
+			auto& capsuleCollider = scene->m_Registry->get<CapsuleColliderComponent>(entity);
 			out << YAML::Key << "CapsuleColliderComponent" << YAML::BeginMap;
-			out << YAML::Key << "Axis" << YAML::Value
-				<< AxisTypeEnumToString(capsuleCollider.Axis);
+			out << YAML::Key << "Axis" << YAML::Value << AxisTypeEnumToString(capsuleCollider.Axis);
 			out << YAML::Key << "Radius" << YAML::Value << capsuleCollider.Radius;
 			out << YAML::Key << "Height" << YAML::Value << capsuleCollider.Height;
 			out << YAML::Key << YAML::EndMap; // Capsule Collider Component

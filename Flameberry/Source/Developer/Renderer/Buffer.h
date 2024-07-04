@@ -9,11 +9,11 @@ namespace Flameberry {
 
 	struct BufferSpecification
 	{
-		VkDeviceSize InstanceSize;
-		uint32_t InstanceCount;
-		VkBufferUsageFlags Usage;
+		VkDeviceSize		  InstanceSize;
+		uint32_t			  InstanceCount;
+		VkBufferUsageFlags	  Usage;
 		VkMemoryPropertyFlags MemoryProperties;
-		VkDeviceSize MinOffsetAlignment = 0;
+		VkDeviceSize		  MinOffsetAlignment = 0;
 	};
 
 	class Buffer
@@ -22,30 +22,25 @@ namespace Flameberry {
 		Buffer(const BufferSpecification& specification);
 		~Buffer();
 
-		void WriteToBuffer(const void* data, VkDeviceSize size,
-			VkDeviceSize offset = 0);
-		void WriteToIndex(const void* data, uint32_t index);
+		void	 WriteToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
+		void	 WriteToIndex(const void* data, uint32_t index);
 		VkResult Flush(VkDeviceSize size, VkDeviceSize offset);
 		VkResult FlushIndex(int index);
 		VkResult MapMemory(VkDeviceSize size, VkDeviceSize offset = 0);
-		void UnmapMemory();
+		void	 UnmapMemory();
 
-		const void* GetMappedMemory() const { return m_VkBufferMappedMemory; }
+		const void*			GetMappedMemory() const { return m_VkBufferMappedMemory; }
 		BufferSpecification GetSpecification() const { return m_BufferSpec; }
-		const VkBuffer& GetVulkanBuffer() const { return m_VkBuffer; }
-		VkDeviceSize GetBufferSize() const
-		{
-			return m_AlignmentSize * m_BufferSpec.InstanceCount;
-		}
+		const VkBuffer&		GetVulkanBuffer() const { return m_VkBuffer; }
+		VkDeviceSize		GetBufferSize() const { return m_AlignmentSize * m_BufferSpec.InstanceCount; }
 
 	private:
-		VkDeviceSize GetAlignment(VkDeviceSize instanceSize,
-			VkDeviceSize minOffsetAlignment);
+		VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
 
 	private:
-		VkBuffer m_VkBuffer = VK_NULL_HANDLE;
+		VkBuffer	   m_VkBuffer = VK_NULL_HANDLE;
 		VkDeviceMemory m_VkBufferDeviceMemory = VK_NULL_HANDLE;
-		void* m_VkBufferMappedMemory = nullptr;
+		void*		   m_VkBufferMappedMemory = nullptr;
 
 		VkDeviceSize m_AlignmentSize;
 

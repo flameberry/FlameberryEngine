@@ -1,8 +1,8 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
-#include <functional>
 #include <string>
+#include <functional>
+#include <GLFW/glfw3.h>
 
 namespace Flameberry {
 
@@ -12,8 +12,7 @@ namespace Flameberry {
 		{
 		public:
 			static void CreateForGLFWwindow(GLFWwindow* window, float titleBarHeight);
-			static void InvalidateFrameAndContentFrameRect(GLFWwindow* window,
-				float titleBarHeight);
+			static void InvalidateFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight);
 			static void SetPrimaryTitle(const std::string& title);
 			static void SetSecondaryTitle(const std::string& secondaryTitle);
 		};

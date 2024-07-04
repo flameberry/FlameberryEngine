@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flameberry.h"
+#include "Project/Project.h"
 
 namespace Flameberry {
 

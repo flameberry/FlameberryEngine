@@ -1,7 +1,7 @@
 #pragma once
 
-#include <set>
 #include <vector>
+#include <set>
 #include <vulkan/vulkan.h>
 
 #include "Core/Core.h"
@@ -20,24 +20,17 @@ namespace Flameberry {
 		VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow);
 		~VulkanDevice();
 
-		inline VkDevice GetVulkanDevice() const { return m_VkDevice; }
-		inline VkQueue GetGraphicsQueue() const { return m_GraphicsAndComputeQueue; }
-		inline VkQueue GetComputeQueue() const { return m_GraphicsAndComputeQueue; }
-		inline VkQueue GetPresentationQueue() const { return m_PresentationQueue; }
-		inline QueueFamilyIndices GetQueueFamilyIndices() const
-		{
-			return m_QueueFamilyIndices;
-		}
-		VkCommandBuffer GetCommandBuffer(uint32_t bufferIndex) const
-		{
-			return m_VkCommandBuffers[bufferIndex];
-		}
-		VkCommandPool GetComputeCommandPool() const { return m_VkCommandPool; }
+		inline VkDevice			  GetVulkanDevice() const { return m_VkDevice; }
+		inline VkQueue			  GetGraphicsQueue() const { return m_GraphicsAndComputeQueue; }
+		inline VkQueue			  GetComputeQueue() const { return m_GraphicsAndComputeQueue; }
+		inline VkQueue			  GetPresentationQueue() const { return m_PresentationQueue; }
+		inline QueueFamilyIndices GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
+		VkCommandBuffer			  GetCommandBuffer(uint32_t bufferIndex) const { return m_VkCommandBuffers[bufferIndex]; }
+		VkCommandPool			  GetComputeCommandPool() const { return m_VkCommandPool; }
 
 		void AllocateCommandBuffers(uint32_t bufferCount);
 		void ResetCommandBuffer(uint32_t bufferIndex);
-		void BeginCommandBuffer(uint32_t bufferIndex,
-			VkCommandBufferUsageFlags usageFlags = 0);
+		void BeginCommandBuffer(uint32_t bufferIndex, VkCommandBufferUsageFlags usageFlags = 0);
 		void EndCommandBuffer(uint32_t bufferIndex);
 		void BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
 		void EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
@@ -45,25 +38,20 @@ namespace Flameberry {
 		void WaitIdle();
 		void WaitIdleGraphicsQueue();
 
-		std::vector<VkDeviceQueueCreateInfo>
-		CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices);
+		std::vector<VkDeviceQueueCreateInfo> CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices);
 
 	private:
-		VkDevice m_VkDevice;
-		VkQueue m_GraphicsAndComputeQueue, m_PresentationQueue;
+		VkDevice		   m_VkDevice;
+		VkQueue			   m_GraphicsAndComputeQueue, m_PresentationQueue;
 		QueueFamilyIndices m_QueueFamilyIndices;
 
-		VkCommandPool m_VkCommandPool;
+		VkCommandPool				 m_VkCommandPool;
 		std::vector<VkCommandBuffer> m_VkCommandBuffers;
 
 #ifdef FBY_PLATFORM_MACOS
-		const std::vector<const char*> m_VkDeviceExtensions = {
-			"VK_KHR_portability_subset", VK_KHR_SWAPCHAIN_EXTENSION_NAME
-		};
+		const std::vector<const char*> m_VkDeviceExtensions = { "VK_KHR_portability_subset", VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 #else
-		const std::vector<const char*> m_VkDeviceExtensions = {
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME
-		};
+		const std::vector<const char*> m_VkDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 #endif
 		VkPhysicalDevice& m_VkPhysicalDevice;
 	};

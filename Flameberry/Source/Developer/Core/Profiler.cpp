@@ -13,10 +13,7 @@ namespace Flameberry {
 
 	Profiler::~Profiler()
 	{
-		double executionTime =
-			std::chrono::duration_cast<std::chrono::nanoseconds>(
-				std::chrono::high_resolution_clock::now() - m_Start)
-				.count();
+		double executionTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_Start).count();
 		s_ScopeExecutionTimes[m_ScopeName] = executionTime;
 	}
 

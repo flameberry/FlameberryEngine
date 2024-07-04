@@ -1,8 +1,7 @@
 #include "Math.h"
 
 namespace Flameberry {
-	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation,
-		glm::vec3& rotation, glm::vec3& scale)
+	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::vec3& rotation, glm::vec3& scale)
 	{
 		// From glm::decompose in matrix_decompose.inl
 
@@ -16,11 +15,11 @@ namespace Flameberry {
 			return false;
 
 		// First, isolate perspective.  This is the messiest.
-		if (epsilonNotEqual(LocalMatrix[0][3], static_cast<T>(0), epsilon<T>()) || epsilonNotEqual(LocalMatrix[1][3], static_cast<T>(0), epsilon<T>()) || epsilonNotEqual(LocalMatrix[2][3], static_cast<T>(0), epsilon<T>()))
+		if (
+			epsilonNotEqual(LocalMatrix[0][3], static_cast<T>(0), epsilon<T>()) || epsilonNotEqual(LocalMatrix[1][3], static_cast<T>(0), epsilon<T>()) || epsilonNotEqual(LocalMatrix[2][3], static_cast<T>(0), epsilon<T>()))
 		{
 			// Clear the perspective partition
-			LocalMatrix[0][3] = LocalMatrix[1][3] = LocalMatrix[2][3] =
-				static_cast<T>(0);
+			LocalMatrix[0][3] = LocalMatrix[1][3] = LocalMatrix[2][3] = static_cast<T>(0);
 			LocalMatrix[3][3] = static_cast<T>(1);
 		}
 

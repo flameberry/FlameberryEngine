@@ -6,7 +6,9 @@ namespace Flameberry {
 	Ref<Logger> Logger::s_CoreLogger;
 
 	Logger::Logger(const char* instanceName)
-		: m_CurrentLogLevel(LogLevel::TRACE), m_InstanceName(instanceName) {}
+		: m_CurrentLogLevel(LogLevel::TRACE), m_InstanceName(instanceName)
+	{
+	}
 
 	std::string Logger::GetCurrentTimeString()
 	{
@@ -38,7 +40,6 @@ namespace Flameberry {
 				logLevelStr = "CRITICAL";
 				break;
 		}
-		return fmt::format("{} [{}] {}", GetCurrentTimeString(), m_InstanceName,
-			logLevelStr);
+		return fmt::format("{} [{}] {}", GetCurrentTimeString(), m_InstanceName, logLevelStr);
 	}
 } // namespace Flameberry

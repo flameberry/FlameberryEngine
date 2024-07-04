@@ -1,8 +1,10 @@
+<<<<<<<< HEAD:Flameberry/CMakeLists.txt
+========
 file(GLOB_RECURSE SRC_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.mm
 )
 
 if(MSVC OR XCODE)
@@ -10,9 +12,9 @@ if(MSVC OR XCODE)
 endif()
 
 if(WIN32)
-    file(GLOB EXCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/MacOS/*.mm)
+    file(GLOB EXCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/Platform/MacOS/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Platform/MacOS/*.h ${CMAKE_CURRENT_SOURCE_DIR}/Platform/MacOS/*.mm)
 elseif(APPLE)
-    file(GLOB EXCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Windows/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Windows/*.h)
+    file(GLOB EXCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/Platform/Windows/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Platform/Windows/*.h)
 endif()
 
 exclude_from_list(SRC_FILES ${EXCLUDE_FILES})
@@ -31,19 +33,10 @@ if(XCODE)
     target_compile_definitions(Flameberry PRIVATE FBY_XCODE_PROJ)
 endif()
 
-target_include_directories(Flameberry PRIVATE ${FBY_INCLUDE_DIRS} ${FBY_SOURCE_DIR}/Flameberry/src)
-
-# Add Dependencies
-add_subdirectory(vendor/GLFW)
-add_subdirectory(vendor/yaml-cpp)
-add_subdirectory(vendor/fmtlib)
-
-option(SPIRV_REFLECT_EXECUTABLE "Build spirv-reflect executable" OFF)
-option(SPIRV_REFLECT_STATIC_LIB "Build a SPIRV-Reflect static library" ON)
-
-add_subdirectory(vendor/SPIRV-Reflect)
+target_include_directories(Flameberry PRIVATE ${FBY_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_compile_definitions(Flameberry PRIVATE ${FBY_COMPILE_DEFINITIONS})
 
 # "FBY_LIBRARY_DEPENDENCIES" defined in the {ROOT_DIRECTORY}/CMakeUtils/Dependencies.cmake
 target_link_libraries(Flameberry PRIVATE ${FBY_LIBRARY_DEPENDENCIES})
+>>>>>>>> dev:Flameberry/Source/Developer/CMakeLists.txt

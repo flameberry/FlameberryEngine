@@ -1,7 +1,7 @@
 #pragma once
 
-#include <memory>
 #include <vulkan/vulkan.h>
+#include <memory>
 
 namespace Flameberry {
 	class VulkanInstance
@@ -12,15 +12,11 @@ namespace Flameberry {
 
 		VkInstance GetVulkanInstance() const { return m_VkInstance; }
 
-		VkResult CreateDebugUtilsMessengerEXT(
-			const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-			const VkAllocationCallbacks* pAllocator,
-			VkDebugUtilsMessengerEXT* pMessenger);
-		void DestroyDebugUtilsMessengerEXT(VkDebugUtilsMessengerEXT messenger,
-			const VkAllocationCallbacks* pAllocator);
+		VkResult CreateDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pMessenger);
+		void	 DestroyDebugUtilsMessengerEXT(VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator);
 
 	private:
-		VkInstance m_VkInstance;
+		VkInstance				 m_VkInstance;
 		VkDebugUtilsMessengerEXT m_VkDebugMessenger;
 	};
 } // namespace Flameberry

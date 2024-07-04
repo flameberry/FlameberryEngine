@@ -1,7 +1,7 @@
 #pragma once
 
-#include <filesystem>
 #include <map>
+#include <filesystem>
 
 // TODO: Make the paths unambigious
 #include "Project/Project.h"
@@ -23,11 +23,9 @@ namespace Flameberry {
 	class ThumbnailCache
 	{
 	public:
-		ThumbnailCache(const Ref<Project>& project,
-			const ThumbnailCacheConfig& config = ThumbnailCacheConfig());
+		ThumbnailCache(const Ref<Project>& project, const ThumbnailCacheConfig& config = ThumbnailCacheConfig());
 
-		Ref<Texture2D>
-		TryGetOrCreateThumbnail(const std::filesystem::path& assetPath);
+		Ref<Texture2D> TryGetOrCreateThumbnail(const std::filesystem::path& assetPath);
 		void ResetThumbnailLoadedCounter() { m_ThumbnailsLoadedThisFrame = 0; }
 
 	private:

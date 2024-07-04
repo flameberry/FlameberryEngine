@@ -27,8 +27,7 @@ namespace std {
 	{
 		size_t operator()(const Flameberry::UUID& key) const
 		{
-			return hash<Flameberry::UUID::value_type>()(
-				(Flameberry::UUID::value_type)key);
+			return hash<Flameberry::UUID::value_type>()((Flameberry::UUID::value_type)key);
 		}
 	};
 } // namespace std

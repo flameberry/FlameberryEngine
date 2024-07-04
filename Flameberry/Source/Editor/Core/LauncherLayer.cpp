@@ -2,13 +2,14 @@
 
 #include <fstream>
 
-#include "UI.h"
+#include "Core/UI.h"
 
 namespace Flameberry {
 
-	LauncherLayer::LauncherLayer(
-		const std::function<void(const Ref<Project>&)>& callback)
-		: m_OpenProjectCallback(callback) {}
+	LauncherLayer::LauncherLayer(const std::function<void(const Ref<Project>&)>& callback)
+		: m_OpenProjectCallback(callback)
+	{
+	}
 
 	void LauncherLayer::OnCreate()
 	{
@@ -46,19 +47,14 @@ namespace Flameberry {
 		static float firstChildSize = 100.0f, secondChildSize = 220.0f;
 		firstChildSize = ImGui::GetContentRegionAvail().x - secondChildSize - 8.0f;
 
-		ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0),
-			ImGuiChildFlags_AlwaysAutoResize,
-			ImGuiWindowFlags_AlwaysUseWindowPadding);
+		ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0), ImGuiChildFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysUseWindowPadding);
 
 		for (const auto& entry : m_ProjectRegistry)
 		{
-			if (UI::ProjectRegistryEntryItem(
-					entry.ProjectName.c_str(), entry.ProjectFilePath.c_str(),
-					!std::filesystem::exists(entry.ProjectFilePath)))
+			if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), entry.ProjectFilePath.c_str(), !std::filesystem::exists(entry.ProjectFilePath)))
 			{
 				// Open Project
-				m_Project =
-					ProjectSerializer::DeserializeIntoNewProject(entry.ProjectFilePath);
+				m_Project = ProjectSerializer::DeserializeIntoNewProject(entry.ProjectFilePath);
 				m_ShouldClose = true;
 			}
 		}
@@ -67,9 +63,7 @@ namespace Flameberry {
 
 		ImGui::SameLine();
 
-		ImGui::BeginChild("##ProjectControls", ImVec2(secondChildSize, 0),
-			ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_Border,
-			ImGuiWindowFlags_AlwaysUseWindowPadding);
+		ImGui::BeginChild("##ProjectControls", ImVec2(secondChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_Border, ImGuiWindowFlags_AlwaysUseWindowPadding);
 
 		if (UI::AlignedButton("New Project", buttonSize))
 			ImGui::OpenPopup("New Project");
@@ -78,18 +72,14 @@ namespace Flameberry {
 
 		if (UI::AlignedButton("Open Project", buttonSize))
 		{
-			// Open a project browser window and if an existing project is selected
-			// then...
-			std::string path =
-				Platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
+			// Open a project browser window and if an existing project is selected then...
+			std::string path = Platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
 			if (!path.empty())
 			{
 				m_Project = ProjectSerializer::DeserializeIntoNewProject(path);
 
 				ProjectRegistryEntry entry{ m_Project->GetConfig().Name, path };
-				if (std::find(m_ProjectRegistry.begin(), m_ProjectRegistry.end(),
-						entry)
-					== m_ProjectRegistry.end())
+				if (std::find(m_ProjectRegistry.begin(), m_ProjectRegistry.end(), entry) == m_ProjectRegistry.end())
 				{
 					// The project didn't exist before in the ProjectRegistry
 					ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
@@ -102,9 +92,13 @@ namespace Flameberry {
 		ImGui::End();
 	}
 
-	void LauncherLayer::OnEvent(Event& e) {}
+	void LauncherLayer::OnEvent(Event& e)
+	{
+	}
 
-	void LauncherLayer::OnDestroy() {}
+	void LauncherLayer::OnDestroy()
+	{
+	}
 
 	void LauncherLayer::UI_NewProjectPopup()
 	{
@@ -113,9 +107,7 @@ namespace Flameberry {
 		ImGui::SetNextWindowSize(ImVec2(1280 / 3, 720 / 4));
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
-		const bool beginPopupModal = ImGui::BeginPopupModal(
-			"New Project", nullptr,
-			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
+		const bool beginPopupModal = ImGui::BeginPopupModal("New Project", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::PopStyleVar();
 
 		if (beginPopupModal)
@@ -130,10 +122,8 @@ namespace Flameberry {
 
 			const float inputBoxWidth = ImGui::GetContentRegionAvail().x - 30.0f;
 
-			UI::InputBox("##ProjectNameInput", inputBoxWidth, m_ProjectNameBuffer, 128,
-				"Project Name...");
-			UI::InputBox("##ProjectPathInput", inputBoxWidth, m_ProjectPathBuffer, 512,
-				"Enter a directory...");
+			UI::InputBox("##ProjectNameInput", inputBoxWidth, m_ProjectNameBuffer, 128, "Project Name...");
+			UI::InputBox("##ProjectPathInput", inputBoxWidth, m_ProjectPathBuffer, 512, "Enter a directory...");
 			ImGui::SameLine();
 			if (ImGui::Button("..."))
 			{

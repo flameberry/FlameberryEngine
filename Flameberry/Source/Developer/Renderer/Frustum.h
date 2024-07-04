@@ -13,7 +13,6 @@ namespace Flameberry {
 		void ExtractFrustumPlanes(const glm::mat4& viewProjectionMatrix);
 	};
 
-	bool IsAABBInsideFrustum(const AABB& aabb, const glm::mat4& transform,
-		const Frustum& frustum);
+	bool IsAABBInsideFrustum(const AABB& aabb, const glm::mat4& transform, const Frustum& frustum);
 
 } // namespace Flameberry

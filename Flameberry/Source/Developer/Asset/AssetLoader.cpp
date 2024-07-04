@@ -1,13 +1,13 @@
 #include "AssetLoader.h"
 
-#include "AssetManager.h"
 #include "Core/Timer.h"
+#include "AssetManager.h"
 #include "Renderer/RenderCommand.h"
 
-#include "MaterialLoader.h"
-#include "MeshLoader.h"
-#include "SkymapLoader.h"
 #include "TextureLoader.h"
+#include "MeshLoader.h"
+#include "MaterialLoader.h"
+#include "SkymapLoader.h"
 
 namespace Flameberry {
 	struct AssetLoaderFunctionMapEntry
@@ -24,8 +24,7 @@ namespace Flameberry {
 		{ AssetType::Skymap, SkymapLoader::LoadSkymap }
 	};
 
-	Ref<Asset> AssetLoader::LoadAsset(const std::filesystem::path& path,
-		AssetType type)
+	Ref<Asset> AssetLoader::LoadAsset(const std::filesystem::path& path, AssetType type)
 	{
 		if ((uint16_t)type >= sizeof(g_AssetLoaderFunctionMap) / sizeof(AssetLoaderFunctionMapEntry))
 		{

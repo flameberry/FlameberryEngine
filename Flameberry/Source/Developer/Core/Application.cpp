@@ -4,10 +4,10 @@
 #include "Layer.h"
 #include "Timer.h"
 
-#include "Asset/AssetManager.h"
 #include "ImGui/ImGuiLayer.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/Texture2D.h"
+#include "Asset/AssetManager.h"
 
 namespace Flameberry {
 	Application* Application::s_Instance;
@@ -30,8 +30,7 @@ namespace Flameberry {
 		m_Window->Init();
 
 		auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
-		VulkanContext::GetCurrentDevice()->AllocateCommandBuffers(
-			swapchain->GetSwapChainImageCount());
+		VulkanContext::GetCurrentDevice()->AllocateCommandBuffers(swapchain->GetSwapChainImageCount());
 
 		Renderer::Init();
 
@@ -45,19 +44,16 @@ namespace Flameberry {
 		while (m_Window->IsRunning())
 		{
 			float now = glfwGetTime();
-			// This is the main delta time of the frame even though it's just a local
-			// variable :D
+			// This is the main delta time of the frame even though it's just a local variable :D
 			float delta = now - last;
 			last = now;
 
 			// This is where all the layers get updated and
-			// The layers submit render commands to a command queue present in
-			// `Renderer`
+			// The layers submit render commands to a command queue present in `Renderer`
 			for (auto& layer : m_LayerStack)
 				layer->OnUpdate(delta);
 
-			// ImGui Rendering is submitted as a render command because otherwise it
-			// behaves oddly and gives validation errors
+			// ImGui Rendering is submitted as a render command because otherwise it behaves oddly and gives validation errors
 			Renderer::Submit([app = this](VkCommandBuffer, uint32_t) {
 				app->m_ImGuiLayer->Begin();
 				for (auto& layer : app->m_LayerStack)
@@ -95,7 +91,9 @@ namespace Flameberry {
 		}
 	}
 
-	void Application::OnKeyPressedEvent(KeyPressedEvent& e) {}
+	void Application::OnKeyPressedEvent(KeyPressedEvent& e)
+	{
+	}
 
 	void Application::OnWindowResizedEvent(WindowResizedEvent& e)
 	{

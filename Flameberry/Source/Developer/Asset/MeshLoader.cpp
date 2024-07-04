@@ -1,18 +1,18 @@
 #include "MeshLoader.h"
 
-#include "AssetManager.h"
 #include "Core/Timer.h"
+#include "AssetManager.h"
 #include "Renderer/RenderCommand.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
 #include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader/tiny_obj_loader.h>
+#include <TinyObjLoader/tiny_obj_loader.h>
 
 namespace Flameberry {
 	template <typename T, typename... Rest>
@@ -30,8 +30,7 @@ namespace std {
 		size_t operator()(Flameberry::MeshVertex const& vertex) const
 		{
 			size_t seed = 0;
-			Flameberry::hashCombine(seed, vertex.Position, vertex.Normal,
-				vertex.TextureUV);
+			Flameberry::hashCombine(seed, vertex.Position, vertex.Normal, vertex.TextureUV);
 			return seed;
 		}
 	};
@@ -49,8 +48,7 @@ namespace Flameberry {
 
 		std::string mtlBaseDir = path.parent_path();
 
-		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(),
-				mtlBaseDir.c_str()))
+		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), mtlBaseDir.c_str()))
 		{
 			FBY_ERROR("Failed to load OBJ file: {}", path);
 			return nullptr;
@@ -73,28 +71,23 @@ namespace Flameberry {
 
 			materialAsset->SetUseAlbedoMap(!mat.diffuse_texname.empty());
 			if (materialAsset->IsUsingAlbedoMap())
-				materialAsset->SetAlbedoMap(AssetManager::TryGetOrLoadAsset<Texture2D>(
-					mtlBaseDir + "/" + mat.diffuse_texname));
+				materialAsset->SetAlbedoMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.diffuse_texname));
 
 			materialAsset->SetUseNormalMap(!mat.displacement_texname.empty());
 			if (materialAsset->IsUsingNormalMap())
-				materialAsset->SetNormalMap(AssetManager::TryGetOrLoadAsset<Texture2D>(
-					mtlBaseDir + "/" + mat.displacement_texname));
+				materialAsset->SetNormalMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.displacement_texname));
 
 			materialAsset->SetUseRoughnessMap(!mat.roughness_texname.empty());
 			if (materialAsset->IsUsingRoughnessMap())
-				materialAsset->SetRoughnessMap(AssetManager::TryGetOrLoadAsset<Texture2D>(
-					mtlBaseDir + "/" + mat.roughness_texname));
+				materialAsset->SetRoughnessMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.roughness_texname));
 
 			materialAsset->SetUseMetallicMap(!mat.metallic_texname.empty());
 			if (materialAsset->IsUsingMetallicMap())
-				materialAsset->SetMetallicMap(AssetManager::TryGetOrLoadAsset<Texture2D>(
-					mtlBaseDir + "/" + mat.metallic_texname));
+				materialAsset->SetMetallicMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.metallic_texname));
 
 			materialAsset->SetUseAmbientMap(!mat.ambient_texname.empty());
 			if (materialAsset->IsUsingAmbientMap())
-				materialAsset->SetAmbientMap(AssetManager::TryGetOrLoadAsset<Texture2D>(
-					mtlBaseDir + "/" + mat.ambient_texname));
+				materialAsset->SetAmbientMap(AssetManager::TryGetOrLoadAsset<Texture2D>(mtlBaseDir + "/" + mat.ambient_texname));
 
 			AssetManager::RegisterAsset(materialAsset);
 			materialHandles.emplace_back(materialAsset->Handle);
@@ -212,13 +205,11 @@ namespace Flameberry {
 			BufferSpecification vertexBufferSpec;
 			vertexBufferSpec.InstanceCount = 1;
 			vertexBufferSpec.InstanceSize = bufferSize;
-			vertexBufferSpec.Usage =
-				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+			vertexBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 			vertexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 			vertexBuffer = std::make_unique<Buffer>(vertexBufferSpec);
-			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(),
-				vertexBuffer->GetVulkanBuffer(), bufferSize);
+			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), vertexBuffer->GetVulkanBuffer(), bufferSize);
 		}
 
 		{
@@ -240,13 +231,11 @@ namespace Flameberry {
 			BufferSpecification indexBufferSpec;
 			indexBufferSpec.InstanceCount = 1;
 			indexBufferSpec.InstanceSize = bufferSize;
-			indexBufferSpec.Usage =
-				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+			indexBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 			indexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 			indexBuffer = std::make_unique<Buffer>(indexBufferSpec);
-			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(),
-				indexBuffer->GetVulkanBuffer(), bufferSize);
+			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), indexBuffer->GetVulkanBuffer(), bufferSize);
 		}
 
 		auto meshAsset = CreateRef<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
@@ -254,17 +243,14 @@ namespace Flameberry {
 		// Set Asset Class Variables
 		meshAsset->FilePath = path;
 		meshAsset->SizeInBytesOnCPU = sizeof(StaticMesh);
-		meshAsset->SizeInBytesOnGPU =
-			vertices.size() * sizeof(MeshVertex) + indices.size() * sizeof(uint32_t);
+		meshAsset->SizeInBytesOnGPU = vertices.size() * sizeof(MeshVertex) + indices.size() * sizeof(uint32_t);
 
-		FBY_INFO("Loaded Model: '{}': Vertices: {}, Indices: {}", path,
-			vertices.size(), indices.size());
+		FBY_INFO("Loaded Model: '{}': Vertices: {}, Indices: {}", path, vertices.size(), indices.size());
 		return meshAsset;
 	}
 
 	// Returns Flameberry Material Asset Handle
-	static AssetHandle ProcessAndLoadMaterial(aiMaterial* material,
-		const std::filesystem::path& path)
+	static AssetHandle ProcessAndLoadMaterial(aiMaterial* material, const std::filesystem::path& path)
 	{
 		aiString name;
 		material->Get(AI_MATKEY_NAME, name);
@@ -305,81 +291,57 @@ namespace Flameberry {
 		result = material->GetTexture(AI_MATKEY_METALLIC_TEXTURE, &metallicMap);
 		materialAsset->SetUseMetallicMap(result == AI_SUCCESS);
 
-		std::string albedoStr(albedoMap.C_Str()), normalStr(normalMap.C_Str()),
-			roughnessStr(roughnessMap.C_Str()), ambientStr(ambientMap.C_Str()),
-			metallicStr(metallicMap.C_Str());
+		std::string albedoStr(albedoMap.C_Str()), normalStr(normalMap.C_Str()), roughnessStr(roughnessMap.C_Str()), ambientStr(ambientMap.C_Str()), metallicStr(metallicMap.C_Str());
 
 		if (materialAsset->IsUsingAlbedoMap())
 		{
 			std::replace(albedoStr.begin(), albedoStr.end(), '\\', '/');
-			materialAsset->SetAlbedoMap(AssetManager::TryGetOrLoadAsset<Texture2D>(
-				path.parent_path() / albedoStr));
+			materialAsset->SetAlbedoMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / albedoStr));
 		}
 
 		if (materialAsset->IsUsingNormalMap())
 		{
 			std::replace(normalStr.begin(), normalStr.end(), '\\', '/');
-			materialAsset->SetNormalMap(AssetManager::TryGetOrLoadAsset<Texture2D>(
-				path.parent_path() / normalStr));
+			materialAsset->SetNormalMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / normalStr));
 		}
 
 		if (materialAsset->IsUsingRoughnessMap())
 		{
 			std::replace(roughnessStr.begin(), roughnessStr.end(), '\\', '/');
-			materialAsset->SetRoughnessMap(AssetManager::TryGetOrLoadAsset<Texture2D>(
-				path.parent_path() / roughnessStr));
+			materialAsset->SetRoughnessMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / roughnessStr));
 		}
 
 		if (materialAsset->IsUsingMetallicMap())
 		{
 			std::replace(metallicStr.begin(), metallicStr.end(), '\\', '/');
-			materialAsset->SetMetallicMap(AssetManager::TryGetOrLoadAsset<Texture2D>(
-				path.parent_path() / metallicStr));
+			materialAsset->SetMetallicMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / metallicStr));
 		}
 
 		if (materialAsset->IsUsingAmbientMap())
 		{
 			std::replace(ambientStr.begin(), ambientStr.end(), '\\', '/');
-			materialAsset->SetAmbientMap(AssetManager::TryGetOrLoadAsset<Texture2D>(
-				path.parent_path() / ambientStr));
+			materialAsset->SetAmbientMap(AssetManager::TryGetOrLoadAsset<Texture2D>(path.parent_path() / ambientStr));
 		}
 
 		AssetManager::RegisterAsset(materialAsset);
 		return materialAsset->Handle;
 	}
 
-	static void ProcessMesh(aiMesh* mesh, const aiScene* scene,
-		std::vector<MeshVertex>& refVertices,
-		std::vector<uint32_t>& refIndices,
-		std::vector<SubMesh>& refSubMeshes,
-		std::vector<AssetHandle>& refMatHandles)
+	static void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles)
 	{
 		uint32_t indexBase = refVertices.size();
 
 		for (uint32_t i = 0; i < mesh->mNumVertices; i++)
 		{
-			glm::vec2 textureCoords = mesh->HasTextureCoords(0)
-				? glm::vec2(mesh->mTextureCoords[0][i].x,
-					  mesh->mTextureCoords[0][i].y)
-				: glm::vec2(0.0f);
-			glm::vec3 tangent =
-				mesh->HasTangentsAndBitangents()
-				? glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y,
-					  mesh->mTangents[i].z)
-				: glm::vec3(0.0f);
-			glm::vec3 bitangent =
-				mesh->HasTangentsAndBitangents()
-				? glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y,
-					  mesh->mBitangents[i].z)
-				: glm::vec3(0.0f);
+			glm::vec2 textureCoords = mesh->HasTextureCoords(0) ? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y) : glm::vec2(0.0f);
+			glm::vec3 tangent = mesh->HasTangentsAndBitangents() ? glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z) : glm::vec3(0.0f);
+			glm::vec3 bitangent = mesh->HasTangentsAndBitangents() ? glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z) : glm::vec3(0.0f);
 			refVertices.emplace_back(
-				glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y,
-					mesh->mVertices[i].z), // Position
-				glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y,
-					mesh->mNormals[i].z), // Normals
-				textureCoords,			  // TextureCoords
-				tangent,				  // Tangent
-				bitangent				  // BiTangent
+				glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z), // Position
+				glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z),	 // Normals
+				textureCoords,																 // TextureCoords
+				tangent,																	 // Tangent
+				bitangent																	 // BiTangent
 			);
 		}
 
@@ -392,34 +354,25 @@ namespace Flameberry {
 		}
 
 		// Add submesh
-		refSubMeshes.emplace_back(
-			SubMesh{ .IndexOffset = indexOffset,
-				.IndexCount = (uint32_t)refIndices.size() - indexOffset,
-				.MaterialHandle = refMatHandles[mesh->mMaterialIndex],
-				.AABB = AABB(glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y,
-								 mesh->mAABB.mMin.z),
-					glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y,
-						mesh->mAABB.mMax.z)) });
+		refSubMeshes.emplace_back(SubMesh{
+			.IndexOffset = indexOffset,
+			.IndexCount = (uint32_t)refIndices.size() - indexOffset,
+			.MaterialHandle = refMatHandles[mesh->mMaterialIndex],
+			.AABB = AABB(glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z), glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)) });
 	}
 
-	static void ProcessNode(aiNode* node, const aiScene* scene,
-		std::vector<MeshVertex>& refVertices,
-		std::vector<uint32_t>& refIndices,
-		std::vector<SubMesh>& refSubMeshes,
-		std::vector<AssetHandle>& refMatHandles)
+	static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles)
 	{
 		// Process all the node's meshes (if any)
 		for (uint32_t i = 0; i < node->mNumMeshes; i++)
 		{
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			ProcessMesh(mesh, scene, refVertices, refIndices, refSubMeshes,
-				refMatHandles);
+			ProcessMesh(mesh, scene, refVertices, refIndices, refSubMeshes, refMatHandles);
 		}
 
 		// Then do the same for each of its children
 		for (uint32_t i = 0; i < node->mNumChildren; i++)
-			ProcessNode(node->mChildren[i], scene, refVertices, refIndices,
-				refSubMeshes, refMatHandles);
+			ProcessNode(node->mChildren[i], scene, refVertices, refIndices, refSubMeshes, refMatHandles);
 	}
 
 	Ref<Asset> MeshLoader::LoadMesh(const std::filesystem::path& path)
@@ -431,10 +384,11 @@ namespace Flameberry {
 		// And have it read the given file with some example postprocessing
 		// Usually - if speed is not the most important aspect for you - you'll
 		// probably to request more postprocessing than we do in this example.
-		const aiScene* scene = importer.ReadFile(
-			path, aiProcessPreset_TargetRealtime_Fast
+		const aiScene* scene = importer.ReadFile(path,
+			aiProcessPreset_TargetRealtime_Fast
 				// aiProcessPreset_TargetRealtime_Quality
-				| aiProcess_FlipUVs | aiProcess_GenBoundingBoxes);
+				| aiProcess_FlipUVs
+				| aiProcess_GenBoundingBoxes);
 
 		// If the import failed, report it
 		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE))
@@ -459,8 +413,7 @@ namespace Flameberry {
 		}
 
 		// Load Meshes
-		ProcessNode(scene->mRootNode, scene, vertices, indices, submeshes,
-			materialHandles);
+		ProcessNode(scene->mRootNode, scene, vertices, indices, submeshes, materialHandles);
 
 		Ref<Buffer> vertexBuffer, indexBuffer;
 
@@ -483,13 +436,11 @@ namespace Flameberry {
 			BufferSpecification vertexBufferSpec;
 			vertexBufferSpec.InstanceCount = 1;
 			vertexBufferSpec.InstanceSize = bufferSize;
-			vertexBufferSpec.Usage =
-				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+			vertexBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 			vertexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 			vertexBuffer = std::make_unique<Buffer>(vertexBufferSpec);
-			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(),
-				vertexBuffer->GetVulkanBuffer(), bufferSize);
+			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), vertexBuffer->GetVulkanBuffer(), bufferSize);
 		}
 
 		{
@@ -511,13 +462,11 @@ namespace Flameberry {
 			BufferSpecification indexBufferSpec;
 			indexBufferSpec.InstanceCount = 1;
 			indexBufferSpec.InstanceSize = bufferSize;
-			indexBufferSpec.Usage =
-				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+			indexBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 			indexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 			indexBuffer = std::make_unique<Buffer>(indexBufferSpec);
-			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(),
-				indexBuffer->GetVulkanBuffer(), bufferSize);
+			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), indexBuffer->GetVulkanBuffer(), bufferSize);
 		}
 
 		auto meshAsset = CreateRef<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
@@ -525,11 +474,9 @@ namespace Flameberry {
 		// Set Asset Class Variables
 		meshAsset->FilePath = path;
 		meshAsset->SizeInBytesOnCPU = sizeof(StaticMesh);
-		meshAsset->SizeInBytesOnGPU =
-			vertices.size() * sizeof(MeshVertex) + indices.size() * sizeof(uint32_t);
+		meshAsset->SizeInBytesOnGPU = vertices.size() * sizeof(MeshVertex) + indices.size() * sizeof(uint32_t);
 
-		FBY_INFO("Loaded Model: '{}': Vertices: {}, Indices: {}", path,
-			vertices.size(), indices.size());
+		FBY_INFO("Loaded Model: '{}': Vertices: {}, Indices: {}", path, vertices.size(), indices.size());
 		return meshAsset;
 	}
 

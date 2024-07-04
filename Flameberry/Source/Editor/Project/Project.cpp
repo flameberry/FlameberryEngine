@@ -1,7 +1,7 @@
 #include "Project.h"
 
-#include <filesystem>
 #include <fstream>
+#include <filesystem>
 
 #include "Core/Core.h"
 #include "Core/YamlUtils.h"
@@ -82,8 +82,7 @@ namespace Flameberry {
 		ProjectSerializer::SerializeProject(m_ProjectDirectory / fileName, this);
 	}
 
-	Ref<Project> ProjectSerializer::DeserializeIntoNewProject(
-		const std::filesystem::path& filePath)
+	Ref<Project> ProjectSerializer::DeserializeIntoNewProject(const std::filesystem::path& filePath)
 	{
 		Ref<Project> newProject = CreateRef<Project>();
 		if (DeserializeIntoExistingProject(filePath, newProject))
@@ -91,19 +90,16 @@ namespace Flameberry {
 		return nullptr;
 	}
 
-	bool ProjectSerializer::DeserializeIntoExistingProject(
-		const std::filesystem::path& filePath, const Ref<Project>& dest)
+	bool ProjectSerializer::DeserializeIntoExistingProject(const std::filesystem::path& filePath, const Ref<Project>& dest)
 	{
-		std::ifstream in(filePath);
+		std::ifstream	  in(filePath);
 		std::stringstream ss;
 		ss << in.rdbuf();
 
 		YAML::Node data = YAML::Load(ss.str());
 		if (!data["Project"])
 		{
-			FBY_ERROR(
-				"Failed to load project [{}]: 'Project' attribute not present in file!",
-				filePath);
+			FBY_ERROR("Failed to load project [{}]: 'Project' attribute not present in file!", filePath);
 			return false;
 		};
 
@@ -113,9 +109,7 @@ namespace Flameberry {
 		auto config = data["Configuration"];
 		if (!config)
 		{
-			FBY_ERROR("Failed to load project [{}]: 'Configuration' attribute not "
-					  "present in file!",
-				filePath);
+			FBY_ERROR("Failed to load project [{}]: 'Configuration' attribute not present in file!", filePath);
 			return false;
 		};
 		dest->m_Config.AssetDirectory = config["AssetDirectory"].as<std::string>();
@@ -151,30 +145,27 @@ namespace Flameberry {
 	void ProjectRegistryManager::AppendEntryToGlobalRegistry(Project* project)
 	{
 		YAML::Emitter out;
-		const auto& filepath =
-			fmt::format("{}/{}.fbproj", project->GetProjectDirectory(),
-				project->GetConfig().Name);
+		const auto&	  filepath = fmt::format("{}/{}.fbproj", project->GetProjectDirectory(), project->GetConfig().Name);
 		out << YAML::BeginMap;
 		{
 			out << YAML::Key << filepath << YAML::Value << YAML::BeginMap;
-			out << YAML::Key << "ProjectName" << YAML::Value
-				<< project->GetConfig().Name;
+			out << YAML::Key << "ProjectName" << YAML::Value << project->GetConfig().Name;
 			out << YAML::EndMap;
 		}
 		out << YAML::EndMap;
 
 		std::ofstream fout(c_GlobalProjectRegistryPath, std::ios_base::app);
-		FBY_ASSERT(fout.is_open(), "Failed to find/open project registry: {}",
-			c_GlobalProjectRegistryPath);
+		FBY_ASSERT(fout.is_open(), "Failed to find/open project registry: {}", c_GlobalProjectRegistryPath);
 		fout << out.c_str() << '\n';
 	}
 
-	void ProjectRegistryManager::RemoveEntryFromGlobalRegistry(
-		const std::filesystem::path& pathOfProjectEntry) {}
+	void ProjectRegistryManager::RemoveEntryFromGlobalRegistry(const std::filesystem::path& pathOfProjectEntry)
+	{
+	}
 
 	ProjectRegistry ProjectRegistryManager::LoadEntireProjectRegistry()
 	{
-		std::ifstream in(c_GlobalProjectRegistryPath);
+		std::ifstream	  in(c_GlobalProjectRegistryPath);
 		std::stringstream ss;
 		ss << in.rdbuf();
 

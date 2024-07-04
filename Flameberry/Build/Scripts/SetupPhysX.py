@@ -3,7 +3,7 @@ from Logger import ColoredLogger
 from Utils import Utils
 
 class PhysXSDKRequirements:
-    __PhysXRootDirectory = Utils.GetProjectDirectory() / 'Flameberry/vendor/PhysX'
+    __PhysXRootDirectory = Utils.GetProjectDirectory() / 'Flameberry/Source/ThirdParty/PhysX'
     __ShouldTakePresetFromUser = True
 
     @classmethod
@@ -72,7 +72,7 @@ set(PHYSX_CHECKED_LIB_DIRECTORY "${{FBY_SOURCE_DIR}}/{innerBinDir.relative_to(Ut
 set(PHYSX_RELEASE_LIB_DIRECTORY "${{FBY_SOURCE_DIR}}/{innerBinDir.relative_to(Utils.GetProjectDirectory())}/release")
 set(PHYSX_COMPILE_DEFINITIONS NDEBUG)
 '''
-        cmakeEnvPhysXFile = open(Utils.GetProjectDirectory() / "CMake/envPhysX.cmake", "w")
+        cmakeEnvPhysXFile = open(Utils.GetProjectDirectory() / "Flameberry/Build/CMake/envPhysX.cmake", "w")
         cmakeEnvPhysXFile.write(outputString)
         cmakeEnvPhysXFile.close()
     

@@ -1,11 +1,11 @@
-#include "UI.h"
+#include "Core/UI.h"
 
-#include <IconFontCppHeaders/IconsLucide.h>
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
+#include <IconFontCppHeaders/IconsLucide.h>
 
-#include "Core/Algorithm.h"
 #include "Core/Core.h"
+#include "Core/Algorithm.h"
 
 #include "ImGui/Theme.h"
 
@@ -14,16 +14,12 @@ namespace Flameberry {
 	struct UIState
 	{
 		// Selection Widget
-		bool IsSelectionWidgetJustOpened = false,
-			 IsSelectionWidgetSearchBoxFocused = false,
-			 HasSelectionWidgetListBoxBegun = false;
+		bool IsSelectionWidgetJustOpened = false, IsSelectionWidgetSearchBoxFocused = false, HasSelectionWidgetListBoxBegun = false;
 	};
 
 	static UIState g_UIState;
 
-	bool UI::Splitter(bool split_vertically, float thickness, float* size1,
-		float* size2, float min_size1, float min_size2,
-		float splitter_long_axis_size)
+	bool UI::Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size)
 	{
 		using namespace ImGui;
 		ImGuiContext& g = *GImGui;
@@ -31,20 +27,15 @@ namespace Flameberry {
 		ImGuiID id = window->GetID("##Splitter");
 		ImRect bb;
 		bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
-		bb.Max =
-			bb.Min + CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness), 0.0f, 0.0f);
-		return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y,
-			size1, size2, min_size1, min_size2, 0.0f, 0.0f,
-			0xFF000000);
+		bb.Max = bb.Min + CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness), 0.0f, 0.0f);
+		return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f, 0.0f, 0xFF000000);
 	}
 
 	bool UI::AlignedButton(const char* label, const ImVec2& size, float alignment)
 	{
 		ImGuiStyle& style = ImGui::GetStyle();
 
-		float width =
-			size.x ? size.x
-				   : ImGui::CalcTextSize(label).x + style.FramePadding.x * 2.0f;
+		float width = size.x ? size.x : ImGui::CalcTextSize(label).x + style.FramePadding.x * 2.0f;
 		float avail = ImGui::GetContentRegionAvail().x;
 
 		float off = (avail - width) * alignment;
@@ -54,8 +45,7 @@ namespace Flameberry {
 		return ImGui::Button(label, size);
 	}
 
-	void UI::InputBox(const char* label, const float width, char* inputBuffer,
-		const uint32_t inputLength, const char* inputHint)
+	void UI::InputBox(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint)
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 3));
@@ -73,8 +63,7 @@ namespace Flameberry {
 		g_UIState.IsSelectionWidgetJustOpened = true;
 	}
 
-	bool UI::BeginSelectionWidget(const char* label, char* inputBuffer,
-		const uint32_t inputLength)
+	bool UI::BeginSelectionWidget(const char* label, char* inputBuffer, const uint32_t inputLength)
 	{
 		std::string labelFmt = fmt::format("{}Popup", label);
 
@@ -93,14 +82,11 @@ namespace Flameberry {
 			if (g_UIState.IsSelectionWidgetSearchBoxFocused)
 			{
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-				ImGui::PushStyleColor(
-					ImGuiCol_Border,
-					ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
 			}
 
 			std::string inputBoxLabel = fmt::format("{}SearchBar", label);
-			UI::InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, inputLength,
-				ICON_LC_SEARCH " Search...");
+			UI::InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, inputLength, ICON_LC_SEARCH " Search...");
 
 			if (g_UIState.IsSelectionWidgetSearchBoxFocused)
 			{
@@ -108,10 +94,8 @@ namespace Flameberry {
 				ImGui::PopStyleVar();
 			}
 
-			g_UIState.IsSelectionWidgetSearchBoxFocused =
-				ImGui::IsItemActive() && ImGui::IsItemFocused();
-			g_UIState.HasSelectionWidgetListBoxBegun =
-				ImGui::BeginListBox("##ScriptActorClassesListBox");
+			g_UIState.IsSelectionWidgetSearchBoxFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
+			g_UIState.HasSelectionWidgetListBoxBegun = ImGui::BeginListBox("##ScriptActorClassesListBox");
 		}
 
 		return beginPopup;
@@ -140,29 +124,22 @@ namespace Flameberry {
 	}
 
 	// TODO: Call one of 2 functions one for Folder Thumbnail and other for file
-	bool UI::ContentBrowserItem(const std::filesystem::path& filepath, float size,
-		const Ref<Texture2D>& thumbnail,
-		ImVec2& outItemSize, bool keepExtension)
+	bool UI::ContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
 	{
 		bool isDirectory = std::filesystem::is_directory(filepath);
 
 		ImGuiStyle& style = ImGui::GetStyle();
 
 		const auto& specification = thumbnail->GetImageSpecification();
-		const float aspectRatio =
-			(float)specification.Width / (float)specification.Height;
+		const float aspectRatio = (float)specification.Width / (float)specification.Height;
 
 		const float width = size;
 		float height = size;
 
 		const float borderThickness = 1.5f;
 
-		const float thumbnailWidth = specification.Width >= specification.Height
-			? size - 2.0f * borderThickness
-			: height * aspectRatio;
-		const float thumbnailHeight = specification.Width >= specification.Height
-			? width / aspectRatio
-			: size - 2.0f * borderThickness;
+		const float thumbnailWidth = specification.Width >= specification.Height ? size - 2.0f * borderThickness : height * aspectRatio;
+		const float thumbnailHeight = specification.Width >= specification.Height ? width / aspectRatio : size - 2.0f * borderThickness;
 
 		const auto& framePadding = style.FramePadding;
 		height += framePadding.y;
@@ -173,31 +150,17 @@ namespace Flameberry {
 
 		const auto& cursorPos = ImGui::GetCursorScreenPos();
 		bool hovered, held;
-		bool isDoubleClicked = ImGui::ButtonBehavior(
-			ImRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight)),
-			ImGui::GetID(filepath.c_str()), &hovered, &held,
-			ImGuiButtonFlags_PressedOnDoubleClick);
+		bool isDoubleClicked = ImGui::ButtonBehavior(ImRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight)), ImGui::GetID(filepath.c_str()), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
 
 		if (!isDirectory)
 		{
-			ImGui::GetWindowDrawList()->AddRectFilled(
-				cursorPos, cursorPos + ImVec2(fullWidth, height), 0xff151515, 3,
-				ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
-			ImGui::GetWindowDrawList()->AddRectFilled(
-				ImVec2(cursorPos.x, cursorPos.y + height),
-				cursorPos + ImVec2(fullWidth, fullHeight), 0xff353535, 3,
-				ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
-			ImGui::GetWindowDrawList()->AddRect(
-				cursorPos, cursorPos + ImVec2(fullWidth, fullHeight),
-				hovered ? ImGui::ColorConvertFloat4ToU32(Theme::AccentColor)
-						: 0xff000000,
-				3, 0, borderThickness);
+			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
+			ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), cursorPos + ImVec2(fullWidth, fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
+			ImGui::GetWindowDrawList()->AddRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), hovered ? ImGui::ColorConvertFloat4ToU32(Theme::AccentColor) : 0xff000000, 3, 0, borderThickness);
 		}
 		else if (hovered)
 		{
-			ImGui::GetWindowDrawList()->AddRectFilled(
-				cursorPos, cursorPos + ImVec2(fullWidth, fullHeight),
-				IM_COL32(60, 60, 60, 255), 3);
+			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
 		}
 
 		ImGui::BeginGroup();
@@ -211,10 +174,7 @@ namespace Flameberry {
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + centerTranslationWidth - framePadding.x);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + centerTranslationHeight - framePadding.y);
 
-		ImGui::ImageButton(
-			filepath.c_str(),
-			reinterpret_cast<ImTextureID>(thumbnail->CreateOrGetDescriptorSet()),
-			ImVec2(thumbnailWidth, thumbnailHeight));
+		ImGui::ImageButton(filepath.c_str(), reinterpret_cast<ImTextureID>(thumbnail->CreateOrGetDescriptorSet()), ImVec2(thumbnailWidth, thumbnailHeight));
 
 		ImGui::PopStyleColor(3);
 
@@ -234,9 +194,7 @@ namespace Flameberry {
 				ImGui::Text("%.*s%s", characters, filename.c_str(), "...");
 			else
 			{
-				ImGui::SetCursorPosX(
-					glm::max(cursorPosX + framePadding.x,
-						cursorPosX + (fullWidth - textWidth) * 0.5f));
+				ImGui::SetCursorPosX(glm::max(cursorPosX + framePadding.x, cursorPosX + (fullWidth - textWidth) * 0.5f));
 				ImGui::Text("%s", filename.c_str());
 			}
 		}
@@ -263,7 +221,9 @@ namespace Flameberry {
 
 		if (ImGui::BeginDragDropSource())
 		{
-			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filepath.c_str(),
+			ImGui::SetDragDropPayload(
+				"FBY_CONTENT_BROWSER_ITEM",
+				filepath.c_str(),
 				(strlen(filepath.c_str()) + 1) * sizeof(char),
 				ImGuiCond_Once);
 			ImGui::Text("%s", filepath.c_str());
@@ -273,8 +233,7 @@ namespace Flameberry {
 		return isDoubleClicked;
 	}
 
-	bool UI::ProjectRegistryEntryItem(const char* projectName, const char* path,
-		bool disabled)
+	bool UI::ProjectRegistryEntryItem(const char* projectName, const char* path, bool disabled)
 	{
 		constexpr float paddingX = 15.0f, paddingY = 5.0f, spacing = 10.0f;
 		const float itemWidth = ImGui::GetContentRegionAvail().x;
@@ -304,30 +263,23 @@ namespace Flameberry {
 		if (disabled)
 			ImGui::EndDisabled();
 
-		ImRect itemRect(cursorScreenPos,
-			cursorScreenPos + ImVec2(itemWidth, ImGui::GetCursorPosY() - cursorPos.y));
+		ImRect itemRect(cursorScreenPos, cursorScreenPos + ImVec2(itemWidth, ImGui::GetCursorPosY() - cursorPos.y));
 		bool hovered, held;
-		bool isDoubleClicked =
-			ImGui::ButtonBehavior(itemRect, ImGui::GetID(projectName), &hovered,
-				&held, ImGuiButtonFlags_PressedOnDoubleClick);
+		bool isDoubleClicked = ImGui::ButtonBehavior(itemRect, ImGui::GetID(projectName), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
 
 		if (hovered)
 		{
-			const ImU32 color = ImGui::IsMouseDown(0) ? IM_COL32(255, 255, 255, 60)
-													  : IM_COL32(255, 255, 255, 30);
-			ImGui::GetWindowDrawList()->AddRectFilled(itemRect.Min, itemRect.Max, color,
-				5.0f);
+			const ImU32 color = ImGui::IsMouseDown(0) ? IM_COL32(255, 255, 255, 60) : IM_COL32(255, 255, 255, 30);
+			ImGui::GetWindowDrawList()->AddRectFilled(itemRect.Min, itemRect.Max, color, 5.0f);
 		}
 		return isDoubleClicked;
 	}
 
-	void UI::Vec3Control(const std::string& str_id, glm::vec3& value,
-		float defaultValue, float dragSpeed, float availWidth)
+	void UI::Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
 
-		float lineHeight =
-			ImGui::GetTextLineHeight() + 2.0f * ImGui::GetStyle().FramePadding.y;
+		float lineHeight = ImGui::GetTextLineHeight() + 2.0f * ImGui::GetStyle().FramePadding.y;
 		ImVec2 buttonSize = { 5.0f, lineHeight };
 
 		ImGui::PushID(str_id.c_str());
@@ -362,8 +314,7 @@ namespace Flameberry {
 		ImGui::SameLine();
 
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-			ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
 
 		if (ImGui::Button("##Z_Button", buttonSize))

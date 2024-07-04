@@ -14,9 +14,9 @@ IF(WIN32)
     IF(NOT Vulkan_FOUND)
         # If 64 bit compiler then use 64 bit version of vulkan library
         if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            set(VULKAN_LIB_PATH "${FBY_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/x64")
+            set(VULKAN_LIB_PATH "${FBY_SOURCE_DIR}/Flameberry/Binaries/ThirdParty/Vulkan/x64")
         else()
-            set(VULKAN_LIB_PATH "${FBY_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/x86")
+            set(VULKAN_LIB_PATH "${FBY_SOURCE_DIR}/Flameberry/Binaries/ThirdParty/Vulkan/x86")
         endif()
 
         find_library(Vulkan_LIBRARY NAMES vulkan-1 PATHS ${VULKAN_LIB_PATH} REQUIRED)
@@ -28,7 +28,7 @@ IF(WIN32)
     ENDIF()
 ELSEIF(LINUX)
     IF(NOT Vulkan_FOUND)
-        find_library(Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "${FBY_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/linux" REQUIRED)
+        find_library(Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "${FBY_SOURCE_DIR}/Flameberry/Binaries/ThirdParty/Vulkan/Linux" REQUIRED)
 
         IF(Vulkan_LIBRARY)
             set(Vulkan_FOUND ON)
@@ -37,7 +37,7 @@ ELSEIF(LINUX)
     ENDIF()
 ELSEIF(APPLE)
     IF(NOT Vulkan_FOUND)
-        find_library(Vulkan_LIBRARY NAMES vulkan HINTS "${FBY_SOURCE_DIR}/Flameberry/vendor/vulkan/lib/macOS" REQUIRED)
+        find_library(Vulkan_LIBRARY NAMES vulkan HINTS "${FBY_SOURCE_DIR}/Flameberry/Binaries/ThirdParty/Vulkan/MacOS" REQUIRED)
 
         IF(Vulkan_LIBRARY)
             set(Vulkan_FOUND ON)
@@ -53,8 +53,8 @@ endif()
 message(STATUS "Found vulkan library at ${Vulkan_LIBRARY}")
 
 if(NOT Vulkan_INCLUDE_DIRS)
-    set(Vulkan_INCLUDE_DIRS "${FBY_SOURCE_DIR}/Flameberry/vendor/vulkan/include")
-    set(Vulkan_INCLUDE_DIR "${FBY_SOURCE_DIR}/Flameberry/vendor/vulkan/include")
+    set(Vulkan_INCLUDE_DIRS "${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Vulkan/include")
+    set(Vulkan_INCLUDE_DIR "${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Vulkan/include")
     message(STATUS "Using bundled Vulkan Include Headers!")
 endif()
 
@@ -75,19 +75,19 @@ set(FBY_COMPILE_DEFINITIONS FBY_PROJECT_DIR="${FBY_SOURCE_DIR}/" GLFW_INCLUDE_VU
 # Setting the paths we require irrespective of the Graphics API
 list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt spirv-reflect-static)
 list(APPEND FBY_INCLUDE_DIRS
-    ${FBY_SOURCE_DIR}/Flameberry/vendor
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/GLFW/include
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/glm
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/imgui
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/yaml-cpp/include
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/fmtlib/include
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/Assimp/include
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/Assimp/build/include
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/GLFW/include
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/glm
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/YamlCpp/include
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/fmtlib/include
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/include
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/build/include
     ${FBY_SOURCE_DIR}/Flameberry/vendor/mono/include
 )
 
 # Nvidia PhysX
-include(CMake/envPhysX.cmake)
+include(Flameberry/Build/CMake/envPhysX.cmake)
 
 add_library(PhysX_LIBRARY STATIC IMPORTED)
 set_target_properties(PhysX_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysX_static_64.a)
@@ -119,11 +119,11 @@ list(APPEND FBY_INCLUDE_DIRS ${PHYSX_INCLUDE_DIR})
 list(APPEND FBY_COMPILE_DEFINITIONS ${PHYSX_COMPILE_DEFINITIONS})
 
 # Assimp
-find_library(Assimp_LIBRARY NAMES assimp HINTS "${FBY_SOURCE_DIR}/Flameberry/vendor/Assimp/build/bin" REQUIRED)
+find_library(Assimp_LIBRARY NAMES assimp HINTS "${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/build/bin" REQUIRED)
 list(APPEND FBY_LIBRARY_DEPENDENCIES ${Assimp_LIBRARY})
 
 # ImGui paths and source
-file(GLOB IMGUI_SRC ${FBY_SOURCE_DIR}/Flameberry/vendor/imgui/*.cpp ${FBY_SOURCE_DIR}/Flameberry/vendor/imgui/*.h)
+file(GLOB IMGUI_SRC ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/*.cpp ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/*.h)
 
 # Mono library
 find_library(Monosgen_LIBRARY NAMES monosgen-2.0 HINTS "${FBY_SOURCE_DIR}/Flameberry/vendor/mono/lib" REQUIRED)
@@ -133,25 +133,25 @@ set(FBY_DEPENDENCY_SOURCE
 
     # ImGui
     ${IMGUI_SRC}
-    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.cpp
-    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_vulkan.h
-    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.cpp
-    ${CMAKE_SOURCE_DIR}/Flameberry/vendor/imgui/backends/imgui_impl_glfw.h
+    ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/backends/imgui_impl_vulkan.cpp
+    ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/backends/imgui_impl_vulkan.h
+    ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
+    ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/backends/imgui_impl_glfw.h
 
     # ImGuizmo
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/GraphEditor.cpp
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/GraphEditor.h
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImCurveEdit.cpp
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImCurveEdit.h
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGradient.cpp
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGradient.h
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGuizmo.cpp
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImGuizmo.h
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.cpp
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImSequencer.h
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/ImGuizmo/ImZoomSlider.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/GraphEditor.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/GraphEditor.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImCurveEdit.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImCurveEdit.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImGradient.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImGradient.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImGuizmo.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImGuizmo.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImSequencer.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImSequencer.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImZoomSlider.h
 
     # Murmur Hash
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/MurmurHash/MurmurHash3.h
-    ${FBY_SOURCE_DIR}/Flameberry/vendor/MurmurHash/MurmurHash3.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MurmurHash/MurmurHash3.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MurmurHash/MurmurHash3.cpp
 )

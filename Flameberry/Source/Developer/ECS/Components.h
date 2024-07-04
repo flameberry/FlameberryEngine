@@ -3,13 +3,13 @@
 #include <string>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-#include "Actor.h"
+#include "ecs.hpp"
 #include "Asset/Asset.h"
 #include "Renderer/GenericCamera.h"
-#include "ecs.hpp"
+#include "Actor.h"
 
 namespace Flameberry {
 
@@ -30,7 +30,9 @@ namespace Flameberry {
 
 		glm::mat4 CalculateTransform() const
 		{
-			return glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(glm::quat(Rotation)) * glm::scale(glm::mat4(1.0f), Scale);
+			return glm::translate(glm::mat4(1.0f), Translation)
+				* glm::toMat4(glm::quat(Rotation))
+				* glm::scale(glm::mat4(1.0f), Scale);
 		}
 	};
 
@@ -44,14 +46,14 @@ namespace Flameberry {
 	struct CameraComponent
 	{
 		GenericCamera Camera;
-		bool IsPrimary = false;
+		bool		  IsPrimary = false;
 	};
 
 	struct SkyLightComponent
 	{
 		glm::vec3 Color{ 0.0f };
-		float Intensity = 0.2f;
-		bool EnableSkyMap = false, EnableReflections = false;
+		float	  Intensity = 0.2f;
+		bool	  EnableSkyMap = false, EnableReflections = false;
 
 		AssetHandle SkyMap = 0;
 	};
@@ -61,8 +63,7 @@ namespace Flameberry {
 	{
 		AssetHandle MeshHandle;
 
-		// This stores the materials that are used for rendering instead of the
-		// default ones which are loaded from the mesh source file
+		// This stores the materials that are used for rendering instead of the default ones which are loaded from the mesh source file
 		MaterialTable OverridenMaterialTable;
 
 		MeshComponent(AssetHandle meshHandle = 0)
@@ -72,7 +73,7 @@ namespace Flameberry {
 	struct DirectionalLightComponent
 	{
 		glm::vec3 Color;
-		float Intensity, LightSize;
+		float	  Intensity, LightSize;
 
 		DirectionalLightComponent()
 			: Color(1.0f), Intensity(10.0f), LightSize(20.0f) {}
@@ -81,7 +82,7 @@ namespace Flameberry {
 	struct PointLightComponent
 	{
 		glm::vec3 Color;
-		float Intensity;
+		float	  Intensity;
 
 		PointLightComponent()
 			: Color(1.0f), Intensity(10.0f) {}
@@ -95,10 +96,14 @@ namespace Flameberry {
 		fbentt::entity NextSibling{};
 
 		RelationshipComponent()
-			: Parent(fbentt::null), FirstChild(fbentt::null), PrevSibling(fbentt::null), NextSibling(fbentt::null) {}
+			: Parent(fbentt::null), FirstChild(fbentt::null), PrevSibling(fbentt::null), NextSibling(fbentt::null)
+		{
+		}
 
 		RelationshipComponent(const RelationshipComponent& dest)
-			: Parent(dest.Parent), FirstChild(dest.FirstChild), PrevSibling(dest.PrevSibling), NextSibling(dest.NextSibling) {}
+			: Parent(dest.Parent), FirstChild(dest.FirstChild), PrevSibling(dest.PrevSibling), NextSibling(dest.NextSibling)
+		{
+		}
 	};
 
 	struct NativeScriptComponent
@@ -163,7 +168,7 @@ namespace Flameberry {
 	struct CapsuleColliderComponent
 	{
 		AxisType Axis = AxisType::Y;
-		float Radius = 0.5f, Height = 1.0f;
+		float	 Radius = 0.5f, Height = 1.0f;
 
 		void* RuntimeShape = nullptr;
 	};
@@ -173,11 +178,6 @@ namespace Flameberry {
 	{
 	};
 
-	using AllComponents =
-		ComponentList<TransformComponent, CameraComponent, SkyLightComponent,
-			MeshComponent, DirectionalLightComponent, PointLightComponent,
-			NativeScriptComponent, ScriptComponent, RigidBodyComponent,
-			BoxColliderComponent, SphereColliderComponent,
-			CapsuleColliderComponent>;
+	using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>;
 
 } // namespace Flameberry

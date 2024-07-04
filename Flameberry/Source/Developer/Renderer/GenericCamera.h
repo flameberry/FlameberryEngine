@@ -13,7 +13,7 @@ namespace Flameberry {
 	struct GenericCameraSettings
 	{
 		Flameberry::ProjectionType ProjectionType = ProjectionType::Perspective;
-		float AspectRatio, Near, Far;
+		float					   AspectRatio, Near, Far;
 		union
 		{
 			float Zoom, FOV;
@@ -25,10 +25,7 @@ namespace Flameberry {
 	public:
 		GenericCamera();
 
-		void SetProjectionType(ProjectionType projectionType)
-		{
-			m_CameraSettings.ProjectionType = projectionType;
-		}
+		void SetProjectionType(ProjectionType projectionType) { m_CameraSettings.ProjectionType = projectionType; }
 		void SetOrthographic(float aspectRatio, float zoom, float near, float far);
 		void SetPerspective(float aspectRatio, float FOV, float near, float far);
 		void SetView(const glm::vec3& position, const glm::vec3& rotation);
@@ -38,14 +35,11 @@ namespace Flameberry {
 		void UpdateWithNear(float near);
 		void UpdateWithFar(float far);
 
-		glm::mat4 CreateViewProjectionMatrix() const
-		{
-			return m_ProjectionMatrix * m_ViewMatrix;
-		}
+		glm::mat4 CreateViewProjectionMatrix() const { return m_ProjectionMatrix * m_ViewMatrix; }
 
 		const GenericCameraSettings& GetSettings() const { return m_CameraSettings; }
-		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
-		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
+		const glm::mat4&			 GetViewMatrix() const { return m_ViewMatrix; }
+		const glm::mat4&			 GetProjectionMatrix() const { return m_ProjectionMatrix; }
 
 	private:
 		void RecalculateProjectionMatrix();
@@ -53,7 +47,7 @@ namespace Flameberry {
 
 	private:
 		GenericCameraSettings m_CameraSettings;
-		glm::mat4 m_ProjectionMatrix, m_ViewMatrix;
+		glm::mat4			  m_ProjectionMatrix, m_ViewMatrix;
 	};
 
 } // namespace Flameberry

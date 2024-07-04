@@ -2,8 +2,8 @@
 
 #include "AABB.h"
 
-#include "Buffer.h"
 #include "Pipeline.h"
+#include "Buffer.h"
 #include "Texture2D.h"
 
 namespace Flameberry {
@@ -17,21 +17,21 @@ namespace Flameberry {
 	{
 		glm::vec3 Position{ 0.0f };
 		glm::vec3 Color{ 1.0f };
-		int EntityIndex = -1;
+		int		  EntityIndex = -1;
 	};
 
 	struct Renderer2DData
 	{
 		// Lines
-		Ref<Pipeline> LinePipeline;
-		Ref<Buffer> LineVertexBuffer;
+		Ref<Pipeline>			LinePipeline;
+		Ref<Buffer>				LineVertexBuffer;
 		std::vector<LineVertex> LineVertices;
 
 		// Quads
-		Ref<Pipeline> QuadPipeline;
-		Ref<Buffer> QuadVertexBuffer, QuadIndexBuffer;
+		Ref<Pipeline>			QuadPipeline;
+		Ref<Buffer>				QuadVertexBuffer, QuadIndexBuffer;
 		std::vector<QuadVertex> QuadVertices;
-		uint32_t VertexBufferOffset = 0;
+		uint32_t				VertexBufferOffset = 0;
 
 		// TODO: Find a better way to do this
 		Ref<Texture2D> TextureMap;
@@ -46,28 +46,17 @@ namespace Flameberry {
 		static void Init(const Ref<RenderPass>& renderPass);
 		static void Shutdown();
 
-		static void AddLine(const glm::vec3& start, const glm::vec3& end,
-			const glm::vec3& color);
-		static void AddSemiCircle(const glm::vec3& position, const float radius,
-			const glm::quat& rotation, const glm::vec3& color,
-			int segments = 32);
-		static void AddCircle(const glm::vec3& position, const float radius,
-			const glm::quat& rotation, const glm::vec3& color,
-			int segments = 32);
-		static void AddBillboard(const glm::vec3& position, float size,
-			const glm::vec3& color, const glm::mat4& viewMatrix,
-			int entityIndex = -1);
+		static void AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color);
+		static void AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments = 32);
+		static void AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments = 32);
+		static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex = -1);
 		static void AddGrid(int gridSize);
-		static void AddAABB(const AABB& aabb, const glm::mat4& transform,
-			const glm::vec4& color);
+		static void AddAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color);
 
 		static void BeginScene(VkDescriptorSet globalDescriptorSet);
 		static void EndScene();
 
-		static void SetActiveTexture(const Ref<Texture2D>& texture)
-		{
-			s_Renderer2DData.TextureMap = texture;
-		}
+		static void SetActiveTexture(const Ref<Texture2D>& texture) { s_Renderer2DData.TextureMap = texture; }
 		static void FlushQuads();
 
 		static const Renderer2DData& GetRendererData() { return s_Renderer2DData; }

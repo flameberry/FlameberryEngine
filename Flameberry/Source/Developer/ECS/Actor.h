@@ -5,6 +5,7 @@
 #include "Scene.h"
 
 namespace Flameberry {
+
 	class Actor
 	{
 	public:
@@ -22,9 +23,10 @@ namespace Flameberry {
 		virtual void OnUpdate(float delta) = 0;
 
 	private:
-		Scene* m_SceneRef;
+		Scene*		   m_SceneRef;
 		fbentt::entity m_Entity;
 
 		friend class Scene;
 	};
+
 } // namespace Flameberry

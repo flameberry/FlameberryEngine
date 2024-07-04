@@ -1,7 +1,7 @@
 #include "Platform/PlatformUtils.h"
 
-#include <GLFW/glfw3.h>
 #include <commdlg.h>
+#include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
@@ -12,17 +12,18 @@ namespace Flameberry {
 
 		void CreateMenuBar() {}
 
-		void OpenInExplorerOrFinder(const char* path) {}
+		void OpenInExplorerOrFinder(const char* path)
+		{
+		}
 
 		std::string OpenFile(const char* filter)
 		{
 			OPENFILENAMEA ofn;
-			CHAR szFile[260] = { 0 };
-			CHAR currentDir[256] = { 0 };
+			CHAR		  szFile[260] = { 0 };
+			CHAR		  currentDir[256] = { 0 };
 			ZeroMemory(&ofn, sizeof(OPENFILENAME));
 			ofn.lStructSize = sizeof(OPENFILENAME);
-			ofn.hwndOwner =
-				glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow());
+			ofn.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow());
 			ofn.lpstrFile = szFile;
 			ofn.nMaxFile = sizeof(szFile);
 			if (GetCurrentDirectoryA(256, currentDir))
@@ -40,12 +41,11 @@ namespace Flameberry {
 		std::string SaveFile(const char* filter)
 		{
 			OPENFILENAMEA ofn;
-			CHAR szFile[260] = { 0 };
-			CHAR currentDir[256] = { 0 };
+			CHAR		  szFile[260] = { 0 };
+			CHAR		  currentDir[256] = { 0 };
 			ZeroMemory(&ofn, sizeof(OPENFILENAME));
 			ofn.lStructSize = sizeof(OPENFILENAME);
-			ofn.hwndOwner =
-				glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow());
+			ofn.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow());
 			ofn.lpstrFile = szFile;
 			ofn.nMaxFile = sizeof(szFile);
 			if (GetCurrentDirectoryA(256, currentDir))

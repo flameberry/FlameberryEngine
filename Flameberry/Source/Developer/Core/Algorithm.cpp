@@ -1,7 +1,7 @@
 #include "Algorithm.h"
 
-#include <cctype>
 #include <cstring>
+#include <cctype>
 
 namespace Flameberry {
 
@@ -36,8 +36,7 @@ namespace Flameberry {
 				if (j == pat_len - 1)
 					break;
 
-				if (ignoreCase ? (std::tolower(txt[i]) == std::tolower(pat[j + 1]))
-							   : (txt[i] == pat[j + 1]))
+				if (ignoreCase ? (std::tolower(txt[i]) == std::tolower(pat[j + 1])) : (txt[i] == pat[j + 1]))
 				{
 					j++;
 					i++;

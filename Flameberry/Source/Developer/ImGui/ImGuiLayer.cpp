@@ -1,18 +1,18 @@
 #include "ImGuiLayer.h"
 
+#include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
-#include <imgui.h>
 
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Theme.h"
 
 #include "Renderer/RenderCommand.h"
-#include "Renderer/Renderer.h"
 #include "Renderer/SwapChain.h"
-#include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanDebug.h"
+#include "Renderer/VulkanContext.h"
+#include "Renderer/Renderer.h"
 
 namespace Flameberry {
 	ImGuiLayer::ImGuiLayer() {}
@@ -24,13 +24,10 @@ namespace Flameberry {
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
 		(void)io;
-		io.ConfigFlags |=
-			ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad
-		// Controls
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;	// Enable Docking
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport /
-															// Platform Windows
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
 		// io.ConfigViewportsNoAutoMerge = true;
 		// io.ConfigViewportsNoTaskBarIcon = true;
 
@@ -52,36 +49,27 @@ namespace Flameberry {
 		constexpr float fontSize = 13.5f * DPI_SCALE;
 		constexpr float bigFontSize = 18.0f * DPI_SCALE;
 
-		io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR
-			"FlameberryEditor/Assets/Fonts/arial/Arial.ttf",
-			bigFontSize, &config);
-		io.FontDefault = io.Fonts->AddFontFromFileTTF(
-			FBY_PROJECT_DIR "FlameberryEditor/Assets/Fonts/arial/Arial.ttf", fontSize,
-			&config);
+		io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/arial/Arial.ttf", bigFontSize, &config);
+		io.FontDefault = io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/arial/Arial.ttf", fontSize, &config);
 		io.FontGlobalScale = 1 / DPI_SCALE;
 
 		// Merging Font-Awesome fonts into the default font
 		ImFontConfig iconFontConfig;
 		iconFontConfig.MergeMode = true;
-		iconFontConfig.GlyphMinAdvanceX =
-			13.0f; // Use if you want to make the icon monospaced
+		iconFontConfig.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
 		iconFontConfig.GlyphOffset = ImVec2(0, 5);
 		static const ImWchar iconRanges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
 
-		io.Fonts->AddFontFromFileTTF(
-			FBY_PROJECT_DIR "FlameberryEditor/Assets/Fonts/lucide/lucide.ttf",
-			fontSize, &iconFontConfig, iconRanges);
+		io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/lucide/lucide.ttf", fontSize, &iconFontConfig, iconRanges);
 
 		// ImGui layout save location
 		io.IniFilename = NULL;
-		ImGui::LoadIniSettingsFromDisk(FBY_PROJECT_DIR
-			"Flameberry/src/ImGui/imgui.ini");
+		ImGui::LoadIniSettingsFromDisk(FBY_PROJECT_DIR "Flameberry/Config/Layouts/BaseEditorLayout.ini");
 
 		// Setup Dear ImGui style
 		SetupImGuiStyle();
 
-		// When viewports are enabled we tweak WindowRounding/WindowBg so platform
-		// windows can look identical to regular ones.
+		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
 		ImGuiStyle& style = ImGui::GetStyle();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
@@ -90,15 +78,11 @@ namespace Flameberry {
 		}
 
 		const auto& device = VulkanContext::GetCurrentDevice();
-		SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(
-			VulkanContext::GetPhysicalDevice(),
-			VulkanContext::GetCurrentWindow()->GetWindowSurface());
+		SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(VulkanContext::GetPhysicalDevice(), VulkanContext::GetCurrentWindow()->GetWindowSurface());
 
 		// Creating ImGui RenderPass
 		VkAttachmentDescription attachment{};
-		attachment.format = VulkanContext::GetCurrentWindow()
-								->GetSwapChain()
-								->GetSwapChainImageFormat();
+		attachment.format = VulkanContext::GetCurrentWindow()->GetSwapChain()->GetSwapChainImageFormat();
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -132,27 +116,22 @@ namespace Flameberry {
 		info.pSubpasses = &subpass;
 		info.dependencyCount = 1;
 		info.pDependencies = &dependency;
-		VK_CHECK_RESULT(vkCreateRenderPass(device->GetVulkanDevice(), &info, nullptr,
-			&m_ImGuiLayerRenderPass));
+		VK_CHECK_RESULT(vkCreateRenderPass(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiLayerRenderPass));
 
 		CreateResources();
 
 		// Setup Platform/Renderer backends
-		ImGui_ImplGlfw_InitForVulkan(
-			VulkanContext::GetCurrentWindow()->GetGLFWwindow(), true);
+		ImGui_ImplGlfw_InitForVulkan(VulkanContext::GetCurrentWindow()->GetGLFWwindow(), true);
 		ImGui_ImplVulkan_InitInfo init_info{};
 		init_info.Instance = VulkanContext::GetCurrentInstance()->GetVulkanInstance();
 		init_info.PhysicalDevice = VulkanContext::GetPhysicalDevice();
 		init_info.Device = device->GetVulkanDevice();
-		init_info.QueueFamily = device->GetQueueFamilyIndices()
-									.GraphicsAndComputeSupportedQueueFamilyIndex;
+		init_info.QueueFamily = device->GetQueueFamilyIndices().GraphicsAndComputeSupportedQueueFamilyIndex;
 		init_info.Queue = device->GetGraphicsQueue();
 		init_info.PipelineCache = VK_NULL_HANDLE;
-		init_info.DescriptorPool = VulkanContext::GetCurrentGlobalDescriptorPool()
-									   ->GetVulkanDescriptorPool();
+		init_info.DescriptorPool = VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool();
 		init_info.Subpass = 0;
-		init_info.MinImageCount =
-			vk_swap_chain_details.SurfaceCapabilities.minImageCount;
+		init_info.MinImageCount = vk_swap_chain_details.SurfaceCapabilities.minImageCount;
 		init_info.ImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
 		init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		init_info.Allocator = VK_NULL_HANDLE;
@@ -164,8 +143,7 @@ namespace Flameberry {
 	void ImGuiLayer::OnDestroy()
 	{
 		// Saving ImGui Layout
-		ImGui::SaveIniSettingsToDisk(FBY_PROJECT_DIR
-			"Flameberry/src/ImGui/imgui.ini");
+		ImGui::SaveIniSettingsToDisk(FBY_PROJECT_DIR "Flameberry/src/ImGui/imgui.ini");
 
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
@@ -193,9 +171,7 @@ namespace Flameberry {
 	void ImGuiLayer::End()
 	{
 		ImGuiIO& io = ImGui::GetIO();
-		io.DisplaySize = ImVec2(
-			(float)VulkanContext::GetCurrentWindow()->GetSpecification().Width,
-			(float)VulkanContext::GetCurrentWindow()->GetSpecification().Height);
+		io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetSpecification().Width, (float)VulkanContext::GetCurrentWindow()->GetSpecification().Height);
 
 		ImGui::Render();
 		ImDrawData* main_draw_data = ImGui::GetDrawData();
@@ -216,10 +192,8 @@ namespace Flameberry {
 		imgui_render_pass_begin_info.pClearValues = &clear_value;
 
 		uint32_t currentFrameIndex = Renderer::RT_GetCurrentFrameIndex();
-		VkCommandBuffer commandBuffer =
-			VulkanContext::GetCurrentDevice()->GetCommandBuffer(currentFrameIndex);
-		vkCmdBeginRenderPass(commandBuffer, &imgui_render_pass_begin_info,
-			VK_SUBPASS_CONTENTS_INLINE);
+		VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(currentFrameIndex);
+		vkCmdBeginRenderPass(commandBuffer, &imgui_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
 		// Record dear imgui primitives into command buffer
 		ImGui_ImplVulkan_RenderDrawData(main_draw_data, commandBuffer);
@@ -272,16 +246,13 @@ namespace Flameberry {
 			vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 			vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
 			vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-			vk_image_view_create_info.subresourceRange.aspectMask =
-				VK_IMAGE_ASPECT_COLOR_BIT;
+			vk_image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
 			vk_image_view_create_info.subresourceRange.levelCount = 1;
 			vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
 			vk_image_view_create_info.subresourceRange.layerCount = 1;
 
-			VK_CHECK_RESULT(vkCreateImageView(device->GetVulkanDevice(),
-				&vk_image_view_create_info, nullptr,
-				&m_ImGuiImageViews[i]));
+			VK_CHECK_RESULT(vkCreateImageView(device->GetVulkanDevice(), &vk_image_view_create_info, nullptr, &m_ImGuiImageViews[i]));
 		}
 
 		// Creating Framebuffers
@@ -298,8 +269,7 @@ namespace Flameberry {
 			info.height = swapchain->GetExtent2D().height;
 			info.layers = 1;
 
-			VK_CHECK_RESULT(vkCreateFramebuffer(device->GetVulkanDevice(), &info,
-				nullptr, &m_ImGuiFramebuffers[i]));
+			VK_CHECK_RESULT(vkCreateFramebuffer(device->GetVulkanDevice(), &info, nullptr, &m_ImGuiFramebuffers[i]));
 		}
 	}
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <unordered_map>
 #include <vector>
+#include <unordered_map>
 #include <vulkan/vulkan.h>
 
 #include "Core/Core.h"
@@ -10,14 +10,11 @@ namespace Flameberry {
 	class DescriptorPool
 	{
 	public:
-		DescriptorPool(VkDevice device,
-			const std::vector<VkDescriptorPoolSize>& poolSizes,
-			uint32_t maxSets);
+		DescriptorPool(VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets);
 		~DescriptorPool();
 
 		VkDescriptorPool GetVulkanDescriptorPool() { return m_VkDescriptorPool; }
-		bool AllocateDescriptorSet(VkDescriptorSet* descriptorSet,
-			VkDescriptorSetLayout descriptorSetLayout);
+		bool			 AllocateDescriptorSet(VkDescriptorSet* descriptorSet, VkDescriptorSetLayout descriptorSetLayout);
 
 	private:
 		VkDescriptorPool m_VkDescriptorPool = VK_NULL_HANDLE;
@@ -34,28 +31,22 @@ namespace Flameberry {
 		DescriptorSetLayout(const DescriptorSetLayoutSpecification& specification);
 		~DescriptorSetLayout();
 
-		static Ref<DescriptorSetLayout>
-		CreateOrGetCached(const DescriptorSetLayoutSpecification& specification);
-		static void ClearCache();
+		static Ref<DescriptorSetLayout> CreateOrGetCached(const DescriptorSetLayoutSpecification& specification);
+		static void						ClearCache();
 
-		VkDescriptorSetLayout GetLayout() const { return m_Layout; }
-		DescriptorSetLayoutSpecification GetSpecification() const
-		{
-			return m_DescSetLayoutSpec;
-		}
+		VkDescriptorSetLayout			 GetLayout() const { return m_Layout; }
+		DescriptorSetLayoutSpecification GetSpecification() const { return m_DescSetLayoutSpec; }
 
 	private:
 		DescriptorSetLayoutSpecification m_DescSetLayoutSpec;
-		VkDescriptorSetLayout m_Layout;
+		VkDescriptorSetLayout			 m_Layout;
 
-		static std::unordered_map<DescriptorSetLayoutSpecification,
-			Ref<DescriptorSetLayout>>
-			s_CachedDescriptorSetLayouts;
+		static std::unordered_map<DescriptorSetLayoutSpecification, Ref<DescriptorSetLayout>> s_CachedDescriptorSetLayouts;
 	};
 
 	struct DescriptorSetSpecification
 	{
-		Ref<DescriptorPool> Pool;
+		Ref<DescriptorPool>		 Pool;
 		Ref<DescriptorSetLayout> Layout;
 	};
 
@@ -65,11 +56,8 @@ namespace Flameberry {
 		DescriptorSet(const DescriptorSetSpecification& specification);
 		~DescriptorSet();
 
-		DescriptorSetSpecification GetSpecification() const
-		{
-			return m_Specification;
-		}
-		VkDescriptorSet GetVulkanDescriptorSet() const { return m_DescriptorSet; }
+		DescriptorSetSpecification GetSpecification() const { return m_Specification; }
+		VkDescriptorSet			   GetVulkanDescriptorSet() const { return m_DescriptorSet; }
 
 		void WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo);
 		void WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo);
@@ -79,6 +67,6 @@ namespace Flameberry {
 		std::vector<VkWriteDescriptorSet> m_WriteInfos;
 
 		DescriptorSetSpecification m_Specification;
-		VkDescriptorSet m_DescriptorSet;
+		VkDescriptorSet			   m_DescriptorSet;
 	};
 } // namespace Flameberry

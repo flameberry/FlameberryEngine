@@ -2,8 +2,8 @@
 
 #include <filesystem>
 
-#include "Asset.h"
 #include "Core/Core.h"
+#include "Asset.h"
 
 namespace Flameberry {
 

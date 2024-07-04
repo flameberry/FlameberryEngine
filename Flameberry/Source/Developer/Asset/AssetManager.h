@@ -1,14 +1,14 @@
 #pragma once
 
-#include <list>
 #include <string>
+#include <list>
 #include <unordered_map>
 
-#include "Core/Core.h"
 #include "Core/UUID.h"
+#include "Core/Core.h"
 
-#include "Renderer/MaterialAsset.h"
 #include "Renderer/StaticMesh.h"
+#include "Renderer/MaterialAsset.h"
 
 #include "AssetLoader.h"
 
@@ -23,31 +23,24 @@ namespace Flameberry {
 			if (s_AssetFilePathToUUIDTable.find(path) != s_AssetFilePathToUUIDTable.end())
 			{
 				auto asset = s_AssetTable[s_AssetFilePathToUUIDTable[path]];
-				FBY_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(),
-					"Requested Asset Type doesn't match the asset type loaded in "
-					"memory!");
+				FBY_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
 
-				// Moving the asset handle to the "front" of the list to indicate that
-				// this asset is recently accessed
-				// s_AssetCache.splice(s_AssetCache.begin(), s_AssetCache,
-				// asset->CacheIterator);
+				// Moving the asset handle to the "front" of the list to indicate that this asset is recently accessed
+				// s_AssetCache.splice(s_AssetCache.begin(), s_AssetCache, asset->CacheIterator);
 
 				FBY_INFO("Found asset having filepath: {} in asset table!", path);
 				return std::static_pointer_cast<Type>(asset);
 			}
 
 			auto asset = AssetLoader::LoadAsset(path, Type::GetStaticAssetType());
-			FBY_ASSERT(
-				Type::GetStaticAssetType() == asset->GetAssetType(),
-				"Requested Asset Type doesn't match the asset type loaded in memory!");
+			FBY_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
 
 			s_AssetTable[asset->Handle] = asset;
 			s_AssetFilePathToUUIDTable[path] = asset->Handle;
 
-			// Moving the asset handle to the "front" of the list to indicate that this
-			// asset is recently accessed s_AssetCache.splice(s_AssetCache.begin(),
-			// s_AssetCache, asset->CacheIterator); Remove least recently used asset if
-			// max cache size is exceeded here
+			// Moving the asset handle to the "front" of the list to indicate that this asset is recently accessed
+			// s_AssetCache.splice(s_AssetCache.begin(), s_AssetCache, asset->CacheIterator);
+			// Remove least recently used asset if max cache size is exceeded here
 			return std::static_pointer_cast<Type>(asset);
 		}
 
@@ -57,14 +50,10 @@ namespace Flameberry {
 			if (s_AssetTable.find(handle) != s_AssetTable.end())
 			{
 				auto asset = s_AssetTable[handle];
-				FBY_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(),
-					"Requested Asset Type doesn't match the asset type loaded in "
-					"memory!");
+				FBY_ASSERT(Type::GetStaticAssetType() == asset->GetAssetType(), "Requested Asset Type doesn't match the asset type loaded in memory!");
 
-				// Moving the asset handle to the "front" of the list to indicate that
-				// this asset is recently accessed
-				// s_AssetCache.splice(s_AssetCache.begin(), s_AssetCache,
-				// asset->CacheIterator);
+				// Moving the asset handle to the "front" of the list to indicate that this asset is recently accessed
+				// s_AssetCache.splice(s_AssetCache.begin(), s_AssetCache, asset->CacheIterator);
 
 				return std::static_pointer_cast<Type>(asset);
 			}
@@ -81,9 +70,7 @@ namespace Flameberry {
 					s_AssetFilePathToUUIDTable[asset->FilePath] = asset->Handle;
 				return;
 			}
-			FBY_WARN(
-				"Failed to register asset with UUID: {}, Asset already registered!",
-				(UUID::value_type)asset->Handle);
+			FBY_WARN("Failed to register asset with UUID: {}, Asset already registered!", (UUID::value_type)asset->Handle);
 		}
 
 		static bool IsAssetHandleValid(AssetHandle handle)
@@ -103,19 +90,14 @@ namespace Flameberry {
 			s_AssetCache.clear();
 		}
 
-		static const std::unordered_map<AssetHandle, Ref<Asset>>& GetAssetTable()
-		{
-			return s_AssetTable;
-		}
+		static const std::unordered_map<AssetHandle, Ref<Asset>>& GetAssetTable() { return s_AssetTable; }
 
 	private:
-		inline static std::unordered_map<AssetHandle, Ref<Asset>> s_AssetTable;
-		inline static std::unordered_map<std::string, AssetHandle>
-			s_AssetFilePathToUUIDTable;
+		inline static std::unordered_map<AssetHandle, Ref<Asset>>  s_AssetTable;
+		inline static std::unordered_map<std::string, AssetHandle> s_AssetFilePathToUUIDTable;
 
 		inline static std::list<AssetHandle> s_AssetCache; // TODO: Implement this
-		inline static const std::size_t s_MaxCPUCacheSizeInBytes = 4096,
-										s_MaxGPUCacheSizeInBytes = 4096;
+		inline static const std::size_t		 s_MaxCPUCacheSizeInBytes = 4096, s_MaxGPUCacheSizeInBytes = 4096;
 	};
 
 } // namespace Flameberry

@@ -8,11 +8,9 @@ namespace Flameberry {
 
 		// Set Asset Class Variables
 		materialAsset->FilePath = path;
-		materialAsset->SizeInBytesOnCPU =
-			materialAsset->GetUnderlyingMaterial()->GetUniformDataSize();
+		materialAsset->SizeInBytesOnCPU = materialAsset->GetUnderlyingMaterial()->GetUniformDataSize();
 		// TODO: Fix this
-		//        materialAsset->SizeInBytesOnGPU =
-		//        materialAsset->AlbedoMap->SizeInBytesOnGPU
+		//        materialAsset->SizeInBytesOnGPU = materialAsset->AlbedoMap->SizeInBytesOnGPU
 		//            + materialAsset->NormalMap->SizeInBytesOnGPU
 		//            + materialAsset->m_RoughnessMap->SizeInBytesOnGPU
 		//            + materialAsset->m_MetallicMap->SizeInBytesOnGPU

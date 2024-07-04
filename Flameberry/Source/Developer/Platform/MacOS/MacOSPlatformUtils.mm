@@ -74,18 +74,6 @@ static std::function<void()> g_NewSceneCallback, g_SaveSceneCallback, g_SaveScen
 
 static MenuBar* g_MenuBar;
 
-@interface TitlebarView : NSView
-- (void) drawRect:(NSRect)dirtyRect;
-@end
-
-@implementation TitlebarView
-- (void) drawRect:(NSRect)dirtyRect
-{
-}
-@end
-
-static NSView* g_TitleBarView;
-
 namespace Flameberry {
 
     namespace Platform {
@@ -163,10 +151,25 @@ namespace Flameberry {
             InvalidateFrameAndContentFrameRect(window, titleBarHeight);
         }
         
+        static bool IsWindowFullScreen(NSWindow* window)
+        {
+            return ([window styleMask] & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen;
+        }
+        
         void TitlebarNative::InvalidateFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight)
         {
             NSWindow* nativeWindow = glfwGetCocoaWindow(window);
             NSView* nativeView = glfwGetCocoaView(window);
+            
+            if (IsWindowFullScreen(nativeWindow))
+            {
+                [nativeWindow.toolbar setVisible:false];
+                [s_TitlebarData.TitlebarView setHidden:true];
+                return;
+            }
+            
+            [nativeWindow.toolbar setVisible:true];
+            [s_TitlebarData.TitlebarView setHidden:false];
             
             CGFloat windowWidth = NSWidth(nativeWindow.frame);
             CGFloat windowHeight = NSHeight(nativeWindow.frame);
