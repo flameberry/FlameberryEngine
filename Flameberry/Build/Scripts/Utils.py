@@ -6,7 +6,7 @@ from requests.exceptions import RequestException
 class Utils:
     @classmethod
     def GetProjectDirectory(cls) -> pathlib.Path:
-        return pathlib.Path(__file__).parent.parent
+        return pathlib.Path(__file__).parent.parent.parent.parent
 
     @classmethod
     def GetVisualStudioVersionIfInstalled(cls):

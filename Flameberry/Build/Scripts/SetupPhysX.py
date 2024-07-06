@@ -79,10 +79,10 @@ set(PHYSX_COMPILE_DEFINITIONS NDEBUG)
     @classmethod
     def __UpdatePackman(cls):
         cwd = os.getcwd()
-        os.chdir('physx/buildtools/packman')
+        os.chdir(cls.__PhysXRootDirectory / 'physx/buildtools/packman')
 
         try:
-            packman = 'packman.cmd' if os.name == 'nt' else 'packman'
+            packman = '.\packman.cmd' if os.name == 'nt' else './packman'
             params = [packman, 'update', '-y']
             subprocess.run(params)
         except Exception as e:
