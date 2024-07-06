@@ -49,11 +49,6 @@ namespace Flameberry {
 		VkCommandPool m_VkCommandPool;
 		std::vector<VkCommandBuffer> m_VkCommandBuffers;
 
-#ifdef FBY_PLATFORM_MACOS
-		const std::vector<const char*> m_VkDeviceExtensions = { "VK_KHR_portability_subset", VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-#else
-		const std::vector<const char*> m_VkDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-#endif
 		VkPhysicalDevice& m_VkPhysicalDevice;
 	};
 

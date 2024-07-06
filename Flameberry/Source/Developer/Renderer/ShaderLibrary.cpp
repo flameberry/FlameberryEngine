@@ -9,16 +9,21 @@ namespace Flameberry {
 	{
 		// Currently this is hardcoded as no new shaders are loaded dynamically at runtime
 		const char* paths[][2] = {
-			{ "Flameberry_PBR.vert.spv", "Flameberry_PBR.frag.spv" },
-			{ "Flameberry_MousePicking.vert.spv", "Flameberry_MousePicking.frag.spv" },
-			{ "Flameberry_MousePicking2D.vert.spv", "Flameberry_MousePicking2D.frag.spv" },
-			{ "Flameberry_SkyMap.vert.spv", "Flameberry_SkyMap.frag.spv" },
-			{ "Flameberry_DirectionalShadowMap.vert.spv", "Flameberry_DirectionalShadowMap.frag.spv" },
-			{ "Flameberry_Quad.vert.spv", "Flameberry_Quad.frag.spv" },
-			{ "Flameberry_SolidColor.vert.spv", "Flameberry_SolidColor.frag.spv" }
+			{ "PBR.vert.spv", "PBR.frag.spv" },
+			{ "MousePicking.vert.spv", "MousePicking.frag.spv" },
+			{ "MousePicking2D.vert.spv", "MousePicking2D.frag.spv" },
+			{ "SkyMap.vert.spv", "SkyMap.frag.spv" },
+			{ "DirectionalShadowMap.vert.spv", "DirectionalShadowMap.frag.spv" },
+			{ "Quad.vert.spv", "Quad.frag.spv" },
+			{ "SolidColor.vert.spv", "SolidColor.frag.spv" }
 		};
 
-		const char* computeShaderPaths[] = {};
+		const char* computeShaderPaths[] = {
+			"HDRToCubemap.comp.spv",
+			"IrradianceMap.comp.spv",
+			"PrefilteredMap.comp.spv",
+			"BRDFLUT.comp.spv",
+		};
 
 		for (const auto& path : paths)
 		{

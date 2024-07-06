@@ -68,7 +68,7 @@ namespace Flameberry {
 		vk_app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 		vk_app_info.pEngineName = "No Engine";
 		vk_app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-		vk_app_info.apiVersion = VK_API_VERSION_1_2;
+		vk_app_info.apiVersion = VK_API_VERSION_1_3;
 
 		VkInstanceCreateInfo vk_create_info{};
 		vk_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

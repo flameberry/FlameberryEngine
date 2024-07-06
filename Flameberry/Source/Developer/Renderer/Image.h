@@ -6,7 +6,6 @@
 #include "Core/Core.h"
 
 namespace Flameberry {
-
 	struct ImageViewSpecification
 	{
 		VkImageAspectFlags AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -33,14 +32,17 @@ namespace Flameberry {
 		Image(const Ref<Image>& image, const ImageViewSpecification& viewSpecification);
 		~Image();
 
-		void GenerateMipMaps();
+		void GenerateMipmaps(VkImageLayout oldLayout, VkImageLayout newLayout);
+		void CmdGenerateMipmaps(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout);
+
 		void WriteFromBuffer(VkBuffer srcBuffer);
 
 		// This function just straight up creates, begins and ends a command buffer, which might be inefficient
 		void TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
+		void CmdTransitionLayout(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
 
-		VkImage GetImage() const { return m_VkImage; }
-		VkImageView GetImageView() const { return m_VkImageView; }
+		VkImage GetVulkanImage() const { return m_VkImage; }
+		VkImageView GetVulkanImageView() const { return m_VkImageView; }
 
 		ImageSpecification GetSpecification() const { return m_Specification; }
 		VkMemoryRequirements GetMemoryRequirements() const { return m_MemoryRequirements; }
@@ -55,5 +57,4 @@ namespace Flameberry {
 
 		uint32_t* m_ReferenceCount;
 	};
-
 } // namespace Flameberry

@@ -169,6 +169,27 @@ namespace Flameberry {
         }
 #endif
 
+		// Specialization Constants
+		{
+			uint32_t count = 0;
+			auto result = reflectionShaderModule.EnumerateSpecializationConstants(&count, NULL);
+			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
+			std::vector<SpvReflectSpecializationConstant*> specializationConstants(count);
+			result = reflectionShaderModule.EnumerateSpecializationConstants(&count, specializationConstants.data());
+			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
+
+			if (count)
+				FBY_LOG("Shader `{}` - Specialization Constants:", m_Name);
+
+			for (uint32_t i = 0; i < count; i++)
+			{
+				FBY_LOG("\t{}", specializationConstants[i]->name);
+				FBY_ASSERT(m_SpecializationConstantIDSet.find(specializationConstants[i]->constant_id) == m_SpecializationConstantIDSet.end(), "Specialization Constant IDs must be unique");
+
+				m_SpecializationConstantIDSet.insert(specializationConstants[i]->constant_id);
+			}
+		}
+
 		{
 			// The information about push constants is collected here
 			uint32_t count = 0;
@@ -182,7 +203,7 @@ namespace Flameberry {
 			for (uint32_t i = 0; i < count; i++)
 			{
 				uint32_t absoluteSize = 0;
-				FBY_LOG("Shader `{}` - PushConstantBlock:", m_Name, i);
+				FBY_LOG("Shader `{}` - PushConstantBlock:", m_Name);
 
 				for (uint32_t j = 0; j < pcblocks[i]->member_count; j++)
 				{
@@ -269,7 +290,7 @@ namespace Flameberry {
 
 					// This unordered_map is stored only for convenience of setting the Uniform Buffers/Images using their names in the shader
 					// It shouldn't be accessed every frame
-					m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] = m_DescriptorBindingSpecifications.size() - 1;
+					m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] = static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
 				}
 				m_DescriptorSetSpecifications.emplace_back(ReflectionDescriptorSetSpecification{ .Set = descSets[i]->set, .BindingCount = descSets[i]->binding_count });
 			}

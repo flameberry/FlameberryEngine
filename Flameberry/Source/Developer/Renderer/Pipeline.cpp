@@ -203,6 +203,28 @@ namespace Flameberry {
 		}
 	}
 
+	static uint32_t PopulateVulkanSpecializationMapEntries(std::vector<VkSpecializationMapEntry>& outVulkanSpecializationMapEntries, const SpecializationConstantLayout& specializationConstantLayout, const Ref<Shader>& shader)
+	{
+		uint32_t offset = 0;
+		const auto& specializationConstantIDSet = shader->GetSpecializationConstantIDSet();
+
+		for (const auto& specializationConstant : specializationConstantLayout)
+		{
+			if (specializationConstant.Type < ShaderDataType::Dummy1)
+			{
+				FBY_ASSERT(specializationConstantIDSet.find(specializationConstant.ConstantID) != specializationConstantIDSet.end(), "Specialization Constant ID specified during Pipeline Creation doesn't match any ID present in the shader!");
+
+				outVulkanSpecializationMapEntries.emplace_back(VkSpecializationMapEntry{
+					.constantID = specializationConstant.ConstantID,
+					.size = SizeOfShaderDataType(specializationConstant.Type),
+					.offset = offset,
+				});
+			}
+			offset += outVulkanSpecializationMapEntries.back().size;
+		}
+		return offset;
+	}
+
 	void Pipeline::CreatePipeline()
 	{
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -444,22 +466,32 @@ namespace Flameberry {
 		std::vector<VkDescriptorSetLayout> vulkanDescriptorSetLayouts;
 		PopulateVulkanDescriptorSetLayouts(vulkanDescriptorSetLayouts, m_DescriptorSetLayouts, m_Specification.Shader);
 
-		VkPipelineLayoutCreateInfo vk_pipeline_layout_create_info{};
-		vk_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		vk_pipeline_layout_create_info.setLayoutCount = (uint32_t)vulkanDescriptorSetLayouts.size();
-		vk_pipeline_layout_create_info.pSetLayouts = vulkanDescriptorSetLayouts.data();
-		vk_pipeline_layout_create_info.pushConstantRangeCount = (uint32_t)vulkanPushConstantRanges.size();
-		vk_pipeline_layout_create_info.pPushConstantRanges = vulkanPushConstantRanges.data();
+		std::vector<VkSpecializationMapEntry> vulkanSpecializationMapEntries;
+		uint32_t dataSize = PopulateVulkanSpecializationMapEntries(vulkanSpecializationMapEntries, m_Specification.SpecializationConstantLayout, m_Specification.Shader);
 
-		VK_CHECK_RESULT(vkCreatePipelineLayout(device, &vk_pipeline_layout_create_info, nullptr, &m_PipelineLayout));
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutCreateInfo.setLayoutCount = (uint32_t)vulkanDescriptorSetLayouts.size();
+		pipelineLayoutCreateInfo.pSetLayouts = vulkanDescriptorSetLayouts.data();
+		pipelineLayoutCreateInfo.pushConstantRangeCount = (uint32_t)vulkanPushConstantRanges.size();
+		pipelineLayoutCreateInfo.pPushConstantRanges = vulkanPushConstantRanges.data();
+
+		VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout));
 
 		VkShaderModule computeShaderModule = m_Specification.Shader->GetVulkanShaderModule();
+
+		VkSpecializationInfo specializationInfo{};
+		specializationInfo.dataSize = dataSize;
+		specializationInfo.mapEntryCount = (uint32_t)vulkanSpecializationMapEntries.size();
+		specializationInfo.pMapEntries = vulkanSpecializationMapEntries.data();
+		specializationInfo.pData = m_Specification.SpecializationConstantData;
 
 		VkPipelineShaderStageCreateInfo pipelineComputeShaderStageCreateInfo{};
 		pipelineComputeShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		pipelineComputeShaderStageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
 		pipelineComputeShaderStageCreateInfo.module = computeShaderModule;
 		pipelineComputeShaderStageCreateInfo.pName = "main";
+		pipelineComputeShaderStageCreateInfo.pSpecializationInfo = &specializationInfo;
 
 		VkComputePipelineCreateInfo computePipelineCreateInfo{};
 		computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;

@@ -5,6 +5,7 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/UI.h"
+#include "Renderer/Skymap.h"
 
 namespace Flameberry {
 

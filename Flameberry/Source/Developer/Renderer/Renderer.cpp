@@ -6,12 +6,12 @@
 #include "Core/Profiler.h"
 
 #include "VulkanContext.h"
-#include "VulkanDebug.h"
 #include "Asset/AssetManager.h"
 #include "SwapChain.h"
 #include "ShaderLibrary.h"
 #include "Texture2D.h"
 #include "MaterialAsset.h"
+#include "Skymap.h"
 
 // #define FBY_ENABLE_QUERY_TIMESTAMP
 
@@ -28,6 +28,7 @@ namespace Flameberry {
 	{
 		// Create the generic texture descriptor layout
 		Texture2D::InitStaticResources();
+		Skymap::Init();
 		ShaderLibrary::Init();
 
 		s_CommandQueue.reserve(5 * 1028 * 1028 / sizeof(Renderer::Command)); // 5 MB
@@ -53,6 +54,7 @@ namespace Flameberry {
 
 #endif
 		ShaderLibrary::Shutdown();
+		Skymap::Destroy();
 		Texture2D::DestroyStaticResources();
 
 		DescriptorSetLayout::ClearCache(); // TODO: Maybe move this to somewhere obvious like VulkanDevice or Renderer

@@ -21,7 +21,7 @@ namespace Flameberry {
 		~Texture2D();
 
 		VkDescriptorSet CreateOrGetDescriptorSet();
-		VkImageView GetImageView() const { return m_TextureImage->GetImageView(); }
+		VkImageView GetImageView() const { return m_TextureImage->GetVulkanImageView(); }
 		VkSampler GetSampler() const { return m_VkTextureSampler; }
 		ImageSpecification GetImageSpecification() const { return m_TextureImageSpecification; }
 
@@ -34,7 +34,7 @@ namespace Flameberry {
 		static Ref<DescriptorSetLayout> GetDescriptorLayout() { return s_DescriptorLayout; }
 		static VkDescriptorSet GetEmptyDescriptorSet() { return s_EmptyDescriptorSet->GetVulkanDescriptorSet(); }
 		static VkSampler GetDefaultSampler() { return s_DefaultSampler; }
-		static VkImageView GetEmptyImageView() { return s_EmptyImage->GetImageView(); }
+		static VkImageView GetEmptyImageView() { return s_EmptyImage->GetVulkanImageView(); }
 		static Ref<Image> GetEmptyImage() { return s_EmptyImage; }
 
 		static Ref<Texture2D> TryGetOrLoadTexture(const std::string& texturePath);

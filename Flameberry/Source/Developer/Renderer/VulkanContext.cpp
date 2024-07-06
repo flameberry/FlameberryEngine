@@ -12,10 +12,11 @@ namespace Flameberry {
 
 	const std::vector<const char*> VulkanContext::s_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
 
-	std::vector<const char*> VulkanContext::s_VkDeviceExtensions = {
+	std::vector<const char*> VulkanContext::s_VulkanDeviceExtensions = {
 		"VK_KHR_portability_subset",
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-		VK_KHR_MULTIVIEW_EXTENSION_NAME
+		VK_KHR_MULTIVIEW_EXTENSION_NAME,
+		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME
 	};
 
 	VulkanContext* VulkanContext::s_CurrentContext = nullptr;
@@ -78,9 +79,15 @@ namespace Flameberry {
 		std::vector<VkDescriptorPoolSize> poolSizes = {
 			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 * 8 },
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 2 }
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 50 }
 		};
 		m_GlobalDescriptorPool = CreateRef<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, maxDescSets);
+
+#if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
+		// SRS - on macOS set environment variable to configure MoltenVK for using Metal argument buffers (needed for descriptor indexing)
+		//     - MoltenVK supports Metal argument buffers on macOS, iOS possible in future (see https://github.com/KhronosGroup/MoltenVK/issues/1651)
+		setenv("MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS", "1", 1);
+#endif
 	}
 
 	VulkanContext::~VulkanContext()
@@ -100,7 +107,7 @@ namespace Flameberry {
 			std::vector<VkExtensionProperties> available_extensions(extensionCount);
 			vkEnumerateDeviceExtensionProperties(vk_device, nullptr, &extensionCount, available_extensions.data());
 
-			std::set<std::string> required_extensions(s_VkDeviceExtensions.begin(), s_VkDeviceExtensions.end());
+			std::set<std::string> required_extensions(s_VulkanDeviceExtensions.begin(), s_VulkanDeviceExtensions.end());
 
 			FBY_INFO("Available Extensions:");
 			for (const auto& extension : available_extensions)
@@ -126,6 +133,15 @@ namespace Flameberry {
 			VkPhysicalDeviceFeatures supportedFeatures;
 			vkGetPhysicalDeviceFeatures(vk_device, &supportedFeatures);
 
+			VkPhysicalDeviceFeatures2 deviceFeatures2{};
+			deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+
+			VkPhysicalDeviceVulkan12Features vulkan12Features{};
+			vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+
+			deviceFeatures2.pNext = &vulkan12Features;
+			vkGetPhysicalDeviceFeatures2(vk_device, &deviceFeatures2);
+
 			bool is_physical_device_valid = indices.GraphicsAndComputeSupportedQueueFamilyIndex != -1
 				&& indices.PresentationSupportedQueueFamilyIndex != -1
 				&& found_required_extensions
@@ -134,7 +150,9 @@ namespace Flameberry {
 				&& supportedFeatures.sampleRateShading
 				&& supportedFeatures.fillModeNonSolid
 				&& supportedFeatures.tessellationShader
-				&& supportedFeatures.depthClamp;
+				&& supportedFeatures.depthClamp
+				&& supportedFeatures.shaderStorageImageArrayDynamicIndexing
+				&& vulkan12Features.descriptorIndexing;
 
 			if (is_physical_device_valid)
 				return vk_device;

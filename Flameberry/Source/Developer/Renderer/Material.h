@@ -65,7 +65,7 @@ namespace Flameberry {
 
 			// How to assemble this?
 			VkDescriptorImageInfo imageInfo{};
-			imageInfo.imageView = image->GetImageView();
+			imageInfo.imageView = image->GetVulkanImageView();
 			imageInfo.sampler = sampler;
 			imageInfo.imageLayout = imageLayout;
 

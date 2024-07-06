@@ -7,11 +7,10 @@
 
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
-#include "Core/UI.h"
+#include "UI.h"
 
 #include "Physics/PhysicsEngine.h"
 #include "Renderer/ShaderLibrary.h"
-#include "Renderer/Skymap.h"
 
 namespace Flameberry {
 
@@ -124,7 +123,7 @@ namespace Flameberry {
 		{
 			// Pipeline Creation
 			PipelineSpecification pipelineSpec{};
-			pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_MousePicking");
+			pipelineSpec.Shader = ShaderLibrary::Get("MousePicking");
 			pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
 			pipelineSpec.VertexLayout = {
@@ -141,7 +140,7 @@ namespace Flameberry {
 		{
 			// Pipeline Creation
 			PipelineSpecification pipelineSpec{};
-			pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_MousePicking2D");
+			pipelineSpec.Shader = ShaderLibrary::Get("MousePicking2D");
 			pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
 			pipelineSpec.VertexLayout = {
@@ -248,7 +247,7 @@ namespace Flameberry {
 		{
 			RenderCommand::WritePixelFromImageToBuffer(
 				m_MousePickingBuffer->GetVulkanBuffer(),
-				m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetImage(),
+				m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetVulkanImage(),
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 				{ m_MouseX, m_ViewportSize.y - m_MouseY - 1 });
 
@@ -1009,6 +1008,31 @@ namespace Flameberry {
 				ImGui::Text("Lambda Split");
 				ImGui::TableNextColumn();
 				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
+
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+
+				ImGui::AlignTextToFramePadding();
+				ImGui::Text("Sky Reflections");
+				ImGui::TableNextColumn();
+				ImGui::Checkbox("##Sky_Reflections", &settings.SkyReflections);
+
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+
+				ImGui::AlignTextToFramePadding();
+				ImGui::Text("Gamma Correction");
+				ImGui::TableNextColumn();
+				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Gamma_Correction_Factor", &settings.GammaCorrectionFactor, 0.001f, 0.0f, 10.0f));
+
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+
+				ImGui::AlignTextToFramePadding();
+				ImGui::Text("Exposure");
+				ImGui::TableNextColumn();
+				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f));
+
 				ImGui::EndTable();
 			}
 		}

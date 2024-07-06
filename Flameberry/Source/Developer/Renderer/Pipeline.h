@@ -10,7 +10,14 @@
 
 namespace Flameberry {
 
+	struct SpecializationConstant
+	{
+		uint32_t ConstantID;
+		ShaderDataType Type;
+	};
+
 	using VertexInputLayout = std::vector<ShaderDataType>;
+	using SpecializationConstantLayout = std::vector<SpecializationConstant>;
 
 	struct PipelineSpecification
 	{
@@ -20,6 +27,9 @@ namespace Flameberry {
 		// Make sure to provide all the attributes present in the Vertex Buffer
 		// And for those that don't need to be used in the shader replace them with the equivalent Dummy Types
 		VertexInputLayout VertexLayout;
+
+		SpecializationConstantLayout SpecializationConstantLayout;
+		void* SpecializationConstantData = nullptr;
 
 		uint32_t SubPass = 0;
 		uint32_t Samples = 1;
@@ -61,6 +71,9 @@ namespace Flameberry {
 	struct ComputePipelineSpecification
 	{
 		Ref<Shader> Shader;
+
+		SpecializationConstantLayout SpecializationConstantLayout;
+		const void* SpecializationConstantData = nullptr;
 	};
 
 	class ComputePipeline

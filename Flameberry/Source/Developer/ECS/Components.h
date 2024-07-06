@@ -26,7 +26,7 @@ namespace Flameberry {
 		glm::vec3 Translation, Rotation, Scale;
 
 		TransformComponent()
-			: Translation(0.0f), Rotation(0.0f), Scale(1.0f) {};
+			: Translation(0.0f), Rotation(0.0f), Scale(1.0f) {}
 
 		glm::mat4 CalculateTransform() const
 		{
