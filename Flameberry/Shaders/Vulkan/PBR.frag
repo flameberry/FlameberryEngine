@@ -13,9 +13,9 @@ layout(location = 0) out vec4 o_FragColor;
 #define CASCADE_COUNT 4
 
 #define POISSON_PROVIDE_32_SAMPLES
-#include "include/poisson.glsl"
+#include "Include/poisson.glsl"
 
-#include "include/CubemapCommon.glsl"
+#include "Include/CubemapCommon.glsl"
 
 const mat4 g_BiasMatrix = mat4(
         0.5, 0.0, 0.0, 0.0,

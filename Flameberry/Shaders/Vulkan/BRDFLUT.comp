@@ -6,7 +6,7 @@ layout(constant_id = 0) const int c_ImageSize = 512;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-#include "include/CubemapCommon.glsl"
+#include "Include/CubemapCommon.glsl"
 
 const uint g_SampleCount = 1024u;
 

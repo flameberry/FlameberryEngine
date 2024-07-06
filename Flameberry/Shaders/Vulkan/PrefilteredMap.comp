@@ -11,7 +11,7 @@ layout(push_constant) uniform Data {
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-#include "include/CubemapCommon.glsl"
+#include "Include/CubemapCommon.glsl"
 
 float max3(vec3 a)
 {

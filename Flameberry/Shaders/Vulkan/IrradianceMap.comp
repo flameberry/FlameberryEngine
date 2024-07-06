@@ -5,7 +5,7 @@ layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_Irradia
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-#include "include/CubemapCommon.glsl"
+#include "Include/CubemapCommon.glsl"
 
 void main()
 {
@@ -39,13 +39,17 @@ void main()
             vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal;
 
             vec3 sampledColor = texture(_FBY_u_Cubemap, sampleVec).rgb;
+
+#if 1
+			// TODO: Temporary fix to the glare artifacts due to high HDR values in the environment map
+			sampledColor = ToneMap(sampledColor);
+#endif
+
             irradiance += sampledColor * cos_theta * sin_theta;
             nrSamples++;
         }
     }
-    irradiance = PI * irradiance * (1.0 / float(nrSamples));
-    // irradiance = ToneMap(irradiance);
-    // irradiance = GammaCorrection(irradiance, 2.2f);
 
+    irradiance = PI * irradiance * (1.0 / float(nrSamples));
     imageStore(_FBY_u_IrradianceMap, ivec3(gl_GlobalInvocationID), vec4(irradiance, 1.0f));
 }
