@@ -88,6 +88,15 @@ namespace Flameberry {
 			: Color(1.0f), Intensity(10.0f) {}
 	};
 
+	struct SpotLightComponent
+	{
+		glm::vec3 Color;
+		float Intensity, InnerConeAngle, OuterConeAngle;
+
+		SpotLightComponent()
+			: Color(1.0f), Intensity(10.0f), InnerConeAngle(30.0f), OuterConeAngle(45.0f) {}
+	};
+
 	struct RelationshipComponent
 	{
 		fbentt::entity Parent{};

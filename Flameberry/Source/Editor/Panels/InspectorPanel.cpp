@@ -5,7 +5,10 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/UI.h"
+#include "ECS/Components.h"
+#include "Renderer/Light.h"
 #include "Renderer/Skymap.h"
+#include "glm/trigonometric.hpp"
 
 namespace Flameberry {
 
@@ -58,6 +61,7 @@ namespace Flameberry {
 				DrawAddComponentEntry<SkyLightComponent>(ICON_LC_SUNRISE "\tSky Light Component");
 				DrawAddComponentEntry<DirectionalLightComponent>(ICON_LC_SUN "\tDirectional Light Component");
 				DrawAddComponentEntry<PointLightComponent>(ICON_LC_LIGHTBULB "\tPoint Light Component");
+				DrawAddComponentEntry<SpotLightComponent>(ICON_LC_CONE "\tSpot Light Component");
 				DrawAddComponentEntry<RigidBodyComponent>(ICON_LC_BOXES "\tRigid Body Component");
 				DrawAddComponentEntry<BoxColliderComponent>(ICON_LC_BOX "\tBox Collider Component");
 				DrawAddComponentEntry<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED "\tSphere Collider Component");
@@ -512,6 +516,56 @@ namespace Flameberry {
 					ImGui::Text("Intensity");
 					ImGui::TableNextColumn();
 					ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f);
+					ImGui::PopItemWidth();
+
+					ImGui::EndTable();
+				}
+			});
+
+			DrawComponent<SpotLightComponent>(ICON_LC_CONE " Spot Light", [&]() {
+				auto& light = m_Context->m_Registry->get<SpotLightComponent>(m_SelectionContext);
+
+				if (ImGui::BeginTable("SpotLightComponentAttributes", 2, s_TableFlags))
+				{
+					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
+					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
+
+					ImGui::AlignTextToFramePadding();
+					ImGui::Text("Color");
+					ImGui::TableNextColumn();
+
+					ImGui::PushItemWidth(-1.0f);
+					ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color));
+
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
+
+					ImGui::AlignTextToFramePadding();
+					ImGui::Text("Intensity");
+					ImGui::TableNextColumn();
+					ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f);
+
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
+
+					ImGui::AlignTextToFramePadding();
+					ImGui::Text("InnerConeAngle");
+					ImGui::TableNextColumn();
+
+					ImGui::DragFloat("##InnerConeAngle", &light.InnerConeAngle, 0.1f, 0.0f, light.OuterConeAngle);
+
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
+
+					ImGui::AlignTextToFramePadding();
+					ImGui::Text("OuterConeAngle");
+					ImGui::TableNextColumn();
+
+					ImGui::DragFloat("##OuterConeAngle", &light.OuterConeAngle, 0.1f, light.InnerConeAngle, 90.0f);
+
 					ImGui::PopItemWidth();
 
 					ImGui::EndTable();

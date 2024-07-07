@@ -2,12 +2,14 @@
 
 #include <fstream>
 
+#include "Core/Assert.h"
 #include "Core/YamlUtils.h"
 #include "Core/Timer.h"
 #include "Components.h"
 
 #include "Asset/AssetManager.h"
 #include "Asset/MeshLoader.h"
+#include "Renderer/GenericCamera.h"
 #include "Renderer/Skymap.h"
 
 namespace Flameberry {
@@ -204,6 +206,15 @@ namespace Flameberry {
 					lightComp.Intensity = light["Intensity"].as<float>();
 				}
 
+				if (auto light = entity["SpotLightComponent"]; light)
+				{
+					auto& lightComp = destScene->m_Registry->emplace<SpotLightComponent>(deserializedEntity);
+					lightComp.Color = light["Color"].as<glm::vec3>();
+					lightComp.Intensity = light["Intensity"].as<float>();
+					lightComp.InnerConeAngle = light["InnerConeAngle"].as<float>();
+					lightComp.OuterConeAngle = light["OuterConeAngle"].as<float>();
+				}
+
 				if (auto rigidBody = entity["RigidBodyComponent"]; rigidBody)
 				{
 					auto& rbComp = destScene->m_Registry->emplace<RigidBodyComponent>(deserializedEntity);
@@ -388,6 +399,17 @@ namespace Flameberry {
 			out << YAML::Key << "Color" << YAML::Value << light.Color;
 			out << YAML::Key << "Intensity" << YAML::Value << light.Intensity;
 			out << YAML::EndMap; // Point Light Component
+		}
+
+		if (scene->m_Registry->has<SpotLightComponent>(entity))
+		{
+			auto& light = scene->m_Registry->get<SpotLightComponent>(entity);
+			out << YAML::Key << "SpotLightComponent" << YAML::BeginMap;
+			out << YAML::Key << "Color" << YAML::Value << light.Color;
+			out << YAML::Key << "Intensity" << YAML::Value << light.Intensity;
+			out << YAML::Key << "InnerConeAngle" << YAML::Value << light.InnerConeAngle;
+			out << YAML::Key << "OuterConeAngle" << YAML::Value << light.OuterConeAngle;
+			out << YAML::EndMap; // Spot Light Component
 		}
 
 		if (scene->m_Registry->has<RigidBodyComponent>(entity))

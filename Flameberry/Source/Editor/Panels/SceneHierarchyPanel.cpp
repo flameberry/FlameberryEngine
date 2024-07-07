@@ -6,6 +6,7 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/UI.h"
+#include "ECS/Components.h"
 
 namespace Flameberry {
 
@@ -321,6 +322,12 @@ namespace Flameberry {
 				{
 					auto entity = m_Context->CreateEntityWithTagAndParent("Point Light", parent);
 					m_Context->m_Registry->emplace<PointLightComponent>(entity);
+					m_SelectionContext = entity;
+				}
+				if (ImGui::MenuItem(ICON_LC_CONE "\tSpot Light"))
+				{
+					auto entity = m_Context->CreateEntityWithTagAndParent("Spot Light", parent);
+					m_Context->m_Registry->emplace<SpotLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				ImGui::EndMenu();

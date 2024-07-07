@@ -5,8 +5,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Core/Core.h"
+#include "Core/Log.h"
 #include "Core/Profiler.h"
 
+#include "ECS/Components.h"
 #include "VulkanDebug.h"
 #include "VulkanContext.h"
 #include "Renderer.h"
@@ -46,7 +48,8 @@ namespace Flameberry {
 		alignas(16) glm::vec3 cameraPosition;
 		alignas(16) DirectionalLight directionalLight;
 		alignas(16) PointLight PointLights[10];
-		alignas(4) int LightCount = 0;
+		alignas(16) SpotLight SpotLights[10];
+		alignas(4) int PointLightCount = 0, SpotLightCount = 0;
 		alignas(4) float SkyLightIntensity = 0.0f;
 		alignas(16) SceneRendererSettingsUniform RendererSettings;
 	};
@@ -467,7 +470,8 @@ namespace Flameberry {
 		Renderer2D::Init(m_GeometryPass);
 
 		// Textures
-		m_LightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/BulbIcon.png");
+		m_PointLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/BulbIcon.png");
+		m_SpotLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SpotLightIcon.png");
 		m_CameraIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/CameraIcon.png");
 		m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SunIcon.png");
 	}
@@ -475,7 +479,7 @@ namespace Flameberry {
 	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
 	{
 		uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
-		std::vector<fbentt::entity> lightEntityHandles;
+		std::vector<fbentt::entity> pointLightEntityHandles, spotLightEntityHandles;
 
 		m_ViewportSize = viewportSize;
 
@@ -531,7 +535,9 @@ namespace Flameberry {
 			auto [transform, dirLight] = scene->m_Registry->get<TransformComponent, DirectionalLightComponent>(entity);
 			sceneUniformBufferData.directionalLight.Color = dirLight.Color;
 			sceneUniformBufferData.directionalLight.Intensity = dirLight.Intensity;
-			sceneUniformBufferData.directionalLight.Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f)); // NOTE: X direction is 0.000001f to avoid shadows being not rendered when directional light perspective camera is looking directly downwards
+
+			// NOTE: X direction is 0.000001f to avoid shadows being not rendered when directional light perspective camera is looking directly downwards
+			sceneUniformBufferData.directionalLight.Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f));
 			sceneUniformBufferData.directionalLight.LightSize = dirLight.LightSize;
 
 			shouldRenderShadows = m_RendererSettings.EnableShadows && true;
@@ -565,12 +571,26 @@ namespace Flameberry {
 		for (const auto& entity : scene->m_Registry->group<TransformComponent, PointLightComponent>())
 		{
 			const auto& [transform, light] = scene->m_Registry->get<TransformComponent, PointLightComponent>(entity);
-			sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform.Translation;
-			sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Color = light.Color;
-			sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Intensity = light.Intensity;
-			sceneUniformBufferData.LightCount++;
+			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Position = transform.Translation;
+			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Color = light.Color;
+			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Intensity = light.Intensity;
+			sceneUniformBufferData.PointLightCount++;
 
-			lightEntityHandles.emplace_back(entity);
+			pointLightEntityHandles.emplace_back(entity);
+		}
+
+		for (const auto& entity : scene->m_Registry->group<TransformComponent, SpotLightComponent>())
+		{
+			const auto& [transform, light] = scene->m_Registry->get<TransformComponent, SpotLightComponent>(entity);
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Position = transform.Translation;
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f));
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Color = light.Color;
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Intensity = light.Intensity;
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].InnerConeAngle = glm::radians(light.InnerConeAngle);
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].OuterConeAngle = glm::radians(light.OuterConeAngle);
+			sceneUniformBufferData.SpotLightCount++;
+
+			spotLightEntityHandles.emplace_back(entity);
 		}
 
 		m_SceneUniformBuffers[currentFrame]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData));
@@ -769,10 +789,16 @@ namespace Flameberry {
 
 		if (renderDebugIcons)
 		{
-			// Render Point Lights
-			Renderer2D::SetActiveTexture(m_LightIcon);
-			for (uint32_t i = 0; i < sceneUniformBufferData.LightCount; i++)
-				Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix, fbentt::to_index(lightEntityHandles[i]));
+			// Render Point Light Icons
+			Renderer2D::SetActiveTexture(m_PointLightIcon);
+			for (uint32_t i = 0; i < sceneUniformBufferData.PointLightCount; i++)
+				Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix, fbentt::to_index(pointLightEntityHandles[i]));
+			Renderer2D::FlushQuads();
+
+			// Render Spot Light Icons
+			Renderer2D::SetActiveTexture(m_SpotLightIcon);
+			for (uint32_t i = 0; i < sceneUniformBufferData.SpotLightCount; i++)
+				Renderer2D::AddBillboard(sceneUniformBufferData.SpotLights[i].Position, 1.0f, sceneUniformBufferData.SpotLights[i].Color, viewMatrix, fbentt::to_index(spotLightEntityHandles[i]));
 			Renderer2D::FlushQuads();
 
 			Renderer2D::SetActiveTexture(m_CameraIcon);

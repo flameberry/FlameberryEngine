@@ -36,6 +36,15 @@ struct PointLight {
     float Intensity;
 };
 
+struct SpotLight {
+    vec3 Position;
+    vec3 Direction;
+    vec3 Color;
+    float Intensity;
+    float InnerConeAngle;
+    float OuterConeAngle;
+};
+
 struct SceneRendererSettingsUniform {
     int EnableShadows, ShowCascades, SoftShadows, SkyReflections;
     float GammaCorrectionFactor, Exposure;
@@ -49,7 +58,8 @@ layout(std140, set = 1, binding = 0) uniform _FBY_SceneData {
     vec3 CameraPosition;
     DirectionalLight DirectionalLight;
     PointLight PointLights[10];
-    int LightCount;
+    SpotLight SpotLights[10];
+    int PointLightCount, SpotLightCount;
     float SkyLightIntensity;
     SceneRendererSettingsUniform SceneRendererSettings;
 } u_SceneData;
@@ -434,14 +444,39 @@ vec3 PBR_PointLight(PointLight light, vec3 normal)
     return PBR_CalcPixelColor(normal, l, lightIntensity);
 }
 
+vec3 PBR_SpotLight(SpotLight light, vec3 normal)
+{
+    vec3 lightIntensity = light.Color * light.Intensity;
+
+    vec3 l = vec3(0.0f);
+    l = light.Position - v_WorldSpacePosition;
+    float lightToPixelDistance = length(l);
+    l = normalize(l);
+    lightIntensity /= lightToPixelDistance * lightToPixelDistance;
+
+    float innerConeAngleCos = cos(light.InnerConeAngle);
+    float outerConeAngleCos = cos(light.OuterConeAngle);
+
+    // Calculate the intensity according to where the pixel lies within the cone
+    float theta = dot(l, normalize(-light.Direction));
+    float epsilon = innerConeAngleCos - outerConeAngleCos;
+    float intensity = clamp((theta - outerConeAngleCos) / epsilon, 0.0, 1.0);
+    lightIntensity *= intensity;
+
+    return PBR_CalcPixelColor(normal, l, lightIntensity);
+}
+
 vec3 PBR_TotalLight(vec3 normal)
 {
     vec3 totalLight = vec3(0.0f);
 
     totalLight += PBR_DirectionalLight(u_SceneData.DirectionalLight, normal);
 
-    for (int i = 0; i < u_SceneData.LightCount; i++)
+    for (int i = 0; i < u_SceneData.PointLightCount; i++)
         totalLight += PBR_PointLight(u_SceneData.PointLights[i], normal);
+
+    for (int i = 0; i < u_SceneData.SpotLightCount; i++)
+        totalLight += PBR_SpotLight(u_SceneData.SpotLights[i], normal);
 
     vec3 ambient = vec3(0.0);
     if (u_SceneData.SceneRendererSettings.SkyReflections == 1)

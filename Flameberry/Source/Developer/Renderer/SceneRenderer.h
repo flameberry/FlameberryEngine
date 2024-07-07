@@ -13,6 +13,7 @@ namespace Flameberry {
 	{
 		glm::mat4 ModelMatrix;
 	};
+
 	struct MousePickingPushConstantData
 	{
 		glm::mat4 ModelMatrix;
@@ -116,7 +117,7 @@ namespace Flameberry {
 		std::vector<Ref<DescriptorSet>> m_CompositePassDescriptorSets;
 
 		// Textures
-		Ref<Texture2D> m_LightIcon, m_CameraIcon, m_DirectionalLightIcon;
+		Ref<Texture2D> m_PointLightIcon, m_SpotLightIcon, m_CameraIcon, m_DirectionalLightIcon;
 
 		// Batching
 		Unique<RendererData> m_RendererData;
