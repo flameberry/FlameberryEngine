@@ -1,4 +1,5 @@
 #include "TextureLoader.h"
+#include "Renderer/Texture2D.h"
 
 #include <stb_image/stb_image.h>
 
@@ -9,7 +10,7 @@ namespace Flameberry {
 
 	Ref<Asset> TextureLoader::LoadTexture2D(const std::filesystem::path& path)
 	{
-		int width, height, channels, bytesPerChannel;
+		int width, height, channels;
 		void* pixels = nullptr;
 		VkFormat format = VK_FORMAT_UNDEFINED;
 
@@ -17,16 +18,19 @@ namespace Flameberry {
 		{
 			pixels = stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R32G32B32A32_SFLOAT;
-			bytesPerChannel = 4;
 		}
 		else
 		{
 			pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R8G8B8A8_UNORM;
-			bytesPerChannel = 1;
 		}
 
-		auto asset = CreateRef<Texture2D>(pixels, width, height, bytesPerChannel, format);
+		Texture2DSpecification specification;
+		specification.Width = width;
+		specification.Height = height;
+		specification.Format = format;
+
+		auto asset = CreateRef<Texture2D>(pixels, specification);
 
 		stbi_image_free(pixels);
 
@@ -38,7 +42,7 @@ namespace Flameberry {
 	}
 
 	// TODO: Needs work quality wise
-	Ref<Texture2D> TextureLoader::LoadTexture2DResized(const std::filesystem::path& path, int newWidth, int newHeight)
+	Ref<Texture2D> TextureLoader::LoadTexture2DResized(const std::filesystem::path& path, int newWidth, int newHeight, bool bGenerateMipmaps)
 	{
 		auto calcWidthHeight = [](const int width, const int height, int& newWidth, int& newHeight) {
 			if (width >= height)
@@ -53,7 +57,7 @@ namespace Flameberry {
 			}
 		};
 
-		int width, height, channels, bytesPerChannel;
+		int width, height, channels;
 		void* pixels = nullptr;
 		void* resizedPixels = nullptr;
 		VkFormat format = VK_FORMAT_UNDEFINED;
@@ -62,7 +66,6 @@ namespace Flameberry {
 		{
 			pixels = stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R32G32B32A32_SFLOAT;
-			bytesPerChannel = 4;
 			channels = 4;
 
 			calcWidthHeight(width, height, newWidth, newHeight);
@@ -75,7 +78,6 @@ namespace Flameberry {
 		{
 			pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R8G8B8A8_UNORM;
-			bytesPerChannel = 1;
 			channels = 4;
 
 			calcWidthHeight(width, height, newWidth, newHeight);
@@ -85,9 +87,15 @@ namespace Flameberry {
 			stbir_resize_uint8_linear((const unsigned char*)pixels, width, height, 0, (unsigned char*)resizedPixels, newWidth, newHeight, 0, stbir_pixel_layout::STBIR_RGBA);
 		}
 
-		auto texture = CreateRef<Texture2D>(resizedPixels, newWidth, newHeight, bytesPerChannel, format);
+		Texture2DSpecification specification;
+		specification.Width = newWidth;
+		specification.Height = newHeight;
+		specification.Format = format;
+		specification.GenerateMipmaps = bGenerateMipmaps;
 
-		if (bytesPerChannel == 4)
+		auto texture = CreateRef<Texture2D>(resizedPixels, specification);
+
+		if (format == VK_FORMAT_R32G32B32A32_SFLOAT)
 			delete[] (float*)resizedPixels;
 		else
 			delete[] (unsigned char*)resizedPixels;

@@ -13,16 +13,24 @@
 
 namespace Flameberry {
 
+	struct Texture2DSpecification
+	{
+		float Width, Height;
+		VkFormat Format;
+		bool GenerateMipmaps = true;
+		VkSampler Sampler = VK_NULL_HANDLE;
+	};
+
 	class Texture2D : public Asset
 	{
 	public:
 		Texture2D(const std::string& texturePath, bool canGenerateMipMaps = true, VkSampler sampler = VK_NULL_HANDLE);
-		Texture2D(const void* data, const float width, const float height, const uint8_t bytesPerChannel, VkFormat format, bool canGenerateMipMaps = true, VkSampler sampler = VK_NULL_HANDLE);
+		Texture2D(const void* data, const Texture2DSpecification& specification);
 		~Texture2D();
 
 		VkDescriptorSet CreateOrGetDescriptorSet();
 		VkImageView GetImageView() const { return m_TextureImage->GetVulkanImageView(); }
-		VkSampler GetSampler() const { return m_VkTextureSampler; }
+		VkSampler GetSampler() const { return m_Sampler; }
 		ImageSpecification GetImageSpecification() const { return m_TextureImageSpecification; }
 
 		FBY_DECLARE_ASSET_TYPE(AssetType::Texture2D);
@@ -48,11 +56,12 @@ namespace Flameberry {
 		ImageSpecification m_TextureImageSpecification;
 
 		Ref<Image> m_TextureImage;
-		VkSampler m_VkTextureSampler;
-		VkDescriptorSet m_DescriptorSet = VK_NULL_HANDLE;
+		VkSampler m_Sampler;
+		VkDescriptorSet m_DescriptorSet;
 
 		bool m_DidCreateSampler = false;
 
+	private:
 		static Ref<DescriptorSetLayout> s_DescriptorLayout;
 		static Ref<DescriptorSet> s_EmptyDescriptorSet;
 		static Ref<Image> s_EmptyImage;
