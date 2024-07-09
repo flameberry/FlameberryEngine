@@ -9,6 +9,7 @@
 #include "ecs.hpp"
 #include "Asset/Asset.h"
 #include "Renderer/GenericCamera.h"
+#include "Renderer/Font.h"
 #include "Actor.h"
 
 namespace Flameberry {
@@ -174,11 +175,21 @@ namespace Flameberry {
 		void* RuntimeShape = nullptr;
 	};
 
+	struct TextComponent
+	{
+		std::string TextString;
+		Ref<Font> Font = Font::GetDefault();
+
+		glm::vec3 Color;
+		float Kerning;
+		float LineSpacing;
+	};
+
 	template <typename... Component>
 	struct ComponentList
 	{
 	};
 
-	using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>;
+	using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent, TextComponent>;
 
 } // namespace Flameberry

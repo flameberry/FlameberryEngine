@@ -17,12 +17,8 @@ namespace Flameberry {
 
 	Renderer2DData Renderer2D::s_Renderer2DData;
 
-	static Font* s_Font;
-
 	void Renderer2D::Init(const Ref<RenderPass>& renderPass)
 	{
-		s_Font = new Font(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/opensans/OpenSans-Regular.ttf");
-
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		{
 			// Line Resources
@@ -298,22 +294,21 @@ namespace Flameberry {
 			Renderer2D::AddLine(vertices[edges[i][0]], vertices[edges[i][1]], color);
 	}
 
-	void Renderer2D::AddText(const std::string& text, const Ref<Font>& font, const glm::mat4& transform, const glm::vec3& color)
+	void Renderer2D::AddText(const std::string& text, const Ref<Font>& font, const glm::mat4& transform, const TextParams& textParams)
 	{
-		const auto& fontGeometry = s_Font->GetMSDFFontData()->FontGeometry;
+		s_Renderer2DData.FontAtlasTexture = font->GetAtlasTexture();
+
+		const auto& fontGeometry = font->GetMSDFFontData()->FontGeometry;
 		const auto& metrics = fontGeometry.getMetrics();
 
-		Ref<Texture2D> fontAtlas = s_Font->GetAtlasTexture();
+		Ref<Texture2D> fontAtlas = font->GetAtlasTexture();
 
 		Renderer2D::SetActiveTexture(fontAtlas);
 
-		const double lineHeightOffset = 0.0;
-		const double kerningOffset = 0.0f;
-
 		double x = 0.0, y = 0.0;
-		double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
+		const double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
 
-		double spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();
+		const double spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();
 
 		for (uint32_t i = 0; i < text.size(); i++)
 		{
@@ -325,20 +320,27 @@ namespace Flameberry {
 			if (character == '\n')
 			{
 				x = 0.0;
-				y -= fsScale * fontGeometry.getMetrics().lineHeight + lineHeightOffset;
+				y -= fsScale * fontGeometry.getMetrics().lineHeight + textParams.LineSpacing;
 				continue;
 			}
 
 			if (character == ' ')
 			{
-				x += fsScale * spaceGlyphAdvance + kerningOffset;
+				double advance = spaceGlyphAdvance;
+				if (i < text.size() - 1)
+				{
+					const char nextCharacter = text[i + 1];
+					fontGeometry.getAdvance(advance, character, nextCharacter);
+				}
+
+				x += fsScale * advance + textParams.Kerning;
 				continue;
 			}
 
 			if (character == '\t')
 			{
 				constexpr double tabsize = 4.0;
-				x += tabsize * (fsScale * spaceGlyphAdvance + kerningOffset);
+				x += tabsize * (fsScale * spaceGlyphAdvance + textParams.Kerning);
 				continue;
 			}
 
@@ -391,18 +393,18 @@ namespace Flameberry {
 
 				vertex.Position = transform * glm::vec4(textCharacterVertexPositions[i], 0.0f, 1.0f);
 
-				vertex.Color = color;
+				vertex.Color = textParams.Color;
 				vertex.TextureCoordinates = textCharacterTextureCoordinates[i];
 				vertex.EntityIndex = -1;
 			}
 
 			if (i < text.size() - 1)
 			{
-				double advance = glyph->getAdvance();
+				double advance;
 				const char nextCharacter = text[i + 1];
 				fontGeometry.getAdvance(advance, character, nextCharacter);
 
-				x += fsScale * advance + kerningOffset;
+				x += fsScale * advance + textParams.Kerning;
 			}
 		}
 	}
@@ -479,7 +481,7 @@ namespace Flameberry {
 			const uint32_t vertexCount = (uint32_t)s_Renderer2DData.TextVertices.size();
 			const uint32_t indexCount = 6 * (uint32_t)s_Renderer2DData.TextVertices.size() / 4;
 
-			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Font->GetAtlasTexture()->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.TextVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.FontAtlasTexture->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.TextVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 				Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
 				VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
@@ -504,11 +506,13 @@ namespace Flameberry {
 		s_Renderer2DData.QuadPipeline = nullptr;
 		s_Renderer2DData.QuadVertexBuffer = nullptr;
 		s_Renderer2DData.QuadIndexBuffer = nullptr;
-		s_Renderer2DData.TextureMap = nullptr;
 
 		s_Renderer2DData.TextPipeline = nullptr;
 		s_Renderer2DData.TextVertexBuffer = nullptr;
 		s_Renderer2DData.TextIndexBuffer = nullptr;
+
+		s_Renderer2DData.TextureMap = nullptr;
+		s_Renderer2DData.FontAtlasTexture = nullptr;
 	}
 
 } // namespace Flameberry

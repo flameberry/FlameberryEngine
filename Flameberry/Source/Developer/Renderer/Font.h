@@ -17,6 +17,8 @@ namespace Flameberry {
 		Ref<Texture2D> GetAtlasTexture() const { return m_AtlasTexture; }
 		const MSDFFontData* GetMSDFFontData() const { return m_Data; }
 
+		static Ref<Font> GetDefault();
+
 	private:
 		MSDFFontData* m_Data;
 		Ref<Texture2D> m_AtlasTexture;

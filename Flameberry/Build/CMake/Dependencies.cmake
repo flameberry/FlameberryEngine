@@ -135,6 +135,9 @@ set(FBY_DEPENDENCY_SOURCE
     ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
     ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/backends/imgui_impl_glfw.h
 
+    ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/misc/cpp/imgui_stdlib.cpp
+    ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/misc/cpp/imgui_stdlib.h
+
     # ImGuizmo
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/GraphEditor.cpp
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/GraphEditor.h

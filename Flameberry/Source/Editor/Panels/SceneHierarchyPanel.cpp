@@ -7,6 +7,7 @@
 
 #include "Core/UI.h"
 #include "ECS/Components.h"
+#include "imgui.h"
 
 namespace Flameberry {
 
@@ -289,18 +290,24 @@ namespace Flameberry {
 		{
 			if (ImGui::MenuItem(ICON_LC_SQUARE "\tEmpty"))
 			{
-				auto entity = m_Context->CreateEntityWithTagAndParent("Empty", parent);
+				const auto entity = m_Context->CreateEntityWithTagAndParent("Empty", parent);
+				m_SelectionContext = entity;
+			}
+			if (ImGui::MenuItem(ICON_LC_TEXT "\tText"))
+			{
+				const auto entity = m_Context->CreateEntityWithTagAndParent("Text", parent);
+				m_Context->m_Registry->emplace<TextComponent>(entity);
 				m_SelectionContext = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_CUBOID "\tMesh"))
 			{
-				auto entity = m_Context->CreateEntityWithTagAndParent("StaticMesh", parent);
+				const auto entity = m_Context->CreateEntityWithTagAndParent("StaticMesh", parent);
 				m_Context->m_Registry->emplace<MeshComponent>(entity);
 				m_SelectionContext = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_CAMERA "\tCamera"))
 			{
-				auto entity = m_Context->CreateEntityWithTagAndParent("Camera", parent);
+				const auto entity = m_Context->CreateEntityWithTagAndParent("Camera", parent);
 				m_Context->m_Registry->emplace<CameraComponent>(entity);
 				m_SelectionContext = entity;
 			}
@@ -308,25 +315,25 @@ namespace Flameberry {
 			{
 				if (ImGui::MenuItem(ICON_LC_SUNRISE "\tSky Light"))
 				{
-					auto entity = m_Context->CreateEntityWithTagAndParent("Sky Light", parent);
+					const auto entity = m_Context->CreateEntityWithTagAndParent("Sky Light", parent);
 					m_Context->m_Registry->emplace<SkyLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_SUN "\tDirectional Light"))
 				{
-					auto entity = m_Context->CreateEntityWithTagAndParent("Directional Light", parent);
+					const auto entity = m_Context->CreateEntityWithTagAndParent("Directional Light", parent);
 					m_Context->m_Registry->emplace<DirectionalLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_LIGHTBULB "\tPoint Light"))
 				{
-					auto entity = m_Context->CreateEntityWithTagAndParent("Point Light", parent);
+					const auto entity = m_Context->CreateEntityWithTagAndParent("Point Light", parent);
 					m_Context->m_Registry->emplace<PointLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_CONE "\tSpot Light"))
 				{
-					auto entity = m_Context->CreateEntityWithTagAndParent("Spot Light", parent);
+					const auto entity = m_Context->CreateEntityWithTagAndParent("Spot Light", parent);
 					m_Context->m_Registry->emplace<SpotLightComponent>(entity);
 					m_SelectionContext = entity;
 				}

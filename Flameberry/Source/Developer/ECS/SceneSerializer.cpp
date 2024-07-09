@@ -123,13 +123,13 @@ namespace Flameberry {
 				auto& IDComp = destScene->m_Registry->emplace<IDComponent>(deserializedEntity);
 				IDComp.ID = ID;
 
-				if (auto tag = entity["TagComponent"]; tag)
+				if (auto tag = entity["TagComponent"])
 				{
 					auto& tagComp = destScene->m_Registry->emplace<TagComponent>(deserializedEntity);
 					tagComp.Tag = tag.as<std::string>();
 				}
 
-				if (auto transform = entity["TransformComponent"]; transform)
+				if (auto transform = entity["TransformComponent"])
 				{
 					auto& transformComp = destScene->m_Registry->emplace<TransformComponent>(deserializedEntity);
 					transformComp.Translation = transform["Translation"].as<glm::vec3>();
@@ -137,7 +137,7 @@ namespace Flameberry {
 					transformComp.Scale = transform["Scale"].as<glm::vec3>();
 				}
 
-				if (auto relation = entity["RelationshipComponent"]; relation)
+				if (auto relation = entity["RelationshipComponent"])
 				{
 					auto& relationComp = destScene->m_Registry->emplace<RelationshipComponent>(deserializedEntity);
 					relationComp.Parent = UUIDToEntityMap[relation["Parent"].as<UUID::value_type>()];
@@ -146,7 +146,16 @@ namespace Flameberry {
 					relationComp.FirstChild = UUIDToEntityMap[relation["FirstChild"].as<UUID::value_type>()];
 				}
 
-				if (auto camera = entity["CameraComponent"]; camera)
+				if (auto text = entity["TextComponent"])
+				{
+					auto& textComp = destScene->m_Registry->emplace<TextComponent>(deserializedEntity);
+					textComp.TextString = text["TextString"].as<std::string>();
+					textComp.Color = text["Color"].as<glm::vec3>();
+					textComp.Kerning = text["Kerning"].as<float>();
+					textComp.LineSpacing = text["LineSpacing"].as<float>();
+				}
+
+				if (auto camera = entity["CameraComponent"])
 				{
 					auto& cameraComp = destScene->m_Registry->emplace<CameraComponent>(deserializedEntity);
 					cameraComp.IsPrimary = camera["IsPrimary"].as<bool>();
@@ -168,7 +177,7 @@ namespace Flameberry {
 					}
 				}
 
-				if (auto mesh = entity["MeshComponent"]; mesh)
+				if (auto mesh = entity["MeshComponent"])
 				{
 					auto& meshComp = destScene->m_Registry->emplace<MeshComponent>(deserializedEntity, 0);
 					meshComp.MeshHandle = mesh["MeshHandle"].as<UUID::value_type>();
@@ -180,7 +189,7 @@ namespace Flameberry {
 					}
 				}
 
-				if (auto skyLight = entity["SkyLightComponent"]; skyLight)
+				if (auto skyLight = entity["SkyLightComponent"])
 				{
 					auto& skyLightComp = destScene->m_Registry->emplace<SkyLightComponent>(deserializedEntity);
 					skyLightComp.Color = skyLight["Color"].as<glm::vec3>();
@@ -191,7 +200,7 @@ namespace Flameberry {
 					skyLightComp.SkyMap = ((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Skymap>(skyLight["SkyMap"].as<std::string>())->Handle : AssetHandle(0));
 				}
 
-				if (auto light = entity["DirectionalLightComponent"]; light)
+				if (auto light = entity["DirectionalLightComponent"])
 				{
 					auto& lightComp = destScene->m_Registry->emplace<DirectionalLightComponent>(deserializedEntity);
 					lightComp.Color = light["Color"].as<glm::vec3>();
@@ -199,14 +208,14 @@ namespace Flameberry {
 					lightComp.LightSize = light["LightSize"].as<float>();
 				}
 
-				if (auto light = entity["PointLightComponent"]; light)
+				if (auto light = entity["PointLightComponent"])
 				{
 					auto& lightComp = destScene->m_Registry->emplace<PointLightComponent>(deserializedEntity);
 					lightComp.Color = light["Color"].as<glm::vec3>();
 					lightComp.Intensity = light["Intensity"].as<float>();
 				}
 
-				if (auto light = entity["SpotLightComponent"]; light)
+				if (auto light = entity["SpotLightComponent"])
 				{
 					auto& lightComp = destScene->m_Registry->emplace<SpotLightComponent>(deserializedEntity);
 					lightComp.Color = light["Color"].as<glm::vec3>();
@@ -215,7 +224,7 @@ namespace Flameberry {
 					lightComp.OuterConeAngle = light["OuterConeAngle"].as<float>();
 				}
 
-				if (auto rigidBody = entity["RigidBodyComponent"]; rigidBody)
+				if (auto rigidBody = entity["RigidBodyComponent"])
 				{
 					auto& rbComp = destScene->m_Registry->emplace<RigidBodyComponent>(deserializedEntity);
 					rbComp.Type = RigidBodyTypeStringToEnum(rigidBody["Type"].as<std::string>());
@@ -225,19 +234,19 @@ namespace Flameberry {
 					rbComp.Restitution = rigidBody["Restitution"].as<float>();
 				}
 
-				if (auto boxCollider = entity["BoxColliderComponent"]; boxCollider)
+				if (auto boxCollider = entity["BoxColliderComponent"])
 				{
 					auto& bcComp = destScene->m_Registry->emplace<BoxColliderComponent>(deserializedEntity);
 					bcComp.Size = boxCollider["Size"].as<glm::vec3>();
 				}
 
-				if (auto sphereCollider = entity["SphereColliderComponent"]; sphereCollider)
+				if (auto sphereCollider = entity["SphereColliderComponent"])
 				{
 					auto& scComp = destScene->m_Registry->emplace<SphereColliderComponent>(deserializedEntity);
 					scComp.Radius = sphereCollider["Radius"].as<float>();
 				}
 
-				if (auto capsuleCollider = entity["CapsuleColliderComponent"]; capsuleCollider)
+				if (auto capsuleCollider = entity["CapsuleColliderComponent"])
 				{
 					auto& ccComp = destScene->m_Registry->emplace<CapsuleColliderComponent>(deserializedEntity);
 					ccComp.Axis = AxisTypeStringToEnum(capsuleCollider["Axis"].as<std::string>());
@@ -247,8 +256,7 @@ namespace Flameberry {
 			}
 		}
 
-		auto meshes = data["Meshes"];
-		if (meshes)
+		if (auto meshes = data["Meshes"])
 		{
 			for (auto mesh : meshes)
 			{
@@ -333,6 +341,17 @@ namespace Flameberry {
 			out << YAML::Key << "NextSibling" << YAML::Value << nextSiblingID;
 			out << YAML::Key << "FirstChild" << YAML::Value << firstChildID;
 			out << YAML::EndMap; // Relationship Component
+		}
+
+		if (scene->m_Registry->has<TextComponent>(entity))
+		{
+			auto& text = scene->m_Registry->get<TextComponent>(entity);
+			out << YAML::Key << "TextComponent" << YAML::BeginMap;
+			out << YAML::Key << "TextString" << YAML::Value << text.TextString;
+			out << YAML::Key << "Color" << YAML::Value << text.Color;
+			out << YAML::Key << "Kerning" << YAML::Value << text.Kerning;
+			out << YAML::Key << "LineSpacing" << YAML::Value << text.LineSpacing;
+			out << YAML::EndMap; // Text Component
 		}
 
 		if (scene->m_Registry->has<CameraComponent>(entity))

@@ -31,6 +31,16 @@ namespace Flameberry {
 		return texture;
 	}
 
+	Ref<Font> Font::GetDefault()
+	{
+		static Ref<Font> DefaultFont;
+
+		if (!DefaultFont)
+			DefaultFont = CreateRef<Font>(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/opensans/OpenSans-Regular.ttf");
+
+		return DefaultFont;
+	}
+
 	Font::Font(const std::filesystem::path& path)
 		: m_Data(new MSDFFontData())
 	{
