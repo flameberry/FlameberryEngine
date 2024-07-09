@@ -18,6 +18,8 @@ namespace Flameberry {
 		{
 			switch (format)
 			{
+				case VK_FORMAT_R8G8B8_UNORM:
+					return 3;
 				case VK_FORMAT_R8G8B8A8_UNORM:
 					return 4;
 				case VK_FORMAT_R32G32B32A32_SFLOAT:

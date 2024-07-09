@@ -46,6 +46,7 @@ namespace Flameberry {
 	{
 		glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
 	};
+
 	EditorLayer::EditorLayer(const Ref<Project>& project)
 		: m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{ glm::vec3(0.0f, 2.0f, 4.0f), glm::vec3(0.0f, -0.3f, -1.0f), (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height, 45.0f, 0.1f, 1000.0f })
 	{

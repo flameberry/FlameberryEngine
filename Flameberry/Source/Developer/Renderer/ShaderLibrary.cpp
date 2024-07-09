@@ -15,7 +15,8 @@ namespace Flameberry {
 			{ "SkyMap.vert.spv", "SkyMap.frag.spv" },
 			{ "DirectionalShadowMap.vert.spv", "DirectionalShadowMap.frag.spv" },
 			{ "Quad.vert.spv", "Quad.frag.spv" },
-			{ "SolidColor.vert.spv", "SolidColor.frag.spv" }
+			{ "SolidColor.vert.spv", "SolidColor.frag.spv" },
+			{ "Text.vert.spv", "Text.frag.spv" },
 		};
 
 		const char* computeShaderPaths[] = {
