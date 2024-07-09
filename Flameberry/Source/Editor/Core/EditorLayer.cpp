@@ -147,9 +147,10 @@ namespace Flameberry {
 			pipelineSpec.VertexLayout = {
 				ShaderDataType::Float3,	 // a_Position
 				ShaderDataType::Dummy12, // Color (Unnecessary)
+				ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
 				ShaderDataType::Int		 // a_EntityIndex
 			};
-			pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
+			pipelineSpec.CullMode = VK_CULL_MODE_NONE;
 
 			m_MousePicking2DPipeline = CreateRef<Pipeline>(pipelineSpec);
 		}

@@ -1,11 +1,11 @@
 #version 450
 
-layout (location = 0) in vec3 v_Color;
-layout (location = 1) in vec2 v_TextureCoords;
+layout(location = 0) in vec3 v_Color;
+layout(location = 1) in vec2 v_TextureCoords;
 
-layout (location = 0) out vec4 o_FragColor;
+layout(location = 0) out vec4 o_FragColor;
 
-layout (set = 1, binding = 0) uniform sampler2D u_TextureMapSampler;
+layout(set = 1, binding = 0) uniform sampler2D u_TextureMapSampler;
 
 void main()
 {

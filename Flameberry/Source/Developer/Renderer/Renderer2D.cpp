@@ -1,5 +1,6 @@
 #include "Renderer2D.h"
 
+#include "ECS/ecs.hpp"
 #include "Renderer.h"
 
 #include "ShaderLibrary.h"
@@ -106,6 +107,7 @@ namespace Flameberry {
 			pipelineSpec.VertexLayout = {
 				ShaderDataType::Float3, // a_Position
 				ShaderDataType::Float3, // a_Color
+				ShaderDataType::Dummy8, // Texture Coordinates (Currently Unnecessary)
 				ShaderDataType::Dummy4	// EntityIndex (Unnecessary)
 			};
 
@@ -241,6 +243,8 @@ namespace Flameberry {
 				+ size * genericVertexOffsets[i].x * right
 				- size * genericVertexOffsets[i].y * up);
 
+			// TODO: Texture Coordinates
+
 			vertex.Color = color;
 			vertex.EntityIndex = entityIndex;
 		}
@@ -294,7 +298,7 @@ namespace Flameberry {
 			Renderer2D::AddLine(vertices[edges[i][0]], vertices[edges[i][1]], color);
 	}
 
-	void Renderer2D::AddText(const std::string& text, const Ref<Font>& font, const glm::mat4& transform, const TextParams& textParams)
+	void Renderer2D::AddText(const std::string& text, const Ref<Font>& font, const glm::mat4& transform, const TextParams& textParams, int entityIndex)
 	{
 		s_Renderer2DData.FontAtlasTexture = font->GetAtlasTexture();
 
@@ -395,7 +399,7 @@ namespace Flameberry {
 
 				vertex.Color = textParams.Color;
 				vertex.TextureCoordinates = textCharacterTextureCoordinates[i];
-				vertex.EntityIndex = -1;
+				vertex.EntityIndex = entityIndex;
 			}
 
 			if (i < text.size() - 1)

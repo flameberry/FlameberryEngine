@@ -835,7 +835,7 @@ namespace Flameberry {
 		for (const auto entity : scene->m_Registry->group<TransformComponent, TextComponent>())
 		{
 			const auto& [transform, text] = scene->m_Registry->get<TransformComponent, TextComponent>(entity);
-			Renderer2D::AddText(text.TextString, text.Font, transform.CalculateTransform(), { text.Color, text.Kerning, text.LineSpacing });
+			Renderer2D::AddText(text.TextString, text.Font, transform.CalculateTransform(), { text.Color, text.Kerning, text.LineSpacing }, fbentt::to_index(entity));
 		}
 
 		Renderer2D::EndScene();
@@ -994,6 +994,7 @@ namespace Flameberry {
 			}
 		}
 
+		// 2D Quad Entities
 		uint32_t indexCount = 6 * Renderer2D::GetRendererData().QuadVertexBufferOffset / (4 * sizeof(QuadVertex));
 		Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
 							 mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
@@ -1007,6 +1008,19 @@ namespace Flameberry {
 			Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
 			vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
 		});
+
+		// Text Entities
+		indexCount = 6 * Renderer2D::GetRendererData().TextVertexBufferOffset / (4 * sizeof(TextVertex));
+		Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
+							 mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
+							 vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
+							 vertexBuffer = Renderer2D::GetRendererData().TextVertexBuffer->GetVulkanBuffer(),
+							 indexBuffer = Renderer2D::GetRendererData().TextIndexBuffer->GetVulkanBuffer(),
+							 indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
+			vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+		});
+
 		renderPass->End();
 	}
 
