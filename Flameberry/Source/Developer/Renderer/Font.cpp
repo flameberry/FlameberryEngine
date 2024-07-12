@@ -44,19 +44,20 @@ namespace Flameberry {
 	Font::Font(const std::filesystem::path& path)
 		: m_Data(new MSDFFontData())
 	{
-		using namespace msdfgen;
-
-		FreetypeHandle* ft = initializeFreetype();
+		msdfgen::FreetypeHandle* ft = msdfgen::initializeFreetype();
 		FBY_ASSERT(ft, "Failed to initialize freetype!");
 
 		const std::string pathStr = path.string();
-		FontHandle* font = loadFont(ft, pathStr.c_str());
+		msdfgen::FontHandle* font = msdfgen::loadFont(ft, pathStr.c_str());
 
 		if (!font)
 		{
 			FBY_ERROR("Failed to load font from: {}", path);
 			return;
 		}
+
+		// Set the font name
+		m_Name = path.stem();
 
 		struct CharsetRange
 		{
@@ -74,6 +75,7 @@ namespace Flameberry {
 				charset.add(c);
 
 		double fontScale = 1.0;
+
 		m_Data->FontGeometry = msdf_atlas::FontGeometry(&m_Data->Glyphs);
 		int glyphsLoaded = m_Data->FontGeometry.loadCharset(font, fontScale, charset);
 		FBY_INFO("Loaded {} glyphs from font (out of {})", glyphsLoaded, charset.size());
@@ -123,8 +125,8 @@ namespace Flameberry {
 
 		m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 4, msdf_atlas::mtsdfGenerator>("Test", (float)emSize, m_Data->Glyphs, m_Data->FontGeometry, width, height);
 
-		destroyFont(font);
-		deinitializeFreetype(ft);
+		msdfgen::destroyFont(font);
+		msdfgen::deinitializeFreetype(ft);
 	}
 
 	Font::~Font()

@@ -8,8 +8,10 @@
 #include "MeshLoader.h"
 #include "MaterialLoader.h"
 #include "SkymapLoader.h"
+#include "FontLoader.h"
 
 namespace Flameberry {
+
 	struct AssetLoaderFunctionMapEntry
 	{
 		AssetType Type;
@@ -21,7 +23,8 @@ namespace Flameberry {
 		{ AssetType::Texture2D, TextureLoader::LoadTexture2D },
 		{ AssetType::StaticMesh, MeshLoader::LoadMesh },
 		{ AssetType::Material, MaterialLoader::LoadMaterial },
-		{ AssetType::Skymap, SkymapLoader::LoadSkymap }
+		{ AssetType::Skymap, SkymapLoader::LoadSkymap },
+		{ AssetType::Font, FontLoader::LoadFont },
 	};
 
 	Ref<Asset> AssetLoader::LoadAsset(const std::filesystem::path& path, AssetType type)
@@ -32,5 +35,6 @@ namespace Flameberry {
 			return nullptr;
 		}
 		return g_AssetLoaderFunctionMap[(uint16_t)type].LoaderFunction(path);
+
 	}
 } // namespace Flameberry

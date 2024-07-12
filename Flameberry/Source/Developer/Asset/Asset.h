@@ -18,6 +18,7 @@
 	}
 
 namespace Flameberry {
+
 	using AssetHandle = UUID;
 
 	enum class AssetType : uint16_t
@@ -26,7 +27,8 @@ namespace Flameberry {
 		Texture2D,
 		StaticMesh,
 		Material,
-		Skymap
+		Skymap,
+		Font,
 	};
 
 	enum class AssetFlag : uint32_t
@@ -48,4 +50,5 @@ namespace Flameberry {
 
 		virtual AssetType GetAssetType() const = 0;
 	};
+
 } // namespace Flameberry

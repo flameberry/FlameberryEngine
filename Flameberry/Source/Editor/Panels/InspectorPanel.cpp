@@ -161,6 +161,39 @@ namespace Flameberry {
 					ImGui::TableNextColumn();
 
 					ImGui::AlignTextToFramePadding();
+					ImGui::Text("Font");
+					ImGui::TableNextColumn();
+
+					// Display font preview
+					ImGui::Image(text.Font->GetAtlasTexture()->CreateOrGetDescriptorSet(), ImVec2(80, 80), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+					if (ImGui::BeginDragDropTarget())
+					{
+						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
+						{
+							const char* path = (const char*)payload->Data;
+							std::filesystem::path fontPath(path);
+							const std::string& ext = fontPath.extension().string();
+
+							FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
+
+							if (std::filesystem::exists(fontPath) && std::filesystem::is_regular_file(fontPath) && (ext == ".ttf"))
+								text.Font = AssetManager::TryGetOrLoadAsset<Font>(fontPath);
+							else
+								FBY_WARN("Bad File given as Font!");
+						}
+						ImGui::EndDragDropTarget();
+					}
+
+					ImGui::SameLine();
+					ImGui::TextWrapped("%s", text.Font->GetName().c_str());
+
+					// FBY_CONTENT_BROWSER_ITEM
+
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
+
+					ImGui::AlignTextToFramePadding();
 					ImGui::Text("Color");
 					ImGui::TableNextColumn();
 
