@@ -300,14 +300,31 @@ namespace Flameberry {
 
 	void Renderer2D::AddText(const std::string& text, const Ref<Font>& font, const glm::mat4& transform, const TextParams& textParams, int entityIndex)
 	{
-		s_Renderer2DData.FontAtlasTexture = font->GetAtlasTexture();
+		auto it = s_Renderer2DData.FontHandleToBatchIndex.find(font->Handle);
+		uint32_t batchIndex = -1;
 
+		if (it == s_Renderer2DData.FontHandleToBatchIndex.end())
+		{
+			// Begin Batch
+			auto& batch = s_Renderer2DData.TextBatches.emplace_back();
+			batch.FontAtlasTexture = font->GetAtlasTexture();
+
+			batchIndex = s_Renderer2DData.TextBatches.size() - 1;
+			s_Renderer2DData.FontHandleToBatchIndex[font->Handle] = batchIndex;
+		}
+		else
+		{
+			batchIndex = it->second;
+		}
+
+		auto& batch = s_Renderer2DData.TextBatches[batchIndex];
+		batch.TextVertices.reserve(batch.TextVertices.size() + text.size() * 4);
+
+		// Adding the text
 		const auto& fontGeometry = font->GetMSDFFontData()->FontGeometry;
 		const auto& metrics = fontGeometry.getMetrics();
 
 		Ref<Texture2D> fontAtlas = font->GetAtlasTexture();
-
-		Renderer2D::SetActiveTexture(fontAtlas);
 
 		double x = 0.0, y = 0.0;
 		const double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
@@ -393,7 +410,7 @@ namespace Flameberry {
 			// Add single character
 			for (uint8_t i = 0; i < 4; i++)
 			{
-				auto& vertex = s_Renderer2DData.TextVertices.emplace_back();
+				auto& vertex = batch.TextVertices.emplace_back();
 
 				vertex.Position = transform * glm::vec4(textCharacterVertexPositions[i], 0.0f, 1.0f);
 
@@ -473,31 +490,36 @@ namespace Flameberry {
 			s_Renderer2DData.LineVertices.clear();
 		}
 
-		if (s_Renderer2DData.TextVertices.size())
+		// Text Rendering
+		for (const auto& batch : s_Renderer2DData.TextBatches)
 		{
-			FBY_ASSERT(s_Renderer2DData.TextVertices.size() <= MAX_QUAD_INDICES, "MAX_QUAD_INDICES reached!");
-			s_Renderer2DData.TextVertexBuffer->WriteToBuffer(s_Renderer2DData.TextVertices.data(), s_Renderer2DData.TextVertices.size() * sizeof(TextVertex), s_Renderer2DData.TextVertexBufferOffset);
+			if (batch.TextVertices.size())
+			{
+				FBY_ASSERT(batch.TextVertices.size() <= MAX_QUAD_INDICES, "MAX_QUAD_INDICES reached!");
+				s_Renderer2DData.TextVertexBuffer->WriteToBuffer(batch.TextVertices.data(), batch.TextVertices.size() * sizeof(TextVertex), s_Renderer2DData.TextVertexBufferOffset);
 
-			const VkBuffer vertexBuffer = s_Renderer2DData.TextVertexBuffer->GetVulkanBuffer();
-			const VkBuffer indexBuffer = s_Renderer2DData.TextIndexBuffer->GetVulkanBuffer();
-			const VkPipelineLayout pipelineLayout = s_Renderer2DData.TextPipeline->GetVulkanPipelineLayout();
-			const VkPipeline vulkanPipeline = s_Renderer2DData.TextPipeline->GetVulkanPipeline();
-			const uint32_t vertexCount = (uint32_t)s_Renderer2DData.TextVertices.size();
-			const uint32_t indexCount = 6 * (uint32_t)s_Renderer2DData.TextVertices.size() / 4;
+				const VkBuffer vertexBuffer = s_Renderer2DData.TextVertexBuffer->GetVulkanBuffer();
+				const VkBuffer indexBuffer = s_Renderer2DData.TextIndexBuffer->GetVulkanBuffer();
+				const VkPipelineLayout pipelineLayout = s_Renderer2DData.TextPipeline->GetVulkanPipelineLayout();
+				const VkPipeline vulkanPipeline = s_Renderer2DData.TextPipeline->GetVulkanPipeline();
+				const uint32_t vertexCount = (uint32_t)batch.TextVertices.size();
+				const uint32_t indexCount = 6 * (uint32_t)batch.TextVertices.size() / 4;
 
-			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.FontAtlasTexture->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.TextVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-				Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
-				VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
+				Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = batch.FontAtlasTexture->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.TextVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+					Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
+					VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
-				VkDeviceSize offsets[] = { offset };
-				vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
-				vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-				vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
-			});
-			s_Renderer2DData.TextVertexBufferOffset += s_Renderer2DData.TextVertices.size() * sizeof(TextVertex);
-			s_Renderer2DData.TextVertices.clear();
+					VkDeviceSize offsets[] = { offset };
+					vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+					vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+					vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+				});
+				s_Renderer2DData.TextVertexBufferOffset += batch.TextVertices.size() * sizeof(TextVertex);
+			}
 		}
+		s_Renderer2DData.TextBatches.clear();
+		s_Renderer2DData.FontHandleToBatchIndex.clear();
 
 		s_GlobalDescriptorSet = VK_NULL_HANDLE;
 	}
@@ -514,9 +536,7 @@ namespace Flameberry {
 		s_Renderer2DData.TextPipeline = nullptr;
 		s_Renderer2DData.TextVertexBuffer = nullptr;
 		s_Renderer2DData.TextIndexBuffer = nullptr;
-
 		s_Renderer2DData.TextureMap = nullptr;
-		s_Renderer2DData.FontAtlasTexture = nullptr;
 	}
 
 } // namespace Flameberry

@@ -46,12 +46,19 @@ namespace Flameberry {
 
 		Ref<Pipeline> TextPipeline;
 		Ref<Buffer> TextVertexBuffer, TextIndexBuffer;
-		std::vector<TextVertex> TextVertices;
 		uint32_t TextVertexBufferOffset = 0;
+
+		struct TextBatch
+		{
+			Ref<Texture2D> FontAtlasTexture;
+			std::vector<TextVertex> TextVertices;
+		};
+
+		std::unordered_map<AssetHandle, uint32_t> FontHandleToBatchIndex;
+		std::vector<TextBatch> TextBatches;
 
 		// TODO: Find a better way to do this
 		Ref<Texture2D> TextureMap;
-		Ref<Texture2D> FontAtlasTexture;
 	};
 
 	struct TextParams
