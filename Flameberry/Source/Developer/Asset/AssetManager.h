@@ -7,9 +7,6 @@
 #include "Core/UUID.h"
 #include "Core/Core.h"
 
-#include "Renderer/StaticMesh.h"
-#include "Renderer/MaterialAsset.h"
-
 #include "AssetLoader.h"
 
 namespace Flameberry {

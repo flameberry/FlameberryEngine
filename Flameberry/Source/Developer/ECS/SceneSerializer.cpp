@@ -2,13 +2,13 @@
 
 #include <fstream>
 
-#include "Core/Assert.h"
 #include "Core/YamlUtils.h"
 #include "Core/Timer.h"
 #include "Components.h"
 
 #include "Asset/AssetManager.h"
 #include "Asset/MeshLoader.h"
+#include "Renderer/MaterialAsset.h"
 #include "Renderer/GenericCamera.h"
 #include "Renderer/Skymap.h"
 

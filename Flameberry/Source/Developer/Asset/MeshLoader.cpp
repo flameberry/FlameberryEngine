@@ -1,9 +1,5 @@
 #include "MeshLoader.h"
 
-#include "Core/Timer.h"
-#include "AssetManager.h"
-#include "Renderer/RenderCommand.h"
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
@@ -13,6 +9,11 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <TinyObjLoader/tiny_obj_loader.h>
+
+#include "Core/Timer.h"
+#include "AssetManager.h"
+#include "Renderer/RenderCommand.h"
+#include "Renderer/MaterialAsset.h"
 
 namespace Flameberry {
 
