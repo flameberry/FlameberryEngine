@@ -13,6 +13,14 @@ namespace Flameberry {
 
 	struct UIState
 	{
+		// Fixed Layout/Style Properties
+		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV
+			| ImGuiTableFlags_BordersInnerH
+			| ImGuiTableFlags_NoKeepColumnsVisible
+			| ImGuiTableFlags_PadOuterX;
+
+		static constexpr float LabelWidth = 100.0f;
+
 		// Selection Widget
 		bool IsSelectionWidgetJustOpened = false, IsSelectionWidgetSearchBoxFocused = false, HasSelectionWidgetListBoxBegun = false;
 	};
@@ -121,6 +129,32 @@ namespace Flameberry {
 			ImGui::EndListBox();
 
 		ImGui::EndPopup();
+	}
+
+	bool UI::BeginKeyValueTable(const char* label, ImGuiTableFlags tableFlags, float labelWidth)
+	{
+		if (ImGui::BeginTable(label, 2, tableFlags ? tableFlags : g_UIState.TableFlags))
+		{
+			ImGui::TableSetupColumn("Attribute_Key", ImGuiTableColumnFlags_WidthFixed, labelWidth != 0.0f ? labelWidth : g_UIState.LabelWidth);
+			ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+			return true;
+		}
+		return false;
+	}
+
+	void UI::TableKeyElement(const char* label)
+	{
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text(label);
+		ImGui::TableNextColumn();
+	}
+
+	void UI::EndKeyValueTable()
+	{
+		ImGui::EndTable();
 	}
 
 	// TODO: Call one of 2 functions one for Folder Thumbnail and other for file

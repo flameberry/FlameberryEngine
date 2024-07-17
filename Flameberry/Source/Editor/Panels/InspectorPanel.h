@@ -54,9 +54,10 @@ namespace Flameberry {
 	}
 
 	template <typename ComponentType, typename Fn>
-	void InspectorPanel::DrawComponent(const char* name, Fn&& fn, bool removable)
+	void InspectorPanel::DrawComponent(const char* name, Fn&& layoutFn, bool removable)
 	{
 		static_assert(std::is_invocable_v<Fn>);
+
 		if (m_Context->m_Registry->has<ComponentType>(m_SelectionContext))
 		{
 			ImGui::PushID(name);
@@ -88,7 +89,8 @@ namespace Flameberry {
 			}
 
 			if (open)
-				fn();
+				layoutFn();
+
 			ImGui::PopID();
 
 			if (shouldRemoveComp)

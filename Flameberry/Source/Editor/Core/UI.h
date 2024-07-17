@@ -59,6 +59,10 @@ namespace Flameberry {
 		static bool SelectionWidgetElement(const char* label, bool isSelected);
 		static void EndSelectionWidget();
 
+		static bool BeginKeyValueTable(const char* label, ImGuiTableFlags tableFlags = 0, float labelWidth = 0.0f);
+		static void TableKeyElement(const char* label);
+		static void EndKeyValueTable();
+
 		static bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled = false);
 		// Returns full width and height of the group including text and file icon
 		static bool ContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension = false);

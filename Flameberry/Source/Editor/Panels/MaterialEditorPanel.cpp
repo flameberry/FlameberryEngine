@@ -26,15 +26,9 @@ namespace Flameberry {
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 			ImGui::PushStyleColor(ImGuiCol_Border, Theme::FrameBorder);
 
-			if (ImGui::BeginTable("MaterialAttributeTable", 2, s_TableFlags))
+			if (UI::BeginKeyValueTable("MaterialAttributeTable"))
 			{
-				ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-				ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::Text("Name");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Name");
 
 				if (m_EditingContext && m_ShouldRename)
 				{
@@ -90,13 +84,7 @@ namespace Flameberry {
 
 					if (!metadata.IsMemoryAsset)
 					{
-						ImGui::TableNextRow();
-						ImGui::TableNextColumn();
-
-						ImGui::AlignTextToFramePadding();
-						ImGui::Text("FilePath");
-						ImGui::TableNextColumn();
-
+						UI::TableKeyElement("FilePath");
 						ImGui::TextWrapped("%s", metadata.FilePath.c_str());
 					}
 
@@ -126,38 +114,27 @@ namespace Flameberry {
 					if (DrawMapControls("Metallic Map", (bool&)uniformDataRef.UseMetallicMap, mapHandle))
 						m_EditingContext->SetMetallicMap(mapHandle);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Albedo");
-					ImGui::TableNextColumn();
 					ImGui::PushItemWidth(-1.0f);
+
+					UI::TableKeyElement("Albedo");
 					ImGui::ColorEdit3("##Albedo", glm::value_ptr(uniformDataRef.Albedo));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
 
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Roughness");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Roughness");
 					ImGui::DragFloat("##Roughness", &uniformDataRef.Roughness, 0.01f, 0.0f, 1.0f);
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
 
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Metallic");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Metallic");
 					ImGui::DragFloat("##Metallic", &uniformDataRef.Metallic, 0.005f, 0.0f, 1.0f);
-					ImGui::PopItemWidth();
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
+
+					ImGui::PopItemWidth();
 
 					// Serialize the material automatically when changed
 					if (m_IsMaterialEdited && !metadata.IsMemoryAsset)
 						MaterialAssetSerializer::Serialize(m_EditingContext, metadata.FilePath);
 				}
-				ImGui::EndTable();
+				UI::EndKeyValueTable();
 			}
 
 			ImGui::PopStyleColor(); // Frame Border Color
@@ -168,13 +145,7 @@ namespace Flameberry {
 
 	bool MaterialEditorPanel::DrawMapControls(const char* label, bool& mapEnabledVar, AssetHandle& mapHandle)
 	{
-		ImGui::TableNextRow();
-		ImGui::TableNextColumn();
-
-		ImGui::AlignTextToFramePadding();
-		ImGui::TextWrapped("%s", label);
-
-		ImGui::TableNextColumn();
+		UI::TableKeyElement(label);
 
 		auto labelStr = "##" + std::string(label);
 		ImGui::Checkbox(labelStr.c_str(), &mapEnabledVar);

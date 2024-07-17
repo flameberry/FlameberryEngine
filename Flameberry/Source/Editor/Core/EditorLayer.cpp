@@ -966,92 +966,44 @@ namespace Flameberry {
 
 		if (ImGui::CollapsingHeader("Scene Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
 		{
-			if (ImGui::BeginTable("RendererSettings_Attributes", 2, flags))
+			if (UI::BeginKeyValueTable("##RendererSettings_Attributes", 0, 140.0f))
 			{
-				ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 100);
-				ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
 				auto& settings = m_SceneRenderer->GetRendererSettingsRef();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Mesh Shader");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Mesh Shader");
 
 				ImGui::Button("Reload");
 				if (ImGui::IsItemClicked())
 					m_ShouldReloadMeshShaders = true;
 
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Frustum Culling");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Frustum Culling");
 				ImGui::Checkbox("##Frustum_Culling", &settings.FrustumCulling);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Show Bounding Boxes");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Show Bounding Boxes");
 				ImGui::Checkbox("##Show_Bounding_Boxes", &settings.ShowBoundingBoxes);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Enable Shadows");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Enable Shadows");
 				ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Show Cascades");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Show Cascades");
 				ImGui::Checkbox("##Show_Cascades", &settings.ShowCascades);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Soft Shadows");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Soft Shadows");
 				ImGui::Checkbox("##Soft_Shadows", &settings.SoftShadows);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Lambda Split");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Lambda Split");
 				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
 
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Sky Reflections");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Sky Reflections");
 				ImGui::Checkbox("##Sky_Reflections", &settings.SkyReflections);
 
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Gamma Correction");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Gamma Correction");
 				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Gamma_Correction_Factor", &settings.GammaCorrectionFactor, 0.001f, 0.0f, 10.0f));
 
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Exposure");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Exposure");
 				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f));
 
-				ImGui::EndTable();
+				UI::EndKeyValueTable();
 			}
 		}
 		ImGui::End();
@@ -1063,55 +1015,26 @@ namespace Flameberry {
 		static constexpr float LabelWidth = 100.0f;
 
 		ImGui::Begin("Asset Registry");
-		if (ImGui::BeginTable("##AssetRegistryTable", 2, TableFlags))
-		{
-			ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, LabelWidth);
-			ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 
+		if (UI::BeginKeyValueTable("##AssetRegistryTable"))
+		{
 			for (const auto& [handle, metadata] : AssetManager::As<EditorAssetManager>()->GetAssetRegistry())
 			{
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Handle");
-
-				ImGui::TableNextColumn();
-
+				UI::TableKeyElement("Handle");
 				ImGui::Text("%llu", (UUID::ValueType)handle);
 
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("FilePath");
-
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("FilePath");
 				ImGui::Text("%s", metadata.FilePath.c_str());
 
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Type");
-
-				ImGui::TableNextColumn();
-
+				UI::TableKeyElement("Type");
 				const std::string typeStr = Utils::AssetTypeEnumToString(metadata.Type);
 				ImGui::Text("%s", typeStr.c_str());
 
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("IsMemoryAsset");
-
-				ImGui::TableNextColumn();
-
+				UI::TableKeyElement("IsMemoryAsset");
 				ImGui::Text("%s", metadata.IsMemoryAsset ? "True" : "False");
 			}
 
-			ImGui::EndTable();
+			UI::EndKeyValueTable();
 		}
 		ImGui::End();
 	}

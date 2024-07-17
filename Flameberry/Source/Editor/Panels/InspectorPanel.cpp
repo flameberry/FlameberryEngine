@@ -84,18 +84,11 @@ namespace Flameberry {
             DrawComponent<IDComponent>("ID Component", this, [&]()
                 {
                     auto& ID = m_Context->m_Registry->get<IDComponent>(m_SelectionContext).ID;
-                    if (ImGui::BeginTable("TransformComponentAttributes", 2, m_TableFlags))
+                    if (UI::BeginKeyValueTable("IDComponentAttributes"))
                     {
-                        ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, m_LabelWidth);
-                        ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-
-                        ImGui::Text("ID");
-                        ImGui::TableNextColumn();
+						UI::TableKeyElement("ID");
                         ImGui::Text("%llu", (UUID::value_type)ID);
-                        ImGui::EndTable();
+                        UI::EndKeyValueTable();
                     }
                 }, true // removable = false
             );
@@ -104,64 +97,32 @@ namespace Flameberry {
 			DrawComponent<TransformComponent>(ICON_LC_SCALE_3D " Transform", [&]() {
 				auto& transform = m_Context->m_Registry->get<TransformComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("TransformComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("TransformComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+					UI::TableKeyElement("Translation");
+					UI::Vec3Control("Translation", transform.Translation, 0.0f, 0.01f, ImGui::GetColumnWidth());
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Rotation");
+					UI::Vec3Control("Rotation", transform.Rotation, 0.0f, 0.01f, ImGui::GetColumnWidth());
 
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Translation");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Scale");
+					UI::Vec3Control("Scale", transform.Scale, 1.0f, 0.01f, ImGui::GetColumnWidth());
 
-					float colWidth = ImGui::GetColumnWidth();
-					UI::Vec3Control("Translation", transform.Translation, 0.0f, 0.01f, colWidth);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Rotation");
-					ImGui::TableNextColumn();
-					UI::Vec3Control("Rotation", transform.Rotation, 0.0f, 0.01f, colWidth);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Scale");
-					ImGui::TableNextColumn();
-					UI::Vec3Control("Scale", transform.Scale, 1.0f, 0.01f, colWidth);
-					ImGui::EndTable();
+					UI::EndKeyValueTable();
 				} }, false // removable = false
 			);
 
 			DrawComponent<TextComponent>(ICON_LC_TEXT " Text", [&]() {
 				auto& text = m_Context->m_Registry->get<TextComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("TextComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("TextComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+					UI::TableKeyElement("Text");
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Text");
-					ImGui::TableNextColumn();
-
-					ImGui::PushItemWidth(-1.0f);
+					ImGui::PushItemWidth(-1.0f); // Why does this need to be called after `UI::TableKeyElement("Text");`?
 					ImGui::InputTextMultiline("##Text", &text.TextString);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Font");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Font");
 
 					Ref<Font> fontAsset = AssetManager::GetAsset<Font>(text.Font);
 					Ref<Texture2D> fontPreview = fontAsset ? fontAsset->GetAtlasTexture() : Font::GetDefault()->GetAtlasTexture();
@@ -197,82 +158,42 @@ namespace Flameberry {
 						ImGui::TextWrapped("%s", fontAsset->GetName().c_str());
 					}
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Color");
-					ImGui::TableNextColumn();
-
+					UI::TableKeyElement("Color");
 					ImGui::ColorEdit3("##TextColor", glm::value_ptr(text.Color));
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Kerning");
-					ImGui::TableNextColumn();
-
+					UI::TableKeyElement("Kerning");
 					ImGui::DragFloat("##Kerning", &text.Kerning, 0.025f);
-					ImGui::TableNextRow();
 
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Line Spacing");
-					ImGui::TableNextColumn();
-
+					UI::TableKeyElement("LineSpacing");
 					ImGui::DragFloat("##Line_Spacing", &text.LineSpacing, 0.025f);
 
 					ImGui::PopItemWidth();
 
-					ImGui::EndTable();
+					UI::EndKeyValueTable();
 				} }, true // removable = true
 			);
 
 			DrawComponent<SkyLightComponent>(ICON_LC_SUNRISE " Sky Light", [=]() {
 				auto& skyLightComp = m_Context->m_Registry->get<SkyLightComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("SkyLightComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("SkyLightComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Color");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Color");
 
 					ImGui::PushItemWidth(-1.0f);
 					ImGui::ColorEdit3("##Color", glm::value_ptr(skyLightComp.Color));
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Intensity");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Intensity");
 					ImGui::DragFloat("##Intensity", &skyLightComp.Intensity, 0.01f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
 					ImGui::PopItemWidth();
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Enable Skymap");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Enable Skymap");
 					ImGui::Checkbox("##Enable_EnvMap", &skyLightComp.EnableSkymap);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
 
 					if (skyLightComp.EnableSkymap)
 					{
-						ImGui::AlignTextToFramePadding();
-						ImGui::Text("Skymap");
-						ImGui::TableNextColumn();
+						UI::TableKeyElement("Skymap");
 
 						Ref<Skymap> skymap = AssetManager::GetAsset<Skymap>(skyLightComp.Skymap);
 
@@ -304,36 +225,20 @@ namespace Flameberry {
 							}
 							ImGui::EndDragDropTarget();
 						}
-						ImGui::TableNextRow();
-						ImGui::TableNextColumn();
 					}
-					ImGui::EndTable();
+					UI::EndKeyValueTable();
 				}
 			});
 
 			DrawComponent<CameraComponent>(ICON_LC_CAMERA " Camera", [&]() {
 				auto& cameraComp = m_Context->m_Registry->get<CameraComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("CameraComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("CameraComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Is Primary");
-
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Is Primary");
 					ImGui::Checkbox("##IsPrimary", &cameraComp.IsPrimary);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Projection Type");
-
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Projection Type");
 
 					const char* projectionTypeStrings[] = { "Orthographic", "Perspective" };
 					uint8_t currentProjectionTypeIndex = (uint8_t)cameraComp.Camera.GetSettings().ProjectionType;
@@ -356,58 +261,36 @@ namespace Flameberry {
 						ImGui::EndCombo();
 					}
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
+					UI::TableKeyElement(currentProjectionTypeIndex == (uint8_t)ProjectionType::Perspective ? "FOV" : "Zoom");
 
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text(currentProjectionTypeIndex == (uint8_t)ProjectionType::Perspective ? "FOV" : "Zoom");
-
-					ImGui::TableNextColumn();
 					float FOV = cameraComp.Camera.GetSettings().FOV;
 					if (ImGui::DragFloat("##FOV", &FOV, 0.01f, 0.0f, 180.0f))
 						cameraComp.Camera.UpdateWithFOVorZoom(FOV);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Near");
 
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Near");
-
-					ImGui::TableNextColumn();
 					float near = cameraComp.Camera.GetSettings().Near;
 					if (ImGui::DragFloat("##Near", &near, 0.01f, 0.0f, 2000.0f))
 						cameraComp.Camera.UpdateWithNear(near);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Far");
 
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Far");
-
-					ImGui::TableNextColumn();
 					float far = cameraComp.Camera.GetSettings().Far;
 					if (ImGui::DragFloat("##Far", &far, 0.01f, 0.0f, 2000.0f))
 						cameraComp.Camera.UpdateWithFar(far);
 
 					ImGui::PopItemWidth();
-					ImGui::EndTable();
+
+					UI::EndKeyValueTable();
 				}
 			});
 
 			DrawComponent<MeshComponent>(ICON_LC_CUBOID " Mesh", [&]() {
 				auto& mesh = m_Context->m_Registry->get<MeshComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("MeshComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("MeshComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Mesh");
-
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Mesh");
 
 					const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
 					ImGui::Button(staticMesh ? staticMesh->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f));
@@ -433,12 +316,13 @@ namespace Flameberry {
 						}
 						ImGui::EndDragDropTarget();
 					}
-					ImGui::EndTable();
+					UI::EndKeyValueTable();
 				}
 
 				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 				bool is_open = ImGui::CollapsingHeader(ICON_LC_DRIBBBLE " Materials", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth);
 				ImGui::PopStyleVar();
+
 				if (is_open)
 				{
 					if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
@@ -558,138 +442,72 @@ namespace Flameberry {
 			DrawComponent<DirectionalLightComponent>(ICON_LC_SUN " Directional Light", [&]() {
 				auto& light = m_Context->m_Registry->get<DirectionalLightComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("DirectionalLightComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("DirectionalLightComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Color");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Color");
 
 					ImGui::PushItemWidth(-1.0f);
 					ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color));
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Intensity");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Intensity");
 					ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Light Size");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Light Size");
 					ImGui::DragFloat("##LightSize", &light.LightSize, 0.1f, 0.0f, 200.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 
 					ImGui::PopItemWidth();
-
-					ImGui::EndTable();
+					UI::EndKeyValueTable();
 				}
 			});
 
 			DrawComponent<PointLightComponent>(ICON_LC_LIGHTBULB " Point Light", [&]() {
 				auto& light = m_Context->m_Registry->get<PointLightComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("PointLightComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("PointLightComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Color");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Color");
 
 					ImGui::PushItemWidth(-1.0f);
 					ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color));
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Intensity");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Intensity");
 					ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f);
-					ImGui::PopItemWidth();
 
-					ImGui::EndTable();
+					ImGui::PopItemWidth();
+					UI::EndKeyValueTable();
 				}
 			});
 
 			DrawComponent<SpotLightComponent>(ICON_LC_CONE " Spot Light", [&]() {
 				auto& light = m_Context->m_Registry->get<SpotLightComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("SpotLightComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("SpotLightComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Color");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Color");
 
 					ImGui::PushItemWidth(-1.0f);
 					ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color));
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Intensity");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Intensity");
 					ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("InnerConeAngle");
-					ImGui::TableNextColumn();
-
+					UI::TableKeyElement("InnerConeAngle");
 					ImGui::DragFloat("##InnerConeAngle", &light.InnerConeAngle, 0.1f, 0.0f, light.OuterConeAngle);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("OuterConeAngle");
-					ImGui::TableNextColumn();
-
+					UI::TableKeyElement("OuterConeAngle");
 					ImGui::DragFloat("##OuterConeAngle", &light.OuterConeAngle, 0.1f, light.InnerConeAngle, 90.0f);
 
 					ImGui::PopItemWidth();
-
-					ImGui::EndTable();
+					UI::EndKeyValueTable();
 				}
 			});
 
 			DrawComponent<RigidBodyComponent>(ICON_LC_BOXES " Rigid Body", [&]() {
 				auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("RigidBodyComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("RigidBodyComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Type");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Type");
 
 					const char* rigidBodyTypeStrings[] = { "Static", "Dynamic" };
 					uint8_t currentRigidBodyTypeIndex = (uint8_t)rigidBody.Type;
@@ -712,99 +530,53 @@ namespace Flameberry {
 						ImGui::EndCombo();
 					}
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Density");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Density");
 					ImGui::DragFloat("##Density", &rigidBody.Density, 0.01f, 0.0f, 1000.0f);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Static Friction");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Static Friction");
 					ImGui::DragFloat("##Static_Friction", &rigidBody.StaticFriction, 0.005, 0.0f, 1.0f);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Dynamic Friction");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Dynamic Friction");
 					ImGui::DragFloat("##Dynamic_Friction", &rigidBody.DynamicFriction, 0.005, 0.0f, 1.0f);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Restitution");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Restitution");
 					ImGui::DragFloat("##Restitution", &rigidBody.Restitution, 0.005f, 0.0f, 1.0f);
-					ImGui::PopItemWidth();
 
-					ImGui::EndTable();
+					ImGui::PopItemWidth();
+					UI::EndKeyValueTable();
 				}
 			});
 
 			DrawComponent<BoxColliderComponent>(ICON_LC_BOX " Box Collider", [&]() {
 				auto& boxCollider = m_Context->m_Registry->get<BoxColliderComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("BoxColliderComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("BoxColliderComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Collider Size");
-					ImGui::TableNextColumn();
-
+					UI::TableKeyElement("Collider Size");
 					UI::Vec3Control("BoxColliderSize", boxCollider.Size, 1.0f, 0.01f, ImGui::GetColumnWidth());
 
-					ImGui::EndTable();
+					UI::EndKeyValueTable();
 				}
 			});
 
 			DrawComponent<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED " Sphere Collider", [&]() {
 				auto& sphereCollider = m_Context->m_Registry->get<SphereColliderComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("SphereColliderComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("SphereColliderComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Radius");
-					ImGui::TableNextColumn();
-
+					UI::TableKeyElement("Radius");
 					FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Radius", &sphereCollider.Radius, 0.01f, 0.0f, 0.0f));
 
-					ImGui::EndTable();
+					UI::EndKeyValueTable();
 				}
 			});
 
 			DrawComponent<CapsuleColliderComponent>(ICON_LC_PILL " Capsule Collider", [&]() {
 				auto& capsuleCollider = m_Context->m_Registry->get<CapsuleColliderComponent>(m_SelectionContext);
 
-				if (ImGui::BeginTable("CapsuleColliderComponentAttributes", 2, s_TableFlags))
+				if (UI::BeginKeyValueTable("CapsuleColliderComponentAttributes"))
 				{
-					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
-					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Axis");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Axis");
 
 					const char* axisTypeStrings[] = { "X", "Y", "Z" };
 					uint8_t currentAxisType = (uint8_t)capsuleCollider.Axis;
@@ -827,28 +599,18 @@ namespace Flameberry {
 						ImGui::EndCombo();
 					}
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Radius");
-					ImGui::TableNextColumn();
-
+					UI::TableKeyElement("Radius");
 					ImGui::DragFloat("##Radius", &capsuleCollider.Radius, 0.01f, 0.0f, 0.0f);
 
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Height");
-					ImGui::TableNextColumn();
+					UI::TableKeyElement("Height");
 					ImGui::DragFloat("##Height", &capsuleCollider.Height, 0.01f, 0.0f, 0.0f);
 
 					ImGui::PopItemWidth();
 
-					ImGui::EndTable();
+					UI::EndKeyValueTable();
 				}
 			});
+
 			ImGui::PopStyleColor();
 		}
 		ImGui::EndChild();
