@@ -50,6 +50,7 @@ namespace Flameberry {
 		void UI_Toolbar();
 		void UI_CompositeView();
 		void UI_RendererSettings();
+		void UI_AssetRegistry();
 		void UI_GizmoOverlay(const ImVec2& workPos);
 		void UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize);
 		void UI_ViewportSettingsOverlay(const ImVec2& workPos, const ImVec2& workSize);

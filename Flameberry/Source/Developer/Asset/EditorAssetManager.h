@@ -21,6 +21,7 @@ namespace Flameberry {
 		AssetHandle ImportAsset(const std::filesystem::path& filePath);
 		void AddMemoryOnlyAsset(const Ref<Asset>& asset);
 
+		const AssetRegistry& GetAssetRegistry() const { return m_AssetRegistry; }
 		const AssetMap& GetLoadedAssets() const { return m_LoadedAssets; }
 		const AssetMetadata& GetAssetMetadata(AssetHandle handle) const { return m_AssetRegistry.at(handle); }
 

@@ -865,7 +865,7 @@ namespace Flameberry {
 
 	void EditorLayer::UI_BottomPanel()
 	{
-		static bool toggleContentBrowser = false, toggleRendererSettings = false;
+		static bool toggleContentBrowser = false, toggleRendererSettings = false, toggleAssetRegistry = false;
 		ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
 
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse
@@ -910,6 +910,11 @@ namespace Flameberry {
 				if (ImGui::Button(ICON_LC_SETTINGS "  Renderer Settings", ImVec2(0.0f, -1.0f)))
 					toggleRendererSettings = !toggleRendererSettings;
 
+				ImGui::SameLine();
+
+				if (ImGui::Button(ICON_LC_NOTEBOOK_TEXT "  Asset Registry", ImVec2(0.0f, -1.0f)))
+					toggleAssetRegistry = !toggleAssetRegistry;
+
 				ImGui::PopStyleColor(2);
 				ImGui::EndMenuBar();
 			}
@@ -921,6 +926,8 @@ namespace Flameberry {
 			m_ContentBrowserPanel->OnUIRender();
 		if (toggleRendererSettings)
 			UI_RendererSettings();
+		if (toggleAssetRegistry)
+			UI_AssetRegistry();
 	}
 	void EditorLayer::UI_CompositeView()
 	{
@@ -1046,6 +1053,65 @@ namespace Flameberry {
 
 				ImGui::EndTable();
 			}
+		}
+		ImGui::End();
+	}
+
+	void EditorLayer::UI_AssetRegistry()
+	{
+		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
+		static constexpr float LabelWidth = 100.0f;
+
+		ImGui::Begin("Asset Registry");
+		if (ImGui::BeginTable("##AssetRegistryTable", 2, TableFlags))
+		{
+			ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, LabelWidth);
+			ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+			for (const auto& [handle, metadata] : AssetManager::As<EditorAssetManager>()->GetAssetRegistry())
+			{
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+
+				ImGui::AlignTextToFramePadding();
+				ImGui::Text("Handle");
+
+				ImGui::TableNextColumn();
+
+				ImGui::Text("%llu", (UUID::ValueType)handle);
+
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+
+				ImGui::AlignTextToFramePadding();
+				ImGui::Text("FilePath");
+
+				ImGui::TableNextColumn();
+				ImGui::Text("%s", metadata.FilePath.c_str());
+
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+
+				ImGui::AlignTextToFramePadding();
+				ImGui::Text("Type");
+
+				ImGui::TableNextColumn();
+
+				const std::string typeStr = Utils::AssetTypeEnumToString(metadata.Type);
+				ImGui::Text("%s", typeStr.c_str());
+
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+
+				ImGui::AlignTextToFramePadding();
+				ImGui::Text("IsMemoryAsset");
+
+				ImGui::TableNextColumn();
+
+				ImGui::Text("%s", metadata.IsMemoryAsset ? "True" : "False");
+			}
+
+			ImGui::EndTable();
 		}
 		ImGui::End();
 	}
