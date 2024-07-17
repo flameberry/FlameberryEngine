@@ -124,7 +124,7 @@ namespace Flameberry {
             }
             
             // Icon Button
-            NSButton* iconButton = [[NSButton alloc] initWithFrame:NSMakeRect(75, 5, 30, 30)]; // Adjust the frame as needed
+            NSButton* iconButton = [[NSButton alloc] initWithFrame:NSMakeRect(75, 2, 30, 30)]; // Adjust the frame as needed
             [iconButton setImage:iconImage];
             [iconButton setButtonType:NSButtonTypeMomentaryPushIn];
             [iconButton setBordered:NO];
