@@ -32,7 +32,7 @@ namespace Flameberry {
 
 		Ref<Texture2D> m_SettingsIcon;
 
-		std::string m_SearchInpuBuffer1, m_SearchInputBuffer2;
+		std::string m_SearchInputBuffer1, m_SearchInputBuffer2;
 
 	private:
 		template <typename ComponentType>

@@ -141,13 +141,14 @@ namespace Flameberry {
 				{
 					if (!m_ProjectNameBuffer.empty())
 					{
-						if (m_Project = Project::CreateProjectOnDisk(projectParentPath, m_ProjectNameBuffer))
-						{
-							// Finally add project entry to GlobalProjectRegistry
-							ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
-
-							// Signal callback to EditorApplication class
-							m_ShouldClose = true;
+                        if ((m_Project = Project::CreateProjectOnDisk(projectParentPath, m_ProjectNameBuffer)))
+                        {
+                            // Finally add project entry to GlobalProjectRegistry
+                            ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
+                            
+                            // Signal callback to EditorApplication class
+                            m_ShouldClose = true;
+                        }
 						else
 							ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s is not empty!", m_Project->GetProjectDirectory().c_str());
 					}

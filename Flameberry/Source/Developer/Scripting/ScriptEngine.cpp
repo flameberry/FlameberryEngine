@@ -325,13 +325,13 @@ namespace Flameberry {
 		void SkyLightComponent_GetEnableSkyMap(uint64_t entity, bool& enableSkyMap)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			enableSkyMap = s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableSkyMap;
+			enableSkyMap = s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableSkymap;
 		}
 
 		void SkyLightComponent_SetEnableSkyMap(uint64_t entity, uint8_t enableSkyMap)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableSkyMap = (bool)enableSkyMap;
+			s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableSkymap = (bool)enableSkyMap;
 		}
 
 		void SkyLightComponent_GetEnableReflections(uint64_t entity,
@@ -863,7 +863,7 @@ namespace Flameberry {
 		m_Class = klass;
 
 		// Get all public fields
-		int fieldCount = mono_class_num_fields(m_Class);
+		const int fieldCount = mono_class_num_fields(m_Class);
 		FBY_INFO("Class {} has {} fields:", GetFullName(), fieldCount);
 
 		void* iterator = nullptr;

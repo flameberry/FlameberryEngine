@@ -14,14 +14,34 @@ namespace Flameberry {
 
 	Ref<Project> Project::s_ActiveProject;
 
-	Ref<Project> Project::CreateProjectOnDisk(const std::filesystem::path& targetFolder, const std::string& projectName)
+	constexpr const char* g_CsprojSource = R"(
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputPath>Binaries</OutputPath>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Reference Include="FlameberryScriptCore">
+      <HintPath>{}/Flameberry/Source/Developer/ScriptingAPI/bin/Debug/net7.0/FlameberryScriptCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
+    )";
+
+	Ref<Project> Project::CreateProjectOnDisk(const std::filesystem::path& targetFolder,
+		const std::string& projectName)
 	{
 		ProjectConfig projectConfig;
 		projectConfig.Name = projectName;
 		projectConfig.AssetDirectory = "Content";
-		projectConfig.AssetRegistryPath = "Intermediate/AssetRegistry.yaml";
+		projectConfig.ScriptAssemblyPath =
+			fmt::format("Content/Scripting/Binaries/net7.0/{}.dll", projectName);
 
-		Ref<Project> project = CreateRef<Project>(targetFolder / projectConfig.Name, projectConfig);
+		Ref<Project> project =
+			CreateRef<Project>(targetFolder / projectConfig.Name, projectConfig);
 
 		// Setup
 		// 1. Create the project directory
@@ -34,9 +54,17 @@ namespace Flameberry {
 			project->Save();
 			// 3. Create a Content folder
 			std::filesystem::create_directory(project->GetAssetDirectory());
-			// 4. Create a Intermediate folder
-			std::filesystem::create_directory(project->GetProjectDirectory() / "Intermediate");
-			// 5. Return the project instance
+			// 4. Create a `Scripting` folder
+			std::filesystem::create_directory(project->GetAssetDirectory() / "Scripting");
+
+			// 5. Add a `.csproj` file to it
+			std::ofstream csprojFile(project->GetAssetDirectory() / "Scripting" / fmt::format("{}.csproj", projectConfig.Name));
+			csprojFile << fmt::format(g_CsprojSource, FBY_PROJECT_DIR);
+			csprojFile.close();
+
+			// Build using dotnet?
+
+			// 6. Return the project instance
 			return project;
 		}
 

@@ -504,201 +504,65 @@ namespace Flameberry {
 				}
 			});
 
-			DrawComponent<ScriptComponent>(
-				ICON_LC_SCROLL " Script",
-				[&]() {
-					auto& sc =
-						m_Context->m_Registry->get<ScriptComponent>(m_SelectionContext);
+			DrawComponent<ScriptComponent>(ICON_LC_SCROLL " Script", [&]() {
+				auto& sc = m_Context->m_Registry->get<ScriptComponent>(m_SelectionContext);
 
-					if (ImGui::BeginTable("ScriptComponentAttributes", 2, s_TableFlags))
+				if (ImGui::BeginTable("ScriptComponentAttributes", 2, s_TableFlags))
+				{
+					ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, s_LabelWidth);
+					ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
+
+					ImGui::AlignTextToFramePadding();
+					ImGui::Text("Class Name");
+					ImGui::TableNextColumn();
+
+					const auto& actorClasses = ScriptEngine::GetActorClassDictionary();
+
+					ImGui::PushItemWidth(-1.0f);
+
+					ImGui::Button(sc.AssemblyQualifiedClassName.c_str(),
+						ImVec2(-1.0f, 0.0f));
+
+					if (ImGui::IsItemClicked())
+						UI::OpenSelectionWidget("##ScriptActorClasses");
+
+					if (UI::BeginSelectionWidget("##ScriptActorClasses", &m_SearchInputBuffer1))
 					{
-						ImGui::TableSetupColumn("Attribute_Name",
-							ImGuiTableColumnFlags_WidthFixed,
-							s_LabelWidth);
-						ImGui::TableSetupColumn("Attribute_Value",
-							ImGuiTableColumnFlags_WidthStretch);
-
-						ImGui::TableNextRow();
-						ImGui::TableNextColumn();
-
-						ImGui::AlignTextToFramePadding();
-						ImGui::Text("Class Name");
-						ImGui::TableNextColumn();
-
-						const auto& actorClasses = ScriptEngine::GetActorClassDictionary();
-
-						ImGui::PushItemWidth(-1.0f);
-
-						ImGui::Button(sc.AssemblyQualifiedClassName.c_str(),
-							ImVec2(-1.0f, 0.0f));
-
-						if (ImGui::IsItemClicked())
-							UI::OpenSelectionWidget("##ScriptActorClasses");
-
-						if (UI::BeginSelectionWidget("##ScriptActorClasses",
-								m_SearchInputBuffer1, 256))
+						for (const auto& [actorClassName, _] : actorClasses)
 						{
-							for (const auto& [actorClassName, _] : actorClasses)
+							if (!m_SearchInputBuffer1.empty())
 							{
-								if (m_SearchInputBuffer1[0] != '\0')
-								{
-									const int index = Algorithm::KmpSearch(
-										actorClassName.c_str(), m_SearchInputBuffer1, true);
-									if (index == -1)
-										continue;
-								}
-
-								bool isSelected =
-									(actorClassName == sc.AssemblyQualifiedClassName);
-
-								if (UI::SelectionWidgetElement(actorClassName.c_str(),
-										isSelected))
-									sc.AssemblyQualifiedClassName = actorClassName;
+								const int index = Algorithm::KmpSearch(actorClassName.c_str(), m_SearchInputBuffer1.c_str(), true);
+								if (index == -1)
+									continue;
 							}
-							UI::EndSelectionWidget();
+
+							bool isSelected = (actorClassName == sc.AssemblyQualifiedClassName);
+
+							if (UI::SelectionWidgetElement(actorClassName.c_str(), isSelected))
+								sc.AssemblyQualifiedClassName = actorClassName;
 						}
+						UI::EndSelectionWidget();
+					}
 
-						ImGui::TableNextRow();
-						ImGui::TableNextColumn();
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
 
-						if (ImGui::CollapsingHeader(
-								ICON_LC_RECTANGLE_ELLIPSIS " Fields",
-								ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAllColumns))
+					if (ImGui::CollapsingHeader(
+							ICON_LC_RECTANGLE_ELLIPSIS " Fields",
+							ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAllColumns))
+					{
+						if (m_Context->IsRuntimeActive())
 						{
-							if (m_Context->IsRuntimeActive())
+							// Display Script Fields
+							if (Ref<ManagedActor> managedActor =
+									ScriptEngine::GetManagedActor(m_SelectionContext))
 							{
-								// Display Script Fields
-								if (Ref<ManagedActor> managedActor =
-										ScriptEngine::GetManagedActor(m_SelectionContext))
-								{
-									for (const auto& field :
-										managedActor->GetManagedClass()->GetScriptFields())
-									{
-										ImGui::PushID(field.Name.c_str());
-										ImGui::TableNextRow();
-										ImGui::TableNextColumn();
-
-										ImGui::AlignTextToFramePadding();
-										ImGui::Text("%s", field.Name.c_str());
-
-										ImGui::TableNextColumn();
-
-										switch (field.Type)
-										{
-											case ScriptFieldType::Float:
-											{
-												auto value = managedActor->GetFieldValue<float>(field);
-												if (ImGui::DragFloat("##", &value, 0.1f))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::Double:
-											{
-												auto value = managedActor->GetFieldValue<double>(field);
-												if (ImGui::DragScalar("##", ImGuiDataType_Double, &value,
-														0.1f))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::Boolean:
-											{
-												auto value = managedActor->GetFieldValue<bool>(field);
-												if (ImGui::Checkbox("##", &value))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::Char:
-											{
-												auto value = managedActor->GetFieldValue<int8_t>(field);
-												if (ImGui::DragScalar("##", ImGuiDataType_S8, &value, 1))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::Short:
-											{
-												auto value = managedActor->GetFieldValue<int16_t>(field);
-												if (ImGui::DragScalar("##", ImGuiDataType_S16, &value, 1))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::Int:
-											{
-												auto value = managedActor->GetFieldValue<int32_t>(field);
-												if (ImGui::DragScalar("##", ImGuiDataType_S32, &value, 1))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::Long:
-											{
-												auto value = managedActor->GetFieldValue<int64_t>(field);
-												if (ImGui::DragScalar("##", ImGuiDataType_S64, &value, 1))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::Byte:
-											{
-												auto value = managedActor->GetFieldValue<uint8_t>(field);
-												if (ImGui::DragScalar("##", ImGuiDataType_U8, &value, 1))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::UShort:
-											{
-												auto value = managedActor->GetFieldValue<uint16_t>(field);
-												if (ImGui::DragScalar("##", ImGuiDataType_U16, &value, 1))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::UInt:
-											{
-												auto value = managedActor->GetFieldValue<uint32_t>(field);
-												if (ImGui::DragScalar("##", ImGuiDataType_U32, &value, 1))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::ULong:
-											{
-												auto value = managedActor->GetFieldValue<uint64_t>(field);
-												if (ImGui::DragScalar("##", ImGuiDataType_U64, &value, 1))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::Vector2:
-											{
-												auto value =
-													managedActor->GetFieldValue<glm::vec2>(field);
-												if (ImGui::DragFloat2("##", glm::value_ptr(value), 0.1f))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::Vector3:
-											{
-												auto value =
-													managedActor->GetFieldValue<glm::vec3>(field);
-												if (ImGui::DragFloat3("##", glm::value_ptr(value), 0.1f))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-											case ScriptFieldType::Vector4:
-											{
-												auto value =
-													managedActor->GetFieldValue<glm::vec4>(field);
-												if (ImGui::DragFloat4("##", glm::value_ptr(value), 0.1f))
-													managedActor->SetFieldValue(field, value);
-												break;
-											}
-										}
-										ImGui::PopID();
-									}
-								}
-							}
-							else if (!sc.AssemblyQualifiedClassName.empty())
-							{
-								uint32_t i = 0;
-								// Display Editor Only Script Fields
 								for (const auto& field :
-									actorClasses.at(sc.AssemblyQualifiedClassName)
-										->GetScriptFields())
+									managedActor->GetManagedClass()->GetScriptFields())
 								{
 									ImGui::PushID(field.Name.c_str());
 									ImGui::TableNextRow();
@@ -709,206 +573,330 @@ namespace Flameberry {
 
 									ImGui::TableNextColumn();
 
-									auto& localScriptFieldBufferMap =
-										ScriptEngine::GetLocalScriptFieldBufferMap();
-									ScriptFieldBuffer* scriptFieldBufferPtr = nullptr;
-									if (auto scriptFieldBufferMapIterator =
-											localScriptFieldBufferMap.find(m_SelectionContext);
-										scriptFieldBufferMapIterator != localScriptFieldBufferMap.end())
-									{
-										if (auto scriptFieldBufferIterator =
-												scriptFieldBufferMapIterator->second.find(i);
-											scriptFieldBufferIterator != scriptFieldBufferMapIterator->second.end())
-											scriptFieldBufferPtr = &scriptFieldBufferIterator->second;
-									}
-
 									switch (field.Type)
 									{
 										case ScriptFieldType::Float:
 										{
-											auto value = scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<float>()
-												: 0.0f;
+											auto value = managedActor->GetFieldValue<float>(field);
 											if (ImGui::DragFloat("##", &value, 0.1f))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::Double:
 										{
-											auto value = scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<double>()
-												: 0.0f;
+											auto value = managedActor->GetFieldValue<double>(field);
 											if (ImGui::DragScalar("##", ImGuiDataType_Double, &value,
 													0.1f))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::Boolean:
 										{
-											auto value = scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<bool>()
-												: false;
+											auto value = managedActor->GetFieldValue<bool>(field);
 											if (ImGui::Checkbox("##", &value))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::Char:
 										{
-											auto value = scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<int8_t>()
-												: 0;
+											auto value = managedActor->GetFieldValue<int8_t>(field);
 											if (ImGui::DragScalar("##", ImGuiDataType_S8, &value, 1))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::Short:
 										{
-											auto value = scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<int16_t>()
-												: 0;
+											auto value = managedActor->GetFieldValue<int16_t>(field);
 											if (ImGui::DragScalar("##", ImGuiDataType_S16, &value, 1))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::Int:
 										{
-											auto value = scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<int32_t>()
-												: 0;
+											auto value = managedActor->GetFieldValue<int32_t>(field);
 											if (ImGui::DragScalar("##", ImGuiDataType_S32, &value, 1))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::Long:
 										{
-											auto value = scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<int64_t>()
-												: 0;
+											auto value = managedActor->GetFieldValue<int64_t>(field);
 											if (ImGui::DragScalar("##", ImGuiDataType_S64, &value, 1))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::Byte:
 										{
-											auto value = scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<uint8_t>()
-												: 0;
+											auto value = managedActor->GetFieldValue<uint8_t>(field);
 											if (ImGui::DragScalar("##", ImGuiDataType_U8, &value, 1))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::UShort:
 										{
-											auto value =
-												scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<uint16_t>()
-												: 0;
+											auto value = managedActor->GetFieldValue<uint16_t>(field);
 											if (ImGui::DragScalar("##", ImGuiDataType_U16, &value, 1))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::UInt:
 										{
-											auto value =
-												scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<uint32_t>()
-												: 0;
+											auto value = managedActor->GetFieldValue<uint32_t>(field);
 											if (ImGui::DragScalar("##", ImGuiDataType_U32, &value, 1))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::ULong:
 										{
-											auto value =
-												scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<uint64_t>()
-												: 0;
+											auto value = managedActor->GetFieldValue<uint64_t>(field);
 											if (ImGui::DragScalar("##", ImGuiDataType_U64, &value, 1))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::Vector2:
 										{
 											auto value =
-												scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<glm::vec2>()
-												: glm::vec2(0.0f);
+												managedActor->GetFieldValue<glm::vec2>(field);
 											if (ImGui::DragFloat2("##", glm::value_ptr(value), 0.1f))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::Vector3:
 										{
 											auto value =
-												scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<glm::vec3>()
-												: glm::vec3(0.0f);
+												managedActor->GetFieldValue<glm::vec3>(field);
 											if (ImGui::DragFloat3("##", glm::value_ptr(value), 0.1f))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 										case ScriptFieldType::Vector4:
 										{
 											auto value =
-												scriptFieldBufferPtr
-												? scriptFieldBufferPtr->GetValue<glm::vec4>()
-												: glm::vec4(0.0f);
+												managedActor->GetFieldValue<glm::vec4>(field);
 											if (ImGui::DragFloat4("##", glm::value_ptr(value), 0.1f))
-												scriptFieldBufferPtr
-													? scriptFieldBufferPtr->SetValue(value)
-													: localScriptFieldBufferMap[m_SelectionContext][i]
-														  .SetValue(value);
+												managedActor->SetFieldValue(field, value);
 											break;
 										}
 									}
 									ImGui::PopID();
-									i++;
 								}
 							}
 						}
-						ImGui::EndTable();
+						else if (!sc.AssemblyQualifiedClassName.empty())
+						{
+							uint32_t i = 0;
+							// Display Editor Only Script Fields
+							for (const auto& field :
+								actorClasses.at(sc.AssemblyQualifiedClassName)
+									->GetScriptFields())
+							{
+								ImGui::PushID(field.Name.c_str());
+								ImGui::TableNextRow();
+								ImGui::TableNextColumn();
+
+								ImGui::AlignTextToFramePadding();
+								ImGui::Text("%s", field.Name.c_str());
+
+								ImGui::TableNextColumn();
+
+								auto& localScriptFieldBufferMap =
+									ScriptEngine::GetLocalScriptFieldBufferMap();
+								ScriptFieldBuffer* scriptFieldBufferPtr = nullptr;
+								if (auto scriptFieldBufferMapIterator =
+										localScriptFieldBufferMap.find(m_SelectionContext);
+									scriptFieldBufferMapIterator != localScriptFieldBufferMap.end())
+								{
+									if (auto scriptFieldBufferIterator =
+											scriptFieldBufferMapIterator->second.find(i);
+										scriptFieldBufferIterator != scriptFieldBufferMapIterator->second.end())
+										scriptFieldBufferPtr = &scriptFieldBufferIterator->second;
+								}
+
+								switch (field.Type)
+								{
+									case ScriptFieldType::Float:
+									{
+										auto value = scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<float>()
+											: 0.0f;
+										if (ImGui::DragFloat("##", &value, 0.1f))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::Double:
+									{
+										auto value = scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<double>()
+											: 0.0f;
+										if (ImGui::DragScalar("##", ImGuiDataType_Double, &value,
+												0.1f))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::Boolean:
+									{
+										auto value = scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<bool>()
+											: false;
+										if (ImGui::Checkbox("##", &value))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::Char:
+									{
+										auto value = scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<int8_t>()
+											: 0;
+										if (ImGui::DragScalar("##", ImGuiDataType_S8, &value, 1))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::Short:
+									{
+										auto value = scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<int16_t>()
+											: 0;
+										if (ImGui::DragScalar("##", ImGuiDataType_S16, &value, 1))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::Int:
+									{
+										auto value = scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<int32_t>()
+											: 0;
+										if (ImGui::DragScalar("##", ImGuiDataType_S32, &value, 1))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::Long:
+									{
+										auto value = scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<int64_t>()
+											: 0;
+										if (ImGui::DragScalar("##", ImGuiDataType_S64, &value, 1))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::Byte:
+									{
+										auto value = scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<uint8_t>()
+											: 0;
+										if (ImGui::DragScalar("##", ImGuiDataType_U8, &value, 1))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::UShort:
+									{
+										auto value =
+											scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<uint16_t>()
+											: 0;
+										if (ImGui::DragScalar("##", ImGuiDataType_U16, &value, 1))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::UInt:
+									{
+										auto value =
+											scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<uint32_t>()
+											: 0;
+										if (ImGui::DragScalar("##", ImGuiDataType_U32, &value, 1))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::ULong:
+									{
+										auto value =
+											scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<uint64_t>()
+											: 0;
+										if (ImGui::DragScalar("##", ImGuiDataType_U64, &value, 1))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::Vector2:
+									{
+										auto value =
+											scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<glm::vec2>()
+											: glm::vec2(0.0f);
+										if (ImGui::DragFloat2("##", glm::value_ptr(value), 0.1f))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::Vector3:
+									{
+										auto value =
+											scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<glm::vec3>()
+											: glm::vec3(0.0f);
+										if (ImGui::DragFloat3("##", glm::value_ptr(value), 0.1f))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+									case ScriptFieldType::Vector4:
+									{
+										auto value =
+											scriptFieldBufferPtr
+											? scriptFieldBufferPtr->GetValue<glm::vec4>()
+											: glm::vec4(0.0f);
+										if (ImGui::DragFloat4("##", glm::value_ptr(value), 0.1f))
+											scriptFieldBufferPtr
+												? scriptFieldBufferPtr->SetValue(value)
+												: localScriptFieldBufferMap[m_SelectionContext][i]
+														.SetValue(value);
+										break;
+									}
+								}
+								ImGui::PopID();
+								i++;
+							}
+						}
 					}
-				},
-				true // removable = true
+					ImGui::EndTable();
+				} }, true // removable = true
 			);
 
 			DrawComponent<RigidBodyComponent>(ICON_LC_BOXES " Rigid Body", [&]() {
