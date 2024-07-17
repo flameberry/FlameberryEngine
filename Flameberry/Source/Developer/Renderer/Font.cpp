@@ -31,14 +31,19 @@ namespace Flameberry {
 		return texture;
 	}
 
+	static Ref<Font> s_DefaultFont;
+
 	Ref<Font> Font::GetDefault()
 	{
-		static Ref<Font> DefaultFont;
+		if (!s_DefaultFont)
+			s_DefaultFont = CreateRef<Font>(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/opensans/OpenSans-Regular.ttf");
 
-		if (!DefaultFont)
-			DefaultFont = CreateRef<Font>(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/opensans/OpenSans-Regular.ttf");
+		return s_DefaultFont;
+	}
 
-		return DefaultFont;
+	void Font::DestroyDefault()
+	{
+		s_DefaultFont = nullptr;
 	}
 
 	Font::Font(const std::filesystem::path& path)

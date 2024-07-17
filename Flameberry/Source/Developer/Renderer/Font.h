@@ -20,6 +20,8 @@ namespace Flameberry {
 		const MSDFFontData* GetMSDFFontData() const { return m_Data; }
 
 		static Ref<Font> GetDefault();
+		// Temporary solution to not having an Application Destroy Queue
+		static void DestroyDefault();
 
 		FBY_DECLARE_ASSET_TYPE(AssetType::Font);
 

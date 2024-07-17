@@ -147,7 +147,7 @@ namespace Flameberry {
 							// Finally add project entry to GlobalProjectRegistry
 							ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
 
-							// Signal callback to FlameberryEditor class
+							// Signal callback to EditorApplication class
 							m_ShouldClose = true;
 						}
 						else

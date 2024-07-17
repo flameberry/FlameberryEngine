@@ -300,6 +300,9 @@ namespace Flameberry {
 	{
 		PhysicsEngine::Shutdown();
 		Renderer2D::Shutdown();
+
+		// Set the active project as nullptr so that all it's resources like AssetManager are released
+		Project::SetActive(nullptr);
 	}
 
 	void EditorLayer::OnUIRender()

@@ -6,10 +6,10 @@
 
 namespace Flameberry {
 
-	class FlameberryEditor : public Application
+	class EditorApplication : public Application
 	{
 	public:
-		FlameberryEditor(const ApplicationSpecification& specification)
+		EditorApplication(const ApplicationSpecification& specification)
 			: Application(specification)
 		{
 			// Check for startup project
@@ -22,7 +22,7 @@ namespace Flameberry {
 					FBY_ERROR("Invalid project path passed as command line arguments: {}", projectPath);
 
 					// TODO: Improve this API urgently
-					m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(FlameberryEditor::OpenProjectWithEditor));
+					m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(EditorApplication::OpenProjectWithEditor));
 					PushLayer(m_LauncherLayer);
 				}
 				else
@@ -41,12 +41,12 @@ namespace Flameberry {
 			else
 			{
 				// TODO: Improve this API urgently
-				m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(FlameberryEditor::OpenProjectWithEditor));
+				m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(EditorApplication::OpenProjectWithEditor));
 				PushLayer(m_LauncherLayer);
 			}
 		}
 
-		~FlameberryEditor()
+		~EditorApplication()
 		{
 		}
 
@@ -84,7 +84,7 @@ namespace Flameberry {
 		applicationSpec.WorkingDirectory = FBY_PROJECT_DIR;
 		applicationSpec.CommandLineArgs = appCmdLineArgs;
 
-		return new FlameberryEditor(applicationSpec);
+		return new EditorApplication(applicationSpec);
 	}
 
 } // namespace Flameberry

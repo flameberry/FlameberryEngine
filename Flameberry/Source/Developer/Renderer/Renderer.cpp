@@ -12,6 +12,7 @@
 #include "Texture2D.h"
 #include "MaterialAsset.h"
 #include "Skymap.h"
+#include "Font.h"
 
 // #define FBY_ENABLE_QUERY_TIMESTAMP
 
@@ -53,6 +54,7 @@ namespace Flameberry {
 		vkDestroyQueryPool(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), s_QueryPool, nullptr);
 
 #endif
+		Font::DestroyDefault();
 		ShaderLibrary::Shutdown();
 		Skymap::Destroy();
 		Texture2D::DestroyStaticResources();

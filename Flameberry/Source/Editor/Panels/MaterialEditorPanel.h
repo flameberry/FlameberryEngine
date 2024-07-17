@@ -24,9 +24,6 @@ namespace Flameberry {
 		char m_RenameBuffer[256] = { '\0' };
 
 		Ref<Texture2D> m_CheckerboardTexture;
-
-		static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible;
-		static constexpr float s_LabelWidth = 100.0f;
 	};
 
 } // namespace Flameberry
