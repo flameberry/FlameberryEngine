@@ -55,6 +55,11 @@ namespace Flameberry {
 
 	AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& filePath)
 	{
+		// Check if the asset with filePath is already present in the AssetRegistry
+		if (const auto it = m_FilePathToAssetHandle.find(filePath); it != m_FilePathToAssetHandle.end())
+			return it->second;
+
+		// Import the asset
 		const std::string& extension = filePath.extension().string();
 		const AssetType type = Utils::GetAssetTypeFromFileExtension(extension);
 
@@ -68,10 +73,13 @@ namespace Flameberry {
 			m_AssetRegistry[asset->Handle] = metadata;
 			m_LoadedAssets[asset->Handle] = asset;
 
+			// Cache the filepath to avoid loading duplicate assets
+			// TODO: What if user intends to load the asset as a duplicate? Is that a valid concern?
+			m_FilePathToAssetHandle[filePath] = asset->Handle;
+
 			SerializeAssetRegistry();
 			return asset->Handle;
 		}
-
 		return 0;
 	}
 
@@ -135,6 +143,9 @@ namespace Flameberry {
 			auto& metadata = m_AssetRegistry[handle];
 			metadata.FilePath = node["FilePath"].as<std::string>();
 			metadata.Type = Utils::AssetTypeStringToEnum(node["Type"].as<std::string>());
+
+			// Caching the filepath
+			m_FilePathToAssetHandle[metadata.FilePath] = handle;
 		}
 
 		return true;

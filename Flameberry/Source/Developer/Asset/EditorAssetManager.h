@@ -31,6 +31,13 @@ namespace Flameberry {
 		AssetMap m_LoadedAssets;
 		AssetMap m_MemoryOnlyAssets;
 		AssetRegistry m_AssetRegistry;
+
+		// For Caching purposes only
+		// This is like a reverse AssetRegistry which stores AssetFilePath -> AssetHandle
+		// Used for avoiding loading assets like Scene multiple times as separate assets
+		// Because Scenes in Editor are loaded using filepaths...
+		// and there should be a way to trace a filepath back to it's AssetHandle if it exists
+		std::unordered_map<std::filesystem::path, AssetHandle> m_FilePathToAssetHandle;
 	};
 
 } // namespace Flameberry
