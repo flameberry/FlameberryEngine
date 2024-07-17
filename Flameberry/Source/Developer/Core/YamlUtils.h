@@ -3,7 +3,24 @@
 #include <yaml-cpp/yaml.h>
 #include <glm/glm.hpp>
 
+#include "Core/UUID.h"
+
 namespace YAML {
+
+	template <>
+	struct convert<Flameberry::UUID>
+	{
+		static Node encode(Flameberry::UUID rhs)
+		{
+			return Node((Flameberry::UUID::ValueType)rhs);
+		}
+
+		static bool decode(const Node& node, Flameberry::UUID& rhs)
+		{
+			rhs = node.as<Flameberry::UUID::ValueType>();
+			return true;
+		}
+	};
 
 	template <>
 	struct convert<glm::vec3>
@@ -61,6 +78,7 @@ namespace YAML {
 
 namespace Flameberry {
 
+	YAML::Emitter& operator<<(YAML::Emitter& out, UUID v);
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v);
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& v);
 

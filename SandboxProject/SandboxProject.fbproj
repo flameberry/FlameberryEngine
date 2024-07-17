@@ -1,5 +1,6 @@
 Project: SandboxProject
 Configuration:
   AssetDirectory: Content
-  StartScene: Content/Scenes/Scripting.berry
+  StartScene: Content/Scenes/Demo.berry
+  AssetRegistryPath: Intermediate/AssetRegistry.yaml
   ScriptAssemblyPath: Content/Scripting/Binaries/net7.0/SandboxProject.dll

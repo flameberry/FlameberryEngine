@@ -4,7 +4,6 @@
 
 #include "Flameberry.h"
 #include "MaterialEditorPanel.h"
-#include "MaterialSelectorPanel.h"
 
 namespace Flameberry {
 
@@ -27,7 +26,6 @@ namespace Flameberry {
 		static constexpr float s_LabelWidth = 100.0f;
 
 		Ref<MaterialEditorPanel> m_MaterialEditorPanel;
-		Ref<MaterialSelectorPanel> m_MaterialSelectorPanel;
 
 		fbentt::entity m_SelectionContext = {};
 		Ref<Scene> m_Context;

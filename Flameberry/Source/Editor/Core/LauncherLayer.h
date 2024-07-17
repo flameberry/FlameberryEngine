@@ -2,6 +2,7 @@
 
 #include "Flameberry.h"
 #include "Project/Project.h"
+#include "Project/ProjectRegistry.h"
 
 namespace Flameberry {
 

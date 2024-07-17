@@ -8,18 +8,17 @@
 #include "Core/UI.h"
 #include "ECS/Components.h"
 #include "Renderer/Skymap.h"
-#include "glm/gtc/type_ptr.hpp"
-#include "imgui.h"
+#include "Asset/Importers/TextureImporter.h"
 
 namespace Flameberry {
 
 	InspectorPanel::InspectorPanel()
-		: m_MaterialSelectorPanel(CreateRef<MaterialSelectorPanel>()), m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()), m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon.png"))
+		: m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()), m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon.png"))
 	{
 	}
 
 	InspectorPanel::InspectorPanel(const Ref<Scene>& context)
-		: m_Context(context), m_MaterialSelectorPanel(CreateRef<MaterialSelectorPanel>()), m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()), m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon2.png"))
+		: m_Context(context), m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()), m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon2.png"))
 	{
 	}
 
@@ -164,8 +163,11 @@ namespace Flameberry {
 					ImGui::Text("Font");
 					ImGui::TableNextColumn();
 
+					Ref<Font> fontAsset = AssetManager::GetAsset<Font>(text.Font);
+					Ref<Texture2D> fontPreview = fontAsset ? fontAsset->GetAtlasTexture() : Font::GetDefault()->GetAtlasTexture();
+
 					// Display font preview
-					ImGui::Image(text.Font->GetAtlasTexture()->CreateOrGetDescriptorSet(), ImVec2(80, 80), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+					ImGui::Image(fontPreview->CreateOrGetDescriptorSet(), ImVec2(80, 80), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
 					if (ImGui::BeginDragDropTarget())
 					{
@@ -177,18 +179,23 @@ namespace Flameberry {
 
 							FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
-							if (std::filesystem::exists(fontPath) && std::filesystem::is_regular_file(fontPath) && (ext == ".ttf"))
-								text.Font = AssetManager::TryGetOrLoadAsset<Font>(fontPath);
+							bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Font
+								&& std::filesystem::exists(fontPath) 
+								&& std::filesystem::is_regular_file(fontPath);
+
+							if (shouldImport)
+								text.Font = AssetManager::As<EditorAssetManager>()->ImportAsset(fontPath);
 							else
 								FBY_WARN("Bad File given as Font!");
 						}
 						ImGui::EndDragDropTarget();
 					}
 
-					ImGui::SameLine();
-					ImGui::TextWrapped("%s", text.Font->GetName().c_str());
-
-					// FBY_CONTENT_BROWSER_ITEM
+					if (fontAsset)
+					{
+						ImGui::SameLine();
+						ImGui::TextWrapped("%s", fontAsset->GetName().c_str());
+					}
 
 					ImGui::TableNextRow();
 					ImGui::TableNextColumn();
@@ -254,22 +261,27 @@ namespace Flameberry {
 					ImGui::TableNextColumn();
 
 					ImGui::AlignTextToFramePadding();
-					ImGui::Text("Enable SkyMap");
+					ImGui::Text("Enable Skymap");
 					ImGui::TableNextColumn();
-					ImGui::Checkbox("##Enable_EnvMap", &skyLightComp.EnableSkyMap);
+					ImGui::Checkbox("##Enable_EnvMap", &skyLightComp.EnableSkymap);
 
 					ImGui::TableNextRow();
 					ImGui::TableNextColumn();
 
-					if (skyLightComp.EnableSkyMap)
+					if (skyLightComp.EnableSkymap)
 					{
 						ImGui::AlignTextToFramePadding();
-						ImGui::Text("SkyMap");
+						ImGui::Text("Skymap");
 						ImGui::TableNextColumn();
 
-						auto skyMap = AssetManager::GetAsset<Skymap>(skyLightComp.SkyMap);
+						Ref<Skymap> skymap = AssetManager::GetAsset<Skymap>(skyLightComp.Skymap);
 
-						ImGui::Button(skyMap ? skyMap->FilePath.filename().c_str() : "Null", ImVec2(-1.0f, 0.0f));
+						ImGui::Button(skymap
+								? std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath)
+									  .filename()
+									  .c_str()
+								: "Null",
+							ImVec2(-1.0f, 0.0f));
 
 						if (ImGui::BeginDragDropTarget())
 						{
@@ -281,8 +293,12 @@ namespace Flameberry {
 
 								FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
-								if (std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath) && (ext == ".hdr"))
-									skyLightComp.SkyMap = AssetManager::TryGetOrLoadAsset<Skymap>(envPath)->Handle;
+								bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Skymap
+									&& std::filesystem::exists(envPath)
+									&& std::filesystem::is_regular_file(envPath);
+
+								if (shouldImport)
+									skyLightComp.Skymap = AssetManager::As<EditorAssetManager>()->ImportAsset(envPath);
 								else
 									FBY_WARN("Bad File given as Environment!");
 							}
@@ -406,11 +422,12 @@ namespace Flameberry {
 
 							FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
-							if (std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath) && (ext == ".obj"))
-							{
-								const auto& loadedMesh = AssetManager::TryGetOrLoadAsset<StaticMesh>(modelPath);
-								mesh.MeshHandle = loadedMesh->Handle;
-							}
+							bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh
+								&& std::filesystem::exists(modelPath)
+								&& std::filesystem::is_regular_file(modelPath);
+
+							if (shouldImport)
+								mesh.MeshHandle = AssetManager::As<EditorAssetManager>()->ImportAsset(modelPath);
 							else
 								FBY_WARN("Bad File given as Model!");
 						}
@@ -482,11 +499,12 @@ namespace Flameberry {
 
 										FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
-										if (std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath) && (ext == ".fbmat"))
-										{
-											const auto& loadedMat = AssetManager::TryGetOrLoadAsset<MaterialAsset>(matPath);
-											mesh.OverridenMaterialTable[submeshIndex] = loadedMat->Handle;
-										}
+										bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Material
+											&& std::filesystem::exists(matPath)
+											&& std::filesystem::is_regular_file(matPath);
+
+										if (shouldImport)
+											mesh.OverridenMaterialTable[submeshIndex] = AssetManager::As<EditorAssetManager>()->ImportAsset(matPath);
 										else
 											FBY_WARN("Bad File given as Material!");
 									}
@@ -502,7 +520,7 @@ namespace Flameberry {
 
 								if (UI::BeginSelectionWidget("##MaterialSelectionWidget", m_SearchInputBuffer2, 256))
 								{
-									for (const auto& [handle, asset] : AssetManager::GetAssetTable())
+									for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetLoadedAssets()) // TODO: Revisit
 									{
 										if (asset->GetAssetType() == AssetType::Material)
 										{
@@ -838,7 +856,6 @@ namespace Flameberry {
 
 		ImGui::PopStyleVar();
 
-		m_MaterialSelectorPanel->OnUIRender();
 		m_MaterialEditorPanel->OnUIRender();
 	}
 

@@ -83,7 +83,7 @@ namespace Flameberry {
 		static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex = -1);
 		static void AddGrid(int gridSize);
 		static void AddAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color);
-		static void AddText(const std::string& text, const Ref<Font>& font, const glm::mat4& transform, const TextParams& textParams, int entityIndex = -1);
+		static void AddText(const std::string& text, const Ref<Font>& fontAsset, const glm::mat4& transform, const TextParams& textParams, int entityIndex = -1);
 
 		static void BeginScene(VkDescriptorSet globalDescriptorSet);
 		static void EndScene();

@@ -78,7 +78,7 @@ namespace Flameberry {
 
 		m_Data->FontGeometry = msdf_atlas::FontGeometry(&m_Data->Glyphs);
 		int glyphsLoaded = m_Data->FontGeometry.loadCharset(font, fontScale, charset);
-		FBY_INFO("Loaded {} glyphs from font (out of {})", glyphsLoaded, charset.size());
+		FBY_INFO("Loaded {} glyphs from font (out of {}) - {}", glyphsLoaded, charset.size(), path);
 
 		double emSize = 40.0;
 

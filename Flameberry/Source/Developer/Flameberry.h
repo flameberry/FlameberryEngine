@@ -27,6 +27,7 @@
 #include "ImGui/Theme.h"
 
 #include "Asset/AssetManager.h"
+#include "Asset/EditorAssetManager.h"
 
 #include "Renderer/RenderCommand.h"
 #include "Renderer/Pipeline.h"

@@ -22,8 +22,16 @@ namespace Flameberry {
 		}
 	};
 
+	enum class ApplicationType : uint8_t
+	{
+		None = 0,
+		Editor,
+		Runtime,
+	};
+
 	struct ApplicationSpecification
 	{
+		ApplicationType Type = ApplicationType::None;
 		std::string Name;
 		WindowSpecification WindowSpec;
 		std::filesystem::path WorkingDirectory;
@@ -38,7 +46,9 @@ namespace Flameberry {
 		void Run();
 
 		Window& GetWindow() { return *m_Window; }
+		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 		static Application& Get() { return *s_Instance; }
+
 		static Application* CreateClientApp(const ApplicationCommandLineArgs& appCmdLineArgs);
 
 		void OnEvent(Event& e);

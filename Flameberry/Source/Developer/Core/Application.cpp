@@ -18,6 +18,8 @@ namespace Flameberry {
 	{
 		s_Instance = this;
 
+		FBY_ASSERT(m_Specification.Type != ApplicationType::None, "ApplicationSpecification: Application Type not specified");
+
 		// Set the working directory
 		if (std::filesystem::exists(m_Specification.WorkingDirectory))
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
@@ -160,7 +162,6 @@ namespace Flameberry {
 		}
 
 		Renderer::Shutdown();
-		AssetManager::Clear();
 
 		m_Window->Shutdown();
 

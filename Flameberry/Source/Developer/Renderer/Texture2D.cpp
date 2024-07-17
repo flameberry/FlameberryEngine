@@ -169,7 +169,7 @@ namespace Flameberry {
 			write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			write_desc[0].pImageInfo = desc_image;
 
-			const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			vkUpdateDescriptorSets(device, 1, write_desc, 0, nullptr);
 		}
 		return m_DescriptorSet;

@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "Core/UI.h"
+#include "Project/ProjectRegistry.h"
 
 namespace Flameberry {
 
@@ -54,7 +55,7 @@ namespace Flameberry {
 			if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), entry.ProjectFilePath.c_str(), !std::filesystem::exists(entry.ProjectFilePath)))
 			{
 				// Open Project
-				m_Project = ProjectSerializer::DeserializeIntoNewProject(entry.ProjectFilePath);
+				m_Project = Project::Load(entry.ProjectFilePath);
 				m_ShouldClose = true;
 			}
 		}
@@ -76,7 +77,7 @@ namespace Flameberry {
 			std::string path = Platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
 			if (!path.empty())
 			{
-				m_Project = ProjectSerializer::DeserializeIntoNewProject(path);
+				m_Project = Project::Load(path);
 
 				ProjectRegistryEntry entry{ m_Project->GetConfig().Name, path };
 				if (std::find(m_ProjectRegistry.begin(), m_ProjectRegistry.end(), entry) == m_ProjectRegistry.end())
@@ -141,50 +142,29 @@ namespace Flameberry {
 				{
 					if (strlen(m_ProjectNameBuffer))
 					{
-						ProjectConfig projectConfig;
-						projectConfig.Name = std::string(m_ProjectNameBuffer);
-						projectConfig.AssetDirectory = "Content";
-
-						m_Project = CreateRef<Project>(projectParentPath / projectConfig.Name, projectConfig);
-
-						// Setup
-						// 1. Create the project directory
-						if (!std::filesystem::exists(m_Project->GetProjectDirectory()))
-							std::filesystem::create_directory(m_Project->GetProjectDirectory());
-
-						if (std::filesystem::is_empty(m_Project->GetProjectDirectory()))
+						if (m_Project = Project::CreateProjectOnDisk(projectParentPath, m_ProjectNameBuffer))
 						{
-							// 2. Serialize the Project
-							m_Project->Save();
-							// 3. Create a Content folder
-							std::filesystem::create_directory(m_Project->GetAssetDirectory());
-							// 4. Add project entry to GlobalProjectRegistry
+							// Finally add project entry to GlobalProjectRegistry
 							ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
 
 							// Signal callback to FlameberryEditor class
 							m_ShouldClose = true;
 						}
 						else
-						{
 							ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s is not empty!", m_Project->GetProjectDirectory().c_str());
-							FBY_ERROR("Failed to create project: Project Directory: {} is not empty!", m_Project->GetProjectDirectory());
-						}
 					}
 					else
-					{
 						FBY_ERROR("Failed to create project: Project name is empty!");
-					}
 				}
 				else
-				{
 					FBY_ERROR("Failed to create project: Either project path is empty or it does not exist!");
-				}
 			}
+
 			ImGui::SameLine();
+
 			if (ImGui::Button("Cancel", ImVec2(120, 0)))
-			{
 				ImGui::CloseCurrentPopup();
-			}
+
 			ImGui::EndPopup();
 		}
 	}

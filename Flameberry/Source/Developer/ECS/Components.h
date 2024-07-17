@@ -54,15 +54,15 @@ namespace Flameberry {
 	{
 		glm::vec3 Color{ 0.0f };
 		float Intensity = 0.2f;
-		bool EnableSkyMap = false, EnableReflections = false;
+		bool EnableSkymap = false, EnableReflections = false;
 
-		AssetHandle SkyMap = 0;
+		AssetHandle Skymap = 0;
 	};
 
 	typedef std::unordered_map<uint32_t, AssetHandle> MaterialTable;
 	struct MeshComponent
 	{
-		AssetHandle MeshHandle;
+		AssetHandle MeshHandle = 0;
 
 		// This stores the materials that are used for rendering instead of the default ones which are loaded from the mesh source file
 		MaterialTable OverridenMaterialTable;
@@ -178,9 +178,9 @@ namespace Flameberry {
 	struct TextComponent
 	{
 		std::string TextString;
-		Ref<Font> Font = Font::GetDefault();
+		AssetHandle Font = 0;
 
-		glm::vec3 Color;
+		glm::vec3 Color{ 1.0f };
 		float Kerning;
 		float LineSpacing;
 	};

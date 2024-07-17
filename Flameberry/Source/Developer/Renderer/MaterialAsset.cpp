@@ -23,37 +23,42 @@ namespace Flameberry {
 		m_MaterialRef->Set("u_MetallicMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
-	void MaterialAsset::SetAlbedoMap(const Ref<Texture2D>& map)
+	void MaterialAsset::SetAlbedoMap(AssetHandle handle)
 	{
-		m_AlbedoMap = map;
-		m_MaterialRef->Set("u_AlbedoMapSampler", m_AlbedoMap);
+		m_AlbedoMap = handle;
+		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
+		m_MaterialRef->Set("u_AlbedoMapSampler", map);
 	}
 
-	void MaterialAsset::SetNormalMap(const Ref<Texture2D>& map)
+	void MaterialAsset::SetNormalMap(AssetHandle handle)
 	{
-		m_NormalMap = map;
-		m_MaterialRef->Set("u_NormalMapSampler", m_NormalMap);
+		m_NormalMap = handle;
+		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
+		m_MaterialRef->Set("u_NormalMapSampler", map);
 	}
 
-	void MaterialAsset::SetRoughnessMap(const Ref<Texture2D>& map)
+	void MaterialAsset::SetRoughnessMap(AssetHandle handle)
 	{
-		m_RoughnessMap = map;
-		m_MaterialRef->Set("u_RoughnessMapSampler", m_RoughnessMap);
+		m_RoughnessMap = handle;
+		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
+		m_MaterialRef->Set("u_RoughnessMapSampler", map);
 	}
 
-	void MaterialAsset::SetAmbientMap(const Ref<Texture2D>& map)
+	void MaterialAsset::SetAmbientMap(AssetHandle handle)
 	{
-		m_AmbientMap = map;
-		m_MaterialRef->Set("u_AmbientMapSampler", m_AmbientMap);
+		m_AmbientMap = handle;
+		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
+		m_MaterialRef->Set("u_AmbientMapSampler", map);
 	}
 
-	void MaterialAsset::SetMetallicMap(const Ref<Texture2D>& map)
+	void MaterialAsset::SetMetallicMap(AssetHandle handle)
 	{
-		m_MetallicMap = map;
-		m_MaterialRef->Set("u_MetallicMapSampler", m_MetallicMap);
+		m_MetallicMap = handle;
+		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
+		m_MaterialRef->Set("u_MetallicMapSampler", map);
 	}
 
-	void MaterialAssetSerializer::Serialize(const Ref<MaterialAsset>& materialAsset, const char* path)
+	void MaterialAssetSerializer::Serialize(const Ref<MaterialAsset>& materialAsset, const std::filesystem::path& path)
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
@@ -66,22 +71,22 @@ namespace Flameberry {
 		out << YAML::Key << "Roughness" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Roughness");
 		out << YAML::Key << "Metallic" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Metallic");
 		out << YAML::Key << "UseAlbedoMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAlbedoMap");
-		out << YAML::Key << "AlbedoMap" << YAML::Value << (materialAsset->m_AlbedoMap ? materialAsset->m_AlbedoMap->FilePath : "");
+		out << YAML::Key << "AlbedoMap" << YAML::Value << materialAsset->m_AlbedoMap;
 		out << YAML::Key << "UseNormalMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseNormalMap");
-		out << YAML::Key << "NormalMap" << YAML::Value << (materialAsset->m_NormalMap ? materialAsset->m_NormalMap->FilePath : "");
+		out << YAML::Key << "NormalMap" << YAML::Value << materialAsset->m_NormalMap;
 		out << YAML::Key << "UseRoughnessMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseRoughnessMap");
-		out << YAML::Key << "RoughnessMap" << YAML::Value << (materialAsset->m_RoughnessMap ? materialAsset->m_RoughnessMap->FilePath : "");
+		out << YAML::Key << "RoughnessMap" << YAML::Value << materialAsset->m_RoughnessMap;
 		out << YAML::Key << "UseAmbientMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAmbientMap");
-		out << YAML::Key << "AmbientMap" << YAML::Value << (materialAsset->m_AmbientMap ? materialAsset->m_AmbientMap->FilePath : "");
+		out << YAML::Key << "AmbientMap" << YAML::Value << materialAsset->m_AmbientMap;
 		out << YAML::Key << "UseMetallicMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseMetallicMap");
-		out << YAML::Key << "MetallicMap" << YAML::Value << (materialAsset->m_MetallicMap ? materialAsset->m_MetallicMap->FilePath : "");
+		out << YAML::Key << "MetallicMap" << YAML::Value << materialAsset->m_MetallicMap;
 		out << YAML::EndMap;
 
 		std::ofstream fout(path);
 		fout << out.c_str();
 	}
 
-	Ref<MaterialAsset> MaterialAssetSerializer::Deserialize(const char* path)
+	Ref<MaterialAsset> MaterialAssetSerializer::Deserialize(const std::filesystem::path& path)
 	{
 		std::ifstream in(path);
 		std::stringstream ss;
@@ -91,7 +96,7 @@ namespace Flameberry {
 		FBY_ASSERT(data, "Failed to load Flameberry Material from path: {}", path);
 
 		Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>(data["Name"].as<std::string>());
-		materialAsset->Handle = data["Handle"].as<UUID::value_type>();
+		materialAsset->Handle = data["Handle"].as<UUID>();
 
 		materialAsset->SetAlbedo(data["Albedo"].as<glm::vec3>());
 		materialAsset->SetRoughness(data["Roughness"].as<float>());
@@ -104,20 +109,20 @@ namespace Flameberry {
 		materialAsset->SetUseMetallicMap(data["UseMetallicMap"].as<bool>());
 
 		// TODO: Batch update the descriptor set of `m_MaterialRef`
-		if (auto map = data["AlbedoMap"].as<std::string>(); !map.empty())
-			materialAsset->SetAlbedoMap(AssetManager::TryGetOrLoadAsset<Texture2D>(map));
+		if (auto mapHandle = data["AlbedoMap"].as<AssetHandle>())
+			materialAsset->SetAlbedoMap(mapHandle);
 
-		if (auto map = data["NormalMap"].as<std::string>(); !map.empty())
-			materialAsset->SetNormalMap(AssetManager::TryGetOrLoadAsset<Texture2D>(map));
+		if (auto mapHandle = data["NormalMap"].as<AssetHandle>())
+			materialAsset->SetNormalMap(mapHandle);
 
-		if (auto map = data["RoughnessMap"].as<std::string>(); !map.empty())
-			materialAsset->SetRoughnessMap(AssetManager::TryGetOrLoadAsset<Texture2D>(map));
+		if (auto mapHandle = data["RoughnessMap"].as<AssetHandle>())
+			materialAsset->SetRoughnessMap(mapHandle);
 
-		if (auto map = data["AmbientMap"].as<std::string>(); !map.empty())
-			materialAsset->SetAmbientMap(AssetManager::TryGetOrLoadAsset<Texture2D>(map));
+		if (auto mapHandle = data["AmbientMap"].as<AssetHandle>())
+			materialAsset->SetAmbientMap(mapHandle);
 
-		if (auto map = data["MetallicMap"].as<std::string>(); !map.empty())
-			materialAsset->SetMetallicMap(AssetManager::TryGetOrLoadAsset<Texture2D>(map));
+		if (auto mapHandle = data["MetallicMap"].as<AssetHandle>())
+			materialAsset->SetMetallicMap(mapHandle);
 
 		return materialAsset;
 	}

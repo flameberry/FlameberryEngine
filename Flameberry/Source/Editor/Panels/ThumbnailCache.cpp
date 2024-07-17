@@ -1,6 +1,6 @@
 #include "ThumbnailCache.h"
 
-#include "Asset/TextureLoader.h"
+#include "Asset/Importers/TextureImporter.h"
 
 namespace Flameberry {
 
@@ -26,7 +26,7 @@ namespace Flameberry {
 		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame || (assetPath.extension() != ".png" && assetPath.extension() != ".jpg" && assetPath.extension() != ".hdr" && assetPath.extension() != ".tga"))
 			return nullptr;
 
-		const auto thumbnail = std::static_pointer_cast<Texture2D>(TextureLoader::LoadTexture2DResized(absolutePath, 128, 128, false));
+		const auto thumbnail = std::static_pointer_cast<Texture2D>(TextureImporter::LoadTexture2DResized(absolutePath, 128, 128, false));
 		auto& cachedThumbnail = m_CachedThumbnails[assetPath];
 		cachedThumbnail.Timestamp = timestamp;
 		cachedThumbnail.Image = thumbnail;

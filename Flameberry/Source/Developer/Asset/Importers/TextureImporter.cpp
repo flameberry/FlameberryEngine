@@ -1,4 +1,4 @@
-#include "TextureLoader.h"
+#include "TextureImporter.h"
 #include "Renderer/Texture2D.h"
 
 #include <stb_image/stb_image.h>
@@ -8,7 +8,12 @@
 
 namespace Flameberry {
 
-	Ref<Asset> TextureLoader::LoadTexture2D(const std::filesystem::path& path)
+	Ref<Texture2D> TextureImporter::ImportTexture2D(AssetHandle handle, const AssetMetadata& metadata)
+	{
+		return LoadTexture2D(metadata.FilePath);
+	}
+
+	Ref<Texture2D> TextureImporter::LoadTexture2D(const std::filesystem::path& path)
 	{
 		int width, height, channels;
 		void* pixels = nullptr;
@@ -30,19 +35,15 @@ namespace Flameberry {
 		specification.Height = height;
 		specification.Format = format;
 
-		auto asset = CreateRef<Texture2D>(pixels, specification);
+		Ref<Texture2D> asset = CreateRef<Texture2D>(pixels, specification);
 
 		stbi_image_free(pixels);
 
-		// Set Asset Class Variables
-		asset->FilePath = path;
-		asset->SizeInBytesOnCPU = sizeof(Texture2D);
-		asset->SizeInBytesOnGPU = 0; // TODO: Calculate using channels * width * height * bytes_per_channel
 		return asset;
 	}
 
 	// TODO: Needs work quality wise
-	Ref<Texture2D> TextureLoader::LoadTexture2DResized(const std::filesystem::path& path, int newWidth, int newHeight, bool bGenerateMipmaps)
+	Ref<Texture2D> TextureImporter::LoadTexture2DResized(const std::filesystem::path& path, int newWidth, int newHeight, bool bGenerateMipmaps)
 	{
 		auto calcWidthHeight = [](const int width, const int height, int& newWidth, int& newHeight) {
 			if (width >= height)

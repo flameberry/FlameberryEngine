@@ -50,6 +50,9 @@ namespace Flameberry {
 		static void RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material);
 		static void RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer);
 
+		// Other Utilities
+		static Ref<Texture2D> GetCheckerboardTexture();
+
 	private:
 		static void ResetStats();
 		static void QueryTimestampResults();

@@ -12,7 +12,7 @@ namespace Flameberry {
 			{ "PBR.vert.spv", "PBR.frag.spv" },
 			{ "MousePicking.vert.spv", "MousePicking.frag.spv" },
 			{ "MousePicking2D.vert.spv", "MousePicking2D.frag.spv" },
-			{ "SkyMap.vert.spv", "SkyMap.frag.spv" },
+			{ "Skymap.vert.spv", "Skymap.frag.spv" },
 			{ "DirectionalShadowMap.vert.spv", "DirectionalShadowMap.frag.spv" },
 			{ "Quad.vert.spv", "Quad.frag.spv" },
 			{ "SolidColor.vert.spv", "SolidColor.frag.spv" },

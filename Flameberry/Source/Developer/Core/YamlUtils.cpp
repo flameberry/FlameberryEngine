@@ -2,6 +2,12 @@
 
 namespace Flameberry {
 
+	YAML::Emitter& operator<<(YAML::Emitter& out, UUID v)
+	{
+		out.WriteIntegralType((UUID::ValueType)v);
+        return out;
+	}
+
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
 	{
 		out << YAML::Flow;

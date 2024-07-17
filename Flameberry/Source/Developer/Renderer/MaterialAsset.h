@@ -44,11 +44,11 @@ namespace Flameberry {
 		void SetUseAmbientMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAmbientMap = value; }
 		void SetUseMetallicMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseMetallicMap = value; }
 
-		void SetAlbedoMap(const Ref<Texture2D>& map);
-		void SetNormalMap(const Ref<Texture2D>& map);
-		void SetRoughnessMap(const Ref<Texture2D>& map);
-		void SetAmbientMap(const Ref<Texture2D>& map);
-		void SetMetallicMap(const Ref<Texture2D>& map);
+		void SetAlbedoMap(AssetHandle handle);
+		void SetNormalMap(AssetHandle handle);
+		void SetRoughnessMap(AssetHandle handle);
+		void SetAmbientMap(AssetHandle handle);
+		void SetMetallicMap(AssetHandle handle);
 
 		FBY_DECLARE_ASSET_TYPE(AssetType::Material);
 
@@ -61,7 +61,7 @@ namespace Flameberry {
 		Ref<Material> m_MaterialRef;
 
 		// These textures are later then sent to the underlying `__Material` ref, i.e. `m_MaterialRef`
-		Ref<Texture2D> m_AlbedoMap, m_NormalMap, m_RoughnessMap, m_AmbientMap, m_MetallicMap;
+		AssetHandle m_AlbedoMap, m_NormalMap, m_RoughnessMap, m_AmbientMap, m_MetallicMap;
 
 		friend class MaterialAssetSerializer;
 		friend class MaterialEditorPanel;
@@ -70,8 +70,8 @@ namespace Flameberry {
 	class MaterialAssetSerializer
 	{
 	public:
-		static void Serialize(const Ref<MaterialAsset>& material, const char* path);
-		static Ref<MaterialAsset> Deserialize(const char* path);
+		static void Serialize(const Ref<MaterialAsset>& material, const std::filesystem::path& path);
+		static Ref<MaterialAsset> Deserialize(const std::filesystem::path& path);
 	};
 
 } // namespace Flameberry

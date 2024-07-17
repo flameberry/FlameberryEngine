@@ -7,7 +7,8 @@
 #include "Components.h"
 
 #include "Asset/AssetManager.h"
-#include "Asset/MeshLoader.h"
+#include "Asset/EditorAssetManager.h"
+#include "Asset/Importers/MeshImporter.h"
 #include "Renderer/MaterialAsset.h"
 #include "Renderer/GenericCamera.h"
 #include "Renderer/Skymap.h"
@@ -110,14 +111,14 @@ namespace Flameberry {
 			for (const auto entity : entities)
 			{
 				const auto deserializedEntity = destScene->m_Registry->create();
-				const UUID ID = entity["Entity"].as<UUID::value_type>();
+				const UUID ID = entity["Entity"].as<UUID>();
 				UUIDToEntityMap[ID] = deserializedEntity;
 			}
 
 			// Deserialize entities
 			for (const auto entity : entities)
 			{
-				const UUID ID = entity["Entity"].as<UUID::value_type>();
+				const UUID ID = entity["Entity"].as<UUID>();
 				const fbentt::entity deserializedEntity = UUIDToEntityMap[ID];
 
 				auto& IDComp = destScene->m_Registry->emplace<IDComponent>(deserializedEntity);
@@ -140,16 +141,17 @@ namespace Flameberry {
 				if (auto relation = entity["RelationshipComponent"])
 				{
 					auto& relationComp = destScene->m_Registry->emplace<RelationshipComponent>(deserializedEntity);
-					relationComp.Parent = UUIDToEntityMap[relation["Parent"].as<UUID::value_type>()];
-					relationComp.PrevSibling = UUIDToEntityMap[relation["PrevSibling"].as<UUID::value_type>()];
-					relationComp.NextSibling = UUIDToEntityMap[relation["NextSibling"].as<UUID::value_type>()];
-					relationComp.FirstChild = UUIDToEntityMap[relation["FirstChild"].as<UUID::value_type>()];
+					relationComp.Parent = UUIDToEntityMap[relation["Parent"].as<UUID>()];
+					relationComp.PrevSibling = UUIDToEntityMap[relation["PrevSibling"].as<UUID>()];
+					relationComp.NextSibling = UUIDToEntityMap[relation["NextSibling"].as<UUID>()];
+					relationComp.FirstChild = UUIDToEntityMap[relation["FirstChild"].as<UUID>()];
 				}
 
 				if (auto text = entity["TextComponent"])
 				{
 					auto& textComp = destScene->m_Registry->emplace<TextComponent>(deserializedEntity);
 					textComp.TextString = text["TextString"].as<std::string>();
+					textComp.Font = text["Font"].as<AssetHandle>();
 					textComp.Color = text["Color"].as<glm::vec3>();
 					textComp.Kerning = text["Kerning"].as<float>();
 					textComp.LineSpacing = text["LineSpacing"].as<float>();
@@ -180,13 +182,10 @@ namespace Flameberry {
 				if (auto mesh = entity["MeshComponent"])
 				{
 					auto& meshComp = destScene->m_Registry->emplace<MeshComponent>(deserializedEntity, 0);
-					meshComp.MeshHandle = mesh["MeshHandle"].as<UUID::value_type>();
+					meshComp.MeshHandle = mesh["MeshHandle"].as<AssetHandle>();
 
-					for (auto entry : mesh["OverridenMaterialTable"]) // TODO: Update with different format
-					{
-						auto mat = AssetManager::TryGetOrLoadAsset<MaterialAsset>(entry["Material"].as<std::string>());
-						meshComp.OverridenMaterialTable[entry["SubmeshIndex"].as<uint32_t>()] = mat->Handle;
-					}
+					for (auto entry : mesh["OverridenMaterialTable"])
+						meshComp.OverridenMaterialTable[entry["SubmeshIndex"].as<uint32_t>()] = entry["Material"].as<AssetHandle>();
 				}
 
 				if (auto skyLight = entity["SkyLightComponent"])
@@ -194,10 +193,8 @@ namespace Flameberry {
 					auto& skyLightComp = destScene->m_Registry->emplace<SkyLightComponent>(deserializedEntity);
 					skyLightComp.Color = skyLight["Color"].as<glm::vec3>();
 					skyLightComp.Intensity = skyLight["Intensity"].as<float>();
-					skyLightComp.EnableSkyMap = skyLight["EnableSkyMap"].as<bool>();
-
-					std::string skymapPath = skyLight["SkyMap"].as<std::string>();
-					skyLightComp.SkyMap = ((skymapPath != "") ? AssetManager::TryGetOrLoadAsset<Skymap>(skyLight["SkyMap"].as<std::string>())->Handle : AssetHandle(0));
+					skyLightComp.EnableSkymap = skyLight["EnableSkymap"].as<bool>();
+					skyLightComp.Skymap = skyLight["Skymap"].as<AssetHandle>();
 				}
 
 				if (auto light = entity["DirectionalLightComponent"])
@@ -255,16 +252,6 @@ namespace Flameberry {
 				}
 			}
 		}
-
-		if (auto meshes = data["Meshes"])
-		{
-			for (auto mesh : meshes)
-			{
-				auto meshAsset = MeshLoader::LoadMesh(mesh["FilePath"].as<std::string>().c_str());
-				meshAsset->Handle = mesh["Mesh"].as<UUID::value_type>();
-				AssetManager::RegisterAsset(meshAsset);
-			}
-		}
 		return true;
 	}
 
@@ -290,19 +277,6 @@ namespace Flameberry {
 		});
 		out << YAML::EndSeq; // Entities
 
-		// Serialize Meshes loaded
-		out << YAML::Key << "Meshes" << YAML::Value << YAML::BeginSeq;
-
-		for (const auto& uuid : meshHandles)
-		{
-			auto mesh = AssetManager::GetAsset<StaticMesh>(uuid);
-
-			out << YAML::BeginMap;
-			out << YAML::Key << "Mesh" << YAML::Value << mesh->Handle;
-			out << YAML::Key << "FilePath" << YAML::Value << mesh->FilePath;
-			out << YAML::EndMap; // Mesh
-		}
-		out << YAML::EndSeq; // Meshes
 		out << YAML::EndMap; // Scene
 
 		std::ofstream fout(scenePath);
@@ -348,6 +322,7 @@ namespace Flameberry {
 			auto& text = scene->m_Registry->get<TextComponent>(entity);
 			out << YAML::Key << "TextComponent" << YAML::BeginMap;
 			out << YAML::Key << "TextString" << YAML::Value << text.TextString;
+			out << YAML::Key << "Font" << YAML::Value << text.Font;
 			out << YAML::Key << "Color" << YAML::Value << text.Color;
 			out << YAML::Key << "Kerning" << YAML::Value << text.Kerning;
 			out << YAML::Key << "LineSpacing" << YAML::Value << text.LineSpacing;
@@ -372,18 +347,18 @@ namespace Flameberry {
 		{
 			auto& mesh = scene->m_Registry->get<MeshComponent>(entity);
 			out << YAML::Key << "MeshComponent" << YAML::BeginMap;
-			out << YAML::Key << "MeshHandle" << YAML::Value << (UUID::value_type)(mesh.MeshHandle);
+			out << YAML::Key << "MeshHandle" << YAML::Value << mesh.MeshHandle;
 
 			out << YAML::Key << "OverridenMaterialTable" << YAML::BeginSeq;
+
 			for (const auto& [submeshIndex, materialHandle] : mesh.OverridenMaterialTable)
 			{
 				out << YAML::BeginMap;
 				out << YAML::Key << "SubmeshIndex" << YAML::Value << submeshIndex;
-
-				auto mat = AssetManager::GetAsset<MaterialAsset>(materialHandle);
-				out << YAML::Key << "Material" << YAML::Value << mat->FilePath;
+				out << YAML::Key << "Material" << YAML::Value << materialHandle;
 				out << YAML::EndMap;
 			}
+
 			out << YAML::EndSeq;
 			out << YAML::EndMap; // Mesh Component
 
@@ -396,8 +371,8 @@ namespace Flameberry {
 			out << YAML::Key << "SkyLightComponent" << YAML::BeginMap;
 			out << YAML::Key << "Color" << YAML::Value << skyLight.Color;
 			out << YAML::Key << "Intensity" << YAML::Value << skyLight.Intensity;
-			out << YAML::Key << "EnableSkyMap" << YAML::Value << skyLight.EnableSkyMap;
-			out << YAML::Key << "SkyMap" << YAML::Value << (AssetManager::IsAssetHandleValid(skyLight.SkyMap) ? AssetManager::GetAsset<Skymap>(skyLight.SkyMap)->FilePath : "");
+			out << YAML::Key << "EnableSkymap" << YAML::Value << skyLight.EnableSkymap;
+			out << YAML::Key << "Skymap" << YAML::Value << skyLight.Skymap;
 			out << YAML::EndMap; // Sky Light Component
 		}
 

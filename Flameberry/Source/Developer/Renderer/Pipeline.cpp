@@ -8,12 +8,6 @@
 
 namespace Flameberry {
 
-	Pipeline::Pipeline(const PipelineSpecification& pipelineSpec)
-		: m_Specification(pipelineSpec)
-	{
-		CreatePipeline();
-	}
-
 	static VkFormat ShaderDataTypeToFormat(ShaderDataType type)
 	{
 		switch (type)
@@ -223,6 +217,12 @@ namespace Flameberry {
 			offset += outVulkanSpecializationMapEntries.back().size;
 		}
 		return offset;
+	}
+
+	Pipeline::Pipeline(const PipelineSpecification& pipelineSpec)
+		: m_Specification(pipelineSpec)
+	{
+		CreatePipeline();
 	}
 
 	void Pipeline::CreatePipeline()

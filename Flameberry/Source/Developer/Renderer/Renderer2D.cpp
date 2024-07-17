@@ -298,9 +298,11 @@ namespace Flameberry {
 			Renderer2D::AddLine(vertices[edges[i][0]], vertices[edges[i][1]], color);
 	}
 
-	void Renderer2D::AddText(const std::string& text, const Ref<Font>& font, const glm::mat4& transform, const TextParams& textParams, int entityIndex)
+	void Renderer2D::AddText(const std::string& text, const Ref<Font>& fontAsset, const glm::mat4& transform, const TextParams& textParams, int entityIndex)
 	{
-		auto it = s_Renderer2DData.FontHandleToBatchIndex.find(font->Handle);
+		const Ref<Font> font = fontAsset ? fontAsset : Font::GetDefault();
+
+		const auto it = s_Renderer2DData.FontHandleToBatchIndex.find(font->Handle);
 		uint32_t batchIndex = -1;
 
 		if (it == s_Renderer2DData.FontHandleToBatchIndex.end())

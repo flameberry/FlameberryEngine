@@ -346,9 +346,7 @@ namespace Flameberry {
 
 		uint32_t imageIndex = VulkanContext::GetCurrentWindow()->GetImageIndex();
 
-		ImGui::Image(reinterpret_cast<ImTextureID>(
-						 m_ViewportDescriptorSets[imageIndex]),
-			ImVec2{ m_ViewportSize.x, m_ViewportSize.y });
+		ImGui::Image(reinterpret_cast<ImTextureID>(m_ViewportDescriptorSets[imageIndex]), ImVec2{ m_ViewportSize.x, m_ViewportSize.y });
 
 		// Scene File Drop Target
 		if (ImGui::BeginDragDropTarget() && m_EditorState == EditorState::Edit)
@@ -368,18 +366,18 @@ namespace Flameberry {
 						m_ShouldOpenAnotherScene = true;
 						m_ScenePathToBeOpened = filePath;
 					}
-					else if (ext == ".obj" || ext == ".fbx" || ext == ".gltf") // TODO: Don't limit this to these 3 extensions
+					else if (Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh)
 					{
-						const auto& staticMesh = AssetManager::TryGetOrLoadAsset<StaticMesh>(path);
-						auto entity = m_ActiveScene->GetRegistry()->create();
-						m_ActiveScene->GetRegistry()->emplace<IDComponent>(entity);
-						m_ActiveScene->GetRegistry()->emplace<TagComponent>(entity, "StaticMesh");
+						const AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(filePath);
 
-						auto& transform = m_ActiveScene->GetRegistry()->emplace<TransformComponent>(entity);
+						const fbentt::entity entity = m_ActiveScene->CreateEntityWithTagAndParent("StaticMesh", fbentt::null);
+
 						constexpr float distance = 5.0f;
+						auto& transform = m_ActiveScene->GetRegistry()->get<TransformComponent>(entity);
 						transform.Translation = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().Position + m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().Direction * distance;
 
-						m_ActiveScene->GetRegistry()->emplace<MeshComponent>(entity, staticMesh->Handle);
+						m_ActiveScene->GetRegistry()->emplace<MeshComponent>(entity, handle);
+
 						m_SceneHierarchyPanel->SetSelectionContext(entity);
 					}
 				}

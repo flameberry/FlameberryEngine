@@ -27,7 +27,7 @@ namespace Flameberry {
 				}
 				else
 				{
-					auto project = ProjectSerializer::DeserializeIntoNewProject(projectPath);
+					Ref<Project> project = Project::Load(projectPath);
 
 					// Set the secondary title of the window to be the name of the project
 					auto& window = Application::Get().GetWindow();
@@ -77,6 +77,7 @@ namespace Flameberry {
 	Application* Application::CreateClientApp(const ApplicationCommandLineArgs& appCmdLineArgs)
 	{
 		ApplicationSpecification applicationSpec;
+		applicationSpec.Type = ApplicationType::Editor;
 		applicationSpec.Name = "Flameberry-Editor";
 		applicationSpec.WindowSpec.Width = 1280;
 		applicationSpec.WindowSpec.Height = 800;

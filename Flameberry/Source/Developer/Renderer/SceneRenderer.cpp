@@ -383,7 +383,7 @@ namespace Flameberry {
 			// Skybox Pipeline
 			{
 				Flameberry::PipelineSpecification pipelineSpec{};
-				pipelineSpec.Shader = ShaderLibrary::Get("SkyMap");
+				pipelineSpec.Shader = ShaderLibrary::Get("Skymap");
 				pipelineSpec.RenderPass = m_GeometryPass;
 
 				pipelineSpec.VertexLayout = {};
@@ -519,11 +519,11 @@ namespace Flameberry {
 		SceneUniformBufferData sceneUniformBufferData;
 
 		// Keep the skylight ready
-		SkyLightComponent* skyMap = nullptr;
+		SkyLightComponent* skymap = nullptr;
 		for (const auto entity : scene->m_Registry->group<TransformComponent, SkyLightComponent>())
 		{
-			skyMap = scene->m_Registry->try_get<SkyLightComponent>(entity);
-			sceneUniformBufferData.SkyLightIntensity = skyMap->Intensity;
+			skymap = scene->m_Registry->try_get<SkyLightComponent>(entity);
+			sceneUniformBufferData.SkyLightIntensity = skymap->Intensity;
 		}
 
 		// Important variable
@@ -634,15 +634,15 @@ namespace Flameberry {
 		RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
 		RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
-		/////////////////////////////////////////// SkyMap Rendering ////////////////////////////////////////////
+		/////////////////////////////////////////// Skymap Rendering ////////////////////////////////////////////
 
-		bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
+		bool shouldRenderSkymap = skymap && skymap->EnableSkymap && skymap->Skymap;
 		VkDescriptorSet textureDescSet = VK_NULL_HANDLE;
 
-		if (shouldRenderSkyMap)
+		if (shouldRenderSkymap)
 		{
 			VkPipelineLayout pipelineLayout = m_SkymapPipeline->GetVulkanPipelineLayout();
-			textureDescSet = AssetManager::GetAsset<Skymap>(skyMap->SkyMap)->GetDescriptorSet()->GetVulkanDescriptorSet();
+			textureDescSet = AssetManager::GetAsset<Skymap>(skymap->Skymap)->GetDescriptorSet()->GetVulkanDescriptorSet();
 
 			SkymapPushConstantObject pco;
 			pco.ViewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
@@ -664,7 +664,7 @@ namespace Flameberry {
 				m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
 				m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
 				m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet(),
-				shouldRenderSkyMap ? textureDescSet : Skymap::GetEmptyDescriptorSet()->GetVulkanDescriptorSet()
+				shouldRenderSkymap ? textureDescSet : Skymap::GetEmptyDescriptorSet()->GetVulkanDescriptorSet()
 			};
 
 			Renderer::RT_BindPipeline(cmdBuffer, pipeline);
@@ -835,7 +835,9 @@ namespace Flameberry {
 		for (const auto entity : scene->m_Registry->group<TransformComponent, TextComponent>())
 		{
 			const auto& [transform, text] = scene->m_Registry->get<TransformComponent, TextComponent>(entity);
-			Renderer2D::AddText(text.TextString, text.Font, transform.CalculateTransform(), { text.Color, text.Kerning, text.LineSpacing }, fbentt::to_index(entity));
+
+			Ref<Font> font = AssetManager::GetAsset<Font>(text.Font);
+			Renderer2D::AddText(text.TextString, font, transform.CalculateTransform(), { text.Color, text.Kerning, text.LineSpacing }, fbentt::to_index(entity));
 		}
 
 		Renderer2D::EndScene();
