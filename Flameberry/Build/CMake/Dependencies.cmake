@@ -73,7 +73,7 @@ list(APPEND FBY_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 set(FBY_COMPILE_DEFINITIONS FBY_PROJECT_DIR="${FBY_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 # Setting the paths we require irrespective of the Graphics API
-list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt spirv-reflect-static)
+list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt spirv-reflect-static msdf-atlas-gen)
 list(APPEND FBY_INCLUDE_DIRS
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/GLFW/include
@@ -83,6 +83,8 @@ list(APPEND FBY_INCLUDE_DIRS
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/fmtlib/include
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/include
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/build/include
+	${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MsdfAtlasGen/msdf-atlas-gen
+	${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MsdfAtlasGen/msdfgen
 	${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Mono/include
 )
 
@@ -137,6 +139,9 @@ set(FBY_DEPENDENCY_SOURCE
     ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/backends/imgui_impl_vulkan.h
     ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
     ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/backends/imgui_impl_glfw.h
+
+    ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/misc/cpp/imgui_stdlib.cpp
+    ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/misc/cpp/imgui_stdlib.h
 
     # ImGuizmo
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/GraphEditor.cpp

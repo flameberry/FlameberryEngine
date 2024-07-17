@@ -5,6 +5,7 @@
 #include "Core/Core.h"
 
 namespace Flameberry {
+
 	class Timer
 	{
 	public:
@@ -24,6 +25,7 @@ namespace Flameberry {
 	public:
 		ScopedTimer(const std::string& scopeName)
 			: m_ScopeName(scopeName) { m_Start = std::chrono::high_resolution_clock::now(); }
+
 		~ScopedTimer()
 		{
 #ifdef FBY_DEBUG
@@ -36,8 +38,9 @@ namespace Flameberry {
 
 	private:
 		decltype(std::chrono::high_resolution_clock::now()) m_Start;
-		std::string											m_ScopeName;
+		std::string m_ScopeName;
 	};
+
 } // namespace Flameberry
 
 #define FBY_SCOPED_TIMER(name) Flameberry::ScopedTimer timer(name)

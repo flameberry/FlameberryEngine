@@ -12,6 +12,7 @@
 #include "Renderer/Renderer.h"
 
 namespace Flameberry {
+
 	bool RenderCommand::DoesFormatSupportDepthAttachment(VkFormat format)
 	{
 		return format == VK_FORMAT_D32_SFLOAT
@@ -262,7 +263,7 @@ namespace Flameberry {
 		std::vector<VkQueueFamilyProperties> queueFamilyProps(queueFamilyCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProps.data());
 
-		uint32_t		   index = 0;
+		uint32_t index = 0;
 		QueueFamilyIndices indices;
 		for (const auto& queue : queueFamilyProps)
 		{
@@ -311,8 +312,8 @@ namespace Flameberry {
 
 	VkSampler RenderCommand::CreateDefaultSampler()
 	{
-		VkSampler			sampler;
-		const auto&			device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		VkSampler sampler;
+		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		samplerInfo.magFilter = VK_FILTER_LINEAR;

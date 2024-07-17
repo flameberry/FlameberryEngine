@@ -6,28 +6,30 @@
 #include "Core/Profiler.h"
 
 #include "VulkanContext.h"
-#include "VulkanDebug.h"
 #include "Asset/AssetManager.h"
 #include "SwapChain.h"
 #include "ShaderLibrary.h"
 #include "Texture2D.h"
 #include "MaterialAsset.h"
+#include "Skymap.h"
+#include "Font.h"
 
 // #define FBY_ENABLE_QUERY_TIMESTAMP
 
 namespace Flameberry {
 
 	std::vector<Renderer::Command> Renderer::s_CommandQueue;
-	uint32_t					   Renderer::s_RT_FrameIndex = 0, Renderer::s_FrameIndex = 0;
-	RendererFrameStats			   Renderer::s_RendererFrameStats;
+	uint32_t Renderer::s_RT_FrameIndex = 0, Renderer::s_FrameIndex = 0;
+	RendererFrameStats Renderer::s_RendererFrameStats;
 
-	VkQueryPool												  Renderer::s_QueryPool;
+	VkQueryPool Renderer::s_QueryPool;
 	std::array<uint64_t, 4 * SwapChain::MAX_FRAMES_IN_FLIGHT> Renderer::s_Timestamps;
 
 	void Renderer::Init()
 	{
 		// Create the generic texture descriptor layout
 		Texture2D::InitStaticResources();
+		Skymap::Init();
 		ShaderLibrary::Init();
 
 		s_CommandQueue.reserve(5 * 1028 * 1028 / sizeof(Renderer::Command)); // 5 MB
@@ -52,7 +54,9 @@ namespace Flameberry {
 		vkDestroyQueryPool(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), s_QueryPool, nullptr);
 
 #endif
+		Font::DestroyDefault();
 		ShaderLibrary::Shutdown();
+		Skymap::Destroy();
 		Texture2D::DestroyStaticResources();
 
 		DescriptorSetLayout::ClearCache(); // TODO: Maybe move this to somewhere obvious like VulkanDevice or Renderer
@@ -68,7 +72,7 @@ namespace Flameberry {
 	void Renderer::RT_RenderFrame()
 	{
 		FBY_PROFILE_SCOPE("RT_RenderLoop");
-		auto&		window = Application::Get().GetWindow();
+		auto& window = Application::Get().GetWindow();
 		const auto& device = VulkanContext::GetCurrentDevice();
 
 		// Execute all Render Commands
@@ -78,7 +82,7 @@ namespace Flameberry {
 			device->BeginCommandBuffer(s_RT_FrameIndex);
 
 			VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(s_RT_FrameIndex);
-			uint32_t		imageIndex = window.GetImageIndex();
+			uint32_t imageIndex = window.GetImageIndex();
 
 #ifdef FBY_ENABLE_QUERY_TIMESTAMP
 
@@ -153,7 +157,7 @@ namespace Flameberry {
 	void Renderer::RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material)
 	{
 		VkDescriptorSet descSetArray[material->m_DescriptorSets.size()];
-		int				idx = 0;
+		int idx = 0;
 		for (const auto& set : material->m_DescriptorSets)
 		{
 			descSetArray[idx] = set->GetVulkanDescriptorSet();

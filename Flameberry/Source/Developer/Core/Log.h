@@ -38,6 +38,7 @@ struct fmt::formatter<std::filesystem::path> : formatter<std::string_view>
 };
 
 namespace Flameberry {
+
 	enum class LogLevel : uint8_t
 	{
 		TRACE = 0,
@@ -52,7 +53,7 @@ namespace Flameberry {
 	{
 	public:
 		inline static Ref<Logger> GetCoreLogger() { return s_CoreLogger; }
-		inline static void		  SetCoreLogger(const Ref<Logger>& logger) { s_CoreLogger = logger; }
+		inline static void SetCoreLogger(const Ref<Logger>& logger) { s_CoreLogger = logger; }
 
 	public:
 		/// Instance Name should be set at the beginning of the program,
@@ -121,10 +122,11 @@ namespace Flameberry {
 	private:
 		/// The name which is used in prefix of the log message
 		std::string m_InstanceName;
-		LogLevel	m_CurrentLogLevel;
+		LogLevel m_CurrentLogLevel;
 
 		static Ref<Logger> s_CoreLogger;
 	};
+
 } // namespace Flameberry
 
 #define FBY_TRACE(...) Flameberry::Logger::GetCoreLogger()->trace(__VA_ARGS__)

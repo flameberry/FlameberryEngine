@@ -1,0 +1,87 @@
+#version 450
+
+layout(constant_id = 0) const int c_MipLevels = 10;
+
+layout(set = 0, binding = 0) uniform samplerCube _FBY_u_Cubemap;
+layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_PrefilteredMap;
+
+layout(push_constant) uniform Data {
+    float Resolution, MipLevel;
+} u_Data;
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+#include "Include/CubemapCommon.glsl"
+
+float max3(vec3 a)
+{
+    return max(a.x, max(a.y, a.z));
+}
+
+// Normal Distribution function
+float D_GGX(float dotNH, float roughness)
+{
+    float alpha = roughness * roughness;
+    float alpha2 = alpha * alpha;
+    float denom = dotNH * dotNH * (alpha2 - 1.0) + 1.0;
+    return (alpha2) / (PI * denom * denom);
+}
+
+vec3 PrefilterEnvMap(vec3 R, float roughness, float resolution, uint sampleCount)
+{
+    vec3 N = R;
+    vec3 V = R;
+    vec3 color = vec3(0.0);
+    float weight = 0.0;
+
+    for (uint i = 0u; i < sampleCount; i++)
+    {
+        const vec2 Xi = Hammersley2d(i, sampleCount);
+        const vec3 H = ImportanceSample_GGX(Xi, roughness, N);
+        const vec3 L = 2.0 * dot(V, H) * H - V;
+        const float dotNL = max(dot(N, L), 0.0);
+
+        if (dotNL > 0.0)
+        {
+            // Filtering based on https://placeholderart.wordpress.com/2015/07/28/implementation-notes-runtime-environment-map-filtering-for-image-based-lighting/
+            const float dotNH = max(dot(N, H), 0.0);
+            const float dotVH = max(dot(V, H), 0.0);
+
+            // Probability Distribution Function
+            const float pdf = D_GGX(dotNH, roughness) * dotNH / (4.0 * dotVH) + 0.0001;
+            // Slid angle of current smple
+            const float omegaS = 1.0 / (float(sampleCount) * pdf);
+            // Solid angle of 1 pixel across all cube faces
+            const float omegaP = 4.0 * PI / (6.0 * resolution * resolution);
+            // Biased (+1.0) mip level for better result
+            const float lodBias = 1.0;
+            const float lod = roughness == 0.0 ? 0.0 : max(0.5 * log2(omegaS / omegaP) + lodBias, 0.0f);
+
+            color += textureLod(_FBY_u_Cubemap, L, lod).rgb * dotNL;
+            weight += dotNL;
+        }
+    }
+    return (color / weight);
+}
+
+void main()
+{
+    const uint sampleCount = 1024u;
+    const float resolutionMultiplier = 2.0f;
+    const ivec2 imgSize = imageSize(_FBY_u_PrefilteredMap);
+
+    // if (any(greaterThanEqual(gl_GlobalInvocationID.xy, imgSize))) {
+    //     return; // Skip out-of-bounds threads
+    // }
+
+    vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
+    normalizedPixelCoords = normalizedPixelCoords * 2.0f - 1.0f;
+    const vec3 worldPosition = NormalizedToWorldPosition(int(gl_GlobalInvocationID.z), normalizedPixelCoords);
+    const vec3 normal = normalize(worldPosition);
+
+    const float roughness = u_Data.MipLevel / float(c_MipLevels - 1);
+    const vec3 color = PrefilterEnvMap(normal, roughness, u_Data.Resolution * resolutionMultiplier, sampleCount);
+
+    // Store the color
+    imageStore(_FBY_u_PrefilteredMap, ivec3(gl_GlobalInvocationID.xyz), vec4(color, 1.0));
+}

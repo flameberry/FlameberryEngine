@@ -52,12 +52,16 @@ namespace Flameberry {
 		static bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size = -1.0f);
 		static void Vec3Control(const std::string& label, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth);
 		static bool AlignedButton(const char* label, const ImVec2& size = ImVec2(0.0f, 0.0f), float alignment = 0.5f);
-		static void InputBox(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint = (const char*)__null);
+		static void InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint = (const char*)__null);
 
 		static void OpenSelectionWidget(const char* label);
-		static bool BeginSelectionWidget(const char* label, char* inputBuffer, const uint32_t inputLength);
+		static bool BeginSelectionWidget(const char* label, std::string* inputBuffer);
 		static bool SelectionWidgetElement(const char* label, bool isSelected);
 		static void EndSelectionWidget();
+
+		static bool BeginKeyValueTable(const char* label, ImGuiTableFlags tableFlags = 0, float labelWidth = 0.0f);
+		static void TableKeyElement(const char* label);
+		static void EndKeyValueTable();
 
 		static bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled = false);
 		// Returns full width and height of the group including text and file icon

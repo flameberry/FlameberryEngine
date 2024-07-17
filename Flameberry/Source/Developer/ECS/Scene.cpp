@@ -1,6 +1,6 @@
 #include "Scene.h"
 
-#include "PxPhysicsAPI.h"
+#include <PxPhysicsAPI.h>
 
 #include "Core/Timer.h"
 #include "Core/Profiler.h"
@@ -103,7 +103,7 @@ namespace Flameberry {
 
 			if (auto* sphereCollider = m_Registry->try_get<SphereColliderComponent>(entity))
 			{
-				auto  geometry = physx::PxSphereGeometry(sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z));
+				auto geometry = physx::PxSphereGeometry(sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z));
 				auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
 				shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
 				sphereCollider->RuntimeShape = shape;
@@ -111,7 +111,7 @@ namespace Flameberry {
 
 			if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity))
 			{
-				auto  geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
+				auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
 				auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
 				shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
 
@@ -264,7 +264,7 @@ namespace Flameberry {
 		if (m_Registry->has<RelationshipComponent>(entity))
 		{
 			auto& relation = m_Registry->get<RelationshipComponent>(entity);
-			auto  sibling = relation.FirstChild;
+			auto sibling = relation.FirstChild;
 			while (sibling != fbentt::null)
 			{
 				auto temp = m_Registry->get<RelationshipComponent>(sibling).NextSibling;
@@ -350,7 +350,7 @@ namespace Flameberry {
 	bool Scene::Recursive_IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
 	{
 		auto* relation = m_Registry->try_get<RelationshipComponent>(parent);
-		auto  sibling = parent;
+		auto sibling = parent;
 		while (relation && sibling != fbentt::null)
 		{
 			if (sibling == key)
@@ -406,7 +406,7 @@ namespace Flameberry {
 			if (srcRelation.Parent != fbentt::null)
 			{
 				fbentt::entity srcNextSibling = srcRelation.NextSibling;
-				auto*		   srcNextSiblingRel = m_Registry->try_get<RelationshipComponent>(srcNextSibling);
+				auto* srcNextSiblingRel = m_Registry->try_get<RelationshipComponent>(srcNextSibling);
 
 				destRelation.Parent = srcRelation.Parent;
 				destRelation.PrevSibling = src;
@@ -437,13 +437,13 @@ namespace Flameberry {
 			return fbentt::null;
 
 		const auto destEntity = DuplicateSingleEntity(src);
-		auto&	   destRelation = m_Registry->emplace<RelationshipComponent>(destEntity);
+		auto& destRelation = m_Registry->emplace<RelationshipComponent>(destEntity);
 
-		auto&		   srcRelation = m_Registry->get<RelationshipComponent>(src);
+		auto& srcRelation = m_Registry->get<RelationshipComponent>(src);
 		fbentt::entity child = srcRelation.FirstChild;
 
 		// Intermediate Variables
-		fbentt::entity		   prevDestChild = fbentt::null;
+		fbentt::entity prevDestChild = fbentt::null;
 		RelationshipComponent* prevDestChildRel = nullptr;
 
 		while (child != fbentt::null)

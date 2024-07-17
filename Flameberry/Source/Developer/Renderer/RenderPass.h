@@ -6,9 +6,10 @@
 #include "Framebuffer.h"
 
 namespace Flameberry {
+
 	struct RenderPassSpecification
 	{
-		std::vector<Ref<Framebuffer>>	 TargetFramebuffers;
+		std::vector<Ref<Framebuffer>> TargetFramebuffers;
 		std::vector<VkSubpassDependency> Dependencies;
 	};
 
@@ -22,10 +23,11 @@ namespace Flameberry {
 		void End();
 
 		RenderPassSpecification GetSpecification() const { return m_RenderPassSpec; }
-		VkRenderPass			GetRenderPass() const { return m_VkRenderPass; }
+		VkRenderPass GetRenderPass() const { return m_VkRenderPass; }
 
 	private:
 		RenderPassSpecification m_RenderPassSpec;
-		VkRenderPass			m_VkRenderPass;
+		VkRenderPass m_VkRenderPass;
 	};
+
 } // namespace Flameberry

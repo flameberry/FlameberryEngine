@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 namespace Flameberry {
+
 	struct DirectionalLight
 	{
 		alignas(16) glm::vec3 Direction{ 0.0f };
@@ -16,4 +17,15 @@ namespace Flameberry {
 		alignas(16) glm::vec3 Color;
 		alignas(4) float Intensity;
 	};
+
+	struct SpotLight
+	{
+		alignas(16) glm::vec3 Position;
+		alignas(16) glm::vec3 Direction;
+		alignas(16) glm::vec3 Color;
+		alignas(4) float Intensity;
+		alignas(4) float InnerConeAngle;
+		alignas(4) float OuterConeAngle;
+	};
+
 } // namespace Flameberry

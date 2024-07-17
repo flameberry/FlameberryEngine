@@ -9,8 +9,8 @@ namespace Flameberry {
 	struct MaterialStructGPURepresentation
 	{
 		glm::vec3 Albedo;
-		float	  Roughness, Metallic;
-		uint32_t  UseAlbedoMap, UseNormalMap, UseRoughnessMap, UseAmbientMap, UseMetallicMap;
+		float Roughness, Metallic;
+		uint32_t UseAlbedoMap, UseNormalMap, UseRoughnessMap, UseAmbientMap, UseMetallicMap;
 	};
 
 	// This class is basically a wrapper for the `Material` class to add utilities for using Materials for Meshes
@@ -23,14 +23,14 @@ namespace Flameberry {
 
 		// Getters
 		std::string GetName() const { return m_Name; }
-		glm::vec3	GetAlbedo() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().Albedo; }
-		float		GetRoughness() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().Roughness; }
-		float		GetMetallic() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().Metallic; }
-		bool		IsUsingAlbedoMap() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAlbedoMap; }
-		bool		IsUsingNormalMap() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseNormalMap; }
-		bool		IsUsingRoughnessMap() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseRoughnessMap; }
-		bool		IsUsingAmbientMap() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAmbientMap; }
-		bool		IsUsingMetallicMap() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseMetallicMap; }
+		glm::vec3 GetAlbedo() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().Albedo; }
+		float GetRoughness() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().Roughness; }
+		float GetMetallic() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().Metallic; }
+		bool IsUsingAlbedoMap() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAlbedoMap; }
+		bool IsUsingNormalMap() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseNormalMap; }
+		bool IsUsingRoughnessMap() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseRoughnessMap; }
+		bool IsUsingAmbientMap() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAmbientMap; }
+		bool IsUsingMetallicMap() const { return m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseMetallicMap; }
 
 		// Setters
 		void SetName(const char* name) { m_Name = name; }
@@ -44,11 +44,11 @@ namespace Flameberry {
 		void SetUseAmbientMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAmbientMap = value; }
 		void SetUseMetallicMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseMetallicMap = value; }
 
-		void SetAlbedoMap(const Ref<Texture2D>& map);
-		void SetNormalMap(const Ref<Texture2D>& map);
-		void SetRoughnessMap(const Ref<Texture2D>& map);
-		void SetAmbientMap(const Ref<Texture2D>& map);
-		void SetMetallicMap(const Ref<Texture2D>& map);
+		void SetAlbedoMap(AssetHandle handle);
+		void SetNormalMap(AssetHandle handle);
+		void SetRoughnessMap(AssetHandle handle);
+		void SetAmbientMap(AssetHandle handle);
+		void SetMetallicMap(AssetHandle handle);
 
 		FBY_DECLARE_ASSET_TYPE(AssetType::Material);
 
@@ -61,7 +61,7 @@ namespace Flameberry {
 		Ref<Material> m_MaterialRef;
 
 		// These textures are later then sent to the underlying `__Material` ref, i.e. `m_MaterialRef`
-		Ref<Texture2D> m_AlbedoMap, m_NormalMap, m_RoughnessMap, m_AmbientMap, m_MetallicMap;
+		AssetHandle m_AlbedoMap, m_NormalMap, m_RoughnessMap, m_AmbientMap, m_MetallicMap;
 
 		friend class MaterialAssetSerializer;
 		friend class MaterialEditorPanel;
@@ -70,8 +70,8 @@ namespace Flameberry {
 	class MaterialAssetSerializer
 	{
 	public:
-		static void				  Serialize(const Ref<MaterialAsset>& material, const char* path);
-		static Ref<MaterialAsset> Deserialize(const char* path);
+		static void Serialize(const Ref<MaterialAsset>& material, const std::filesystem::path& path);
+		static Ref<MaterialAsset> Deserialize(const std::filesystem::path& path);
 	};
 
 } // namespace Flameberry

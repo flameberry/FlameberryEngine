@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "Core/UI.h"
+#include "Project/ProjectRegistry.h"
 
 namespace Flameberry {
 
@@ -54,7 +55,7 @@ namespace Flameberry {
 			if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), entry.ProjectFilePath.c_str(), !std::filesystem::exists(entry.ProjectFilePath)))
 			{
 				// Open Project
-				m_Project = ProjectSerializer::DeserializeIntoNewProject(entry.ProjectFilePath);
+				m_Project = Project::Load(entry.ProjectFilePath);
 				m_ShouldClose = true;
 			}
 		}
@@ -76,7 +77,7 @@ namespace Flameberry {
 			std::string path = Platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
 			if (!path.empty())
 			{
-				m_Project = ProjectSerializer::DeserializeIntoNewProject(path);
+				m_Project = Project::Load(path);
 
 				ProjectRegistryEntry entry{ m_Project->GetConfig().Name, path };
 				if (std::find(m_ProjectRegistry.begin(), m_ProjectRegistry.end(), entry) == m_ProjectRegistry.end())
@@ -122,14 +123,13 @@ namespace Flameberry {
 
 			const float inputBoxWidth = ImGui::GetContentRegionAvail().x - 30.0f;
 
-			UI::InputBox("##ProjectNameInput", inputBoxWidth, m_ProjectNameBuffer, 128, "Project Name...");
-			UI::InputBox("##ProjectPathInput", inputBoxWidth, m_ProjectPathBuffer, 512, "Enter a directory...");
+			UI::InputBox("##ProjectNameInput", inputBoxWidth, &m_ProjectNameBuffer, "Project Name...");
+			UI::InputBox("##ProjectPathInput", inputBoxWidth, &m_ProjectPathBuffer, "Enter a directory...");
 			ImGui::SameLine();
 			if (ImGui::Button("..."))
 			{
-				std::string directoryPath = Platform::OpenFolder();
-				if (!directoryPath.empty())
-					strcpy(m_ProjectPathBuffer, directoryPath.c_str());
+                if (const std::string directoryPath = Platform::OpenFolder(); !directoryPath.empty())
+					m_ProjectPathBuffer = directoryPath;
 			}
 
 			ImGui::Spacing();
@@ -139,30 +139,30 @@ namespace Flameberry {
 				std::filesystem::path projectParentPath(m_ProjectPathBuffer);
 				if (!projectParentPath.empty() && std::filesystem::exists(projectParentPath))
 				{
-					if (strlen(m_ProjectNameBuffer))
+					if (!m_ProjectNameBuffer.empty())
 					{
-						if (m_Project = Project::CreateProjectOnDisk(projectParentPath,
-								m_ProjectNameBuffer);
-							m_Project)
-							// Signal callback to FlameberryEditor class
+						if (m_Project = Project::CreateProjectOnDisk(projectParentPath, m_ProjectNameBuffer))
+						{
+							// Finally add project entry to GlobalProjectRegistry
+							ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
+
+							// Signal callback to EditorApplication class
 							m_ShouldClose = true;
 						else
-							ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
-								"%s is not empty!",
-								m_Project->GetProjectDirectory().c_str());
+							ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s is not empty!", m_Project->GetProjectDirectory().c_str());
 					}
 					else
 						FBY_ERROR("Failed to create project: Project name is empty!");
 				}
 				else
-					FBY_ERROR("Failed to create project: Either project path is empty or "
-							  "it does not exist!");
+					FBY_ERROR("Failed to create project: Either project path is empty or it does not exist!");
 			}
+
 			ImGui::SameLine();
+
 			if (ImGui::Button("Cancel", ImVec2(120, 0)))
-			{
 				ImGui::CloseCurrentPopup();
-			}
+
 			ImGui::EndPopup();
 		}
 	}

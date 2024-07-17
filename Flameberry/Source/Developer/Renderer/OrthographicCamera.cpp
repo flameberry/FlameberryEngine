@@ -6,6 +6,7 @@
 #include "Core/Input.h"
 
 namespace Flameberry {
+
 	OrthographicCamera::OrthographicCamera(const glm::vec2& viewportSize, float zoom)
 		: m_ViewportSize(viewportSize), m_Zoom(zoom), m_ViewMatrix(1.0f)
 	{
@@ -50,4 +51,5 @@ namespace Flameberry {
 
 		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
 	}
+
 } // namespace Flameberry

@@ -5,6 +5,7 @@
 #include "RenderCommand.h"
 
 namespace Flameberry {
+
 	Framebuffer::Framebuffer(const FramebufferSpecification& specification)
 		: m_FramebufferSpec(specification)
 	{
@@ -23,7 +24,7 @@ namespace Flameberry {
 	{
 		VkImageView imageViews[m_FramebufferImages.size()];
 		for (uint32_t i = 0; i < m_FramebufferImages.size(); i++)
-			imageViews[i] = m_FramebufferImages[i]->GetImageView();
+			imageViews[i] = m_FramebufferImages[i]->GetVulkanImageView();
 
 		VkFramebufferCreateInfo vk_framebuffer_create_info{};
 		vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -110,4 +111,5 @@ namespace Flameberry {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkDestroyFramebuffer(device, m_VkFramebuffer, nullptr);
 	}
+
 } // namespace Flameberry

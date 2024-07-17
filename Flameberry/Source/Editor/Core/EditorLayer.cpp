@@ -7,7 +7,7 @@
 
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
-#include "Core/UI.h"
+#include "UI.h"
 
 #include "Physics/PhysicsEngine.h"
 #include "Renderer/ShaderLibrary.h"
@@ -48,6 +48,7 @@ namespace Flameberry {
 	{
 		glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
 	};
+
 	EditorLayer::EditorLayer(const Ref<Project>& project)
 		: m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{ glm::vec3(0.0f, 2.0f, 4.0f), glm::vec3(0.0f, -0.3f, -1.0f), (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height, 45.0f, 0.1f, 1000.0f })
 	{
@@ -82,13 +83,8 @@ namespace Flameberry {
 		m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
 
 		// Open the start scene
-		if (const auto& scenePath = m_Project->GetStartScenePath(); !scenePath.empty())
-		{
-			if (std::filesystem::exists(scenePath))
-				OpenScene(scenePath);
-			else
-				FBY_ERROR("Start scene path: {} does not exist", scenePath);
-		}
+		if (AssetManager::IsAssetHandleValid(m_Project->GetConfig().StartScene))
+			OpenScene(m_Project->GetConfig().StartScene);
 
 		/////////////////////////////////////// Preparing Mouse Picking Pass ////////////////////////////////////////
 
@@ -127,7 +123,7 @@ namespace Flameberry {
 		{
 			// Pipeline Creation
 			PipelineSpecification pipelineSpec{};
-			pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_MousePicking");
+			pipelineSpec.Shader = ShaderLibrary::Get("MousePicking");
 			pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
 			pipelineSpec.VertexLayout = {
@@ -144,15 +140,16 @@ namespace Flameberry {
 		{
 			// Pipeline Creation
 			PipelineSpecification pipelineSpec{};
-			pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_MousePicking2D");
+			pipelineSpec.Shader = ShaderLibrary::Get("MousePicking2D");
 			pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
 			pipelineSpec.VertexLayout = {
 				ShaderDataType::Float3,	 // a_Position
 				ShaderDataType::Dummy12, // Color (Unnecessary)
+				ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
 				ShaderDataType::Int		 // a_EntityIndex
 			};
-			pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
+			pipelineSpec.CullMode = VK_CULL_MODE_NONE;
 
 			m_MousePicking2DPipeline = CreateRef<Pipeline>(pipelineSpec);
 		}
@@ -270,7 +267,7 @@ namespace Flameberry {
 		{
 			RenderCommand::WritePixelFromImageToBuffer(
 				m_MousePickingBuffer->GetVulkanBuffer(),
-				m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetImage(),
+				m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetVulkanImage(),
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 				{ m_MouseX, m_ViewportSize.y - m_MouseY - 1 });
 
@@ -327,6 +324,9 @@ namespace Flameberry {
 		ScriptEngine::Shutdown();
 		PhysicsEngine::Shutdown();
 		Renderer2D::Shutdown();
+
+		// Set the active project as nullptr so that all it's resources like AssetManager are released
+		Project::SetActive(nullptr);
 	}
 
 	void EditorLayer::OnUIRender()
@@ -368,9 +368,7 @@ namespace Flameberry {
 
 		uint32_t imageIndex = VulkanContext::GetCurrentWindow()->GetImageIndex();
 
-		ImGui::Image(reinterpret_cast<ImTextureID>(
-						 m_ViewportDescriptorSets[imageIndex]),
-			ImVec2{ m_ViewportSize.x, m_ViewportSize.y });
+		ImGui::Image(reinterpret_cast<ImTextureID>(m_ViewportDescriptorSets[imageIndex]), ImVec2{ m_ViewportSize.x, m_ViewportSize.y });
 
 		// Scene File Drop Target
 		if (ImGui::BeginDragDropTarget() && m_EditorState == EditorState::Edit)
@@ -385,23 +383,23 @@ namespace Flameberry {
 
 				if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath))
 				{
-					if (ext == ".scene" || ext == ".berry")
+					if (Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Scene)
 					{
 						m_ShouldOpenAnotherScene = true;
 						m_ScenePathToBeOpened = filePath;
 					}
-					else if (ext == ".obj" || ext == ".fbx" || ext == ".gltf") // TODO: Don't limit this to these 3 extensions
+					else if (Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh)
 					{
-						const auto& staticMesh = AssetManager::TryGetOrLoadAsset<StaticMesh>(path);
-						auto entity = m_ActiveScene->GetRegistry()->create();
-						m_ActiveScene->GetRegistry()->emplace<IDComponent>(entity);
-						m_ActiveScene->GetRegistry()->emplace<TagComponent>(entity, "StaticMesh");
+						const AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(filePath);
 
-						auto& transform = m_ActiveScene->GetRegistry()->emplace<TransformComponent>(entity);
+						const fbentt::entity entity = m_ActiveScene->CreateEntityWithTagAndParent("StaticMesh", fbentt::null);
+
 						constexpr float distance = 5.0f;
+						auto& transform = m_ActiveScene->GetRegistry()->get<TransformComponent>(entity);
 						transform.Translation = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().Position + m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().Direction * distance;
 
-						m_ActiveScene->GetRegistry()->emplace<MeshComponent>(entity, staticMesh->Handle);
+						m_ActiveScene->GetRegistry()->emplace<MeshComponent>(entity, handle);
+
 						m_SceneHierarchyPanel->SetSelectionContext(entity);
 					}
 				}
@@ -644,10 +642,17 @@ namespace Flameberry {
 		FBY_ERROR("Failed to save scene!");
 	}
 
-	void EditorLayer::OpenScene()
+	void EditorLayer::OpenScene(AssetHandle handle)
 	{
-		std::string sceneToBeLoaded = Platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
-		OpenScene(sceneToBeLoaded);
+		if (Ref<Scene> sceneAsset = AssetManager::GetAsset<Scene>(handle))
+		{
+			SetActiveScene(sceneAsset);
+
+			m_EditorScenePath = AssetManager::As<EditorAssetManager>()->GetAssetMetadata(handle).FilePath;
+			m_ActiveScene->OnViewportResize(m_ViewportSize);
+
+			FBY_INFO("Loaded Scene: {}", m_EditorScenePath);
+		}
 	}
 
 	void EditorLayer::OpenScene(const std::string& path)
@@ -658,23 +663,32 @@ namespace Flameberry {
 			return;
 		}
 
-		if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
-		{
-			m_EditorScenePath = path;
-			m_ActiveScene->OnViewportResize(m_ViewportSize);
-			FBY_INFO("Loaded Scene: {}", m_EditorScenePath);
-		}
+		// SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene);
+		AssetHandle sceneHandle = AssetManager::As<EditorAssetManager>()->ImportAsset(path);
+
+		OpenScene(sceneHandle);
+	}
+
+	void EditorLayer::OpenScene()
+	{
+		std::string sceneToBeLoaded = Platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
+		OpenScene(sceneToBeLoaded);
 	}
 
 	void EditorLayer::NewScene()
 	{
-		m_ActiveScene = CreateRef<Scene>();
-		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
-		m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
+		SetActiveScene(CreateRef<Scene>());
 		m_EditorScenePath = "";
 
 		if (m_EditorState == EditorState::Play)
 			m_ActiveSceneBackUpCopy = nullptr;
+	}
+
+	void EditorLayer::SetActiveScene(const Ref<Scene>& scene)
+	{
+		m_ActiveScene = scene;
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+		m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
 	}
 
 	void EditorLayer::UI_Menubar()
@@ -878,7 +892,7 @@ namespace Flameberry {
 
 	void EditorLayer::UI_BottomPanel()
 	{
-		static bool toggleContentBrowser = false, toggleRendererSettings = false;
+		static bool toggleContentBrowser = false, toggleRendererSettings = false, toggleAssetRegistry = false;
 		ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
 
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse
@@ -923,6 +937,11 @@ namespace Flameberry {
 				if (ImGui::Button(ICON_LC_SETTINGS "  Renderer Settings", ImVec2(0.0f, -1.0f)))
 					toggleRendererSettings = !toggleRendererSettings;
 
+				ImGui::SameLine();
+
+				if (ImGui::Button(ICON_LC_NOTEBOOK_TEXT "  Asset Registry", ImVec2(0.0f, -1.0f)))
+					toggleAssetRegistry = !toggleAssetRegistry;
+
 				ImGui::PopStyleColor(2);
 				ImGui::EndMenuBar();
 			}
@@ -934,6 +953,8 @@ namespace Flameberry {
 			m_ContentBrowserPanel->OnUIRender();
 		if (toggleRendererSettings)
 			UI_RendererSettings();
+		if (toggleAssetRegistry)
+			UI_AssetRegistry();
 	}
 
 	void EditorLayer::ReloadAssemblySafely()
@@ -989,68 +1010,75 @@ namespace Flameberry {
 
 		if (ImGui::CollapsingHeader("Scene Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
 		{
-			if (ImGui::BeginTable("RendererSettings_Attributes", 2, flags))
+			if (UI::BeginKeyValueTable("##RendererSettings_Attributes", 0, 140.0f))
 			{
-				ImGui::TableSetupColumn("Attribute_Name", ImGuiTableColumnFlags_WidthFixed, 100);
-				ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
-
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
 				auto& settings = m_SceneRenderer->GetRendererSettingsRef();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Mesh Shader");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Mesh Shader");
 
 				ImGui::Button("Reload");
 				if (ImGui::IsItemClicked())
 					m_ShouldReloadMeshShaders = true;
 
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Frustum Culling");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Frustum Culling");
 				ImGui::Checkbox("##Frustum_Culling", &settings.FrustumCulling);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Show Bounding Boxes");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Show Bounding Boxes");
 				ImGui::Checkbox("##Show_Bounding_Boxes", &settings.ShowBoundingBoxes);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Enable Shadows");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Enable Shadows");
 				ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Show Cascades");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Show Cascades");
 				ImGui::Checkbox("##Show_Cascades", &settings.ShowCascades);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Soft Shadows");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Soft Shadows");
 				ImGui::Checkbox("##Soft_Shadows", &settings.SoftShadows);
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("Lambda Split");
-				ImGui::TableNextColumn();
+				UI::TableKeyElement("Lambda Split");
 				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
-				ImGui::EndTable();
+
+				UI::TableKeyElement("Sky Reflections");
+				ImGui::Checkbox("##Sky_Reflections", &settings.SkyReflections);
+
+				UI::TableKeyElement("Gamma Correction");
+				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Gamma_Correction_Factor", &settings.GammaCorrectionFactor, 0.001f, 0.0f, 10.0f));
+
+				UI::TableKeyElement("Exposure");
+				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f));
+
+				UI::EndKeyValueTable();
 			}
+		}
+		ImGui::End();
+	}
+
+	void EditorLayer::UI_AssetRegistry()
+	{
+		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
+		static constexpr float LabelWidth = 100.0f;
+
+		ImGui::Begin("Asset Registry");
+
+		if (UI::BeginKeyValueTable("##AssetRegistryTable"))
+		{
+			for (const auto& [handle, metadata] : AssetManager::As<EditorAssetManager>()->GetAssetRegistry())
+			{
+				UI::TableKeyElement("Handle");
+				ImGui::Text("%llu", (UUID::ValueType)handle);
+
+				UI::TableKeyElement("FilePath");
+				ImGui::Text("%s", metadata.FilePath.c_str());
+
+				UI::TableKeyElement("Type");
+				const std::string typeStr = Utils::AssetTypeEnumToString(metadata.Type);
+				ImGui::Text("%s", typeStr.c_str());
+
+				UI::TableKeyElement("IsMemoryAsset");
+				ImGui::Text("%s", metadata.IsMemoryAsset ? "True" : "False");
+			}
+
+			UI::EndKeyValueTable();
 		}
 		ImGui::End();
 	}

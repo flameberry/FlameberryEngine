@@ -1,14 +1,14 @@
 #include "SceneRenderer.h"
 
-#include <map>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Core/Core.h"
+#include "Core/Log.h"
 #include "Core/Profiler.h"
 
+#include "ECS/Components.h"
 #include "VulkanDebug.h"
 #include "VulkanContext.h"
 #include "Renderer.h"
@@ -17,6 +17,8 @@
 #include "ShaderLibrary.h"
 #include "Material.h"
 #include "Frustum.h"
+#include "Light.h"
+#include "Skymap.h"
 
 #include "Asset/AssetManager.h"
 
@@ -27,9 +29,16 @@ namespace Flameberry {
 		glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
 	};
 
+	struct SkymapPushConstantObject
+	{
+		glm::mat4 ViewProjectionMatrix;
+		float Exposure;
+	};
+
 	struct SceneRendererSettingsUniform
 	{
-		int EnableShadows = 1, ShowCascades = 0, SoftShadows = 1;
+		int EnableShadows = 1, ShowCascades = 0, SoftShadows = 1, SkyReflections = 1;
+		float GammaCorrectionFactor, Exposure;
 	};
 
 	struct SceneUniformBufferData
@@ -39,7 +48,8 @@ namespace Flameberry {
 		alignas(16) glm::vec3 cameraPosition;
 		alignas(16) DirectionalLight directionalLight;
 		alignas(16) PointLight PointLights[10];
-		alignas(4) int LightCount = 0;
+		alignas(16) SpotLight SpotLights[10];
+		alignas(4) int PointLightCount = 0, SpotLightCount = 0;
 		alignas(4) float SkyLightIntensity = 0.0f;
 		alignas(16) SceneRendererSettingsUniform RendererSettings;
 	};
@@ -143,7 +153,7 @@ namespace Flameberry {
 			}
 
 			PipelineSpecification pipelineSpec{};
-			pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_DirectionalShadowMap");
+			pipelineSpec.Shader = ShaderLibrary::Get("DirectionalShadowMap");
 			pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
 			pipelineSpec.VertexLayout = {
@@ -335,7 +345,7 @@ namespace Flameberry {
 
 					VkDescriptorImageInfo imageInfo{};
 					imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-					imageInfo.imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetImageView();
+					imageInfo.imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetVulkanImageView();
 					imageInfo.sampler = m_ShadowMapSampler;
 
 					m_ShadowMapRefDescSets[i]->WriteImage(0, imageInfo);
@@ -344,7 +354,7 @@ namespace Flameberry {
 
 				PipelineSpecification pipelineSpec{};
 
-				pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_PBR");
+				pipelineSpec.Shader = ShaderLibrary::Get("PBR");
 				pipelineSpec.RenderPass = m_GeometryPass;
 
 				pipelineSpec.VertexLayout = {
@@ -373,7 +383,7 @@ namespace Flameberry {
 			// Skybox Pipeline
 			{
 				Flameberry::PipelineSpecification pipelineSpec{};
-				pipelineSpec.Shader = ShaderLibrary::Get("Flameberry_SkyMap");
+				pipelineSpec.Shader = ShaderLibrary::Get("Skymap");
 				pipelineSpec.RenderPass = m_GeometryPass;
 
 				pipelineSpec.VertexLayout = {};
@@ -387,7 +397,7 @@ namespace Flameberry {
 				pipelineSpec.DepthWriteEnable = false;
 				pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 
-				m_SkyboxPipeline = CreateRef<Pipeline>(pipelineSpec);
+				m_SkymapPipeline = CreateRef<Pipeline>(pipelineSpec);
 			}
 			m_VkTextureSampler = Texture2D::GetDefaultSampler();
 		}
@@ -460,7 +470,8 @@ namespace Flameberry {
 		Renderer2D::Init(m_GeometryPass);
 
 		// Textures
-		m_LightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/BulbIcon.png");
+		m_PointLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/BulbIcon.png");
+		m_SpotLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SpotLightIcon.png");
 		m_CameraIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/CameraIcon.png");
 		m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SunIcon.png");
 	}
@@ -468,7 +479,7 @@ namespace Flameberry {
 	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
 	{
 		uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
-		std::vector<fbentt::entity> lightEntityHandles;
+		std::vector<fbentt::entity> pointLightEntityHandles, spotLightEntityHandles;
 
 		m_ViewportSize = viewportSize;
 
@@ -508,11 +519,11 @@ namespace Flameberry {
 		SceneUniformBufferData sceneUniformBufferData;
 
 		// Keep the skylight ready
-		SkyLightComponent* skyMap = nullptr;
+		SkyLightComponent* skymap = nullptr;
 		for (const auto entity : scene->m_Registry->group<TransformComponent, SkyLightComponent>())
 		{
-			skyMap = scene->m_Registry->try_get<SkyLightComponent>(entity);
-			sceneUniformBufferData.SkyLightIntensity = skyMap->Intensity;
+			skymap = scene->m_Registry->try_get<SkyLightComponent>(entity);
+			sceneUniformBufferData.SkyLightIntensity = skymap->Intensity;
 		}
 
 		// Important variable
@@ -524,7 +535,9 @@ namespace Flameberry {
 			auto [transform, dirLight] = scene->m_Registry->get<TransformComponent, DirectionalLightComponent>(entity);
 			sceneUniformBufferData.directionalLight.Color = dirLight.Color;
 			sceneUniformBufferData.directionalLight.Intensity = dirLight.Intensity;
-			sceneUniformBufferData.directionalLight.Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f)); // NOTE: X direction is 0.000001f to avoid shadows being not rendered when directional light perspective camera is looking directly downwards
+
+			// NOTE: X direction is 0.000001f to avoid shadows being not rendered when directional light perspective camera is looking directly downwards
+			sceneUniformBufferData.directionalLight.Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f));
 			sceneUniformBufferData.directionalLight.LightSize = dirLight.LightSize;
 
 			shouldRenderShadows = m_RendererSettings.EnableShadows && true;
@@ -551,16 +564,33 @@ namespace Flameberry {
 		sceneUniformBufferData.RendererSettings.EnableShadows = (int)shouldRenderShadows;
 		sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
 		sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
+		sceneUniformBufferData.RendererSettings.SkyReflections = (int)m_RendererSettings.SkyReflections;
+		sceneUniformBufferData.RendererSettings.GammaCorrectionFactor = m_RendererSettings.GammaCorrectionFactor;
+		sceneUniformBufferData.RendererSettings.Exposure = m_RendererSettings.Exposure;
 
 		for (const auto& entity : scene->m_Registry->group<TransformComponent, PointLightComponent>())
 		{
 			const auto& [transform, light] = scene->m_Registry->get<TransformComponent, PointLightComponent>(entity);
-			sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Position = transform.Translation;
-			sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Color = light.Color;
-			sceneUniformBufferData.PointLights[sceneUniformBufferData.LightCount].Intensity = light.Intensity;
-			sceneUniformBufferData.LightCount++;
+			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Position = transform.Translation;
+			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Color = light.Color;
+			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Intensity = light.Intensity;
+			sceneUniformBufferData.PointLightCount++;
 
-			lightEntityHandles.emplace_back(entity);
+			pointLightEntityHandles.emplace_back(entity);
+		}
+
+		for (const auto& entity : scene->m_Registry->group<TransformComponent, SpotLightComponent>())
+		{
+			const auto& [transform, light] = scene->m_Registry->get<TransformComponent, SpotLightComponent>(entity);
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Position = transform.Translation;
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f));
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Color = light.Color;
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Intensity = light.Intensity;
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].InnerConeAngle = glm::radians(light.InnerConeAngle);
+			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].OuterConeAngle = glm::radians(light.OuterConeAngle);
+			sceneUniformBufferData.SpotLightCount++;
+
+			spotLightEntityHandles.emplace_back(entity);
 		}
 
 		m_SceneUniformBuffers[currentFrame]->WriteToBuffer(&sceneUniformBufferData, sizeof(SceneUniformBufferData));
@@ -604,20 +634,25 @@ namespace Flameberry {
 		RenderCommand::SetViewport(0.0f, 0.0f, m_ViewportSize.x, m_ViewportSize.y);
 		RenderCommand::SetScissor({ 0, 0 }, VkExtent2D{ (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y });
 
-		/////////////////////////////////////////// SkyMap Rendering ////////////////////////////////////////////
+		/////////////////////////////////////////// Skymap Rendering ////////////////////////////////////////////
 
-		bool shouldRenderSkyMap = skyMap && skyMap->EnableSkyMap && skyMap->SkyMap;
-		if (shouldRenderSkyMap)
+		bool shouldRenderSkymap = skymap && skymap->EnableSkymap && AssetManager::IsAssetHandleValid(skymap->Skymap);
+		VkDescriptorSet textureDescSet = VK_NULL_HANDLE;
+
+		if (shouldRenderSkymap)
 		{
-			glm::mat4 viewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
-			VkPipelineLayout pipelineLayout = m_SkyboxPipeline->GetVulkanPipelineLayout();
-			VkDescriptorSet textureDescSet = AssetManager::GetAsset<Skymap>(skyMap->SkyMap)->GetDescriptorSet()->GetVulkanDescriptorSet();
+			VkPipelineLayout pipelineLayout = m_SkymapPipeline->GetVulkanPipelineLayout();
+			textureDescSet = AssetManager::GetAsset<Skymap>(skymap->Skymap)->GetDescriptorSet()->GetVulkanDescriptorSet();
 
-			Renderer::Submit([pipeline = m_SkyboxPipeline->GetVulkanPipeline(), pipelineLayout, viewProjectionMatrix, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			SkymapPushConstantObject pco;
+			pco.ViewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
+			pco.Exposure = m_RendererSettings.Exposure;
+
+			Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 				Renderer::RT_BindPipeline(cmdBuffer, pipeline);
 				VkDescriptorSet descSets[] = { textureDescSet };
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
-				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjectionMatrix);
+				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SkymapPushConstantObject), &pco);
 				vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
 			});
 		}
@@ -628,7 +663,8 @@ namespace Flameberry {
 			VkDescriptorSet descriptorSets[] = {
 				m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
 				m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-				m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet()
+				m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet(),
+				shouldRenderSkymap ? textureDescSet : Skymap::GetEmptyDescriptorSet()->GetVulkanDescriptorSet()
 			};
 
 			Renderer::RT_BindPipeline(cmdBuffer, pipeline);
@@ -753,10 +789,16 @@ namespace Flameberry {
 
 		if (renderDebugIcons)
 		{
-			// Render Point Lights
-			Renderer2D::SetActiveTexture(m_LightIcon);
-			for (uint32_t i = 0; i < sceneUniformBufferData.LightCount; i++)
-				Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix, fbentt::to_index(lightEntityHandles[i]));
+			// Render Point Light Icons
+			Renderer2D::SetActiveTexture(m_PointLightIcon);
+			for (uint32_t i = 0; i < sceneUniformBufferData.PointLightCount; i++)
+				Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix, fbentt::to_index(pointLightEntityHandles[i]));
+			Renderer2D::FlushQuads();
+
+			// Render Spot Light Icons
+			Renderer2D::SetActiveTexture(m_SpotLightIcon);
+			for (uint32_t i = 0; i < sceneUniformBufferData.SpotLightCount; i++)
+				Renderer2D::AddBillboard(sceneUniformBufferData.SpotLights[i].Position, 1.0f, sceneUniformBufferData.SpotLights[i].Color, viewMatrix, fbentt::to_index(spotLightEntityHandles[i]));
 			Renderer2D::FlushQuads();
 
 			Renderer2D::SetActiveTexture(m_CameraIcon);
@@ -788,6 +830,15 @@ namespace Flameberry {
 		// Should make editor only (Not Runtime)
 		if (renderGrid)
 			Renderer2D::AddGrid(25);
+
+		// Render all the text in the scene
+		for (const auto entity : scene->m_Registry->group<TransformComponent, TextComponent>())
+		{
+			const auto& [transform, text] = scene->m_Registry->get<TransformComponent, TextComponent>(entity);
+
+			Ref<Font> font = AssetManager::GetAsset<Font>(text.Font);
+			Renderer2D::AddText(text.TextString, font, transform.CalculateTransform(), { text.Color, text.Kerning, text.LineSpacing }, fbentt::to_index(entity));
+		}
 
 		Renderer2D::EndScene();
 
@@ -945,7 +996,8 @@ namespace Flameberry {
 			}
 		}
 
-		uint32_t indexCount = 6 * Renderer2D::GetRendererData().VertexBufferOffset / (4 * sizeof(QuadVertex));
+		// 2D Quad Entities
+		uint32_t indexCount = 6 * Renderer2D::GetRendererData().QuadVertexBufferOffset / (4 * sizeof(QuadVertex));
 		Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
 							 mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
 							 vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
@@ -958,6 +1010,19 @@ namespace Flameberry {
 			Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
 			vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
 		});
+
+		// Text Entities
+		indexCount = 6 * Renderer2D::GetRendererData().TextVertexBufferOffset / (4 * sizeof(TextVertex));
+		Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
+							 mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
+							 vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
+							 vertexBuffer = Renderer2D::GetRendererData().TextVertexBuffer->GetVulkanBuffer(),
+							 indexBuffer = Renderer2D::GetRendererData().TextIndexBuffer->GetVulkanBuffer(),
+							 indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
+			vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+		});
+
 		renderPass->End();
 	}
 

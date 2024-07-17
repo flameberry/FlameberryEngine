@@ -3,7 +3,6 @@
 #include <map>
 #include <filesystem>
 
-// TODO: Make the paths unambigious
 #include "Project/Project.h"
 #include "Renderer/Texture2D.h"
 

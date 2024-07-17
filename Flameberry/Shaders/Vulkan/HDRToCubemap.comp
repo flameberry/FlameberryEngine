@@ -1,0 +1,30 @@
+#version 450
+
+layout(set = 0, binding = 0) uniform sampler2D _FBY_u_EquirectangularImage;
+layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_Cubemap;
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+#include "Include/CubemapCommon.glsl"
+
+vec3 PanoramaToCubeMap(int face, vec2 texCoord)
+{
+    vec2 texCoordNew = texCoord * 2.0 - 1.0; // < mapping vom 0,1 to -1,1 coords
+    vec3 scan = NormalizedToWorldPosition(face, texCoordNew);
+    vec3 direction = normalize(scan);
+    vec2 src = DirToUV(direction);
+
+    return texture(_FBY_u_EquirectangularImage, src).rgb; // < get the color from the panorama
+}
+
+void main()
+{
+    // Get the size of the equirectangular image
+    const ivec2 imgSize = imageSize(_FBY_u_Cubemap);
+
+    vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
+    vec3 sampledColor = PanoramaToCubeMap(int(gl_GlobalInvocationID.z), normalizedPixelCoords);
+
+    // Write the pixel value from the equirectangular image to the cube map
+    imageStore(_FBY_u_Cubemap, ivec3(gl_GlobalInvocationID.xyz), vec4(sampledColor, 1.0f));
+}

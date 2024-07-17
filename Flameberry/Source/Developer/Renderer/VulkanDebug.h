@@ -6,6 +6,7 @@
 #include "Core/Core.h"
 
 namespace Flameberry {
+
 	static std::string GetVkResult(VkResult result)
 	{
 		std::string errorString = "";
@@ -133,6 +134,7 @@ namespace Flameberry {
 		}
 		return errorString;
 	}
+
 } // namespace Flameberry
 
 #define VK_CHECK_RESULT(expr)                                                                           \

@@ -39,9 +39,11 @@ namespace Flameberry {
 		void OpenProject(const std::string& path);
 		void SaveScene();
 		void SaveSceneAs();
-		void OpenScene();
+		void OpenScene(AssetHandle handle);
 		void OpenScene(const std::string& path);
+		void OpenScene();
 		void NewScene();
+		void SetActiveScene(const Ref<Scene>& scene);
 
 		void OnSceneEdit();
 		void OnScenePlay();
@@ -50,6 +52,7 @@ namespace Flameberry {
 		void UI_Toolbar();
 		void UI_CompositeView();
 		void UI_RendererSettings();
+		void UI_AssetRegistry();
 		void UI_GizmoOverlay(const ImVec2& workPos);
 		void UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize);
 		void UI_ViewportSettingsOverlay(const ImVec2& workPos, const ImVec2& workSize);
@@ -70,24 +73,24 @@ namespace Flameberry {
 
 		// Scalars
 		EditorState m_EditorState = EditorState::Edit;
-		int			m_MouseX = 0, m_MouseY = 0;
-		int			m_GizmoType = -1;
-		bool		m_IsViewportFocused = false, m_IsViewportHovered = false, m_HasViewportSizeChanged = false;
-		bool		m_IsCameraMoving = false, m_IsGizmoActive = false;
-		bool		m_IsMousePickingBufferReady = false, m_DidViewportBegin = true, m_IsAnyOverlayHovered = false;
-		bool		m_EnableGrid = true;
+		int m_MouseX = 0, m_MouseY = 0;
+		int m_GizmoType = -1;
+		bool m_IsViewportFocused = false, m_IsViewportHovered = false, m_HasViewportSizeChanged = false;
+		bool m_IsCameraMoving = false, m_IsGizmoActive = false;
+		bool m_IsMousePickingBufferReady = false, m_DidViewportBegin = true, m_IsAnyOverlayHovered = false;
+		bool m_EnableGrid = true;
 
 		glm::vec2 m_ViewportSize{ 1280, 720 };
 		glm::vec2 m_RenderViewportSize{ 1280, 720 }; // This is to store the viewport size to be rendered to for high dpi/retina displays
 		glm::vec2 m_ViewportBounds[2];
 
 		std::string m_EditorScenePath = "", m_ScenePathToBeOpened = "";
-		bool		m_ShouldOpenAnotherScene = false;
+		bool m_ShouldOpenAnotherScene = false;
 
 		// Texture Icons
-		Ref<Texture2D>			m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon, m_PauseIcon, m_StepIcon;
+		Ref<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon, m_PauseIcon, m_StepIcon;
 		static constexpr ImVec2 s_OverlayButtonSize = ImVec2(16, 16);
-		static constexpr float	s_OverlayPadding = 6.0f;
+		static constexpr float s_OverlayPadding = 6.0f;
 
 		// Renderer
 		Unique<SceneRenderer> m_SceneRenderer;
@@ -103,7 +106,7 @@ namespace Flameberry {
 		Ref<ContentBrowserPanel> m_ContentBrowserPanel;
 
 		// Mouse Picking
-		std::unique_ptr<Buffer> m_MousePickingBuffer;
+		Unique<Buffer> m_MousePickingBuffer;
 		Ref<RenderPass> m_MousePickingRenderPass;
 
 		Ref<Pipeline> m_MousePickingPipeline, m_MousePicking2DPipeline;

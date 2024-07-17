@@ -1,10 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <string>
-#include <list>
-#include <filesystem>
-
 #include "Core/UUID.h"
 
 #define FBY_DECLARE_ASSET_TYPE(Type)                              \
@@ -18,15 +13,18 @@
 	}
 
 namespace Flameberry {
+
 	using AssetHandle = UUID;
 
 	enum class AssetType : uint16_t
 	{
 		None = 0,
+		Scene,
 		Texture2D,
 		StaticMesh,
 		Material,
-		Skymap
+		Skymap,
+		Font,
 	};
 
 	enum class AssetFlag : uint32_t
@@ -41,11 +39,17 @@ namespace Flameberry {
 	public:
 		AssetHandle Handle;
 
-		AssetFlags						 Flags = 0;
-		std::filesystem::path			 FilePath;
-		std::list<AssetHandle>::iterator CacheIterator;
-		std::size_t						 SizeInBytesOnCPU, SizeInBytesOnGPU;
-
+		AssetFlags Flags = 0;
 		virtual AssetType GetAssetType() const = 0;
 	};
+
+	namespace Utils {
+
+		// Helper functions
+		AssetType GetAssetTypeFromFileExtension(const std::string& extension);
+		AssetType AssetTypeStringToEnum(const std::string& typeStr);
+		std::string AssetTypeEnumToString(AssetType assetType);
+
+	} // namespace Utils
+
 } // namespace Flameberry

@@ -5,6 +5,7 @@
 #include "VulkanContext.h"
 
 namespace Flameberry {
+
 	Image::Image(const ImageSpecification& specification)
 		: m_Specification(specification), m_ReferenceCount(new uint32_t(1))
 	{
@@ -67,7 +68,7 @@ namespace Flameberry {
 	{
 		m_Specification.ViewSpecification = viewSpecification;
 
-		const auto&			  device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VkImageViewCreateInfo vk_image_view_create_info{};
 		vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		vk_image_view_create_info.image = m_VkImage;
@@ -100,15 +101,20 @@ namespace Flameberry {
 		}
 	}
 
-	void Image::GenerateMipMaps()
+	void Image::GenerateMipmaps(VkImageLayout oldLayout, VkImageLayout newLayout)
+	{
+		const auto& device = VulkanContext::GetCurrentDevice();
+		VkCommandBuffer cmdBuffer;
+		device->BeginSingleTimeCommandBuffer(cmdBuffer);
+		CmdGenerateMipmaps(cmdBuffer, oldLayout, newLayout);
+		device->EndSingleTimeCommandBuffer(cmdBuffer);
+	}
+
+	void Image::CmdGenerateMipmaps(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
 		VkFormatProperties formatProperties;
 		vkGetPhysicalDeviceFormatProperties(VulkanContext::GetPhysicalDevice(), m_Specification.Format, &formatProperties);
 		FBY_ASSERT(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT, "Texture Image Format does not support linear blitting!");
-
-		const auto&		device = VulkanContext::GetCurrentDevice();
-		VkCommandBuffer commandBuffer;
-		device->BeginSingleTimeCommandBuffer(commandBuffer);
 
 		VkImageMemoryBarrier barrier{};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -117,7 +123,7 @@ namespace Flameberry {
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
+		barrier.subresourceRange.layerCount = m_Specification.ArrayLayers;
 		barrier.subresourceRange.levelCount = 1;
 
 		int32_t mipWidth = m_Specification.Width;
@@ -126,12 +132,12 @@ namespace Flameberry {
 		for (uint32_t i = 1; i < m_Specification.MipLevels; i++)
 		{
 			barrier.subresourceRange.baseMipLevel = i - 1;
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.oldLayout = oldLayout;
 			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
-			vkCmdPipelineBarrier(commandBuffer,
+			vkCmdPipelineBarrier(cmdBuffer,
 				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 				0, nullptr,
 				0, nullptr,
@@ -143,26 +149,26 @@ namespace Flameberry {
 			blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			blit.srcSubresource.mipLevel = i - 1;
 			blit.srcSubresource.baseArrayLayer = 0;
-			blit.srcSubresource.layerCount = 1;
+			blit.srcSubresource.layerCount = m_Specification.ArrayLayers;
 			blit.dstOffsets[0] = { 0, 0, 0 };
 			blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
 			blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			blit.dstSubresource.mipLevel = i;
 			blit.dstSubresource.baseArrayLayer = 0;
-			blit.dstSubresource.layerCount = 1;
+			blit.dstSubresource.layerCount = m_Specification.ArrayLayers;
 
-			vkCmdBlitImage(commandBuffer,
+			vkCmdBlitImage(cmdBuffer,
 				m_VkImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				m_VkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				m_VkImage, oldLayout,
 				1, &blit,
 				VK_FILTER_LINEAR);
 
 			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			barrier.newLayout = newLayout;
 			barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-			vkCmdPipelineBarrier(commandBuffer,
+			vkCmdPipelineBarrier(cmdBuffer,
 				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
 				0, nullptr,
 				0, nullptr,
@@ -175,18 +181,16 @@ namespace Flameberry {
 		}
 
 		barrier.subresourceRange.baseMipLevel = m_Specification.MipLevels - 1;
-		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		barrier.oldLayout = oldLayout;
+		barrier.newLayout = newLayout;
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-		vkCmdPipelineBarrier(commandBuffer,
+		vkCmdPipelineBarrier(cmdBuffer,
 			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
 			0, nullptr,
 			0, nullptr,
 			1, &barrier);
-
-		device->EndSingleTimeCommandBuffer(commandBuffer);
 	}
 
 	void Image::WriteFromBuffer(VkBuffer srcBuffer)
@@ -216,7 +220,15 @@ namespace Flameberry {
 	void Image::TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask)
 	{
 		const auto& device = VulkanContext::GetCurrentDevice();
+		VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;
 
+		device->BeginSingleTimeCommandBuffer(cmdBuffer);
+		CmdTransitionLayout(cmdBuffer, oldLayout, newLayout, aspectMask);
+		device->EndSingleTimeCommandBuffer(cmdBuffer);
+	}
+
+	void Image::CmdTransitionLayout(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask)
+	{
 		VkImageSubresourceRange subresourceRange = {};
 		subresourceRange.aspectMask = aspectMask;
 		subresourceRange.baseMipLevel = 0;
@@ -326,8 +338,6 @@ namespace Flameberry {
 				break;
 		}
 
-		VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;
-		device->BeginSingleTimeCommandBuffer(cmdBuffer);
 		// Put barrier inside setup command buffer
 		vkCmdPipelineBarrier(cmdBuffer,
 			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
@@ -336,6 +346,6 @@ namespace Flameberry {
 			0, nullptr,
 			0, nullptr,
 			1, &imageMemoryBarrier);
-		device->EndSingleTimeCommandBuffer(cmdBuffer);
 	}
+
 } // namespace Flameberry

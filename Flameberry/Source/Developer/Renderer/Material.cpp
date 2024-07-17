@@ -36,7 +36,7 @@ namespace Flameberry {
 		const auto& descriptorBindings = m_Shader->GetDescriptorBindingSpecifications();
 
 		std::vector<VkDescriptorSetLayoutBinding> vulkanDescSetBindings;
-		uint32_t								  index = 0;
+		uint32_t index = 0;
 
 		for (const auto& reflectionDescSet : reflectionDescriptorSets)
 		{

@@ -15,6 +15,7 @@
 #include "Renderer/Renderer.h"
 
 namespace Flameberry {
+
 	ImGuiLayer::ImGuiLayer() {}
 
 	void ImGuiLayer::OnCreate()
@@ -348,4 +349,5 @@ namespace Flameberry {
 
 		colors[ImGuiCol_DragDropTarget] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
 	}
+
 } // namespace Flameberry

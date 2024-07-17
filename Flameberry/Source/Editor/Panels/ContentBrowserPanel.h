@@ -25,17 +25,17 @@ namespace Flameberry {
 	private:
 		std::filesystem::path m_CurrentDirectory;
 
-		VkSampler					m_VkTextureSampler;
+		VkSampler m_VkTextureSampler;
 		std::vector<Ref<Texture2D>> m_IconTextures;
 
 		Ref<ThumbnailCache> m_ThumbnailCache;
 
 		static constexpr ImGuiPopupFlags m_PopupFlags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
 
-		float	 m_FirstChildSize = 170.0f, m_SecondChildSize = 0.0f;
+		float m_FirstChildSize = 170.0f, m_SecondChildSize = 0.0f;
 		uint32_t m_ThumbnailSize = 110;
-		bool	 m_IsSearchBoxFocused = false;
-		char	 m_SearchInputBuffer[256] = { '\0' };
+		bool m_IsSearchBoxFocused = false;
+		std::string m_SearchInputBuffer;
 	};
 
 } // namespace Flameberry

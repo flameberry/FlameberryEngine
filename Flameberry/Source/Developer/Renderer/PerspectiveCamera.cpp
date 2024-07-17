@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Flameberry {
+
 	PerspectiveCamera::PerspectiveCamera(const PerspectiveCameraSpecification& specification)
 		: m_CameraSpec(specification)
 	{
@@ -26,4 +27,5 @@ namespace Flameberry {
 		m_ProjectionMatrix[1][1] *= -1;
 		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
 	}
+
 } // namespace Flameberry

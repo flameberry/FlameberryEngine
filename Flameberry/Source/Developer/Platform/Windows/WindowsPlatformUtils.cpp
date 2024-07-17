@@ -8,6 +8,7 @@
 #include "Core/Application.h"
 
 namespace Flameberry {
+
 	namespace Platform {
 
 		void CreateMenuBar() {}
@@ -19,8 +20,8 @@ namespace Flameberry {
 		std::string OpenFile(const char* filter)
 		{
 			OPENFILENAMEA ofn;
-			CHAR		  szFile[260] = { 0 };
-			CHAR		  currentDir[256] = { 0 };
+			CHAR szFile[260] = { 0 };
+			CHAR currentDir[256] = { 0 };
 			ZeroMemory(&ofn, sizeof(OPENFILENAME));
 			ofn.lStructSize = sizeof(OPENFILENAME);
 			ofn.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow());
@@ -41,8 +42,8 @@ namespace Flameberry {
 		std::string SaveFile(const char* filter)
 		{
 			OPENFILENAMEA ofn;
-			CHAR		  szFile[260] = { 0 };
-			CHAR		  currentDir[256] = { 0 };
+			CHAR szFile[260] = { 0 };
+			CHAR currentDir[256] = { 0 };
 			ZeroMemory(&ofn, sizeof(OPENFILENAME));
 			ofn.lStructSize = sizeof(OPENFILENAME);
 			ofn.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow());

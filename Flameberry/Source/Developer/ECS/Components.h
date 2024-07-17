@@ -9,6 +9,7 @@
 #include "ecs.hpp"
 #include "Asset/Asset.h"
 #include "Renderer/GenericCamera.h"
+#include "Renderer/Font.h"
 #include "Actor.h"
 
 namespace Flameberry {
@@ -26,7 +27,7 @@ namespace Flameberry {
 		glm::vec3 Translation, Rotation, Scale;
 
 		TransformComponent()
-			: Translation(0.0f), Rotation(0.0f), Scale(1.0f) {};
+			: Translation(0.0f), Rotation(0.0f), Scale(1.0f) {}
 
 		glm::mat4 CalculateTransform() const
 		{
@@ -46,22 +47,22 @@ namespace Flameberry {
 	struct CameraComponent
 	{
 		GenericCamera Camera;
-		bool		  IsPrimary = false;
+		bool IsPrimary = false;
 	};
 
 	struct SkyLightComponent
 	{
 		glm::vec3 Color{ 0.0f };
-		float	  Intensity = 0.2f;
-		bool	  EnableSkyMap = false, EnableReflections = false;
+		float Intensity = 0.2f;
+		bool EnableSkymap = false, EnableReflections = false;
 
-		AssetHandle SkyMap = 0;
+		AssetHandle Skymap = 0;
 	};
 
 	typedef std::unordered_map<uint32_t, AssetHandle> MaterialTable;
 	struct MeshComponent
 	{
-		AssetHandle MeshHandle;
+		AssetHandle MeshHandle = 0;
 
 		// This stores the materials that are used for rendering instead of the default ones which are loaded from the mesh source file
 		MaterialTable OverridenMaterialTable;
@@ -73,7 +74,7 @@ namespace Flameberry {
 	struct DirectionalLightComponent
 	{
 		glm::vec3 Color;
-		float	  Intensity, LightSize;
+		float Intensity, LightSize;
 
 		DirectionalLightComponent()
 			: Color(1.0f), Intensity(10.0f), LightSize(20.0f) {}
@@ -82,10 +83,19 @@ namespace Flameberry {
 	struct PointLightComponent
 	{
 		glm::vec3 Color;
-		float	  Intensity;
+		float Intensity;
 
 		PointLightComponent()
 			: Color(1.0f), Intensity(10.0f) {}
+	};
+
+	struct SpotLightComponent
+	{
+		glm::vec3 Color;
+		float Intensity, InnerConeAngle, OuterConeAngle;
+
+		SpotLightComponent()
+			: Color(1.0f), Intensity(10.0f), InnerConeAngle(30.0f), OuterConeAngle(45.0f) {}
 	};
 
 	struct RelationshipComponent
@@ -168,9 +178,19 @@ namespace Flameberry {
 	struct CapsuleColliderComponent
 	{
 		AxisType Axis = AxisType::Y;
-		float	 Radius = 0.5f, Height = 1.0f;
+		float Radius = 0.5f, Height = 1.0f;
 
 		void* RuntimeShape = nullptr;
+	};
+
+	struct TextComponent
+	{
+		std::string TextString;
+		AssetHandle Font = 0;
+
+		glm::vec3 Color{ 1.0f };
+		float Kerning;
+		float LineSpacing;
 	};
 
 	template <typename... Component>
@@ -178,6 +198,6 @@ namespace Flameberry {
 	{
 	};
 
-	using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>;
+	using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent, TextComponent>;
 
 } // namespace Flameberry

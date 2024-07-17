@@ -9,6 +9,7 @@
 #include "Asset/AssetManager.h"
 
 namespace Flameberry {
+
 	StaticMesh::StaticMesh(const Ref<Buffer>& vertexBuffer, const Ref<Buffer>& indexBuffer, const std::vector<SubMesh>& submeshes)
 		: m_VertexBuffer(vertexBuffer), m_IndexBuffer(indexBuffer), m_SubMeshes(std::move(submeshes))
 	{
@@ -17,4 +18,5 @@ namespace Flameberry {
 	StaticMesh::~StaticMesh()
 	{
 	}
+
 } // namespace Flameberry

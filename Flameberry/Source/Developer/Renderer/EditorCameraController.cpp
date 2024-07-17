@@ -10,6 +10,7 @@
 #include "Core/Input.h"
 
 namespace Flameberry {
+
 	EditorCameraController::EditorCameraController(const PerspectiveCameraSpecification& specification)
 		: m_Camera(CreateRef<PerspectiveCamera>(specification))
 	{
@@ -37,7 +38,7 @@ namespace Flameberry {
 		if (Input::IsKeyPressed(KeyCode::LeftShift) || Input::IsKeyPressed(KeyCode::RightShift))
 			speed *= 2.0f;
 
-		bool  moved = false;
+		bool moved = false;
 		auto& cameraSpec = m_Camera->m_CameraSpec;
 		if (Input::IsKeyPressed(KeyCode::W))
 		{
@@ -106,4 +107,5 @@ namespace Flameberry {
 			}
 		}
 	}
+
 } // namespace Flameberry

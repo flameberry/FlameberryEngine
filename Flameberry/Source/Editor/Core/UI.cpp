@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/Core.h"
@@ -13,6 +14,14 @@ namespace Flameberry {
 
 	struct UIState
 	{
+		// Fixed Layout/Style Properties
+		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV
+			| ImGuiTableFlags_BordersInnerH
+			| ImGuiTableFlags_NoKeepColumnsVisible
+			| ImGuiTableFlags_PadOuterX;
+
+		static constexpr float LabelWidth = 100.0f;
+
 		// Selection Widget
 		bool IsSelectionWidgetJustOpened = false, IsSelectionWidgetSearchBoxFocused = false, HasSelectionWidgetListBoxBegun = false;
 	};
@@ -45,12 +54,12 @@ namespace Flameberry {
 		return ImGui::Button(label, size);
 	}
 
-	void UI::InputBox(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint)
+	void UI::InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint)
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 3));
 		ImGui::PushItemWidth(width);
-		ImGui::InputTextWithHint(label, inputHint, inputBuffer, inputLength);
+		ImGui::InputTextWithHint(label, inputHint, inputBuffer);
 		ImGui::PopItemWidth();
 		ImGui::PopStyleVar(2);
 	}
@@ -63,7 +72,7 @@ namespace Flameberry {
 		g_UIState.IsSelectionWidgetJustOpened = true;
 	}
 
-	bool UI::BeginSelectionWidget(const char* label, char* inputBuffer, const uint32_t inputLength)
+	bool UI::BeginSelectionWidget(const char* label, std::string* inputBuffer)
 	{
 		std::string labelFmt = fmt::format("{}Popup", label);
 
@@ -86,7 +95,7 @@ namespace Flameberry {
 			}
 
 			std::string inputBoxLabel = fmt::format("{}SearchBar", label);
-			UI::InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, inputLength, ICON_LC_SEARCH " Search...");
+			UI::InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, ICON_LC_SEARCH " Search...");
 
 			if (g_UIState.IsSelectionWidgetSearchBoxFocused)
 			{
@@ -123,6 +132,32 @@ namespace Flameberry {
 		ImGui::EndPopup();
 	}
 
+	bool UI::BeginKeyValueTable(const char* label, ImGuiTableFlags tableFlags, float labelWidth)
+	{
+		if (ImGui::BeginTable(label, 2, tableFlags ? tableFlags : g_UIState.TableFlags))
+		{
+			ImGui::TableSetupColumn("Attribute_Key", ImGuiTableColumnFlags_WidthFixed, labelWidth != 0.0f ? labelWidth : g_UIState.LabelWidth);
+			ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
+			return true;
+		}
+		return false;
+	}
+
+	void UI::TableKeyElement(const char* label)
+	{
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text(label);
+		ImGui::TableNextColumn();
+	}
+
+	void UI::EndKeyValueTable()
+	{
+		ImGui::EndTable();
+	}
+
 	// TODO: Call one of 2 functions one for Folder Thumbnail and other for file
 	bool UI::ContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
 	{
@@ -136,7 +171,7 @@ namespace Flameberry {
 		const float width = size;
 		float height = size;
 
-		const float borderThickness = 1.5f;
+		constexpr float borderThickness = 1.5f;
 
 		const float thumbnailWidth = specification.Width >= specification.Height ? size - 2.0f * borderThickness : height * aspectRatio;
 		const float thumbnailHeight = specification.Width >= specification.Height ? width / aspectRatio : size - 2.0f * borderThickness;
@@ -160,6 +195,9 @@ namespace Flameberry {
 		}
 		else if (hovered)
 		{
+			constexpr float shadowThickness = 2.0f;
+			constexpr ImVec2 offset(shadowThickness, shadowThickness);
+			ImGui::GetWindowDrawList()->AddRect(cursorPos + offset, cursorPos + ImVec2(fullWidth, fullHeight) + offset, IM_COL32(25, 25, 25, 255), 3, 0, shadowThickness);
 			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
 		}
 
@@ -221,12 +259,15 @@ namespace Flameberry {
 
 		if (ImGui::BeginDragDropSource())
 		{
-			ImGui::SetDragDropPayload(
-				"FBY_CONTENT_BROWSER_ITEM",
-				filepath.c_str(),
-				(strlen(filepath.c_str()) + 1) * sizeof(char),
-				ImGuiCond_Once);
-			ImGui::Text("%s", filepath.c_str());
+			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filepath.c_str(), (strlen(filepath.c_str()) + 1) * sizeof(char), ImGuiCond_Once);
+
+			constexpr float size = 80.0f;
+
+			// Show Asset Preview
+			ImGui::Image(thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
+			ImGui::SameLine();
+			ImGui::Text("%s", filepath.stem().c_str());
+
 			ImGui::EndDragDropSource();
 		}
 		outItemSize = ImVec2(fullWidth, fullHeight);

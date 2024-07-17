@@ -10,12 +10,15 @@
 #include "Asset/AssetManager.h"
 
 namespace Flameberry {
+
 	Application* Application::s_Instance;
 
 	Application::Application(const ApplicationSpecification& specification)
 		: m_Specification(specification)
 	{
 		s_Instance = this;
+
+		FBY_ASSERT(m_Specification.Type != ApplicationType::None, "ApplicationSpecification: Application Type not specified");
 
 		// Set the working directory
 		if (std::filesystem::exists(m_Specification.WorkingDirectory))
@@ -159,11 +162,11 @@ namespace Flameberry {
 		}
 
 		Renderer::Shutdown();
-		AssetManager::Clear();
 
 		m_Window->Shutdown();
 
 		glfwTerminate();
 		FBY_INFO("Ended Application!");
 	}
+
 } // namespace Flameberry

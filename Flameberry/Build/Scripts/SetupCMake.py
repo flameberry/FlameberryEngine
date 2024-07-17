@@ -75,7 +75,7 @@ class CMakeRequirements:
     
     @classmethod
     def WriteChosenDirectoryToMeta(cls):
-        f = open(Utils.GetProjectDirectory() / 'Flameberry/Build/Scripts/Setup.meta', 'w')
+        f = open(Utils.GetProjectDirectory() / 'Flameberry/Build/Scripts/Setup.meta', 'w+')
         f.write(f'cmake={cls.CMakeChosenPath}\n')
         f.close()
 

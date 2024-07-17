@@ -16,8 +16,8 @@ namespace Flameberry {
 		~Material();
 
 		// These are the functions intended for the Renderer to use to submit the Vulkan Push Constants
-		uint32_t	   GetUniformDataSize() const { return m_PushConstantBufferSize; }
-		uint32_t	   GetPushConstantOffset() const { return m_PushConstantBufferOffset; }
+		uint32_t GetUniformDataSize() const { return m_PushConstantBufferSize; }
+		uint32_t GetPushConstantOffset() const { return m_PushConstantBufferOffset; }
 		const uint8_t* GetUniformDataPtr() const { return m_PushConstantBuffer; }
 
 		// This function should be used to set any raw value like floats/ints etc.
@@ -65,7 +65,7 @@ namespace Flameberry {
 
 			// How to assemble this?
 			VkDescriptorImageInfo imageInfo{};
-			imageInfo.imageView = image->GetImageView();
+			imageInfo.imageView = image->GetVulkanImageView();
 			imageInfo.sampler = sampler;
 			imageInfo.imageLayout = imageLayout;
 

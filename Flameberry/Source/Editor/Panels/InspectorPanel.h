@@ -4,7 +4,6 @@
 
 #include "Flameberry.h"
 #include "MaterialEditorPanel.h"
-#include "MaterialSelectorPanel.h"
 
 namespace Flameberry {
 
@@ -24,18 +23,16 @@ namespace Flameberry {
 
 	private:
 		static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
-		static constexpr float			 s_LabelWidth = 100.0f;
+		static constexpr float s_LabelWidth = 100.0f;
 
-		Ref<MaterialEditorPanel>   m_MaterialEditorPanel;
-		Ref<MaterialSelectorPanel> m_MaterialSelectorPanel;
+		Ref<MaterialEditorPanel> m_MaterialEditorPanel;
 
 		fbentt::entity m_SelectionContext = {};
-		Ref<Scene>	   m_Context;
+		Ref<Scene> m_Context;
 
 		Ref<Texture2D> m_SettingsIcon;
 
-		char m_SearchInputBuffer1[256] = { '\0' };
-		char m_SearchInputBuffer2[256] = { '\0' };
+		std::string m_SearchInpuBuffer1, m_SearchInputBuffer2;
 
 	private:
 		template <typename ComponentType>
@@ -56,9 +53,10 @@ namespace Flameberry {
 	}
 
 	template <typename ComponentType, typename Fn>
-	void InspectorPanel::DrawComponent(const char* name, Fn&& fn, bool removable)
+	void InspectorPanel::DrawComponent(const char* name, Fn&& layoutFn, bool removable)
 	{
 		static_assert(std::is_invocable_v<Fn>);
+
 		if (m_Context->m_Registry->has<ComponentType>(m_SelectionContext))
 		{
 			ImGui::PushID(name);
@@ -90,7 +88,8 @@ namespace Flameberry {
 			}
 
 			if (open)
-				fn();
+				layoutFn();
+
 			ImGui::PopID();
 
 			if (shouldRemoveComp)

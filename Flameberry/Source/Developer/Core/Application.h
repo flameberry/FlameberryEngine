@@ -12,7 +12,7 @@ namespace Flameberry {
 
 	struct ApplicationCommandLineArgs
 	{
-		int			 Count;
+		int Count;
 		const char** Args;
 
 		const char* operator[](int idx) const
@@ -22,11 +22,19 @@ namespace Flameberry {
 		}
 	};
 
+	enum class ApplicationType : uint8_t
+	{
+		None = 0,
+		Editor,
+		Runtime,
+	};
+
 	struct ApplicationSpecification
 	{
-		std::string				   Name;
-		WindowSpecification		   WindowSpec;
-		std::filesystem::path	   WorkingDirectory;
+		ApplicationType Type = ApplicationType::None;
+		std::string Name;
+		WindowSpecification WindowSpec;
+		std::filesystem::path WorkingDirectory;
 		ApplicationCommandLineArgs CommandLineArgs;
 	};
 
@@ -37,8 +45,10 @@ namespace Flameberry {
 		~Application();
 		void Run();
 
-		Window&				GetWindow() { return *m_Window; }
+		Window& GetWindow() { return *m_Window; }
+		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 		static Application& Get() { return *s_Instance; }
+
 		static Application* CreateClientApp(const ApplicationCommandLineArgs& appCmdLineArgs);
 
 		void OnEvent(Event& e);
@@ -59,17 +69,18 @@ namespace Flameberry {
 	private:
 		ApplicationSpecification m_Specification;
 
-		Ref<Window>		   m_Window;
+		Ref<Window> m_Window;
 		Ref<VulkanContext> m_VulkanContext;
-		ImGuiLayer*		   m_ImGuiLayer;
+		ImGuiLayer* m_ImGuiLayer;
 
 		bool m_BlockAllLayerEvents = false;
 
 		// Layer Stack Related Variables
 		std::vector<Layer*> m_LayerStack;
-		uint32_t			m_LayerInsertIndex = 0;
+		uint32_t m_LayerInsertIndex = 0;
 
 	private:
 		static Application* s_Instance;
 	};
+
 } // namespace Flameberry

@@ -16,12 +16,26 @@ namespace Flameberry {
 
 		Ref<DescriptorSet> GetDescriptorSet() { return m_SkymapDescriptorSet; }
 
+		static void Init();
+		static void Destroy();
+		static Ref<DescriptorSet> GetEmptyDescriptorSet() { return s_EmptyDescriptorSet; }
+
 		FBY_DECLARE_ASSET_TYPE(AssetType::Skymap);
 
 	private:
-		Ref<Image> m_CubemapImage;
+		Ref<Image> m_CubemapImage, m_IrradianceMap, m_PrefilteredMap, m_BRDFLUTMap;
 
 		Ref<DescriptorSet> m_SkymapDescriptorSet;
+
+		// The sampler that allows sampling multiple LODs, which is very important for this pipeline
+		VkSampler m_MultiLODSampler;
+		// The sampler that is essential for BDRFLUT pipeline, to ensure no weird artefacts
+		VkSampler m_BRDFLUTSampler;
+
+		static Ref<DescriptorSet> s_EmptyDescriptorSet;
+		static Ref<Image> s_EmptyCubemap;
+
+		static std::unordered_map<uint32_t, Ref<Image>> s_CubemapSizeToBRDFLUTMap;
 	};
 
 } // namespace Flameberry

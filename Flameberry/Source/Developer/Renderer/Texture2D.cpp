@@ -1,5 +1,7 @@
 #include "Texture2D.h"
 
+#include "Core/Assert.h"
+#include "Renderer/Pipeline.h"
 #include "VulkanDebug.h"
 #include "Buffer.h"
 
@@ -8,23 +10,40 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
-#include <filesystem>
-
 namespace Flameberry {
+
+	namespace Utils {
+
+		static uint32_t GetPixelSizeInBytesFromTextureFormat(VkFormat format)
+		{
+			switch (format)
+			{
+				case VK_FORMAT_R8G8B8_UNORM:
+					return 3;
+				case VK_FORMAT_R8G8B8A8_UNORM:
+					return 4;
+				case VK_FORMAT_R32G32B32A32_SFLOAT:
+					return 4 * 4;
+			}
+			FBY_ASSERT(0, "Unsupported texture format");
+		}
+
+	} // namespace Utils
+
 	Ref<DescriptorSetLayout> Texture2D::s_DescriptorLayout;
-	Ref<DescriptorSet>		 Texture2D::s_EmptyDescriptorSet;
-	Ref<Image>				 Texture2D::s_EmptyImage;
-	VkSampler				 Texture2D::s_DefaultSampler;
+	Ref<DescriptorSet> Texture2D::s_EmptyDescriptorSet;
+	Ref<Image> Texture2D::s_EmptyImage;
+	VkSampler Texture2D::s_DefaultSampler;
 
 	std::unordered_map<std::string, Ref<Texture2D>> Texture2D::s_TextureCacheDirectory;
 
 	Texture2D::Texture2D(const std::string& texturePath, bool canGenerateMipMaps, VkSampler sampler)
 	{
-		int width, height, channels, bytes_per_channel;
+		int width, height, channels;
 
-		void*		 pixels = nullptr;
-		uint32_t	 mipLevels = 1;
-		VkFormat	 format = VK_FORMAT_UNDEFINED;
+		void* pixels = nullptr;
+		uint32_t mipLevels = 1;
+		VkFormat format = VK_FORMAT_UNDEFINED;
 		VkDeviceSize imageSize = 0;
 
 		if (stbi_is_hdr(texturePath.c_str()))
@@ -32,28 +51,26 @@ namespace Flameberry {
 			pixels = stbi_loadf(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			mipLevels = 1;
 			format = VK_FORMAT_R32G32B32A32_SFLOAT;
-			bytes_per_channel = 4;
 		}
 		else
 		{
 			pixels = stbi_load(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
 			format = VK_FORMAT_R8G8B8A8_UNORM;
-			bytes_per_channel = 1;
 		}
 
 		FBY_ASSERT(pixels, "Texture pixels are empty!");
-		imageSize = 4 * width * height * bytes_per_channel;
+		imageSize = width * height * Utils::GetPixelSizeInBytesFromTextureFormat(format);
 		SetupTexture(pixels, width, height, imageSize, canGenerateMipMaps ? mipLevels : 1, format, sampler);
 		stbi_image_free(pixels);
 	}
 
-	Texture2D::Texture2D(const void* data, const float width, const float height, const uint8_t bytesPerChannel, VkFormat format, bool canGenerateMipMaps, VkSampler sampler)
+	Texture2D::Texture2D(const void* data, const Texture2DSpecification& specification)
 	{
 		FBY_ASSERT(data, "Texture pixels are empty!");
-		uint32_t	 mipLevels = canGenerateMipMaps ? static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1 : 1;
-		VkDeviceSize imageSize = 4 * width * height * bytesPerChannel;
-		SetupTexture(data, width, height, imageSize, mipLevels, format, sampler);
+		const uint32_t mipLevels = specification.GenerateMipmaps ? static_cast<uint32_t>(std::floor(std::log2(std::max(specification.Width, specification.Height)))) + 1 : 1;
+		const VkDeviceSize imageSize = specification.Width * specification.Height * Utils::GetPixelSizeInBytesFromTextureFormat(specification.Format);
+		SetupTexture(data, specification.Width, specification.Height, imageSize, mipLevels, specification.Format, specification.Sampler);
 	}
 
 	void Texture2D::SetupTexture(const void* data, const float width, const float height, const float imageSize, const uint16_t mipLevels, const VkFormat format, const VkSampler sampler)
@@ -88,7 +105,7 @@ namespace Flameberry {
 		m_TextureImage->WriteFromBuffer(stagingBuffer.GetVulkanBuffer());
 
 		if (m_TextureImageSpecification.MipLevels > 1)
-			m_TextureImage->GenerateMipMaps();
+			m_TextureImage->GenerateMipmaps(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		else
 			m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -118,10 +135,10 @@ namespace Flameberry {
 			sampler_info.minLod = 0.0f;
 			sampler_info.maxLod = (float)m_TextureImageSpecification.MipLevels;
 
-			VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_VkTextureSampler));
+			VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_Sampler));
 		}
 		else
-			m_VkTextureSampler = sampler;
+			m_Sampler = sampler;
 	}
 
 	Texture2D::~Texture2D()
@@ -130,7 +147,7 @@ namespace Flameberry {
 		if (m_DescriptorSet != VK_NULL_HANDLE)
 			vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
 		if (m_DidCreateSampler)
-			vkDestroySampler(device, m_VkTextureSampler, nullptr);
+			vkDestroySampler(device, m_Sampler, nullptr);
 	}
 
 	VkDescriptorSet Texture2D::CreateOrGetDescriptorSet()
@@ -141,8 +158,8 @@ namespace Flameberry {
 
 			// Update the Descriptor Set:
 			VkDescriptorImageInfo desc_image[1] = {};
-			desc_image[0].sampler = m_VkTextureSampler;
-			desc_image[0].imageView = m_TextureImage->GetImageView();
+			desc_image[0].sampler = m_Sampler;
+			desc_image[0].imageView = m_TextureImage->GetVulkanImageView();
 			desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 			VkWriteDescriptorSet write_desc[1] = {};
@@ -152,7 +169,7 @@ namespace Flameberry {
 			write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			write_desc[0].pImageInfo = desc_image;
 
-			const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			vkUpdateDescriptorSets(device, 1, write_desc, 0, nullptr);
 		}
 		return m_DescriptorSet;
@@ -211,7 +228,7 @@ namespace Flameberry {
 			vk_image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			vk_image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			vk_image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			vk_image_memory_barrier.image = s_EmptyImage->GetImage();
+			vk_image_memory_barrier.image = s_EmptyImage->GetVulkanImage();
 			vk_image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			vk_image_memory_barrier.subresourceRange.baseMipLevel = 0;
 			vk_image_memory_barrier.subresourceRange.levelCount = 1;
@@ -265,7 +282,7 @@ namespace Flameberry {
 
 		VkDescriptorImageInfo desc_image{};
 		desc_image.sampler = s_DefaultSampler;
-		desc_image.imageView = s_EmptyImage->GetImageView();
+		desc_image.imageView = s_EmptyImage->GetVulkanImageView();
 		desc_image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 		s_EmptyDescriptorSet->WriteImage(0, desc_image);

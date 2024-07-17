@@ -169,10 +169,31 @@ namespace Flameberry {
         }
 #endif
 
+		// Specialization Constants
+		{
+			uint32_t count = 0;
+			auto result = reflectionShaderModule.EnumerateSpecializationConstants(&count, NULL);
+			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
+			std::vector<SpvReflectSpecializationConstant*> specializationConstants(count);
+			result = reflectionShaderModule.EnumerateSpecializationConstants(&count, specializationConstants.data());
+			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
+
+			if (count)
+				FBY_LOG("Shader `{}` - Specialization Constants:", m_Name);
+
+			for (uint32_t i = 0; i < count; i++)
+			{
+				FBY_LOG("\t{}", specializationConstants[i]->name);
+				FBY_ASSERT(m_SpecializationConstantIDSet.find(specializationConstants[i]->constant_id) == m_SpecializationConstantIDSet.end(), "Specialization Constant IDs must be unique");
+
+				m_SpecializationConstantIDSet.insert(specializationConstants[i]->constant_id);
+			}
+		}
+
 		{
 			// The information about push constants is collected here
 			uint32_t count = 0;
-			auto	 result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
+			auto result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
 			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 			std::vector<SpvReflectBlockVariable*> pcblocks(count);
 			result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
@@ -182,7 +203,7 @@ namespace Flameberry {
 			for (uint32_t i = 0; i < count; i++)
 			{
 				uint32_t absoluteSize = 0;
-				FBY_LOG("Shader `{}` - PushConstantBlock:", m_Name, i);
+				FBY_LOG("Shader `{}` - PushConstantBlock:", m_Name);
 
 				for (uint32_t j = 0; j < pcblocks[i]->member_count; j++)
 				{
@@ -216,7 +237,7 @@ namespace Flameberry {
 		{
 			// The information about descriptor sets is collected here
 			uint32_t count = 0;
-			auto	 result = reflectionShaderModule.EnumerateDescriptorSets(&count, NULL);
+			auto result = reflectionShaderModule.EnumerateDescriptorSets(&count, NULL);
 			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 			std::vector<SpvReflectDescriptorSet*> descSets(count);
 			result = reflectionShaderModule.EnumerateDescriptorSets(&count, descSets.data());
@@ -232,7 +253,7 @@ namespace Flameberry {
 					auto& binding = descSets[i]->bindings[j];
 
 					std::string fullName = binding->name;
-					bool		rendererOnly, isDescriptorTypeImage;
+					bool rendererOnly, isDescriptorTypeImage;
 
 					if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER
 						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
@@ -269,7 +290,7 @@ namespace Flameberry {
 
 					// This unordered_map is stored only for convenience of setting the Uniform Buffers/Images using their names in the shader
 					// It shouldn't be accessed every frame
-					m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] = m_DescriptorBindingSpecifications.size() - 1;
+					m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] = static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
 				}
 				m_DescriptorSetSpecifications.emplace_back(ReflectionDescriptorSetSpecification{ .Set = descSets[i]->set, .BindingCount = descSets[i]->binding_count });
 			}
@@ -283,7 +304,7 @@ namespace Flameberry {
 		shaderModuleCreateInfo.codeSize = shaderSpvBinaryCode.size();
 		shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderSpvBinaryCode.data());
 
-		const auto	   device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VkShaderModule vulkanShaderModule = VK_NULL_HANDLE;
 		VK_CHECK_RESULT(vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &vulkanShaderModule));
 		return vulkanShaderModule;
