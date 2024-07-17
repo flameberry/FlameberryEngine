@@ -37,9 +37,11 @@ namespace Flameberry {
 		void OpenProject(const std::string& path);
 		void SaveScene();
 		void SaveSceneAs();
-		void OpenScene();
+		void OpenScene(AssetHandle handle);
 		void OpenScene(const std::string& path);
+		void OpenScene();
 		void NewScene();
+		void SetActiveScene(const Ref<Scene>& scene);
 
 		void OnSceneEdit();
 		void OnScenePlay();

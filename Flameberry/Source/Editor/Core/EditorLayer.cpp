@@ -79,13 +79,8 @@ namespace Flameberry {
 		m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
 
 		// Open the start scene
-		if (const auto& scenePath = m_Project->GetStartScenePath(); !scenePath.empty())
-		{
-			if (std::filesystem::exists(scenePath))
-				OpenScene(scenePath);
-			else
-				FBY_ERROR("Start scene path: {} does not exist", scenePath);
-		}
+		if (AssetManager::IsAssetHandleValid(m_Project->GetConfig().StartScene))
+			OpenScene(m_Project->GetConfig().StartScene);
 
 		/////////////////////////////////////// Preparing Mouse Picking Pass ////////////////////////////////////////
 
@@ -361,7 +356,7 @@ namespace Flameberry {
 
 				if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath))
 				{
-					if (ext == ".scene" || ext == ".berry")
+					if (Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Scene)
 					{
 						m_ShouldOpenAnotherScene = true;
 						m_ScenePathToBeOpened = filePath;
@@ -620,10 +615,17 @@ namespace Flameberry {
 		FBY_ERROR("Failed to save scene!");
 	}
 
-	void EditorLayer::OpenScene()
+	void EditorLayer::OpenScene(AssetHandle handle)
 	{
-		std::string sceneToBeLoaded = Platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
-		OpenScene(sceneToBeLoaded);
+		if (Ref<Scene> sceneAsset = AssetManager::GetAsset<Scene>(handle))
+		{
+			SetActiveScene(sceneAsset);
+
+			m_EditorScenePath = AssetManager::As<EditorAssetManager>()->GetAssetMetadata(handle).FilePath;
+			m_ActiveScene->OnViewportResize(m_ViewportSize);
+
+			FBY_INFO("Loaded Scene: {}", m_EditorScenePath);
+		}
 	}
 
 	void EditorLayer::OpenScene(const std::string& path)
@@ -634,23 +636,32 @@ namespace Flameberry {
 			return;
 		}
 
-		if (SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene))
-		{
-			m_EditorScenePath = path;
-			m_ActiveScene->OnViewportResize(m_ViewportSize);
-			FBY_INFO("Loaded Scene: {}", m_EditorScenePath);
-		}
+		// SceneSerializer::DeserializeIntoExistingScene(path.c_str(), m_ActiveScene);
+		AssetHandle sceneHandle = AssetManager::As<EditorAssetManager>()->ImportAsset(path);
+
+		OpenScene(sceneHandle);
+	}
+
+	void EditorLayer::OpenScene()
+	{
+		std::string sceneToBeLoaded = Platform::OpenFile("Flameberry Scene File (*.berry)\0.berry\0");
+		OpenScene(sceneToBeLoaded);
 	}
 
 	void EditorLayer::NewScene()
 	{
-		m_ActiveScene = CreateRef<Scene>();
-		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
-		m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
+		SetActiveScene(CreateRef<Scene>());
 		m_EditorScenePath = "";
 
 		if (m_EditorState == EditorState::Play)
 			m_ActiveSceneBackUpCopy = nullptr;
+	}
+
+	void EditorLayer::SetActiveScene(const Ref<Scene>& scene)
+	{
+		m_ActiveScene = scene;
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+		m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
 	}
 
 	void EditorLayer::UI_Menubar()

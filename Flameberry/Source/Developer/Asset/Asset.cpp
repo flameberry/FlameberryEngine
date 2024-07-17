@@ -5,6 +5,9 @@ namespace Flameberry {
 	namespace Utils {
 
 		static std::unordered_map<std::string, AssetType> g_FileExtensionToAssetTypeMap = {
+			// Scene
+			{ ".berry", AssetType::Scene },
+
 			// Texture2D
 			{ ".png", AssetType::Texture2D },
 			{ ".jpg", AssetType::Texture2D },
@@ -39,6 +42,8 @@ namespace Flameberry {
 
 		AssetType AssetTypeStringToEnum(const std::string& typeStr)
 		{
+			if (typeStr == "Scene")
+				return AssetType::Scene;
 			if (typeStr == "Texture2D")
 				return AssetType::Texture2D;
 			if (typeStr == "StaticMesh")
@@ -55,6 +60,8 @@ namespace Flameberry {
 		{
 			switch (assetType)
 			{
+				case AssetType::Scene:
+					return "Scene";
 				case AssetType::Texture2D:
 					return "Texture2D";
 				case AssetType::StaticMesh:

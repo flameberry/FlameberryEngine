@@ -38,7 +38,7 @@ namespace Flameberry {
 		}
 
 		dest->m_Config.AssetDirectory = config["AssetDirectory"].as<std::string>();
-		dest->m_Config.StartScene = config["StartScene"].as<std::string>();
+		dest->m_Config.StartScene = config["StartScene"].as<AssetHandle>();
 		dest->m_Config.AssetRegistryPath = config["AssetRegistryPath"].as<std::string>();
 		return true;
 	}

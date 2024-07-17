@@ -2,6 +2,7 @@
 
 #include "ecs.hpp"
 #include "Renderer/StaticMesh.h"
+#include "Asset/Asset.h"
 
 namespace physx {
 	class PxScene;
@@ -9,7 +10,7 @@ namespace physx {
 
 namespace Flameberry {
 
-	class Scene
+	class Scene : public Asset
 	{
 	public:
 		Scene();
@@ -43,6 +44,8 @@ namespace Flameberry {
 		inline std::string GetName() const { return m_Name; }
 		inline Ref<fbentt::registry> GetRegistry() const { return m_Registry; }
 		fbentt::entity GetPrimaryCameraEntity() const;
+
+		FBY_DECLARE_ASSET_TYPE(AssetType::Scene);
 
 	private:
 		bool Recursive_IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);

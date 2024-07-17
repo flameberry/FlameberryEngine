@@ -1,5 +1,6 @@
 #include "AssetImporter.h"
 
+#include "Importers/SceneImporter.h"
 #include "Importers/TextureImporter.h"
 #include "Importers/MeshImporter.h"
 #include "Importers/MaterialImporter.h"
@@ -16,6 +17,7 @@ namespace Flameberry {
 
 	static const AssetImporterFunctionMapEntry g_AssetImporterFunctionMap[] = {
 		{ AssetType::None, nullptr },
+		{ AssetType::Scene, SceneImporter::ImportScene },
 		{ AssetType::Texture2D, TextureImporter::ImportTexture2D },
 		{ AssetType::StaticMesh, MeshImporter::ImportMesh },
 		{ AssetType::Material, MaterialImporter::ImportMaterial },

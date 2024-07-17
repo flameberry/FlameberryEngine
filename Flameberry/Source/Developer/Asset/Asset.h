@@ -19,6 +19,7 @@ namespace Flameberry {
 	enum class AssetType : uint16_t
 	{
 		None = 0,
+		Scene,
 		Texture2D,
 		StaticMesh,
 		Material,
