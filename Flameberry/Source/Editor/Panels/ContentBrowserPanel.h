@@ -35,7 +35,7 @@ namespace Flameberry {
 		float m_FirstChildSize = 170.0f, m_SecondChildSize = 0.0f;
 		uint32_t m_ThumbnailSize = 110;
 		bool m_IsSearchBoxFocused = false;
-		char m_SearchInputBuffer[256] = { '\0' };
+		std::string m_SearchInputBuffer;
 	};
 
 } // namespace Flameberry

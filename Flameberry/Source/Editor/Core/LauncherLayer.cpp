@@ -123,14 +123,13 @@ namespace Flameberry {
 
 			const float inputBoxWidth = ImGui::GetContentRegionAvail().x - 30.0f;
 
-			UI::InputBox("##ProjectNameInput", inputBoxWidth, m_ProjectNameBuffer, 128, "Project Name...");
-			UI::InputBox("##ProjectPathInput", inputBoxWidth, m_ProjectPathBuffer, 512, "Enter a directory...");
+			UI::InputBox("##ProjectNameInput", inputBoxWidth, &m_ProjectNameBuffer, "Project Name...");
+			UI::InputBox("##ProjectPathInput", inputBoxWidth, &m_ProjectPathBuffer, "Enter a directory...");
 			ImGui::SameLine();
 			if (ImGui::Button("..."))
 			{
-				std::string directoryPath = Platform::OpenFolder();
-				if (!directoryPath.empty())
-					strcpy(m_ProjectPathBuffer, directoryPath.c_str());
+                if (const std::string directoryPath = Platform::OpenFolder(); !directoryPath.empty())
+					m_ProjectPathBuffer = directoryPath;
 			}
 
 			ImGui::Spacing();
@@ -140,7 +139,7 @@ namespace Flameberry {
 				std::filesystem::path projectParentPath(m_ProjectPathBuffer);
 				if (!projectParentPath.empty() && std::filesystem::exists(projectParentPath))
 				{
-					if (strlen(m_ProjectNameBuffer))
+					if (!m_ProjectNameBuffer.empty())
 					{
 						if (m_Project = Project::CreateProjectOnDisk(projectParentPath, m_ProjectNameBuffer))
 						{

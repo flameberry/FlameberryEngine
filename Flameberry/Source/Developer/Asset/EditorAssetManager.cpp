@@ -68,7 +68,11 @@ namespace Flameberry {
 		metadata.FilePath = filePath;
 		metadata.IsMemoryAsset = false;
 
-		if (Ref<Asset> asset = AssetImporter::ImportAsset(asset->Handle, metadata))
+		// Currently it doesn't matter what the handle is as...
+		// a new handle will be generated while importing asset
+		AssetHandle handle = 0;
+
+		if (Ref<Asset> asset = AssetImporter::ImportAsset(handle, metadata))
 		{
 			m_AssetRegistry[asset->Handle] = metadata;
 			m_LoadedAssets[asset->Handle] = asset;

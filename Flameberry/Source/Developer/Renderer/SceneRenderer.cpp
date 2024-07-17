@@ -636,7 +636,7 @@ namespace Flameberry {
 
 		/////////////////////////////////////////// Skymap Rendering ////////////////////////////////////////////
 
-		bool shouldRenderSkymap = skymap && skymap->EnableSkymap && skymap->Skymap;
+		bool shouldRenderSkymap = skymap && skymap->EnableSkymap && AssetManager::IsAssetHandleValid(skymap->Skymap);
 		VkDescriptorSet textureDescSet = VK_NULL_HANDLE;
 
 		if (shouldRenderSkymap)

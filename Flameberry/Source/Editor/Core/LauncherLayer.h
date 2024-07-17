@@ -27,8 +27,7 @@ namespace Flameberry {
 		std::function<void(const Ref<Project>&)> m_OpenProjectCallback;
 		bool m_ShouldClose = false;
 
-		char m_ProjectNameBuffer[128] = "";
-		char m_ProjectPathBuffer[512] = "";
+		std::string m_ProjectNameBuffer, m_ProjectPathBuffer;
 	};
 
 } // namespace Flameberry

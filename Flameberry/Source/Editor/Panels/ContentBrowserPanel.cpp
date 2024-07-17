@@ -188,7 +188,7 @@ namespace Flameberry {
 			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
 		}
 
-		UI::InputBox("##ContentBrowserSearchBar", 150.0f, m_SearchInputBuffer, 256, ICON_LC_SEARCH " Search...");
+		UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
 
 		if (m_IsSearchBoxFocused)
 		{
@@ -253,7 +253,7 @@ namespace Flameberry {
 			if (m_SearchInputBuffer[0] != '\0')
 			{
 				// TODO: Maybe some optimisation to not search again if the input string is same
-				const int index = Algorithm::KmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer, true);
+				const int index = Algorithm::KmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer.c_str(), true);
 				if (index == -1)
 					continue;
 			}

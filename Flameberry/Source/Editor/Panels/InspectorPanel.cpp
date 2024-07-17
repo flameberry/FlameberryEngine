@@ -292,7 +292,7 @@ namespace Flameberry {
 				{
 					UI::TableKeyElement("Mesh");
 
-					const auto& staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
+					Ref<StaticMesh> staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
 					ImGui::Button(staticMesh ? staticMesh->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f));
 
 					if (ImGui::BeginDragDropTarget())
@@ -402,7 +402,7 @@ namespace Flameberry {
 								if (ImGui::IsItemClicked())
 									UI::OpenSelectionWidget("##MaterialSelectionWidget");
 
-								if (UI::BeginSelectionWidget("##MaterialSelectionWidget", m_SearchInputBuffer2, 256))
+								if (UI::BeginSelectionWidget("##MaterialSelectionWidget", &m_SearchInputBuffer2))
 								{
 									for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetLoadedAssets()) // TODO: Revisit
 									{
@@ -412,7 +412,7 @@ namespace Flameberry {
 
 											if (m_SearchInputBuffer2[0] != '\0')
 											{
-												const int index = Algorithm::KmpSearch(m->GetName().c_str(), m_SearchInputBuffer2, true);
+												const int index = Algorithm::KmpSearch(m->GetName().c_str(), m_SearchInputBuffer2.c_str(), true);
 												if (index == -1)
 													continue;
 											}

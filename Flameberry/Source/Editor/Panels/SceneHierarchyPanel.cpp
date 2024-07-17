@@ -3,11 +3,11 @@
 #include <filesystem>
 
 #include <glm/gtc/type_ptr.hpp>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/UI.h"
 #include "ECS/Components.h"
-#include "imgui.h"
 
 namespace Flameberry {
 
@@ -43,7 +43,7 @@ namespace Flameberry {
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
 
-		UI::InputBox("##SceneHierarchySearchBar", width, m_SearchInputBuffer, 256, ICON_LC_SEARCH " Search...");
+		UI::InputBox("##SceneHierarchySearchBar", width, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
 
 		ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
@@ -113,20 +113,22 @@ namespace Flameberry {
 
 	void SceneHierarchyPanel::RenameNode(std::string& tag)
 	{
-		strcpy(m_RenameBuffer, tag.c_str());
-
 		ImGui::SameLine();
 		ImGui::SetKeyboardFocusHere();
-		ImGui::PushItemWidth(-1.0f);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
-		if (ImGui::InputText("###Rename", m_RenameBuffer, 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
+		ImGui::PushItemWidth(-1.0f);
+		if (ImGui::InputText("###Rename", &m_RenameBuffer, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
 		{
-			tag = std::string(m_RenameBuffer);
+			tag = m_RenameBuffer;
 			m_RenamedEntity = fbentt::null;
 		}
-		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
+		ImGui::PopStyleVar();
+
+		// Remove the input box when it is defocused/deactivated
+		if (ImGui::IsItemDeactivated())
+			m_RenamedEntity = fbentt::null;
 	}
 
 	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
@@ -143,42 +145,44 @@ namespace Flameberry {
 
 	void SceneHierarchyPanel::DrawEntityNode(fbentt::entity entity)
 	{
+		// "Name" of the entity
 		auto& tag = m_Context->m_Registry->get<TagComponent>(entity).Tag;
 
+		// If the current entity matches the search, then it is to be highlighted
 		bool highlight = false;
 
-		if (m_SearchInputBuffer[0] != '\0')
+		// Search function
+		if (!m_SearchInputBuffer.empty())
 		{
 			// TODO: Maybe some optimisation to not search again if the input string is same
-			if (Algorithm::KmpSearch(tag.c_str(), m_SearchInputBuffer, true) != -1)
+			if (Algorithm::KmpSearch(tag.c_str(), m_SearchInputBuffer.c_str(), true) != -1)
 				highlight = true;
 		}
 
-		bool isRenamed = m_RenamedEntity == entity;
-		bool isSelected = m_SelectionContext == entity;
+		// Entity state
+		const bool isRenamed = m_RenamedEntity == entity;
+		const bool isSelected = m_SelectionContext == entity;
 		m_IsSelectedNodeDisplayed = m_IsSelectedNodeDisplayed || isSelected;
-
-		bool should_delete_entity = false, should_duplicate_entity = false;
-		int treeNodeFlags = (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
-			| ImGuiTreeNodeFlags_OpenOnArrow
-			| ImGuiTreeNodeFlags_FramePadding;
 
 		bool hasChild = false;
 
-		if (m_Context->m_Registry->has<RelationshipComponent>(entity))
-		{
-			auto& relation = m_Context->m_Registry->get<RelationshipComponent>(entity);
-			hasChild = relation.FirstChild != fbentt::null;
-		}
+		if (auto* relation = m_Context->m_Registry->try_get<RelationshipComponent>(entity))
+			hasChild = relation->FirstChild != fbentt::null;
 
-		if (!hasChild)
-			treeNodeFlags |= ImGuiTreeNodeFlags_Leaf;
-
-		if (m_RenamedEntity != entity)
-			treeNodeFlags |= ImGuiTreeNodeFlags_SpanFullWidth;
+		const int treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow
+			| ImGuiTreeNodeFlags_FramePadding
+			| ImGuiTreeNodeFlags_AllowItemOverlap
+			| (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
+			| (hasChild ? 0 : ImGuiTreeNodeFlags_Leaf)
+			| (isRenamed ? 0 : ImGuiTreeNodeFlags_SpanFullWidth);
 
 		ImGui::PushID((const void*)(uint64_t)entity);
 
+		// Set the current entity tree node expanded until the selected node is visible
+		if (!m_IsSelectedNodeDisplayed)
+			ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+
+		// Styling of the Entity TreeNode
 		const float textColor = isSelected ? 0.0f : 1.0f;
 		ImGui::PushStyleColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
 		ImGui::PushStyleColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
@@ -189,13 +193,11 @@ namespace Flameberry {
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 
-		if (!m_IsSelectedNodeDisplayed)
-			ImGui::SetNextItemOpen(true, ImGuiCond_Always);
-
 		if (highlight)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f });
 
-		bool open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s", tag.c_str());
+		// Display the actual entity node with it's tag
+		bool open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, tag.c_str());
 
 		if (highlight)
 			ImGui::PopStyleColor();
@@ -203,15 +205,20 @@ namespace Flameberry {
 		ImGui::PopStyleVar(2);
 		ImGui::PopStyleColor(isSelected ? 4 : 3);
 
+		// Select entity if clicked
 		if (ImGui::IsItemClicked())
 			m_SelectionContext = entity;
 
+		// Check for rename shortcuts being used
 		if (isSelected && ImGui::IsWindowFocused())
 		{
 			ImGuiIO& io = ImGui::GetIO();
 			if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
 				m_RenamedEntity = entity;
 		}
+
+		// Display Context Menu
+		bool shouldDeleteEntity = false, shouldDuplicateEntity = false;
 
 		if (ImGui::BeginPopupContextItem("EntityNodeContextMenu", m_PopupFlags))
 		{
@@ -221,25 +228,23 @@ namespace Flameberry {
 				m_RenamedEntity = entity;
 
 			if (ImGui::MenuItem(ICON_LC_COPY "\tDuplicate Entity"))
-				should_duplicate_entity = true;
+				shouldDuplicateEntity = true;
 
 			if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete Entity"))
-				should_delete_entity = true;
+				shouldDeleteEntity = true;
 
 			ImGui::EndPopup();
 		}
 
+		// Drag entities to drop them on other entities
 		if (ImGui::BeginDragDropSource())
 		{
-			ImGui::SetDragDropPayload(
-				"FBY_SCENE_HIERARCHY_ENTITY_NODE",
-				&entity,
-				sizeof(entity),
-				ImGuiCond_Once);
+			ImGui::SetDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE", &entity, sizeof(entity), ImGuiCond_Once);
 			ImGui::Text("%s", tag.c_str());
 			ImGui::EndDragDropSource();
 		}
 
+		// Drop entities onto each other to reparent them
 		if (ImGui::BeginDragDropTarget())
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
@@ -252,9 +257,11 @@ namespace Flameberry {
 
 		ImGui::PopID();
 
+		// Rename Entity
 		if (isRenamed)
 			RenameNode(tag);
 
+		// Display all the children of the entity if the current node is expanded
 		if (open)
 		{
 			if (hasChild)
@@ -270,13 +277,15 @@ namespace Flameberry {
 			ImGui::TreePop();
 		}
 
-		if (should_duplicate_entity)
+		// Perform the Context Menu Actions in a deferred way...
+		// to avoid crashes due to incomplete rendering of their children
+		if (shouldDuplicateEntity)
 		{
 			const auto duplicate = m_Context->DuplicateEntity(entity);
 			m_SelectionContext = duplicate;
 		}
 
-		if (should_delete_entity)
+		if (shouldDeleteEntity)
 		{
 			m_Context->DestroyEntityTree(entity);
 			if (m_SelectionContext == entity)

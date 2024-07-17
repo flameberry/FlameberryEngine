@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/Core.h"
@@ -53,12 +54,12 @@ namespace Flameberry {
 		return ImGui::Button(label, size);
 	}
 
-	void UI::InputBox(const char* label, const float width, char* inputBuffer, const uint32_t inputLength, const char* inputHint)
+	void UI::InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint)
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 3));
 		ImGui::PushItemWidth(width);
-		ImGui::InputTextWithHint(label, inputHint, inputBuffer, inputLength);
+		ImGui::InputTextWithHint(label, inputHint, inputBuffer);
 		ImGui::PopItemWidth();
 		ImGui::PopStyleVar(2);
 	}
@@ -71,7 +72,7 @@ namespace Flameberry {
 		g_UIState.IsSelectionWidgetJustOpened = true;
 	}
 
-	bool UI::BeginSelectionWidget(const char* label, char* inputBuffer, const uint32_t inputLength)
+	bool UI::BeginSelectionWidget(const char* label, std::string* inputBuffer)
 	{
 		std::string labelFmt = fmt::format("{}Popup", label);
 
@@ -94,7 +95,7 @@ namespace Flameberry {
 			}
 
 			std::string inputBoxLabel = fmt::format("{}SearchBar", label);
-			UI::InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, inputLength, ICON_LC_SEARCH " Search...");
+			UI::InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, ICON_LC_SEARCH " Search...");
 
 			if (g_UIState.IsSelectionWidgetSearchBoxFocused)
 			{
