@@ -171,7 +171,7 @@ namespace Flameberry {
 		const float width = size;
 		float height = size;
 
-		const float borderThickness = 1.5f;
+		constexpr float borderThickness = 1.5f;
 
 		const float thumbnailWidth = specification.Width >= specification.Height ? size - 2.0f * borderThickness : height * aspectRatio;
 		const float thumbnailHeight = specification.Width >= specification.Height ? width / aspectRatio : size - 2.0f * borderThickness;
@@ -195,6 +195,9 @@ namespace Flameberry {
 		}
 		else if (hovered)
 		{
+			constexpr float shadowThickness = 2.0f;
+			constexpr ImVec2 offset(shadowThickness, shadowThickness);
+			ImGui::GetWindowDrawList()->AddRect(cursorPos + offset, cursorPos + ImVec2(fullWidth, fullHeight) + offset, IM_COL32(25, 25, 25, 255), 3, 0, shadowThickness);
 			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
 		}
 
@@ -256,12 +259,15 @@ namespace Flameberry {
 
 		if (ImGui::BeginDragDropSource())
 		{
-			ImGui::SetDragDropPayload(
-				"FBY_CONTENT_BROWSER_ITEM",
-				filepath.c_str(),
-				(strlen(filepath.c_str()) + 1) * sizeof(char),
-				ImGuiCond_Once);
-			ImGui::Text("%s", filepath.c_str());
+			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filepath.c_str(), (strlen(filepath.c_str()) + 1) * sizeof(char), ImGuiCond_Once);
+
+			constexpr float size = 80.0f;
+
+			// Show Asset Preview
+			ImGui::Image(thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
+			ImGui::SameLine();
+			ImGui::Text("%s", filepath.stem().c_str());
+
 			ImGui::EndDragDropSource();
 		}
 		outItemSize = ImVec2(fullWidth, fullHeight);

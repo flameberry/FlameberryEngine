@@ -53,27 +53,28 @@ namespace Flameberry {
 
 	void ContentBrowserPanel::RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator)
 	{
-		bool is_leaf = true;
+		bool isLeaf = true;
 		for (auto& directory : std::filesystem::directory_iterator{ parent })
 		{
-			is_leaf = is_leaf && !directory.is_directory();
+			isLeaf = isLeaf && !directory.is_directory();
 		}
+
 		const bool is_selected = m_CurrentDirectory == parent;
 
 		const int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
 			| ImGuiTreeNodeFlags_OpenOnArrow
 			| ImGuiTreeNodeFlags_SpanFullWidth
 			| ImGuiTreeNodeFlags_FramePadding
-			| (is_leaf ? ImGuiTreeNodeFlags_Leaf : 0);
+			| (isLeaf ? ImGuiTreeNodeFlags_Leaf : 0);
 
 		ImGui::PushID(parent.path().filename().c_str());
 
-		float textColor = is_selected ? 0.0f : 1.0f;
+		const ImVec4 textColor = is_selected ? ImVec4(0, 0, 0, 1) : ImGui::GetStyle().Colors[ImGuiCol_Text];
 		ImGui::PushStyleColor(ImGuiCol_Header, Theme::AccentColor);
 		ImGui::PushStyleColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
 		if (is_selected)
 			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_Text, textColor);
 
 		if (IsPathInHierarchy(m_CurrentDirectory, parent))
 		{
@@ -165,8 +166,8 @@ namespace Flameberry {
 
 		ImGui::SameLine();
 
-		float topChildHeight = 34.0f;
-		float bottomChildHeight = ImGui::GetContentRegionAvail().y - topChildHeight;
+		constexpr float topChildHeight = 34.0f;
+		const float bottomChildHeight = ImGui::GetContentRegionAvail().y - topChildHeight;
 
 		ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
 		ImGui::PopStyleVar();
