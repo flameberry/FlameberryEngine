@@ -21,6 +21,7 @@ namespace Flameberry {
 	std::vector<Renderer::Command> Renderer::s_CommandQueue;
 	uint32_t Renderer::s_RT_FrameIndex = 0, Renderer::s_FrameIndex = 0;
 	RendererFrameStats Renderer::s_RendererFrameStats;
+	std::array<Ref<CommandBuffer>, SwapChain::MAX_FRAMES_IN_FLIGHT> Renderer::s_CommandBuffers;
 
 	VkQueryPool Renderer::s_QueryPool;
 	std::array<uint64_t, 4 * SwapChain::MAX_FRAMES_IN_FLIGHT> Renderer::s_Timestamps;
@@ -31,6 +32,18 @@ namespace Flameberry {
 		Texture2D::InitStaticResources();
 		Skymap::Init();
 		ShaderLibrary::Init();
+
+		{
+			// The main command buffers
+			CommandBufferSpecification cmdBufferSpec;
+			cmdBufferSpec.CommandPool = VulkanContext::GetCurrentDevice()->GetCommandPool();
+			cmdBufferSpec.IsPrimary = true;
+			cmdBufferSpec.SingleTimeUsage = false;
+
+			// Create command buffers
+			for (auto& commandBuffer : s_CommandBuffers)
+				commandBuffer = CreateRef<CommandBuffer>(cmdBufferSpec);
+		}
 
 		s_CommandQueue.reserve(5 * 1028 * 1028 / sizeof(Renderer::Command)); // 5 MB
 
@@ -78,11 +91,10 @@ namespace Flameberry {
 		// Execute all Render Commands
 		if (window.BeginFrame())
 		{
-			device->ResetCommandBuffer(s_RT_FrameIndex);
-			device->BeginCommandBuffer(s_RT_FrameIndex);
+			s_CommandBuffers[s_RT_FrameIndex]->Reset();
+			s_CommandBuffers[s_RT_FrameIndex]->Begin();
 
-			VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(s_RT_FrameIndex);
-			uint32_t imageIndex = window.GetImageIndex();
+			const uint32_t imageIndex = window.GetImageIndex();
 
 #ifdef FBY_ENABLE_QUERY_TIMESTAMP
 
@@ -92,7 +104,7 @@ namespace Flameberry {
 #endif
 
 			for (auto& cmd : s_CommandQueue)
-				cmd(commandBuffer, imageIndex);
+				cmd(s_CommandBuffers[s_RT_FrameIndex]->GetVulkanCommandBuffer(), imageIndex);
 
 #ifdef FBY_ENABLE_QUERY_TIMESTAMP
 
@@ -100,7 +112,7 @@ namespace Flameberry {
 
 #endif
 
-			device->EndCommandBuffer(s_RT_FrameIndex);
+			s_CommandBuffers[s_RT_FrameIndex]->End();
 			window.SwapBuffers();
 		}
 

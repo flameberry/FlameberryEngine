@@ -119,7 +119,7 @@ namespace Flameberry {
 	void VulkanWindow::SwapBuffers()
 	{
 		const auto& device = VulkanContext::GetCurrentDevice();
-		VkResult queuePresentStatus = m_SwapChain->SubmitCommandBuffer(device->GetCommandBuffer(Renderer::RT_GetCurrentFrameIndex()));
+		VkResult queuePresentStatus = m_SwapChain->SubmitCommandBuffer(Renderer::GetActiveVulkanCommandBuffer());
 
 		// TODO: This code should be enabled when ensured that all the resources that depend upon the swapchain are also updated
 		// if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR)

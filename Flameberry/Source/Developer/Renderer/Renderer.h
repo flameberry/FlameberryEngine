@@ -8,6 +8,7 @@
 #include "Material.h"
 #include "Pipeline.h"
 #include "StaticMesh.h"
+#include "CommandBuffer.h"
 #include "ECS/Components.h"
 
 namespace Flameberry {
@@ -43,6 +44,8 @@ namespace Flameberry {
 		static uint32_t RT_GetCurrentFrameIndex() { return s_RT_FrameIndex; }
 		// The render function to be called in the Render Thread which does the actual rendering by execution of the submitted commands
 		static void RT_RenderFrame();
+		// Get the Vulkan Command Buffer that is being actively recorded
+		static VkCommandBuffer GetActiveVulkanCommandBuffer() { return s_CommandBuffers[s_RT_FrameIndex]->GetVulkanCommandBuffer(); }
 
 		// Rendering Utilities
 		static void SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform);
@@ -50,15 +53,13 @@ namespace Flameberry {
 		static void RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material);
 		static void RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer);
 
-		// Other Utilities
-		static Ref<Texture2D> GetCheckerboardTexture();
-
 	private:
 		static void ResetStats();
 		static void QueryTimestampResults();
 
 	private:
 		static uint32_t s_RT_FrameIndex, s_FrameIndex;
+		static std::array<Ref<CommandBuffer>, SwapChain::MAX_FRAMES_IN_FLIGHT> s_CommandBuffers;
 
 		static RendererFrameStats s_RendererFrameStats;
 

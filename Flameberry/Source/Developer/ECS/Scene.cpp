@@ -373,10 +373,11 @@ namespace Flameberry {
 	template <typename... Component>
 	static void CopyComponentIfExists(Scene* context, fbentt::entity dest, fbentt::entity src)
 	{
-		([&]() {
-			if (auto* comp = context->GetRegistry()->try_get<Component>(src); comp)
-				context->GetRegistry()->emplace<Component>(dest, *comp);
-		}(),
+		([&]()
+			{
+				if (auto* comp = context->GetRegistry()->try_get<Component>(src); comp)
+					context->GetRegistry()->emplace<Component>(dest, *comp);
+			}(),
 			...);
 	}
 

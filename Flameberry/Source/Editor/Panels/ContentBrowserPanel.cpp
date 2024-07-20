@@ -39,8 +39,8 @@ static std::vector<std::string> g_IconPaths = {
 namespace Flameberry {
 
 	ContentBrowserPanel::ContentBrowserPanel()
-		: m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory), // Getting Asset Directory via this method to get the relative path only
-		m_ThumbnailCache(CreateRef<ThumbnailCache>(Project::GetActiveProject()))
+		: m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory) // Getting Asset Directory via this method to get the relative path only
+		, m_ThumbnailCache(CreateRef<ThumbnailCache>(Project::GetActiveProject()))
 		, m_VkTextureSampler(Texture2D::GetDefaultSampler())
 	{
 		for (const auto& path : g_IconPaths)
@@ -59,9 +59,9 @@ namespace Flameberry {
 			isLeaf = isLeaf && !directory.is_directory();
 		}
 
-		const bool is_selected = m_CurrentDirectory == parent;
+		const bool isSelected = m_CurrentDirectory == parent;
 
-		const int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
+		const int treeNodeFlags = (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
 			| ImGuiTreeNodeFlags_OpenOnArrow
 			| ImGuiTreeNodeFlags_SpanFullWidth
 			| ImGuiTreeNodeFlags_FramePadding
@@ -69,10 +69,10 @@ namespace Flameberry {
 
 		ImGui::PushID(parent.path().filename().c_str());
 
-		const ImVec4 textColor = is_selected ? ImVec4(0, 0, 0, 1) : ImGui::GetStyle().Colors[ImGuiCol_Text];
+		const ImVec4 textColor = isSelected ? ImVec4(0, 0, 0, 1) : ImGui::GetStyle().Colors[ImGuiCol_Text];
 		ImGui::PushStyleColor(ImGuiCol_Header, Theme::AccentColor);
 		ImGui::PushStyleColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
-		if (is_selected)
+		if (isSelected)
 			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
 		ImGui::PushStyleColor(ImGuiCol_Text, textColor);
 
@@ -95,7 +95,7 @@ namespace Flameberry {
 		ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FileTypeIndex::FOLDER]->CreateOrGetDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight() + framePaddingY, ImGui::GetTextLineHeight() + framePaddingY });
 		ImGui::SameLine();
 		ImGui::Text("%s", parent.path().filename().c_str());
-		ImGui::PopStyleColor(is_selected ? 4 : 3);
+		ImGui::PopStyleColor(isSelected ? 4 : 3);
 		ImGui::PopID();
 
 		if (is_opened)
