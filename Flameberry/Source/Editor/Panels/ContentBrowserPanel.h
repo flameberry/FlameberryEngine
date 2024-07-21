@@ -5,8 +5,6 @@
 
 #include "Flameberry.h"
 
-#include "ThumbnailCache.h"
-
 namespace Flameberry {
 
 	class ContentBrowserPanel
@@ -27,8 +25,6 @@ namespace Flameberry {
 
 		VkSampler m_VkTextureSampler;
 		std::vector<Ref<Texture2D>> m_IconTextures;
-
-		Ref<ThumbnailCache> m_ThumbnailCache;
 
 		static constexpr ImGuiPopupFlags m_PopupFlags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
 

@@ -4,15 +4,14 @@
 
 namespace Flameberry {
 
-	ThumbnailCache::ThumbnailCache(const Ref<Project>& project, const ThumbnailCacheConfig& config)
-		: m_Project(project), m_ThumbnailCacheDirectory(m_Project->GetProjectDirectory() / "Thumbnail.cache"), m_Config(config)
+	ThumbnailCache::ThumbnailCache(const std::filesystem::path& thumbnailCacheDirectory, const ThumbnailCacheConfig& config)
+		: m_ThumbnailCacheDirectory(thumbnailCacheDirectory), m_Config(config)
 	{
 	}
 
-	Ref<Texture2D> ThumbnailCache::TryGetOrCreateThumbnail(const std::filesystem::path& assetPath)
+	Ref<Texture2D> ThumbnailCache::GetOrCreateThumbnail(const std::filesystem::path& assetPath)
 	{
-		const auto absolutePath = m_Project->GetProjectDirectory() / assetPath;
-		const std::filesystem::file_time_type lastWriteTime = std::filesystem::last_write_time(absolutePath);
+		const std::filesystem::file_time_type lastWriteTime = std::filesystem::last_write_time(assetPath);
 		const uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(lastWriteTime.time_since_epoch()).count();
 
 		if (m_CachedThumbnails.find(assetPath) != m_CachedThumbnails.end())
@@ -26,7 +25,7 @@ namespace Flameberry {
 		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame || (assetPath.extension() != ".png" && assetPath.extension() != ".jpg" && assetPath.extension() != ".hdr" && assetPath.extension() != ".tga"))
 			return nullptr;
 
-		const auto thumbnail = std::static_pointer_cast<Texture2D>(TextureImporter::LoadTexture2DResized(absolutePath, 128, 128, false));
+		const auto thumbnail = std::static_pointer_cast<Texture2D>(TextureImporter::LoadTexture2DResized(assetPath, 128, 128, false));
 		auto& cachedThumbnail = m_CachedThumbnails[assetPath];
 		cachedThumbnail.Timestamp = timestamp;
 		cachedThumbnail.Image = thumbnail;

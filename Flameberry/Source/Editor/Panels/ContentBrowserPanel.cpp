@@ -1,12 +1,11 @@
 #include "ContentBrowserPanel.h"
 
 #include <filesystem>
-#include <imgui.h>
-
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Flameberry.h"
 #include "Core/UI.h"
+#include "Project/Project.h"
 
 #define FBY_BACK_ARROW_ICON 0
 #define FBY_FORWARD_ARROW_ICON 1
@@ -40,7 +39,6 @@ namespace Flameberry {
 
 	ContentBrowserPanel::ContentBrowserPanel()
 		: m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory) // Getting Asset Directory via this method to get the relative path only
-		, m_ThumbnailCache(CreateRef<ThumbnailCache>(Project::GetActiveProject()))
 		, m_VkTextureSampler(Texture2D::GetDefaultSampler())
 	{
 		for (const auto& path : g_IconPaths)
@@ -242,7 +240,7 @@ namespace Flameberry {
 
 		ImVec2 itemSize;
 
-		m_ThumbnailCache->ResetThumbnailLoadedCounter();
+		Project::GetActiveProject()->GetThumbnailCache()->ResetThumbnailLoadedCounter();
 
 		for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory })
 		{
@@ -266,7 +264,7 @@ namespace Flameberry {
 
 			Ref<Texture2D> thumbnail;
 			if (!isDirectory)
-				thumbnail = m_ThumbnailCache->TryGetOrCreateThumbnail(filePath);
+				thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
 			if (!thumbnail)
 			{
 				if (isDirectory)

@@ -20,6 +20,7 @@ namespace Flameberry {
 		projectConfig.Name = projectName;
 		projectConfig.AssetDirectory = "Content";
 		projectConfig.AssetRegistryPath = "Intermediate/AssetRegistry.yaml";
+		projectConfig.ThumbnailCacheDirectory = "Intermediate/Thumbnail.cache";
 
 		Ref<Project> project = CreateRef<Project>(targetFolder / projectConfig.Name, projectConfig);
 
@@ -57,6 +58,8 @@ namespace Flameberry {
 
 	void Project::Init()
 	{
+		m_ThumbnailCache = CreateRef<ThumbnailCache>(GetThumbnailCacheDirectory());
+
 		switch (Application::Get().GetSpecification().Type)
 		{
 			case ApplicationType::Editor:

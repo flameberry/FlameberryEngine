@@ -40,6 +40,7 @@ namespace Flameberry {
 		dest->m_Config.AssetDirectory = config["AssetDirectory"].as<std::string>();
 		dest->m_Config.StartScene = config["StartScene"].as<AssetHandle>();
 		dest->m_Config.AssetRegistryPath = config["AssetRegistryPath"].as<std::string>();
+		dest->m_Config.ThumbnailCacheDirectory = config["ThumbnailCacheDirectory"].as<std::string>();
 		return true;
 	}
 
@@ -54,6 +55,7 @@ namespace Flameberry {
 			out << YAML::Key << "AssetDirectory" << YAML::Value << project->m_Config.AssetDirectory;
 			out << YAML::Key << "StartScene" << YAML::Value << project->m_Config.StartScene;
 			out << YAML::Key << "AssetRegistryPath" << YAML::Value << project->m_Config.AssetRegistryPath;
+			out << YAML::Key << "ThumbnailCacheDirectory" << YAML::Value << project->m_Config.ThumbnailCacheDirectory;
 			out << YAML::EndMap; // Configuration
 		}
 		out << YAML::EndMap;
