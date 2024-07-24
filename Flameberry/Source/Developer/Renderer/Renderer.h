@@ -7,6 +7,7 @@
 
 #include "Material.h"
 #include "Pipeline.h"
+#include "Renderer/Texture2D.h"
 #include "StaticMesh.h"
 #include "CommandBuffer.h"
 #include "ECS/Components.h"
@@ -53,6 +54,9 @@ namespace Flameberry {
 		static void RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material);
 		static void RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer);
 
+		// Retrieve Generic Resources
+		static Ref<Texture2D> GetCheckerboardTexture() { return s_CheckerboardTexture; }
+
 	private:
 		static void ResetStats();
 		static void QueryTimestampResults();
@@ -69,6 +73,10 @@ namespace Flameberry {
 		// Query Pool
 		static VkQueryPool s_QueryPool;
 		static std::array<uint64_t, 4 * SwapChain::MAX_FRAMES_IN_FLIGHT> s_Timestamps;
+
+	private:
+		// Generic Resources required all over the application
+		static Ref<Texture2D> s_CheckerboardTexture;
 	};
 
 } // namespace Flameberry

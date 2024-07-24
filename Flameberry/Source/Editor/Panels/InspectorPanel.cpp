@@ -10,6 +10,7 @@
 #include "Core/UI.h"
 #include "ECS/Components.h"
 #include "Project/Project.h"
+#include "Renderer/Renderer.h"
 #include "Renderer/Skymap.h"
 #include "Asset/Importers/TextureImporter.h"
 #include "imgui.h"
@@ -206,12 +207,21 @@ namespace Flameberry {
 						{
 							UI::TableKeyElement("Skymap");
 
-                            // TODO: Check if skymap is null
-							Ref<Skymap> skymap = AssetManager::GetAsset<Skymap>(skyLightComp.Skymap);
+							// TODO: Check if skymap is null
+							Ref<Skymap> skymap = AssetManager::AssetManager::GetAsset<Skymap>(skyLightComp.Skymap);
 
-							// Display Thumbnail for the environment maps
-							const auto& filePath = AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skymap->Handle).FilePath;
-							const Ref<Texture2D> thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
+							Ref<Texture2D> thumbnail;
+
+							if (skymap)
+							{
+								// Display Thumbnail for the environment maps
+								const auto& filePath = AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skymap->Handle).FilePath;
+								thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
+							}
+							else
+							{
+								thumbnail = Renderer::GetCheckerboardTexture();
+							}
 
 							constexpr float size = 80.0f;
 							const float aspectRatio = (float)thumbnail->GetImageSpecification().Width / (float)thumbnail->GetImageSpecification().Height;

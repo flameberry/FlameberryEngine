@@ -4,13 +4,11 @@
 
 #include "Core/UI.h"
 #include "Asset/EditorAssetManager.h"
-#include "Asset/Importers/TextureImporter.h"
-#include "Asset/Importers/MaterialImporter.h"
+#include "Renderer/Renderer.h"
 
 namespace Flameberry {
 
 	MaterialEditorPanel::MaterialEditorPanel()
-		: m_CheckerboardTexture(TextureImporter::LoadTexture2D("Content/Textures/Checkerboard.png"))
 	{
 	}
 
@@ -154,7 +152,7 @@ namespace Flameberry {
 		{
 			Ref<Texture2D> previewMap = AssetManager::IsAssetHandleValid(mapHandle)
 				? AssetManager::GetAsset<Texture2D>(mapHandle)
-				: m_CheckerboardTexture;
+				: Renderer::GetCheckerboardTexture();
 
 			ImGui::SameLine();
 			ImGui::Image(reinterpret_cast<ImTextureID>(previewMap->CreateOrGetDescriptorSet()), ImVec2{ 70, 70 });
