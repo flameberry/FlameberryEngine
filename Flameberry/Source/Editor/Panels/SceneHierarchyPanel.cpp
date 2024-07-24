@@ -1,7 +1,5 @@
 #include "SceneHierarchyPanel.h"
 
-#include <filesystem>
-
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <IconFontCppHeaders/IconsLucide.h>
@@ -34,24 +32,13 @@ namespace Flameberry {
 		const float width = ImGui::GetContentRegionAvail().x - 2.0f * padding;
 		ImGui::SetCursorPos(ImVec2(padding, 4 + ImGui::GetCursorPosY()));
 
-		if (m_IsSearchBarFocused)
 		{
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-		}
+			UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1.0f, m_IsSearchBarFocused);
+			UI::ScopedStyleVariable frameRounding(ImGuiStyleVar_FrameRounding, 8);
+			UI::ScopedStyleColor borderColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, m_IsSearchBarFocused);
+			UI::ScopedStyleColor frameBg(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8);
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
-
-		UI::InputBox("##SceneHierarchySearchBar", width, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
-
-		ImGui::PopStyleColor();
-		ImGui::PopStyleVar();
-
-		if (m_IsSearchBarFocused)
-		{
-			ImGui::PopStyleColor();
-			ImGui::PopStyleVar();
+			UI::InputBox("##SceneHierarchySearchBar", width, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
 		}
 
 		m_IsSearchBarFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
@@ -70,11 +57,12 @@ namespace Flameberry {
 
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y);
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 4));
-		ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBg);
-		ImGui::BeginChild("##EntityList", ImVec2(-1, -1), false, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysUseWindowPadding);
-		ImGui::PopStyleColor();
-		ImGui::PopStyleVar();
+		{
+			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 4));
+			UI::ScopedStyleColor childBg(ImGuiCol_ChildBg, Theme::WindowBg);
+
+			ImGui::BeginChild("##EntityList", ImVec2(-1, -1), false, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysUseWindowPadding);
+		}
 
 		if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))
 		{
@@ -95,10 +83,11 @@ namespace Flameberry {
 
 		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
 		m_IsSelectedNodeDisplayed = false;
-		m_Context->m_Registry->for_each([this](fbentt::entity entity) {
-			if (m_Context->IsEntityRoot(entity))
-				DrawEntityNode(entity);
-		});
+		m_Context->m_Registry->for_each([this](fbentt::entity entity)
+			{
+				if (m_Context->IsEntityRoot(entity))
+					DrawEntityNode(entity);
+			});
 		ImGui::PopStyleVar();
 
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
@@ -116,7 +105,8 @@ namespace Flameberry {
 		ImGui::SameLine();
 		ImGui::SetKeyboardFocusHere();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
+		UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
+
 		ImGui::PushItemWidth(-1.0f);
 		if (ImGui::InputText("###Rename", &m_RenameBuffer, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
 		{
@@ -124,7 +114,6 @@ namespace Flameberry {
 			m_RenamedEntity = fbentt::null;
 		}
 		ImGui::PopItemWidth();
-		ImGui::PopStyleVar();
 
 		// Remove the input box when it is defocused/deactivated
 		if (ImGui::IsItemDeactivated())
@@ -182,28 +171,21 @@ namespace Flameberry {
 		if (!m_IsSelectedNodeDisplayed)
 			ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
-		// Styling of the Entity TreeNode
-		const float textColor = isSelected ? 0.0f : 1.0f;
-		ImGui::PushStyleColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
-		ImGui::PushStyleColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
-		if (isSelected)
-			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
+		bool open;
+		{
+			// Styling of the Entity TreeNode
+			const float textColor = isSelected ? 0.0f : 1.0f;
+			UI::ScopedStyleColor headerColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
+			UI::ScopedStyleColor headerActiveColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
+			UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
+			UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
+			UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
+			UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+			UI::ScopedStyleColor textC2(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f }, highlight);
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
-
-		if (highlight)
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f });
-
-		// Display the actual entity node with it's tag
-		bool open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, tag.c_str());
-
-		if (highlight)
-			ImGui::PopStyleColor();
-
-		ImGui::PopStyleVar(2);
-		ImGui::PopStyleColor(isSelected ? 4 : 3);
+			// Display the actual entity node with it's tag
+			open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, tag.c_str());
+		}
 
 		// Select entity if clicked
 		if (ImGui::IsItemClicked())

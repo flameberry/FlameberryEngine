@@ -23,8 +23,8 @@ namespace Flameberry {
 			ImGui::Begin("Material Editor", &m_Open);
 			ImGui::PopStyleVar();
 
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
-			ImGui::PushStyleColor(ImGuiCol_Border, Theme::FrameBorder);
+			UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1);
+			UI::ScopedStyleColor borderColor(ImGuiCol_Border, Theme::FrameBorder);
 
 			if (UI::BeginKeyValueTable("MaterialAttributeTable"))
 			{
@@ -35,15 +35,15 @@ namespace Flameberry {
 					strcpy(m_RenameBuffer, m_EditingContext->GetName().c_str());
 					ImGui::SetKeyboardFocusHere();
 
+					UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
+
 					ImGui::PushItemWidth(-1.0f);
-					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 					if (ImGui::InputText("###RenameMaterial", m_RenameBuffer, 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
 					{
 						m_EditingContext->SetName(std::string(m_RenameBuffer).c_str());
 						m_ShouldRename = false;
 						m_IsMaterialEdited = true;
 					}
-					ImGui::PopStyleVar();
 					ImGui::PopItemWidth();
 				}
 				else
@@ -136,9 +136,6 @@ namespace Flameberry {
 				}
 				UI::EndKeyValueTable();
 			}
-
-			ImGui::PopStyleColor(); // Frame Border Color
-			ImGui::PopStyleVar();	// Frame Border Size
 			ImGui::End();
 		}
 	}

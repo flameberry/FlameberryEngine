@@ -206,6 +206,7 @@ namespace Flameberry {
 						{
 							UI::TableKeyElement("Skymap");
 
+                            // TODO: Check if skymap is null
 							Ref<Skymap> skymap = AssetManager::GetAsset<Skymap>(skyLightComp.Skymap);
 
 							// Display Thumbnail for the environment maps

@@ -16,7 +16,11 @@
 
 namespace Flameberry {
 
-	ImGuiLayer::ImGuiLayer() {}
+	constexpr static const char* s_ImGuiLayoutPath = FBY_PROJECT_DIR "Flameberry/Config/Layouts/BaseEditorLayout.ini";
+
+	ImGuiLayer::ImGuiLayer()
+	{
+	}
 
 	void ImGuiLayer::OnCreate()
 	{
@@ -54,7 +58,7 @@ namespace Flameberry {
 		io.FontDefault = io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/arial/Arial.ttf", fontSize, &config);
 		io.FontGlobalScale = 1 / DPI_SCALE;
 
-		// Merging Font-Awesome fonts into the default font
+		// Merging Lucide fonts into the default font
 		ImFontConfig iconFontConfig;
 		iconFontConfig.MergeMode = true;
 		iconFontConfig.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
@@ -65,7 +69,7 @@ namespace Flameberry {
 
 		// ImGui layout save location
 		io.IniFilename = NULL;
-		ImGui::LoadIniSettingsFromDisk(FBY_PROJECT_DIR "Flameberry/Config/Layouts/BaseEditorLayout.ini");
+		ImGui::LoadIniSettingsFromDisk(s_ImGuiLayoutPath);
 
 		// Setup Dear ImGui style
 		SetupImGuiStyle();
@@ -144,7 +148,7 @@ namespace Flameberry {
 	void ImGuiLayer::OnDestroy()
 	{
 		// Saving ImGui Layout
-		ImGui::SaveIniSettingsToDisk(FBY_PROJECT_DIR "Flameberry/src/ImGui/imgui.ini");
+		ImGui::SaveIniSettingsToDisk(s_ImGuiLayoutPath);
 
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
@@ -306,10 +310,13 @@ namespace Flameberry {
 
 		// Tabs
 		colors[ImGuiCol_Tab] = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-		colors[ImGuiCol_TabHovered] = ImVec4{ 0.3f, 0.305f, 0.31f, 1.0f };
-		colors[ImGuiCol_TabActive] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
+		// colors[ImGuiCol_TabHovered] = ImVec4{ 0.3f, 0.305f, 0.31f, 1.0f };
+		// colors[ImGuiCol_TabActive] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
 		colors[ImGuiCol_TabUnfocused] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
+
+		colors[ImGuiCol_TabHovered] = ImVec4(0.49f, 0.43f, 0.24f, 1.00f);
+		colors[ImGuiCol_TabActive] = ImVec4(0.31f, 0.28f, 0.23f, 1.00f);
 
 		// colors[ImGuiCol_WindowBg] = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
 		colors[ImGuiCol_WindowBg] = Theme::WindowBgGrey;
