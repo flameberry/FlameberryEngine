@@ -16,10 +16,11 @@
 #include "Core/Layer.h"
 #include "Core/Timer.h"
 #include "Core/Input.h"
-#include "Core/Math.h"
 #include "Core/Timer.h"
 #include "Core/Profiler.h"
 #include "Core/Algorithm.h"
+
+#include "Math/Math.h"
 
 #include "Platform/PlatformUtils.h"
 

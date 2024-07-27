@@ -829,12 +829,12 @@ namespace Flameberry {
 
 		if (renderPhysicsCollider && selectedEntity != fbentt::null)
 		{
-            if (auto* transform = scene->GetRegistry()->try_get<TransformComponent>(selectedEntity))
-            {
-                // Draw Physics Collider
-                SubmitPhysicsColliderGeometry(scene, selectedEntity, *transform); // NOTE: This function will check if any of the colliders is present
-                SubmitCameraViewGeometry(scene, selectedEntity, *transform);
-            }
+			if (auto* transform = scene->GetRegistry()->try_get<TransformComponent>(selectedEntity))
+			{
+				// Draw Physics Collider
+				SubmitPhysicsColliderGeometry(scene, selectedEntity, *transform); // NOTE: This function will check if any of the colliders is present
+				SubmitCameraViewGeometry(scene, selectedEntity, *transform);
+			}
 		}
 
 		// Should make editor only (Not Runtime)
@@ -1152,8 +1152,7 @@ namespace Flameberry {
 	void SceneRenderer::SubmitCameraViewGeometry(const Ref<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
 	{
 		constexpr glm::vec3 color(0.961f, 0.796f, 0.486f); // TODO: Replace with Theme::AccentColor
-		auto* cameraComp = scene->GetRegistry()->try_get<CameraComponent>(entity);
-		if (cameraComp)
+		if (auto* cameraComp = scene->GetRegistry()->try_get<CameraComponent>(entity))
 		{
 			const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
 			const auto& settings = cameraComp->Camera.GetSettings();

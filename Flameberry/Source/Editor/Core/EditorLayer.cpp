@@ -48,7 +48,16 @@ namespace Flameberry {
 	};
 
 	EditorLayer::EditorLayer(const Ref<Project>& project)
-		: m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{ glm::vec3(0.0f, 2.0f, 4.0f), glm::vec3(0.0f, -0.3f, -1.0f), (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height, 45.0f, 0.1f, 1000.0f })
+		: m_Project(project)
+		, m_ActiveCameraController(
+			  glm::vec3(0.0f, 2.0f, 4.0f),
+			  glm::vec3(0.0f, -0.3f, -1.0f),
+			  GenericCameraSettings{
+				  .ProjectionType = ProjectionType::Perspective,
+				  .AspectRatio = (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height,
+				  .FOV = 45.0f,
+				  .Near = 0.1f,
+				  .Far = 1000.0f })
 	{
 #ifdef FBY_PLATFORM_MACOS
 		Platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
@@ -181,7 +190,7 @@ namespace Flameberry {
 		FBY_PROFILE_SCOPE("EditorLayer::OnUpdate");
 		if (m_HasViewportSizeChanged)
 		{
-			m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
+			m_ActiveCameraController.OnResize(m_ViewportSize.x / m_ViewportSize.y);
 			m_ActiveScene->OnViewportResize(m_ViewportSize);
 			m_HasViewportSizeChanged = false;
 		}
@@ -203,10 +212,10 @@ namespace Flameberry {
 			case EditorState::Edit:
 			{
 				// TODO: Design this better
-				auto camera = m_ActiveCameraController.GetPerspectiveCamera();
+				const auto& camera = m_ActiveCameraController.GetCamera();
 
 				// Actual Rendering (All scene related render passes)
-				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera->GetViewMatrix(), camera->GetProjectionMatrix(), camera->GetSpecification().Position, camera->GetSpecification().zNear, camera->GetSpecification().zFar, m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
+				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), m_ActiveCameraController.GetPosition(), camera.GetSettings().Near, camera.GetSettings().Far, m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
 				break;
 			}
 			case EditorState::Play:
@@ -224,8 +233,8 @@ namespace Flameberry {
 				}
 				else
 				{
-					auto camera = m_ActiveCameraController.GetPerspectiveCamera();
-					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera->GetViewMatrix(), camera->GetProjectionMatrix(), camera->GetSpecification().Position, camera->GetSpecification().zNear, camera->GetSpecification().zFar, m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
+					const auto& camera = m_ActiveCameraController.GetCamera();
+					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), m_ActiveCameraController.GetPosition(), camera.GetSettings().Near, camera.GetSettings().Far, fbentt::null, false, false, false, false);
 				}
 				break;
 			}
@@ -376,7 +385,7 @@ namespace Flameberry {
 
 						constexpr float distance = 5.0f;
 						auto& transform = m_ActiveScene->GetRegistry()->get<TransformComponent>(entity);
-						transform.Translation = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().Position + m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().Direction * distance;
+						transform.Translation = m_ActiveCameraController.GetPosition() + m_ActiveCameraController.GetDirection() * distance;
 
 						m_ActiveScene->GetRegistry()->emplace<MeshComponent>(entity, handle);
 
@@ -393,9 +402,9 @@ namespace Flameberry {
 		const auto& selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
 		if (selectedEntity != fbentt::null && m_GizmoType != -1 && m_EditorState == EditorState::Edit)
 		{
-			glm::mat4 projectionMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetProjectionMatrix();
+			glm::mat4 projectionMatrix = m_ActiveCameraController.GetCamera().GetProjectionMatrix();
 			projectionMatrix[1][1] *= -1;
-			glm::mat4 viewMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetViewMatrix();
+			glm::mat4 viewMatrix = m_ActiveCameraController.GetCamera().GetViewMatrix();
 
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
@@ -420,7 +429,7 @@ namespace Flameberry {
 			{
 				m_IsGizmoActive = true;
 				glm::vec3 translation, rotation, scale;
-				DecomposeTransform(transform, translation, rotation, scale);
+				Math::DecomposeTransform(transform, translation, rotation, scale);
 
 				const glm::vec3 deltaTranslation = translation - transformComp.Translation;
 				const glm::vec3 deltaRotation = rotation - transformComp.Rotation;
@@ -517,8 +526,8 @@ namespace Flameberry {
 						const auto duplicateEntity = m_ActiveScene->DuplicateEntity(selectionContext);
 						m_SceneHierarchyPanel->SetSelectionContext(duplicateEntity);
 					}
-					break;
 				}
+				break;
 			case KeyCode::O:
 				if (ctrl_or_cmd)
 				{

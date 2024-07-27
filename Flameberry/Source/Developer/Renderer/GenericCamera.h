@@ -29,6 +29,7 @@ namespace Flameberry {
 		void SetOrthographic(float aspectRatio, float zoom, float near, float far);
 		void SetPerspective(float aspectRatio, float FOV, float near, float far);
 		void SetView(const glm::vec3& position, const glm::vec3& rotation);
+		void SetView_Direction(const glm::vec3& position, const glm::vec3& direction);
 
 		void UpdateWithFOVorZoom(float FOV);
 		void UpdateWithAspectRatio(float aspectRatio);

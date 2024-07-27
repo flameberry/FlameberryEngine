@@ -5,6 +5,7 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/InspectorPanel.h"
+#include "Core/UI.h"
 
 namespace Flameberry {
 
@@ -125,29 +126,31 @@ namespace Flameberry {
 			window_flags |= ImGuiWindowFlags_NoMove;
 
 			ImGui::SetNextWindowBgAlpha(0.45f); // Transparent background
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(20, 20));
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 3.0f });
 
 			// TODO: This seems to have no effect
 			ImGuiWindowClass windowClass;
 			windowClass.ViewportFlagsOverrideSet = ImGuiViewportFlags_TopMost;
 			ImGui::SetNextWindowClass(&windowClass);
 
-			ImGui::Begin(str_id, __null, window_flags);
+			{
+				UI::ScopedStyleVariable windowMinSize(ImGuiStyleVar_WindowMinSize, ImVec2(20, 20));
+				UI::ScopedStyleVariable windowBorderSize(ImGuiStyleVar_WindowBorderSize, 0.0f);
+				UI::ScopedStyleVariable windowRounding(ImGuiStyleVar_WindowRounding, 5.0f);
+				UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 3.0f });
+
+				ImGui::Begin(str_id, __null, window_flags);
+			}
 
 			m_IsAnyOverlayHovered = m_IsAnyOverlayHovered || ImGui::IsWindowHovered();
 
-			ImGui::PopStyleVar(4);
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+			{
+				UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+				UI::ScopedStyleColor button(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+				UI::ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
 
-			func();
+				func();
+			}
 
-			ImGui::PopStyleColor(2);
-			ImGui::PopStyleVar();
 			ImGui::End();
 		}
 	}
