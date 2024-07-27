@@ -1,6 +1,7 @@
 #include "Platform/PlatformUtils.h"
 
 #import <Cocoa/Cocoa.h>
+#import <QuartzCore/QuartzCore.h>
 
 #import <string>
 
@@ -111,7 +112,7 @@ namespace Flameberry {
             
             // Customize the appearance of the title bar
             [s_TitlebarData.TitlebarView setBackgroundColor:[NSColor colorWithRed:28.0f/255.0f green:28.0f/255.0f blue:28.0f/255.0f alpha:1.0f]]; // Set the background color
-            
+
             // Icon
             const char* flameberryIcon = FBY_PROJECT_DIR"Flameberry/Assets/Icons/FlameberryIcon.png";
             NSString* flameberryIconPath = [[NSString alloc] initWithCString:flameberryIcon encoding:NSASCIIStringEncoding];
@@ -187,10 +188,32 @@ namespace Flameberry {
             [s_TitlebarData.TitlebarView setFrame:titleBarRect];
             [s_TitlebarData.TitlebarView setWantsLayer:YES]; // Enable layer-backed views for better performance or custom drawing
             
-            // Reevaluate position of Secondary Title bar, because of it being on the rightmost end of the title bar
+            // Reevaluate position of Secondary Title, because of it being on the rightmost end of the title bar
             CGFloat spacing = 5.0f, secondaryTitleWidth = NSWidth(s_TitlebarData.SecondaryTitleTextView.frame), secondaryTitleHeight = NSHeight(s_TitlebarData.SecondaryTitleTextView.frame);
             NSRect secondaryTitleRect = NSMakeRect(windowWidth - spacing - secondaryTitleWidth, titleBarHeight / 2.0f - secondaryTitleHeight / 2.0f, secondaryTitleWidth, secondaryTitleHeight);
             [s_TitlebarData.SecondaryTitleTextView setFrame:secondaryTitleRect];
+            
+            // Update gradient frame to match title bar view's bounds
+            CAGradientLayer* gradient = (CAGradientLayer*)s_TitlebarData.TitlebarView.layer.sublayers[0];
+            if (!gradient)
+            {
+                gradient = [CAGradientLayer layer];
+                [s_TitlebarData.TitlebarView.layer insertSublayer:gradient atIndex:0];
+            }
+            gradient.frame = s_TitlebarData.TitlebarView.bounds;
+            gradient.startPoint = CGPointMake(0.0, 1.0); // Top left
+            gradient.endPoint = CGPointMake(0.35, 1.0);   // Bottom right
+        }
+        
+        void TitlebarNative::SetGradient(const glm::vec4& color)
+        {
+            // Update gradient frame to match title bar view's bounds
+            CAGradientLayer* gradient = (CAGradientLayer*)s_TitlebarData.TitlebarView.layer.sublayers[0];
+            FBY_ASSERT(gradient, "CustomTitlebar: Gradient layer is null");
+            gradient.colors = @[
+                (__bridge id)[NSColor colorWithRed:color.r green:color.g blue:color.b alpha:color.a].CGColor,
+                (__bridge id)[NSColor colorWithRed:28.0f/255.0f green:28.0f/255.0f blue:28.0f/255.0f alpha:1.0f].CGColor // Black
+            ];
         }
         
         void TitlebarNative::SetPrimaryTitle(const std::string& title)

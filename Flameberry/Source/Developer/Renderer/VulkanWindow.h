@@ -34,6 +34,7 @@ namespace Flameberry {
 		void SetSize(int width, int height) override;
 		void SetTitle(const char* title) override;
 		void SetSecondaryTitle(const char* secondaryTitle) override;
+		void SetTitlebarGradient(const glm::vec4& color) override;
 		void MoveToCenter() override;
 
 		void Resize() override;

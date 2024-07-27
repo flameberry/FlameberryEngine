@@ -1055,6 +1055,9 @@ namespace Flameberry {
 	{
 		m_EditorState = EditorState::Edit;
 
+		// Set the titlebar color based on scene state
+		Application::Get().GetWindow().SetTitlebarGradient({ Theme::TitlebarGreenColor.x, Theme::TitlebarGreenColor.y, Theme::TitlebarGreenColor.z, Theme::TitlebarGreenColor.w });
+
 		m_ActiveScene->OnStopRuntime();
 
 		// Delete the m_RuntimeScene
@@ -1066,6 +1069,9 @@ namespace Flameberry {
 	void EditorLayer::OnScenePlay()
 	{
 		m_EditorState = EditorState::Play;
+
+		// Set the titlebar color based on scene state
+		Application::Get().GetWindow().SetTitlebarGradient({ Theme::TitlebarRedColor.x, Theme::TitlebarRedColor.y, Theme::TitlebarRedColor.z, Theme::TitlebarRedColor.w });
 
 		std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
 		// Copy m_ActiveSceneBackUpCopy to m_ActiveScene

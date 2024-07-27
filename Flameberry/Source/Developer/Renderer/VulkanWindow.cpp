@@ -46,6 +46,7 @@ namespace Flameberry {
 			Platform::TitlebarNative::CreateForGLFWwindow(m_Window, m_Specification.TitlebarHeight);
 			Platform::TitlebarNative::SetPrimaryTitle(m_Specification.Title);
 			Platform::TitlebarNative::SetSecondaryTitle(m_Specification.SecondaryTitle);
+			Platform::TitlebarNative::SetGradient(m_Specification.TitlebarGradientColor);
 		}
 
 		m_SwapChain = CreateRef<SwapChain>(m_WindowSurface);
@@ -62,31 +63,34 @@ namespace Flameberry {
 		m_EventCallBack = fn;
 		glfwSetWindowUserPointer(m_Window, this);
 
-		glfwSetFramebufferSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
-			VulkanWindow* pWindow = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
-			pWindow->m_Specification.Width = width;
-			pWindow->m_Specification.Height = height;
-
-			WindowResizedEvent event(width, height);
-			pWindow->m_EventCallBack(event);
-
-			FBY_LOG(event.ToString());
-		});
-
-		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-			VulkanWindow* ptr = (VulkanWindow*)glfwGetWindowUserPointer(window);
-			if (action == GLFW_PRESS)
+		glfwSetFramebufferSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 			{
-				KeyPressedEvent event((KeyCode)key);
-				ptr->m_EventCallBack(event);
-			}
-		});
+				VulkanWindow* pWindow = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
+				pWindow->m_Specification.Width = width;
+				pWindow->m_Specification.Height = height;
 
-		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset) {
-			VulkanWindow* ptr = (VulkanWindow*)glfwGetWindowUserPointer(window);
-			MouseScrollEvent event(xoffset, yoffset);
-			ptr->m_EventCallBack(event);
-		});
+				WindowResizedEvent event(width, height);
+				pWindow->m_EventCallBack(event);
+
+				FBY_LOG(event.ToString());
+			});
+
+		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+			{
+				VulkanWindow* ptr = (VulkanWindow*)glfwGetWindowUserPointer(window);
+				if (action == GLFW_PRESS)
+				{
+					KeyPressedEvent event((KeyCode)key);
+					ptr->m_EventCallBack(event);
+				}
+			});
+
+		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset)
+			{
+				VulkanWindow* ptr = (VulkanWindow*)glfwGetWindowUserPointer(window);
+				MouseScrollEvent event(xoffset, yoffset);
+				ptr->m_EventCallBack(event);
+			});
 	}
 
 	void VulkanWindow::CreateVulkanWindowSurface(VkInstance instance)
@@ -160,6 +164,13 @@ namespace Flameberry {
 		m_Specification.Title = title;
 		if (!m_Specification.NativeTitlebar)
 			Platform::TitlebarNative::SetSecondaryTitle(m_Specification.Title);
+	}
+
+	void VulkanWindow::SetTitlebarGradient(const glm::vec4& color)
+	{
+		m_Specification.TitlebarGradientColor = color;
+		if (!m_Specification.NativeTitlebar)
+			Platform::TitlebarNative::SetGradient(m_Specification.TitlebarGradientColor);
 	}
 
 	void VulkanWindow::MoveToCenter()

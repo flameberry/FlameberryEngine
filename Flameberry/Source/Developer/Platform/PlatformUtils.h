@@ -3,6 +3,7 @@
 #include <string>
 #include <functional>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 namespace Flameberry {
 
@@ -15,6 +16,7 @@ namespace Flameberry {
 			static void InvalidateFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight);
 			static void SetPrimaryTitle(const std::string& title);
 			static void SetSecondaryTitle(const std::string& secondaryTitle);
+			static void SetGradient(const glm::vec4& color);
 		};
 
 		void CreateMenuBar();
