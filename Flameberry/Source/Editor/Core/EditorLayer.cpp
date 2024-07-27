@@ -1088,6 +1088,8 @@ namespace Flameberry {
 		m_ActiveScene = CreateRef<Scene>(m_ActiveSceneBackUpCopy);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 
+		// This fixes any aspect ratio bugs that happen when viewport is resized during EditorState::Play
+		m_ActiveScene->OnViewportResize(m_ViewportSize);
 		m_ActiveScene->OnStartRuntime();
 	}
 
