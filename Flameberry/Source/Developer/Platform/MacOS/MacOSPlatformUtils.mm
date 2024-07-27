@@ -132,7 +132,7 @@ namespace Flameberry {
             
             [s_TitlebarData.TitlebarView addSubview:iconButton];
             
-            NSFont *defaultUIFont = [NSFont systemFontOfSize:NSFont.systemFontSize];
+            NSFont* defaultUIFont = [NSFont titleBarFontOfSize:NSFont.systemFontSize];
 
             // Add Primary Title
             s_TitlebarData.PrimaryTitleTextView = [[NSTextView alloc] initWithFrame:NSMakeRect(110, titleBarHeight / 2 - 12, 200, 20)];

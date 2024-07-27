@@ -7,7 +7,7 @@
 
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
-#include "UI.h"
+#include "Core/UI.h"
 
 #include "Physics/PhysicsEngine.h"
 #include "Renderer/ShaderLibrary.h"
@@ -959,9 +959,10 @@ namespace Flameberry {
 
 		ImVec2 compositeViewportSize = ImGui::GetContentRegionAvail();
 
-		ImGui::Image(reinterpret_cast<ImTextureID>(
-						 m_CompositePassViewportDescriptorSets[VulkanContext::GetCurrentWindow()->GetSwapChain()->GetAcquiredImageIndex()]),
+		ImGui::Image(
+			reinterpret_cast<ImTextureID>(m_CompositePassViewportDescriptorSets[VulkanContext::GetCurrentWindow()->GetSwapChain()->GetAcquiredImageIndex()]),
 			ImVec2{ compositeViewportSize.x, compositeViewportSize.y });
+
 		ImGui::End();
 	}
 
