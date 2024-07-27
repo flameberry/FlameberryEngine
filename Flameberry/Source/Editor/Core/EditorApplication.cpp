@@ -61,7 +61,7 @@ namespace Flameberry {
 			auto& window = Application::Get().GetWindow();
 			window.SetTitle(fmt::format("Flameberry Engine [{}]", FBY_CONFIG_STR).c_str());
 			window.SetSecondaryTitle(projectRef->GetConfig().Name.c_str());
-			window.SetSize(1280, 800);
+			window.SetSize(1300, 800);
 			window.MoveToCenter();
 
 			// Create an Editor Instance and push it to Application Layers
@@ -79,7 +79,7 @@ namespace Flameberry {
 		ApplicationSpecification applicationSpec;
 		applicationSpec.Type = ApplicationType::Editor;
 		applicationSpec.Name = "Flameberry-Editor";
-		applicationSpec.WindowSpec.Width = 1280;
+		applicationSpec.WindowSpec.Width = 1300;
 		applicationSpec.WindowSpec.Height = 800;
 		applicationSpec.WorkingDirectory = FBY_PROJECT_DIR;
 		applicationSpec.CommandLineArgs = appCmdLineArgs;
