@@ -99,9 +99,12 @@ namespace Flameberry {
 			return false;
 		};
 
-		destScene->m_Name = data["Scene"].as<std::string>();
-
 		destScene->m_Registry->clear();
+
+		data = data["Scene"];
+		destScene->m_Name = data["Name"].as<std::string>();
+
+		const UUID worldEntityUUID = data["WorldEntity"].as<UUID>();
 
 		auto entities = data["Entities"];
 		if (entities)
@@ -114,6 +117,9 @@ namespace Flameberry {
 				const UUID ID = entity["Entity"].as<UUID>();
 				UUIDToEntityMap[ID] = deserializedEntity;
 			}
+
+			// Set the Scene -> WorldEntity
+			destScene->m_WorldEntity = (UUIDToEntityMap[worldEntityUUID]);
 
 			// Deserialize entities
 			for (const auto entity : entities)
@@ -266,15 +272,18 @@ namespace Flameberry {
 
 		YAML::Emitter out;
 		out << YAML::BeginMap;
-		out << YAML::Key << "Scene" << YAML::Value << sceneName;
+		out << YAML::Key << "Scene" << YAML::Value << YAML::BeginMap;
+		out << YAML::Key << "Name" << YAML::Value << srcScene->m_Name;
+		out << YAML::Key << "WorldEntity" << YAML::Value << srcScene->m_Registry->get<IDComponent>(srcScene->m_WorldEntity).ID;
 
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 
 		std::set<UUID> meshHandles;
 
-		srcScene->m_Registry->for_each([&](fbentt::entity entity) {
-			SerializeEntity(out, entity, srcScene, meshHandles);
-		});
+		srcScene->m_Registry->for_each([&](fbentt::entity entity)
+			{
+				SerializeEntity(out, entity, srcScene, meshHandles);
+			});
 		out << YAML::EndSeq; // Entities
 
 		out << YAML::EndMap; // Scene

@@ -66,7 +66,7 @@ namespace Flameberry {
 
 		if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))
 		{
-			DrawCreateEntityMenu();
+			DisplayCreateEntityMenu();
 			ImGui::EndPopup();
 		}
 
@@ -83,11 +83,9 @@ namespace Flameberry {
 
 		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
 		m_IsSelectedNodeDisplayed = false;
-		m_Context->m_Registry->for_each([this](fbentt::entity entity)
-			{
-				if (m_Context->IsEntityRoot(entity))
-					DrawEntityNode(entity);
-			});
+
+		DisplayEntityTree(m_Context->GetWorldEntity());
+
 		ImGui::PopStyleVar();
 
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
@@ -132,10 +130,10 @@ namespace Flameberry {
 		m_InspectorPanel->SetSelectionContext(m_SelectionContext);
 	}
 
-	void SceneHierarchyPanel::DrawEntityNode(fbentt::entity entity)
+	void SceneHierarchyPanel::DisplayEntityTree(fbentt::entity entity)
 	{
 		// "Name" of the entity
-		auto& tag = m_Context->m_Registry->get<TagComponent>(entity).Tag;
+		auto& tag = m_Context->GetRegistry()->get<TagComponent>(entity).Tag;
 
 		// If the current entity matches the search, then it is to be highlighted
 		bool highlight = false;
@@ -149,13 +147,14 @@ namespace Flameberry {
 		}
 
 		// Entity state
+		const bool isWorldEntity = m_Context->IsWorldEntity(entity);
 		const bool isRenamed = m_RenamedEntity == entity;
 		const bool isSelected = m_SelectionContext == entity;
 		m_IsSelectedNodeDisplayed = m_IsSelectedNodeDisplayed || isSelected;
 
 		bool hasChild = false;
 
-		if (auto* relation = m_Context->m_Registry->try_get<RelationshipComponent>(entity))
+		if (auto* relation = m_Context->GetRegistry()->try_get<RelationshipComponent>(entity))
 			hasChild = relation->FirstChild != fbentt::null;
 
 		const int treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow
@@ -191,12 +190,16 @@ namespace Flameberry {
 		if (ImGui::IsItemClicked())
 			m_SelectionContext = entity;
 
-		// Check for rename shortcuts being used
-		if (isSelected && ImGui::IsWindowFocused())
+		// World Entity should not be renamed
+		if (!isWorldEntity)
 		{
-			ImGuiIO& io = ImGui::GetIO();
-			if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
-				m_RenamedEntity = entity;
+			// Check for rename shortcuts being used
+			if (isSelected && ImGui::IsWindowFocused())
+			{
+				ImGuiIO& io = ImGui::GetIO();
+				if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
+					m_RenamedEntity = entity;
+			}
 		}
 
 		// Display Context Menu
@@ -204,16 +207,21 @@ namespace Flameberry {
 
 		if (ImGui::BeginPopupContextItem("EntityNodeContextMenu", m_PopupFlags))
 		{
-			DrawCreateEntityMenu(entity);
+			DisplayCreateEntityMenu(entity);
 
-			if (ImGui::MenuItem(ICON_LC_TEXT_CURSOR_INPUT "\tRename"))
-				m_RenamedEntity = entity;
+			// World Entity should not be renamed, duplicated, deleted
+			ImGui::BeginDisabled(isWorldEntity);
+			{
+				if (ImGui::MenuItem(ICON_LC_TEXT_CURSOR_INPUT "\tRename"))
+					m_RenamedEntity = entity;
 
-			if (ImGui::MenuItem(ICON_LC_COPY "\tDuplicate Entity"))
-				shouldDuplicateEntity = true;
+				if (ImGui::MenuItem(ICON_LC_COPY "\tDuplicate Entity"))
+					shouldDuplicateEntity = true;
 
-			if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete Entity"))
-				shouldDeleteEntity = true;
+				if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete Entity"))
+					shouldDeleteEntity = true;
+			}
+			ImGui::EndDisabled();
 
 			ImGui::EndPopup();
 		}
@@ -241,18 +249,21 @@ namespace Flameberry {
 
 		// Rename Entity
 		if (isRenamed)
+		{
+			m_RenameBuffer = tag;
 			RenameNode(tag);
+		}
 
 		// Display all the children of the entity if the current node is expanded
 		if (open)
 		{
 			if (hasChild)
 			{
-				fbentt::entity child = m_Context->m_Registry->get<RelationshipComponent>(entity).FirstChild;
+				fbentt::entity child = m_Context->GetRegistry()->get<RelationshipComponent>(entity).FirstChild;
 				while (child != fbentt::null)
 				{
-					auto temp = m_Context->m_Registry->get<RelationshipComponent>(child).NextSibling;
-					DrawEntityNode(child);
+					auto temp = m_Context->GetRegistry()->get<RelationshipComponent>(child).NextSibling;
+					DisplayEntityTree(child);
 					child = temp;
 				}
 			}
@@ -275,57 +286,57 @@ namespace Flameberry {
 		}
 	}
 
-	void SceneHierarchyPanel::DrawCreateEntityMenu(fbentt::entity parent)
+	void SceneHierarchyPanel::DisplayCreateEntityMenu(fbentt::entity parent)
 	{
 		if (ImGui::BeginMenu(ICON_LC_PLUS "\tCreate"))
 		{
 			if (ImGui::MenuItem(ICON_LC_SQUARE "\tEmpty"))
 			{
-				const auto entity = m_Context->CreateEntityWithTagAndParent("Empty", parent);
+				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Empty", parent);
 				m_SelectionContext = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_TEXT "\tText"))
 			{
-				const auto entity = m_Context->CreateEntityWithTagAndParent("Text", parent);
-				m_Context->m_Registry->emplace<TextComponent>(entity);
+				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Text", parent);
+				m_Context->GetRegistry()->emplace<TextComponent>(entity);
 				m_SelectionContext = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_CUBOID "\tMesh"))
 			{
-				const auto entity = m_Context->CreateEntityWithTagAndParent("StaticMesh", parent);
-				m_Context->m_Registry->emplace<MeshComponent>(entity);
+				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("StaticMesh", parent);
+				m_Context->GetRegistry()->emplace<MeshComponent>(entity);
 				m_SelectionContext = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_CAMERA "\tCamera"))
 			{
-				const auto entity = m_Context->CreateEntityWithTagAndParent("Camera", parent);
-				m_Context->m_Registry->emplace<CameraComponent>(entity);
+				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Camera", parent);
+				m_Context->GetRegistry()->emplace<CameraComponent>(entity);
 				m_SelectionContext = entity;
 			}
 			if (ImGui::BeginMenu("Light"))
 			{
 				if (ImGui::MenuItem(ICON_LC_SUNRISE "\tSky Light"))
 				{
-					const auto entity = m_Context->CreateEntityWithTagAndParent("Sky Light", parent);
-					m_Context->m_Registry->emplace<SkyLightComponent>(entity);
+					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Sky Light", parent);
+					m_Context->GetRegistry()->emplace<SkyLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_SUN "\tDirectional Light"))
 				{
-					const auto entity = m_Context->CreateEntityWithTagAndParent("Directional Light", parent);
-					m_Context->m_Registry->emplace<DirectionalLightComponent>(entity);
+					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Directional Light", parent);
+					m_Context->GetRegistry()->emplace<DirectionalLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_LIGHTBULB "\tPoint Light"))
 				{
-					const auto entity = m_Context->CreateEntityWithTagAndParent("Point Light", parent);
-					m_Context->m_Registry->emplace<PointLightComponent>(entity);
+					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Point Light", parent);
+					m_Context->GetRegistry()->emplace<PointLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_CONE "\tSpot Light"))
 				{
-					const auto entity = m_Context->CreateEntityWithTagAndParent("Spot Light", parent);
-					m_Context->m_Registry->emplace<SpotLightComponent>(entity);
+					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Spot Light", parent);
+					m_Context->GetRegistry()->emplace<SpotLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				ImGui::EndMenu();

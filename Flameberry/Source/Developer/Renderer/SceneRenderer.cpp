@@ -521,9 +521,9 @@ namespace Flameberry {
 
 		// Keep the skylight ready
 		SkyLightComponent* skymap = nullptr;
-		for (const auto entity : scene->m_Registry->group<TransformComponent, SkyLightComponent>())
+		for (const auto entity : scene->GetRegistry()->group<TransformComponent, SkyLightComponent>())
 		{
-			skymap = scene->m_Registry->try_get<SkyLightComponent>(entity);
+			skymap = scene->GetRegistry()->try_get<SkyLightComponent>(entity);
 			sceneUniformBufferData.SkyLightIntensity = skymap->Intensity;
 		}
 
@@ -531,9 +531,9 @@ namespace Flameberry {
 		bool shouldRenderShadows = false;
 
 		// Update Directional Lights
-		for (const auto& entity : scene->m_Registry->group<TransformComponent, DirectionalLightComponent>())
+		for (const auto& entity : scene->GetRegistry()->group<TransformComponent, DirectionalLightComponent>())
 		{
-			auto [transform, dirLight] = scene->m_Registry->get<TransformComponent, DirectionalLightComponent>(entity);
+			auto [transform, dirLight] = scene->GetRegistry()->get<TransformComponent, DirectionalLightComponent>(entity);
 			sceneUniformBufferData.directionalLight.Color = dirLight.Color;
 			sceneUniformBufferData.directionalLight.Intensity = dirLight.Intensity;
 
@@ -569,9 +569,9 @@ namespace Flameberry {
 		sceneUniformBufferData.RendererSettings.GammaCorrectionFactor = m_RendererSettings.GammaCorrectionFactor;
 		sceneUniformBufferData.RendererSettings.Exposure = m_RendererSettings.Exposure;
 
-		for (const auto& entity : scene->m_Registry->group<TransformComponent, PointLightComponent>())
+		for (const auto& entity : scene->GetRegistry()->group<TransformComponent, PointLightComponent>())
 		{
-			const auto& [transform, light] = scene->m_Registry->get<TransformComponent, PointLightComponent>(entity);
+			const auto& [transform, light] = scene->GetRegistry()->get<TransformComponent, PointLightComponent>(entity);
 			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Position = transform.Translation;
 			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Color = light.Color;
 			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Intensity = light.Intensity;
@@ -580,9 +580,9 @@ namespace Flameberry {
 			pointLightEntityHandles.emplace_back(entity);
 		}
 
-		for (const auto& entity : scene->m_Registry->group<TransformComponent, SpotLightComponent>())
+		for (const auto& entity : scene->GetRegistry()->group<TransformComponent, SpotLightComponent>())
 		{
-			const auto& [transform, light] = scene->m_Registry->get<TransformComponent, SpotLightComponent>(entity);
+			const auto& [transform, light] = scene->GetRegistry()->get<TransformComponent, SpotLightComponent>(entity);
 			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Position = transform.Translation;
 			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f));
 			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Color = light.Color;
@@ -609,9 +609,9 @@ namespace Flameberry {
 					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr);
 				});
 
-			for (const auto& entity : scene->m_Registry->group<TransformComponent, MeshComponent>())
+			for (const auto& entity : scene->GetRegistry()->group<TransformComponent, MeshComponent>())
 			{
-				const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+				const auto& [transform, mesh] = scene->GetRegistry()->get<TransformComponent, MeshComponent>(entity);
 
 				if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
 				{
@@ -678,9 +678,9 @@ namespace Flameberry {
 
 #if 0
         // Without sorting
-        for (const auto& entity : scene->m_Registry->view<TransformComponent, MeshComponent>())
+        for (const auto& entity : scene->GetRegistry()->view<TransformComponent, MeshComponent>())
         {
-            const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+            const auto& [transform, mesh] = scene->GetRegistry()->get<TransformComponent, MeshComponent>(entity);
             if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle); staticMesh)
                 Renderer::SubmitMeshWithMaterial(staticMesh, m_MeshPipeline, mesh.OverridenMaterialTable, transform.GetTransform());
         }
@@ -698,9 +698,9 @@ namespace Flameberry {
 		if (m_RendererSettings.FrustumCulling)
 			cameraFrustum.ExtractFrustumPlanes(cameraBufferData.ViewProjectionMatrix);
 
-		for (const auto& entity : scene->m_Registry->group<TransformComponent, MeshComponent>())
+		for (const auto& entity : scene->GetRegistry()->group<TransformComponent, MeshComponent>())
 		{
-			const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+			const auto& [transform, mesh] = scene->GetRegistry()->get<TransformComponent, MeshComponent>(entity);
 
 			if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
 			{
@@ -811,17 +811,17 @@ namespace Flameberry {
 			Renderer2D::FlushQuads();
 
 			Renderer2D::SetActiveTexture(m_CameraIcon);
-			for (auto entity : scene->m_Registry->group<TransformComponent, CameraComponent>())
+			for (auto entity : scene->GetRegistry()->group<TransformComponent, CameraComponent>())
 			{
-				auto& transform = scene->m_Registry->get<TransformComponent>(entity);
+				auto& transform = scene->GetRegistry()->get<TransformComponent>(entity);
 				Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
 			}
 			Renderer2D::FlushQuads();
 
 			Renderer2D::SetActiveTexture(m_DirectionalLightIcon);
-			for (auto entity : scene->m_Registry->group<TransformComponent, DirectionalLightComponent>())
+			for (auto entity : scene->GetRegistry()->group<TransformComponent, DirectionalLightComponent>())
 			{
-				auto& transform = scene->m_Registry->get<TransformComponent>(entity);
+				auto& transform = scene->GetRegistry()->get<TransformComponent>(entity);
 				Renderer2D::AddBillboard(transform.Translation, 1.2f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
 			}
 			Renderer2D::FlushQuads();
@@ -829,11 +829,12 @@ namespace Flameberry {
 
 		if (renderPhysicsCollider && selectedEntity != fbentt::null)
 		{
-			auto& transform = scene->m_Registry->get<TransformComponent>(selectedEntity);
-
-			// Draw Physics Collider
-			SubmitPhysicsColliderGeometry(scene, selectedEntity, transform); // NOTE: This function will check if any of the colliders is present
-			SubmitCameraViewGeometry(scene, selectedEntity, transform);
+            if (auto* transform = scene->GetRegistry()->try_get<TransformComponent>(selectedEntity))
+            {
+                // Draw Physics Collider
+                SubmitPhysicsColliderGeometry(scene, selectedEntity, *transform); // NOTE: This function will check if any of the colliders is present
+                SubmitCameraViewGeometry(scene, selectedEntity, *transform);
+            }
 		}
 
 		// Should make editor only (Not Runtime)
@@ -841,9 +842,9 @@ namespace Flameberry {
 			Renderer2D::AddGrid(25);
 
 		// Render all the text in the scene
-		for (const auto entity : scene->m_Registry->group<TransformComponent, TextComponent>())
+		for (const auto entity : scene->GetRegistry()->group<TransformComponent, TextComponent>())
 		{
-			const auto& [transform, text] = scene->m_Registry->get<TransformComponent, TextComponent>(entity);
+			const auto& [transform, text] = scene->GetRegistry()->get<TransformComponent, TextComponent>(entity);
 
 			Ref<Font> font = AssetManager::GetAsset<Font>(text.Font);
 			Renderer2D::AddText(text.TextString, font, transform.CalculateTransform(), { text.Color, text.Kerning, text.LineSpacing }, fbentt::to_index(entity));
@@ -986,9 +987,9 @@ namespace Flameberry {
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
 			});
 
-		for (const auto& entity : scene->m_Registry->group<TransformComponent, MeshComponent>())
+		for (const auto& entity : scene->GetRegistry()->group<TransformComponent, MeshComponent>())
 		{
-			const auto& [transform, mesh] = scene->m_Registry->get<TransformComponent, MeshComponent>(entity);
+			const auto& [transform, mesh] = scene->GetRegistry()->get<TransformComponent, MeshComponent>(entity);
 
 			if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
 			{
@@ -1053,7 +1054,7 @@ namespace Flameberry {
 		const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
 
 		// Render Physics Colliders
-		auto* boxCollider = scene->m_Registry->try_get<BoxColliderComponent>(entity);
+		auto* boxCollider = scene->GetRegistry()->try_get<BoxColliderComponent>(entity);
 		if (boxCollider)
 		{
 			const glm::vec3 halfExtent = transform.Scale * boxCollider->Size * 0.5f + bias;
@@ -1089,7 +1090,7 @@ namespace Flameberry {
 			Renderer2D::AddLine(vertex3, vertex1, greenColor);
 			Renderer2D::AddLine(vertex7, vertex5, greenColor);
 		}
-		else if (auto* sphereCollider = scene->m_Registry->try_get<SphereColliderComponent>(entity); sphereCollider)
+		else if (auto* sphereCollider = scene->GetRegistry()->try_get<SphereColliderComponent>(entity); sphereCollider)
 		{
 			// Define the radius of the sphere
 			float radius = sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z) + bias;
@@ -1125,7 +1126,7 @@ namespace Flameberry {
 			Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), greenColor);
 			Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, transform.Translation + glm::vec3(0.0f, 0.0f, radius), greenColor);
 		}
-		else if (auto* capsuleCollider = scene->m_Registry->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
+		else if (auto* capsuleCollider = scene->GetRegistry()->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
 		{
 			// Define the radius and half height of the capsule
 			float halfHeight = 0.5f * capsuleCollider->Height * transform.Scale.y;
@@ -1151,7 +1152,7 @@ namespace Flameberry {
 	void SceneRenderer::SubmitCameraViewGeometry(const Ref<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
 	{
 		constexpr glm::vec3 color(0.961f, 0.796f, 0.486f); // TODO: Replace with Theme::AccentColor
-		auto* cameraComp = scene->m_Registry->try_get<CameraComponent>(entity);
+		auto* cameraComp = scene->GetRegistry()->try_get<CameraComponent>(entity);
 		if (cameraComp)
 		{
 			const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));

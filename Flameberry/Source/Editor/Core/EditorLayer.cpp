@@ -241,6 +241,9 @@ namespace Flameberry {
 #endif
 			});
 
+		// Retrieving the entity index from the mouse picking framebuffer
+		// This is written before the rendering block...
+		// to make sure that we access the buffer in the next frame after the rendering is done in the last one
 		if (m_IsMousePickingBufferReady)
 		{
 			RenderCommand::WritePixelFromImageToBuffer(
@@ -369,7 +372,7 @@ namespace Flameberry {
 					{
 						const AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(filePath);
 
-						const fbentt::entity entity = m_ActiveScene->CreateEntityWithTagAndParent("StaticMesh", fbentt::null);
+						const fbentt::entity entity = m_ActiveScene->CreateEntityWithTagTransformAndParent("StaticMesh", fbentt::null);
 
 						constexpr float distance = 5.0f;
 						auto& transform = m_ActiveScene->GetRegistry()->get<TransformComponent>(entity);
@@ -419,9 +422,11 @@ namespace Flameberry {
 				glm::vec3 translation, rotation, scale;
 				DecomposeTransform(transform, translation, rotation, scale);
 
-				transformComp.Translation = translation;
+				const glm::vec3 deltaTranslation = translation - transformComp.Translation;
+				const glm::vec3 deltaRotation = rotation - transformComp.Rotation;
+				const glm::vec3 deltaScale = scale - transformComp.Scale;
 
-				glm::vec3 deltaRotation = rotation - transformComp.Rotation;
+				transformComp.Translation = translation;
 				transformComp.Rotation += deltaRotation;
 				transformComp.Scale = scale;
 			}

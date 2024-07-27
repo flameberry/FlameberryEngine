@@ -94,7 +94,12 @@ namespace Flameberry {
 
 		const YAML::Node data = YAML::Load(ss.str());
 		const YAML::Node root = data["Material"];
-		FBY_ASSERT(root, "Failed to load Flameberry Material from path: {}", path);
+        
+        if (!root)
+		{
+            FBY_ERROR("Failed to load Flameberry Material from path: {}", path);
+            return nullptr;
+        }
 
 		Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>(root["Name"].as<std::string>());
 

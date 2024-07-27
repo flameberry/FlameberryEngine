@@ -19,9 +19,6 @@ namespace Flameberry {
 		void OnUIRender();
 
 	private:
-		Ref<fbentt::registry> GetContextRegistry() const { return m_Context->m_Registry; }
-
-	private:
 		static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
 		static constexpr float s_LabelWidth = 100.0f;
 
@@ -45,10 +42,10 @@ namespace Flameberry {
 	template <typename ComponentType>
 	void InspectorPanel::DrawAddComponentEntry(const char* name)
 	{
-		if (!m_Context->m_Registry->has<ComponentType>(m_SelectionContext))
+		if (!m_Context->GetRegistry()->has<ComponentType>(m_SelectionContext))
 		{
 			if (ImGui::MenuItem(name))
-				m_Context->m_Registry->emplace<ComponentType>(m_SelectionContext);
+				m_Context->GetRegistry()->emplace<ComponentType>(m_SelectionContext);
 		}
 	}
 
@@ -57,7 +54,7 @@ namespace Flameberry {
 	{
 		static_assert(std::is_invocable_v<Fn>);
 
-		if (m_Context->m_Registry->has<ComponentType>(m_SelectionContext))
+		if (m_Context->GetRegistry()->has<ComponentType>(m_SelectionContext))
 		{
 			ImGui::PushID(name);
 
@@ -93,7 +90,7 @@ namespace Flameberry {
 			ImGui::PopID();
 
 			if (shouldRemoveComp)
-				m_Context->m_Registry->erase<ComponentType>(m_SelectionContext);
+				m_Context->GetRegistry()->erase<ComponentType>(m_SelectionContext);
 		}
 	}
 

@@ -12,8 +12,6 @@
 #include "Project/Project.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/Skymap.h"
-#include "Asset/Importers/TextureImporter.h"
-#include "imgui.h"
 
 namespace Flameberry {
 
@@ -39,7 +37,7 @@ namespace Flameberry {
 		{
 			ImGui::PushStyleColor(ImGuiCol_Border, Theme::FrameBorder);
 
-			auto& tag = m_Context->m_Registry->get<TagComponent>(m_SelectionContext);
+			auto& tag = m_Context->GetRegistry()->get<TagComponent>(m_SelectionContext);
 			ImFont* bigFont = ImGui::GetIO().Fonts->Fonts[0];
 			ImGuiStyle& style = ImGui::GetStyle();
 
@@ -88,7 +86,7 @@ namespace Flameberry {
 #if 0
             DrawComponent<IDComponent>("ID Component", this, [&]()
                 {
-                    auto& ID = m_Context->m_Registry->get<IDComponent>(m_SelectionContext).ID;
+                    auto& ID = m_Context->GetRegistry()->get<IDComponent>(m_SelectionContext).ID;
                     if (UI::BeginKeyValueTable("IDComponentAttributes"))
                     {
 						UI::TableKeyElement("ID");
@@ -101,7 +99,7 @@ namespace Flameberry {
 
 			DrawComponent<TransformComponent>(ICON_LC_SCALE_3D " Transform", [&]()
 				{
-					auto& transform = m_Context->m_Registry->get<TransformComponent>(m_SelectionContext);
+					auto& transform = m_Context->GetRegistry()->get<TransformComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("TransformComponentAttributes"))
 					{
@@ -122,7 +120,7 @@ namespace Flameberry {
 
 			DrawComponent<TextComponent>(ICON_LC_TEXT " Text", [&]()
 				{
-					auto& text = m_Context->m_Registry->get<TextComponent>(m_SelectionContext);
+					auto& text = m_Context->GetRegistry()->get<TextComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("TextComponentAttributes"))
 					{
@@ -186,7 +184,7 @@ namespace Flameberry {
 
 			DrawComponent<SkyLightComponent>(ICON_LC_SUNRISE " Sky Light", [=]()
 				{
-					auto& skyLightComp = m_Context->m_Registry->get<SkyLightComponent>(m_SelectionContext);
+					auto& skyLightComp = m_Context->GetRegistry()->get<SkyLightComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("SkyLightComponentAttributes"))
 					{
@@ -260,7 +258,7 @@ namespace Flameberry {
 
 			DrawComponent<CameraComponent>(ICON_LC_CAMERA " Camera", [&]()
 				{
-					auto& cameraComp = m_Context->m_Registry->get<CameraComponent>(m_SelectionContext);
+					auto& cameraComp = m_Context->GetRegistry()->get<CameraComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("CameraComponentAttributes"))
 					{
@@ -316,7 +314,7 @@ namespace Flameberry {
 
 			DrawComponent<MeshComponent>(ICON_LC_CUBOID " Mesh", [&]()
 				{
-					auto& mesh = m_Context->m_Registry->get<MeshComponent>(m_SelectionContext);
+					auto& mesh = m_Context->GetRegistry()->get<MeshComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("MeshComponentAttributes"))
 					{
@@ -471,7 +469,7 @@ namespace Flameberry {
 
 			DrawComponent<DirectionalLightComponent>(ICON_LC_SUN " Directional Light", [&]()
 				{
-					auto& light = m_Context->m_Registry->get<DirectionalLightComponent>(m_SelectionContext);
+					auto& light = m_Context->GetRegistry()->get<DirectionalLightComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("DirectionalLightComponentAttributes"))
 					{
@@ -493,7 +491,7 @@ namespace Flameberry {
 
 			DrawComponent<PointLightComponent>(ICON_LC_LIGHTBULB " Point Light", [&]()
 				{
-					auto& light = m_Context->m_Registry->get<PointLightComponent>(m_SelectionContext);
+					auto& light = m_Context->GetRegistry()->get<PointLightComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("PointLightComponentAttributes"))
 					{
@@ -512,7 +510,7 @@ namespace Flameberry {
 
 			DrawComponent<SpotLightComponent>(ICON_LC_CONE " Spot Light", [&]()
 				{
-					auto& light = m_Context->m_Registry->get<SpotLightComponent>(m_SelectionContext);
+					auto& light = m_Context->GetRegistry()->get<SpotLightComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("SpotLightComponentAttributes"))
 					{
@@ -537,7 +535,7 @@ namespace Flameberry {
 
 			DrawComponent<RigidBodyComponent>(ICON_LC_BOXES " Rigid Body", [&]()
 				{
-					auto& rigidBody = m_Context->m_Registry->get<RigidBodyComponent>(m_SelectionContext);
+					auto& rigidBody = m_Context->GetRegistry()->get<RigidBodyComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("RigidBodyComponentAttributes"))
 					{
@@ -583,7 +581,7 @@ namespace Flameberry {
 
 			DrawComponent<BoxColliderComponent>(ICON_LC_BOX " Box Collider", [&]()
 				{
-					auto& boxCollider = m_Context->m_Registry->get<BoxColliderComponent>(m_SelectionContext);
+					auto& boxCollider = m_Context->GetRegistry()->get<BoxColliderComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("BoxColliderComponentAttributes"))
 					{
@@ -596,7 +594,7 @@ namespace Flameberry {
 
 			DrawComponent<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED " Sphere Collider", [&]()
 				{
-					auto& sphereCollider = m_Context->m_Registry->get<SphereColliderComponent>(m_SelectionContext);
+					auto& sphereCollider = m_Context->GetRegistry()->get<SphereColliderComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("SphereColliderComponentAttributes"))
 					{
@@ -609,7 +607,7 @@ namespace Flameberry {
 
 			DrawComponent<CapsuleColliderComponent>(ICON_LC_PILL " Capsule Collider", [&]()
 				{
-					auto& capsuleCollider = m_Context->m_Registry->get<CapsuleColliderComponent>(m_SelectionContext);
+					auto& capsuleCollider = m_Context->GetRegistry()->get<CapsuleColliderComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("CapsuleColliderComponentAttributes"))
 					{
