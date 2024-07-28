@@ -111,7 +111,7 @@ namespace Flameberry {
             s_TitlebarData.TitlebarView = [[NSView alloc] init];
             
             // Customize the appearance of the title bar
-            [s_TitlebarData.TitlebarView setBackgroundColor:[NSColor colorWithRed:28.0f/255.0f green:28.0f/255.0f blue:28.0f/255.0f alpha:1.0f]]; // Set the background color
+            [s_TitlebarData.TitlebarView setBackgroundColor:[NSColor colorWithRed:Theme::TitlebarColor.x green:Theme::TitlebarColor.y blue:Theme::TitlebarColor.z alpha:Theme::TitlebarColor.w]]; // Set the background color
 
             // Icon
             const char* flameberryIcon = FBY_PROJECT_DIR"Flameberry/Assets/Icons/FlameberryIcon.png";
@@ -189,8 +189,11 @@ namespace Flameberry {
             [s_TitlebarData.TitlebarView setWantsLayer:YES]; // Enable layer-backed views for better performance or custom drawing
             
             // Reevaluate position of Secondary Title, because of it being on the rightmost end of the title bar
-            CGFloat spacing = 5.0f, secondaryTitleWidth = NSWidth(s_TitlebarData.SecondaryTitleTextView.frame), secondaryTitleHeight = NSHeight(s_TitlebarData.SecondaryTitleTextView.frame);
-            NSRect secondaryTitleRect = NSMakeRect(windowWidth - spacing - secondaryTitleWidth, titleBarHeight / 2.0f - secondaryTitleHeight / 2.0f, secondaryTitleWidth, secondaryTitleHeight);
+            CGFloat spacing = -15.0f, secondaryTitleWidth = NSWidth(s_TitlebarData.SecondaryTitleTextView.frame), secondaryTitleHeight = NSHeight(s_TitlebarData.SecondaryTitleTextView.frame);
+            NSRect secondaryTitleRect = NSMakeRect(windowWidth - spacing - secondaryTitleWidth,
+                                                   titleBarHeight / 2.0f - 12,
+                                                   secondaryTitleWidth,
+                                                   secondaryTitleHeight);
             [s_TitlebarData.SecondaryTitleTextView setFrame:secondaryTitleRect];
             
             // Update gradient frame to match title bar view's bounds
@@ -210,9 +213,10 @@ namespace Flameberry {
             // Update gradient frame to match title bar view's bounds
             CAGradientLayer* gradient = (CAGradientLayer*)s_TitlebarData.TitlebarView.layer.sublayers[0];
             FBY_ASSERT(gradient, "CustomTitlebar: Gradient layer is null");
+            
             gradient.colors = @[
                 (__bridge id)[NSColor colorWithRed:color.r green:color.g blue:color.b alpha:color.a].CGColor,
-                (__bridge id)[NSColor colorWithRed:28.0f/255.0f green:28.0f/255.0f blue:28.0f/255.0f alpha:1.0f].CGColor // Black
+                (__bridge id)[NSColor colorWithRed:Theme::TitlebarColor.x green:Theme::TitlebarColor.y blue:Theme::TitlebarColor.z alpha:Theme::TitlebarColor.w].CGColor // Black
             ];
         }
         
