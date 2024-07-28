@@ -17,8 +17,8 @@ namespace Flameberry {
 		static constexpr ImVec4 FrameBorder = ImVec4(0.24f, 0.24f, 0.24f, 1.0f);
 		static constexpr ImVec4 DarkThemeColor = ImVec4(41.0f / 255.0f, 41.0f / 255.0f, 41.0f / 255.0f, 1.0f);
 		static constexpr ImVec4 DarkThemeColorDark = ImVec4(28.0f / 255.0f, 28.0f / 255.0f, 28.0f / 255.0f, 1.0f);
-		static constexpr ImVec4 TitlebarGreenColor = ImVec4(18.0f / 255.0f, 185.0f / 255.0f, 30.0f / 255.0f, 75.0f / 255.0f);
-		static constexpr ImVec4 TitlebarRedColor = ImVec4(185.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f, 75.0f / 255.0f);
+		static constexpr ImVec4 TitlebarGreenColor = ImVec4(18.0f / 255.0f, 185.0f / 255.0f, 30.0f / 255.0f, 100.0f / 255.0f);
+		static constexpr ImVec4 TitlebarRedColor = ImVec4(185.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f, 100.0f / 255.0f);
 		static constexpr ImVec4 TitlebarOrangeColor = ImVec4(185.0f / 255.0f, 88.0f / 255.0f, 30.0f / 255.0f, 75.0f / 255.0f);
 	};
 

@@ -183,7 +183,7 @@ namespace Flameberry {
 			UI::ScopedStyleColor textC2(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f }, highlight);
 
 			// Display the actual entity node with it's tag
-			open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, tag.c_str());
+			open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s %s", isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : ICON_LC_BOX, tag.c_str());
 		}
 
 		// Select entity if clicked
