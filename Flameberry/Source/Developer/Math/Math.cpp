@@ -1,11 +1,28 @@
 #include "Math.h"
 
-namespace Flameberry {
+namespace Flameberry::Math {
+
+	void DecomposeViewMatrix(const glm::mat4& viewMatrix, glm::vec3& eye, glm::vec3& lookDirection, glm::vec3& up)
+	{
+		// Inverse the view matrix to get the model matrix
+		glm::mat4 modelMatrix = glm::inverse(viewMatrix);
+
+		// Extract the translation (eye position) from the model matrix
+		eye = glm::vec3(modelMatrix[3]);
+
+		// Extract the rotation part from the model matrix
+		glm::mat3 rotationMatrix(modelMatrix);
+
+		// The look direction is the negative z-axis in the view space
+		lookDirection = -glm::vec3(rotationMatrix[2]);
+
+		// The up vector is the y-axis in the view space
+		up = glm::vec3(rotationMatrix[1]);
+	}
 
 	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::vec3& rotation, glm::vec3& scale)
 	{
 		// From glm::decompose in matrix_decompose.inl
-
 		using namespace glm;
 		using T = float;
 

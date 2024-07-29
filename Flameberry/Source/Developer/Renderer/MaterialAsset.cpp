@@ -62,7 +62,7 @@ namespace Flameberry {
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
-		out << YAML::Key << "Handle" << YAML::Value << materialAsset->Handle;
+		out << YAML::Key << "Material" << YAML::Value << YAML::BeginMap;
 		out << YAML::Key << "Name" << YAML::Value << materialAsset->m_Name;
 
 		const float* albedo = materialAsset->m_MaterialRef->GetArray<float>("u_Albedo");
@@ -92,36 +92,41 @@ namespace Flameberry {
 		std::stringstream ss;
 		ss << in.rdbuf();
 
-		YAML::Node data = YAML::Load(ss.str());
-		FBY_ASSERT(data, "Failed to load Flameberry Material from path: {}", path);
+		const YAML::Node data = YAML::Load(ss.str());
+		const YAML::Node root = data["Material"];
+        
+        if (!root)
+		{
+            FBY_ERROR("Failed to load Flameberry Material from path: {}", path);
+            return nullptr;
+        }
 
-		Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>(data["Name"].as<std::string>());
-		materialAsset->Handle = data["Handle"].as<UUID>();
+		Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>(root["Name"].as<std::string>());
 
-		materialAsset->SetAlbedo(data["Albedo"].as<glm::vec3>());
-		materialAsset->SetRoughness(data["Roughness"].as<float>());
-		materialAsset->SetMetallic(data["Metallic"].as<float>());
+		materialAsset->SetAlbedo(root["Albedo"].as<glm::vec3>());
+		materialAsset->SetRoughness(root["Roughness"].as<float>());
+		materialAsset->SetMetallic(root["Metallic"].as<float>());
 
-		materialAsset->SetUseAlbedoMap(data["UseAlbedoMap"].as<bool>());
-		materialAsset->SetUseNormalMap(data["UseNormalMap"].as<bool>());
-		materialAsset->SetUseRoughnessMap(data["UseRoughnessMap"].as<bool>());
-		materialAsset->SetUseAmbientMap(data["UseAmbientMap"].as<bool>());
-		materialAsset->SetUseMetallicMap(data["UseMetallicMap"].as<bool>());
+		materialAsset->SetUseAlbedoMap(root["UseAlbedoMap"].as<bool>());
+		materialAsset->SetUseNormalMap(root["UseNormalMap"].as<bool>());
+		materialAsset->SetUseRoughnessMap(root["UseRoughnessMap"].as<bool>());
+		materialAsset->SetUseAmbientMap(root["UseAmbientMap"].as<bool>());
+		materialAsset->SetUseMetallicMap(root["UseMetallicMap"].as<bool>());
 
 		// TODO: Batch update the descriptor set of `m_MaterialRef`
-		if (auto mapHandle = data["AlbedoMap"].as<AssetHandle>())
+        if (auto mapHandle = root["AlbedoMap"].as<AssetHandle>(); AssetManager::IsAssetHandleValid(mapHandle))
 			materialAsset->SetAlbedoMap(mapHandle);
 
-		if (auto mapHandle = data["NormalMap"].as<AssetHandle>())
+		if (auto mapHandle = root["NormalMap"].as<AssetHandle>(); AssetManager::IsAssetHandleValid(mapHandle))
 			materialAsset->SetNormalMap(mapHandle);
 
-		if (auto mapHandle = data["RoughnessMap"].as<AssetHandle>())
+		if (auto mapHandle = root["RoughnessMap"].as<AssetHandle>(); AssetManager::IsAssetHandleValid(mapHandle))
 			materialAsset->SetRoughnessMap(mapHandle);
 
-		if (auto mapHandle = data["AmbientMap"].as<AssetHandle>())
+		if (auto mapHandle = root["AmbientMap"].as<AssetHandle>(); AssetManager::IsAssetHandleValid(mapHandle))
 			materialAsset->SetAmbientMap(mapHandle);
 
-		if (auto mapHandle = data["MetallicMap"].as<AssetHandle>())
+		if (auto mapHandle = root["MetallicMap"].as<AssetHandle>(); AssetManager::IsAssetHandleValid(mapHandle))
 			materialAsset->SetMetallicMap(mapHandle);
 
 		return materialAsset;

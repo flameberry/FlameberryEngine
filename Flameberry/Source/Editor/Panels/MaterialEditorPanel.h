@@ -22,8 +22,6 @@ namespace Flameberry {
 		Ref<MaterialAsset> m_EditingContext;
 		bool m_IsMaterialEdited = false, m_ShouldRename = false, m_Open = false;
 		char m_RenameBuffer[256] = { '\0' };
-
-		Ref<Texture2D> m_CheckerboardTexture;
 	};
 
 } // namespace Flameberry

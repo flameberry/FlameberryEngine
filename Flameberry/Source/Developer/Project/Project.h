@@ -4,6 +4,7 @@
 
 #include "Core/Core.h"
 #include "Asset/IAssetManager.h"
+#include "Project/ThumbnailCache.h"
 
 namespace Flameberry {
 
@@ -12,7 +13,7 @@ namespace Flameberry {
 		std::filesystem::path AssetDirectory /* = "Content" */, ScriptAssemblyPath;
 		AssetHandle StartScene = 0;
 		std::filesystem::path AssetRegistryPath;
-
+		std::filesystem::path ThumbnailCacheDirectory;
 		std::string Name = "FlameberryProject";
 	};
 
@@ -36,10 +37,12 @@ namespace Flameberry {
 		void Save();
 
 		Ref<IAssetManager> GetAssetManager() { return m_AssetManager; }
+		Ref<ThumbnailCache> GetThumbnailCache() { return m_ThumbnailCache; }
 
 		const std::filesystem::path& GetProjectDirectory() const { return m_ProjectDirectory; }
 		std::filesystem::path GetAssetDirectory() const { return m_ProjectDirectory / m_Config.AssetDirectory; }
 		std::filesystem::path GetAssetRegistryPath() const { return m_ProjectDirectory / m_Config.AssetRegistryPath; }
+		std::filesystem::path GetThumbnailCacheDirectory() const { return m_ProjectDirectory / m_Config.ThumbnailCacheDirectory; }
 		std::filesystem::path GetScriptAssemblyPath() const { return m_ProjectDirectory / m_Config.ScriptAssemblyPath; }
 
 		ProjectConfig& GetConfig() { return m_Config; }
@@ -52,6 +55,7 @@ namespace Flameberry {
 		ProjectConfig m_Config;
 
 		Ref<IAssetManager> m_AssetManager;
+		Ref<ThumbnailCache> m_ThumbnailCache;
 
 	private:
 		static Ref<Project> s_ActiveProject;

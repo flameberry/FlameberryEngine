@@ -26,13 +26,8 @@ namespace Flameberry {
 		inline VkQueue GetComputeQueue() const { return m_GraphicsAndComputeQueue; }
 		inline VkQueue GetPresentationQueue() const { return m_PresentationQueue; }
 		inline QueueFamilyIndices GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
-		VkCommandBuffer GetCommandBuffer(uint32_t bufferIndex) const { return m_VkCommandBuffers[bufferIndex]; }
-		VkCommandPool GetComputeCommandPool() const { return m_VkCommandPool; }
+		VkCommandPool GetCommandPool() const { return m_VkCommandPool; }
 
-		void AllocateCommandBuffers(uint32_t bufferCount);
-		void ResetCommandBuffer(uint32_t bufferIndex);
-		void BeginCommandBuffer(uint32_t bufferIndex, VkCommandBufferUsageFlags usageFlags = 0);
-		void EndCommandBuffer(uint32_t bufferIndex);
 		void BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
 		void EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
 
@@ -47,7 +42,6 @@ namespace Flameberry {
 		QueueFamilyIndices m_QueueFamilyIndices;
 
 		VkCommandPool m_VkCommandPool;
-		std::vector<VkCommandBuffer> m_VkCommandBuffers;
 
 		VkPhysicalDevice& m_VkPhysicalDevice;
 	};

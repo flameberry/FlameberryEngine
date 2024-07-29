@@ -1,12 +1,12 @@
 #include "ContentBrowserPanel.h"
 
 #include <filesystem>
-#include <imgui.h>
-
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Flameberry.h"
 #include "Core/UI.h"
+#include "Project/Project.h"
+#include "imgui.h"
 
 #define FBY_BACK_ARROW_ICON 0
 #define FBY_FORWARD_ARROW_ICON 1
@@ -39,8 +39,7 @@ static std::vector<std::string> g_IconPaths = {
 namespace Flameberry {
 
 	ContentBrowserPanel::ContentBrowserPanel()
-		: m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory), // Getting Asset Directory via this method to get the relative path only
-		m_ThumbnailCache(CreateRef<ThumbnailCache>(Project::GetActiveProject()))
+		: m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory) // Getting Asset Directory via this method to get the relative path only
 		, m_VkTextureSampler(Texture2D::GetDefaultSampler())
 	{
 		for (const auto& path : g_IconPaths)
@@ -53,15 +52,16 @@ namespace Flameberry {
 
 	void ContentBrowserPanel::RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator)
 	{
+		constexpr float framePaddingY = 2.5f;
+
 		bool isLeaf = true;
+
 		for (auto& directory : std::filesystem::directory_iterator{ parent })
-		{
 			isLeaf = isLeaf && !directory.is_directory();
-		}
 
-		const bool is_selected = m_CurrentDirectory == parent;
+		const bool isSelected = m_CurrentDirectory == parent;
 
-		const int treeNodeFlags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0)
+		const int treeNodeFlags = (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
 			| ImGuiTreeNodeFlags_OpenOnArrow
 			| ImGuiTreeNodeFlags_SpanFullWidth
 			| ImGuiTreeNodeFlags_FramePadding
@@ -69,24 +69,24 @@ namespace Flameberry {
 
 		ImGui::PushID(parent.path().filename().c_str());
 
-		const ImVec4 textColor = is_selected ? ImVec4(0, 0, 0, 1) : ImGui::GetStyle().Colors[ImGuiCol_Text];
-		ImGui::PushStyleColor(ImGuiCol_Header, Theme::AccentColor);
-		ImGui::PushStyleColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
-		if (is_selected)
-			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-		ImGui::PushStyleColor(ImGuiCol_Text, textColor);
-
 		if (IsPathInHierarchy(m_CurrentDirectory, parent))
-		{
 			ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+
+		bool isOpened;
+
+		{
+			UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, framePaddingY });
+			UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 1, 0 });
+
+			UI::ScopedStyleColor header(ImGuiCol_Header, Theme::AccentColor);
+			UI::ScopedStyleColor headerActive(ImGuiCol_HeaderActive, Theme::AccentColorLight);
+			UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
+
+			const ImVec4 textColor = isSelected ? ImVec4(0, 0, 0, 1) : ImGui::GetStyle().Colors[ImGuiCol_Text];
+			UI::ScopedStyleColor _(ImGuiCol_Text, textColor);
+
+			isOpened = ImGui::TreeNodeEx("##node", treeNodeFlags);
 		}
-
-		constexpr float framePaddingY = 1.8f;
-
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, framePaddingY });
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
-		bool is_opened = ImGui::TreeNodeEx("##node", treeNodeFlags);
-		ImGui::PopStyleVar(2);
 
 		if (ImGui::IsItemClicked())
 			m_CurrentDirectory = parent.path();
@@ -94,18 +94,22 @@ namespace Flameberry {
 		ImGui::SameLine();
 		ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FileTypeIndex::FOLDER]->CreateOrGetDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight() + framePaddingY, ImGui::GetTextLineHeight() + framePaddingY });
 		ImGui::SameLine();
-		ImGui::Text("%s", parent.path().filename().c_str());
-		ImGui::PopStyleColor(is_selected ? 4 : 3);
+
+		{
+			const ImVec4 textColor = isSelected ? ImVec4(0, 0, 0, 1) : ImGui::GetStyle().Colors[ImGuiCol_Text];
+			UI::ScopedStyleColor _(ImGuiCol_Text, textColor);
+
+			ImGui::Text("%s", parent.path().filename().c_str());
+		}
+
 		ImGui::PopID();
 
-		if (is_opened)
+		if (isOpened)
 		{
 			for (auto& directory : iterator)
 			{
 				if (directory.is_directory())
-				{
 					RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator{ directory });
-				}
 			}
 			ImGui::TreePop();
 		}
@@ -129,9 +133,10 @@ namespace Flameberry {
 
 	void ContentBrowserPanel::OnUIRender()
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-		ImGui::Begin("Content Browser");
-		ImGui::PopStyleVar();
+		{
+			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+			ImGui::Begin("Content Browser");
+		}
 
 		m_SecondChildSize = ImGui::GetContentRegionAvail().x - m_FirstChildSize - 8.0f;
 
@@ -183,19 +188,14 @@ namespace Flameberry {
 			m_CurrentDirectory = m_CurrentDirectory.parent_path();
 
 		ImGui::SameLine();
-		if (m_IsSearchBoxFocused)
+
 		{
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+			UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1.0f, m_IsSearchBoxFocused);
+			UI::ScopedStyleColor borderColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
+
+			UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
 		}
 
-		UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
-
-		if (m_IsSearchBoxFocused)
-		{
-			ImGui::PopStyleColor();
-			ImGui::PopStyleVar();
-		}
 		m_IsSearchBoxFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
 
 		ImGui::SameLine();
@@ -242,7 +242,7 @@ namespace Flameberry {
 
 		ImVec2 itemSize;
 
-		m_ThumbnailCache->ResetThumbnailLoadedCounter();
+		Project::GetActiveProject()->GetThumbnailCache()->ResetThumbnailLoadedCounter();
 
 		for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory })
 		{
@@ -266,7 +266,7 @@ namespace Flameberry {
 
 			Ref<Texture2D> thumbnail;
 			if (!isDirectory)
-				thumbnail = m_ThumbnailCache->TryGetOrCreateThumbnail(filePath);
+				thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
 			if (!thumbnail)
 			{
 				if (isDirectory)

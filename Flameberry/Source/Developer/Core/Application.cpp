@@ -32,9 +32,6 @@ namespace Flameberry {
 
 		m_Window->Init();
 
-		auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
-		VulkanContext::GetCurrentDevice()->AllocateCommandBuffers(swapchain->GetSwapChainImageCount());
-
 		Renderer::Init();
 
 		m_ImGuiLayer = new ImGuiLayer();

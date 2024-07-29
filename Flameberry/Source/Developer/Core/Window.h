@@ -5,6 +5,7 @@
 
 #include "Event.h"
 #include "Core/Core.h"
+#include "ImGui/Theme.h"
 
 #ifdef FBY_DEBUG
 	#define FBY_WINDOW_TITLE "Flameberry Engine [Debug]"
@@ -24,10 +25,15 @@ namespace Flameberry {
 		bool VSync;
 
 		bool NativeTitlebar;
-		static constexpr int TitlebarHeight = 36;
+		glm::vec4 TitlebarGradientColor;
+		static constexpr int TitlebarHeight = 34;
 
 		WindowSpecification(int width = 1280, int height = 720, const char* title = FBY_WINDOW_TITLE)
-			: Width(width), Height(height), Title(title), NativeTitlebar(false)
+			: Width(width)
+			, Height(height)
+			, Title(title)
+			, NativeTitlebar(false)
+			, TitlebarGradientColor(Theme::TitlebarGreenColor.x, Theme::TitlebarGreenColor.y, Theme::TitlebarGreenColor.z, Theme::TitlebarGreenColor.w)
 		{
 		}
 	};
@@ -55,6 +61,7 @@ namespace Flameberry {
 		virtual void SetSize(int width, int height) = 0;
 		virtual void SetTitle(const char* title) = 0;
 		virtual void SetSecondaryTitle(const char* title) = 0;
+		virtual void SetTitlebarGradient(const glm::vec4& color) = 0;
 		virtual void MoveToCenter() = 0;
 	};
 

@@ -12,9 +12,8 @@ namespace Flameberry {
 		// Getting Queue Family Indices
 		m_QueueFamilyIndices = RenderCommand::GetQueueFamilyIndices(m_VkPhysicalDevice, pVulkanWindow->GetWindowSurface());
 
-		std::vector<VkDeviceQueueCreateInfo> vk_device_queue_create_infos = CreateDeviceQueueInfos(
-			{ (uint32_t)m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex,
-				(uint32_t)m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex });
+		std::vector<VkDeviceQueueCreateInfo> vk_device_queue_create_infos = CreateDeviceQueueInfos({ (uint32_t)m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex,
+			(uint32_t)m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex });
 
 		VkPhysicalDeviceFeatures2 deviceFeatures2{};
 		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -75,39 +74,6 @@ namespace Flameberry {
 		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 		VK_CHECK_RESULT(vkCreateCommandPool(m_VkDevice, &commandPoolCreateInfo, nullptr, &m_VkCommandPool));
-	}
-
-	void VulkanDevice::AllocateCommandBuffers(uint32_t bufferCount)
-	{
-		m_VkCommandBuffers.resize(bufferCount);
-
-		VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{};
-		vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		vk_command_buffer_allocate_info.commandPool = m_VkCommandPool;
-		vk_command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		vk_command_buffer_allocate_info.commandBufferCount = (uint32_t)m_VkCommandBuffers.size();
-
-		VK_CHECK_RESULT(vkAllocateCommandBuffers(m_VkDevice, &vk_command_buffer_allocate_info, m_VkCommandBuffers.data()));
-	}
-
-	void VulkanDevice::ResetCommandBuffer(uint32_t bufferIndex)
-	{
-		vkResetCommandBuffer(m_VkCommandBuffers[bufferIndex], 0);
-	}
-
-	void VulkanDevice::BeginCommandBuffer(uint32_t bufferIndex, VkCommandBufferUsageFlags usageFlags)
-	{
-		VkCommandBufferBeginInfo vk_command_buffer_begin_info{};
-		vk_command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		vk_command_buffer_begin_info.flags = usageFlags;
-		vk_command_buffer_begin_info.pInheritanceInfo = nullptr;
-
-		VK_CHECK_RESULT(vkBeginCommandBuffer(m_VkCommandBuffers[bufferIndex], &vk_command_buffer_begin_info));
-	}
-
-	void VulkanDevice::EndCommandBuffer(uint32_t bufferIndex)
-	{
-		VK_CHECK_RESULT(vkEndCommandBuffer(m_VkCommandBuffers[bufferIndex]));
 	}
 
 	void VulkanDevice::BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer)

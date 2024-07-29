@@ -380,7 +380,7 @@ namespace Flameberry {
 
 		// The command buffer to run the whole process --------------------------------------------------------------------------------
 		CommandBufferSpecification cmdBufferSpecification;
-		cmdBufferSpecification.CommandPool = VulkanContext::GetCurrentDevice()->GetComputeCommandPool();
+		cmdBufferSpecification.CommandPool = VulkanContext::GetCurrentDevice()->GetCommandPool();
 		cmdBufferSpecification.SingleTimeUsage = true;
 		cmdBufferSpecification.IsPrimary = true;
 

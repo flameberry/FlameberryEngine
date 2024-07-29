@@ -20,11 +20,13 @@ namespace Flameberry {
 		fbentt::entity GetSelectionContext() const { return m_SelectionContext; }
 		bool IsFocused() const { return m_IsFocused && !m_IsSearchBarFocused && m_RenamedEntity == fbentt::null; }
 
-		void DrawEntityNode(fbentt::entity entity);
-		void DrawCreateEntityMenu(fbentt::entity parent = (fbentt::entity)fbentt::null);
+		void DisplayEntityTree(fbentt::entity entity);
+		void DisplayCreateEntityMenu(fbentt::entity parent = (fbentt::entity)fbentt::null);
 
 	private:
-		fbentt::entity m_SelectionContext = {}, m_RenamedEntity = {};
+		fbentt::entity m_SelectionContext = {};
+		fbentt::entity m_RenamedEntity = {};
+
 		Ref<Scene> m_Context;
 		Ref<InspectorPanel> m_InspectorPanel;
 

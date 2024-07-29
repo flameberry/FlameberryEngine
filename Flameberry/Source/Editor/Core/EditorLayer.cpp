@@ -7,7 +7,7 @@
 
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
-#include "UI.h"
+#include "Core/UI.h"
 
 #include "Physics/PhysicsEngine.h"
 #include "Renderer/ShaderLibrary.h"
@@ -44,13 +44,22 @@ namespace Flameberry {
 		}
 	};
 
-	struct CameraUniformBufferObject
+	struct CameraUniformBufferGPURepresentation
 	{
 		glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
 	};
 
 	EditorLayer::EditorLayer(const Ref<Project>& project)
-		: m_Project(project), m_ActiveCameraController(PerspectiveCameraSpecification{ glm::vec3(0.0f, 2.0f, 4.0f), glm::vec3(0.0f, -0.3f, -1.0f), (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height, 45.0f, 0.1f, 1000.0f })
+		: m_Project(project)
+		, m_ActiveCameraController(
+			  glm::vec3(0.0f, 2.0f, 4.0f),
+			  glm::vec3(0.0f, -0.3f, -1.0f),
+			  GenericCameraSettings{
+				  .ProjectionType = ProjectionType::Perspective,
+				  .AspectRatio = (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height,
+				  .FOV = 45.0f,
+				  .Near = 0.1f,
+				  .Far = 1000.0f })
 	{
 #ifdef FBY_PLATFORM_MACOS
 		Platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
@@ -71,6 +80,7 @@ namespace Flameberry {
 		m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon.png");
 		m_PauseIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/PauseIcon.png");
 		m_StepIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/StepIcon.png");
+		m_SimulateAndPauseIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SimulateAndPauseIcon.png");
 
 		Project::SetActive(m_Project);
 		std::filesystem::current_path(m_Project->GetProjectDirectory());
@@ -211,7 +221,7 @@ namespace Flameberry {
 
 		if (m_HasViewportSizeChanged)
 		{
-			m_ActiveCameraController.GetPerspectiveCamera()->OnResize(m_ViewportSize.x / m_ViewportSize.y);
+			m_ActiveCameraController.OnResize(m_ViewportSize.x / m_ViewportSize.y);
 			m_ActiveScene->OnViewportResize(m_ViewportSize);
 			m_HasViewportSizeChanged = false;
 		}
@@ -226,10 +236,10 @@ namespace Flameberry {
 			case EditorState::Edit:
 			{
 				// TODO: Design this better
-				auto camera = m_ActiveCameraController.GetPerspectiveCamera();
+				const auto& camera = m_ActiveCameraController.GetCamera();
 
 				// Actual Rendering (All scene related render passes)
-				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera->GetViewMatrix(), camera->GetProjectionMatrix(), camera->GetSpecification().Position, camera->GetSpecification().zNear, camera->GetSpecification().zFar, m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
+				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), m_ActiveCameraController.GetPosition(), camera.GetSettings().Near, camera.GetSettings().Far, m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
 				break;
 			}
 			case EditorState::Play:
@@ -247,22 +257,34 @@ namespace Flameberry {
 				}
 				else
 				{
-					auto camera = m_ActiveCameraController.GetPerspectiveCamera();
-					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera->GetViewMatrix(), camera->GetProjectionMatrix(), camera->GetSpecification().Position, camera->GetSpecification().zNear, camera->GetSpecification().zFar, m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
+					const auto& camera = m_ActiveCameraController.GetCamera();
+					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), m_ActiveCameraController.GetPosition(), camera.GetSettings().Near, camera.GetSettings().Far, fbentt::null, false, false, false, false);
 				}
 				break;
+			}
+			case EditorState::Simulate:
+			{
+				m_ActiveScene->OnUpdateSimulation(delta);
+
+				const auto& camera = m_ActiveCameraController.GetCamera();
+				// Actual Rendering (All scene related render passes)
+				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), m_ActiveCameraController.GetPosition(), camera.GetSettings().Near, camera.GetSettings().Far, m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
 			}
 		}
 
 		// Update all image index related descriptors
-		Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-			// TODO: Update these descriptors only when there corresponding framebuffer is updated
-			InvalidateViewportImGuiDescriptorSet(imageIndex);
+		Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+			{
+				// TODO: Update these descriptors only when there corresponding framebuffer is updated
+				InvalidateViewportImGuiDescriptorSet(imageIndex);
 #if 0
                 InvalidateCompositePassImGuiDescriptorSet(imageIndex);
 #endif
-		});
+			});
 
+		// Retrieving the entity index from the mouse picking framebuffer
+		// This is written before the rendering block...
+		// to make sure that we access the buffer in the next frame after the rendering is done in the last one
 		if (m_IsMousePickingBufferReady)
 		{
 			RenderCommand::WritePixelFromImageToBuffer(
@@ -392,11 +414,11 @@ namespace Flameberry {
 					{
 						const AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(filePath);
 
-						const fbentt::entity entity = m_ActiveScene->CreateEntityWithTagAndParent("StaticMesh", fbentt::null);
+						const fbentt::entity entity = m_ActiveScene->CreateEntityWithTagTransformAndParent("StaticMesh", fbentt::null);
 
 						constexpr float distance = 5.0f;
 						auto& transform = m_ActiveScene->GetRegistry()->get<TransformComponent>(entity);
-						transform.Translation = m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().Position + m_ActiveCameraController.GetPerspectiveCamera()->GetSpecification().Direction * distance;
+						transform.Translation = m_ActiveCameraController.GetPosition() + m_ActiveCameraController.GetDirection() * distance;
 
 						m_ActiveScene->GetRegistry()->emplace<MeshComponent>(entity, handle);
 
@@ -413,9 +435,9 @@ namespace Flameberry {
 		const auto& selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
 		if (selectedEntity != fbentt::null && m_GizmoType != -1 && m_EditorState == EditorState::Edit)
 		{
-			glm::mat4 projectionMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetProjectionMatrix();
+			glm::mat4 projectionMatrix = m_ActiveCameraController.GetCamera().GetProjectionMatrix();
 			projectionMatrix[1][1] *= -1;
-			glm::mat4 viewMatrix = m_ActiveCameraController.GetPerspectiveCamera()->GetViewMatrix();
+			glm::mat4 viewMatrix = m_ActiveCameraController.GetCamera().GetViewMatrix();
 
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
@@ -440,11 +462,13 @@ namespace Flameberry {
 			{
 				m_IsGizmoActive = true;
 				glm::vec3 translation, rotation, scale;
-				DecomposeTransform(transform, translation, rotation, scale);
+				Math::DecomposeTransform(transform, translation, rotation, scale);
+
+				const glm::vec3 deltaTranslation = translation - transformComp.Translation;
+				const glm::vec3 deltaRotation = rotation - transformComp.Rotation;
+				const glm::vec3 deltaScale = scale - transformComp.Scale;
 
 				transformComp.Translation = translation;
-
-				glm::vec3 deltaRotation = rotation - transformComp.Rotation;
 				transformComp.Rotation += deltaRotation;
 				transformComp.Scale = scale;
 			}
@@ -535,8 +559,8 @@ namespace Flameberry {
 						const auto duplicateEntity = m_ActiveScene->DuplicateEntity(selectionContext);
 						m_SceneHierarchyPanel->SetSelectionContext(duplicateEntity);
 					}
-					break;
 				}
+				break;
 			case KeyCode::O:
 				if (ctrl_or_cmd)
 				{
@@ -779,95 +803,125 @@ namespace Flameberry {
 		window_pos.x = workPos.x + s_OverlayPadding;
 		window_pos.y = workPos.y + s_OverlayPadding;
 
-		UI_Overlay("##GizmoOverlay", window_pos, [=]() {
-			if (ImGui::ImageButton("SelectModeButton", reinterpret_cast<ImTextureID>(m_CursorIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == -1 ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+		UI_Overlay("##GizmoOverlay", window_pos, [=]()
 			{
-				m_GizmoType = -1;
-				ImGui::SetWindowFocus("Viewport");
-			}
-			ImGui::SameLine();
-			if (ImGui::ImageButton("TranslateModeButton", reinterpret_cast<ImTextureID>(m_TranslateIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::TRANSLATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
-			{
-				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-				ImGui::SetWindowFocus("Viewport");
-			}
-			ImGui::SameLine();
-			if (ImGui::ImageButton("RotateModeButton", reinterpret_cast<ImTextureID>(m_RotateIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::ROTATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
-			{
-				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-				ImGui::SetWindowFocus("Viewport");
-			}
-			ImGui::SameLine();
-			if (ImGui::ImageButton("ScaleModeButton", reinterpret_cast<ImTextureID>(m_ScaleIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::SCALE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
-			{
-				m_GizmoType = ImGuizmo::OPERATION::SCALE;
-				ImGui::SetWindowFocus("Viewport");
-			}
-		});
+				if (ImGui::ImageButton("SelectModeButton", reinterpret_cast<ImTextureID>(m_CursorIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == -1 ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+				{
+					m_GizmoType = -1;
+					ImGui::SetWindowFocus("Viewport");
+				}
+				ImGui::SameLine();
+				if (ImGui::ImageButton("TranslateModeButton", reinterpret_cast<ImTextureID>(m_TranslateIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::TRANSLATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+				{
+					m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+					ImGui::SetWindowFocus("Viewport");
+				}
+				ImGui::SameLine();
+				if (ImGui::ImageButton("RotateModeButton", reinterpret_cast<ImTextureID>(m_RotateIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::ROTATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+				{
+					m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+					ImGui::SetWindowFocus("Viewport");
+				}
+				ImGui::SameLine();
+				if (ImGui::ImageButton("ScaleModeButton", reinterpret_cast<ImTextureID>(m_ScaleIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == ImGuizmo::OPERATION::SCALE ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
+				{
+					m_GizmoType = ImGuizmo::OPERATION::SCALE;
+					ImGui::SetWindowFocus("Viewport");
+				}
+			});
 	}
 
 	void EditorLayer::UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize)
 	{
 		ImVec2 window_pos;
-		window_pos.x = workPos.x + workSize.x / 2.0f - 2 * s_OverlayButtonSize.x;
 		window_pos.y = workPos.y + s_OverlayPadding;
+		switch (m_EditorState)
+		{
+			case EditorState::Edit:
+				window_pos.x = workPos.x + workSize.x / 2.0f - 3.0f * s_OverlayButtonSize.x;
+				break;
+			default:
+				window_pos.x = workPos.x + workSize.x / 2.0f - 2.5f * s_OverlayButtonSize.x;
+				break;
+		}
 
-		UI_Overlay("##ToolbarOverlay", window_pos, [=]() {
-			switch (m_EditorState)
+		UI_Overlay("##ToolbarOverlay", window_pos, [=]()
 			{
-				case EditorState::Edit:
+				switch (m_EditorState)
 				{
-					if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f)))
-						OnScenePlay();
-					break;
-				}
-				case EditorState::Play:
-				{
-					if (m_ActiveScene->IsRuntimePaused())
+					case EditorState::Edit:
 					{
-						// UnPause the scene
-						if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
-							m_ActiveScene->SetRuntimePaused(false);
+						if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f)))
+							OnScenePlay();
+						ImGui::SameLine();
+						if (ImGui::ImageButton("SceneSimulateButton", reinterpret_cast<ImTextureID>(m_SimulateAndPauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f)))
+							OnSceneSimulate();
+						break;
 					}
-					else
+					case EditorState::Play:
 					{
-						// Pause the scene
-						if (ImGui::ImageButton("ScenePauseButton", reinterpret_cast<ImTextureID>(m_PauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
-							m_ActiveScene->SetRuntimePaused(true);
+						if (m_ActiveScene->IsRuntimePaused())
+						{
+							// UnPause the scene
+							if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+								m_ActiveScene->SetRuntimePaused(false);
+						}
+						else
+						{
+							// Pause the scene
+							if (ImGui::ImageButton("ScenePauseButton", reinterpret_cast<ImTextureID>(m_PauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+								m_ActiveScene->SetRuntimePaused(true);
+						}
+						break;
 					}
-					break;
+					case EditorState::Simulate:
+					{
+						if (m_ActiveScene->IsRuntimePaused())
+						{
+							// UnPause the scene
+							if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_SimulateAndPauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+								m_ActiveScene->SetRuntimePaused(false);
+						}
+						else
+						{
+							// Pause the scene
+							if (ImGui::ImageButton("ScenePauseButton", reinterpret_cast<ImTextureID>(m_SimulateAndPauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+								m_ActiveScene->SetRuntimePaused(true);
+						}
+						break;
+					}
 				}
-			}
 
-			ImGui::SameLine();
+				ImGui::SameLine();
 
-			ImGui::BeginDisabled(!m_ActiveScene->IsRuntimePaused());
-			if (ImGui::ImageButton("SceneStepButton", reinterpret_cast<ImTextureID>(m_StepIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0)))
-			{
-				FBY_LOG("Stepped");
-				m_ActiveScene->Step(1);
-			}
-			ImGui::EndDisabled();
-
-			ImGui::SameLine();
-
-			switch (m_EditorState)
-			{
-				case EditorState::Edit:
+				ImGui::BeginDisabled(!m_ActiveScene->IsRuntimePaused());
+				if (ImGui::ImageButton("SceneStepButton", reinterpret_cast<ImTextureID>(m_StepIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0)))
 				{
-					ImGui::BeginDisabled();
-					ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f));
-					ImGui::EndDisabled();
-					break;
+					m_ActiveScene->Step(1);
+					FBY_LOG("Stepped 1 frame");
 				}
-				case EditorState::Play:
+				ImGui::EndDisabled();
+
+				ImGui::SameLine();
+
+				switch (m_EditorState)
 				{
-					if (ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1)))
-						OnSceneEdit();
-					break;
+					case EditorState::Edit:
+					{
+						ImGui::BeginDisabled();
+						ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f));
+						ImGui::EndDisabled();
+						break;
+					}
+					case EditorState::Play:
+					case EditorState::Simulate:
+					{
+						if (ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1)))
+							OnSceneEdit();
+						break;
+					}
 				}
-			}
-		});
+			});
 	}
 
 	void EditorLayer::UI_ViewportSettingsOverlay(const ImVec2& workPos, const ImVec2& workSize)
@@ -876,18 +930,19 @@ namespace Flameberry {
 		window_pos.x = workPos.x + workSize.x - 1.5f * s_OverlayPadding - 2 * s_OverlayButtonSize.x;
 		window_pos.y = workPos.y + s_OverlayPadding;
 
-		UI_Overlay("##ViewportSettingsOverlay", window_pos, [=]() {
-			ImGui::ImageButton("##ViewportSettingsButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
-
-			if (ImGui::IsItemClicked())
-				ImGui::OpenPopup("##ViewportSettingsPopup");
-
-			if (ImGui::BeginPopup("##ViewportSettingsPopup"))
+		UI_Overlay("##ViewportSettingsOverlay", window_pos, [=]()
 			{
-				ImGui::Checkbox("Display Grid", &m_EnableGrid);
-				ImGui::EndPopup();
-			}
-		});
+				ImGui::ImageButton("##ViewportSettingsButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
+
+				if (ImGui::IsItemClicked())
+					ImGui::OpenPopup("##ViewportSettingsPopup");
+
+				if (ImGui::BeginPopup("##ViewportSettingsPopup"))
+				{
+					ImGui::Checkbox("Display Grid", &m_EnableGrid);
+					ImGui::EndPopup();
+				}
+			});
 	}
 
 	void EditorLayer::UI_BottomPanel()
@@ -982,9 +1037,10 @@ namespace Flameberry {
 
 		ImVec2 compositeViewportSize = ImGui::GetContentRegionAvail();
 
-		ImGui::Image(reinterpret_cast<ImTextureID>(
-						 m_CompositePassViewportDescriptorSets[VulkanContext::GetCurrentWindow()->GetSwapChain()->GetAcquiredImageIndex()]),
+		ImGui::Image(
+			reinterpret_cast<ImTextureID>(m_CompositePassViewportDescriptorSets[VulkanContext::GetCurrentWindow()->GetSwapChain()->GetAcquiredImageIndex()]),
 			ImVec2{ compositeViewportSize.x, compositeViewportSize.y });
+
 		ImGui::End();
 	}
 
@@ -994,7 +1050,7 @@ namespace Flameberry {
 
 		ImGui::Begin("Renderer Settings");
 
-		if (ImGui::CollapsingHeader("Renderer Frame Statistics (Geometry Pass Only)", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
+		if (ImGui::CollapsingHeader("Frame Statistics (Geometry Pass Only)", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
 		{
 			ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			FBY_DISPLAY_SCOPE_DETAILS_IMGUI();
@@ -1007,6 +1063,7 @@ namespace Flameberry {
 			// ImGui::Text("Mesh Draw Calls: %u", rendererFrameStats.DrawCallCount);
 			// ImGui::Text("Indices: %u", rendererFrameStats.IndexCount);
 		}
+		ImGui::NewLine();
 
 		if (ImGui::CollapsingHeader("Scene Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
 		{
@@ -1085,26 +1142,61 @@ namespace Flameberry {
 
 	void EditorLayer::OnSceneEdit()
 	{
-		m_EditorState = EditorState::Edit;
+		FBY_ASSERT(m_EditorState != EditorState::Edit);
 
-		m_ActiveScene->OnStopRuntime();
+		// Set the titlebar color based on scene state
+		Application::Get().GetWindow().SetTitlebarGradient({ Theme::TitlebarGreenColor.x, Theme::TitlebarGreenColor.y, Theme::TitlebarGreenColor.z, Theme::TitlebarGreenColor.w });
+
+		switch (m_EditorState)
+		{
+			case EditorState::Play:
+				m_ActiveScene->OnStopRuntime();
+				break;
+			case EditorState::Simulate:
+				m_ActiveScene->OnStopSimulation();
+				break;
+		}
 
 		// Delete the m_RuntimeScene
 		std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 		m_ActiveSceneBackUpCopy = nullptr;
+
+		m_EditorState = EditorState::Edit;
 	}
 
 	void EditorLayer::OnScenePlay()
 	{
-		m_EditorState = EditorState::Play;
+		// Set the titlebar color based on scene state
+		Application::Get().GetWindow().SetTitlebarGradient({ Theme::TitlebarRedColor.x, Theme::TitlebarRedColor.y, Theme::TitlebarRedColor.z, Theme::TitlebarRedColor.w });
 
 		std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
 		// Copy m_ActiveSceneBackUpCopy to m_ActiveScene
 		m_ActiveScene = CreateRef<Scene>(m_ActiveSceneBackUpCopy);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 
+		// This fixes any aspect ratio bugs that happen when viewport is resized during EditorState::Play
+		m_ActiveScene->OnViewportResize(m_ViewportSize);
 		m_ActiveScene->OnStartRuntime();
+
+		m_EditorState = EditorState::Play;
+	}
+
+	void EditorLayer::OnSceneSimulate()
+	{
+		// Set the titlebar color based on scene state
+		Application::Get().GetWindow().SetTitlebarGradient({ Theme::TitlebarOrangeColor.x, Theme::TitlebarOrangeColor.y, Theme::TitlebarOrangeColor.z, Theme::TitlebarOrangeColor.w });
+
+		std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
+		// Copy m_ActiveSceneBackUpCopy to m_ActiveScene
+		m_ActiveScene = CreateRef<Scene>(m_ActiveSceneBackUpCopy);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+
+		// This fixes any aspect ratio bugs that happen when viewport is resized during EditorState::Play
+		m_ActiveScene->OnViewportResize(m_ViewportSize);
+		m_ActiveScene->OnStartSimulation();
+
+		m_EditorState = EditorState::Simulate;
 	}
 
 } // namespace Flameberry
