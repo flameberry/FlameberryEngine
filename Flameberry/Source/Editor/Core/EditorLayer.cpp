@@ -810,8 +810,16 @@ namespace Flameberry {
 	void EditorLayer::UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize)
 	{
 		ImVec2 window_pos;
-		window_pos.x = workPos.x + workSize.x / 2.0f - 2 * s_OverlayButtonSize.x;
 		window_pos.y = workPos.y + s_OverlayPadding;
+		switch (m_EditorState)
+		{
+			case EditorState::Edit:
+				window_pos.x = workPos.x + workSize.x / 2.0f - 3.0f * s_OverlayButtonSize.x;
+				break;
+			default:
+				window_pos.x = workPos.x + workSize.x / 2.0f - 2.5f * s_OverlayButtonSize.x;
+				break;
+		}
 
 		UI_Overlay("##ToolbarOverlay", window_pos, [=]()
 			{
