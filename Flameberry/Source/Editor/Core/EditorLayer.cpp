@@ -78,6 +78,7 @@ namespace Flameberry {
 		m_SettingsIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon.png");
 		m_PauseIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/PauseIcon.png");
 		m_StepIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/StepIcon.png");
+		m_SimulateAndPauseIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SimulateAndPauseIcon.png");
 
 		Project::SetActive(m_Project);
 		std::filesystem::current_path(m_Project->GetProjectDirectory());
@@ -237,6 +238,14 @@ namespace Flameberry {
 					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), m_ActiveCameraController.GetPosition(), camera.GetSettings().Near, camera.GetSettings().Far, fbentt::null, false, false, false, false);
 				}
 				break;
+			}
+			case EditorState::Simulate:
+			{
+				m_ActiveScene->OnUpdateSimulation(delta);
+
+				const auto& camera = m_ActiveCameraController.GetCamera();
+				// Actual Rendering (All scene related render passes)
+				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), m_ActiveCameraController.GetPosition(), camera.GetSettings().Near, camera.GetSettings().Far, m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
 			}
 		}
 
@@ -812,6 +821,9 @@ namespace Flameberry {
 					{
 						if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f)))
 							OnScenePlay();
+						ImGui::SameLine();
+						if (ImGui::ImageButton("SceneSimulateButton", reinterpret_cast<ImTextureID>(m_SimulateAndPauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(0.5f, 1.0f)))
+							OnSceneSimulate();
 						break;
 					}
 					case EditorState::Play:
@@ -830,6 +842,22 @@ namespace Flameberry {
 						}
 						break;
 					}
+					case EditorState::Simulate:
+					{
+						if (m_ActiveScene->IsRuntimePaused())
+						{
+							// UnPause the scene
+							if (ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_SimulateAndPauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+								m_ActiveScene->SetRuntimePaused(false);
+						}
+						else
+						{
+							// Pause the scene
+							if (ImGui::ImageButton("ScenePauseButton", reinterpret_cast<ImTextureID>(m_SimulateAndPauseIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor))
+								m_ActiveScene->SetRuntimePaused(true);
+						}
+						break;
+					}
 				}
 
 				ImGui::SameLine();
@@ -837,8 +865,8 @@ namespace Flameberry {
 				ImGui::BeginDisabled(!m_ActiveScene->IsRuntimePaused());
 				if (ImGui::ImageButton("SceneStepButton", reinterpret_cast<ImTextureID>(m_StepIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0)))
 				{
-					FBY_LOG("Stepped");
 					m_ActiveScene->Step(1);
+					FBY_LOG("Stepped 1 frame");
 				}
 				ImGui::EndDisabled();
 
@@ -854,6 +882,7 @@ namespace Flameberry {
 						break;
 					}
 					case EditorState::Play:
+					case EditorState::Simulate:
 					{
 						if (ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1)))
 							OnSceneEdit();
@@ -972,7 +1001,7 @@ namespace Flameberry {
 
 		ImGui::Begin("Renderer Settings");
 
-		if (ImGui::CollapsingHeader("Renderer Frame Statistics (Geometry Pass Only)", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
+		if (ImGui::CollapsingHeader("Frame Statistics (Geometry Pass Only)", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
 		{
 			ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			FBY_DISPLAY_SCOPE_DETAILS_IMGUI();
@@ -985,6 +1014,7 @@ namespace Flameberry {
 			// ImGui::Text("Mesh Draw Calls: %u", rendererFrameStats.DrawCallCount);
 			// ImGui::Text("Indices: %u", rendererFrameStats.IndexCount);
 		}
+		ImGui::NewLine();
 
 		if (ImGui::CollapsingHeader("Scene Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
 		{
@@ -1063,23 +1093,31 @@ namespace Flameberry {
 
 	void EditorLayer::OnSceneEdit()
 	{
-		m_EditorState = EditorState::Edit;
+		FBY_ASSERT(m_EditorState != EditorState::Edit);
 
 		// Set the titlebar color based on scene state
 		Application::Get().GetWindow().SetTitlebarGradient({ Theme::TitlebarGreenColor.x, Theme::TitlebarGreenColor.y, Theme::TitlebarGreenColor.z, Theme::TitlebarGreenColor.w });
 
-		m_ActiveScene->OnStopRuntime();
+		switch (m_EditorState)
+		{
+			case EditorState::Play:
+				m_ActiveScene->OnStopRuntime();
+				break;
+			case EditorState::Simulate:
+				m_ActiveScene->OnStopSimulation();
+				break;
+		}
 
 		// Delete the m_RuntimeScene
 		std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 		m_ActiveSceneBackUpCopy = nullptr;
+
+		m_EditorState = EditorState::Edit;
 	}
 
 	void EditorLayer::OnScenePlay()
 	{
-		m_EditorState = EditorState::Play;
-
 		// Set the titlebar color based on scene state
 		Application::Get().GetWindow().SetTitlebarGradient({ Theme::TitlebarRedColor.x, Theme::TitlebarRedColor.y, Theme::TitlebarRedColor.z, Theme::TitlebarRedColor.w });
 
@@ -1091,6 +1129,25 @@ namespace Flameberry {
 		// This fixes any aspect ratio bugs that happen when viewport is resized during EditorState::Play
 		m_ActiveScene->OnViewportResize(m_ViewportSize);
 		m_ActiveScene->OnStartRuntime();
+
+		m_EditorState = EditorState::Play;
+	}
+
+	void EditorLayer::OnSceneSimulate()
+	{
+		// Set the titlebar color based on scene state
+		Application::Get().GetWindow().SetTitlebarGradient({ Theme::TitlebarOrangeColor.x, Theme::TitlebarOrangeColor.y, Theme::TitlebarOrangeColor.z, Theme::TitlebarOrangeColor.w });
+
+		std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
+		// Copy m_ActiveSceneBackUpCopy to m_ActiveScene
+		m_ActiveScene = CreateRef<Scene>(m_ActiveSceneBackUpCopy);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+
+		// This fixes any aspect ratio bugs that happen when viewport is resized during EditorState::Play
+		m_ActiveScene->OnViewportResize(m_ViewportSize);
+		m_ActiveScene->OnStartSimulation();
+
+		m_EditorState = EditorState::Simulate;
 	}
 
 } // namespace Flameberry

@@ -65,6 +65,59 @@ namespace Flameberry {
 			nsc.Actor->OnInstanceCreated();
 		}
 
+		OnPhysicsStart();
+	}
+
+	void Scene::OnStopRuntime()
+	{
+		m_IsRuntimeActive = m_IsRuntimePaused = false;
+
+		OnPhysicsStop();
+
+		// Delete Script Actors
+		for (auto& nsc : m_Registry->view<NativeScriptComponent>())
+		{
+			nsc.Actor->OnInstanceDeleted();
+			nsc.DestroyScript(&nsc);
+		}
+	}
+
+	void Scene::OnUpdateRuntime(float delta)
+	{
+		FBY_PROFILE_SCOPE("Scene::OnUpdateRuntime");
+
+		if (!ShouldStep())
+			return;
+
+		// Update Native Scripts
+		for (auto& nsc : m_Registry->view<NativeScriptComponent>())
+			nsc.Actor->OnUpdate(delta);
+
+		OnPhysicsSimulate(delta);
+	}
+
+	void Scene::OnStartSimulation()
+	{
+		OnPhysicsStart();
+	}
+
+	void Scene::OnUpdateSimulation(float delta)
+	{
+		FBY_PROFILE_SCOPE("Scene::OnUpdateSimulation");
+
+		if (!ShouldStep())
+			return;
+
+		OnPhysicsSimulate(delta);
+	}
+
+	void Scene::OnStopSimulation()
+	{
+		OnPhysicsStop();
+	}
+
+	void Scene::OnPhysicsStart()
+	{
 		// Create Physics Context
 		physx::PxSceneDesc sceneDesc(PhysicsEngine::GetTolerancesScale());
 		sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
@@ -161,37 +214,8 @@ namespace Flameberry {
 		}
 	}
 
-	void Scene::OnStopRuntime()
+	void Scene::OnPhysicsSimulate(float delta)
 	{
-		m_IsRuntimeActive = m_IsRuntimePaused = false;
-
-		m_PxScene->release();
-
-		// Delete Script Actors
-		for (auto& nsc : m_Registry->view<NativeScriptComponent>())
-		{
-			nsc.Actor->OnInstanceDeleted();
-			nsc.DestroyScript(&nsc);
-		}
-	}
-
-	void Scene::OnUpdateRuntime(float delta)
-	{
-		FBY_PROFILE_SCOPE("Scene::OnUpdateRuntime");
-
-		// Handle Pausing and Stepping
-		if (m_IsRuntimePaused)
-		{
-			if (m_StepFrames <= 0)
-				return;
-			else
-				m_StepFrames--;
-		}
-
-		// Update Native Scripts
-		for (auto& nsc : m_Registry->view<NativeScriptComponent>())
-			nsc.Actor->OnUpdate(delta);
-
 		// Update Physics
 		m_PxScene->simulate(delta);
 		m_PxScene->fetchResults(true);
@@ -205,6 +229,24 @@ namespace Flameberry {
 			transform.Translation = { globalTransform.p.x, globalTransform.p.y, globalTransform.p.z };
 			transform.Rotation = glm::eulerAngles(glm::quat(globalTransform.q.w, globalTransform.q.x, globalTransform.q.y, globalTransform.q.z));
 		}
+	}
+
+	void Scene::OnPhysicsStop()
+	{
+		m_PxScene->release();
+	}
+
+	bool Scene::ShouldStep()
+	{
+		if (m_IsRuntimePaused)
+		{
+			if (m_StepFrames <= 0)
+				return false;
+			else
+				m_StepFrames--;
+		}
+
+		return true;
 	}
 
 	void Scene::OnViewportResize(const glm::vec2& viewportSize)

@@ -12,7 +12,8 @@ namespace Flameberry {
 	enum class EditorState : uint8_t
 	{
 		Edit = 0,
-		Play = 1
+		Play = 1,
+		Simulate = 2,
 	};
 
 	class EditorLayer : public Layer
@@ -46,6 +47,7 @@ namespace Flameberry {
 
 		void OnSceneEdit();
 		void OnScenePlay();
+		void OnSceneSimulate();
 
 		void UI_Menubar();
 		void UI_Toolbar();
@@ -84,7 +86,7 @@ namespace Flameberry {
 		bool m_ShouldOpenAnotherScene = false;
 
 		// Texture Icons
-		Ref<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon, m_PauseIcon, m_StepIcon;
+		Ref<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon, m_PauseIcon, m_StepIcon, m_SimulateAndPauseIcon;
 		static constexpr ImVec2 s_OverlayButtonSize = ImVec2(16, 16);
 		static constexpr float s_OverlayPadding = 6.0f;
 
@@ -135,7 +137,7 @@ namespace Flameberry {
 			{
 				UI::ScopedStyleVariable windowMinSize(ImGuiStyleVar_WindowMinSize, ImVec2(20, 20));
 				UI::ScopedStyleVariable windowBorderSize(ImGuiStyleVar_WindowBorderSize, 0.0f);
-				UI::ScopedStyleVariable windowRounding(ImGuiStyleVar_WindowRounding, 5.0f);
+				UI::ScopedStyleVariable windowRounding(ImGuiStyleVar_WindowRounding, 16.0f);
 				UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 3.0f });
 
 				ImGui::Begin(str_id, __null, window_flags);

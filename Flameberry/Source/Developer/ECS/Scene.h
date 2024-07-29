@@ -21,9 +21,13 @@ namespace Flameberry {
 		const Scene& operator=(const Scene& other) const = delete;
 
 		void OnStartRuntime();
+		void OnUpdateRuntime(float delta);
 		void OnStopRuntime();
 
-		void OnUpdateRuntime(float delta);
+		void OnStartSimulation();
+		void OnUpdateSimulation(float delta);
+		void OnStopSimulation();
+
 		void OnViewportResize(const glm::vec2& viewportSize);
 
 		fbentt::entity CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent);
@@ -61,6 +65,15 @@ namespace Flameberry {
 		 * Recursively checks if the given `entity` is in the lower heirarchy of the given `parent`
 		 */
 		bool Recursive_IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
+
+		void OnPhysicsStart();
+		void OnPhysicsSimulate(float delta);
+		void OnPhysicsStop();
+
+		/**
+		 * Handle Pausing and Stepping
+		 */
+		bool ShouldStep();
 
 	private:
 		Ref<fbentt::registry> m_Registry;
