@@ -74,6 +74,7 @@ namespace Flameberry {
 	{
 		m_IsRuntimeActive = m_IsRuntimePaused = false;
 
+		ScriptEngine::OnRuntimeStop();
 		OnPhysicsStop();
 
 		// Delete Script Actors
@@ -96,6 +97,7 @@ namespace Flameberry {
 			nsc.Actor->OnUpdate(delta);
 
 		OnPhysicsSimulate(delta);
+		ScriptEngine::OnRuntimeUpdate(delta);
 	}
 
 	void Scene::OnStartSimulation()
@@ -216,11 +218,8 @@ namespace Flameberry {
 		}
 	}
 
-
-
-		OnPhy
 	void Scene::OnPhysicsSimulate(float delta)
-	{		
+	{
 		// Update Physics
 		m_PxScene->simulate(delta);
 		m_PxScene->fetchResults(true);

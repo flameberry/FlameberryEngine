@@ -830,7 +830,7 @@ namespace Flameberry {
 		auto it = s_Data->ManagedActors.find(entity);
 		if (it == s_Data->ManagedActors.end())
 		{
-			FBY_ERROR("Failed to get managed actor with entity ID: {}", entity);
+			FBY_ERROR("Failed to get managed actor with entity ID: {}", (uint64_t)entity);
 			return nullptr;
 		}
 		return it->second;
