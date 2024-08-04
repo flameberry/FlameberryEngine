@@ -17,6 +17,7 @@ namespace Flameberry {
 			{ "Quad.vert.spv", "Quad.frag.spv" },
 			{ "SolidColor.vert.spv", "SolidColor.frag.spv" },
 			{ "Text.vert.spv", "Text.frag.spv" },
+			{ "InfiniteGrid.vert.spv", "InfiniteGrid.frag.spv" },
 		};
 
 		const char* computeShaderPaths[] = {

@@ -96,7 +96,7 @@ namespace Flameberry {
 		Ref<DescriptorSetLayout> m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
 		std::vector<Ref<DescriptorSet>> m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
 		std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
-		Ref<Pipeline> m_MeshPipeline, m_SkymapPipeline;
+		Ref<Pipeline> m_MeshPipeline, m_SkymapPipeline, m_GridPipeline;
 		VkSampler m_VkTextureSampler;
 
 		// Shadow Map

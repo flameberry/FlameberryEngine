@@ -4,11 +4,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Asset/Importers/TextureImporter.h"
 #include "Core/Core.h"
 #include "Core/Log.h"
 #include "Core/Profiler.h"
 
 #include "ECS/Components.h"
+#include "Renderer/Pipeline.h"
 #include "VulkanDebug.h"
 #include "VulkanContext.h"
 #include "Renderer.h"
@@ -21,6 +23,7 @@
 #include "Skymap.h"
 
 #include "Asset/AssetManager.h"
+#include "vulkan/vulkan_core.h"
 
 namespace Flameberry {
 
@@ -400,6 +403,20 @@ namespace Flameberry {
 				m_SkymapPipeline = CreateRef<Pipeline>(pipelineSpec);
 			}
 			m_VkTextureSampler = Texture2D::GetDefaultSampler();
+		}
+		{
+			// Creating Grid Pipeline
+			PipelineSpecification pipelineSpec{};
+			pipelineSpec.Shader = ShaderLibrary::Get("InfiniteGrid");
+			pipelineSpec.RenderPass = m_GeometryPass;
+
+			pipelineSpec.VertexLayout = {};
+			pipelineSpec.BlendingEnable = true;
+
+			VkSampleCountFlagBits sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+			pipelineSpec.Samples = sampleCount;
+
+			m_GridPipeline = CreateRef<Pipeline>(pipelineSpec);
 		}
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -838,8 +855,8 @@ namespace Flameberry {
 		}
 
 		// Should make editor only (Not Runtime)
-		if (renderGrid)
-			Renderer2D::AddGrid(25);
+		// if (renderGrid)
+		// 	Renderer2D::AddGrid(25);
 
 		// Render all the text in the scene
 		for (const auto entity : scene->GetRegistry()->group<TransformComponent, TextComponent>())
@@ -851,6 +868,19 @@ namespace Flameberry {
 		}
 
 		Renderer2D::EndScene();
+
+		///////////////////////////////////////////// Grid Rendering /////////////////////////////////////////////
+		if (renderGrid)
+		{
+			VkPipelineLayout pipelineLayout = m_GridPipeline->GetVulkanPipelineLayout();
+			Renderer::Submit([globalCameraBufferDescSet = m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(), pipelineLayout, pipeline = m_GridPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t)
+				{
+					VkDescriptorSet descriptorSets[] = { globalCameraBufferDescSet };
+					Renderer::RT_BindPipeline(cmdBuffer, pipeline);
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+					vkCmdDraw(cmdBuffer, 6, 1, 0, 0);
+				});
+		}
 
 		m_GeometryPass->End();
 
