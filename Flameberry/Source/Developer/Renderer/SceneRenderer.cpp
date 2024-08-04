@@ -38,6 +38,12 @@ namespace Flameberry {
 		float Exposure;
 	};
 
+	struct GridSettingsGPURepresentation
+	{
+		FBoolean Fading;
+		float Near, Far;
+	};
+
 	struct SceneRendererSettingsUniform
 	{
 		int EnableShadows = 1, ShowCascades = 0, SoftShadows = 1, SkyReflections = 1;
@@ -417,6 +423,11 @@ namespace Flameberry {
 			pipelineSpec.Samples = sampleCount;
 
 			m_GridPipeline = CreateRef<Pipeline>(pipelineSpec);
+
+			m_GridMaterial = CreateRef<Material>(pipelineSpec.Shader);
+			m_GridMaterial->Set("u_GridSettings.Fading", 1.0f);
+			m_GridMaterial->Set("u_GridSettings.Near", 0.1f);
+			m_GridMaterial->Set("u_GridSettings.Far", 100.0f);
 		}
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -491,6 +502,11 @@ namespace Flameberry {
 		m_SpotLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SpotLightIcon.png");
 		m_CameraIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/CameraIcon.png");
 		m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SunIcon.png");
+	}
+
+	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera, const glm::vec3& cameraPosition, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
+	{
+		RenderScene(viewportSize, scene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), cameraPosition, camera.GetSettings().Near, camera.GetSettings().Far, selectedEntity, renderGrid, renderDebugIcons, renderOutline, renderPhysicsCollider);
 	}
 
 	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
@@ -854,10 +870,6 @@ namespace Flameberry {
 			}
 		}
 
-		// Should make editor only (Not Runtime)
-		// if (renderGrid)
-		// 	Renderer2D::AddGrid(25);
-
 		// Render all the text in the scene
 		for (const auto entity : scene->GetRegistry()->group<TransformComponent, TextComponent>())
 		{
@@ -870,14 +882,23 @@ namespace Flameberry {
 		Renderer2D::EndScene();
 
 		///////////////////////////////////////////// Grid Rendering /////////////////////////////////////////////
+
+		// Should make editor only (Not Runtime)
 		if (renderGrid)
 		{
 			VkPipelineLayout pipelineLayout = m_GridPipeline->GetVulkanPipelineLayout();
-			Renderer::Submit([globalCameraBufferDescSet = m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(), pipelineLayout, pipeline = m_GridPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t)
+
+			GridSettingsGPURepresentation& gridSettings = m_GridMaterial->GetUniformDataReferenceAs<GridSettingsGPURepresentation>();
+			gridSettings.Fading = (FBoolean)m_RendererSettings.GridFading;
+			gridSettings.Near = m_RendererSettings.GridNear;
+			gridSettings.Far = m_RendererSettings.GridFar;
+
+			Renderer::Submit([material = m_GridMaterial, globalCameraBufferDescSet = m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(), pipelineLayout, pipeline = m_GridPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t)
 				{
 					VkDescriptorSet descriptorSets[] = { globalCameraBufferDescSet };
 					Renderer::RT_BindPipeline(cmdBuffer, pipeline);
 					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+					Renderer::RT_BindMaterial(cmdBuffer, pipelineLayout, material);
 					vkCmdDraw(cmdBuffer, 6, 1, 0, 0);
 				});
 		}

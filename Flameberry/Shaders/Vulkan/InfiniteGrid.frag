@@ -1,14 +1,16 @@
 #version 450
 
-const float g_Near = 0.01;
-const float g_Far = 100.0;
-
 layout(location = 0) in vec3 v_NearPoint;
 layout(location = 1) in vec3 v_FarPoint;
 layout(location = 2) in mat4 v_ViewMatrix;
 layout(location = 6) in mat4 v_ProjectionMatrix;
 
 layout(location = 0) out vec4 o_FragColor;
+
+layout(push_constant) uniform GridSettings {
+    bool Fading;
+    float Near, Far;
+} u_GridSettings;
 
 float ComputeDepth(vec3 pos)
 {
@@ -20,8 +22,8 @@ float ComputeLinearDepth(vec3 pos)
 {
     vec4 clipSpacePos = v_ProjectionMatrix * v_ViewMatrix * vec4(pos.xyz, 1.0);
     float clipSpaceDepth = (clipSpacePos.z / clipSpacePos.w) * 2.0 - 1.0; // put back between -1 and 1
-    float linearDepth = (2.0 * g_Near * g_Far) / (g_Far + g_Near - clipSpaceDepth * (g_Far - g_Near)); // get linear value between 0.01 and 100
-    return linearDepth / g_Far; // normalize
+    float linearDepth = (2.0 * u_GridSettings.Near * u_GridSettings.Far) / (u_GridSettings.Far + u_GridSettings.Near - clipSpaceDepth * (u_GridSettings.Far - u_GridSettings.Near)); // get linear value between 0.01 and 100
+    return linearDepth / u_GridSettings.Far; // normalize
 }
 
 float PristineGrid(in vec2 uv, vec2 lineWidth)
@@ -55,16 +57,13 @@ void main()
 
     gl_FragDepth = ComputeDepth(fragPos3D);
 
-    float linearDepth = ComputeLinearDepth(fragPos3D);
-    float fading = max(0, (0.5 - linearDepth));
-
     // Compute UV coordinates for the grid
     vec2 gridUV = fragPos3D.xz;
 
     // For some reason adding this offset with gridUV and any scale, gives the correct grid position
     vec2 gridOffset = vec2(0.0, 0.5);
 
-    const vec2 axesLineWidth = vec2(0.03);
+    const vec2 axesLineWidth = vec2(0.02);
     vec2 lineWidth = vec2(0.01);
     vec2 lineWidth2 = vec2(0.02);
     vec3 baseGridColor = vec3(0.2);
@@ -85,9 +84,18 @@ void main()
     float gridIntensity = max(gridIntensity1, gridIntensity2);
 
     // Determine the color of the fragment based on grid intensity
-    // vec4 gridColor = vec4(baseGridColor, gridIntensity);
-    vec4 gridColor = mix(vec4(0, 0, 0, 0), vec4(baseGridColor, 1), gridIntensity);
+    vec4 gridColor = vec4(baseGridColor, gridIntensity);
+
+    // vec4 gridColor = mix(vec4(0, 0, 0, 0), vec4(baseGridColor, 1), gridIntensity);
+    // vec4 gridColor = mix(vec4(0, 0, 0, 0), vec4(baseGridColor, 1), gridIntensity1);
+    // gridColor = mix(gridColor, vec4(baseGridColor, 1), gridIntensity2);
 
     o_FragColor = gridColor * float(t > 0);
-    // o_FragColor.a *= fading;
+
+    if (u_GridSettings.Fading)
+    {
+        float linearDepth = ComputeLinearDepth(fragPos3D);
+        float fading = max(0, 0.8 - linearDepth);
+        o_FragColor.a *= fading;
+    }
 }

@@ -28,6 +28,9 @@ namespace Flameberry {
 		bool EnableShadows = true, ShowCascades = false, SoftShadows = true, SkyReflections = true;
 		float CascadeLambdaSplit = 0.91f;
 
+		bool GridFading = true;
+		float GridNear = 0.1f, GridFar = 100.0f;
+
 		static const uint32_t CascadeCount = 4, CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
 	};
 
@@ -68,6 +71,7 @@ namespace Flameberry {
 		SceneRenderer(const glm::vec2& viewportSize);
 		~SceneRenderer();
 
+		void RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera, const glm::vec3& cameraPosition, fbentt::entity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true, bool renderOutline = true, bool renderPhysicsCollider = true);
 		void RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true, bool renderOutline = true, bool renderPhysicsCollider = true);
 
 		VkImageView GetGeometryPassOutputImageView(uint32_t index) const { return m_GeometryPass->GetSpecification().TargetFramebuffers[index]->GetColorResolveAttachment(0)->GetVulkanImageView(); }
@@ -98,6 +102,7 @@ namespace Flameberry {
 		std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
 		Ref<Pipeline> m_MeshPipeline, m_SkymapPipeline, m_GridPipeline;
 		VkSampler m_VkTextureSampler;
+		Ref<Material> m_GridMaterial;
 
 		// Shadow Map
 		Ref<RenderPass> m_ShadowMapRenderPass;
