@@ -61,14 +61,33 @@ void main()
     // Compute UV coordinates for the grid
     vec2 gridUV = fragPos3D.xz;
 
-    vec2 lineWidth = vec2(0.02);
-    float gridIntensity = PristineGrid(gridUV * 0.5, lineWidth);
-    // gridIntensity += PristineGrid(gridUV * 5.0, vec2(0.1));
+    // For some reason adding this offset with gridUV and any scale, gives the correct grid position
+    vec2 gridOffset = vec2(0.0, 0.5);
+
+    const vec2 axesLineWidth = vec2(0.03);
+    vec2 lineWidth = vec2(0.01);
+    vec2 lineWidth2 = vec2(0.02);
+    vec3 baseGridColor = vec3(0.2);
+
+    if (abs(fragPos3D.x) <= axesLineWidth.x)
+    {
+        baseGridColor.r = 1.0;
+        lineWidth = axesLineWidth;
+    }
+    if (abs(fragPos3D.z) <= axesLineWidth.y)
+    {
+        baseGridColor.z = 1.0;
+        lineWidth = axesLineWidth;
+    }
+
+    float gridIntensity1 = PristineGrid(gridUV * 0.5 + gridOffset, lineWidth);
+    float gridIntensity2 = PristineGrid(gridUV * 5.0 + gridOffset, lineWidth2);
+    float gridIntensity = max(gridIntensity1, gridIntensity2);
 
     // Determine the color of the fragment based on grid intensity
-    vec4 gridColor = vec4(vec3(0.4), gridIntensity);
-    // vec4 gridColor = mix(vec4(0, 0, 0, 1), vec4(1, 1, 1, 1), gridIntensity);
+    // vec4 gridColor = vec4(baseGridColor, gridIntensity);
+    vec4 gridColor = mix(vec4(0, 0, 0, 0), vec4(baseGridColor, 1), gridIntensity);
 
     o_FragColor = gridColor * float(t > 0);
-    o_FragColor.a *= fading;
+    // o_FragColor.a *= fading;
 }
