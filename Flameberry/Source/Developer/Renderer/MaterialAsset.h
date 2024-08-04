@@ -10,7 +10,7 @@ namespace Flameberry {
 	{
 		glm::vec3 Albedo;
 		float Roughness, Metallic;
-		uint32_t UseAlbedoMap, UseNormalMap, UseRoughnessMap, UseAmbientMap, UseMetallicMap;
+		FBoolean UseAlbedoMap, UseNormalMap, UseRoughnessMap, UseAmbientMap, UseMetallicMap;
 	};
 
 	// This class is basically a wrapper for the `Material` class to add utilities for using Materials for Meshes
@@ -38,11 +38,11 @@ namespace Flameberry {
 		void SetRoughness(float roughness) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().Roughness = roughness; }
 		void SetMetallic(float metallic) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().Metallic = metallic; }
 
-		void SetUseAlbedoMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAlbedoMap = value; }
-		void SetUseNormalMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseNormalMap = value; }
-		void SetUseRoughnessMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseRoughnessMap = value; }
-		void SetUseAmbientMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAmbientMap = value; }
-		void SetUseMetallicMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseMetallicMap = value; }
+		void SetUseAlbedoMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAlbedoMap = (FBoolean)value; }
+		void SetUseNormalMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseNormalMap = (FBoolean)value; }
+		void SetUseRoughnessMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseRoughnessMap = (FBoolean)value; }
+		void SetUseAmbientMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAmbientMap = (FBoolean)value; }
+		void SetUseMetallicMap(bool value) { m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseMetallicMap = (FBoolean)value; }
 
 		void SetAlbedoMap(AssetHandle handle);
 		void SetNormalMap(AssetHandle handle);

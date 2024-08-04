@@ -42,11 +42,6 @@ namespace Flameberry {
 		}
 	};
 
-	struct CameraUniformBufferGPURepresentation
-	{
-		glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
-	};
-
 	EditorLayer::EditorLayer(const Ref<Project>& project)
 		: m_Project(project)
 		, m_ActiveCameraController(

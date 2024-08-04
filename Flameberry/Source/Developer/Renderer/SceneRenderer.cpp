@@ -46,7 +46,7 @@ namespace Flameberry {
 
 	struct SceneRendererSettingsUniform
 	{
-		int EnableShadows = 1, ShowCascades = 0, SoftShadows = 1, SkyReflections = 1;
+		FBoolean EnableShadows = FTrue, ShowCascades = FFalse, SoftShadows = FTrue, SkyReflections = FTrue;
 		float GammaCorrectionFactor, Exposure;
 	};
 
@@ -595,10 +595,10 @@ namespace Flameberry {
 			sceneUniformBufferData.CascadeViewProjectionMatrices[i] = m_Cascades[i].ViewProjectionMatrix;
 			sceneUniformBufferData.CascadeDepthSplits[i] = m_Cascades[i].DepthSplit;
 		}
-		sceneUniformBufferData.RendererSettings.EnableShadows = (int)shouldRenderShadows;
-		sceneUniformBufferData.RendererSettings.ShowCascades = (int)m_RendererSettings.ShowCascades;
-		sceneUniformBufferData.RendererSettings.SoftShadows = (int)m_RendererSettings.SoftShadows;
-		sceneUniformBufferData.RendererSettings.SkyReflections = (int)m_RendererSettings.SkyReflections;
+		sceneUniformBufferData.RendererSettings.EnableShadows = (FBoolean)shouldRenderShadows;
+		sceneUniformBufferData.RendererSettings.ShowCascades = (FBoolean)m_RendererSettings.ShowCascades;
+		sceneUniformBufferData.RendererSettings.SoftShadows = (FBoolean)m_RendererSettings.SoftShadows;
+		sceneUniformBufferData.RendererSettings.SkyReflections = (FBoolean)m_RendererSettings.SkyReflections;
 		sceneUniformBufferData.RendererSettings.GammaCorrectionFactor = m_RendererSettings.GammaCorrectionFactor;
 		sceneUniformBufferData.RendererSettings.Exposure = m_RendererSettings.Exposure;
 
