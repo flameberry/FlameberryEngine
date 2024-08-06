@@ -11,7 +11,24 @@
 
 namespace Flameberry {
 
+	static std::unordered_map<uint64_t, uint32_t> s_DescriptorSetAndBindingIntegerToArrayIndex;
+
+	bool operator==(const ReflectionDescriptorBindingSpecification& s1, const ReflectionDescriptorBindingSpecification& s2)
+	{
+		return s1.Set == s2.Set
+			&& s1.Binding == s2.Binding
+			&& s1.Type == s2.Type
+			&& s1.Count == s2.Count
+			&& s1.IsDescriptorTypeImage == s2.IsDescriptorTypeImage
+			&& s1.RendererOnly == s2.RendererOnly;
+	}
+
 	namespace Utils {
+
+		uint64_t CantorPairingFunction(uint32_t a, uint32_t b)
+		{
+			return (a + b) * (a + b + 1) / 2 + a;
+		}
 
 		bool HasPrefix(const char* str1, const char* prefix)
 		{
@@ -57,6 +74,9 @@ namespace Flameberry {
 		const auto& stem = std::filesystem::path(vertexShaderSpvPath).stem().string();
 		m_Name = stem.substr(0, stem.find('.'));
 
+		// Clear the map to be used for the current shader
+		s_DescriptorSetAndBindingIntegerToArrayIndex.clear();
+
 		// Vertex Shader
 		std::vector<char> vertexShaderSpvBinaryCode = LoadShaderSpvCode(vertexShaderSpvPath);
 		Reflect(vertexShaderSpvBinaryCode);
@@ -72,6 +92,9 @@ namespace Flameberry {
 	{
 		const auto& stem = std::filesystem::path(spvBinaryPath).stem().string();
 		m_Name = stem.substr(0, stem.find('.'));
+
+		// Clear the map to be used for the current shader
+		s_DescriptorSetAndBindingIntegerToArrayIndex.clear();
 
 		std::vector<char> shaderSpvBinaryCode = LoadShaderSpvCode(spvBinaryPath);
 		Reflect(shaderSpvBinaryCode);
@@ -276,9 +299,7 @@ namespace Flameberry {
 							fullName = binding->type_description->type_name;
 					}
 
-					// Here all the reflection binding specifications are pushed back
-					// Assumption here is that all the bindings are in order (Yet to find out how would it affect the functioning)
-					m_DescriptorBindingSpecifications.emplace_back(ReflectionDescriptorBindingSpecification{
+					ReflectionDescriptorBindingSpecification reflectionDescriptorBindingSpecification{
 						.Name = fullName,
 						.Set = binding->set,
 						.Binding = binding->binding,
@@ -286,11 +307,29 @@ namespace Flameberry {
 						.Type = (VkDescriptorType)binding->descriptor_type,
 						.VulkanShaderStage = (VkShaderStageFlags)reflectionShaderModule.GetShaderStage(),
 						.RendererOnly = rendererOnly,
-						.IsDescriptorTypeImage = isDescriptorTypeImage });
+						.IsDescriptorTypeImage = isDescriptorTypeImage
+					};
 
-					// This unordered_map is stored only for convenience of setting the Uniform Buffers/Images using their names in the shader
-					// It shouldn't be accessed every frame
-					m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] = static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
+					uint64_t combinedValue = Utils::CantorPairingFunction(binding->set, binding->binding);
+
+					if (auto it = s_DescriptorSetAndBindingIntegerToArrayIndex.find(combinedValue); it != s_DescriptorSetAndBindingIntegerToArrayIndex.end())
+					{
+						FBY_ASSERT(reflectionDescriptorBindingSpecification == m_DescriptorBindingSpecifications[it->second], "Descriptor Sets with the same set number and binding must be the exact same");
+						m_DescriptorBindingSpecifications[it->second].VulkanShaderStage |= reflectionDescriptorBindingSpecification.VulkanShaderStage;
+					}
+					else
+					{
+						// Here all the reflection binding specifications are pushed back
+						// Assumption here is that all the bindings are in order (Yet to find out how would it affect the functioning)
+						m_DescriptorBindingSpecifications.emplace_back(reflectionDescriptorBindingSpecification);
+
+						// This unordered_map is stored only for convenience of setting the Uniform Buffers/Images using their names in the shader
+						// It shouldn't be accessed every frame
+						m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] = static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
+
+						// The index of the descriptor set is maintained to consider the case of same descriptor sets defined in different stages of the pipeline
+						s_DescriptorSetAndBindingIntegerToArrayIndex[combinedValue] = static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
+					}
 				}
 				m_DescriptorSetSpecifications.emplace_back(ReflectionDescriptorSetSpecification{ .Set = descSets[i]->set, .BindingCount = descSets[i]->binding_count });
 			}

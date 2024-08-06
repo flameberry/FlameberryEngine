@@ -78,11 +78,12 @@ namespace Flameberry {
 
 			ImGui::Spacing();
 
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
-			ImGui::PushStyleColor(ImGuiCol_Border, Theme::WindowBorder);
-			ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX);
-			ImGui::PopStyleColor();
-			ImGui::PopStyleVar();
+			{
+				UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
+				UI::ScopedStyleColor border(ImGuiCol_Border, Theme::WindowBorder);
+
+				ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX);
+			}
 
 			ImGui::Spacing();
 #if 0
@@ -370,7 +371,7 @@ namespace Flameberry {
 
 							if (ImGui::BeginTable("MaterialTable", 4, s_TableFlags))
 							{
-								ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+								ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 								ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
 								ImGui::TableSetupColumn("Material_LoadFromAssetsButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
 								ImGui::TableSetupColumn("Material_ResetButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);

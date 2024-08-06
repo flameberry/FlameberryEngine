@@ -44,11 +44,6 @@ namespace Flameberry {
 		}
 	};
 
-	struct CameraUniformBufferGPURepresentation
-	{
-		glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
-	};
-
 	EditorLayer::EditorLayer(const Ref<Project>& project)
 		: m_Project(project)
 		, m_ActiveCameraController(
@@ -239,7 +234,7 @@ namespace Flameberry {
 				const auto& camera = m_ActiveCameraController.GetCamera();
 
 				// Actual Rendering (All scene related render passes)
-				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), m_ActiveCameraController.GetPosition(), camera.GetSettings().Near, camera.GetSettings().Far, m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
+				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
 				break;
 			}
 			case EditorState::Play:
@@ -253,12 +248,12 @@ namespace Flameberry {
 					auto [transform, cameraComp] = m_ActiveScene->GetRegistry()->get<TransformComponent, CameraComponent>(cameraEntity);
 					auto& camera = cameraComp.Camera;
 					camera.SetView(transform.Translation, transform.Rotation);
-					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), transform.Translation, camera.GetSettings().Near, camera.GetSettings().Far, fbentt::null, false, false, false, false);
+					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, transform.Translation, fbentt::null, false, false, false, false);
 				}
 				else
 				{
 					const auto& camera = m_ActiveCameraController.GetCamera();
-					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), m_ActiveCameraController.GetPosition(), camera.GetSettings().Near, camera.GetSettings().Far, fbentt::null, false, false, false, false);
+					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), fbentt::null, false, false, false, false);
 				}
 				break;
 			}
@@ -268,7 +263,7 @@ namespace Flameberry {
 
 				const auto& camera = m_ActiveCameraController.GetCamera();
 				// Actual Rendering (All scene related render passes)
-				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), m_ActiveCameraController.GetPosition(), camera.GetSettings().Near, camera.GetSettings().Far, m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
+				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
 			}
 		}
 
@@ -1103,6 +1098,15 @@ namespace Flameberry {
 
 				UI::TableKeyElement("Exposure");
 				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f));
+
+				UI::TableKeyElement("Grid Fading");
+				FBY_PUSH_WIDTH_MAX(ImGui::Checkbox("##Grid_Fading", &settings.GridFading));
+
+				UI::TableKeyElement("Grid Near");
+				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Near", &settings.GridNear, 0.01f, 0.0f, settings.GridFar));
+
+				UI::TableKeyElement("Grid Far");
+				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Far", &settings.GridFar, 0.01f, settings.GridNear));
 
 				UI::EndKeyValueTable();
 			}

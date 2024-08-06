@@ -67,6 +67,13 @@ namespace Flameberry {
 		Dummy16 // Note: The sizes are in bytes
 	};
 
+	// Boolean data type for representing a GPU Boolean
+	enum FBoolean : uint32_t
+	{
+		FFalse = 0u,
+		FTrue = 1u
+	};
+
 	class Shader
 	{
 	public:

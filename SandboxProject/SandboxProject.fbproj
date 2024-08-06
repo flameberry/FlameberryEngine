@@ -1,7 +1,7 @@
 Project: SandboxProject
 Configuration:
   AssetDirectory: Content
-  StartScene: 0
+  StartScene: 9784671771204879794
   AssetRegistryPath: Intermediate/AssetRegistry.yaml
   ThumbnailCacheDirectory: Intermediate/Thumbnail.cache
   ScriptAssemblyPath: Content/Scripting/Binaries/net7.0/SandboxProject.dll

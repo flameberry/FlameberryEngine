@@ -180,18 +180,24 @@ namespace Flameberry {
 
 	void Renderer::RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material)
 	{
-		VkDescriptorSet descSetArray[material->m_DescriptorSets.size()];
-		int idx = 0;
-		for (const auto& set : material->m_DescriptorSets)
-		{
-			descSetArray[idx] = set->GetVulkanDescriptorSet();
-			idx++;
-		}
-		uint32_t setNumber = material->m_StartSetIndex;
-		uint32_t count = idx;
-
 		vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, material->GetPushConstantOffset(), material->GetUniformDataSize(), material->GetUniformDataPtr());
-		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, setNumber, count, &descSetArray[0], 0, nullptr);
+
+		if (material->m_DescriptorSets.size())
+		{
+			int idx = 0;
+			VkDescriptorSet descSetArray[material->m_DescriptorSets.size()];
+
+			for (const auto& set : material->m_DescriptorSets)
+			{
+				descSetArray[idx] = set->GetVulkanDescriptorSet();
+				idx++;
+			}
+
+			const uint32_t setNumber = material->m_StartSetIndex;
+			const uint32_t count = idx;
+
+			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, setNumber, count, &descSetArray[0], 0, nullptr);
+		}
 
 		// Record Statistics
 		s_RendererFrameStats.BoundMaterials++;
