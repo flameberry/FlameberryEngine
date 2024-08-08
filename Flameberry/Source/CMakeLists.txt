@@ -18,3 +18,11 @@ set(MSDF_ATLAS_BUILD_STANDALONE OFF)
 set(MSDF_ATLAS_USE_VCPKG OFF)
 set(MSDF_ATLAS_USE_SKIA OFF)
 add_subdirectory(ThirdParty/MsdfAtlasGen)
+
+set(INTERPROCEDURAL_OPTIMIZATION ON)
+
+add_subdirectory(ThirdParty/JoltPhysics/Build)
+
+SET_INTERPROCEDURAL_OPTIMIZATION()
+
+# set(CMAKE_CXX_FLAGS_DEBUG "")

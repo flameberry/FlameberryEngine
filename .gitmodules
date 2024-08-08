@@ -31,3 +31,6 @@
 [submodule "Flameberry/Source/ThirdParty/Freetype"]
 	path = Flameberry/Source/ThirdParty/Freetype
 	url = https://github.com/freetype/freetype
+[submodule "Flameberry/Source/ThirdParty/JoltPhysics"]
+	path = Flameberry/Source/ThirdParty/JoltPhysics
+	url = https://github.com/jrouwe/JoltPhysics

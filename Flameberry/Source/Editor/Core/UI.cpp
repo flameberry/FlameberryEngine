@@ -252,7 +252,7 @@ namespace Flameberry::UI {
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginDragDropSource())
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 		{
 			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filepath.c_str(), (strlen(filepath.c_str()) + 1) * sizeof(char), ImGuiCond_Once);
 

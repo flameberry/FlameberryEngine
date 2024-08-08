@@ -73,7 +73,7 @@ list(APPEND FBY_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 set(FBY_COMPILE_DEFINITIONS FBY_PROJECT_DIR="${FBY_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 # Setting the paths we require irrespective of the Graphics API
-list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt spirv-reflect-static msdf-atlas-gen)
+list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt spirv-reflect-static msdf-atlas-gen Jolt)
 list(APPEND FBY_INCLUDE_DIRS
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/GLFW/include
@@ -83,41 +83,10 @@ list(APPEND FBY_INCLUDE_DIRS
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/fmtlib/include
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/include
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/build/include
-	${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MsdfAtlasGen/msdf-atlas-gen
-	${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MsdfAtlasGen/msdfgen
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MsdfAtlasGen/msdf-atlas-gen
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MsdfAtlasGen/msdfgen
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/JoltPhysics
 )
-
-# Nvidia PhysX
-include(Flameberry/Build/CMake/envPhysX.cmake)
-
-add_library(PhysX_LIBRARY STATIC IMPORTED)
-set_target_properties(PhysX_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysX_static_64.a)
-set_target_properties(PhysX_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysX_static_64.a)
-
-add_library(PhysXFoundation_LIBRARY STATIC IMPORTED)
-set_target_properties(PhysXFoundation_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXFoundation_static_64.a)
-set_target_properties(PhysXFoundation_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXFoundation_static_64.a)
-
-add_library(PhysXCommon_LIBRARY STATIC IMPORTED)
-set_target_properties(PhysXCommon_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXCommon_static_64.a)
-set_target_properties(PhysXCommon_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXCommon_static_64.a)
-
-add_library(PhysXCooking_LIBRARY STATIC IMPORTED)
-set_target_properties(PhysXCooking_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXCooking_static_64.a)
-set_target_properties(PhysXCooking_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXCooking_static_64.a)
-
-add_library(PhysXExtensions_LIBRARY STATIC IMPORTED)
-set_target_properties(PhysXExtensions_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXExtensions_static_64.a)
-set_target_properties(PhysXExtensions_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXExtensions_static_64.a)
-
-# TODO: Should not be needed
-add_library(PhysXPvdSDK_LIBRARY STATIC IMPORTED)
-set_target_properties(PhysXPvdSDK_LIBRARY PROPERTIES IMPORTED_LOCATION_DEBUG ${PHYSX_CHECKED_LIB_DIRECTORY}/libPhysXPvdSDK_static_64.a)
-set_target_properties(PhysXPvdSDK_LIBRARY PROPERTIES IMPORTED_LOCATION_RELEASE ${PHYSX_RELEASE_LIB_DIRECTORY}/libPhysXPvdSDK_static_64.a)
-
-list(APPEND FBY_LIBRARY_DEPENDENCIES PhysX_LIBRARY PhysXFoundation_LIBRARY PhysXCommon_LIBRARY PhysXCooking_LIBRARY PhysXExtensions_LIBRARY PhysXPvdSDK_LIBRARY)
-list(APPEND FBY_INCLUDE_DIRS ${PHYSX_INCLUDE_DIR})
-list(APPEND FBY_COMPILE_DEFINITIONS ${PHYSX_COMPILE_DEFINITIONS})
 
 # Assimp
 find_library(Assimp_LIBRARY NAMES assimp HINTS "${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/build/bin" REQUIRED)

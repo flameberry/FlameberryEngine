@@ -1,13 +1,28 @@
 #include "Scene.h"
 
-#include <PxPhysicsAPI.h>
+#include <Jolt/Jolt.h>
+
+// Jolt includes
+#include <Jolt/RegisterTypes.h>
+#include <Jolt/Core/Factory.h>
+#include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/Body/MassProperties.h>
 
 #include "Core/Assert.h"
 #include "Core/Profiler.h"
 #include "Components.h"
 
 #include "ECS/ecs.hpp"
-#include "Physics/PhysicsEngine.h"
+#include "Physics/Physics.h"
+#include "Physics/InterfaceImpls.h"
 
 namespace Flameberry {
 
@@ -118,16 +133,105 @@ namespace Flameberry {
 
 	void Scene::OnPhysicsStart()
 	{
+		for (auto entity : m_Registry->group<TransformComponent, RigidBodyComponent>())
+		{
+			const auto& [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
+
+			JPH::ShapeRefC shapeRef;
+
+			if (auto* boxColliderComponent = m_Registry->try_get<BoxColliderComponent>(entity))
+			{
+				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
+
+				const glm::vec3 boxColliderSize = 0.5f * boxColliderComponent->Size * transform.Scale;
+				JPH::BoxShapeSettings boxShapeSettings(JPH::Vec3(boxColliderSize.x, boxColliderSize.y, boxColliderSize.z));
+				boxShapeSettings.SetEmbedded();
+
+				// Create the shape
+				JPH::ShapeSettings::ShapeResult boxShapeResult = boxShapeSettings.Create();
+				shapeRef = boxShapeResult.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
+			}
+
+			if (auto* sphereColliderComponent = m_Registry->try_get<SphereColliderComponent>(entity))
+			{
+				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
+
+				const float sphereColliderRadius = sphereColliderComponent->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z);
+				JPH::SphereShapeSettings sphereShapeSettings(sphereColliderRadius);
+				sphereShapeSettings.SetEmbedded();
+
+				// Create the shape
+				JPH::ShapeSettings::ShapeResult sphereShapeResult = sphereShapeSettings.Create();
+				shapeRef = sphereShapeResult.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
+			}
+
+			if (auto* capsuleColliderComponent = m_Registry->try_get<CapsuleColliderComponent>(entity))
+			{
+				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
+
+				const float sphereColliderRadius = capsuleColliderComponent->Radius * glm::max(transform.Scale.x, transform.Scale.z);
+				const float sphereColliderHalfHeight = 0.5f * capsuleColliderComponent->Height * transform.Scale.y;
+				JPH::CapsuleShapeSettings capsuleShapeSettings(sphereColliderHalfHeight, sphereColliderRadius);
+				capsuleShapeSettings.SetEmbedded();
+
+				// Create the shape
+				JPH::ShapeSettings::ShapeResult capsuleShapeResult = capsuleShapeSettings.Create();
+				shapeRef = capsuleShapeResult.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
+			}
+
+			const auto quat = glm::quat(transform.Rotation);
+
+			JPH::ObjectLayer objectLayer;
+			JPH::EMotionType motionType;
+
+			switch (rigidBody.Type)
+			{
+				case RigidBodyComponent::RigidBodyType::Static:
+					objectLayer = Layers::NON_MOVING;
+					motionType = JPH::EMotionType::Static;
+					break;
+				case RigidBodyComponent::RigidBodyType::Kinematic:
+					objectLayer = Layers::MOVING;
+					motionType = JPH::EMotionType::Kinematic;
+					break;
+				case RigidBodyComponent::RigidBodyType::Dynamic:
+					objectLayer = Layers::MOVING;
+					motionType = JPH::EMotionType::Dynamic;
+					break;
+			}
+
+			JPH::BodyCreationSettings bodyCreationSettings(
+				shapeRef.GetPtr(),
+				JPH::RVec3(transform.Translation.x, transform.Translation.y, transform.Translation.z),
+				JPH::Quat(quat.x, quat.y, quat.z, quat.w),
+				motionType,
+				objectLayer);
+
+			JPH::Body* body = PhysicsManager::GetBodyInterface().CreateBody(bodyCreationSettings);
+			PhysicsManager::GetBodyInterface().AddBody(body->GetID(), JPH::EActivation::Activate); // TODO: To Activate or Not?
+
+			PhysicsManager::GetBodyInterface().SetFriction(body->GetID(), rigidBody.StaticFriction);
+			PhysicsManager::GetBodyInterface().SetRestitution(body->GetID(), rigidBody.Restitution);
+
+			rigidBody.RuntimeRigidBody = body;
+		}
+
+		// Optional step: Before starting the physics simulation you can optimize the broad phase. This improves collision detection performance (it's pointless here because we only have 2 bodies).
+		// You should definitely not call this every frame or when e.g. streaming in a new level section as it is an expensive operation.
+		// Instead insert all new objects in batches instead of 1 at a time to keep the broad phase efficient.
+		PhysicsManager::OptimizeBroadPhase();
+
+#if 0
 		// Create Physics Context
 		physx::PxSceneDesc sceneDesc(PhysicsEngine::GetTolerancesScale());
 		sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
 		sceneDesc.cpuDispatcher = PhysicsEngine::GetCPUDispatcher();
 		sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
 
-		// Create Physics Scene
+		Create Physics Scene
 		m_PxScene = PhysicsEngine::GetPhysics()->createScene(sceneDesc);
 
-		// Create Physics Actors
+		Create Physics Actors
 		for (auto entity : m_Registry->group<TransformComponent, RigidBodyComponent>())
 		{
 			auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
@@ -212,10 +316,29 @@ namespace Flameberry {
 				shape->release();
 			}
 		}
+#endif
 	}
 
 	void Scene::OnPhysicsSimulate(float delta)
 	{
+		// If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).
+		const int cCollisionSteps = 1;
+
+		// Step the world
+		PhysicsManager::Update(delta, cCollisionSteps);
+
+		for (auto entity : m_Registry->group<RigidBodyComponent>())
+		{
+			auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
+			JPH::Body* rigidBodyRuntimePtr = (JPH::Body*)rigidBody.RuntimeRigidBody;
+			JPH::RVec3 position = PhysicsManager::GetBodyInterface().GetCenterOfMassPosition(rigidBodyRuntimePtr->GetID());
+			JPH::Quat quat = PhysicsManager::GetBodyInterface().GetRotation(rigidBodyRuntimePtr->GetID());
+
+			transform.Translation = { position.GetX(), position.GetY(), position.GetZ() };
+			transform.Rotation = glm::eulerAngles(glm::quat(quat.GetW(), quat.GetX(), quat.GetY(), quat.GetZ()));
+		}
+
+#if 0
 		// Update Physics
 		m_PxScene->simulate(delta);
 		m_PxScene->fetchResults(true);
@@ -229,11 +352,21 @@ namespace Flameberry {
 			transform.Translation = { globalTransform.p.x, globalTransform.p.y, globalTransform.p.z };
 			transform.Rotation = glm::eulerAngles(glm::quat(globalTransform.q.w, globalTransform.q.x, globalTransform.q.y, globalTransform.q.z));
 		}
+#endif
 	}
 
 	void Scene::OnPhysicsStop()
 	{
+		for (auto& rigidBody : m_Registry->view<RigidBodyComponent>())
+		{
+			JPH::Body* body = (JPH::Body*)rigidBody.RuntimeRigidBody;
+			PhysicsManager::GetBodyInterface().RemoveBody(body->GetID());
+			PhysicsManager::GetBodyInterface().DestroyBody(body->GetID());
+		}
+
+#if 0
 		m_PxScene->release();
+#endif
 	}
 
 	bool Scene::ShouldStep()

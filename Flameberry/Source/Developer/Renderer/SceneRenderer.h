@@ -31,7 +31,7 @@ namespace Flameberry {
 		bool GridFading = true;
 		float GridNear = 0.1f, GridFar = 100.0f;
 
-		static const uint32_t CascadeCount = 4, CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
+		static constexpr uint32_t CascadeCount = 4, CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
 	};
 
 	struct Cascade

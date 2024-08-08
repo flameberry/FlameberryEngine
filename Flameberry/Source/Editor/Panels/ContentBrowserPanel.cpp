@@ -146,7 +146,7 @@ namespace Flameberry {
 		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
 
 		ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBgGrey);
-		ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, -1.0f), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_AlwaysUseWindowPadding);
 		ImGui::PopStyleColor();
 
 		for (auto& directory : std::filesystem::directory_iterator(Project::GetActiveProject()->GetConfig().AssetDirectory))
@@ -174,7 +174,7 @@ namespace Flameberry {
 		constexpr float topChildHeight = 34.0f;
 		const float bottomChildHeight = ImGui::GetContentRegionAvail().y - topChildHeight;
 
-		ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
+		ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
 		ImGui::PopStyleVar();
 
 		constexpr float arrowSize = 14.0f;
@@ -231,7 +231,7 @@ namespace Flameberry {
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowPos(pos);
-		ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, bottomChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, bottomChildHeight), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_AlwaysUseWindowPadding);
 		ImGui::PopStyleVar();
 
 		const float spacing = ImGui::GetStyle().ItemSpacing.x;

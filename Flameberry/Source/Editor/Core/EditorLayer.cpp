@@ -9,7 +9,7 @@
 #include "Renderer/Framebuffer.h"
 #include "Core/UI.h"
 
-#include "Physics/PhysicsEngine.h"
+#include "Physics/Physics.h"
 #include "Renderer/ShaderLibrary.h"
 
 namespace Flameberry {
@@ -78,7 +78,7 @@ namespace Flameberry {
 		Project::SetActive(m_Project);
 		std::filesystem::current_path(m_Project->GetProjectDirectory());
 
-		PhysicsEngine::Init();
+		PhysicsManager::Init();
 		m_ActiveScene = CreateRef<Scene>();
 		m_SceneHierarchyPanel = CreateRef<SceneHierarchyPanel>(m_ActiveScene);
 		m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
@@ -315,7 +315,7 @@ namespace Flameberry {
 
 	void EditorLayer::OnDestroy()
 	{
-		PhysicsEngine::Shutdown();
+		PhysicsManager::Shutdown();
 		Renderer2D::Shutdown();
 
 		// Set the active project as nullptr so that all it's resources like AssetManager are released
@@ -1100,6 +1100,7 @@ namespace Flameberry {
 
 			UI::EndKeyValueTable();
 		}
+
 		ImGui::End();
 	}
 

@@ -61,7 +61,7 @@ namespace Flameberry {
 			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 4));
 			UI::ScopedStyleColor childBg(ImGuiCol_ChildBg, Theme::WindowBg);
 
-			ImGui::BeginChild("##EntityList", ImVec2(-1, -1), false, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysUseWindowPadding);
+			ImGui::BeginChild("##EntityList", ImVec2(-1, -1), 0, ImGuiWindowFlags_AlwaysUseWindowPadding);
 		}
 
 		if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))

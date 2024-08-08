@@ -126,8 +126,15 @@ namespace Flameberry {
 		template <typename T>
 		void Bind()
 		{
-			InitScript = []() { return static_cast<Flameberry::Actor*>(new T()); };
-			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Actor; nsc->Actor = nullptr; };
+			InitScript = []()
+			{
+				return static_cast<Flameberry::Actor*>(new T());
+			};
+			DestroyScript = [](NativeScriptComponent* nsc)
+			{
+				delete nsc->Actor;
+				nsc->Actor = nullptr;
+			};
 		}
 	};
 
@@ -143,8 +150,10 @@ namespace Flameberry {
 		enum class RigidBodyType : uint8_t
 		{
 			Static = 0,
+			Kinematic,
 			Dynamic
 		};
+
 		RigidBodyType Type = RigidBodyType::Static;
 
 		float Density = 10.0f;
