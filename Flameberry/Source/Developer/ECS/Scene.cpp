@@ -179,8 +179,6 @@ namespace Flameberry {
 				shapeRef = capsuleShapeResult.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
 			}
 
-			const auto quat = glm::quat(transform.Rotation);
-
 			JPH::ObjectLayer objectLayer;
 			JPH::EMotionType motionType;
 
@@ -200,6 +198,8 @@ namespace Flameberry {
 					break;
 			}
 
+			const auto quat = glm::quat(transform.Rotation);
+
 			JPH::BodyCreationSettings bodyCreationSettings(
 				shapeRef.GetPtr(),
 				JPH::RVec3(transform.Translation.x, transform.Translation.y, transform.Translation.z),
@@ -208,9 +208,9 @@ namespace Flameberry {
 				objectLayer);
 
 			JPH::Body* body = PhysicsManager::GetBodyInterface().CreateBody(bodyCreationSettings);
-			PhysicsManager::GetBodyInterface().AddBody(body->GetID(), JPH::EActivation::Activate); // TODO: To Activate or Not?
 
-			PhysicsManager::GetBodyInterface().SetFriction(body->GetID(), rigidBody.StaticFriction);
+			PhysicsManager::GetBodyInterface().AddBody(body->GetID(), JPH::EActivation::Activate); // TODO: To Activate or Not?
+			PhysicsManager::GetBodyInterface().SetFriction(body->GetID(), (rigidBody.StaticFriction + rigidBody.DynamicFriction) / 2.0f);
 			PhysicsManager::GetBodyInterface().SetRestitution(body->GetID(), rigidBody.Restitution);
 
 			rigidBody.RuntimeRigidBody = body;

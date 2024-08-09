@@ -16,9 +16,6 @@
 [submodule "Flameberry/vendor/Assimp"]
 	path = Flameberry/Source/ThirdParty/Assimp
 	url = https://github.com/assimp/assimp
-[submodule "Flameberry/vendor/PhysX"]
-	path = Flameberry/Source/ThirdParty/PhysX
-	url = https://github.com/flameberry/PhysX
 [submodule "Flameberry/vendor/fmtlib"]
 	path = Flameberry/Source/ThirdParty/fmtlib
 	url = https://github.com/fmtlib/fmt

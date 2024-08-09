@@ -361,7 +361,7 @@ namespace Flameberry {
 							const float verticalLength = textLineHeightWithSpacing + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
 							ImGui::SetNextWindowSizeConstraints(ImVec2(-1.0f, verticalLength), ImVec2(-1.0f, verticalLength * limit));
 
-							ImGuiWindowFlags windowFlags = ImGuiChildFlags_AlwaysAutoResize;
+							ImGuiWindowFlags windowFlags = ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY;
 
 							ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 							ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), windowFlags);
