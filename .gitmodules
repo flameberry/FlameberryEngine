@@ -31,3 +31,6 @@
 [submodule "Flameberry/Source/ThirdParty/Assimp"]
 	path = Flameberry/Source/ThirdParty/Assimp
 	url = https://github.com/assimp/assimp
+[submodule "Flameberry/Source/ThirdParty/LibPNG"]
+	path = Flameberry/Source/ThirdParty/LibPNG
+	url = https://github.com/pnggroup/libpng
