@@ -2,7 +2,6 @@ from Logger import ColoredLogger
 from SetupCMake import CMakeRequirements
 from SetupVulkan import VulkanSDKRequirements
 from SetupPhysX import PhysXSDKRequirements
-from SetupAssimp import AssimpRequirements
 from SetupProject import ProjectRequirements
 
 if __name__ == "__main__":
@@ -16,9 +15,6 @@ if __name__ == "__main__":
 
     if not VulkanSDKRequirements.Validate():
         VulkanSDKRequirements.InstallVulkanSDK()
-
-    if not AssimpRequirements.Validate():
-        AssimpRequirements.BuildAssimp()
 
     ProjectRequirements.Validate()
 

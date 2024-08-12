@@ -73,7 +73,7 @@ list(APPEND FBY_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 set(FBY_COMPILE_DEFINITIONS FBY_PROJECT_DIR="${FBY_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 # Setting the paths we require irrespective of the Graphics API
-list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt spirv-reflect-static msdf-atlas-gen Jolt)
+list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt spirv-reflect-static assimp msdf-atlas-gen Jolt)
 list(APPEND FBY_INCLUDE_DIRS
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/GLFW/include
@@ -88,12 +88,11 @@ list(APPEND FBY_INCLUDE_DIRS
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/JoltPhysics
 )
 
-# Assimp
-find_library(Assimp_LIBRARY NAMES assimp HINTS "${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/build/bin" REQUIRED)
-list(APPEND FBY_LIBRARY_DEPENDENCIES ${Assimp_LIBRARY})
-
 # ImGui paths and source
-file(GLOB IMGUI_SRC ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/*.cpp ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/*.h)
+file(GLOB IMGUI_SRC
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/*.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/*.h
+)
 
 set(FBY_DEPENDENCY_SOURCE
 

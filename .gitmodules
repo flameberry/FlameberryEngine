@@ -13,9 +13,6 @@
 [submodule "Flameberry/vendor/ImGuizmo"]
 	path = Flameberry/Source/ThirdParty/ImGuizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo
-[submodule "Flameberry/vendor/Assimp"]
-	path = Flameberry/Source/ThirdParty/Assimp
-	url = https://github.com/assimp/assimp
 [submodule "Flameberry/vendor/fmtlib"]
 	path = Flameberry/Source/ThirdParty/fmtlib
 	url = https://github.com/fmtlib/fmt
@@ -31,3 +28,6 @@
 [submodule "Flameberry/Source/ThirdParty/JoltPhysics"]
 	path = Flameberry/Source/ThirdParty/JoltPhysics
 	url = https://github.com/jrouwe/JoltPhysics
+[submodule "Flameberry/Source/ThirdParty/Assimp"]
+	path = Flameberry/Source/ThirdParty/Assimp
+	url = https://github.com/assimp/assimp

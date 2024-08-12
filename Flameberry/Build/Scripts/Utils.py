@@ -3,6 +3,7 @@ from zipfile import ZipFile
 from Logger import ColoredLogger
 from requests.exceptions import RequestException
 
+
 class Utils:
     @classmethod
     def GetProjectDirectory(cls) -> pathlib.Path:
@@ -12,12 +13,16 @@ class Utils:
     def GetVisualStudioVersionIfInstalled(cls):
         try:
             # Run the reg command to query the Windows Registry for Visual Studio installation
-            result = subprocess.run(['reg', 'query', 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio'], capture_output=True, text=True)
+            result = subprocess.run(
+                ["reg", "query", "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio"],
+                capture_output=True,
+                text=True,
+            )
 
             # Check if the command was successful (return code 0) and if Visual Studio keys are present in the output
-            if result.returncode == 0 and 'VisualStudio' in result.stdout:
+            if result.returncode == 0 and "VisualStudio" in result.stdout:
                 # Extract version information from the output using regular expressions
-                versionMatch = re.search(r'VisualStudio\\(\d+)', result.stdout)
+                versionMatch = re.search(r"VisualStudio\\(\d+)", result.stdout)
                 if versionMatch:
                     return versionMatch.group(1)
             return None
@@ -30,10 +35,10 @@ class Utils:
     def IsXcodeInstalled(cls):
         try:
             # Run the xcode-select command to check if Xcode is installed
-            result = subprocess.run(['xcode-select', '--print-path'], capture_output=True, text=True)
+            result = subprocess.run(["xcode-select", "--print-path"], capture_output=True, text=True)
 
             # Check if the command was successful (return code 0) and if Xcode path is present in the output
-            return result.returncode == 0 and '/Applications/Xcode.app' in result.stdout.strip()
+            return result.returncode == 0 and "/Applications/Xcode.app" in result.stdout.strip()
 
         except Exception as e:
             ColoredLogger.Logger.error(e)
@@ -48,14 +53,16 @@ class Utils:
         try:
             os.chdir(path)
             # Check if the remote URL matches the provided GitHub URL
-            remoteURL = subprocess.check_output(["git", "config", "--get", "remote.origin.url"], universal_newlines=True)
+            remoteURL = subprocess.check_output(
+                ["git", "config", "--get", "remote.origin.url"], universal_newlines=True
+            )
             os.chdir(cwd)
             return githubURL in remoteURL
         except subprocess.CalledProcessError:
             return False
 
     @classmethod
-    def PrintProgressBar(cls, iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd='\r'):
+    def PrintProgressBar(cls, iteration, total, prefix="", suffix="", decimals=1, length=100, fill="█", printEnd="\r"):
         """
         Call in a loop to create terminal progress bar
         @params:
@@ -69,8 +76,8 @@ class Utils:
         """
         percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
         filledLength = int(length * iteration // total)
-        bar = fill * filledLength + '-' * (length - filledLength)
-        print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
+        bar = fill * filledLength + "-" * (length - filledLength)
+        print(f"\r{prefix} |{bar}| {percent}% {suffix}", end=printEnd)
 
         # Print New Line on Complete
         if iteration == total:
@@ -81,7 +88,7 @@ class Utils:
         if type(URL) is not str:
             ColoredLogger.Logger.error("Download URL should be a str!")
             return False
-        
+
         filename = str(filepath).split("/")[-1]
         filepath = os.path.abspath(filepath)
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -109,23 +116,23 @@ class Utils:
 
                     elapsedTime = time.perf_counter() - startTime
                     avgKBPS = (downloaded / 1024) / elapsedTime
-                    speedString = f'{avgKBPS:.2f} KB/s'
+                    speedString = f"{avgKBPS:.2f} KB/s"
                     if avgKBPS > 1024:
                         avgMBPS = avgKBPS / 1024
-                        speedString = f'{avgMBPS:.2f} MB/s'
+                        speedString = f"{avgMBPS:.2f} MB/s"
 
-                    suffix = f'({downloaded / 1024 / 1024:.2f} / {total / 1024 / 1024:.2f} MB) (Speed: {speedString})'
+                    suffix = f"({downloaded / 1024 / 1024:.2f} / {total / 1024 / 1024:.2f} MB) (Speed: {speedString})"
                     try:
                         width = os.get_terminal_size().columns - 50
-                        printEnd = '\r'
+                        printEnd = "\r"
                     except OSError:
                         width = 75
-                        printEnd = ''
+                        printEnd = ""
 
                     cls.PrintProgressBar(downloaded, total, length=width, suffix=suffix, printEnd=printEnd)
-        
+
         if total != downloaded:
-            ColoredLogger.Logger.error(f'Failed to download {filename}!')
+            ColoredLogger.Logger.error(f"Failed to download {filename}!")
             return False
         return True
 
