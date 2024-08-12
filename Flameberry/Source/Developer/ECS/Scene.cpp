@@ -220,103 +220,6 @@ namespace Flameberry {
 		// You should definitely not call this every frame or when e.g. streaming in a new level section as it is an expensive operation.
 		// Instead insert all new objects in batches instead of 1 at a time to keep the broad phase efficient.
 		PhysicsManager::OptimizeBroadPhase();
-
-#if 0
-		// Create Physics Context
-		physx::PxSceneDesc sceneDesc(PhysicsEngine::GetTolerancesScale());
-		sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
-		sceneDesc.cpuDispatcher = PhysicsEngine::GetCPUDispatcher();
-		sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
-
-		Create Physics Scene
-		m_PxScene = PhysicsEngine::GetPhysics()->createScene(sceneDesc);
-
-		Create Physics Actors
-		for (auto entity : m_Registry->group<TransformComponent, RigidBodyComponent>())
-		{
-			auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
-
-			const auto quat = glm::quat(transform.Rotation);
-			const auto transformMat = physx::PxTransform(
-				physx::PxVec3(transform.Translation.x, transform.Translation.y, transform.Translation.z),
-				physx::PxQuat(quat.x, quat.y, quat.z, quat.w));
-			switch (rigidBody.Type)
-			{
-				case RigidBodyComponent::RigidBodyType::Static:
-				{
-					physx::PxRigidStatic* staticBody = PhysicsEngine::GetPhysics()->createRigidStatic(transformMat);
-					rigidBody.RuntimeRigidBody = staticBody;
-					break;
-				}
-				case RigidBodyComponent::RigidBodyType::Dynamic:
-				{
-					physx::PxRigidDynamic* dynamicBody = PhysicsEngine::GetPhysics()->createRigidDynamic(transformMat);
-					rigidBody.RuntimeRigidBody = dynamicBody;
-					break;
-				}
-			}
-
-			FBY_ASSERT(rigidBody.RuntimeRigidBody, "Failed to create RigidBody!");
-
-			physx::PxShape* shape = nullptr;
-
-			if (auto* boxCollider = m_Registry->try_get<BoxColliderComponent>(entity))
-			{
-				auto geometry = physx::PxBoxGeometry(
-					0.5f * boxCollider->Size.x * transform.Scale.x,
-					0.5f * boxCollider->Size.y * transform.Scale.y,
-					0.5f * boxCollider->Size.z * transform.Scale.z);
-				auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
-				shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
-				boxCollider->RuntimeShape = shape;
-			}
-
-			if (auto* sphereCollider = m_Registry->try_get<SphereColliderComponent>(entity))
-			{
-				auto geometry = physx::PxSphereGeometry(sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z));
-				auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
-				shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
-				sphereCollider->RuntimeShape = shape;
-			}
-
-			if (auto* capsuleCollider = m_Registry->try_get<CapsuleColliderComponent>(entity))
-			{
-				auto geometry = physx::PxCapsuleGeometry(capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z), 0.5f * capsuleCollider->Height * transform.Scale.y);
-				auto* material = PhysicsEngine::GetPhysics()->createMaterial(rigidBody.StaticFriction, rigidBody.DynamicFriction, rigidBody.Restitution);
-				shape = PhysicsEngine::GetPhysics()->createShape(geometry, *material);
-
-				switch (capsuleCollider->Axis)
-				{
-					case AxisType::X:
-						break;
-					case AxisType::Y:
-					{
-						physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1)));
-						shape->setLocalPose(relativePose);
-						break;
-					}
-					case AxisType::Z:
-					{
-						physx::PxTransform relativePose(physx::PxQuat(physx::PxHalfPi, physx::PxVec3(1, 0, 0)));
-						shape->setLocalPose(relativePose);
-						break;
-					}
-				}
-				capsuleCollider->RuntimeShape = shape;
-			}
-
-			if (shape)
-			{
-				// TODO: Add axis locking
-				physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
-				rigidBodyRuntimePtr->attachShape(*shape);
-				if (rigidBody.Type == RigidBodyComponent::RigidBodyType::Dynamic)
-					physx::PxRigidBodyExt::updateMassAndInertia(*rigidBodyRuntimePtr, rigidBody.Density);
-				m_PxScene->addActor(*rigidBodyRuntimePtr);
-				shape->release();
-			}
-		}
-#endif
 	}
 
 	void Scene::OnPhysicsSimulate(float delta)
@@ -337,22 +240,6 @@ namespace Flameberry {
 			transform.Translation = { position.GetX(), position.GetY(), position.GetZ() };
 			transform.Rotation = glm::eulerAngles(glm::quat(quat.GetW(), quat.GetX(), quat.GetY(), quat.GetZ()));
 		}
-
-#if 0
-		// Update Physics
-		m_PxScene->simulate(delta);
-		m_PxScene->fetchResults(true);
-
-		for (auto entity : m_Registry->group<RigidBodyComponent>())
-		{
-			auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
-			physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)rigidBody.RuntimeRigidBody;
-
-			physx::PxTransform globalTransform = rigidBodyRuntimePtr->getGlobalPose();
-			transform.Translation = { globalTransform.p.x, globalTransform.p.y, globalTransform.p.z };
-			transform.Rotation = glm::eulerAngles(glm::quat(globalTransform.q.w, globalTransform.q.x, globalTransform.q.y, globalTransform.q.z));
-		}
-#endif
 	}
 
 	void Scene::OnPhysicsStop()
@@ -363,10 +250,6 @@ namespace Flameberry {
 			PhysicsManager::GetBodyInterface().RemoveBody(body->GetID());
 			PhysicsManager::GetBodyInterface().DestroyBody(body->GetID());
 		}
-
-#if 0
-		m_PxScene->release();
-#endif
 	}
 
 	bool Scene::ShouldStep()

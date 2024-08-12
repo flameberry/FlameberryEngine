@@ -1,7 +1,6 @@
 from Logger import ColoredLogger
 from SetupCMake import CMakeRequirements
 from SetupVulkan import VulkanSDKRequirements
-from SetupPhysX import PhysXSDKRequirements
 from SetupProject import ProjectRequirements
 
 if __name__ == "__main__":

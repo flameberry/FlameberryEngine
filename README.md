@@ -16,7 +16,6 @@ Flameberry Engine is a C++ Game Engine based upon the Vulkan Graphics API and is
 2. Vulkan/MoltenVK support
 3. Python
 4. CMake (Preferred)
-5. For Windows, Visual Studio is required to build PhysX SDK
 
 _Note: If you have Visual Studio version less than 17 installed then in the `Scripts/Win-GenProjects.bat` change the CMake Generator from `Visual Studio 17 2022` to the appropriate version that you have_
 
@@ -37,11 +36,10 @@ _Note: For detailed build steps: <a href="https://flameberry.github.io/docs/inst
 5. ImGuizmo
 6. stb
 7. fmtlib
-8. Tiny OBJ Loader
-9. Yaml-CPP
-10. Assimp
-11. Nvidia PhysX
-12. Freetype
-13. MSDF-Gen-Atlas
-14. MurmurHash
-15. IconFontCppHeaders
+8. Yaml-CPP
+9. Assimp
+10. Jolt Physics
+11. Freetype
+12. MSDF-Gen-Atlas
+13. MurmurHash
+14. IconFontCppHeaders

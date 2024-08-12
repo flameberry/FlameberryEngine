@@ -75,8 +75,6 @@ namespace Flameberry {
 		Ref<fbentt::registry> m_Registry;
 		fbentt::entity m_WorldEntity = {};
 
-		// physx::PxScene* m_PxScene;
-
 		std::string m_Name = "Untitled";
 		glm::vec2 m_ViewportSize = { 1280, 720 };
 
