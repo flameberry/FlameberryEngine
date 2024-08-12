@@ -60,6 +60,9 @@ class VulkanSDKRequirements:
             except Exception as e:
                 raise e
 
+            # Adding Vulkan SDK to current shell's PATH
+            os.environ["VULKAN_SDK"] = f"{os.pathsep}{cls.__VulkanSDKInstallPathLocal}"
+
         # For macOS installation only
         elif URL.endswith(".dmg"):
             # Attach DMG Volume
@@ -105,7 +108,7 @@ class VulkanSDKRequirements:
                 profile.write("\n# Vulkan SDK Setup (Installed by Flameberry)\n")
                 profile.write(f"source {vulkanSDKPath}/setup-env.sh\n")
 
-            # TODO: Maybe obsolete
+            # Adding Vulkan SDK to current shell's PATH
             os.environ["VULKAN_SDK"] = f'{os.pathsep}{vulkanSDKPath + "/macOS"}'
 
         # For Linux installation only

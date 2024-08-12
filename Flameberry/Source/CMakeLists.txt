@@ -22,6 +22,7 @@ add_subdirectory(ThirdParty/SPIRV-Reflect)
 add_subdirectory(ThirdParty/LibPNG)
 add_library(PNG::PNG ALIAS png_static) # Needed for msdfgen find_package(PNG REQUIRED)
 
+# This directory contains the pnglibconf.h file which is needed for compilation of msdfgen-ext
 get_target_property(PNG_BINARY_DIR png_static BINARY_DIR)
 
 # Freetype
