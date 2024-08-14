@@ -34,3 +34,6 @@
 [submodule "Flameberry/Source/ThirdParty/MsdfAtlasGen/LibPng"]
 	path = Flameberry/Source/ThirdParty/MsdfAtlasGen/LibPng
 	url = https://github.com/pnggroup/libpng
+[submodule "Flameberry/Source/ThirdParty/JoltPhysics"]
+	path = Flameberry/Source/ThirdParty/JoltPhysics
+	url = https://github.com/jrouwe/JoltPhysics
