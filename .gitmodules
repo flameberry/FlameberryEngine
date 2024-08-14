@@ -37,3 +37,6 @@
 [submodule "Flameberry/Source/ThirdParty/JoltPhysics"]
 	path = Flameberry/Source/ThirdParty/JoltPhysics
 	url = https://github.com/jrouwe/JoltPhysics
+[submodule "Flameberry/Source/ThirdParty/MsdfAtlasGen/ZLib"]
+	path = Flameberry/Source/ThirdParty/MsdfAtlasGen/ZLib
+	url = https://github.com/madler/zlib

@@ -4,6 +4,7 @@ add_subdirectory(ThirdParty/YamlCpp)
 add_subdirectory(ThirdParty/fmtlib)
 
 # Assimp
+set(ASSIMP_BUILD_ZLIB OFF)
 add_subdirectory(ThirdParty/Assimp)
 
 # Assimp doesn't compile without this flag on Apple Silicon
@@ -17,6 +18,13 @@ list(APPEND FBY_INCLUDE_DIRS ${ASSIMP_INCLUDE_DIRS})
 set(SPIRV_REFLECT_EXECUTABLE OFF)
 set(SPIRV_REFLECT_STATIC_LIB ON)
 add_subdirectory(ThirdParty/SPIRV-Reflect)
+
+# ZLib
+add_subdirectory(ThirdParty/MsdfAtlasGen/ZLib)
+set(ZLIB_FOUND 1)
+set(ZLIB_LIBRARIES zlibstatic)
+
+# set(ZLIB_INCLUDE_DIR zlibstatic)
 
 # LibPNG
 add_subdirectory(ThirdParty/MsdfAtlasGen/LibPng)
