@@ -31,3 +31,6 @@
 [submodule "Flameberry/Source/ThirdParty/Freetype"]
 	path = Flameberry/Source/ThirdParty/Freetype
 	url = https://github.com/freetype/freetype
+[submodule "Flameberry/Source/ThirdParty/LibPNG"]
+	path = Flameberry/Source/ThirdParty/LibPNG
+	url = https://github.com/pnggroup/libpng
