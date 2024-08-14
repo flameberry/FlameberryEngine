@@ -25,9 +25,12 @@
 [submodule "Flameberry/vendor/SPIRV-Reflect"]
 	path = Flameberry/Source/ThirdParty/SPIRV-Reflect
 	url = https://github.com/KhronosGroup/SPIRV-Reflect
-[submodule "Flameberry/Source/ThirdParty/MsdfAtlasGen"]
-	path = Flameberry/Source/ThirdParty/MsdfAtlasGen
-	url = https://github.com/Chlumsky/msdf-atlas-gen
-[submodule "Flameberry/Source/ThirdParty/Freetype"]
-	path = Flameberry/Source/ThirdParty/Freetype
+[submodule "Flameberry/Source/ThirdParty/MsdfAtlasGen/Freetype"]
+	path = Flameberry/Source/ThirdParty/MsdfAtlasGen/Freetype
 	url = https://github.com/freetype/freetype
+[submodule "Flameberry/Source/ThirdParty/MsdfAtlasGen/MsdfAtlasGen"]
+	path = Flameberry/Source/ThirdParty/MsdfAtlasGen/MsdfAtlasGen
+	url = https://github.com/Chlumsky/msdf-atlas-gen
+[submodule "Flameberry/Source/ThirdParty/MsdfAtlasGen/LibPng"]
+	path = Flameberry/Source/ThirdParty/MsdfAtlasGen/LibPng
+	url = https://github.com/pnggroup/libpng
