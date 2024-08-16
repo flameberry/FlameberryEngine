@@ -64,7 +64,7 @@ namespace Flameberry {
 			ImGui::BeginChild("##EntityList", ImVec2(-1, -1), 0, ImGuiWindowFlags_AlwaysUseWindowPadding);
 		}
 
-		if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))
+		if (ImGui::BeginPopupContextWindow((const char*)nullptr, m_PopupFlags))
 		{
 			DisplayCreateEntityMenu();
 			ImGui::EndPopup();

@@ -467,7 +467,7 @@ namespace fbentt {
 				free_entities.pop_back();
 				return entities[freeEntityIndex];
 			}
-			return entities.emplace_back(to_handle(entities.size(), 0, true));
+			return entities.emplace_back(to_handle(static_cast<uint32_t>(entities.size()), 0, true));
 		}
 
 		void destroy(entity entity)

@@ -1,5 +1,7 @@
 #pragma once
 
+#undef FBY_ENABLE_ASSERTS
+
 #ifdef FBY_ENABLE_ASSERTS
 	#define FBY_INTERNAL_DO_ON_ASSERT(x, ...) \
 		{                                     \

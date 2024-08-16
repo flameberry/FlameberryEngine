@@ -99,7 +99,8 @@ namespace Flameberry {
 			const ImVec4 textColor = isSelected ? ImVec4(0, 0, 0, 1) : ImGui::GetStyle().Colors[ImGuiCol_Text];
 			UI::ScopedStyleColor _(ImGuiCol_Text, textColor);
 
-			ImGui::Text("%s", parent.path().filename().c_str());
+			std::string filename = parent.path().filename().string();
+			ImGui::Text("%s", filename.c_str());
 		}
 
 		ImGui::PopID();
@@ -238,7 +239,7 @@ namespace Flameberry {
 		const float cellSize = m_ThumbnailSize + spacing;
 		uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize, rowIndex = 0;
 		columns = columns >= 1 ? columns : 1;
-		ImGui::Columns(columns, (const char*)__null, false);
+		ImGui::Columns(columns, (const char*)nullptr, false);
 
 		ImVec2 itemSize;
 
@@ -254,7 +255,7 @@ namespace Flameberry {
 			if (m_SearchInputBuffer[0] != '\0')
 			{
 				// TODO: Maybe some optimisation to not search again if the input string is same
-				const int index = Algorithm::KmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer.c_str(), true);
+				const int index = Algorithm::KmpSearch(filePath.filename().replace_extension().string().c_str(), m_SearchInputBuffer.c_str(), true);
 				if (index == -1)
 					continue;
 			}
@@ -306,7 +307,7 @@ namespace Flameberry {
 		if (ImGui::GetColumnIndex() != 0)
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + itemSize.y + 10.0f);
 
-		if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))
+		if (ImGui::BeginPopupContextWindow((const char*)nullptr, m_PopupFlags))
 		{
 			if (ImGui::BeginMenu(ICON_LC_PLUS "\tCreate"))
 			{
@@ -336,7 +337,8 @@ namespace Flameberry {
 
 		ImGui::PushClipRect(clipRect.Min, clipRect.Max, true);
 
-		std::string_view currentPath(m_CurrentDirectory.c_str());
+		std::string currentDirectory = m_CurrentDirectory.string();
+		std::string_view currentPath(currentDirectory.c_str());
 
 		ImGui::GetWindowDrawList()->AddRectFilled(clipRect.Min, clipRect.Max,
 			ImGui::ColorConvertFloat4ToU32(Theme::FrameBg),
@@ -364,7 +366,7 @@ namespace Flameberry {
 
 			// Displaying the folder name
 			const ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
-			ImGui::TextUnformatted(currentPath.begin(), currentPath.begin() + position);
+			ImGui::TextUnformatted(currentPath.data(), currentPath.data() + position);
 			ImGui::SameLine();
 
 			const ImRect buttonRect(cursorScreenPos - ImVec2(style.FramePadding.x, 0.0f),

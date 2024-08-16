@@ -11,7 +11,7 @@ namespace Flameberry {
 
 	Ref<Scene> SceneImporter::LoadScene(const std::filesystem::path& path)
 	{
-		return SceneSerializer::DeserializeIntoNewScene(path.c_str());
+		return SceneSerializer::DeserializeIntoNewScene(path.string().c_str());
 	}
 
 } // namespace Flameberry

@@ -10,6 +10,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED On)
 # Xcode scheme generation is helpful for things like passing command line arguments for development
 set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
 
+if(MSVC)
+    add_compile_options(
+        $<$<CONFIG:>:/MT>
+        $<$<CONFIG:Debug>:/MTd>
+        $<$<CONFIG:Release>:/MT>
+    )
+endif()
+
 # Handle Generation for single config generators like MakeFiles, when no Config is specified explicitly in the command line
 if(XCODE AND CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE "Release")

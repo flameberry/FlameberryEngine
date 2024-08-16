@@ -49,13 +49,14 @@ namespace Flameberry {
 					continue;
 				}
 
-				vulkanDescSetBindings.emplace_back(VkDescriptorSetLayoutBinding{
-					.binding = descriptorBindings[index].Binding,
-					.descriptorCount = descriptorBindings[index].Count,
-					.descriptorType = descriptorBindings[index].Type,
-					.stageFlags = descriptorBindings[index].VulkanShaderStage,
-					.pImmutableSamplers = nullptr });
+				VkDescriptorSetLayoutBinding vulkanBinding{};
+				vulkanBinding.binding = descriptorBindings[index].Binding;
+				vulkanBinding.descriptorCount = descriptorBindings[index].Count;
+				vulkanBinding.descriptorType = descriptorBindings[index].Type;
+				vulkanBinding.stageFlags = descriptorBindings[index].VulkanShaderStage;
+				vulkanBinding.pImmutableSamplers = nullptr;
 
+				vulkanDescSetBindings.emplace_back(vulkanBinding);
 				index++;
 			}
 

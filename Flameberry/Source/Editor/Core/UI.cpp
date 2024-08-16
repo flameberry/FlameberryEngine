@@ -155,6 +155,9 @@ namespace Flameberry::UI {
 	// TODO: Call one of 2 functions one for Folder Thumbnail and other for file
 	bool ContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
 	{
+		std::string filePathStr = filepath.string();
+		const char* filePathCStr = filePathStr.c_str();
+
 		bool isDirectory = std::filesystem::is_directory(filepath);
 
 		ImGuiStyle& style = ImGui::GetStyle();
@@ -208,10 +211,10 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
 			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 
-			ImGui::ImageButton(filepath.c_str(), reinterpret_cast<ImTextureID>(thumbnail->CreateOrGetDescriptorSet()), ImVec2(thumbnailWidth, thumbnailHeight));
+			ImGui::ImageButton(filePathCStr, reinterpret_cast<ImTextureID>(thumbnail->CreateOrGetDescriptorSet()), ImVec2(thumbnailWidth, thumbnailHeight));
 		}
 
-		const auto& filename = keepExtension ? filepath.filename() : filepath.stem();
+		const auto& filename = keepExtension ? filepath.filename().string() : filepath.stem().string();
 		const auto cursorPosX = ImGui::GetCursorPosX();
 		ImGui::SetCursorPosX(cursorPosX + framePadding.x);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y + centerTranslationHeight);
@@ -241,11 +244,11 @@ namespace Flameberry::UI {
 
 		ImGui::EndGroup();
 
-		if (ImGui::BeginPopupContextItem(filepath.c_str()))
+		if (ImGui::BeginPopupContextItem(filePathCStr))
 		{
 			if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete"))
 			{
-				// Add a confirm popup
+				// Add a confirm pop up
 				// std::filesystem::remove(filepath);
 				FBY_LOG("Delete");
 			}
@@ -254,14 +257,14 @@ namespace Flameberry::UI {
 
 		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 		{
-			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filepath.c_str(), (strlen(filepath.c_str()) + 1) * sizeof(char), ImGuiCond_Once);
+			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filePathCStr, (strlen(filePathCStr) + 1) * sizeof(char), ImGuiCond_Once);
 
 			constexpr float size = 80.0f;
 
 			// Show Asset Preview
 			ImGui::Image(thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
 			ImGui::SameLine();
-			ImGui::Text("%s", filepath.stem().c_str());
+			ImGui::Text("%s", filepath.stem().string().c_str());
 
 			ImGui::EndDragDropSource();
 		}

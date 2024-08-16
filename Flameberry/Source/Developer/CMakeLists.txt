@@ -27,6 +27,9 @@ set_custom_build_properties(Flameberry)
 # Defines "FBY_DEBUG" for Debug build, and "FBY_RELEASE" for Release build
 set_build_config_macro_for_target(Flameberry)
 
+# Defines the /MT flag for Runtime Library in MSVC
+set_mt_runtime_library_for_target(Flameberry)
+
 if(XCODE)
     target_compile_definitions(Flameberry PRIVATE FBY_XCODE_PROJ)
 endif()

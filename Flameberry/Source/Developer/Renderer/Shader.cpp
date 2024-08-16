@@ -241,19 +241,20 @@ namespace Flameberry {
 
 					// Full name is used to ensure uniqueness of the uniform variable (even though it is rare to overlap)
 					m_UniformFullNameToSpecification[fullName] = ReflectionUniformVariableSpecification{
-						.Name = fullName.c_str(), // Wondering if the full name should be used
-						.LocalOffset = member.offset - pcblocks[i]->offset,
-						.GlobalOffset = member.offset,
-						.Size = member.size
+						fullName.c_str(),					 // Name // Wondering if the full name should be used
+						member.offset - pcblocks[i]->offset, // LocalOffset
+						member.offset,						 // GlobalOffset
+						member.size							 // Size
 					};
 				}
 
 				m_PushConstantSpecifications.emplace_back(ReflectionPushConstantSpecification{
-					.Name = pcblocks[i]->type_description->type_name,
-					.Offset = pcblocks[i]->offset,
-					.Size = absoluteSize,
-					.VulkanShaderStage = (VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage(),
-					.RendererOnly = Utils::HasPrefix(pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX) });
+					pcblocks[i]->type_description->type_name,													// Name
+					(VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage(),								// VulkanShaderStage
+					absoluteSize,																				// Size
+					pcblocks[i]->offset,																		// Offset
+					Utils::HasPrefix(pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX) // IsRendererOnly
+				});
 			}
 		}
 
@@ -300,14 +301,14 @@ namespace Flameberry {
 					}
 
 					ReflectionDescriptorBindingSpecification reflectionDescriptorBindingSpecification{
-						.Name = fullName,
-						.Set = binding->set,
-						.Binding = binding->binding,
-						.Count = binding->count,
-						.Type = (VkDescriptorType)binding->descriptor_type,
-						.VulkanShaderStage = (VkShaderStageFlags)reflectionShaderModule.GetShaderStage(),
-						.RendererOnly = rendererOnly,
-						.IsDescriptorTypeImage = isDescriptorTypeImage
+						fullName, // Name
+						binding->set, // Set
+						binding->binding, // Binding
+						binding->count, // Count
+						(VkDescriptorType)binding->descriptor_type, // Type
+						(VkShaderStageFlags)reflectionShaderModule.GetShaderStage(), // VulkanShaderStage
+						rendererOnly, // IsRendererOnly
+						isDescriptorTypeImage // IsDescriptorTypeImage
 					};
 
 					uint64_t combinedValue = Utils::CantorPairingFunction(binding->set, binding->binding);
@@ -331,7 +332,7 @@ namespace Flameberry {
 						s_DescriptorSetAndBindingIntegerToArrayIndex[combinedValue] = static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
 					}
 				}
-				m_DescriptorSetSpecifications.emplace_back(ReflectionDescriptorSetSpecification{ .Set = descSets[i]->set, .BindingCount = descSets[i]->binding_count });
+				m_DescriptorSetSpecifications.emplace_back(ReflectionDescriptorSetSpecification{ descSets[i]->set, descSets[i]->binding_count });
 			}
 		}
 	}

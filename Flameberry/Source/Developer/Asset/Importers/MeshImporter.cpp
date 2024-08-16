@@ -133,10 +133,10 @@ namespace Flameberry {
 
 		// Add submesh
 		refSubMeshes.emplace_back(SubMesh{
-			.IndexOffset = indexOffset,
-			.IndexCount = (uint32_t)refIndices.size() - indexOffset,
-			.MaterialHandle = refMatHandles[mesh->mMaterialIndex],
-			.AABB = AABB(glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z), glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)) });
+			refMatHandles[mesh->mMaterialIndex],
+			indexOffset,
+			(uint32_t)refIndices.size() - indexOffset,
+			AABB(glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z), glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)) });
 	}
 
 	static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles)
@@ -163,7 +163,7 @@ namespace Flameberry {
 		// And have it read the given file with some example postprocessing
 		// Usually - if speed is not the most important aspect for you - you'll
 		// probably to request more postprocessing than we do in this example.
-		const aiScene* scene = importer.ReadFile(path,
+		const aiScene* scene = importer.ReadFile(path.string(),
 			aiProcessPreset_TargetRealtime_Fast
 				// aiProcessPreset_TargetRealtime_Quality
 				| aiProcess_FlipUVs

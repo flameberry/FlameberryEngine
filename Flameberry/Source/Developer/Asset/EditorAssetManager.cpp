@@ -65,7 +65,7 @@ namespace Flameberry {
 
 		AssetMetadata metadata;
 		metadata.Type = type;
-		metadata.FilePath = filePath;
+		metadata.FilePath = filePath.string();
 		metadata.IsMemoryAsset = false;
 
 		// Currently it doesn't matter what the handle is as...

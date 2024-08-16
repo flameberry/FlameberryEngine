@@ -251,7 +251,7 @@ namespace Flameberry {
 							}
 
 							ImGui::Spacing();
-							ImGui::TextWrapped("%s", skymap ? std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath).filename().c_str() : "Null");
+							ImGui::TextWrapped("%s", skymap ? std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath).filename().string().c_str() : "Null");
 						}
 						UI::EndKeyValueTable();
 					}

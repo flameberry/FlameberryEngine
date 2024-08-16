@@ -139,6 +139,6 @@ namespace Flameberry {
 
 #define VK_CHECK_RESULT(expr)                                                                           \
 	{                                                                                                   \
-		auto r = expr;                                                                                  \
-		FBY_ASSERT(r == VK_SUCCESS, "Vulkan process failed with: {}", ::Flameberry::GetVkResult(expr)); \
+		VkResult r = expr;                                                                                  \
+		FBY_ASSERT(r == VK_SUCCESS, "Vulkan process failed with: {}", ::Flameberry::GetVkResult(r)); \
 	}

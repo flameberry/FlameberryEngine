@@ -3,12 +3,27 @@ add_subdirectory(ThirdParty/GLFW)
 add_subdirectory(ThirdParty/YamlCpp)
 add_subdirectory(ThirdParty/fmtlib)
 
+set(INTERPROCEDURAL_OPTIMIZATION ON)
+add_subdirectory(ThirdParty/JoltPhysics/Build)
+SET_INTERPROCEDURAL_OPTIMIZATION()
+
+add_subdirectory(ThirdParty/MsdfAtlasGen/ZLib)
+add_library(ZLIB::ZLIB ALIAS zlibstatic)
+get_target_property(ZLIB_INCLUDE_DIR zlibstatic INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(ZLIB_BINARY_DIR zlibstatic BINARY_DIR)
+set(ZLIB_FOUND TRUE)
+set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR} ${ZLIB_BINARY_DIR})
+set(ZLIB_LIBRARIES zlibstatic)
+
 # Assimp
 set(ASSIMP_BUILD_ZLIB OFF)
+set(ASSIMP_WARNINGS_AS_ERRORS OFF)
 add_subdirectory(ThirdParty/Assimp)
 
-# Assimp doesn't compile without this flag on Apple Silicon
-set_target_properties(assimp PROPERTIES COMPILE_FLAGS "-Wno-error=shorten-64-to-32")
+if(APPLE)
+    # Assimp doesn't compile without this flag on Apple Silicon
+    set_target_properties(assimp PROPERTIES COMPILE_FLAGS "-Wno-error=shorten-64-to-32")
+endif()
 
 # This is to ensure the include/assimp/config.h that is generated in the assimp build directory is found
 get_target_property(ASSIMP_INCLUDE_DIRS assimp INTERFACE_INCLUDE_DIRECTORIES)
@@ -19,12 +34,7 @@ set(SPIRV_REFLECT_EXECUTABLE OFF)
 set(SPIRV_REFLECT_STATIC_LIB ON)
 add_subdirectory(ThirdParty/SPIRV-Reflect)
 
-# ZLib
-add_subdirectory(ThirdParty/MsdfAtlasGen/ZLib)
-set(ZLIB_FOUND 1)
-set(ZLIB_LIBRARIES zlibstatic)
-
-# set(ZLIB_INCLUDE_DIR zlibstatic)
+set(ZLIB_LIBRARY zlibstatic)
 
 # LibPNG
 add_subdirectory(ThirdParty/MsdfAtlasGen/LibPng)
@@ -32,6 +42,8 @@ add_library(PNG::PNG ALIAS png_static) # Needed for msdfgen find_package(PNG REQ
 
 # This directory contains the pnglibconf.h file which is needed for compilation of msdfgen-ext
 get_target_property(PNG_BINARY_DIR png_static BINARY_DIR)
+
+unset(ZLIB_LIBRARY)
 
 # Freetype
 add_subdirectory(ThirdParty/MsdfAtlasGen/Freetype)
@@ -44,10 +56,6 @@ set(MSDF_ATLAS_USE_SKIA OFF)
 add_subdirectory(ThirdParty/MsdfAtlasGen/MsdfAtlasGen)
 
 target_include_directories(msdfgen-ext PUBLIC ${PNG_BINARY_DIR})
-
-set(INTERPROCEDURAL_OPTIMIZATION ON)
-add_subdirectory(ThirdParty/JoltPhysics/Build)
-SET_INTERPROCEDURAL_OPTIMIZATION()
 
 # Add Source Targets
 add_subdirectory(Developer)

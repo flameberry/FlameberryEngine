@@ -10,21 +10,21 @@ namespace Flameberry {
 	{
 		// This is the max amount of rigid bodies that you can add to the physics system. If you try to add more you'll get an error.
 		// Note: This value is low because this is a simple test. For a real project use something in the order of 65536.
-		const uint MaxBodies = 1024;
+		const JPH::uint MaxBodies = 1024;
 
 		// This determines how many mutexes to allocate to protect rigid bodies from concurrent access. Set it to 0 for the default settings.
-		const uint NumBodyMutexes = 0;
+		const JPH::uint NumBodyMutexes = 0;
 
 		// This is the max amount of body pairs that can be queued at any time (the broad phase will detect overlapping
 		// body pairs based on their bounding boxes and will insert them into a queue for the narrowphase). If you make this buffer
 		// too small the queue will fill up and the broad phase jobs will start to do narrow phase work. This is slightly less efficient.
 		// Note: This value is low because this is a simple test. For a real project use something in the order of 65536.
-		const uint MaxBodyPairs = 1024;
+		const JPH::uint MaxBodyPairs = 1024;
 
 		// This is the maximum size of the contact constraint buffer. If more contacts (collisions between bodies) are detected than this
 		// number then these contacts will be ignored and bodies will start interpenetrating / fall through the world.
 		// Note: This value is low because this is a simple test. For a real project use something in the order of 10240.
-		const uint MaxContactConstraints = 1024;
+		const JPH::uint MaxContactConstraints = 1024;
 
 		// We need a temp allocator for temporary allocations during the physics update. We're
 		// pre-allocating 10 MB to avoid having to do allocations during the physics update.
@@ -75,7 +75,7 @@ namespace Flameberry {
 	}
 
 	// Callback for asserts, connect this to your own assert handler if you have one
-	static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, uint inLine)
+	static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine)
 	{
 		FBY_ASSERT(0, "{}:{}: ({}) {}", inFile, inLine, inExpression, (inMessage != nullptr ? inMessage : ""));
 		return true;

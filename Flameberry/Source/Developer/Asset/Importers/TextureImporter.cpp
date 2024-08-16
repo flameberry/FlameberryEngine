@@ -19,14 +19,16 @@ namespace Flameberry {
 		void* pixels = nullptr;
 		VkFormat format = VK_FORMAT_UNDEFINED;
 
-		if (stbi_is_hdr(path.c_str()))
+		const std::string pathStr = path.string();
+
+		if (stbi_is_hdr(pathStr.c_str()))
 		{
-			pixels = stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+			pixels = stbi_loadf(pathStr.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R32G32B32A32_SFLOAT;
 		}
 		else
 		{
-			pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+			pixels = stbi_load(pathStr.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R8G8B8A8_UNORM;
 		}
 
@@ -63,9 +65,11 @@ namespace Flameberry {
 		void* resizedPixels = nullptr;
 		VkFormat format = VK_FORMAT_UNDEFINED;
 
-		if (stbi_is_hdr(path.c_str()))
+		const char* pathCStr = path.string().c_str();
+
+		if (stbi_is_hdr(pathCStr))
 		{
-			pixels = stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+			pixels = stbi_loadf(pathCStr, &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R32G32B32A32_SFLOAT;
 			channels = 4;
 
@@ -77,7 +81,7 @@ namespace Flameberry {
 		}
 		else
 		{
-			pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+			pixels = stbi_load(pathCStr, &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R8G8B8A8_UNORM;
 			channels = 4;
 

@@ -185,7 +185,7 @@ namespace Flameberry {
 		if (material->m_DescriptorSets.size())
 		{
 			int idx = 0;
-			VkDescriptorSet descSetArray[material->m_DescriptorSets.size()];
+			std::vector<VkDescriptorSet> descSetArray(material->m_DescriptorSets.size());
 
 			for (const auto& set : material->m_DescriptorSets)
 			{

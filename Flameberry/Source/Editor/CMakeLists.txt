@@ -8,6 +8,9 @@ set_custom_build_properties(FlameberryEditor)
 # Defines "FBY_DEBUG" for Debug build, and "FBY_RELEASE" for Release build
 set_build_config_macro_for_target(FlameberryEditor)
 
+# Defines the /MT flag for Runtime Library in MSVC
+set_mt_runtime_library_for_target(FlameberryEditor)
+
 if(XCODE)
     target_compile_definitions(FlameberryEditor PRIVATE FBY_XCODE_PROJ)
     set_target_properties(FlameberryEditor PROPERTIES XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE "Metal")

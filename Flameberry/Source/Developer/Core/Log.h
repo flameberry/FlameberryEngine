@@ -41,12 +41,12 @@ namespace Flameberry {
 
 	enum class LogLevel : uint8_t
 	{
-		TRACE = 0,
-		LOG,
-		INFO,
-		WARNING,
-		ERROR,
-		CRITICAL
+		Trace = 0,
+		Log,
+		Info,
+		Warning,
+		Error,
+		Critical
 	};
 
 	class Logger
@@ -64,43 +64,43 @@ namespace Flameberry {
 		template <typename T, typename... Args>
 		void log(const T& message, const Args&... args)
 		{
-			if (m_CurrentLogLevel <= LogLevel::LOG)
-				fmt::print(fmt::fg(fmt::terminal_color::cyan), "{}: {}\n", GetPrefix(LogLevel::LOG), fmt::format(message, args...));
+			if (m_CurrentLogLevel <= LogLevel::Log)
+				fmt::print(fmt::fg(fmt::terminal_color::cyan), "{}: {}\n", GetPrefix(LogLevel::Log), fmt::format(message, args...));
 		}
 
 		template <typename T, typename... Args>
 		void trace(const T& message, const Args&... args)
 		{
-			if (m_CurrentLogLevel <= LogLevel::TRACE)
-				fmt::print(fmt::fg(fmt::terminal_color::bright_white), "{}: {}\n", GetPrefix(LogLevel::TRACE), fmt::format(message, args...));
+			if (m_CurrentLogLevel <= LogLevel::Trace)
+				fmt::print(fmt::fg(fmt::terminal_color::bright_white), "{}: {}\n", GetPrefix(LogLevel::Trace), fmt::format(message, args...));
 		}
 
 		template <typename T, typename... Args>
 		void info(const T& message, const Args&... args)
 		{
-			if (m_CurrentLogLevel <= LogLevel::INFO)
-				fmt::print(fmt::fg(fmt::terminal_color::green), "{}: {}\n", GetPrefix(LogLevel::INFO), fmt::format(message, args...));
+			if (m_CurrentLogLevel <= LogLevel::Info)
+				fmt::print(fmt::fg(fmt::terminal_color::green), "{}: {}\n", GetPrefix(LogLevel::Info), fmt::format(message, args...));
 		}
 
 		template <typename T, typename... Args>
 		void warn(const T& message, const Args&... args)
 		{
-			if (m_CurrentLogLevel <= LogLevel::WARNING)
-				fmt::print(fmt::fg(fmt::terminal_color::yellow), "{}: {}\n", GetPrefix(LogLevel::WARNING), fmt::format(message, args...));
+			if (m_CurrentLogLevel <= LogLevel::Warning)
+				fmt::print(fmt::fg(fmt::terminal_color::yellow), "{}: {}\n", GetPrefix(LogLevel::Warning), fmt::format(message, args...));
 		}
 
 		template <typename T, typename... Args>
 		void error(const T& message, const Args&... args)
 		{
-			if (m_CurrentLogLevel <= LogLevel::ERROR)
-				fmt::print(fmt::fg(fmt::terminal_color::red), "{}: {}\n", GetPrefix(LogLevel::ERROR), fmt::format(message, args...));
+			if (m_CurrentLogLevel <= LogLevel::Error)
+				fmt::print(fmt::fg(fmt::terminal_color::red), "{}: {}\n", GetPrefix(LogLevel::Error), fmt::format(message, args...));
 		}
 
 		template <typename T, typename... Args>
 		void critical(const T& message, const Args&... args)
 		{
-			if (m_CurrentLogLevel <= LogLevel::CRITICAL)
-				fmt::print(fmt::fg(fmt::terminal_color::red) | fmt::bg(fmt::color::yellow), "{}: {}\n", GetPrefix(LogLevel::CRITICAL), fmt::format(message, args...));
+			if (m_CurrentLogLevel <= LogLevel::Critical)
+				fmt::print(fmt::fg(fmt::terminal_color::red) | fmt::bg(fmt::color::yellow), "{}: {}\n", GetPrefix(LogLevel::Critical), fmt::format(message, args...));
 		}
 
 		template <typename T, typename... Args>

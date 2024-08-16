@@ -83,8 +83,8 @@ list(APPEND FBY_INCLUDE_DIRS
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/fmtlib/include
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/include
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/Assimp/build/include
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MsdfAtlasGen/msdf-atlas-gen
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MsdfAtlasGen/msdfgen
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MsdfAtlasGen/MsdfAtlasGen/msdf-atlas-gen
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MsdfAtlasGen/MsdfAtlasGen/msdfgen
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/JoltPhysics
 )
 

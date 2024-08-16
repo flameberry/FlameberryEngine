@@ -22,7 +22,7 @@ namespace Flameberry {
 
 	void Framebuffer::CreateVulkanFramebuffer(VkRenderPass renderPass)
 	{
-		VkImageView imageViews[m_FramebufferImages.size()];
+		std::vector<VkImageView> imageViews(m_FramebufferImages.size());
 		for (uint32_t i = 0; i < m_FramebufferImages.size(); i++)
 			imageViews[i] = m_FramebufferImages[i]->GetVulkanImageView();
 
@@ -30,7 +30,7 @@ namespace Flameberry {
 		vk_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		vk_framebuffer_create_info.renderPass = renderPass;
 		vk_framebuffer_create_info.attachmentCount = static_cast<uint32_t>(m_FramebufferImages.size());
-		vk_framebuffer_create_info.pAttachments = imageViews;
+		vk_framebuffer_create_info.pAttachments = imageViews.data();
 		vk_framebuffer_create_info.width = m_FramebufferSpec.Width;
 		vk_framebuffer_create_info.height = m_FramebufferSpec.Height;
 		vk_framebuffer_create_info.layers = 1;

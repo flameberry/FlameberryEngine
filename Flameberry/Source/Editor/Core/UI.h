@@ -54,7 +54,7 @@ namespace Flameberry {
 		bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size = -1.0f);
 		void Vec3Control(const std::string& label, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth);
 		bool AlignedButton(const char* label, const ImVec2& size = ImVec2(0.0f, 0.0f), float alignment = 0.5f);
-		void InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint = (const char*)__null);
+		void InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint = (const char*)nullptr);
 
 		void OpenSelectionWidget(const char* label);
 		bool BeginSelectionWidget(const char* label, std::string* inputBuffer);

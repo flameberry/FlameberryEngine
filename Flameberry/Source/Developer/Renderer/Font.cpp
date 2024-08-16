@@ -62,7 +62,7 @@ namespace Flameberry {
 		}
 
 		// Set the font name
-		m_Name = path.stem();
+		m_Name = path.stem().string();
 
 		struct CharsetRange
 		{
