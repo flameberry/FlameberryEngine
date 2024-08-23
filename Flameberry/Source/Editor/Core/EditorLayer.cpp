@@ -328,8 +328,6 @@ namespace Flameberry {
 #ifndef FBY_PLATFORM_MACOS
 		UI_Menubar();
 #endif
-		ImGui::ShowDemoWindow();
-
 		auto& io = ImGui::GetIO();
 		if (m_IsCameraMoving)
 			io.ConfigFlags |= ImGuiConfigFlags_NoMouse;

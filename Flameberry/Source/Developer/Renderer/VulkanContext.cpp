@@ -13,7 +13,7 @@ namespace Flameberry {
 	const std::vector<const char*> VulkanContext::s_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
 
 	std::vector<const char*> VulkanContext::s_VulkanDeviceExtensions = {
-#ifdef FBY_PLATFORM_APPLE
+#ifdef FBY_PLATFORM_MACOS
 		"VK_KHR_portability_subset",
 #endif
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -99,15 +99,8 @@ namespace Flameberry {
 
 	VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices, VkSurfaceKHR surface)
 	{
-		bool first = true;
 		for (auto vk_device : vk_physical_devices)
 		{
-			if (first)
-			{
-				first = false;
-				continue;
-			}
-
 			QueueFamilyIndices indices = RenderCommand::GetQueueFamilyIndices(vk_device, surface);
 
 			uint32_t extensionCount = 0;

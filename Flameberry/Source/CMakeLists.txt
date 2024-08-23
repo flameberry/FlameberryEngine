@@ -7,17 +7,10 @@ set(INTERPROCEDURAL_OPTIMIZATION ON)
 add_subdirectory(ThirdParty/JoltPhysics/Build)
 SET_INTERPROCEDURAL_OPTIMIZATION()
 
-add_subdirectory(ThirdParty/MsdfAtlasGen/ZLib)
-add_library(ZLIB::ZLIB ALIAS zlibstatic)
-get_target_property(ZLIB_INCLUDE_DIR zlibstatic INTERFACE_INCLUDE_DIRECTORIES)
-get_target_property(ZLIB_BINARY_DIR zlibstatic BINARY_DIR)
-set(ZLIB_FOUND TRUE)
-set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR} ${ZLIB_BINARY_DIR})
-set(ZLIB_LIBRARIES zlibstatic)
+if(WIN32)
+	set(ASSIMP_WARNINGS_AS_ERRORS OFF)
+endif()
 
-# Assimp
-set(ASSIMP_BUILD_ZLIB OFF)
-set(ASSIMP_WARNINGS_AS_ERRORS OFF)
 add_subdirectory(ThirdParty/Assimp)
 
 if(APPLE)
@@ -34,28 +27,8 @@ set(SPIRV_REFLECT_EXECUTABLE OFF)
 set(SPIRV_REFLECT_STATIC_LIB ON)
 add_subdirectory(ThirdParty/SPIRV-Reflect)
 
-set(ZLIB_LIBRARY zlibstatic)
-
-# LibPNG
-add_subdirectory(ThirdParty/MsdfAtlasGen/LibPng)
-add_library(PNG::PNG ALIAS png_static) # Needed for msdfgen find_package(PNG REQUIRED)
-
-# This directory contains the pnglibconf.h file which is needed for compilation of msdfgen-ext
-get_target_property(PNG_BINARY_DIR png_static BINARY_DIR)
-
-unset(ZLIB_LIBRARY)
-
-# Freetype
-add_subdirectory(ThirdParty/MsdfAtlasGen/Freetype)
-add_library(Freetype::Freetype ALIAS freetype) # Needed for msdfgen find_package(Freetype REQUIRED)
-
-# MSDF-Atlas-Gen
-set(MSDF_ATLAS_BUILD_STANDALONE OFF)
-set(MSDF_ATLAS_USE_VCPKG OFF)
-set(MSDF_ATLAS_USE_SKIA OFF)
-add_subdirectory(ThirdParty/MsdfAtlasGen/MsdfAtlasGen)
-
-target_include_directories(msdfgen-ext PUBLIC ${PNG_BINARY_DIR})
+# Add MsdfAtlasGen and it's dependencies
+add_subdirectory(ThirdParty/MsdfAtlasGen)
 
 # Add Source Targets
 add_subdirectory(Developer)

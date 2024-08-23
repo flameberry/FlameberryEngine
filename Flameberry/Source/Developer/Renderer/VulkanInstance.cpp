@@ -10,7 +10,7 @@
 namespace Flameberry {
 
 	static const char* s_VulkanInstanceExtensions[] = {
-#ifdef FBY_PLATFORM_APPLE
+#ifdef FBY_PLATFORM_MACOS
 		VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
 #endif
 		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
@@ -95,7 +95,7 @@ namespace Flameberry {
 		vk_create_info.enabledExtensionCount = static_cast<uint32_t>(vk_extensions.size());
 		vk_create_info.ppEnabledExtensionNames = vk_extensions.data();
 
-#ifdef FBY_PLATFORM_APPLE
+#ifdef FBY_PLATFORM_MACOS
 		vk_create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
 
