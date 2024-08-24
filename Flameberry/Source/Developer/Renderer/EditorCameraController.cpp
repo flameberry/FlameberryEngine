@@ -165,6 +165,8 @@ namespace Flameberry {
 			m_Camera.UpdateWithFOVorZoom(m_Zoom);
 		if (moved)
 			m_Camera.SetView_Direction(m_Position, m_Direction);
+
+		return moved;
 	}
 
 	void EditorCameraController::OnResize(float aspectRatio)

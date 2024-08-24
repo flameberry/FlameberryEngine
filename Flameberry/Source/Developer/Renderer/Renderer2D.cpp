@@ -197,7 +197,7 @@ namespace Flameberry {
 
 	void Renderer2D::AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
 	{
-		constexpr float PI = glm::pi<float>();
+		GLM_CONSTEXPR float PI = glm::pi<float>();
 		const float angle = PI / segments;
 
 		glm::vec3 lastVertex = position + rotation * glm::vec3(radius, 0.0f, 0.0f);
@@ -211,7 +211,7 @@ namespace Flameberry {
 
 	void Renderer2D::AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
 	{
-		constexpr float PI = glm::pi<float>();
+		GLM_CONSTEXPR float PI = glm::pi<float>();
 		const float angle = 2 * PI / segments;
 
 		glm::vec3 lastVertex = position + rotation * glm::vec3(radius, 0.0f, 0.0f);
@@ -225,7 +225,7 @@ namespace Flameberry {
 
 	void Renderer2D::AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex)
 	{
-		constexpr glm::mat4x2 genericVertexOffsets = {
+		GLM_CONSTEXPR glm::mat4x2 genericVertexOffsets = {
 			{ -1.0f, -1.0f },
 			{ 1.0f, -1.0f },
 			{ 1.0f, 1.0f },
@@ -258,11 +258,10 @@ namespace Flameberry {
 		const float start = -gridSize * squareSize;
 
 		float current = start;
-
-		constexpr glm::vec3 lineColor(0.3f);
-		constexpr glm::vec3 boldLineColor(0.7f);
-		constexpr glm::vec3 redLineColor(1.0f, 0.235f, 0.286f);
-		constexpr glm::vec3 blueLineColor(0.286f, 0.235f, 1.0f);
+		GLM_CONSTEXPR glm::vec3 lineColor(0.3f);
+		GLM_CONSTEXPR glm::vec3 boldLineColor(0.7f);
+		GLM_CONSTEXPR glm::vec3 redLineColor(1.0f, 0.235f, 0.286f);
+		GLM_CONSTEXPR glm::vec3 blueLineColor(0.286f, 0.235f, 1.0f);
 
 		for (int i = -gridSize; i <= gridSize; i++)
 		{

@@ -25,9 +25,9 @@ namespace Flameberry {
 
 		int KmpSearch(const char* txt, const char* pat, bool ignoreCase)
 		{
-			int pat_len = strlen(pat);
-			int txt_len = strlen(txt);
-			int lps[pat_len];
+			const int pat_len = strlen(pat);
+			const int txt_len = strlen(txt);
+			int* lps = new int[pat_len];
 			calculateLPS(pat, lps);
 
 			int i = 0, j = -1;
@@ -49,6 +49,9 @@ namespace Flameberry {
 						j = lps[j] - 1;
 				}
 			}
+
+			delete[] lps;
+
 			if (j == pat_len - 1)
 				return i - pat_len;
 			return -1;

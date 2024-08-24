@@ -27,3 +27,9 @@ function(exclude_from_list list)
 
     set(${list} ${${list}} PARENT_SCOPE)
 endfunction()
+
+function(set_mt_runtime_library_for_target TARGET_NAME)
+    if(MSVC)
+        set_property(TARGET ${TARGET_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$CONFIG:Debug:Debug>")
+    endif()
+endfunction()

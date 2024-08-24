@@ -11,8 +11,9 @@ namespace Flameberry {
 
 	struct QueueFamilyIndices
 	{
-		int GraphicsAndComputeSupportedQueueFamilyIndex = -1;
-		int PresentationSupportedQueueFamilyIndex = -1;
+		uint32_t GraphicsQueueFamilyIndex = -1;
+		uint32_t ComputeQueueFamilyIndex = -1;
+		uint32_t PresentationSupportedQueueFamilyIndex = -1;
 	};
 
 	class VulkanDevice
@@ -21,29 +22,31 @@ namespace Flameberry {
 		VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow);
 		~VulkanDevice();
 
-		inline VkDevice GetVulkanDevice() const { return m_VkDevice; }
-		inline VkQueue GetGraphicsQueue() const { return m_GraphicsAndComputeQueue; }
-		inline VkQueue GetComputeQueue() const { return m_GraphicsAndComputeQueue; }
+		inline VkDevice GetVulkanDevice() const { return m_VulkanDevice; }
+		inline VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
+		inline VkQueue GetComputeQueue() const { return m_ComputeQueue; }
 		inline VkQueue GetPresentationQueue() const { return m_PresentationQueue; }
 		inline QueueFamilyIndices GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
-		VkCommandPool GetCommandPool() const { return m_VkCommandPool; }
+		VkCommandPool GetGraphicsCommandPool() const { return m_GraphicsQueueCommandPool; }
+		VkCommandPool GetComputeCommandPool() const { return m_ComputeQueueCommandPool; }
 
-		void BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
-		void EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer);
+		void BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute = false) const;
+		void EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute = false) const;
 
-		void WaitIdle();
-		void WaitIdleGraphicsQueue();
+		void WaitIdle() const;
+		void WaitIdleGraphicsQueue() const;
+		void WaitIdleComputeQueue() const;
 
 		std::vector<VkDeviceQueueCreateInfo> CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices);
 
 	private:
-		VkDevice m_VkDevice;
-		VkQueue m_GraphicsAndComputeQueue, m_PresentationQueue;
+		VkDevice m_VulkanDevice;
+		VkQueue m_GraphicsQueue, m_ComputeQueue, m_PresentationQueue;
 		QueueFamilyIndices m_QueueFamilyIndices;
 
-		VkCommandPool m_VkCommandPool;
+		VkCommandPool m_GraphicsQueueCommandPool, m_ComputeQueueCommandPool;
 
-		VkPhysicalDevice& m_VkPhysicalDevice;
+		VkPhysicalDevice& m_VulkanPhysicalDevice;
 	};
 
 } // namespace Flameberry

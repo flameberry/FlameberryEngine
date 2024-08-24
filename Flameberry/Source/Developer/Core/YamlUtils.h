@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+
 #include <yaml-cpp/yaml.h>
 #include <glm/glm.hpp>
 
@@ -29,6 +31,21 @@ namespace YAML {
             return true;
         }
     };
+
+	template <>
+	struct convert<std::filesystem::path>
+	{
+		static Node encode(const std::filesystem::path& rhs)
+		{
+			return Node(rhs.string());
+		}
+
+		static bool decode(const Node& node, std::filesystem::path& rhs)
+		{
+			rhs = std::filesystem::path(node.as<std::string>());
+			return true;
+		}
+	};
 
 	template <>
 	struct convert<Flameberry::UUID>
@@ -101,6 +118,7 @@ namespace YAML {
 
 namespace Flameberry {
 
+	YAML::Emitter& operator<<(YAML::Emitter& out, const std::filesystem::path& v);
 	YAML::Emitter& operator<<(YAML::Emitter& out, UUID v);
     YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v);
     YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v);

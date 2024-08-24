@@ -7,7 +7,7 @@ namespace Flameberry {
 	Ref<Logger> Logger::s_CoreLogger;
 
 	Logger::Logger(const char* instanceName)
-		: m_CurrentLogLevel(LogLevel::TRACE), m_InstanceName(instanceName)
+		: m_CurrentLogLevel(LogLevel::Trace), m_InstanceName(instanceName)
 	{
 	}
 
@@ -22,22 +22,22 @@ namespace Flameberry {
 		std::string logLevelStr;
 		switch (level)
 		{
-			case LogLevel::TRACE:
+			case LogLevel::Trace:
 				logLevelStr = "TRACE";
 				break;
-			case LogLevel::LOG:
+			case LogLevel::Log:
 				logLevelStr = "LOG";
 				break;
-			case LogLevel::INFO:
+			case LogLevel::Info:
 				logLevelStr = "INFO";
 				break;
-			case LogLevel::WARNING:
+			case LogLevel::Warning:
 				logLevelStr = "WARNING";
 				break;
-			case LogLevel::ERROR:
+			case LogLevel::Error:
 				logLevelStr = "ERROR";
 				break;
-			case LogLevel::CRITICAL:
+			case LogLevel::Critical:
 				logLevelStr = "CRITICAL";
 				break;
 		}

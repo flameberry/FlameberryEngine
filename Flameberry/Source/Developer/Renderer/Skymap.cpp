@@ -28,12 +28,14 @@ namespace Flameberry {
 		int width, height, channels, bytesPerChannel;
 		void* pixels = nullptr;
 
+		const std::string filepathStr = filepath.string();
+
 		// Confirm that the skymap is an HDR file
-		if (!stbi_is_hdr(filepath.c_str()))
+		if (!stbi_is_hdr(filepathStr.c_str()))
 			FBY_ERROR("Skymap cannot be made using a non-hdr file: {}", filepath);
 
 		// Load the equirectangular map
-		pixels = stbi_loadf(filepath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+		pixels = stbi_loadf(filepathStr.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 		// Assert that the pixels are not empty
 		FBY_ASSERT(pixels, "Failed to load skymap from (Pixels are empty): {}", filepath);
 
@@ -137,7 +139,7 @@ namespace Flameberry {
 		}
 
 		// The image views for accessing each mip in the compute shader
-		VkImageView prefilteredMipMapImageViews[mipLevels];
+		std::vector<VkImageView> prefilteredMipMapImageViews(mipLevels);
 		{
 			// Creation of the Prefiltered Map
 			// This process is almost the same as the creation of the m_CubemapImage
@@ -302,8 +304,8 @@ namespace Flameberry {
 		// Creation of the PrefilteredMap generation pipeline ---------------------------------------------------------------------------
 		Ref<ComputePipeline> prefilteredMapGenerationPipeline;
 		Ref<Material> prefilteredMapMaterial;
-		Ref<DescriptorSet> prefilteredMapGenerationDescriptorSets[mipLevels];
-		VkDescriptorImageInfo prefilteredMapImageInfos[mipLevels];
+		std::vector<Ref<DescriptorSet>> prefilteredMapGenerationDescriptorSets(mipLevels);
+		std::vector<VkDescriptorImageInfo> prefilteredMapImageInfos(mipLevels);
 		{
 			ComputePipelineSpecification prefilteredPipelineSpec;
 			prefilteredPipelineSpec.Shader = ShaderLibrary::Get("PrefilteredMap");
@@ -380,7 +382,7 @@ namespace Flameberry {
 
 		// The command buffer to run the whole process --------------------------------------------------------------------------------
 		CommandBufferSpecification cmdBufferSpecification;
-		cmdBufferSpecification.CommandPool = VulkanContext::GetCurrentDevice()->GetCommandPool();
+		cmdBufferSpecification.CommandPool = VulkanContext::GetCurrentDevice()->GetComputeCommandPool();
 		cmdBufferSpecification.SingleTimeUsage = true;
 		cmdBufferSpecification.IsPrimary = true;
 
@@ -477,14 +479,14 @@ namespace Flameberry {
 
 		// Now that all the processing is done, we need to bring all the skymap resources into a descriptor set to be used later by the PBR pipeline
 		std::vector<VkDescriptorSetLayoutBinding> descBindings = {
-			{ .binding = 0, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT },
-			{ .binding = 1, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT },
-			{ .binding = 2, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT },
-			{ .binding = 3, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT }
+			{ 0, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1, /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			{ 1, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1, /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			{ 2, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1, /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			{ 3, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1, /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
 		};
 
 		DescriptorSetSpecification skymapDescSetSpec;
-		skymapDescSetSpec.Layout = DescriptorSetLayout::CreateOrGetCached(DescriptorSetLayoutSpecification{ .Bindings = descBindings });
+		skymapDescSetSpec.Layout = DescriptorSetLayout::CreateOrGetCached(DescriptorSetLayoutSpecification{ descBindings });
 		m_SkymapDescriptorSet = CreateRef<DescriptorSet>(skymapDescSetSpec);
 
 		VkDescriptorImageInfo skymapImageInfo{};
@@ -536,6 +538,8 @@ namespace Flameberry {
 		m_SkymapDescriptorSet->Update();
 
 		// TODO: Remove this in the future
+		VulkanContext::GetCurrentDevice()->WaitIdleComputeQueue();
+		VulkanContext::GetCurrentDevice()->WaitIdleGraphicsQueue();
 		VulkanContext::GetCurrentDevice()->WaitIdle();
 
 		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -581,10 +585,10 @@ namespace Flameberry {
 
 		DescriptorSetLayoutSpecification descSetLayoutSpec;
 		descSetLayoutSpec.Bindings = {
-			{ .binding = 0, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT },
-			{ .binding = 1, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT },
-			{ .binding = 2, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT },
-			{ .binding = 3, .descriptorCount = 1, .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT }
+			{ 0, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1, /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			{ 1, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1, /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			{ 2, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1, /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			{ 3, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1, /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
 		};
 
 		Ref<DescriptorSetLayout> descSetLayout = DescriptorSetLayout::CreateOrGetCached(descSetLayoutSpec);

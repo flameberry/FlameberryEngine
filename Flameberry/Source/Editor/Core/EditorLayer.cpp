@@ -9,7 +9,7 @@
 #include "Renderer/Framebuffer.h"
 #include "Core/UI.h"
 
-#include "Physics/PhysicsEngine.h"
+#include "Physics/Physics.h"
 #include "Renderer/ShaderLibrary.h"
 #include "Renderer/Skymap.h"
 #include "Scripting/ScriptEngine.h"
@@ -50,11 +50,12 @@ namespace Flameberry {
 			  glm::vec3(0.0f, 2.0f, 4.0f),
 			  glm::vec3(0.0f, -0.3f, -1.0f),
 			  GenericCameraSettings{
-				  .ProjectionType = ProjectionType::Perspective,
-				  .AspectRatio = (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height,
-				  .FOV = 45.0f,
-				  .Near = 0.1f,
-				  .Far = 1000.0f })
+				  ProjectionType::Perspective,																										// ProjectionType
+				  (float)Application::Get().GetWindow().GetSpecification().Width / (float)Application::Get().GetWindow().GetSpecification().Height, // AspectRatio
+				  0.1f,																																// Near
+				  1000.0f,																															// Far
+				  45.0f,																															// FOV
+			  })
 	{
 #ifdef FBY_PLATFORM_MACOS
 		Platform::SetNewSceneCallbackMenuBar(FBY_BIND_EVENT_FN(EditorLayer::NewScene));
@@ -80,9 +81,8 @@ namespace Flameberry {
 		Project::SetActive(m_Project);
 		std::filesystem::current_path(m_Project->GetProjectDirectory());
 
-		PhysicsEngine::Init();
 		ScriptEngine::Init(m_Project->GetScriptAssemblyPath());
-
+		PhysicsManager::Init();
 		m_ActiveScene = CreateRef<Scene>();
 		m_SceneHierarchyPanel = CreateRef<SceneHierarchyPanel>(m_ActiveScene);
 		m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
@@ -106,7 +106,7 @@ namespace Flameberry {
 		mousePickingFramebufferSpec.Height = m_ViewportSize.y;
 		mousePickingFramebufferSpec.Samples = 1;
 		mousePickingFramebufferSpec.Attachments = { VK_FORMAT_R32_SINT, VK_FORMAT_D32_SFLOAT };
-		mousePickingFramebufferSpec.ClearColorValue = { .int32 = { -1 } };
+		mousePickingFramebufferSpec.ClearColorValue.int32[0] = -1;
 		mousePickingFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
 
 		RenderPassSpecification mousePickingRenderPassSpec;
@@ -293,7 +293,7 @@ namespace Flameberry {
 			int32_t entityIndex = data[0];
 			m_MousePickingBuffer->UnmapMemory();
 			m_SceneHierarchyPanel->SetSelectionContext((entityIndex != -1) ? m_ActiveScene->GetRegistry()->get_entity_at_index(entityIndex) : fbentt::null);
-			// FBY_LOG("Selected Entity Index: {}", entityIndex);
+			FBY_LOG("Selected Entity Index: {}", entityIndex);
 			m_IsMousePickingBufferReady = false;
 		}
 
@@ -338,8 +338,8 @@ namespace Flameberry {
 
 	void EditorLayer::OnDestroy()
 	{
+		PhysicsManager::Shutdown();
 		ScriptEngine::Shutdown();
-		PhysicsEngine::Shutdown();
 		Renderer2D::Shutdown();
 
 		// Set the active project as nullptr so that all it's resources like AssetManager are released
@@ -375,6 +375,8 @@ namespace Flameberry {
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 		m_RenderViewportSize = { viewportPanelSize.x * ImGui::GetWindowDpiScale(), viewportPanelSize.y * ImGui::GetWindowDpiScale() };
 
+		const float DPI_SCALE = ImGui::GetWindowDpiScale();
+
 		m_IsViewportHovered = ImGui::IsWindowHovered();
 		// For the Camera Input if other windows are focused but the user right clicks this window then set focus for the camera to continue moving without affecting other windows
 		if (m_IsViewportHovered && ImGui::IsMouseDown(ImGuiMouseButton_Right))
@@ -403,7 +405,7 @@ namespace Flameberry {
 					if (Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Scene)
 					{
 						m_ShouldOpenAnotherScene = true;
-						m_ScenePathToBeOpened = filePath;
+						m_ScenePathToBeOpened = filePath.string();
 					}
 					else if (Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh)
 					{
@@ -1141,6 +1143,7 @@ namespace Flameberry {
 
 			UI::EndKeyValueTable();
 		}
+
 		ImGui::End();
 	}
 

@@ -97,28 +97,30 @@ namespace Flameberry {
 
 	void RenderCommand::SetViewport(float x, float y, float width, float height)
 	{
-		Renderer::Submit([x, y, width, height](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-			VkViewport viewport{};
-			viewport.x = x;
-			viewport.y = y;
-			viewport.width = width;
-			viewport.height = height;
-			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
+		Renderer::Submit([x, y, width, height](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+			{
+				VkViewport viewport{};
+				viewport.x = x;
+				viewport.y = y;
+				viewport.width = width;
+				viewport.height = height;
+				viewport.minDepth = 0.0f;
+				viewport.maxDepth = 1.0f;
 
-			vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
-		});
+				vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+			});
 	}
 
 	void RenderCommand::SetScissor(VkOffset2D offset, VkExtent2D extent)
 	{
-		Renderer::Submit([offset, extent](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-			VkRect2D scissor{};
-			scissor.offset = offset;
-			scissor.extent = extent;
+		Renderer::Submit([offset, extent](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+			{
+				VkRect2D scissor{};
+				scissor.offset = offset;
+				scissor.extent = extent;
 
-			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
-		});
+				vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+			});
 	}
 
 	void RenderCommand::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize)
@@ -267,18 +269,27 @@ namespace Flameberry {
 		QueueFamilyIndices indices;
 		for (const auto& queue : queueFamilyProps)
 		{
+#if 0
 			// TOOD: Check for separate compute device available
 			if ((queue.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queue.queueFlags & VK_QUEUE_COMPUTE_BIT) && (queue.timestampValidBits != 0))
 				indices.GraphicsAndComputeSupportedQueueFamilyIndex = index;
+#else
+			if (queue.queueFlags & VK_QUEUE_GRAPHICS_BIT && queue.timestampValidBits != 0)
+				indices.GraphicsQueueFamilyIndex = index;
 
-			VkBool32 is_presentation_supported = false;
-			vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, index, surface, &is_presentation_supported);
+			if (queue.queueFlags & VK_QUEUE_COMPUTE_BIT && queue.timestampValidBits != 0)
+				indices.ComputeQueueFamilyIndex = index;
+#endif
 
-			if (is_presentation_supported)
+			VkBool32 isPresentationSupported = false;
+			vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, index, surface, &isPresentationSupported);
+
+			if (isPresentationSupported)
 				indices.PresentationSupportedQueueFamilyIndex = index;
 
-			if (indices.GraphicsAndComputeSupportedQueueFamilyIndex != -1 && indices.PresentationSupportedQueueFamilyIndex != -1)
+			if (indices.GraphicsQueueFamilyIndex != -1 && indices.ComputeQueueFamilyIndex != -1 && indices.PresentationSupportedQueueFamilyIndex != -1)
 				break;
+
 			index++;
 		}
 		return indices;

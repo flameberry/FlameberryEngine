@@ -49,7 +49,7 @@ namespace Flameberry {
 		std::vector<VkFence> m_InFlightFences;
 		std::vector<VkFence> m_ImagesInFlight;
 
-		uint32_t m_ImageIndex, m_CurrentFrameIndex;
+		uint32_t m_ImageIndex = 0, m_CurrentFrameIndex = 0;
 		uint32_t m_ImageCount = 0;
 
 	public:

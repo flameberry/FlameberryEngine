@@ -99,7 +99,8 @@ namespace Flameberry {
 			const ImVec4 textColor = isSelected ? ImVec4(0, 0, 0, 1) : ImGui::GetStyle().Colors[ImGuiCol_Text];
 			UI::ScopedStyleColor _(ImGuiCol_Text, textColor);
 
-			ImGui::Text("%s", parent.path().filename().c_str());
+			std::string filename = parent.path().filename().string();
+			ImGui::Text("%s", filename.c_str());
 		}
 
 		ImGui::PopID();
@@ -146,7 +147,7 @@ namespace Flameberry {
 		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
 
 		ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBgGrey);
-		ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, -1.0f), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_AlwaysUseWindowPadding);
 		ImGui::PopStyleColor();
 
 		for (auto& directory : std::filesystem::directory_iterator(Project::GetActiveProject()->GetConfig().AssetDirectory))
@@ -174,7 +175,7 @@ namespace Flameberry {
 		constexpr float topChildHeight = 34.0f;
 		const float bottomChildHeight = ImGui::GetContentRegionAvail().y - topChildHeight;
 
-		ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
+		ImGui::BeginChild("##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
 		ImGui::PopStyleVar();
 
 		constexpr float arrowSize = 14.0f;
@@ -231,14 +232,14 @@ namespace Flameberry {
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowPos(pos);
-		ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, bottomChildHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::BeginChild("##Contents", ImVec2(m_SecondChildSize, bottomChildHeight), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_AlwaysUseWindowPadding);
 		ImGui::PopStyleVar();
 
 		const float spacing = ImGui::GetStyle().ItemSpacing.x;
 		const float cellSize = m_ThumbnailSize + spacing;
 		uint32_t columns = ImGui::GetContentRegionAvail().x / cellSize, rowIndex = 0;
 		columns = columns >= 1 ? columns : 1;
-		ImGui::Columns(columns, (const char*)__null, false);
+		ImGui::Columns(columns, (const char*)nullptr, false);
 
 		ImVec2 itemSize;
 
@@ -254,7 +255,8 @@ namespace Flameberry {
 			if (m_SearchInputBuffer[0] != '\0')
 			{
 				// TODO: Maybe some optimisation to not search again if the input string is same
-				const int index = Algorithm::KmpSearch(filePath.filename().replace_extension().c_str(), m_SearchInputBuffer.c_str(), true);
+				const std::string filePathWithoutExtension = filePath.filename().replace_extension().string();
+				const int index = Algorithm::KmpSearch(filePathWithoutExtension.c_str(), m_SearchInputBuffer.c_str(), true);
 				if (index == -1)
 					continue;
 			}
@@ -306,19 +308,22 @@ namespace Flameberry {
 		if (ImGui::GetColumnIndex() != 0)
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + itemSize.y + 10.0f);
 
-		if (ImGui::BeginPopupContextWindow((const char*)__null, m_PopupFlags))
+		if (ImGui::BeginPopupContextWindow((const char*)nullptr, m_PopupFlags))
 		{
 			if (ImGui::BeginMenu(ICON_LC_PLUS "\tCreate"))
 			{
 				if (ImGui::MenuItem(ICON_LC_DRIBBBLE "\tMaterial"))
 				{
 					auto mat = CreateRef<MaterialAsset>("New Material");
-					MaterialAssetSerializer::Serialize(mat, (m_CurrentDirectory / "NewMaterial.fbmat").c_str());
+					MaterialAssetSerializer::Serialize(mat, m_CurrentDirectory / "NewMaterial.fbmat");
 				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::MenuItem(ICON_LC_EXTERNAL_LINK "\tOpen In Finder"))
-				Platform::OpenInExplorerOrFinder((Project::GetActiveProjectDirectory() / m_CurrentDirectory).string().c_str());
+			{
+				const std::string filePathStr = (Project::GetActiveProjectDirectory() / m_CurrentDirectory).string();
+				Platform::OpenInExplorerOrFinder(filePathStr.c_str());
+			}
 			ImGui::EndPopup();
 		}
 		ImGui::EndChild();
@@ -336,7 +341,8 @@ namespace Flameberry {
 
 		ImGui::PushClipRect(clipRect.Min, clipRect.Max, true);
 
-		std::string_view currentPath(m_CurrentDirectory.c_str());
+		std::string currentDirectory = m_CurrentDirectory.string();
+		std::string_view currentPath(currentDirectory.c_str());
 
 		ImGui::GetWindowDrawList()->AddRectFilled(clipRect.Min, clipRect.Max,
 			ImGui::ColorConvertFloat4ToU32(Theme::FrameBg),
@@ -364,7 +370,7 @@ namespace Flameberry {
 
 			// Displaying the folder name
 			const ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
-			ImGui::TextUnformatted(currentPath.begin(), currentPath.begin() + position);
+			ImGui::TextUnformatted(currentPath.data(), currentPath.data() + position);
 			ImGui::SameLine();
 
 			const ImRect buttonRect(cursorScreenPos - ImVec2(style.FramePadding.x, 0.0f),

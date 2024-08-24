@@ -9,6 +9,13 @@
 
 namespace Flameberry {
 
+	static const char* s_VulkanInstanceExtensions[] = {
+#ifdef FBY_PLATFORM_MACOS
+		VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
+#endif
+		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+	};
+
 	static VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -79,14 +86,18 @@ namespace Flameberry {
 
 		std::vector<const char*> vk_extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-		vk_extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-		vk_extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+		for (auto extension : s_VulkanInstanceExtensions)
+			vk_extensions.push_back(extension);
+
 		if (enableValidationLayers)
 			vk_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
 		vk_create_info.enabledExtensionCount = static_cast<uint32_t>(vk_extensions.size());
 		vk_create_info.ppEnabledExtensionNames = vk_extensions.data();
+
+#ifdef FBY_PLATFORM_MACOS
 		vk_create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
 
 		VkDebugUtilsMessengerCreateInfoEXT vk_debug_create_info{};
 		auto validationLayers = VulkanContext::GetValidationLayerNames();
@@ -128,7 +139,7 @@ namespace Flameberry {
 		}
 	}
 
-	VkResult VulkanInstance::CreateDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pMessenger)
+	VkResult VulkanInstance::CreateDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pMessenger) const
 	{
 		auto vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VkInstance, "vkCreateDebugUtilsMessengerEXT");
 		if (vkCreateDebugUtilsMessengerEXT)
@@ -138,7 +149,7 @@ namespace Flameberry {
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 
-	void VulkanInstance::DestroyDebugUtilsMessengerEXT(VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator)
+	void VulkanInstance::DestroyDebugUtilsMessengerEXT(VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator) const
 	{
 		auto vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VkInstance, "vkDestroyDebugUtilsMessengerEXT");
 		if (vkDestroyDebugUtilsMessengerEXT)

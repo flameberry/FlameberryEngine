@@ -4,10 +4,6 @@
 #include "Renderer/StaticMesh.h"
 #include "Asset/Asset.h"
 
-namespace physx {
-	class PxScene;
-}
-
 namespace Flameberry {
 
 	class Scene : public Asset
@@ -78,8 +74,6 @@ namespace Flameberry {
 	private:
 		Ref<fbentt::registry> m_Registry;
 		fbentt::entity m_WorldEntity = {};
-
-		physx::PxScene* m_PxScene;
 
 		std::string m_Name = "Untitled";
 		glm::vec2 m_ViewportSize = { 1280, 720 };

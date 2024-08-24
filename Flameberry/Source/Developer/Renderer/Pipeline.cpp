@@ -155,9 +155,11 @@ namespace Flameberry {
 			{
 				outPushConstantRanges.emplace_back(
 					VkPushConstantRange{
-						.offset = specification.Offset,
-						.size = specification.Size,
-						.stageFlags = (VkShaderStageFlags)specification.VulkanShaderStage });
+						(VkShaderStageFlags)specification.VulkanShaderStage,
+						specification.Offset,
+						specification.Size 
+					}
+				);
 				pcOffsetToIndex[specification.Offset] = (uint32_t)outPushConstantRanges.size() - 1;
 			}
 		}
@@ -178,11 +180,11 @@ namespace Flameberry {
 			for (uint32_t i = 0; i < reflectionDescSet.BindingCount; i++)
 			{
 				vulkanDescSetBindings.emplace_back(VkDescriptorSetLayoutBinding{
-					.binding = descriptorBindings[index].Binding,
-					.descriptorCount = descriptorBindings[index].Count,
-					.descriptorType = descriptorBindings[index].Type,
-					.stageFlags = descriptorBindings[index].VulkanShaderStage,
-					.pImmutableSamplers = nullptr });
+					descriptorBindings[index].Binding,
+					descriptorBindings[index].Type,
+					descriptorBindings[index].Count,
+					descriptorBindings[index].VulkanShaderStage,
+					nullptr });
 				index++;
 			}
 
@@ -209,9 +211,9 @@ namespace Flameberry {
 				FBY_ASSERT(specializationConstantIDSet.find(specializationConstant.ConstantID) != specializationConstantIDSet.end(), "Specialization Constant ID specified during Pipeline Creation doesn't match any ID present in the shader!");
 
 				outVulkanSpecializationMapEntries.emplace_back(VkSpecializationMapEntry{
-					.constantID = specializationConstant.ConstantID,
-					.size = SizeOfShaderDataType(specializationConstant.Type),
-					.offset = offset,
+					specializationConstant.ConstantID,
+					offset,
+					SizeOfShaderDataType(specializationConstant.Type),
 				});
 			}
 			offset += outVulkanSpecializationMapEntries.back().size;
@@ -324,7 +326,7 @@ namespace Flameberry {
 		pipelineDepthStencilStateCreateInfo.back = m_Specification.StencilOpState;
 
 		// Create the vertex attribute description structs based on the m_PipelineSpec.VertexLayout
-		VkVertexInputAttributeDescription vertexAttributeDescriptions[m_Specification.VertexLayout.size()];
+		std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions(m_Specification.VertexLayout.size());
 		uint32_t offset = 0, idx = 0;
 		for (uint32_t loc = 0; loc < m_Specification.VertexLayout.size(); loc++)
 		{
@@ -351,7 +353,7 @@ namespace Flameberry {
 		pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = vertexInputBindingDescription.stride ? 1 : 0;
 		pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = &vertexInputBindingDescription;
 		pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = idx; // Index will represent Size after the last increment
-		pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexAttributeDescriptions;
+		pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexAttributeDescriptions.data();
 
 		VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo{};
 		pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

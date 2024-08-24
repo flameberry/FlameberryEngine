@@ -100,7 +100,8 @@ namespace Flameberry {
             );
 #endif
 
-			DrawComponent<TransformComponent>(ICON_LC_SCALE_3D " Transform", [&]()
+			DrawComponent<TransformComponent>(
+				ICON_LC_SCALE_3D " Transform", [&]()
 				{
 					auto& transform = m_Context->GetRegistry()->get<TransformComponent>(m_SelectionContext);
 
@@ -121,7 +122,8 @@ namespace Flameberry {
 				false // removable = false
 			);
 
-			DrawComponent<TextComponent>(ICON_LC_TEXT " Text", [&]()
+			DrawComponent<TextComponent>(
+				ICON_LC_TEXT " Text", [&]()
 				{
 					auto& text = m_Context->GetRegistry()->get<TextComponent>(m_SelectionContext);
 
@@ -253,7 +255,9 @@ namespace Flameberry {
 							}
 
 							ImGui::Spacing();
-							ImGui::TextWrapped("%s", skymap ? std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath).filename().c_str() : "Null");
+
+							std::string skymapName = std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath).filename().string();
+							ImGui::TextWrapped("%s", skymap ? skymapName.c_str() : "Null");
 						}
 						UI::EndKeyValueTable();
 					}
@@ -363,10 +367,10 @@ namespace Flameberry {
 							const float verticalLength = textLineHeightWithSpacing + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
 							ImGui::SetNextWindowSizeConstraints(ImVec2(-1.0f, verticalLength), ImVec2(-1.0f, verticalLength * limit));
 
-							ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
+							ImGuiWindowFlags windowFlags = ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY;
 
 							ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-							ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), false, window_flags);
+							ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), windowFlags);
 							ImGui::PopStyleVar();
 
 							if (ImGui::BeginTable("MaterialTable", 4, s_TableFlags))
@@ -941,13 +945,13 @@ namespace Flameberry {
 					{
 						UI::TableKeyElement("Type");
 
-						const char* rigidBodyTypeStrings[] = { "Static", "Dynamic" };
+						const char* rigidBodyTypeStrings[] = { "Static", "Kinematic", "Dynamic" };
 						uint8_t currentRigidBodyTypeIndex = (uint8_t)rigidBody.Type;
 
 						ImGui::PushItemWidth(-1.0f);
 						if (ImGui::BeginCombo("##RigidBodyType", rigidBodyTypeStrings[currentRigidBodyTypeIndex]))
 						{
-							for (int i = 0; i < 2; i++)
+							for (int i = 0; i < 3; i++)
 							{
 								bool isSelected = (i == (uint8_t)rigidBody.Type);
 								if (ImGui::Selectable(rigidBodyTypeStrings[i], &isSelected))
@@ -1047,8 +1051,8 @@ namespace Flameberry {
 				});
 
 			ImGui::PopStyleColor();
+			ImGui::EndChild();
 		}
-		ImGui::EndChild();
 		ImGui::End();
 
 		ImGui::PopStyleVar();

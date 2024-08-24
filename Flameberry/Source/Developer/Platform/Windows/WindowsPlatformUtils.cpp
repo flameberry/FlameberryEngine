@@ -1,6 +1,9 @@
 #include "Platform/PlatformUtils.h"
 
+#include <Windows.h>
 #include <commdlg.h>
+#include <ShlObj.h>
+
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
@@ -14,6 +17,26 @@ namespace Flameberry {
 		void CreateMenuBar() {}
 
 		void OpenInExplorerOrFinder(const char* path)
+		{
+		}
+
+		void TitlebarNative::CreateForGLFWwindow(GLFWwindow* window, float titleBarHeight)
+		{
+		}
+
+		void TitlebarNative::InvalidateFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight)
+		{
+		}
+
+		void TitlebarNative::SetPrimaryTitle(const std::string& title)
+		{
+		}
+
+		void TitlebarNative::SetSecondaryTitle(const std::string& secondaryTitle)
+		{
+		}
+
+		void TitlebarNative::SetGradient(const glm::vec4& color)
 		{
 		}
 
@@ -35,6 +58,38 @@ namespace Flameberry {
 
 			if (GetOpenFileNameA(&ofn) == TRUE)
 				return ofn.lpstrFile;
+
+			return std::string();
+		}
+
+		std::string OpenFolder()
+		{
+			BROWSEINFOA bi;
+			CHAR szFolder[MAX_PATH] = { 0 };
+			CHAR currentDir[MAX_PATH] = { 0 };
+
+			ZeroMemory(&bi, sizeof(BROWSEINFOA));
+
+			// Get the current directory and set it as the initial directory
+			if (GetCurrentDirectoryA(MAX_PATH, currentDir))
+				bi.lpszTitle = "Select a Folder"; // Text displayed in the dialog box
+
+			bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;							   // Flags for only directories and the new dialog style
+			bi.lpfn = NULL;																	   // Callback function, unused here
+			bi.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow()); // Owner window
+			bi.lpszTitle = "Select Folder";
+
+			// Open the folder selection dialog
+			LPITEMIDLIST lpItem = SHBrowseForFolderA(&bi);
+
+			if (lpItem != nullptr)
+			{
+				// Get the folder path from the selection
+				if (SHGetPathFromIDListA(lpItem, szFolder))
+				{
+					return std::string(szFolder);
+				}
+			}
 
 			return std::string();
 		}

@@ -162,7 +162,7 @@ namespace Flameberry {
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
 				{
 					std::filesystem::path path = (const char*)payload->Data;
-					const auto& ext = path.extension();
+					const auto& ext = path.extension().string();
 					FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
 					bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Texture2D

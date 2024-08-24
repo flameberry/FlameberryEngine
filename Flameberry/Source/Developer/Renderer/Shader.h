@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <set>
+#include <filesystem>
 
 #include <vulkan/vulkan.h>
 
@@ -77,8 +78,8 @@ namespace Flameberry {
 	class Shader
 	{
 	public:
-		Shader(const char* vertexShaderSpvPath, const char* fragmentShaderSpvPath);
-		Shader(const char* spvBinaryPath);
+		Shader(const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath);
+		Shader(const std::filesystem::path& spvBinaryPath);
 		~Shader();
 
 		void GetVertexAndFragmentShaderModules(VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const;
@@ -96,7 +97,7 @@ namespace Flameberry {
 		const ReflectionDescriptorBindingSpecification& GetBinding(const std::string& name) const;
 
 	private:
-		std::vector<char> LoadShaderSpvCode(const char* path);
+		std::vector<char> LoadShaderSpvCode(const std::filesystem::path& path);
 		void Reflect(const std::vector<char>& shaderSpvBinaryCode);
 		VkShaderModule CreateVulkanShaderModule(const std::vector<char>& shaderSpvBinaryCode);
 

@@ -153,7 +153,7 @@ namespace Flameberry {
 				UI::ScopedStyleVariable windowRounding(ImGuiStyleVar_WindowRounding, 16.0f);
 				UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 3.0f });
 
-				ImGui::Begin(str_id, __null, window_flags);
+				ImGui::Begin(str_id, nullptr, window_flags);
 			}
 
 			m_IsAnyOverlayHovered = m_IsAnyOverlayHovered || ImGui::IsWindowHovered();

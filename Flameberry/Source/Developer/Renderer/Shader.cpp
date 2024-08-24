@@ -68,10 +68,10 @@ namespace Flameberry {
 
 	} // namespace Utils
 
-	Shader::Shader(const char* vertexShaderSpvPath, const char* fragmentShaderSpvPath)
+	Shader::Shader(const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath)
 	{
 		// TODO: This is probably some odd behaviour to name the shader with just the vertex shader's name
-		const auto& stem = std::filesystem::path(vertexShaderSpvPath).stem().string();
+		const auto& stem = vertexShaderSpvPath.stem().string();
 		m_Name = stem.substr(0, stem.find('.'));
 
 		// Clear the map to be used for the current shader
@@ -88,9 +88,9 @@ namespace Flameberry {
 		m_FragmentShaderModule = CreateVulkanShaderModule(fragmentShaderSpvBinaryCode);
 	}
 
-	Shader::Shader(const char* spvBinaryPath)
+	Shader::Shader(const std::filesystem::path& spvBinaryPath)
 	{
-		const auto& stem = std::filesystem::path(spvBinaryPath).stem().string();
+		const auto& stem = spvBinaryPath.stem().string();
 		m_Name = stem.substr(0, stem.find('.'));
 
 		// Clear the map to be used for the current shader
@@ -115,7 +115,7 @@ namespace Flameberry {
 		return m_DescriptorBindingSpecifications[it->second];
 	}
 
-	std::vector<char> Shader::LoadShaderSpvCode(const char* path)
+	std::vector<char> Shader::LoadShaderSpvCode(const std::filesystem::path& path)
 	{
 		std::ifstream spv_ifstream(path, std::ios::binary);
 		if (!spv_ifstream.is_open())
@@ -127,7 +127,7 @@ namespace Flameberry {
 
 		std::vector<char> shaderSpvBinaryCode(size);
 		spv_ifstream.read(shaderSpvBinaryCode.data(), size);
-		return std::move(shaderSpvBinaryCode);
+		return shaderSpvBinaryCode;
 	}
 
 	void Shader::Reflect(const std::vector<char>& shaderSpvBinaryCode)
@@ -241,19 +241,20 @@ namespace Flameberry {
 
 					// Full name is used to ensure uniqueness of the uniform variable (even though it is rare to overlap)
 					m_UniformFullNameToSpecification[fullName] = ReflectionUniformVariableSpecification{
-						.Name = fullName.c_str(), // Wondering if the full name should be used
-						.LocalOffset = member.offset - pcblocks[i]->offset,
-						.GlobalOffset = member.offset,
-						.Size = member.size
+						fullName.c_str(),					 // Name // Wondering if the full name should be used
+						member.offset - pcblocks[i]->offset, // LocalOffset
+						member.offset,						 // GlobalOffset
+						member.size							 // Size
 					};
 				}
 
 				m_PushConstantSpecifications.emplace_back(ReflectionPushConstantSpecification{
-					.Name = pcblocks[i]->type_description->type_name,
-					.Offset = pcblocks[i]->offset,
-					.Size = absoluteSize,
-					.VulkanShaderStage = (VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage(),
-					.RendererOnly = Utils::HasPrefix(pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX) });
+					pcblocks[i]->type_description->type_name,													// Name
+					(VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage(),								// VulkanShaderStage
+					absoluteSize,																				// Size
+					pcblocks[i]->offset,																		// Offset
+					Utils::HasPrefix(pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX) // IsRendererOnly
+				});
 			}
 		}
 
@@ -300,14 +301,14 @@ namespace Flameberry {
 					}
 
 					ReflectionDescriptorBindingSpecification reflectionDescriptorBindingSpecification{
-						.Name = fullName,
-						.Set = binding->set,
-						.Binding = binding->binding,
-						.Count = binding->count,
-						.Type = (VkDescriptorType)binding->descriptor_type,
-						.VulkanShaderStage = (VkShaderStageFlags)reflectionShaderModule.GetShaderStage(),
-						.RendererOnly = rendererOnly,
-						.IsDescriptorTypeImage = isDescriptorTypeImage
+						fullName, // Name
+						binding->set, // Set
+						binding->binding, // Binding
+						binding->count, // Count
+						(VkDescriptorType)binding->descriptor_type, // Type
+						(VkShaderStageFlags)reflectionShaderModule.GetShaderStage(), // VulkanShaderStage
+						rendererOnly, // IsRendererOnly
+						isDescriptorTypeImage // IsDescriptorTypeImage
 					};
 
 					uint64_t combinedValue = Utils::CantorPairingFunction(binding->set, binding->binding);
@@ -331,7 +332,7 @@ namespace Flameberry {
 						s_DescriptorSetAndBindingIntegerToArrayIndex[combinedValue] = static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
 					}
 				}
-				m_DescriptorSetSpecifications.emplace_back(ReflectionDescriptorSetSpecification{ .Set = descSets[i]->set, .BindingCount = descSets[i]->binding_count });
+				m_DescriptorSetSpecifications.emplace_back(ReflectionDescriptorSetSpecification{ descSets[i]->set, descSets[i]->binding_count });
 			}
 		}
 	}

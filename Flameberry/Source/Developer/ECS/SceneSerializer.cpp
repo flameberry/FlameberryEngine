@@ -164,7 +164,7 @@ namespace Flameberry {
 		return nullptr;
 	}
 
-	bool SceneSerializer::DeserializeIntoExistingScene(const char* path, const Ref<Scene>& destScene)
+	bool SceneSerializer::DeserializeIntoExistingScene(const std::filesystem::path& path, const Ref<Scene>& destScene)
 	{
 		FBY_SCOPED_TIMER("Scene Deserialization");
 
@@ -453,14 +453,14 @@ namespace Flameberry {
 		return true;
 	}
 
-	void SceneSerializer::SerializeSceneToFile(const char* path, const Ref<Scene>& srcScene)
+	void SceneSerializer::SerializeSceneToFile(const std::filesystem::path& path, const Ref<Scene>& srcScene)
 	{
 		FBY_SCOPED_TIMER("Serialization");
 
-		std::string scenePath(path);
+		const std::string scenePath = path.string();
 		uint32_t lastSlashPosition = scenePath.find_last_of('/') + 1;
 		uint32_t lastDotPosition = scenePath.find_last_of('.');
-		std::string sceneName = scenePath.substr(lastSlashPosition, lastDotPosition - lastSlashPosition);
+		const std::string sceneName = scenePath.substr(lastSlashPosition, lastDotPosition - lastSlashPosition);
 
 		YAML::Emitter out;
 		out << YAML::BeginMap;

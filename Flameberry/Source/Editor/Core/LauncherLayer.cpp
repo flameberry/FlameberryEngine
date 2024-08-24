@@ -48,11 +48,12 @@ namespace Flameberry {
 		static float firstChildSize = 100.0f, secondChildSize = 220.0f;
 		firstChildSize = ImGui::GetContentRegionAvail().x - secondChildSize - 8.0f;
 
-		ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0), ImGuiChildFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysUseWindowPadding);
+		ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_AlwaysUseWindowPadding);
 
 		for (const auto& entry : m_ProjectRegistry)
 		{
-			if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), entry.ProjectFilePath.c_str(), !std::filesystem::exists(entry.ProjectFilePath)))
+			const std::string projectFilePathStr = entry.ProjectFilePath.string();
+			if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), projectFilePathStr.c_str(), !std::filesystem::exists(entry.ProjectFilePath)))
 			{
 				// Open Project
 				m_Project = Project::Load(entry.ProjectFilePath);
@@ -64,7 +65,7 @@ namespace Flameberry {
 
 		ImGui::SameLine();
 
-		ImGui::BeginChild("##ProjectControls", ImVec2(secondChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_Border, ImGuiWindowFlags_AlwaysUseWindowPadding);
+		ImGui::BeginChild("##ProjectControls", ImVec2(secondChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Border, ImGuiWindowFlags_AlwaysUseWindowPadding);
 
 		if (UI::AlignedButton("New Project", buttonSize))
 			ImGui::OpenPopup("New Project");
@@ -150,7 +151,10 @@ namespace Flameberry {
                             m_ShouldClose = true;
                         }
 						else
-							ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s is not empty!", m_Project->GetProjectDirectory().c_str());
+						{
+							const std::string projectDirectoryStr = m_Project->GetProjectDirectory().string();
+							ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s is not empty!", projectDirectoryStr.c_str());
+						}
 					}
 					else
 						FBY_ERROR("Failed to create project: Project name is empty!");
