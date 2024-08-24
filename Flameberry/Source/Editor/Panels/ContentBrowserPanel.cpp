@@ -255,7 +255,8 @@ namespace Flameberry {
 			if (m_SearchInputBuffer[0] != '\0')
 			{
 				// TODO: Maybe some optimisation to not search again if the input string is same
-				const int index = Algorithm::KmpSearch(filePath.filename().replace_extension().string().c_str(), m_SearchInputBuffer.c_str(), true);
+				const std::string filePathWithoutExtension = filePath.filename().replace_extension().string();
+				const int index = Algorithm::KmpSearch(filePathWithoutExtension.c_str(), m_SearchInputBuffer.c_str(), true);
 				if (index == -1)
 					continue;
 			}
@@ -314,12 +315,15 @@ namespace Flameberry {
 				if (ImGui::MenuItem(ICON_LC_DRIBBBLE "\tMaterial"))
 				{
 					auto mat = CreateRef<MaterialAsset>("New Material");
-					MaterialAssetSerializer::Serialize(mat, (m_CurrentDirectory / "NewMaterial.fbmat").c_str());
+					MaterialAssetSerializer::Serialize(mat, m_CurrentDirectory / "NewMaterial.fbmat");
 				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::MenuItem(ICON_LC_EXTERNAL_LINK "\tOpen In Finder"))
-				Platform::OpenInExplorerOrFinder((Project::GetActiveProjectDirectory() / m_CurrentDirectory).string().c_str());
+			{
+				const std::string filePathStr = (Project::GetActiveProjectDirectory() / m_CurrentDirectory).string();
+				Platform::OpenInExplorerOrFinder(filePathStr.c_str());
+			}
 			ImGui::EndPopup();
 		}
 		ImGui::EndChild();

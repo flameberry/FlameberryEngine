@@ -184,7 +184,7 @@ namespace Flameberry {
 		}
 		else
 		{
-			Ref<Texture2D> texture = CreateRef<Texture2D>(texturePath.c_str());
+			Ref<Texture2D> texture = CreateRef<Texture2D>(texturePath);
 			s_TextureCacheDirectory[texturePath] = texture;
 			FBY_TRACE("Texture not found in cache! Loading texture from disk: {}", texturePath);
 			return texture;

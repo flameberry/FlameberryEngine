@@ -35,6 +35,7 @@
 #include "Renderer/Texture2D.h"
 #include "Renderer/StaticMesh.h"
 #include "Renderer/VulkanDebug.h"
+#include "Renderer/VulkanContext.h"
 #include "Renderer/RenderPass.h"
 #include "Renderer/SceneRenderer.h"
 #include "Renderer/Renderer2D.h"

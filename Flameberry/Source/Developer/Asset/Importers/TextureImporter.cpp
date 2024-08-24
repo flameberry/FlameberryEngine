@@ -65,7 +65,8 @@ namespace Flameberry {
 		void* resizedPixels = nullptr;
 		VkFormat format = VK_FORMAT_UNDEFINED;
 
-		const char* pathCStr = path.string().c_str();
+		const std::string pathStr = path.string();
+		const char* pathCStr = pathStr.c_str();
 
 		if (stbi_is_hdr(pathCStr))
 		{

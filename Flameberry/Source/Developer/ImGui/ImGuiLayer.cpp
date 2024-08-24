@@ -131,7 +131,7 @@ namespace Flameberry {
 		init_info.Instance = VulkanContext::GetCurrentInstance()->GetVulkanInstance();
 		init_info.PhysicalDevice = VulkanContext::GetPhysicalDevice();
 		init_info.Device = device->GetVulkanDevice();
-		init_info.QueueFamily = device->GetQueueFamilyIndices().GraphicsAndComputeSupportedQueueFamilyIndex;
+		init_info.QueueFamily = device->GetQueueFamilyIndices().GraphicsQueueFamilyIndex;
 		init_info.Queue = device->GetGraphicsQueue();
 		init_info.PipelineCache = VK_NULL_HANDLE;
 		init_info.DescriptorPool = VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool();

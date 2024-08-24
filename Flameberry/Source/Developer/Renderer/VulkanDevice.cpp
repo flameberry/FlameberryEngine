@@ -7,13 +7,14 @@
 namespace Flameberry {
 
 	VulkanDevice::VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow)
-		: m_VkPhysicalDevice(physicalDevice)
+		: m_VulkanPhysicalDevice(physicalDevice)
 	{
 		// Getting Queue Family Indices
-		m_QueueFamilyIndices = RenderCommand::GetQueueFamilyIndices(m_VkPhysicalDevice, pVulkanWindow->GetWindowSurface());
+		m_QueueFamilyIndices = RenderCommand::GetQueueFamilyIndices(m_VulkanPhysicalDevice, pVulkanWindow->GetWindowSurface());
 
-		std::vector<VkDeviceQueueCreateInfo> vk_device_queue_create_infos = CreateDeviceQueueInfos({ (uint32_t)m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex,
-			(uint32_t)m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex });
+		std::vector<VkDeviceQueueCreateInfo> vulkanDeviceQueueCreateInfos = CreateDeviceQueueInfos({ m_QueueFamilyIndices.GraphicsQueueFamilyIndex,
+			m_QueueFamilyIndices.ComputeQueueFamilyIndex,
+			m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex });
 
 		VkPhysicalDeviceFeatures2 deviceFeatures2{};
 		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -33,8 +34,8 @@ namespace Flameberry {
 		// Creating Vulkan Logical Device
 		VkDeviceCreateInfo vk_device_create_info{};
 		vk_device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		vk_device_create_info.queueCreateInfoCount = static_cast<uint32_t>(vk_device_queue_create_infos.size());
-		vk_device_create_info.pQueueCreateInfos = vk_device_queue_create_infos.data();
+		vk_device_create_info.queueCreateInfoCount = static_cast<uint32_t>(vulkanDeviceQueueCreateInfos.size());
+		vk_device_create_info.pQueueCreateInfos = vulkanDeviceQueueCreateInfos.data();
 
 		vk_device_create_info.pEnabledFeatures = nullptr;
 
@@ -62,29 +63,42 @@ namespace Flameberry {
 			vk_device_create_info.enabledLayerCount = 0;
 		}
 
-		VK_CHECK_RESULT(vkCreateDevice(m_VkPhysicalDevice, &vk_device_create_info, nullptr, &m_VkDevice));
+		VK_CHECK_RESULT(vkCreateDevice(m_VulkanPhysicalDevice, &vk_device_create_info, nullptr, &m_VulkanDevice));
 
-		vkGetDeviceQueue(m_VkDevice, m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex, 0, &m_GraphicsAndComputeQueue);
-		vkGetDeviceQueue(m_VkDevice, m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex, 0, &m_PresentationQueue);
+		vkGetDeviceQueue(m_VulkanDevice, m_QueueFamilyIndices.GraphicsQueueFamilyIndex, 0, &m_GraphicsQueue);
+		vkGetDeviceQueue(m_VulkanDevice, m_QueueFamilyIndices.ComputeQueueFamilyIndex, 0, &m_ComputeQueue);
+		vkGetDeviceQueue(m_VulkanDevice, m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex, 0, &m_PresentationQueue);
 
-		// Creating Command Pool
-		VkCommandPoolCreateInfo commandPoolCreateInfo{};
-		commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		commandPoolCreateInfo.queueFamilyIndex = m_QueueFamilyIndices.GraphicsAndComputeSupportedQueueFamilyIndex;
-		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		{
+			// Creating Graphics Queue Command Pool
+			VkCommandPoolCreateInfo commandPoolCreateInfo{};
+			commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			commandPoolCreateInfo.queueFamilyIndex = m_QueueFamilyIndices.GraphicsQueueFamilyIndex;
+			commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-		VK_CHECK_RESULT(vkCreateCommandPool(m_VkDevice, &commandPoolCreateInfo, nullptr, &m_VkCommandPool));
+			VK_CHECK_RESULT(vkCreateCommandPool(m_VulkanDevice, &commandPoolCreateInfo, nullptr, &m_GraphicsQueueCommandPool));
+		}
+
+		{
+			// Creating Compute Queue Command Pool
+			VkCommandPoolCreateInfo commandPoolCreateInfo{};
+			commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			commandPoolCreateInfo.queueFamilyIndex = m_QueueFamilyIndices.ComputeQueueFamilyIndex;
+			commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		
+			VK_CHECK_RESULT(vkCreateCommandPool(m_VulkanDevice, &commandPoolCreateInfo, nullptr, &m_ComputeQueueCommandPool));
+		}
 	}
 
-	void VulkanDevice::BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer)
+	void VulkanDevice::BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute) const
 	{
 		VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{};
 		vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		vk_command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		vk_command_buffer_allocate_info.commandPool = m_VkCommandPool;
+		vk_command_buffer_allocate_info.commandPool = isCompute ? m_ComputeQueueCommandPool : m_GraphicsQueueCommandPool;
 		vk_command_buffer_allocate_info.commandBufferCount = 1;
 
-		vkAllocateCommandBuffers(m_VkDevice, &vk_command_buffer_allocate_info, &commandBuffer);
+		vkAllocateCommandBuffers(m_VulkanDevice, &vk_command_buffer_allocate_info, &commandBuffer);
 
 		VkCommandBufferBeginInfo vk_command_buffer_begin_info{};
 		vk_command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -93,7 +107,7 @@ namespace Flameberry {
 		vkBeginCommandBuffer(commandBuffer, &vk_command_buffer_begin_info);
 	}
 
-	void VulkanDevice::EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer)
+	void VulkanDevice::EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute) const
 	{
 		vkEndCommandBuffer(commandBuffer);
 
@@ -102,42 +116,49 @@ namespace Flameberry {
 		vk_submit_info.commandBufferCount = 1;
 		vk_submit_info.pCommandBuffers = &commandBuffer;
 
-		vkQueueSubmit(m_GraphicsAndComputeQueue, 1, &vk_submit_info, VK_NULL_HANDLE);
-		vkQueueWaitIdle(m_GraphicsAndComputeQueue);
+		VkQueue vulkanQueue = isCompute ? m_ComputeQueue : m_GraphicsQueue;
+		vkQueueSubmit(vulkanQueue, 1, &vk_submit_info, VK_NULL_HANDLE);
+		vkQueueWaitIdle(vulkanQueue);
 
-		vkFreeCommandBuffers(m_VkDevice, m_VkCommandPool, 1, &commandBuffer);
+		vkFreeCommandBuffers(m_VulkanDevice, m_GraphicsQueueCommandPool, 1, &commandBuffer);
 	}
 
 	VulkanDevice::~VulkanDevice()
 	{
-		vkDestroyCommandPool(m_VkDevice, m_VkCommandPool, nullptr);
-		vkDestroyDevice(m_VkDevice, nullptr);
+		vkDestroyCommandPool(m_VulkanDevice, m_GraphicsQueueCommandPool, nullptr);
+		vkDestroyCommandPool(m_VulkanDevice, m_ComputeQueueCommandPool, nullptr);
+		vkDestroyDevice(m_VulkanDevice, nullptr);
 	}
 
 	std::vector<VkDeviceQueueCreateInfo> VulkanDevice::CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices)
 	{
-		float queuePriority = 1.0f;
-		std::vector<VkDeviceQueueCreateInfo> vk_device_queue_create_infos;
+		constexpr float queuePriority = 1.0f;
+		std::vector<VkDeviceQueueCreateInfo> vulkanDeviceQueueCreateInfos;
 		for (uint32_t uniqueQueueFamilyIndex : uniqueQueueFamilyIndices)
 		{
-			VkDeviceQueueCreateInfo vk_queue_create_info{};
-			vk_queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-			vk_queue_create_info.queueFamilyIndex = uniqueQueueFamilyIndex;
-			vk_queue_create_info.queueCount = 1;
-			vk_queue_create_info.pQueuePriorities = &queuePriority;
-			vk_device_queue_create_infos.push_back(vk_queue_create_info);
+			VkDeviceQueueCreateInfo vulkanQueueCreateInfo{};
+			vulkanQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			vulkanQueueCreateInfo.queueFamilyIndex = uniqueQueueFamilyIndex;
+			vulkanQueueCreateInfo.queueCount = 1;
+			vulkanQueueCreateInfo.pQueuePriorities = &queuePriority;
+			vulkanDeviceQueueCreateInfos.push_back(vulkanQueueCreateInfo);
 		}
-		return vk_device_queue_create_infos;
+		return vulkanDeviceQueueCreateInfos;
 	}
 
-	void VulkanDevice::WaitIdle()
+	void VulkanDevice::WaitIdle() const
 	{
-		vkDeviceWaitIdle(m_VkDevice);
+		vkDeviceWaitIdle(m_VulkanDevice);
 	}
 
-	void VulkanDevice::WaitIdleGraphicsQueue()
+	void VulkanDevice::WaitIdleGraphicsQueue() const
 	{
-		vkQueueWaitIdle(m_GraphicsAndComputeQueue);
+		vkQueueWaitIdle(m_GraphicsQueue);
+	}
+	
+	void VulkanDevice::WaitIdleComputeQueue() const
+	{
+		vkQueueWaitIdle(m_ComputeQueue);
 	}
 
 } // namespace Flameberry

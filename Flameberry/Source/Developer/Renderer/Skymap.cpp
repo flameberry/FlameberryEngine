@@ -28,12 +28,14 @@ namespace Flameberry {
 		int width, height, channels, bytesPerChannel;
 		void* pixels = nullptr;
 
+		const std::string filepathStr = filepath.string();
+
 		// Confirm that the skymap is an HDR file
-		if (!stbi_is_hdr(filepath.string().c_str()))
+		if (!stbi_is_hdr(filepathStr.c_str()))
 			FBY_ERROR("Skymap cannot be made using a non-hdr file: {}", filepath);
 
 		// Load the equirectangular map
-		pixels = stbi_loadf(filepath.string().c_str(), &width, &height, &channels, STBI_rgb_alpha);
+		pixels = stbi_loadf(filepathStr.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 		// Assert that the pixels are not empty
 		FBY_ASSERT(pixels, "Failed to load skymap from (Pixels are empty): {}", filepath);
 
@@ -380,7 +382,7 @@ namespace Flameberry {
 
 		// The command buffer to run the whole process --------------------------------------------------------------------------------
 		CommandBufferSpecification cmdBufferSpecification;
-		cmdBufferSpecification.CommandPool = VulkanContext::GetCurrentDevice()->GetCommandPool();
+		cmdBufferSpecification.CommandPool = VulkanContext::GetCurrentDevice()->GetComputeCommandPool();
 		cmdBufferSpecification.SingleTimeUsage = true;
 		cmdBufferSpecification.IsPrimary = true;
 
@@ -536,6 +538,8 @@ namespace Flameberry {
 		m_SkymapDescriptorSet->Update();
 
 		// TODO: Remove this in the future
+		VulkanContext::GetCurrentDevice()->WaitIdleComputeQueue();
+		VulkanContext::GetCurrentDevice()->WaitIdleGraphicsQueue();
 		VulkanContext::GetCurrentDevice()->WaitIdle();
 
 		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();

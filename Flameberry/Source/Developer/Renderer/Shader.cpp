@@ -68,10 +68,10 @@ namespace Flameberry {
 
 	} // namespace Utils
 
-	Shader::Shader(const char* vertexShaderSpvPath, const char* fragmentShaderSpvPath)
+	Shader::Shader(const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath)
 	{
 		// TODO: This is probably some odd behaviour to name the shader with just the vertex shader's name
-		const auto& stem = std::filesystem::path(vertexShaderSpvPath).stem().string();
+		const auto& stem = vertexShaderSpvPath.stem().string();
 		m_Name = stem.substr(0, stem.find('.'));
 
 		// Clear the map to be used for the current shader
@@ -88,9 +88,9 @@ namespace Flameberry {
 		m_FragmentShaderModule = CreateVulkanShaderModule(fragmentShaderSpvBinaryCode);
 	}
 
-	Shader::Shader(const char* spvBinaryPath)
+	Shader::Shader(const std::filesystem::path& spvBinaryPath)
 	{
-		const auto& stem = std::filesystem::path(spvBinaryPath).stem().string();
+		const auto& stem = spvBinaryPath.stem().string();
 		m_Name = stem.substr(0, stem.find('.'));
 
 		// Clear the map to be used for the current shader
@@ -115,7 +115,7 @@ namespace Flameberry {
 		return m_DescriptorBindingSpecifications[it->second];
 	}
 
-	std::vector<char> Shader::LoadShaderSpvCode(const char* path)
+	std::vector<char> Shader::LoadShaderSpvCode(const std::filesystem::path& path)
 	{
 		std::ifstream spv_ifstream(path, std::ios::binary);
 		if (!spv_ifstream.is_open())
@@ -127,7 +127,7 @@ namespace Flameberry {
 
 		std::vector<char> shaderSpvBinaryCode(size);
 		spv_ifstream.read(shaderSpvBinaryCode.data(), size);
-		return std::move(shaderSpvBinaryCode);
+		return shaderSpvBinaryCode;
 	}
 
 	void Shader::Reflect(const std::vector<char>& shaderSpvBinaryCode)

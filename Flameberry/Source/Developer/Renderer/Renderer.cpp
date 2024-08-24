@@ -39,7 +39,7 @@ namespace Flameberry {
 		{
 			// The main command buffers
 			CommandBufferSpecification cmdBufferSpec;
-			cmdBufferSpec.CommandPool = VulkanContext::GetCurrentDevice()->GetCommandPool();
+			cmdBufferSpec.CommandPool = VulkanContext::GetCurrentDevice()->GetGraphicsCommandPool();
 			cmdBufferSpec.IsPrimary = true;
 			cmdBufferSpec.SingleTimeUsage = false;
 

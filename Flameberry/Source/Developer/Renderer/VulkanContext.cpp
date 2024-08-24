@@ -1,6 +1,7 @@
 #include "VulkanContext.h"
 
 #include <set>
+#include <map>
 #include <string>
 
 #include "Core/Core.h"
@@ -97,43 +98,45 @@ namespace Flameberry {
 		m_Window->DestroyVulkanWindowSurface(m_VulkanInstance->GetVulkanInstance());
 	}
 
-	VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& vk_physical_devices, VkSurfaceKHR surface)
+	VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& physicalDeviceList, VkSurfaceKHR surface)
 	{
-		for (auto vk_device : vk_physical_devices)
+		std::map<int, VkPhysicalDevice> physicalDeviceMap;
+
+		for (auto physicalDevice : physicalDeviceList)
 		{
-			QueueFamilyIndices indices = RenderCommand::GetQueueFamilyIndices(vk_device, surface);
+			QueueFamilyIndices indices = RenderCommand::GetQueueFamilyIndices(physicalDevice, surface);
 
 			uint32_t extensionCount = 0;
-			vkEnumerateDeviceExtensionProperties(vk_device, nullptr, &extensionCount, nullptr);
+			vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
 
-			std::vector<VkExtensionProperties> available_extensions(extensionCount);
-			vkEnumerateDeviceExtensionProperties(vk_device, nullptr, &extensionCount, available_extensions.data());
+			std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+			vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, availableExtensions.data());
 
-			std::set<std::string> required_extensions(s_VulkanDeviceExtensions.begin(), s_VulkanDeviceExtensions.end());
+			std::set<std::string> requiredExtensions(s_VulkanDeviceExtensions.begin(), s_VulkanDeviceExtensions.end());
 
 			FBY_INFO("Available Extensions:");
-			for (const auto& extension : available_extensions)
+			for (const auto& extension : availableExtensions)
 			{
 				FBY_INFO("\t{}", extension.extensionName);
-				required_extensions.erase(extension.extensionName);
+				requiredExtensions.erase(extension.extensionName);
 			}
-			bool found_required_extensions = required_extensions.empty();
-			bool is_swap_chain_adequate = false;
+			bool foundRequiredExtensions = requiredExtensions.empty();
+			bool isSwapchainAdequate = false;
 
-			if (found_required_extensions)
+			if (foundRequiredExtensions)
 			{
-				SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(vk_device, surface);
-				is_swap_chain_adequate = (!vk_swap_chain_details.SurfaceFormats.empty()) && (!vk_swap_chain_details.PresentationModes.empty());
+				SwapChainDetails vulkanSwapchainDetails = RenderCommand::GetSwapChainDetails(physicalDevice, surface);
+				isSwapchainAdequate = (!vulkanSwapchainDetails.SurfaceFormats.empty()) && (!vulkanSwapchainDetails.PresentationModes.empty());
 			}
 			else
 			{
 				FBY_ERROR("Failed to find the following extension(s):");
-				for (const auto& name : required_extensions)
+				for (const auto& name : requiredExtensions)
 					FBY_ERROR("\t{}", name);
 			}
 
 			VkPhysicalDeviceFeatures supportedFeatures;
-			vkGetPhysicalDeviceFeatures(vk_device, &supportedFeatures);
+			vkGetPhysicalDeviceFeatures(physicalDevice, &supportedFeatures);
 
 			VkPhysicalDeviceFeatures2 deviceFeatures2{};
 			deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -142,12 +145,13 @@ namespace Flameberry {
 			vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
 
 			deviceFeatures2.pNext = &vulkan12Features;
-			vkGetPhysicalDeviceFeatures2(vk_device, &deviceFeatures2);
+			vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures2);
 
-			bool is_physical_device_valid = indices.GraphicsAndComputeSupportedQueueFamilyIndex != -1
+			bool isPhysicalDeviceValid = indices.GraphicsQueueFamilyIndex != -1
+				&& indices.ComputeQueueFamilyIndex!= -1
 				&& indices.PresentationSupportedQueueFamilyIndex != -1
-				&& found_required_extensions
-				&& is_swap_chain_adequate
+				&& foundRequiredExtensions
+				&& isSwapchainAdequate
 				&& supportedFeatures.samplerAnisotropy
 				&& supportedFeatures.sampleRateShading
 				&& supportedFeatures.fillModeNonSolid
@@ -156,11 +160,19 @@ namespace Flameberry {
 				&& supportedFeatures.shaderStorageImageArrayDynamicIndexing
 				&& vulkan12Features.descriptorIndexing;
 
-			if (is_physical_device_valid)
-				return vk_device;
+			VkPhysicalDeviceProperties deviceProperties;
+			vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+
+			int score = 0;
+
+			if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+				score -= 1000;
+
+			if (isPhysicalDeviceValid)
+				physicalDeviceMap[score] = physicalDevice;
 		}
-		FBY_ASSERT(0, "Failed to find valid physical device!");
-		return VK_NULL_HANDLE;
+		FBY_ASSERT(physicalDeviceMap.size(), "Failed to find valid physical device!");
+		return physicalDeviceMap.rbegin()->second;
 	}
 
 } // namespace Flameberry

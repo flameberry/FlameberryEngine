@@ -29,13 +29,13 @@ namespace Flameberry {
 
 		for (const auto& path : paths)
 		{
-			Ref<Shader> shader = CreateRef<Shader>((s_ShaderBaseDirectory / path[0]).string().c_str(), (s_ShaderBaseDirectory / path[1]).string().c_str());
+			Ref<Shader> shader = CreateRef<Shader>(s_ShaderBaseDirectory / path[0], s_ShaderBaseDirectory / path[1]);
 			s_ShaderStorage[shader->GetName()] = shader;
 		}
 
 		for (const auto& path : computeShaderPaths)
 		{
-			Ref<Shader> shader = CreateRef<Shader>((s_ShaderBaseDirectory / path).string().c_str());
+			Ref<Shader> shader = CreateRef<Shader>(s_ShaderBaseDirectory / path);
 			s_ShaderStorage[shader->GetName()] = shader;
 		}
 	}

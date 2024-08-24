@@ -9,7 +9,7 @@ namespace Flameberry {
 
 	Ref<MaterialAsset> MaterialImporter::LoadMaterial(const std::filesystem::path& path)
 	{
-		return MaterialAssetSerializer::Deserialize(path.c_str());
+		return MaterialAssetSerializer::Deserialize(path);
 	}
 
 } // namespace Flameberry

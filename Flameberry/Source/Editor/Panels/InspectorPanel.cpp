@@ -98,7 +98,8 @@ namespace Flameberry {
             );
 #endif
 
-			DrawComponent<TransformComponent>(ICON_LC_SCALE_3D " Transform", [&]()
+			DrawComponent<TransformComponent>(
+				ICON_LC_SCALE_3D " Transform", [&]()
 				{
 					auto& transform = m_Context->GetRegistry()->get<TransformComponent>(m_SelectionContext);
 
@@ -119,7 +120,8 @@ namespace Flameberry {
 				false // removable = false
 			);
 
-			DrawComponent<TextComponent>(ICON_LC_TEXT " Text", [&]()
+			DrawComponent<TextComponent>(
+				ICON_LC_TEXT " Text", [&]()
 				{
 					auto& text = m_Context->GetRegistry()->get<TextComponent>(m_SelectionContext);
 
@@ -251,7 +253,9 @@ namespace Flameberry {
 							}
 
 							ImGui::Spacing();
-							ImGui::TextWrapped("%s", skymap ? std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath).filename().string().c_str() : "Null");
+
+							std::string skymapName = std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath).filename().string();
+							ImGui::TextWrapped("%s", skymap ? skymapName.c_str() : "Null");
 						}
 						UI::EndKeyValueTable();
 					}
