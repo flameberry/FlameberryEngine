@@ -1,7 +1,6 @@
 # ZLib
 if(NOT ZLIB_FOUND)
 	if(NOT TARGET zlibstatic)
-		message(WARNING "Bro zlibstatic found")
 		add_subdirectory(ZLib)
 	endif()
 	add_library(ZLIB::ZLIB ALIAS zlibstatic)
