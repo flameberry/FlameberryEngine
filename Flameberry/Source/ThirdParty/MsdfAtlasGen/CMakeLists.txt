@@ -3,13 +3,17 @@ if(NOT ZLIB_FOUND)
 	if(NOT TARGET zlibstatic)
 		add_subdirectory(ZLib)
 	endif()
+
 	add_library(ZLIB::ZLIB ALIAS zlibstatic)
 	get_target_property(ZLIB_INCLUDE_DIR zlibstatic INTERFACE_INCLUDE_DIRECTORIES)
-	set(ZLIB_FOUND TRUE)
-	set(ZLIB_LIBRARIES zlibstatic)
 
-	# Assimp
-	# set(ASSIMP_BUILD_ZLIB OFF)
+	set(ZLIB_FOUND TRUE PARENT_SCOPE)
+	set(ZLIB_LIBRARIES zlibstatic PARENT_SCOPE)
+
+	if(WIN32)
+		get_target_property(ZLIB_BINARY_DIR zlibstatic BINARY_DIR)
+		set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR} ${ZLIB_BINARY_DIR} PARENT_SCOPE)
+	endif()
 endif()
 
 if(WIN32)
@@ -38,4 +42,3 @@ set(MSDF_ATLAS_USE_SKIA OFF)
 add_subdirectory(MsdfAtlasGen)
 
 target_include_directories(msdfgen-ext PUBLIC ${PNG_BINARY_DIR})
-
