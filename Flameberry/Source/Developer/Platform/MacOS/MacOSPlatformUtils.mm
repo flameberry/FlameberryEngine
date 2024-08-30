@@ -93,6 +93,7 @@ namespace Flameberry {
             NSWindow* nativeWindow = glfwGetCocoaWindow(window);
             NSView* nativeView = glfwGetCocoaView(window);
             
+            
             [nativeWindow setTitlebarAppearsTransparent:YES];
             nativeWindow.titleVisibility = NSWindowTitleHidden;
             
@@ -113,9 +114,10 @@ namespace Flameberry {
             // Customize the appearance of the title bar
             [s_TitlebarData.TitlebarView setBackgroundColor:[NSColor colorWithRed:Theme::TitlebarColor.x green:Theme::TitlebarColor.y blue:Theme::TitlebarColor.z alpha:Theme::TitlebarColor.w]]; // Set the background color
 
-            // Icon
-            const char* flameberryIcon = FBY_PROJECT_DIR"Flameberry/Assets/Icons/FlameberryIcon.png";
-            NSString* flameberryIconPath = [[NSString alloc] initWithCString:flameberryIcon encoding:NSASCIIStringEncoding];
+            // Construct full path by prepending the project directory
+            NSString* flameberryIconPath = [NSString stringWithFormat:@"%@%@", @(FBY_PROJECT_DIR), @"Flameberry/Assets/Icons/FlameberryIcon.png"];
+            
+            // Create NSImage object with the file path
             NSImage* iconImage = [[NSImage alloc] initWithContentsOfFile:flameberryIconPath];
             
             if (iconImage)

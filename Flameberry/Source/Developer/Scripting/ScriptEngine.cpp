@@ -7,7 +7,18 @@
 #include <mono/metadata/attrdefs.h>
 #include <mono/metadata/mono-config.h>
 
-#include <PxPhysicsAPI.h>
+#include <Jolt/Jolt.h>
+// Jolt includes
+#include <Jolt/RegisterTypes.h>
+#include <Jolt/Core/Factory.h>
+#include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
 
 #include "Core/Core.h"
 #include "Core/Input.h"
@@ -15,9 +26,7 @@
 #include "ECS/Components.h"
 
 #define FBY_REGISTER_COMPONENT(Type) ::Flameberry::RegisterComponent<Type>(#Type)
-#define FBY_ADD_INTERNAL_CALL(InternalCall)                                    \
-	mono_add_internal_call("Flameberry.Managed.InternalCalls::" #InternalCall, \
-		(const void*)InternalCalls::InternalCall);
+#define FBY_ADD_INTERNAL_CALL(InternalCall) mono_add_internal_call("Flameberry.Managed.InternalCalls::" #InternalCall, (const void*)InternalCalls::InternalCall);
 
 namespace Flameberry {
 
@@ -487,26 +496,10 @@ namespace Flameberry {
 
 		void RigidBodyComponent_ApplyForce(uint64_t entity, const glm::vec3& force, const ForceMode& mode, bool autowake)
 		{
-			FBY_ASSERT(s_Data->ActiveScene,
-				"InternalCall: Active scene must not be null");
-			physx::PxRigidBody* rigidBodyRuntimePtr = (physx::PxRigidBody*)s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).RuntimeRigidBody;
-			physx::PxForceMode::Enum pxMode;
-			switch (mode)
-			{
-				case ForceMode::Force:
-					pxMode = physx::PxForceMode::eFORCE;
-					break;
-				case ForceMode::Impulse:
-					pxMode = physx::PxForceMode::eIMPULSE;
-					break;
-				case ForceMode::VelocityChange:
-					pxMode = physx::PxForceMode::eVELOCITY_CHANGE;
-					break;
-				case ForceMode::Acceleration:
-					pxMode = physx::PxForceMode::eACCELERATION;
-					break;
-			}
-			rigidBodyRuntimePtr->addForce(physx::PxVec3(force.x, force.y, force.z), pxMode, autowake);
+			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
+
+			JPH::Body* rigidBodyRuntimePtr = (JPH::Body*)s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).RuntimeRigidBody;
+			rigidBodyRuntimePtr->AddForce(JPH::RVec3(force.x, force.y, force.z));
 		}
 
 		void BoxColliderComponent_GetSize(uint64_t entity, glm::vec3& size)
@@ -730,7 +723,8 @@ namespace Flameberry {
 		MonoType* managedType = mono_reflection_type_from_name((char*)fmt::format("Flameberry.{}", name).c_str(), s_Data->CoreAssemblyImage);
 		FBY_ASSERT(managedType != nullptr, "Internal Error: Component not available in Script-Core");
 
-		s_Data->ComponentTypeHashToHasComponentFunction[managedType] = [](fbentt::entity entity) -> bool {
+		s_Data->ComponentTypeHashToHasComponentFunction[managedType] = [](fbentt::entity entity) -> bool
+		{
 			FBY_ASSERT(s_Data->ActiveScene, "Internal Error: Scene should not be nullptr");
 			return s_Data->ActiveScene->GetRegistry()->has<Component>(entity);
 		};

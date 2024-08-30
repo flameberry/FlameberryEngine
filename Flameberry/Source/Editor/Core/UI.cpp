@@ -211,7 +211,7 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
 			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 
-			ImGui::ImageButton(filePathCStr, reinterpret_cast<ImTextureID>(thumbnail->CreateOrGetDescriptorSet()), ImVec2(thumbnailWidth, thumbnailHeight));
+			ImGui::Image(reinterpret_cast<ImTextureID>(thumbnail->CreateOrGetDescriptorSet()), ImVec2(thumbnailWidth, thumbnailHeight));
 		}
 
 		const auto& filename = keepExtension ? filepath.filename().string() : filepath.stem().string();

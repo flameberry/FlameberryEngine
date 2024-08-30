@@ -23,6 +23,7 @@
 #include "ECS/ecs.hpp"
 #include "Physics/Physics.h"
 #include "Physics/InterfaceImpls.h"
+#include "Scripting/ScriptEngine.h"
 
 namespace Flameberry {
 

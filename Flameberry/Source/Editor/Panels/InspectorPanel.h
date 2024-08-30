@@ -66,7 +66,7 @@ namespace Flameberry {
 			auto& style = ImGui::GetStyle();
 			float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
 
-			bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
+			bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowItemOverlap);
 			ImGui::PopStyleVar();
 
 			ImGui::SameLine(contentRegionAvail.x - lineHeight);

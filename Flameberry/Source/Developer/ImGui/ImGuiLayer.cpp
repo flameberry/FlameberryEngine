@@ -170,7 +170,8 @@ namespace Flameberry {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+		// ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+		ImGui::DockSpaceOverViewport();
 	}
 
 	void ImGuiLayer::End()
@@ -297,9 +298,9 @@ namespace Flameberry {
 		style.PopupRounding = 3;
 		style.CellPadding = ImVec2(8, 7);
 		style.ScrollbarSize = 12;
-		style.DockingSeparatorSize = 3;
+		// style.DockingSeparatorSize = 3;
 		style.WindowMenuButtonPosition = ImGuiDir_Left;
-		style.TabBarBorderSize = 0;
+		style.TabBorderSize = 0;
 
 		auto& colors = style.Colors;
 

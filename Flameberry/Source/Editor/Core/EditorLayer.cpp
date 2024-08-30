@@ -186,15 +186,13 @@ namespace Flameberry {
 
 		// Create the file watcher that will reload script assembly when modified
 		m_AssemblyFileWatcher = CreateUnique<filewatch::FileWatch<std::string>>(
-			m_Project->GetScriptAssemblyPath().string(),
+            m_Project->GetScriptAssemblyPath().string(),
 			[this](const std::string& path, const filewatch::Event change_type) {
-				FBY_LOG("AssemblyFileWatcher: Event: {} - {}", path,
-					filewatch::event_to_string(change_type));
+				FBY_LOG("AssemblyFileWatcher: Event: {} - {}", path, filewatch::event_to_string(change_type));
 
 				if (!m_AssemblyReloadPending)
 				{
-					m_AssemblyFirstChangeTimePoint =
-						std::chrono::high_resolution_clock::now();
+					m_AssemblyFirstChangeTimePoint = std::chrono::high_resolution_clock::now();
 					m_AssemblyReloadPending = true;
 				}
 			});

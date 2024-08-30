@@ -156,7 +156,7 @@ namespace Flameberry {
 			return ScriptFieldType::Invalid;
 	}
 
-	Ref<Scene> SceneSerializer::DeserializeIntoNewScene(const char* path)
+	Ref<Scene> SceneSerializer::DeserializeIntoNewScene(const std::filesystem::path& path)
 	{
 		Ref<Scene> newScene = CreateRef<Scene>();
 		if (DeserializeIntoExistingScene(path, newScene))
