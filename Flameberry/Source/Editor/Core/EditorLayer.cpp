@@ -464,7 +464,7 @@ namespace Flameberry {
 		// UI_CompositeView();
 	}
 
-	void EditorLayer::InvalidateViewportImGuiDescriptorSet(uint32_t index)
+	void EditorLayer::InvalidateViewportImGuiDescriptorSet(uint32_t index) const
 	{
 		VkDescriptorImageInfo desc_image[1] = {};
 		desc_image[0].sampler = Texture2D::GetDefaultSampler();
@@ -480,7 +480,7 @@ namespace Flameberry {
 		vkUpdateDescriptorSets(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), 1, write_desc, 0, nullptr);
 	}
 
-	void EditorLayer::InvalidateCompositePassImGuiDescriptorSet(uint32_t index)
+	void EditorLayer::InvalidateCompositePassImGuiDescriptorSet(uint32_t index) const
 	{
 		VkDescriptorImageInfo desc_image[1] = {};
 		desc_image[0].sampler = Texture2D::GetDefaultSampler();
