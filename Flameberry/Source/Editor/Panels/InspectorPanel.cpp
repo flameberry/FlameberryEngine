@@ -22,7 +22,7 @@ namespace Flameberry {
 	}
 
 	InspectorPanel::InspectorPanel(const Ref<Scene>& context)
-		: m_Context(context), m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()), m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon2.png"))
+		: m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()), m_Context(context), m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon2.png"))
 	{
 	}
 
@@ -36,7 +36,7 @@ namespace Flameberry {
 
 		if (m_SelectionContext != fbentt::null)
 		{
-			ImGui::PushStyleColor(ImGuiCol_Border, Theme::FrameBorder);
+			UI::ScopedStyleColor borderColor(ImGuiCol_Border, Theme::FrameBorder);
 
 			auto& tag = m_Context->GetRegistry()->get<TagComponent>(m_SelectionContext);
 			ImFont* bigFont = ImGui::GetIO().Fonts->Fonts[0];
@@ -256,8 +256,8 @@ namespace Flameberry {
 
 							ImGui::Spacing();
 
-							std::string skymapName = std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath).filename().string();
-							ImGui::TextWrapped("%s", skymap ? skymapName.c_str() : "Null");
+							std::string skymapName = skymap ? std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath).filename().string() : "";
+							ImGui::TextWrapped("%s", skymapName.c_str());
 						}
 						UI::EndKeyValueTable();
 					}
@@ -334,13 +334,13 @@ namespace Flameberry {
 						{
 							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
 							{
-								const char* path = (const char*)payload->Data;
-								std::filesystem::path modelPath{ path };
+								const char* path = static_cast<const char*>(payload->Data);
+								const std::filesystem::path modelPath{ path };
 								const std::string& ext = modelPath.extension().string();
 
 								FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
-								bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh
+								const bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh
 									&& std::filesystem::exists(modelPath)
 									&& std::filesystem::is_regular_file(modelPath);
 
@@ -383,7 +383,7 @@ namespace Flameberry {
 								uint32_t submeshIndex = 0;
 								for (const auto& submesh : staticMesh->GetSubMeshes())
 								{
-									ImGui::PushID(submeshIndex);
+									ImGui::PushID(static_cast<int>(submeshIndex));
 
 									ImGui::TableNextRow();
 									ImGui::TableNextColumn();
@@ -1050,7 +1050,6 @@ namespace Flameberry {
 					}
 				});
 
-			ImGui::PopStyleColor();
 			ImGui::EndChild();
 		}
 		ImGui::End();

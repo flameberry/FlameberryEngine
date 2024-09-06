@@ -34,8 +34,8 @@ namespace Flameberry {
 
 		AssetType GetAssetTypeFromFileExtension(const std::string& extension)
 		{
-			auto it = g_FileExtensionToAssetTypeMap.find(extension);
-			AssetType assetType = it != g_FileExtensionToAssetTypeMap.end() ? it->second : AssetType::None;
+			const auto it = g_FileExtensionToAssetTypeMap.find(extension);
+			const AssetType assetType = it != g_FileExtensionToAssetTypeMap.end() ? it->second : AssetType::None;
 
 			return assetType;
 		}

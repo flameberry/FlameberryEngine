@@ -21,11 +21,11 @@ namespace Flameberry {
 			ImGui::Begin("Material Editor", &m_Open);
 			ImGui::PopStyleVar();
 
-			UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1);
-			UI::ScopedStyleColor borderColor(ImGuiCol_Border, Theme::FrameBorder);
-
 			if (UI::BeginKeyValueTable("MaterialAttributeTable"))
 			{
+				UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1);
+				UI::ScopedStyleColor borderColor(ImGuiCol_Border, Theme::FrameBorder);
+
 				UI::TableKeyElement("Name");
 
 				if (m_EditingContext && m_ShouldRename)

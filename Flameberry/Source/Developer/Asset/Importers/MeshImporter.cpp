@@ -65,7 +65,8 @@ namespace Flameberry {
 		{
 			std::replace(albedoStr.begin(), albedoStr.end(), '\\', '/');
 
-			AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(path.parent_path() / albedoStr);
+			const auto& resolvedPath = std::filesystem::weakly_canonical(path.parent_path() / albedoStr);
+			AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(resolvedPath);
 			materialAsset->SetAlbedoMap(handle);
 		}
 
@@ -73,7 +74,8 @@ namespace Flameberry {
 		{
 			std::replace(normalStr.begin(), normalStr.end(), '\\', '/');
 
-			AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(path.parent_path() / normalStr);
+			const auto& resolvedPath = std::filesystem::canonical(path.parent_path() / normalStr);
+			AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(resolvedPath);
 			materialAsset->SetNormalMap(handle);
 		}
 
@@ -81,7 +83,8 @@ namespace Flameberry {
 		{
 			std::replace(roughnessStr.begin(), roughnessStr.end(), '\\', '/');
 
-			AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(path.parent_path() / roughnessStr);
+			const auto& resolvedPath = std::filesystem::canonical(path.parent_path() / roughnessStr);
+			AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(resolvedPath);
 			materialAsset->SetRoughnessMap(handle);
 		}
 
@@ -89,7 +92,8 @@ namespace Flameberry {
 		{
 			std::replace(metallicStr.begin(), metallicStr.end(), '\\', '/');
 
-			AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(path.parent_path() / metallicStr);
+			const auto& resolvedPath = std::filesystem::canonical(path.parent_path() / metallicStr);
+			AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(resolvedPath);
 			materialAsset->SetMetallicMap(handle);
 		}
 
@@ -97,7 +101,8 @@ namespace Flameberry {
 		{
 			std::replace(ambientStr.begin(), ambientStr.end(), '\\', '/');
 
-			AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(path.parent_path() / ambientStr);
+			const auto& resolvedPath = std::filesystem::canonical(path.parent_path() / ambientStr);
+			AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(resolvedPath);
 			materialAsset->SetAmbientMap(handle);
 		}
 

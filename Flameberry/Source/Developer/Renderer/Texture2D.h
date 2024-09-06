@@ -56,7 +56,7 @@ namespace Flameberry {
 		ImageSpecification m_TextureImageSpecification;
 
 		Ref<Image> m_TextureImage;
-		VkSampler m_Sampler;
+		VkSampler m_Sampler{};
 		VkDescriptorSet m_DescriptorSet = VK_NULL_HANDLE;
 
 		bool m_DidCreateSampler = false;

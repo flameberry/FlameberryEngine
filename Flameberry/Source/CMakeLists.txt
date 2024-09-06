@@ -23,8 +23,8 @@ get_target_property(ASSIMP_INCLUDE_DIRS assimp INTERFACE_INCLUDE_DIRECTORIES)
 list(APPEND FBY_INCLUDE_DIRS ${ASSIMP_INCLUDE_DIRS})
 
 # SPIRV-Reflect
-set(SPIRV_REFLECT_EXECUTABLE OFF)
-set(SPIRV_REFLECT_STATIC_LIB ON)
+set(SPIRV_REFLECT_EXECUTABLE OFF CACHE BOOL "Build SPIRV-Reflect executable" FORCE)
+set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build SPIRV-Reflect as a static library" FORCE)
 add_subdirectory(ThirdParty/SPIRV-Reflect)
 
 # Add MsdfAtlasGen and it's dependencies

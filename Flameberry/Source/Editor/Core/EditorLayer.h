@@ -34,8 +34,8 @@ namespace Flameberry {
 		void OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
 		void OnMouseScrolledEvent(MouseScrollEvent& e);
 
-		void InvalidateViewportImGuiDescriptorSet(uint32_t index);
-		void InvalidateCompositePassImGuiDescriptorSet(uint32_t index);
+		void InvalidateViewportImGuiDescriptorSet(uint32_t index) const;
+		void InvalidateCompositePassImGuiDescriptorSet(uint32_t index) const;
 
 		void OpenProject();
 		void OpenProject(const std::string& path);
