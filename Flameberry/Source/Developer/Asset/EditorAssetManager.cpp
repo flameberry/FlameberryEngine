@@ -8,6 +8,22 @@
 
 namespace Flameberry {
 
+	namespace Utils {
+
+		static bool CreateDirectoriesIfNotExists(const std::filesystem::path& path)
+		{
+			std::error_code errcode;
+			std::filesystem::create_directories(path, errcode);
+			if (errcode)
+			{
+				FBY_ERROR("Failed to create directories: {}", errcode.message());
+				return false;
+			}
+			return true;
+		}
+
+	} // namespace Utils
+
 	bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
 	{
 		return m_AssetRegistry.find(handle) != m_AssetRegistry.end();
@@ -121,6 +137,8 @@ namespace Flameberry {
 		out << YAML::EndMap; // Root
 
 		std::filesystem::path path = Project::GetActiveProject()->GetAssetRegistryPath();
+
+		Utils::CreateDirectoriesIfNotExists(path.parent_path());
 
 		std::ofstream fout(path);
 		fout << out.c_str();

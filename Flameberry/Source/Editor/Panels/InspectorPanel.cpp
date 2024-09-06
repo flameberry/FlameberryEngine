@@ -21,7 +21,7 @@ namespace Flameberry {
 	}
 
 	InspectorPanel::InspectorPanel(const Ref<Scene>& context)
-		: m_Context(context), m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()), m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon2.png"))
+		: m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>()), m_Context(context), m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon2.png"))
 	{
 	}
 
@@ -35,7 +35,7 @@ namespace Flameberry {
 
 		if (m_SelectionContext != fbentt::null)
 		{
-			ImGui::PushStyleColor(ImGuiCol_Border, Theme::FrameBorder);
+			UI::ScopedStyleColor borderColor(ImGuiCol_Border, Theme::FrameBorder);
 
 			auto& tag = m_Context->GetRegistry()->get<TagComponent>(m_SelectionContext);
 			ImFont* bigFont = ImGui::GetIO().Fonts->Fonts[0];
@@ -651,7 +651,6 @@ namespace Flameberry {
 					}
 				});
 
-			ImGui::PopStyleColor();
 			ImGui::EndChild();
 		}
 		ImGui::End();

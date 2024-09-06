@@ -50,7 +50,7 @@ namespace Flameberry {
 	}
 
 	template <typename ComponentType, typename Fn>
-	void InspectorPanel::DrawComponent(const char* name, Fn&& layoutFn, bool removable)
+	void InspectorPanel::DrawComponent(const char* name, Fn&& fn, bool removable)
 	{
 		static_assert(std::is_invocable_v<Fn>);
 
@@ -58,15 +58,15 @@ namespace Flameberry {
 		{
 			ImGui::PushID(name);
 
-			ImVec2 contentRegionAvail = ImGui::GetContentRegionAvail();
+			const ImVec2 contentRegionAvail = ImGui::GetContentRegionAvail();
 
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 4));
 
 			auto& style = ImGui::GetStyle();
-			float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
+			const float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
 
-			bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
+			const bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
 			ImGui::PopStyleVar();
 
 			ImGui::SameLine(contentRegionAvail.x - lineHeight);
@@ -85,7 +85,7 @@ namespace Flameberry {
 			}
 
 			if (open)
-				layoutFn();
+				fn();
 
 			ImGui::PopID();
 
