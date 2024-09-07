@@ -386,7 +386,7 @@ namespace Flameberry {
 					{
 						const AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(filePath);
 
-						const fbentt::entity entity = m_ActiveScene->CreateEntityWithTagTransformAndParent("StaticMesh", fbentt::null);
+						const fbentt::entity entity = m_ActiveScene->CreateEntityWithTagTransformAndParent(filePath.stem().string(), fbentt::null);
 
 						constexpr float distance = 5.0f;
 						auto& transform = m_ActiveScene->GetRegistry()->get<TransformComponent>(entity);

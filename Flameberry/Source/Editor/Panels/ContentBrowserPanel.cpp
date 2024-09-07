@@ -88,7 +88,7 @@ namespace Flameberry {
 			isOpened = ImGui::TreeNodeEx("##node", treeNodeFlags);
 		}
 
-		if (ImGui::IsItemClicked())
+		if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 			m_CurrentDirectory = parent.path();
 
 		ImGui::SameLine();

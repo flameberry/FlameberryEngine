@@ -254,7 +254,9 @@ namespace Flameberry {
 		}
 
 		FBY_INFO("Loaded Model: '{}': Vertices: {}, Indices: {}", path, vertices.size(), indices.size());
-		return CreateRef<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
+		Ref<StaticMesh> mesh = CreateRef<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
+		mesh->SetName(path.stem().string());
+		return mesh;
 	}
 
 } // namespace Flameberry

@@ -178,7 +178,7 @@ namespace Flameberry {
 			// Styling of the Entity TreeNode
 			const float textColor = isSelected ? 0.0f : 1.0f;
 			UI::ScopedStyleColor headerColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
-			UI::ScopedStyleColor headerActiveColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
+			UI::ScopedStyleColor headerActiveColor(ImGuiCol_HeaderActive, Theme::AccentColorLight, isSelected);
 			UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
 			UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
 			UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
@@ -193,7 +193,9 @@ namespace Flameberry {
 		}
 
 		// Select entity if clicked
-		if (ImGui::IsItemClicked())
+
+		// Only select the object if it is clicked and not being dragged and not toggled open
+		if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 			m_SelectionContext = entity;
 
 		// World Entity should not be renamed
@@ -294,14 +296,15 @@ namespace Flameberry {
 
 	void SceneHierarchyPanel::DisplayCreateEntityMenu(fbentt::entity parent)
 	{
+		static uint32_t collectionCount = 0;
+
 		if (ImGui::BeginMenu(ICON_LC_PLUS "\tCreate"))
 		{
 			if (ImGui::MenuItem(ICON_LC_LIBRARY "\tCollection"))
 			{
-				static uint32_t i = 0;
-				const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", i), parent);
+				const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", collectionCount), parent);
 				m_SelectionContext = entity;
-				i++;
+				collectionCount++;
 			}
 			if (ImGui::MenuItem(ICON_LC_SQUARE "\tEmpty"))
 			{

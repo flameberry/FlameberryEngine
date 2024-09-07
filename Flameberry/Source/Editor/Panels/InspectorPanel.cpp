@@ -54,7 +54,8 @@ namespace Flameberry {
 			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - style.FramePadding.x * 2.0f - ImGui::CalcTextSize(addComponentText).x - style.ItemSpacing.x);
 
 			// Check if selected entity is a collection entity
-			bool disableAddComponentButton = m_Context->GetRegistry()->has<CollectionComponent>(m_SelectionContext);
+			bool disableAddComponentButton = m_Context->GetRegistry()->has<CollectionComponent>(m_SelectionContext)
+				|| m_Context->IsWorldEntity(m_SelectionContext);
 
 			// Some special entities are not supposed to have all the components
 			ImGui::BeginDisabled(disableAddComponentButton);
