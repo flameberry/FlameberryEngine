@@ -1077,10 +1077,7 @@ namespace Flameberry {
 
 		// Text Entities
 		indexCount = 6 * Renderer2D::GetRendererData().TextVertexBufferOffset / (4 * sizeof(TextVertex));
-		Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
-							 mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
-							 vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
-							 vertexBuffer = Renderer2D::GetRendererData().TextVertexBuffer->GetVulkanBuffer(),
+		Renderer::Submit([vertexBuffer = Renderer2D::GetRendererData().TextVertexBuffer->GetVulkanBuffer(),
 							 indexBuffer = Renderer2D::GetRendererData().TextIndexBuffer->GetVulkanBuffer(),
 							 indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
@@ -1105,8 +1102,7 @@ namespace Flameberry {
 		const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
 
 		// Render Physics Colliders
-		auto* boxCollider = scene->GetRegistry()->try_get<BoxColliderComponent>(entity);
-		if (boxCollider)
+		if (auto* boxCollider = scene->GetRegistry()->try_get<BoxColliderComponent>(entity))
 		{
 			const glm::vec3 halfExtent = transform.Scale * boxCollider->Size * 0.5f + bias;
 

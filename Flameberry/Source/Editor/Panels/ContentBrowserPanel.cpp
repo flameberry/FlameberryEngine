@@ -124,7 +124,7 @@ namespace Flameberry {
 		if (keystr.size() <= parentstr.size())
 			return false;
 
-		for (int32_t i = int32_t(parentstr.size() - 1); i >= 0; i--)
+		for (int32_t i = (int32_t)(parentstr.size() - 1); i >= 0; i--)
 		{
 			if (keystr[i] != parentstr[i])
 				return false;
@@ -263,7 +263,6 @@ namespace Flameberry {
 
 			ImGui::PushID(filePath.filename().c_str());
 			const std::string ext = filePath.extension().string();
-			int currentIconIndex;
 			bool isFileSupported = true, isDirectory = directory.is_directory();
 
 			Ref<Texture2D> thumbnail;
@@ -271,6 +270,7 @@ namespace Flameberry {
 				thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
 			if (!thumbnail)
 			{
+				int currentIconIndex;
 				if (isDirectory)
 					currentIconIndex = FileTypeIndex::FOLDER;
 				else if (ext == ".berry")

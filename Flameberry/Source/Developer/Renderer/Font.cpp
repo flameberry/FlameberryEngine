@@ -69,7 +69,7 @@ namespace Flameberry {
 			uint32_t Start, End;
 		};
 
-		const CharsetRange charsetRanges[] = {
+		constexpr CharsetRange charsetRanges[] = {
 			{ 0x20, 0xFF }
 		};
 
@@ -105,28 +105,25 @@ namespace Flameberry {
 #define THREAD_COUNT 8
 
 		// if MSDF || MTSDF
-
 		uint64_t coloringSeed = 0;
-		bool expensiveColoring = false;
-		if (expensiveColoring)
-		{
-			msdf_atlas::Workload([&glyphs = m_Data->Glyphs, &coloringSeed](int i, int threadNo) -> bool {
+#if 0
+		// Expensive Coloring
+		msdf_atlas::Workload([&glyphs = m_Data->Glyphs, &coloringSeed](int i, int threadNo) -> bool
+			{
 				unsigned long long glyphSeed = (LCG_MULTIPLIER * (coloringSeed ^ i) + LCG_INCREMENT) * !!coloringSeed;
 				glyphs[i].edgeColoring(msdfgen::edgeColoringInkTrap, DEFAULT_ANGLE_THRESHOLD, glyphSeed);
 				return true;
 			},
-				m_Data->Glyphs.size())
-				.finish(THREAD_COUNT);
-		}
-		else
+			m_Data->Glyphs.size())
+			.finish(THREAD_COUNT);
+#else
+		unsigned long long glyphSeed = coloringSeed;
+		for (msdf_atlas::GlyphGeometry& glyph : m_Data->Glyphs)
 		{
-			unsigned long long glyphSeed = coloringSeed;
-			for (msdf_atlas::GlyphGeometry& glyph : m_Data->Glyphs)
-			{
-				glyphSeed *= LCG_MULTIPLIER;
-				glyph.edgeColoring(msdfgen::edgeColoringInkTrap, DEFAULT_ANGLE_THRESHOLD, glyphSeed);
-			}
+			glyphSeed *= LCG_MULTIPLIER;
+			glyph.edgeColoring(msdfgen::edgeColoringInkTrap, DEFAULT_ANGLE_THRESHOLD, glyphSeed);
 		}
+#endif
 
 		m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 4, msdf_atlas::mtsdfGenerator>("Test", (float)emSize, m_Data->Glyphs, m_Data->FontGeometry, width, height);
 

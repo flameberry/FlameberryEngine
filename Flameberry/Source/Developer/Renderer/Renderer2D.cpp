@@ -469,7 +469,7 @@ namespace Flameberry {
 
 	void Renderer2D::EndScene()
 	{
-		if (s_Renderer2DData.LineVertices.size())
+		if (!s_Renderer2DData.LineVertices.empty())
 		{
 			FBY_ASSERT(s_Renderer2DData.LineVertices.size() <= 2 * MAX_LINES, "MAX_LINES limit reached!");
 			s_Renderer2DData.LineVertexBuffer->WriteToBuffer(s_Renderer2DData.LineVertices.data(), s_Renderer2DData.LineVertices.size() * sizeof(LineVertex), 0);

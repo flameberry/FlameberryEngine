@@ -41,6 +41,7 @@ namespace Flameberry {
 	class Window
 	{
 	public:
+		virtual ~Window() = default;
 		static Ref<Window> Create(const WindowSpecification& specification = WindowSpecification());
 
 		virtual GLFWwindow* GetGLFWwindow() const = 0;

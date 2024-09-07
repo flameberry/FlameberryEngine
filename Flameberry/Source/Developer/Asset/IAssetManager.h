@@ -12,6 +12,7 @@ namespace Flameberry {
 	class IAssetManager
 	{
 	public:
+		virtual ~IAssetManager() = default;
 		virtual Ref<Asset> GetAsset(AssetHandle handle) = 0;
 		virtual bool IsAssetHandleValid(AssetHandle handle) const = 0;
 		virtual bool IsAssetLoaded(AssetHandle handle) const = 0;

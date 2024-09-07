@@ -272,7 +272,7 @@ namespace Flameberry::UI {
 		return isDoubleClicked;
 	}
 
-	bool ProjectRegistryEntryItem(const char* projectName, const char* path, bool disabled)
+	bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled)
 	{
 		constexpr float paddingX = 15.0f, paddingY = 5.0f, spacing = 10.0f;
 		const float itemWidth = ImGui::GetContentRegionAvail().x;
@@ -290,7 +290,7 @@ namespace Flameberry::UI {
 		ImGui::SetCursorPosY(cursorPos.y + 2.0f * paddingY);
 
 		auto& bigFont = ImGui::GetIO().Fonts->Fonts[0];
-		ImGui::Text("%s", projectName);
+		ImGui::Text("%s", name);
 
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + paddingX);
 		ImGui::TextWrapped("%s", path);
@@ -304,7 +304,7 @@ namespace Flameberry::UI {
 
 		ImRect itemRect(cursorScreenPos, cursorScreenPos + ImVec2(itemWidth, ImGui::GetCursorPosY() - cursorPos.y));
 		bool hovered, held;
-		bool isDoubleClicked = ImGui::ButtonBehavior(itemRect, ImGui::GetID(projectName), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
+		bool isDoubleClicked = ImGui::ButtonBehavior(itemRect, ImGui::GetID(name), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
 
 		if (hovered)
 		{

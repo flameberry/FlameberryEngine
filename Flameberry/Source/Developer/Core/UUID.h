@@ -28,7 +28,7 @@ namespace std {
 	template <>
 	struct hash<Flameberry::UUID>
 	{
-		size_t operator()(const Flameberry::UUID& key) const
+		size_t operator()(const Flameberry::UUID& key) const noexcept
 		{
 			return hash<Flameberry::UUID::ValueType>()((Flameberry::UUID::ValueType)key);
 		}

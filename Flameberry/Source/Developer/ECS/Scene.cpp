@@ -225,7 +225,7 @@ namespace Flameberry {
 	void Scene::OnPhysicsSimulate(float delta)
 	{
 		// If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).
-		const int cCollisionSteps = 1;
+		constexpr int cCollisionSteps = 1;
 
 		// Step the world
 		PhysicsManager::Update(delta, cCollisionSteps);

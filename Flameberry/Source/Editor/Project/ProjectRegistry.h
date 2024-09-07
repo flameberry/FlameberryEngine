@@ -9,13 +9,13 @@ namespace Flameberry {
 		std::string ProjectName;
 		std::filesystem::path ProjectFilePath;
 
-		const bool operator==(const ProjectRegistryEntry& other)
+		bool operator==(const ProjectRegistryEntry& other) const
 		{
 			// This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
 			return ProjectFilePath == other.ProjectFilePath;
 		}
 
-		const bool operator!=(const ProjectRegistryEntry& other)
+		bool operator!=(const ProjectRegistryEntry& other) const
 		{
 			// This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
 			return !(*this == other);

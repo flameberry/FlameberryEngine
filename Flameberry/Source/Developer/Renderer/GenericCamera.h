@@ -36,7 +36,7 @@ namespace Flameberry {
 		void UpdateWithNear(float near);
 		void UpdateWithFar(float far);
 
-		glm::mat4 CreateViewProjectionMatrix() const { return m_ProjectionMatrix * m_ViewMatrix; }
+		[[nodiscard]] glm::mat4 CreateViewProjectionMatrix() const { return m_ProjectionMatrix * m_ViewMatrix; }
 
 		const GenericCameraSettings& GetSettings() const { return m_CameraSettings; }
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }

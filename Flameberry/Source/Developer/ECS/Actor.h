@@ -12,7 +12,7 @@ namespace Flameberry {
 		virtual ~Actor() = default;
 
 		template <typename... T>
-		decltype(auto) GetComponent()
+		decltype(auto) GetComponent() const
 		{
 			if (m_SceneRef)
 				return m_SceneRef->GetRegistry()->get<T...>(m_Entity);

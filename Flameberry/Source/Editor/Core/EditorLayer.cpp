@@ -271,7 +271,7 @@ namespace Flameberry {
 			int32_t entityIndex = data[0];
 			m_MousePickingBuffer->UnmapMemory();
 			m_SceneHierarchyPanel->SetSelectionContext((entityIndex != -1) ? m_ActiveScene->GetRegistry()->get_entity_at_index(entityIndex) : fbentt::null);
-			FBY_LOG("Selected Entity Index: {}", entityIndex);
+			// FBY_LOG("Selected Entity Index: {}", entityIndex);
 			m_IsMousePickingBufferReady = false;
 		}
 
@@ -351,8 +351,6 @@ namespace Flameberry {
 
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 		m_RenderViewportSize = { viewportPanelSize.x * ImGui::GetWindowDpiScale(), viewportPanelSize.y * ImGui::GetWindowDpiScale() };
-
-		const float DPI_SCALE = ImGui::GetWindowDpiScale();
 
 		m_IsViewportHovered = ImGui::IsWindowHovered();
 		// For the Camera Input if other windows are focused but the user right clicks this window then set focus for the camera to continue moving without affecting other windows
@@ -438,9 +436,9 @@ namespace Flameberry {
 				glm::vec3 translation, rotation, scale;
 				Math::DecomposeTransform(transform, translation, rotation, scale);
 
-				const glm::vec3 deltaTranslation = translation - transformComp.Translation;
 				const glm::vec3 deltaRotation = rotation - transformComp.Rotation;
-				const glm::vec3 deltaScale = scale - transformComp.Scale;
+				// const glm::vec3 deltaTranslation = translation - transformComp.Translation;
+				// const glm::vec3 deltaScale = scale - transformComp.Scale;
 
 				transformComp.Translation = translation;
 				transformComp.Rotation += deltaRotation;
@@ -586,6 +584,9 @@ namespace Flameberry {
 						m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
 					}
 				}
+				break;
+			case KeyCode::Escape:
+				m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
 				break;
 		}
 	}
@@ -1078,9 +1079,6 @@ namespace Flameberry {
 
 	void EditorLayer::UI_AssetRegistry()
 	{
-		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
-		static constexpr float LabelWidth = 100.0f;
-
 		ImGui::Begin("Asset Registry");
 
 		if (UI::BeginKeyValueTable("##AssetRegistryTable"))

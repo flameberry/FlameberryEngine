@@ -44,6 +44,12 @@ namespace Flameberry {
 			: Tag(tag) {}
 	};
 
+	// Editor Only
+	// For scene structure tidying purposes only
+	struct CollectionComponent
+	{
+	};
+
 	struct CameraComponent
 	{
 		GenericCamera Camera;
@@ -199,6 +205,9 @@ namespace Flameberry {
 	{
 	};
 
-	using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent, TextComponent>;
+	using AllComponents = ComponentList<TransformComponent, CollectionComponent, CameraComponent, MeshComponent,
+		SkyLightComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent,
+		RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent,
+		TextComponent>;
 
 } // namespace Flameberry

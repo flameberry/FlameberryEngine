@@ -34,7 +34,7 @@ namespace Flameberry {
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		m_Window = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Title, NULL, NULL);
+		m_Window = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Title, nullptr, nullptr);
 		FBY_ASSERT(m_Window, "GLFW window is null!");
 		FBY_INFO("Created GLFW window of title '{}' and dimensions ({}, {})", m_Specification.Title, m_Specification.Width, m_Specification.Height);
 	}
@@ -65,7 +65,7 @@ namespace Flameberry {
 
 		glfwSetFramebufferSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 			{
-				VulkanWindow* pWindow = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
+				VulkanWindow* pWindow = static_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
 				pWindow->m_Specification.Width = width;
 				pWindow->m_Specification.Height = height;
 

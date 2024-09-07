@@ -226,7 +226,7 @@ namespace fbentt {
 		explicit pool_data(const pool_data& pool)
 			: entity_set(pool.entity_set), copy_handler_data(pool.copy_handler_data), remove(pool.remove)
 		{
-			if (pool.copy_handler_data != NULL)
+			if (pool.copy_handler_data != nullptr)
 			{
 				// TODO: Check if this needs optimisation, currently the handler data is only copied upon loading the first scene and pressing the play button
 				pool.copy_handler_data(pool, *this);
@@ -517,7 +517,7 @@ namespace fbentt {
 			}
 			pools[typeID].entity_set.add(index);
 
-			if (pools[typeID].remove == NULL)
+			if (pools[typeID].remove == nullptr)
 			{
 				pools[typeID].remove = [](const pool_data& pool, uint32_t index)
 				{
@@ -526,7 +526,7 @@ namespace fbentt {
 				};
 			}
 
-			if (pools[typeID].copy_handler_data == NULL)
+			if (pools[typeID].copy_handler_data == nullptr)
 			{
 				pools[typeID].copy_handler_data = [](const pool_data& src, pool_data& dest)
 				{

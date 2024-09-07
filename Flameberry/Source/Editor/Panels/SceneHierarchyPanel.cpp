@@ -28,7 +28,7 @@ namespace Flameberry {
 
 		m_IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 
-		const float padding = 12.0f;
+		constexpr float padding = 12.0f;
 		const float width = ImGui::GetContentRegionAvail().x - 2.0f * padding;
 		ImGui::SetCursorPos(ImVec2(padding, 4 + ImGui::GetCursorPosY()));
 
@@ -148,9 +148,12 @@ namespace Flameberry {
 
 		// Entity state
 		const bool isWorldEntity = m_Context->IsWorldEntity(entity);
+		const bool isCollectionEntity = m_Context->GetRegistry()->has<CollectionComponent>(entity);
 		const bool isRenamed = m_RenamedEntity == entity;
 		const bool isSelected = m_SelectionContext == entity;
+
 		m_IsSelectedNodeDisplayed = m_IsSelectedNodeDisplayed || isSelected;
+		FBY_ASSERT(!(isWorldEntity && isCollectionEntity), "World Entity cannot be a Collection Entity!");
 
 		bool hasChild = false;
 
@@ -182,8 +185,11 @@ namespace Flameberry {
 			UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 			UI::ScopedStyleColor textC2(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f }, highlight);
 
+			// Figure out the entity icon to be displayed
+			const char* iconCStr = isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : (isCollectionEntity ? ICON_LC_LIBRARY : ICON_LC_BOX);
+
 			// Display the actual entity node with it's tag
-			open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s %s", isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : ICON_LC_BOX, tag.c_str());
+			open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s %s", iconCStr, tag.c_str());
 		}
 
 		// Select entity if clicked
@@ -341,8 +347,22 @@ namespace Flameberry {
 				}
 				ImGui::EndMenu();
 			}
+			if (ImGui::MenuItem(ICON_LC_LIBRARY "\tCollection"))
+			{
+				static uint32_t i = 0;
+				const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", i), parent);
+				m_SelectionContext = entity;
+				i++;
+			}
 			ImGui::EndMenu();
 		}
+	}
+
+	fbentt::entity SceneHierarchyPanel::CreateCollectionEntity(const std::string& name, fbentt::entity parent)
+	{
+		fbentt::entity entity = m_Context->CreateEntityWithTagAndParent(name, parent);
+		m_Context->GetRegistry()->emplace<CollectionComponent>(entity);
+		return entity;
 	}
 
 } // namespace Flameberry

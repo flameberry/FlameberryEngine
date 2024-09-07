@@ -195,7 +195,7 @@ namespace Flameberry {
 		// Specialization Constants
 		{
 			uint32_t count = 0;
-			auto result = reflectionShaderModule.EnumerateSpecializationConstants(&count, NULL);
+			auto result = reflectionShaderModule.EnumerateSpecializationConstants(&count, nullptr);
 			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
 			std::vector<SpvReflectSpecializationConstant*> specializationConstants(count);
 			result = reflectionShaderModule.EnumerateSpecializationConstants(&count, specializationConstants.data());
@@ -216,7 +216,7 @@ namespace Flameberry {
 		{
 			// The information about push constants is collected here
 			uint32_t count = 0;
-			auto result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, NULL);
+			auto result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, nullptr);
 			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 			std::vector<SpvReflectBlockVariable*> pcblocks(count);
 			result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
@@ -261,7 +261,7 @@ namespace Flameberry {
 		{
 			// The information about descriptor sets is collected here
 			uint32_t count = 0;
-			auto result = reflectionShaderModule.EnumerateDescriptorSets(&count, NULL);
+			auto result = reflectionShaderModule.EnumerateDescriptorSets(&count, nullptr);
 			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 			std::vector<SpvReflectDescriptorSet*> descSets(count);
 			result = reflectionShaderModule.EnumerateDescriptorSets(&count, descSets.data());

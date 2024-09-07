@@ -24,6 +24,12 @@ namespace Flameberry {
 		void DisplayCreateEntityMenu(fbentt::entity parent = (fbentt::entity)fbentt::null);
 
 	private:
+		/**
+		 * This function is present in `SceneHierarchyPanel` and not in `Scene` as the usage of CollectionComponent is meant for Editor Only
+		 */
+		fbentt::entity CreateCollectionEntity(const std::string& name, fbentt::entity parent);
+
+	private:
 		fbentt::entity m_SelectionContext = {};
 		fbentt::entity m_RenamedEntity = {};
 

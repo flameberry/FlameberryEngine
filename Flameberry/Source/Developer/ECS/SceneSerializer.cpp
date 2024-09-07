@@ -106,8 +106,7 @@ namespace Flameberry {
 
 		const UUID worldEntityUUID = data["WorldEntity"].as<UUID>();
 
-		auto entities = data["Entities"];
-		if (entities)
+		if (auto entities = data["Entities"])
 		{
 			std::unordered_map<UUID, fbentt::entity> UUIDToEntityMap;
 			UUIDToEntityMap[UUID(0)] = fbentt::null;
@@ -135,6 +134,9 @@ namespace Flameberry {
 					auto& tagComp = destScene->m_Registry->emplace<TagComponent>(deserializedEntity);
 					tagComp.Tag = tag.as<std::string>();
 				}
+
+				if (auto collection = entity["CollectionComponent"])
+					auto& tagComp = destScene->m_Registry->emplace<CollectionComponent>(deserializedEntity);
 
 				if (auto transform = entity["TransformComponent"])
 				{
@@ -298,6 +300,13 @@ namespace Flameberry {
 		out << YAML::Key << "Entity" << YAML::Value << scene->m_Registry->get<IDComponent>(entity).ID;
 
 		out << YAML::Key << "TagComponent" << YAML::Value << scene->m_Registry->get<TagComponent>(entity).Tag;
+
+		if (scene->m_Registry->has<CollectionComponent>(entity))
+		{
+			auto& collection = scene->m_Registry->get<CollectionComponent>(entity);
+			out << YAML::Key << "CollectionComponent" << YAML::BeginMap;
+			out << YAML::EndMap; // Collection Component
+		}
 
 		if (scene->m_Registry->has<TransformComponent>(entity))
 		{
