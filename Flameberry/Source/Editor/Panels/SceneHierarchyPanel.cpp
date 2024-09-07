@@ -73,10 +73,10 @@ namespace Flameberry {
 			UI::ScopedStyleColor tableBorderStrong(ImGuiCol_TableBorderStrong, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
 			UI::ScopedStyleColor tableBorderLight(ImGuiCol_TableBorderLight, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
 
-			if (ImGui::BeginTable("TypeBar", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoBordersInBody))
+			if (ImGui::BeginTable("SceneHierarchyTable", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoBordersInBody))
 			{
 				ImGui::TableSetupColumn(ICON_LC_EYE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::CalcTextSize(ICON_LC_EYE).x);
-				ImGui::TableSetupColumn(ICON_LC_TAG " Label", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
+				ImGui::TableSetupColumn("Item Label", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
 				ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::GetWindowWidth() / 4.5f);
 
 				ImGui::TableHeadersRow();
@@ -177,22 +177,21 @@ namespace Flameberry {
 		{
 			const float greyShade = isSelected ? 75.0f / 255.0f : 126.0f / 255.0f;
 			const ImVec4 greyColor(greyShade, greyShade, greyShade, 1.0f);
-
 			const float textColor = isSelected ? 0.0f : 1.0f;
-			UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
 
 			{
 				ImGui::TableNextColumn();
 				ImGui::AlignTextToFramePadding();
 
-				static bool visibility = true;
+				// TODO: Add actual functionality to this
+				const bool visibility = true;
 
 				// Only display icon when entity node is hovered
 				const bool isEntityNodeHovered = ImGui::GetHoveredID() == ImGui::GetID((const void*)(uint64_t)entity);
 				ImGui::TextColored(isEntityNodeHovered ? ImVec4(textColor, textColor, textColor, 1.0f) : ImVec4(0, 0, 0, 0), visibility ? ICON_LC_EYE : ICON_LC_EYE_OFF);
 
-				if (ImGui::IsItemClicked())
-					visibility = !visibility;
+				// if (ImGui::IsItemClicked())
+				// 	visibility = !visibility;
 			}
 
 			// Set the current entity tree node expanded until the selected node is visible
@@ -208,6 +207,7 @@ namespace Flameberry {
 				UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
 				UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 				UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+				UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
 				UI::ScopedStyleColor textC2(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f }, highlight);
 
 				// Figure out the entity icon to be displayed
@@ -276,8 +276,10 @@ namespace Flameberry {
 			}
 
 			// Type Column
-			ImGui::TableNextColumn();
-			ImGui::TextColored(greyColor, "Entity");
+			{
+				ImGui::TableNextColumn();
+				ImGui::TextColored(greyColor, isWorldEntity ? "Root" : (isCollectionEntity ? "Collection" : "Entity"));
+			}
 		}
 		ImGui::PopID();
 
@@ -332,6 +334,9 @@ namespace Flameberry {
 				m_SelectionContext = entity;
 				collectionCount++;
 			}
+
+			ImGui::SeparatorText("3D");
+
 			if (ImGui::MenuItem(ICON_LC_SQUARE "\tEmpty"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Empty", parent);
@@ -355,6 +360,9 @@ namespace Flameberry {
 				m_Context->GetRegistry()->emplace<CameraComponent>(entity);
 				m_SelectionContext = entity;
 			}
+
+			ImGui::SeparatorText("Lighting");
+
 			if (ImGui::BeginMenu("Light"))
 			{
 				if (ImGui::MenuItem(ICON_LC_SUNRISE "\tSky Light"))
