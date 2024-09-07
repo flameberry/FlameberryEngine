@@ -343,7 +343,7 @@ namespace Flameberry {
 								const std::filesystem::path modelPath{ path };
 								const std::string& ext = modelPath.extension().string();
 
-								FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
+								FBY_INFO("Payload received: {}, with extension {}", path, ext);
 
 								const bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh
 									&& std::filesystem::exists(modelPath)
