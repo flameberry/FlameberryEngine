@@ -296,6 +296,13 @@ namespace Flameberry {
 	{
 		if (ImGui::BeginMenu(ICON_LC_PLUS "\tCreate"))
 		{
+			if (ImGui::MenuItem(ICON_LC_LIBRARY "\tCollection"))
+			{
+				static uint32_t i = 0;
+				const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", i), parent);
+				m_SelectionContext = entity;
+				i++;
+			}
 			if (ImGui::MenuItem(ICON_LC_SQUARE "\tEmpty"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Empty", parent);
@@ -346,13 +353,6 @@ namespace Flameberry {
 					m_SelectionContext = entity;
 				}
 				ImGui::EndMenu();
-			}
-			if (ImGui::MenuItem(ICON_LC_LIBRARY "\tCollection"))
-			{
-				static uint32_t i = 0;
-				const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", i), parent);
-				m_SelectionContext = entity;
-				i++;
 			}
 			ImGui::EndMenu();
 		}
