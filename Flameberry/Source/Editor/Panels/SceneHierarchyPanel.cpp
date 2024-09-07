@@ -73,19 +73,27 @@ namespace Flameberry {
 			UI::ScopedStyleColor tableBorderStrong(ImGuiCol_TableBorderStrong, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
 			UI::ScopedStyleColor tableBorderLight(ImGuiCol_TableBorderLight, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
 
-			if (ImGui::BeginTable("SceneHierarchyTable", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoBordersInBody))
+			ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingStretchProp
+				| ImGuiTableFlags_PadOuterX
+				| ImGuiTableFlags_BordersInnerV
+				| ImGuiTableFlags_NoBordersInBody
+				| ImGuiTableFlags_ScrollY;
+
+			if (ImGui::BeginTable("SceneHierarchyTable", 3, tableFlags))
 			{
+				ImGui::TableSetupScrollFreeze(3, 1);
 				ImGui::TableSetupColumn(ICON_LC_EYE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::CalcTextSize(ICON_LC_EYE).x);
 				ImGui::TableSetupColumn("Item Label", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
 				ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::GetWindowWidth() / 4.5f);
 
 				ImGui::TableHeadersRow();
+				{
+					UI::ScopedStyleVariable cellPadding(ImGuiStyleVar_CellPadding, ImVec2(0, 1));
+					UI::ScopedStyleVariable indentSpacing(ImGuiStyleVar_IndentSpacing, 12.0f);
 
-				UI::ScopedStyleVariable cellPadding(ImGuiStyleVar_CellPadding, ImVec2(0, 1));
-				UI::ScopedStyleVariable indentSpacing(ImGuiStyleVar_IndentSpacing, 12.0f);
-
-				m_IsSelectedNodeDisplayed = false;
-				DisplayEntityTree(m_Context->GetWorldEntity());
+					m_IsSelectedNodeDisplayed = false;
+					DisplayEntityTree(m_Context->GetWorldEntity());
+				}
 
 				ImGui::EndTable();
 			}
