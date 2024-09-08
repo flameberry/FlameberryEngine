@@ -33,11 +33,11 @@ namespace Flameberry {
 		ImGui::Begin("Inspector");
 		ImGui::PopStyleVar();
 
-		if (m_SelectionContext != fbentt::null)
+		if (m_SelectionContext != Null)
 		{
 			UI::ScopedStyleColor borderColor(ImGuiCol_Border, Theme::FrameBorder);
 
-			auto& tag = m_Context->GetRegistry()->get<TagComponent>(m_SelectionContext);
+			auto& tag = m_Context->GetRegistry()->GetComponent<TagComponent>(m_SelectionContext);
 			ImFont* bigFont = ImGui::GetIO().Fonts->Fonts[0];
 			ImGuiStyle& style = ImGui::GetStyle();
 
@@ -54,7 +54,7 @@ namespace Flameberry {
 			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - style.FramePadding.x * 2.0f - ImGui::CalcTextSize(addComponentText).x - style.ItemSpacing.x);
 
 			// Check if selected entity is a collection entity
-			bool disableAddComponentButton = m_Context->GetRegistry()->has<CollectionComponent>(m_SelectionContext)
+			bool disableAddComponentButton = m_Context->GetRegistry()->HasComponent<CollectionComponent>(m_SelectionContext)
 				|| m_Context->IsWorldEntity(m_SelectionContext);
 
 			// Some special entities are not supposed to have all the components
@@ -94,7 +94,7 @@ namespace Flameberry {
 #if 0
             DrawComponent<IDComponent>("ID Component", this, [&]()
                 {
-                    auto& ID = m_Context->GetRegistry()->get<IDComponent>(m_SelectionContext).ID;
+                    auto& ID = m_Context->GetRegistry()->GetComponent<IDComponent>(m_SelectionContext).ID;
                     if (UI::BeginKeyValueTable("IDComponentAttributes"))
                     {
 						UI::TableKeyElement("ID");
@@ -108,7 +108,7 @@ namespace Flameberry {
 			DrawComponent<TransformComponent>(
 				ICON_LC_SCALE_3D " Transform", [&]()
 				{
-					auto& transform = m_Context->GetRegistry()->get<TransformComponent>(m_SelectionContext);
+					auto& transform = m_Context->GetRegistry()->GetComponent<TransformComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("TransformComponentAttributes"))
 					{
@@ -130,7 +130,7 @@ namespace Flameberry {
 			DrawComponent<TextComponent>(
 				ICON_LC_TEXT " Text", [&]()
 				{
-					auto& text = m_Context->GetRegistry()->get<TextComponent>(m_SelectionContext);
+					auto& text = m_Context->GetRegistry()->GetComponent<TextComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("TextComponentAttributes"))
 					{
@@ -194,7 +194,7 @@ namespace Flameberry {
 
 			DrawComponent<SkyLightComponent>(ICON_LC_SUNRISE " Sky Light", [=]()
 				{
-					auto& skyLightComp = m_Context->GetRegistry()->get<SkyLightComponent>(m_SelectionContext);
+					auto& skyLightComp = m_Context->GetRegistry()->GetComponent<SkyLightComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("SkyLightComponentAttributes"))
 					{
@@ -270,7 +270,7 @@ namespace Flameberry {
 
 			DrawComponent<CameraComponent>(ICON_LC_CAMERA " Camera", [&]()
 				{
-					auto& cameraComp = m_Context->GetRegistry()->get<CameraComponent>(m_SelectionContext);
+					auto& cameraComp = m_Context->GetRegistry()->GetComponent<CameraComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("CameraComponentAttributes"))
 					{
@@ -326,7 +326,7 @@ namespace Flameberry {
 
 			DrawComponent<MeshComponent>(ICON_LC_CUBOID " Mesh", [&]()
 				{
-					auto& mesh = m_Context->GetRegistry()->get<MeshComponent>(m_SelectionContext);
+					auto& mesh = m_Context->GetRegistry()->GetComponent<MeshComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("MeshComponentAttributes"))
 					{
@@ -481,7 +481,7 @@ namespace Flameberry {
 
 			DrawComponent<DirectionalLightComponent>(ICON_LC_SUN " Directional Light", [&]()
 				{
-					auto& light = m_Context->GetRegistry()->get<DirectionalLightComponent>(m_SelectionContext);
+					auto& light = m_Context->GetRegistry()->GetComponent<DirectionalLightComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("DirectionalLightComponentAttributes"))
 					{
@@ -503,7 +503,7 @@ namespace Flameberry {
 
 			DrawComponent<PointLightComponent>(ICON_LC_LIGHTBULB " Point Light", [&]()
 				{
-					auto& light = m_Context->GetRegistry()->get<PointLightComponent>(m_SelectionContext);
+					auto& light = m_Context->GetRegistry()->GetComponent<PointLightComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("PointLightComponentAttributes"))
 					{
@@ -522,7 +522,7 @@ namespace Flameberry {
 
 			DrawComponent<SpotLightComponent>(ICON_LC_CONE " Spot Light", [&]()
 				{
-					auto& light = m_Context->GetRegistry()->get<SpotLightComponent>(m_SelectionContext);
+					auto& light = m_Context->GetRegistry()->GetComponent<SpotLightComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("SpotLightComponentAttributes"))
 					{
@@ -547,7 +547,7 @@ namespace Flameberry {
 
 			DrawComponent<RigidBodyComponent>(ICON_LC_BOXES " Rigid Body", [&]()
 				{
-					auto& rigidBody = m_Context->GetRegistry()->get<RigidBodyComponent>(m_SelectionContext);
+					auto& rigidBody = m_Context->GetRegistry()->GetComponent<RigidBodyComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("RigidBodyComponentAttributes"))
 					{
@@ -593,7 +593,7 @@ namespace Flameberry {
 
 			DrawComponent<BoxColliderComponent>(ICON_LC_BOX " Box Collider", [&]()
 				{
-					auto& boxCollider = m_Context->GetRegistry()->get<BoxColliderComponent>(m_SelectionContext);
+					auto& boxCollider = m_Context->GetRegistry()->GetComponent<BoxColliderComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("BoxColliderComponentAttributes"))
 					{
@@ -606,7 +606,7 @@ namespace Flameberry {
 
 			DrawComponent<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED " Sphere Collider", [&]()
 				{
-					auto& sphereCollider = m_Context->GetRegistry()->get<SphereColliderComponent>(m_SelectionContext);
+					auto& sphereCollider = m_Context->GetRegistry()->GetComponent<SphereColliderComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("SphereColliderComponentAttributes"))
 					{
@@ -619,7 +619,7 @@ namespace Flameberry {
 
 			DrawComponent<CapsuleColliderComponent>(ICON_LC_PILL " Capsule Collider", [&]()
 				{
-					auto& capsuleCollider = m_Context->GetRegistry()->get<CapsuleColliderComponent>(m_SelectionContext);
+					auto& capsuleCollider = m_Context->GetRegistry()->GetComponent<CapsuleColliderComponent>(m_SelectionContext);
 
 					if (UI::BeginKeyValueTable("CapsuleColliderComponentAttributes"))
 					{

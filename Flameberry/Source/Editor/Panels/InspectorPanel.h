@@ -15,7 +15,7 @@ namespace Flameberry {
 		~InspectorPanel() = default;
 
 		void SetContext(const Ref<Scene>& context) { m_Context = context; }
-		void SetSelectionContext(const fbentt::entity& selectionContext) { m_SelectionContext = selectionContext; }
+		void SetSelectionContext(const FEntity& selectionContext) { m_SelectionContext = selectionContext; }
 		void OnUIRender();
 
 	private:
@@ -24,7 +24,7 @@ namespace Flameberry {
 
 		Ref<MaterialEditorPanel> m_MaterialEditorPanel;
 
-		fbentt::entity m_SelectionContext = {};
+		FEntity m_SelectionContext = {};
 		Ref<Scene> m_Context;
 
 		Ref<Texture2D> m_SettingsIcon;
@@ -42,10 +42,10 @@ namespace Flameberry {
 	template <typename ComponentType>
 	void InspectorPanel::DrawAddComponentEntry(const char* name)
 	{
-		if (!m_Context->GetRegistry()->has<ComponentType>(m_SelectionContext))
+		if (!m_Context->GetRegistry()->HasComponent<ComponentType>(m_SelectionContext))
 		{
 			if (ImGui::MenuItem(name))
-				m_Context->GetRegistry()->emplace<ComponentType>(m_SelectionContext);
+				m_Context->GetRegistry()->EmplaceComponent<ComponentType>(m_SelectionContext);
 		}
 	}
 
@@ -54,7 +54,7 @@ namespace Flameberry {
 	{
 		static_assert(std::is_invocable_v<Fn>);
 
-		if (m_Context->GetRegistry()->has<ComponentType>(m_SelectionContext))
+		if (m_Context->GetRegistry()->HasComponent<ComponentType>(m_SelectionContext))
 		{
 			ImGui::PushID(name);
 
@@ -90,7 +90,7 @@ namespace Flameberry {
 			ImGui::PopID();
 
 			if (shouldRemoveComp)
-				m_Context->GetRegistry()->erase<ComponentType>(m_SelectionContext);
+				m_Context->GetRegistry()->EraseComponent<ComponentType>(m_SelectionContext);
 		}
 	}
 

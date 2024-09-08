@@ -27,19 +27,19 @@
 namespace Flameberry {
 
 	Scene::Scene()
-		: m_Registry(CreateRef<fbentt::registry>())
+		: m_Registry(CreateRef<FRegistry>())
 	{
 		// Ensure that registry is empty before adding the world node
 		// because the world entity should be the entity with index 0
-		FBY_ASSERT(m_Registry->empty(), "Registry should be empty before adding the world entity");
+		FBY_ASSERT(m_Registry->Empty(), "Registry should be empty before adding the world entity");
 
-		m_WorldEntity = m_Registry->create();
-		m_Registry->emplace<IDComponent>(m_WorldEntity);
-		m_Registry->emplace<TagComponent>(m_WorldEntity, "World");
+		m_WorldEntity = m_Registry->CreateEntity();
+		m_Registry->EmplaceComponent<IDComponent>(m_WorldEntity);
+		m_Registry->EmplaceComponent<TagComponent>(m_WorldEntity, "World");
 	}
 
 	Scene::Scene(const Ref<Scene>& other)
-		: m_Registry(CreateRef<fbentt::registry>(*other->m_Registry))
+		: m_Registry(CreateRef<FRegistry>(*other->m_Registry))
 		, m_Name(other->m_Name)
 		, m_ViewportSize(other->m_ViewportSize)
 		, m_WorldEntity(other->m_WorldEntity)
@@ -48,7 +48,7 @@ namespace Flameberry {
 	}
 
 	Scene::Scene(const Scene& other)
-		: m_Registry(CreateRef<fbentt::registry>(*other.m_Registry))
+		: m_Registry(CreateRef<FRegistry>(*other.m_Registry))
 		, m_Name(other.m_Name)
 		, m_ViewportSize(other.m_ViewportSize)
 		, m_WorldEntity(other.m_WorldEntity)
@@ -66,13 +66,13 @@ namespace Flameberry {
 		m_IsRuntimeActive = true;
 
 		// Update Cameras
-		for (auto& cameraComp : m_Registry->view<CameraComponent>())
+		for (auto& cameraComp : m_Registry->View<CameraComponent>())
 			cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
 
 		// Create Script Actors
-		for (auto entity : m_Registry->group<NativeScriptComponent>())
+		for (auto entity : m_Registry->Group<NativeScriptComponent>())
 		{
-			auto& nsc = m_Registry->get<NativeScriptComponent>(entity);
+			auto& nsc = m_Registry->GetComponent<NativeScriptComponent>(entity);
 			nsc.Actor = nsc.InitScript();
 			nsc.Actor->m_SceneRef = this;
 			nsc.Actor->m_Entity = entity;
@@ -90,7 +90,7 @@ namespace Flameberry {
 		OnPhysicsStop();
 
 		// Delete Script Actors
-		for (auto& nsc : m_Registry->view<NativeScriptComponent>())
+		for (auto& nsc : m_Registry->View<NativeScriptComponent>())
 		{
 			nsc.Actor->OnInstanceDeleted();
 			nsc.DestroyScript(&nsc);
@@ -105,7 +105,7 @@ namespace Flameberry {
 			return;
 
 		// Update Native Scripts
-		for (auto& nsc : m_Registry->view<NativeScriptComponent>())
+		for (auto& nsc : m_Registry->View<NativeScriptComponent>())
 			nsc.Actor->OnUpdate(delta);
 
 		OnPhysicsSimulate(delta);
@@ -133,13 +133,13 @@ namespace Flameberry {
 
 	void Scene::OnPhysicsStart()
 	{
-		for (auto entity : m_Registry->group<TransformComponent, RigidBodyComponent>())
+		for (auto entity : m_Registry->Group<TransformComponent, RigidBodyComponent>())
 		{
-			const auto& [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
+			const auto& [transform, rigidBody] = m_Registry->GetComponent<TransformComponent, RigidBodyComponent>(entity);
 
 			JPH::ShapeRefC shapeRef;
 
-			if (auto* boxColliderComponent = m_Registry->try_get<BoxColliderComponent>(entity))
+			if (auto* boxColliderComponent = m_Registry->TryGetComponent<BoxColliderComponent>(entity))
 			{
 				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
 
@@ -152,7 +152,7 @@ namespace Flameberry {
 				shapeRef = boxShapeResult.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
 			}
 
-			if (auto* sphereColliderComponent = m_Registry->try_get<SphereColliderComponent>(entity))
+			if (auto* sphereColliderComponent = m_Registry->TryGetComponent<SphereColliderComponent>(entity))
 			{
 				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
 
@@ -165,7 +165,7 @@ namespace Flameberry {
 				shapeRef = sphereShapeResult.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
 			}
 
-			if (auto* capsuleColliderComponent = m_Registry->try_get<CapsuleColliderComponent>(entity))
+			if (auto* capsuleColliderComponent = m_Registry->TryGetComponent<CapsuleColliderComponent>(entity))
 			{
 				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
 
@@ -230,9 +230,9 @@ namespace Flameberry {
 		// Step the world
 		PhysicsManager::Update(delta, cCollisionSteps);
 
-		for (auto entity : m_Registry->group<RigidBodyComponent>())
+		for (auto entity : m_Registry->Group<RigidBodyComponent>())
 		{
-			auto [transform, rigidBody] = m_Registry->get<TransformComponent, RigidBodyComponent>(entity);
+			auto [transform, rigidBody] = m_Registry->GetComponent<TransformComponent, RigidBodyComponent>(entity);
 			JPH::Body* rigidBodyRuntimePtr = (JPH::Body*)rigidBody.RuntimeRigidBody;
 			JPH::RVec3 position = PhysicsManager::GetBodyInterface().GetCenterOfMassPosition(rigidBodyRuntimePtr->GetID());
 			JPH::Quat quat = PhysicsManager::GetBodyInterface().GetRotation(rigidBodyRuntimePtr->GetID());
@@ -244,7 +244,7 @@ namespace Flameberry {
 
 	void Scene::OnPhysicsStop()
 	{
-		for (auto& rigidBody : m_Registry->view<RigidBodyComponent>())
+		for (auto& rigidBody : m_Registry->View<RigidBodyComponent>())
 		{
 			JPH::Body* body = (JPH::Body*)rigidBody.RuntimeRigidBody;
 			PhysicsManager::GetBodyInterface().RemoveBody(body->GetID());
@@ -269,51 +269,51 @@ namespace Flameberry {
 	{
 		m_ViewportSize = viewportSize;
 
-		for (auto& cameraComp : m_Registry->view<CameraComponent>())
+		for (auto& cameraComp : m_Registry->View<CameraComponent>())
 		{
 			// TODO: This is fishy, maybe update this only when runtime is started
 			cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
 		}
 	}
 
-	fbentt::entity Scene::GetPrimaryCameraEntity() const
+	FEntity Scene::GetPrimaryCameraEntity() const
 	{
-		for (auto entity : m_Registry->group<CameraComponent>())
+		for (auto entity : m_Registry->Group<CameraComponent>())
 		{
-			auto& cameraComp = m_Registry->get<CameraComponent>(entity);
+			auto& cameraComp = m_Registry->GetComponent<CameraComponent>(entity);
 			if (cameraComp.IsPrimary)
 				return entity;
 		}
 		return {};
 	}
 
-	fbentt::entity Scene::CreateEntityWithParent(fbentt::entity parent)
+	FEntity Scene::CreateEntityWithParent(FEntity parent)
 	{
-		if (parent == fbentt::null)
+		if (parent == Null)
 			parent = m_WorldEntity;
 
-		const auto entity = m_Registry->create();
+		const auto entity = m_Registry->CreateEntity();
 
 		// Handle relations to make `entity` a child of `parent`
-		m_Registry->emplace<RelationshipComponent>(entity);
+		m_Registry->EmplaceComponent<RelationshipComponent>(entity);
 
-		if (!m_Registry->has<RelationshipComponent>(parent))
-			m_Registry->emplace<RelationshipComponent>(parent);
+		if (!m_Registry->HasComponent<RelationshipComponent>(parent))
+			m_Registry->EmplaceComponent<RelationshipComponent>(parent);
 
-		auto& relation = m_Registry->get<RelationshipComponent>(entity);
+		auto& relation = m_Registry->GetComponent<RelationshipComponent>(entity);
 		relation.Parent = parent;
 
-		auto& parentRel = m_Registry->get<RelationshipComponent>(parent);
-		if (parentRel.FirstChild == fbentt::null)
+		auto& parentRel = m_Registry->GetComponent<RelationshipComponent>(parent);
+		if (parentRel.FirstChild == Null)
 			parentRel.FirstChild = entity;
 		else
 		{
 			auto sibling = parentRel.FirstChild;
 
-			while (m_Registry->get<RelationshipComponent>(sibling).NextSibling != fbentt::null)
-				sibling = m_Registry->get<RelationshipComponent>(sibling).NextSibling;
+			while (m_Registry->GetComponent<RelationshipComponent>(sibling).NextSibling != Null)
+				sibling = m_Registry->GetComponent<RelationshipComponent>(sibling).NextSibling;
 
-			auto& siblingRel = m_Registry->get<RelationshipComponent>(sibling);
+			auto& siblingRel = m_Registry->GetComponent<RelationshipComponent>(sibling);
 			siblingRel.NextSibling = entity;
 			relation.PrevSibling = sibling;
 		}
@@ -321,59 +321,59 @@ namespace Flameberry {
 		return entity;
 	}
 
-	fbentt::entity Scene::CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent)
+	FEntity Scene::CreateEntityWithTagAndParent(const std::string& tag, FEntity parent)
 	{
-		const fbentt::entity entity = CreateEntityWithParent(parent);
-		m_Registry->emplace<IDComponent>(entity);
-		m_Registry->emplace<TagComponent>(entity, tag);
+		const FEntity entity = CreateEntityWithParent(parent);
+		m_Registry->EmplaceComponent<IDComponent>(entity);
+		m_Registry->EmplaceComponent<TagComponent>(entity, tag);
 
 		return entity;
 	}
 
-	fbentt::entity Scene::CreateEntityWithTagTransformAndParent(const std::string& tag, fbentt::entity parent)
+	FEntity Scene::CreateEntityWithTagTransformAndParent(const std::string& tag, FEntity parent)
 	{
 		const auto entity = CreateEntityWithTagAndParent(tag, parent);
-		m_Registry->emplace<TransformComponent>(entity);
+		m_Registry->EmplaceComponent<TransformComponent>(entity);
 
 		return entity;
 	}
 
-	void Scene::DestroyEntityTree(fbentt::entity entity)
+	void Scene::DestroyEntityTree(FEntity entity)
 	{
-		if (entity == fbentt::null)
+		if (entity == Null)
 			return;
 
-		if (m_Registry->has<RelationshipComponent>(entity))
+		if (m_Registry->HasComponent<RelationshipComponent>(entity))
 		{
-			auto& relation = m_Registry->get<RelationshipComponent>(entity);
+			auto& relation = m_Registry->GetComponent<RelationshipComponent>(entity);
 			auto sibling = relation.FirstChild;
-			while (sibling != fbentt::null)
+			while (sibling != Null)
 			{
-				auto temp = m_Registry->get<RelationshipComponent>(sibling).NextSibling;
+				auto temp = m_Registry->GetComponent<RelationshipComponent>(sibling).NextSibling;
 				DestroyEntityTree(sibling);
 				sibling = temp;
 			}
 
-			if (relation.Parent != fbentt::null)
+			if (relation.Parent != Null)
 			{
-				auto& parentRel = m_Registry->get<RelationshipComponent>(relation.Parent);
+				auto& parentRel = m_Registry->GetComponent<RelationshipComponent>(relation.Parent);
 				if (parentRel.FirstChild == entity)
 					parentRel.FirstChild = relation.NextSibling;
 			}
-			if (relation.PrevSibling != fbentt::null)
-				m_Registry->get<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
-			if (relation.NextSibling != fbentt::null)
-				m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
+			if (relation.PrevSibling != Null)
+				m_Registry->GetComponent<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
+			if (relation.NextSibling != Null)
+				m_Registry->GetComponent<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
 		}
-		m_Registry->destroy(entity);
+		m_Registry->DestroyEntity(entity);
 	}
 
-	void Scene::ReparentEntity(fbentt::entity entity, fbentt::entity destParent)
+	void Scene::ReparentEntity(FEntity entity, FEntity destParent)
 	{
-		FBY_ASSERT(entity != fbentt::null, "Can't reparent null entity!");
+		FBY_ASSERT(entity != Null, "Can't reparent null entity!");
 
 		// Whose responsibility should this be? Should the caller ensure to set destParent to atleast WorldEntity?
-		if (destParent == fbentt::null)
+		if (destParent == Null)
 			destParent = m_WorldEntity;
 
 		// Cannot reparent if entity and parent are the same,
@@ -390,96 +390,96 @@ namespace Flameberry {
 			return;
 
 		// TODO: Shouldn't all entities have RelationshipComponent? As they all are children of WorldEntity
-		if (!m_Registry->has<RelationshipComponent>(entity))
-			m_Registry->emplace<RelationshipComponent>(entity);
+		if (!m_Registry->HasComponent<RelationshipComponent>(entity))
+			m_Registry->EmplaceComponent<RelationshipComponent>(entity);
 
 		// TODO: Shouldn't all entities have RelationshipComponent? As they all are children of WorldEntity
-		if (!m_Registry->has<RelationshipComponent>(destParent))
-			m_Registry->emplace<RelationshipComponent>(destParent);
+		if (!m_Registry->HasComponent<RelationshipComponent>(destParent))
+			m_Registry->EmplaceComponent<RelationshipComponent>(destParent);
 
-		auto& relation = m_Registry->get<RelationshipComponent>(entity);
+		auto& relation = m_Registry->GetComponent<RelationshipComponent>(entity);
 		const auto oldParent = relation.Parent;
 
 		// No need to proceed further if `entity` is already a child of `destParent`
 		if (oldParent == destParent)
 			return;
 
-		if (oldParent != fbentt::null)
+		if (oldParent != Null)
 		{
-			auto& oldParentRel = m_Registry->get<RelationshipComponent>(oldParent);
+			auto& oldParentRel = m_Registry->GetComponent<RelationshipComponent>(oldParent);
 			if (oldParentRel.FirstChild == entity)
 				oldParentRel.FirstChild = relation.NextSibling;
 		}
-		if (relation.PrevSibling != fbentt::null)
-			m_Registry->get<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
-		if (relation.NextSibling != fbentt::null)
-			m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
+		if (relation.PrevSibling != Null)
+			m_Registry->GetComponent<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
+		if (relation.NextSibling != Null)
+			m_Registry->GetComponent<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
 
-		auto& newParentRel = m_Registry->get<RelationshipComponent>(destParent);
+		auto& newParentRel = m_Registry->GetComponent<RelationshipComponent>(destParent);
 		relation.NextSibling = newParentRel.FirstChild;
-		relation.PrevSibling = fbentt::null;
+		relation.PrevSibling = Null;
 		relation.Parent = destParent;
 
-		if (relation.NextSibling != fbentt::null)
-			m_Registry->get<RelationshipComponent>(relation.NextSibling).PrevSibling = entity;
+		if (relation.NextSibling != Null)
+			m_Registry->GetComponent<RelationshipComponent>(relation.NextSibling).PrevSibling = entity;
 		newParentRel.FirstChild = entity;
 	}
 
-	bool Scene::Recursive_IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
+	bool Scene::Recursive_IsEntityInHierarchy(FEntity key, FEntity parent)
 	{
-		auto* relation = m_Registry->try_get<RelationshipComponent>(parent);
+		auto* relation = m_Registry->TryGetComponent<RelationshipComponent>(parent);
 		auto sibling = parent;
-		while (relation && sibling != fbentt::null)
+		while (relation && sibling != Null)
 		{
 			if (sibling == key)
 				return true;
 
-			if (relation->FirstChild != fbentt::null && Recursive_IsEntityInHierarchy(key, relation->FirstChild))
+			if (relation->FirstChild != Null && Recursive_IsEntityInHierarchy(key, relation->FirstChild))
 				return true;
 
 			sibling = relation->NextSibling;
-			relation = m_Registry->try_get<RelationshipComponent>(sibling);
+			relation = m_Registry->TryGetComponent<RelationshipComponent>(sibling);
 		}
 		return false;
 	}
 
-	bool Scene::IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent)
+	bool Scene::IsEntityInHierarchy(FEntity key, FEntity parent)
 	{
-		auto* relation = m_Registry->try_get<RelationshipComponent>(parent);
+		auto* relation = m_Registry->TryGetComponent<RelationshipComponent>(parent);
 		return relation ? Recursive_IsEntityInHierarchy(key, relation->FirstChild) : false;
 	}
 
 	template <typename... Component>
-	static void CopyComponentIfExists(Scene* context, fbentt::entity dest, fbentt::entity src)
+	static void CopyComponentIfExists(Scene* context, FEntity dest, FEntity src)
 	{
 		([&]()
 			{
-				if (auto* comp = context->GetRegistry()->try_get<Component>(src); comp)
-					context->GetRegistry()->emplace<Component>(dest, *comp);
+				if (auto* comp = context->GetRegistry()->TryGetComponent<Component>(src); comp)
+					context->GetRegistry()->EmplaceComponent<Component>(dest, *comp);
 			}(),
 			...);
 	}
 
 	template <typename... Component>
-	static void CopyComponentIfExists(ComponentList<Component...>, Scene* context, fbentt::entity dest, fbentt::entity src)
+	static void CopyComponentIfExists(ComponentList<Component...>, Scene* context, FEntity dest, FEntity src)
 	{
 		CopyComponentIfExists<Component...>(context, dest, src);
 	}
 
-	fbentt::entity Scene::DuplicateEntity(fbentt::entity src)
+	FEntity Scene::DuplicateEntity(FEntity src)
 	{
-		if (m_Registry->has<RelationshipComponent>(src))
+		if (m_Registry->HasComponent<RelationshipComponent>(src))
 		{
-			fbentt::entity duplicateEntity = DuplicateEntityTree(src);
+			FEntity duplicateEntity = DuplicateEntityTree(src);
 
-			auto& destRelation = m_Registry->get<RelationshipComponent>(duplicateEntity);
-			auto& srcRelation = m_Registry->get<RelationshipComponent>(src);
+			auto& destRelation = m_Registry->GetComponent<RelationshipComponent>(duplicateEntity);
+			auto& srcRelation = m_Registry->GetComponent<RelationshipComponent>(src);
 
 			// Handling the `duplicateEntity`'s relation component
-			if (srcRelation.Parent != fbentt::null)
+			if (srcRelation.Parent != Null)
 			{
-				fbentt::entity srcNextSibling = srcRelation.NextSibling;
-				auto* srcNextSiblingRel = m_Registry->try_get<RelationshipComponent>(srcNextSibling);
+				FEntity srcNextSibling = srcRelation.NextSibling;
+				auto* srcNextSiblingRel = m_Registry->TryGetComponent<RelationshipComponent>(srcNextSibling);
 
 				destRelation.Parent = srcRelation.Parent;
 				destRelation.PrevSibling = src;
@@ -494,49 +494,49 @@ namespace Flameberry {
 		return DuplicatePureEntity(src);
 	}
 
-	fbentt::entity Scene::DuplicatePureEntity(fbentt::entity src)
+	FEntity Scene::DuplicatePureEntity(FEntity src)
 	{
-		const auto destEntity = m_Registry->create();
-		m_Registry->emplace<IDComponent>(destEntity);
-		m_Registry->emplace<TagComponent>(destEntity, m_Registry->get<TagComponent>(src).Tag);
+		const auto destEntity = m_Registry->CreateEntity();
+		m_Registry->EmplaceComponent<IDComponent>(destEntity);
+		m_Registry->EmplaceComponent<TagComponent>(destEntity, m_Registry->GetComponent<TagComponent>(src).Tag);
 
 		CopyComponentIfExists(AllComponents{}, this, destEntity, src);
 		return destEntity;
 	}
 
-	fbentt::entity Scene::DuplicateEntityTree(fbentt::entity src)
+	FEntity Scene::DuplicateEntityTree(FEntity src)
 	{
-		if (src == fbentt::null)
-			return fbentt::null;
+		if (src == Null)
+			return Null;
 
 		const auto destEntity = DuplicatePureEntity(src);
-		auto& destRelation = m_Registry->emplace<RelationshipComponent>(destEntity);
+		auto& destRelation = m_Registry->EmplaceComponent<RelationshipComponent>(destEntity);
 
-		auto& srcRelation = m_Registry->get<RelationshipComponent>(src);
-		fbentt::entity child = srcRelation.FirstChild;
+		auto& srcRelation = m_Registry->GetComponent<RelationshipComponent>(src);
+		FEntity child = srcRelation.FirstChild;
 
 		// Intermediate Variables
-		fbentt::entity prevDestChild = fbentt::null;
+		FEntity prevDestChild = Null;
 		RelationshipComponent* prevDestChildRel = nullptr;
 
-		while (child != fbentt::null)
+		while (child != Null)
 		{
 			// Create a copy of each children of `src`
-			fbentt::entity destChild = DuplicateEntityTree(child);
+			FEntity destChild = DuplicateEntityTree(child);
 
 			// Setup the Relationship Component of the copy of children of `src`
-			auto& destChildRel = m_Registry->get<RelationshipComponent>(destChild);
+			auto& destChildRel = m_Registry->GetComponent<RelationshipComponent>(destChild);
 			destChildRel.Parent = destEntity;
 			destChildRel.PrevSibling = prevDestChild;
-			if (prevDestChildRel = m_Registry->try_get<RelationshipComponent>(prevDestChild); prevDestChildRel)
+			if (prevDestChildRel = m_Registry->TryGetComponent<RelationshipComponent>(prevDestChild); prevDestChildRel)
 				prevDestChildRel->NextSibling = destChild;
 
 			// Set FirstChild variable of `destEntity`
-			if (prevDestChild == fbentt::null)
-				m_Registry->get<RelationshipComponent>(destEntity).FirstChild = destChild;
+			if (prevDestChild == Null)
+				m_Registry->GetComponent<RelationshipComponent>(destEntity).FirstChild = destChild;
 
 			prevDestChild = destChild;
-			child = m_Registry->get<RelationshipComponent>(child).NextSibling;
+			child = m_Registry->GetComponent<RelationshipComponent>(child).NextSibling;
 		}
 		return destEntity;
 	}

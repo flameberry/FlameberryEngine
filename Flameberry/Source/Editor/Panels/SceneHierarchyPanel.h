@@ -15,23 +15,23 @@ namespace Flameberry {
 
 		void RenameNode(std::string& tag);
 		void SetContext(const Ref<Scene>& context);
-		void SetSelectionContext(fbentt::entity entity);
+		void SetSelectionContext(FEntity entity);
 
-		fbentt::entity GetSelectionContext() const { return m_SelectionContext; }
-		bool IsFocused() const { return m_IsFocused && !m_IsSearchBarFocused && m_RenamedEntity == fbentt::null; }
+		FEntity GetSelectionContext() const { return m_SelectionContext; }
+		bool IsFocused() const { return m_IsFocused && !m_IsSearchBarFocused && m_RenamedEntity == Null; }
 
-		void DisplayEntityTree(fbentt::entity entity);
-		void DisplayCreateEntityMenu(fbentt::entity parent = (fbentt::entity)fbentt::null);
+		void DisplayEntityTree(FEntity entity);
+		void DisplayCreateEntityMenu(FEntity parent = (FEntity)Null);
 
 	private:
 		/**
 		 * This function is present in `SceneHierarchyPanel` and not in `Scene` as the usage of CollectionComponent is meant for Editor Only
 		 */
-		fbentt::entity CreateCollectionEntity(const std::string& name, fbentt::entity parent);
+		FEntity CreateCollectionEntity(const std::string& name, FEntity parent);
 
 	private:
-		fbentt::entity m_SelectionContext = {};
-		fbentt::entity m_RenamedEntity = {};
+		FEntity m_SelectionContext = {};
+		FEntity m_RenamedEntity = {};
 
 		Ref<Scene> m_Context;
 		Ref<InspectorPanel> m_InspectorPanel;

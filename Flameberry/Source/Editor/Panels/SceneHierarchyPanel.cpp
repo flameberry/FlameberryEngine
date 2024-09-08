@@ -62,8 +62,8 @@ namespace Flameberry {
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
 			{
-				const fbentt::entity payloadEntity = *((const fbentt::entity*)payload->Data);
-				m_Context->ReparentEntity(payloadEntity, fbentt::null);
+				const FEntity payloadEntity = *((const FEntity*)payload->Data);
+				m_Context->ReparentEntity(payloadEntity, Null);
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -100,7 +100,7 @@ namespace Flameberry {
 		}
 
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
-			m_SelectionContext = fbentt::null;
+			m_SelectionContext = Null;
 
 		ImGui::EndChild();
 		ImGui::End();
@@ -120,13 +120,13 @@ namespace Flameberry {
 		if (ImGui::InputText("###Rename", &m_RenameBuffer, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
 		{
 			tag = m_RenameBuffer;
-			m_RenamedEntity = fbentt::null;
+			m_RenamedEntity = Null;
 		}
 		ImGui::PopItemWidth();
 
 		// Remove the input box when it is defocused/deactivated
 		if (ImGui::IsItemDeactivated())
-			m_RenamedEntity = fbentt::null;
+			m_RenamedEntity = Null;
 	}
 
 	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
@@ -135,16 +135,16 @@ namespace Flameberry {
 		m_InspectorPanel->SetContext(m_Context);
 	}
 
-	void SceneHierarchyPanel::SetSelectionContext(fbentt::entity entity)
+	void SceneHierarchyPanel::SetSelectionContext(FEntity entity)
 	{
 		m_SelectionContext = entity;
 		m_InspectorPanel->SetSelectionContext(m_SelectionContext);
 	}
 
-	void SceneHierarchyPanel::DisplayEntityTree(fbentt::entity entity)
+	void SceneHierarchyPanel::DisplayEntityTree(FEntity entity)
 	{
 		// "Name" of the entity
-		auto& tag = m_Context->GetRegistry()->get<TagComponent>(entity).Tag;
+		auto& tag = m_Context->GetRegistry()->GetComponent<TagComponent>(entity).Tag;
 
 		// If the current entity matches the search, then it is to be highlighted
 		bool highlight = false;
@@ -159,7 +159,7 @@ namespace Flameberry {
 
 		// Entity state
 		const bool isWorldEntity = m_Context->IsWorldEntity(entity);
-		const bool isCollectionEntity = m_Context->GetRegistry()->has<CollectionComponent>(entity);
+		const bool isCollectionEntity = m_Context->GetRegistry()->HasComponent<CollectionComponent>(entity);
 		const bool isRenamed = m_RenamedEntity == entity;
 		const bool isSelected = m_SelectionContext == entity;
 
@@ -168,8 +168,8 @@ namespace Flameberry {
 
 		bool hasChild = false;
 
-		if (auto* relation = m_Context->GetRegistry()->try_get<RelationshipComponent>(entity))
-			hasChild = relation->FirstChild != fbentt::null;
+		if (auto* relation = m_Context->GetRegistry()->TryGetComponent<RelationshipComponent>(entity))
+			hasChild = relation->FirstChild != Null;
 
 		const int treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow
 			| ImGuiTreeNodeFlags_FramePadding
@@ -277,7 +277,7 @@ namespace Flameberry {
 			{
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
 				{
-					const fbentt::entity payloadEntity = *((const fbentt::entity*)payload->Data);
+					const FEntity payloadEntity = *((const FEntity*)payload->Data);
 					m_Context->ReparentEntity(payloadEntity, entity);
 				}
 				ImGui::EndDragDropTarget();
@@ -303,10 +303,10 @@ namespace Flameberry {
 		{
 			if (hasChild)
 			{
-				fbentt::entity child = m_Context->GetRegistry()->get<RelationshipComponent>(entity).FirstChild;
-				while (child != fbentt::null)
+				FEntity child = m_Context->GetRegistry()->GetComponent<RelationshipComponent>(entity).FirstChild;
+				while (child != Null)
 				{
-					auto temp = m_Context->GetRegistry()->get<RelationshipComponent>(child).NextSibling;
+					auto temp = m_Context->GetRegistry()->GetComponent<RelationshipComponent>(child).NextSibling;
 					DisplayEntityTree(child);
 					child = temp;
 				}
@@ -326,11 +326,11 @@ namespace Flameberry {
 		{
 			m_Context->DestroyEntityTree(entity);
 			if (m_SelectionContext == entity)
-				m_SelectionContext = fbentt::null;
+				m_SelectionContext = Null;
 		}
 	}
 
-	void SceneHierarchyPanel::DisplayCreateEntityMenu(fbentt::entity parent)
+	void SceneHierarchyPanel::DisplayCreateEntityMenu(FEntity parent)
 	{
 		static uint32_t collectionCount = 0;
 
@@ -353,19 +353,19 @@ namespace Flameberry {
 			if (ImGui::MenuItem(ICON_LC_TEXT "\tText"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Text", parent);
-				m_Context->GetRegistry()->emplace<TextComponent>(entity);
+				m_Context->GetRegistry()->EmplaceComponent<TextComponent>(entity);
 				m_SelectionContext = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_CUBOID "\tMesh"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("StaticMesh", parent);
-				m_Context->GetRegistry()->emplace<MeshComponent>(entity);
+				m_Context->GetRegistry()->EmplaceComponent<MeshComponent>(entity);
 				m_SelectionContext = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_CAMERA "\tCamera"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Camera", parent);
-				m_Context->GetRegistry()->emplace<CameraComponent>(entity);
+				m_Context->GetRegistry()->EmplaceComponent<CameraComponent>(entity);
 				m_SelectionContext = entity;
 			}
 
@@ -376,25 +376,25 @@ namespace Flameberry {
 				if (ImGui::MenuItem(ICON_LC_SUNRISE "\tSky Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Sky Light", parent);
-					m_Context->GetRegistry()->emplace<SkyLightComponent>(entity);
+					m_Context->GetRegistry()->EmplaceComponent<SkyLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_SUN "\tDirectional Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Directional Light", parent);
-					m_Context->GetRegistry()->emplace<DirectionalLightComponent>(entity);
+					m_Context->GetRegistry()->EmplaceComponent<DirectionalLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_LIGHTBULB "\tPoint Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Point Light", parent);
-					m_Context->GetRegistry()->emplace<PointLightComponent>(entity);
+					m_Context->GetRegistry()->EmplaceComponent<PointLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_CONE "\tSpot Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Spot Light", parent);
-					m_Context->GetRegistry()->emplace<SpotLightComponent>(entity);
+					m_Context->GetRegistry()->EmplaceComponent<SpotLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				ImGui::EndMenu();
@@ -403,10 +403,10 @@ namespace Flameberry {
 		}
 	}
 
-	fbentt::entity SceneHierarchyPanel::CreateCollectionEntity(const std::string& name, fbentt::entity parent)
+	FEntity SceneHierarchyPanel::CreateCollectionEntity(const std::string& name, FEntity parent)
 	{
-		fbentt::entity entity = m_Context->CreateEntityWithTagAndParent(name, parent);
-		m_Context->GetRegistry()->emplace<CollectionComponent>(entity);
+		FEntity entity = m_Context->CreateEntityWithTagAndParent(name, parent);
+		m_Context->GetRegistry()->EmplaceComponent<CollectionComponent>(entity);
 		return entity;
 	}
 

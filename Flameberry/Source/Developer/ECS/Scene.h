@@ -26,14 +26,14 @@ namespace Flameberry {
 
 		void OnViewportResize(const glm::vec2& viewportSize);
 
-		fbentt::entity CreateEntityWithTagAndParent(const std::string& tag, fbentt::entity parent);
-		fbentt::entity CreateEntityWithTagTransformAndParent(const std::string& tag, fbentt::entity parent);
-		void DestroyEntityTree(fbentt::entity entity);
-		void ReparentEntity(fbentt::entity entity, fbentt::entity destParent);
-		bool IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
-		fbentt::entity DuplicateEntity(fbentt::entity src);
-		fbentt::entity DuplicatePureEntity(fbentt::entity src);
-		fbentt::entity DuplicateEntityTree(fbentt::entity src);
+		FEntity CreateEntityWithTagAndParent(const std::string& tag, FEntity parent);
+		FEntity CreateEntityWithTagTransformAndParent(const std::string& tag, FEntity parent);
+		void DestroyEntityTree(FEntity entity);
+		void ReparentEntity(FEntity entity, FEntity destParent);
+		bool IsEntityInHierarchy(FEntity key, FEntity parent);
+		FEntity DuplicateEntity(FEntity src);
+		FEntity DuplicatePureEntity(FEntity src);
+		FEntity DuplicateEntityTree(FEntity src);
 
 		bool IsRuntimeActive() const { return m_IsRuntimeActive; }
 		bool IsRuntimePaused() const { return m_IsRuntimePaused; }
@@ -42,10 +42,10 @@ namespace Flameberry {
 		void Step(int steps) { m_StepFrames = steps; }
 
 		inline std::string GetName() const { return m_Name; }
-		inline Ref<fbentt::registry> GetRegistry() const { return m_Registry; }
-		inline fbentt::entity GetWorldEntity() const { return m_WorldEntity; }
-		inline bool IsWorldEntity(fbentt::entity entity) const { return m_WorldEntity == entity; }
-		fbentt::entity GetPrimaryCameraEntity() const;
+		inline Ref<FRegistry> GetRegistry() const { return m_Registry; }
+		inline FEntity GetWorldEntity() const { return m_WorldEntity; }
+		inline bool IsWorldEntity(FEntity entity) const { return m_WorldEntity == entity; }
+		FEntity GetPrimaryCameraEntity() const;
 
 		FBY_DECLARE_ASSET_TYPE(AssetType::Scene);
 
@@ -55,12 +55,12 @@ namespace Flameberry {
 		 * If parent is null, entity will be created with the world entity being it's parent
 		 * This is the only way an entity should be created in the scene
 		 */
-		fbentt::entity CreateEntityWithParent(fbentt::entity parent);
+		FEntity CreateEntityWithParent(FEntity parent);
 
 		/**
 		 * Recursively checks if the given `entity` is in the lower heirarchy of the given `parent`
 		 */
-		bool Recursive_IsEntityInHierarchy(fbentt::entity key, fbentt::entity parent);
+		bool Recursive_IsEntityInHierarchy(FEntity key, FEntity parent);
 
 		void OnPhysicsStart();
 		void OnPhysicsSimulate(float delta);
@@ -72,8 +72,8 @@ namespace Flameberry {
 		bool ShouldStep();
 
 	private:
-		Ref<fbentt::registry> m_Registry;
-		fbentt::entity m_WorldEntity = {};
+		Ref<FRegistry> m_Registry;
+		FEntity m_WorldEntity = {};
 
 		std::string m_Name = "Untitled";
 		glm::vec2 m_ViewportSize = { 1280, 720 };

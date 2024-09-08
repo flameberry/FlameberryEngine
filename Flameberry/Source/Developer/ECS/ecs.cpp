@@ -1,7 +1,7 @@
 #include "ecs.hpp"
 
-namespace fbentt {
+namespace Flameberry {
 
-	null_t null;
+	FNullEntity Null;
 
-}
+} // namespace Flameberry

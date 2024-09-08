@@ -106,13 +106,13 @@ namespace Flameberry {
 
 	struct RelationshipComponent
 	{
-		fbentt::entity Parent{};
-		fbentt::entity FirstChild{};
-		fbentt::entity PrevSibling{};
-		fbentt::entity NextSibling{};
+		FEntity Parent{};
+		FEntity FirstChild{};
+		FEntity PrevSibling{};
+		FEntity NextSibling{};
 
 		RelationshipComponent()
-			: Parent(fbentt::null), FirstChild(fbentt::null), PrevSibling(fbentt::null), NextSibling(fbentt::null)
+			: Parent(Null), FirstChild(Null), PrevSibling(Null), NextSibling(Null)
 		{
 		}
 
