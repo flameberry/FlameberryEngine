@@ -33,7 +33,7 @@ namespace Flameberry {
 		ImGui::Begin("Inspector");
 		ImGui::PopStyleVar();
 
-		if (m_SelectionContext != Null)
+		if (m_SelectionContext != FEntity::Null)
 		{
 			UI::ScopedStyleColor borderColor(ImGuiCol_Border, Theme::FrameBorder);
 

@@ -289,7 +289,7 @@ namespace Flameberry {
 
 	FEntity Scene::CreateEntityWithParent(FEntity parent)
 	{
-		if (parent == Null)
+		if (parent == FEntity::Null)
 			parent = m_WorldEntity;
 
 		const auto entity = m_Registry->CreateEntity();
@@ -304,13 +304,13 @@ namespace Flameberry {
 		relation.Parent = parent;
 
 		auto& parentRel = m_Registry->GetComponent<RelationshipComponent>(parent);
-		if (parentRel.FirstChild == Null)
+		if (parentRel.FirstChild == FEntity::Null)
 			parentRel.FirstChild = entity;
 		else
 		{
 			auto sibling = parentRel.FirstChild;
 
-			while (m_Registry->GetComponent<RelationshipComponent>(sibling).NextSibling != Null)
+			while (m_Registry->GetComponent<RelationshipComponent>(sibling).NextSibling != FEntity::Null)
 				sibling = m_Registry->GetComponent<RelationshipComponent>(sibling).NextSibling;
 
 			auto& siblingRel = m_Registry->GetComponent<RelationshipComponent>(sibling);
@@ -340,29 +340,29 @@ namespace Flameberry {
 
 	void Scene::DestroyEntityTree(FEntity entity)
 	{
-		if (entity == Null)
+		if (entity == FEntity::Null)
 			return;
 
 		if (m_Registry->HasComponent<RelationshipComponent>(entity))
 		{
 			auto& relation = m_Registry->GetComponent<RelationshipComponent>(entity);
 			auto sibling = relation.FirstChild;
-			while (sibling != Null)
+			while (sibling != FEntity::Null)
 			{
 				auto temp = m_Registry->GetComponent<RelationshipComponent>(sibling).NextSibling;
 				DestroyEntityTree(sibling);
 				sibling = temp;
 			}
 
-			if (relation.Parent != Null)
+			if (relation.Parent != FEntity::Null)
 			{
 				auto& parentRel = m_Registry->GetComponent<RelationshipComponent>(relation.Parent);
 				if (parentRel.FirstChild == entity)
 					parentRel.FirstChild = relation.NextSibling;
 			}
-			if (relation.PrevSibling != Null)
+			if (relation.PrevSibling != FEntity::Null)
 				m_Registry->GetComponent<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
-			if (relation.NextSibling != Null)
+			if (relation.NextSibling != FEntity::Null)
 				m_Registry->GetComponent<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
 		}
 		m_Registry->DestroyEntity(entity);
@@ -370,10 +370,10 @@ namespace Flameberry {
 
 	void Scene::ReparentEntity(FEntity entity, FEntity destParent)
 	{
-		FBY_ASSERT(entity != Null, "Can't reparent null entity!");
+		FBY_ASSERT(entity != FEntity::Null, "Can't reparent null entity!");
 
 		// Whose responsibility should this be? Should the caller ensure to set destParent to atleast WorldEntity?
-		if (destParent == Null)
+		if (destParent == FEntity::Null)
 			destParent = m_WorldEntity;
 
 		// Cannot reparent if entity and parent are the same,
@@ -404,23 +404,23 @@ namespace Flameberry {
 		if (oldParent == destParent)
 			return;
 
-		if (oldParent != Null)
+		if (oldParent != FEntity::Null)
 		{
 			auto& oldParentRel = m_Registry->GetComponent<RelationshipComponent>(oldParent);
 			if (oldParentRel.FirstChild == entity)
 				oldParentRel.FirstChild = relation.NextSibling;
 		}
-		if (relation.PrevSibling != Null)
+		if (relation.PrevSibling != FEntity::Null)
 			m_Registry->GetComponent<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
-		if (relation.NextSibling != Null)
+		if (relation.NextSibling != FEntity::Null)
 			m_Registry->GetComponent<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
 
 		auto& newParentRel = m_Registry->GetComponent<RelationshipComponent>(destParent);
 		relation.NextSibling = newParentRel.FirstChild;
-		relation.PrevSibling = Null;
+		relation.PrevSibling = FEntity::Null;
 		relation.Parent = destParent;
 
-		if (relation.NextSibling != Null)
+		if (relation.NextSibling != FEntity::Null)
 			m_Registry->GetComponent<RelationshipComponent>(relation.NextSibling).PrevSibling = entity;
 		newParentRel.FirstChild = entity;
 	}
@@ -429,12 +429,12 @@ namespace Flameberry {
 	{
 		auto* relation = m_Registry->TryGetComponent<RelationshipComponent>(parent);
 		auto sibling = parent;
-		while (relation && sibling != Null)
+		while (relation && sibling != FEntity::Null)
 		{
 			if (sibling == key)
 				return true;
 
-			if (relation->FirstChild != Null && Recursive_IsEntityInHierarchy(key, relation->FirstChild))
+			if (relation->FirstChild != FEntity::Null && Recursive_IsEntityInHierarchy(key, relation->FirstChild))
 				return true;
 
 			sibling = relation->NextSibling;
@@ -476,7 +476,7 @@ namespace Flameberry {
 			auto& srcRelation = m_Registry->GetComponent<RelationshipComponent>(src);
 
 			// Handling the `duplicateEntity`'s relation component
-			if (srcRelation.Parent != Null)
+			if (srcRelation.Parent != FEntity::Null)
 			{
 				FEntity srcNextSibling = srcRelation.NextSibling;
 				auto* srcNextSiblingRel = m_Registry->TryGetComponent<RelationshipComponent>(srcNextSibling);
@@ -506,8 +506,8 @@ namespace Flameberry {
 
 	FEntity Scene::DuplicateEntityTree(FEntity src)
 	{
-		if (src == Null)
-			return Null;
+		if (src == FEntity::Null)
+			return FEntity::Null;
 
 		const auto destEntity = DuplicatePureEntity(src);
 		auto& destRelation = m_Registry->EmplaceComponent<RelationshipComponent>(destEntity);
@@ -516,10 +516,10 @@ namespace Flameberry {
 		FEntity child = srcRelation.FirstChild;
 
 		// Intermediate Variables
-		FEntity prevDestChild = Null;
+		FEntity prevDestChild = FEntity::Null;
 		RelationshipComponent* prevDestChildRel = nullptr;
 
-		while (child != Null)
+		while (child != FEntity::Null)
 		{
 			// Create a copy of each children of `src`
 			FEntity destChild = DuplicateEntityTree(child);
@@ -532,7 +532,7 @@ namespace Flameberry {
 				prevDestChildRel->NextSibling = destChild;
 
 			// Set FirstChild variable of `destEntity`
-			if (prevDestChild == Null)
+			if (prevDestChild == FEntity::Null)
 				m_Registry->GetComponent<RelationshipComponent>(destEntity).FirstChild = destChild;
 
 			prevDestChild = destChild;

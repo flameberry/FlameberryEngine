@@ -18,10 +18,10 @@ namespace Flameberry {
 		void SetSelectionContext(FEntity entity);
 
 		FEntity GetSelectionContext() const { return m_SelectionContext; }
-		bool IsFocused() const { return m_IsFocused && !m_IsSearchBarFocused && m_RenamedEntity == Null; }
+		bool IsFocused() const { return m_IsFocused && !m_IsSearchBarFocused && m_RenamedEntity == FEntity::Null; }
 
 		void DisplayEntityTree(FEntity entity);
-		void DisplayCreateEntityMenu(FEntity parent = (FEntity)Null);
+		void DisplayCreateEntityMenu(FEntity parent = FEntity::Null);
 
 	private:
 		/**

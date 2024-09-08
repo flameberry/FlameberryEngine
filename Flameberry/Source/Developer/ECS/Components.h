@@ -112,7 +112,7 @@ namespace Flameberry {
 		FEntity NextSibling{};
 
 		RelationshipComponent()
-			: Parent(Null), FirstChild(Null), PrevSibling(Null), NextSibling(Null)
+			: Parent(FEntity::Null), FirstChild(FEntity::Null), PrevSibling(FEntity::Null), NextSibling(FEntity::Null)
 		{
 		}
 

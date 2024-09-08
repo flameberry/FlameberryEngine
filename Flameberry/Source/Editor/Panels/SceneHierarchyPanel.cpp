@@ -63,7 +63,7 @@ namespace Flameberry {
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
 			{
 				const FEntity payloadEntity = *((const FEntity*)payload->Data);
-				m_Context->ReparentEntity(payloadEntity, Null);
+				m_Context->ReparentEntity(payloadEntity, FEntity::Null);
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -100,7 +100,7 @@ namespace Flameberry {
 		}
 
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
-			m_SelectionContext = Null;
+			m_SelectionContext = FEntity::Null;
 
 		ImGui::EndChild();
 		ImGui::End();
@@ -120,13 +120,13 @@ namespace Flameberry {
 		if (ImGui::InputText("###Rename", &m_RenameBuffer, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
 		{
 			tag = m_RenameBuffer;
-			m_RenamedEntity = Null;
+			m_RenamedEntity = FEntity::Null;
 		}
 		ImGui::PopItemWidth();
 
 		// Remove the input box when it is defocused/deactivated
 		if (ImGui::IsItemDeactivated())
-			m_RenamedEntity = Null;
+			m_RenamedEntity = FEntity::Null;
 	}
 
 	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
@@ -169,7 +169,7 @@ namespace Flameberry {
 		bool hasChild = false;
 
 		if (auto* relation = m_Context->GetRegistry()->TryGetComponent<RelationshipComponent>(entity))
-			hasChild = relation->FirstChild != Null;
+			hasChild = relation->FirstChild != FEntity::Null;
 
 		const int treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow
 			| ImGuiTreeNodeFlags_FramePadding
@@ -304,7 +304,7 @@ namespace Flameberry {
 			if (hasChild)
 			{
 				FEntity child = m_Context->GetRegistry()->GetComponent<RelationshipComponent>(entity).FirstChild;
-				while (child != Null)
+				while (child != FEntity::Null)
 				{
 					auto temp = m_Context->GetRegistry()->GetComponent<RelationshipComponent>(child).NextSibling;
 					DisplayEntityTree(child);
@@ -326,7 +326,7 @@ namespace Flameberry {
 		{
 			m_Context->DestroyEntityTree(entity);
 			if (m_SelectionContext == entity)
-				m_SelectionContext = Null;
+				m_SelectionContext = FEntity::Null;
 		}
 	}
 

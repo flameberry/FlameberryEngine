@@ -117,9 +117,6 @@ namespace Flameberry {
 		std::vector<TDataType> m_PackedBuffer, m_SparseBuffer;
 	};
 
-	struct FNullEntity;
-	extern FNullEntity Null;
-
 	/**
 	 * Contains a 64 bit integer -> Layout of handle: | 32-bit index | 31-bit version | 1-bit validity |
 	 */
@@ -128,6 +125,21 @@ namespace Flameberry {
 	public:
 		using THandleType = std::uint64_t;
 		using TVersionType = std::uint32_t;
+
+		/**
+		 * Important Class
+		 * Depicts a Null FEntity Handle, it's instance acts like a null entity literal
+		 */
+		struct FNullEntity
+		{
+			constexpr operator FEntity() const { return 0xFFFFFFFF00000000; }
+		};
+
+	public:
+		/**
+		 * The standard way to specify/use/compare a null entity
+		 */
+		constexpr static FNullEntity Null;
 
 	public:
 		constexpr FEntity()
@@ -161,15 +173,6 @@ namespace Flameberry {
 
 	private:
 		THandleType m_Handle;
-	};
-
-	/**
-	 * Important Class
-	 * Depicts a Null FEntity Handle, it's instance acts like a null entity literal
-	 */
-	struct FNullEntity
-	{
-		constexpr operator FEntity() const { return 0xFFFFFFFF00000000; }
 	};
 
 	template <typename TComponent>
@@ -356,7 +359,7 @@ namespace Flameberry {
 
 			static_assert(std::is_invocable_v<Fn, void*, uint32_t>);
 
-			FBY_ASSERT(entity != Null, "Failed to iterate over components of entity: Entity is null!");
+			FBY_ASSERT(entity != FEntity::Null, "Failed to iterate over components of entity: Entity is null!");
 
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
@@ -437,7 +440,7 @@ namespace Flameberry {
 
 		void DestroyEntity(FEntity entity)
 		{
-			FBY_ASSERT(entity != Null, "Failed to destroy entity: Entity is null!");
+			FBY_ASSERT(entity != FEntity::Null, "Failed to destroy entity: Entity is null!");
 
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
@@ -459,7 +462,7 @@ namespace Flameberry {
 		template <typename TComponent, typename... TArgs>
 		TComponent& EmplaceComponent(const FEntity& entity, TArgs... args)
 		{
-			FBY_ASSERT(entity != Null, "Failed to emplace component: Entity is null!");
+			FBY_ASSERT(entity != FEntity::Null, "Failed to emplace component: Entity is null!");
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
 			FBY_ASSERT(index < m_EntityBuffer.size() && version == entity.GetVersion(), "Failed to emplace component: Invalid/Outdated handle!");
@@ -511,7 +514,7 @@ namespace Flameberry {
 				const uint32_t index = entity.GetIndex();
 
 				uint32_t typeID = GetStaticTypeID<TComponent>();
-				if (entity == Null
+				if (entity == FEntity::Null
 					|| index > m_EntityBuffer.size()
 					|| m_EntityBuffer[index].GetVersion() != entity.GetVersion()
 					|| m_ComponentPools.size() <= typeID
@@ -537,7 +540,7 @@ namespace Flameberry {
 		template <typename TComponent, typename... TMoreComponents>
 		decltype(auto) GetComponent(const FEntity& entity) const
 		{
-			FBY_ASSERT(entity != Null, "Failed to get component: Entity is null!");
+			FBY_ASSERT(entity != FEntity::Null, "Failed to get component: Entity is null!");
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
 			FBY_ASSERT(index < m_EntityBuffer.size() && version == entity.GetVersion(), "Failed to get component: Invalid/Outdated handle!");
@@ -569,7 +572,7 @@ namespace Flameberry {
 		template <typename TComponent, typename... TMoreComponents>
 		bool HasComponent(const FEntity& entity) const
 		{
-			FBY_ASSERT(entity != Null, "Failed to check component: Entity is null!");
+			FBY_ASSERT(entity != FEntity::Null, "Failed to check component: Entity is null!");
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
 			FBY_ASSERT(index < m_EntityBuffer.size() && version == entity.GetVersion(), "Failed to check component: Invalid/Outdated handle!");
@@ -595,7 +598,7 @@ namespace Flameberry {
 		template <typename TComponent, typename... TMoreComponents>
 		void EraseComponent(const FEntity& entity) const
 		{
-			FBY_ASSERT(entity != Null, "Failed to erase component: Entity is null!");
+			FBY_ASSERT(entity != FEntity::Null, "Failed to erase component: Entity is null!");
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
 			FBY_ASSERT(index < m_EntityBuffer.size() && version == entity.GetVersion(), "Failed to erase component: Invalid/Outdated handle!");

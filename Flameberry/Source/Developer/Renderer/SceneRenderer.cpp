@@ -860,7 +860,7 @@ namespace Flameberry {
 			Renderer2D::FlushQuads();
 		}
 
-		if (renderPhysicsCollider && selectedEntity != Null)
+		if (renderPhysicsCollider && selectedEntity != FEntity::Null)
 		{
 			if (auto* transform = scene->GetRegistry()->TryGetComponent<TransformComponent>(selectedEntity))
 			{

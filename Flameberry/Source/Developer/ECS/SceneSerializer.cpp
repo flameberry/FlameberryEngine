@@ -109,7 +109,7 @@ namespace Flameberry {
 		if (auto entities = data["Entities"])
 		{
 			std::unordered_map<UUID, FEntity> UUIDToEntityMap;
-			UUIDToEntityMap[UUID(0)] = Null;
+			UUIDToEntityMap[UUID(0)] = FEntity::Null;
 			for (const auto entity : entities)
 			{
 				const auto deserializedEntity = destScene->m_Registry->CreateEntity();
@@ -323,10 +323,10 @@ namespace Flameberry {
 			auto& relation = scene->m_Registry->GetComponent<RelationshipComponent>(entity);
 			out << YAML::Key << "RelationshipComponent" << YAML::BeginMap;
 
-			const UUID parentID = relation.Parent != Null ? scene->m_Registry->GetComponent<IDComponent>(relation.Parent).ID : UUID(0);
-			const UUID prevSiblingID = relation.PrevSibling != Null ? scene->m_Registry->GetComponent<IDComponent>(relation.PrevSibling).ID : UUID(0);
-			const UUID nextSiblingID = relation.NextSibling != Null ? scene->m_Registry->GetComponent<IDComponent>(relation.NextSibling).ID : UUID(0);
-			const UUID firstChildID = relation.FirstChild != Null ? scene->m_Registry->GetComponent<IDComponent>(relation.FirstChild).ID : UUID(0);
+			const UUID parentID = relation.Parent != FEntity::Null ? scene->m_Registry->GetComponent<IDComponent>(relation.Parent).ID : UUID(0);
+			const UUID prevSiblingID = relation.PrevSibling != FEntity::Null ? scene->m_Registry->GetComponent<IDComponent>(relation.PrevSibling).ID : UUID(0);
+			const UUID nextSiblingID = relation.NextSibling != FEntity::Null ? scene->m_Registry->GetComponent<IDComponent>(relation.NextSibling).ID : UUID(0);
+			const UUID firstChildID = relation.FirstChild != FEntity::Null ? scene->m_Registry->GetComponent<IDComponent>(relation.FirstChild).ID : UUID(0);
 
 			out << YAML::Key << "Parent" << YAML::Value << parentID;
 			out << YAML::Key << "PrevSibling" << YAML::Value << prevSiblingID;
