@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <set>
+#include <mutex>
+
 #include <vulkan/vulkan.h>
 
 #include "Core/Core.h"
@@ -21,6 +23,9 @@ namespace Flameberry {
 	public:
 		VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow);
 		~VulkanDevice();
+
+		template <typename Fn>
+		void AccessQueueSafely(Fn&& function);
 
 		inline VkDevice GetVulkanDevice() const { return m_VulkanDevice; }
 		inline VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
@@ -43,10 +48,20 @@ namespace Flameberry {
 		VkDevice m_VulkanDevice;
 		VkQueue m_GraphicsQueue, m_ComputeQueue, m_PresentationQueue;
 		QueueFamilyIndices m_QueueFamilyIndices;
+		std::mutex m_QueueMutex;
 
 		VkCommandPool m_GraphicsQueueCommandPool, m_ComputeQueueCommandPool;
 
 		VkPhysicalDevice& m_VulkanPhysicalDevice;
 	};
+
+	template <typename Fn>
+	inline void VulkanDevice::AccessQueueSafely(Fn&& function)
+	{
+		static_assert(std::is_invocable_v<Fn>);
+
+		std::scoped_lock lock(m_QueueMutex);
+		function();
+	}
 
 } // namespace Flameberry

@@ -7,10 +7,52 @@
 #include "Core/Timer.h"
 #include "Asset/AssetManager.h"
 #include "Asset/EditorAssetManager.h"
+
+#include "Renderer/Renderer.h"
 #include "Renderer/RenderCommand.h"
+#include "Renderer/CommandBuffer.h"
 #include "Renderer/MaterialAsset.h"
 
 namespace Flameberry {
+
+	namespace Utils {
+
+		void AssetThread_CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize)
+		{
+			CommandBufferSpecification cmdBufferSpec;
+			cmdBufferSpec.CommandPool = VulkanContext::GetCurrentDevice()->GetComputeCommandPool();
+			cmdBufferSpec.SingleTimeUsage = true;
+			cmdBufferSpec.IsPrimary = true;
+
+			CommandBuffer cmdBuffer(cmdBufferSpec);
+
+			cmdBuffer.Begin();
+
+			VkBufferCopy vk_buffer_copy_info{};
+			vk_buffer_copy_info.srcOffset = 0;
+			vk_buffer_copy_info.dstOffset = 0;
+			vk_buffer_copy_info.size = bufferSize;
+
+			vkCmdCopyBuffer(cmdBuffer.GetVulkanCommandBuffer(), srcBuffer, dstBuffer, 1, &vk_buffer_copy_info);
+			cmdBuffer.End();
+
+			// Test
+			VkCommandBuffer vulkanCmdBuffer = cmdBuffer.GetVulkanCommandBuffer();
+			VkQueue graphicsQueue = VulkanContext::GetCurrentDevice()->GetGraphicsQueue();
+
+			VkSubmitInfo vulkanQueueSubmitInfo{};
+			vulkanQueueSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+			vulkanQueueSubmitInfo.commandBufferCount = 1;
+			vulkanQueueSubmitInfo.pCommandBuffers = &vulkanCmdBuffer;
+
+			VulkanContext::GetCurrentDevice()->AccessQueueSafely([graphicsQueue, vulkanQueueSubmitInfo]()
+				{
+					vkQueueSubmit(graphicsQueue, 1, &vulkanQueueSubmitInfo, VK_NULL_HANDLE);
+					vkQueueWaitIdle(graphicsQueue);
+				});
+		}
+
+	} // namespace Utils
 
 	Ref<StaticMesh> MeshImporter::ImportMesh(AssetHandle handle, const AssetMetadata& metadata)
 	{
@@ -225,6 +267,7 @@ namespace Flameberry {
 
 			vertexBuffer = std::make_unique<Buffer>(vertexBufferSpec);
 			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), vertexBuffer->GetVulkanBuffer(), bufferSize);
+			Utils::AssetThread_CopyBuffer(stagingBuffer.GetVulkanBuffer(), vertexBuffer->GetVulkanBuffer(), bufferSize);
 		}
 
 		{
@@ -250,7 +293,8 @@ namespace Flameberry {
 			indexBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 			indexBuffer = std::make_unique<Buffer>(indexBufferSpec);
-			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), indexBuffer->GetVulkanBuffer(), bufferSize);
+			// RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), indexBuffer->GetVulkanBuffer(), bufferSize);
+			Utils::AssetThread_CopyBuffer(stagingBuffer.GetVulkanBuffer(), indexBuffer->GetVulkanBuffer(), bufferSize);
 		}
 
 		FBY_INFO("Loaded Model: '{}': Vertices: {}, Indices: {}", path, vertices.size(), indices.size());

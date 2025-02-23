@@ -646,7 +646,7 @@ namespace Flameberry {
 			{
 				const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
 
-				if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
+				if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
 				{
 					ModelMatrixPushConstantData pushContantData;
 					pushContantData.ModelMatrix = transform.CalculateTransform();
@@ -672,26 +672,29 @@ namespace Flameberry {
 
 		/////////////////////////////////////////// Skymap Rendering ////////////////////////////////////////////
 
-		bool shouldRenderSkymap = skymap && skymap->EnableSkymap && AssetManager::IsAssetHandleValid(skymap->Skymap);
+		bool shouldRenderSkymap = skymap && skymap->EnableSkymap;
 		VkDescriptorSet textureDescSet = VK_NULL_HANDLE;
 
 		if (shouldRenderSkymap)
 		{
-			VkPipelineLayout pipelineLayout = m_SkymapPipeline->GetVulkanPipelineLayout();
-			textureDescSet = AssetManager::GetAsset<Skymap>(skymap->Skymap)->GetDescriptorSet()->GetVulkanDescriptorSet();
+			if (Ref<Skymap> skymapAsset = AssetManager::GetAsset<Skymap>(skymap->Skymap))
+			{
+				VkPipelineLayout pipelineLayout = m_SkymapPipeline->GetVulkanPipelineLayout();
+				textureDescSet = skymapAsset->GetDescriptorSet()->GetVulkanDescriptorSet();
 
-			SkymapPushConstantObject pco;
-			pco.ViewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
-			pco.Exposure = m_RendererSettings.Exposure;
+				SkymapPushConstantObject pco;
+				pco.ViewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
+				pco.Exposure = m_RendererSettings.Exposure;
 
-			Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-				{
-					Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-					VkDescriptorSet descSets[] = { textureDescSet };
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
-					vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SkymapPushConstantObject), &pco);
-					vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
-				});
+				Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+					{
+						Renderer::RT_BindPipeline(cmdBuffer, pipeline);
+						VkDescriptorSet descSets[] = { textureDescSet };
+						vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
+						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SkymapPushConstantObject), &pco);
+						vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
+					});
+			}
 		}
 
 		///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
@@ -714,7 +717,7 @@ namespace Flameberry {
         for (const auto& entity : scene->GetRegistry()->view<TransformComponent, MeshComponent>())
         {
             const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
-            if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle); staticMesh)
+            if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle); staticMesh)
                 Renderer::SubmitMeshWithMaterial(staticMesh, m_MeshPipeline, mesh.OverridenMaterialTable, transform.GetTransform());
         }
 #else
@@ -735,7 +738,7 @@ namespace Flameberry {
 		{
 			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
 
-			if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
+			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
 			{
 				uint32_t submeshIndex = 0;
 
@@ -1042,7 +1045,7 @@ namespace Flameberry {
 		{
 			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
 
-			if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
+			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
 			{
 				MousePickingPushConstantData pushContantData;
 				pushContantData.ModelMatrix = transform.CalculateTransform();

@@ -147,7 +147,7 @@ namespace Flameberry {
 			vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures2);
 
 			bool isPhysicalDeviceValid = indices.GraphicsQueueFamilyIndex != -1
-				&& indices.ComputeQueueFamilyIndex!= -1
+				&& indices.ComputeQueueFamilyIndex != -1
 				&& indices.PresentationSupportedQueueFamilyIndex != -1
 				&& foundRequiredExtensions
 				&& isSwapchainAdequate

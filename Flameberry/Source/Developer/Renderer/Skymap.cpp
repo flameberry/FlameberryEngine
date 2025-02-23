@@ -475,7 +475,12 @@ namespace Flameberry {
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &vulkanCmdBuffer;
 
-		VK_CHECK_RESULT(vkQueueSubmit(VulkanContext::GetCurrentDevice()->GetComputeQueue(), 1, &submitInfo, VK_NULL_HANDLE));
+		auto computeQueue = VulkanContext::GetCurrentDevice()->GetComputeQueue();
+
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely([submitInfo]()
+			{
+				VK_CHECK_RESULT(vkQueueSubmit(VulkanContext::GetCurrentDevice()->GetComputeQueue(), 1, &submitInfo, VK_NULL_HANDLE));
+			});
 
 		// Now that all the processing is done, we need to bring all the skymap resources into a descriptor set to be used later by the PBR pipeline
 		std::vector<VkDescriptorSetLayoutBinding> descBindings = {

@@ -35,8 +35,6 @@ namespace Flameberry {
 
 		if (m_SelectionContext != FEntity::Null)
 		{
-			UI::ScopedStyleColor borderColor(ImGuiCol_Border, Theme::FrameBorder);
-
 			auto& tag = m_Context->GetRegistry()->GetComponent<TagComponent>(m_SelectionContext);
 			ImFont* bigFont = ImGui::GetIO().Fonts->Fonts[0];
 			ImGuiStyle& style = ImGui::GetStyle();

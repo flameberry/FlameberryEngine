@@ -48,7 +48,7 @@ namespace Flameberry {
 				commandBuffer = CreateRef<CommandBuffer>(cmdBufferSpec);
 		}
 
-		s_CommandQueue.reserve(5 * 1028 * 1028 / sizeof(Renderer::Command)); // 5 MB
+		s_CommandQueue.reserve(5 * 1024 * 1024 / sizeof(Renderer::Command)); // 5 MB
 
 		// Load Generic Resources
 		s_CheckerboardTexture = TextureImporter::LoadTexture2D(FBY_PROJECT_DIR "Flameberry/Assets/Icons/Checkerboard.png");
@@ -139,12 +139,13 @@ namespace Flameberry {
 		s_RT_FrameIndex = (s_RT_FrameIndex + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
 	}
 
-	/// @brief Obsolete: This function is used to render a single mesh by individually binding it's resources.
-	/// It shouldn't be preferred anymore, as redundant bindings are a problem using this.
-	/// @param mesh - The mesh to be rendered
-	/// @param pipeline - The mesh pipeline
-	/// @param materialTable - The corresponding material table
-	/// @param transform - The transform matrix
+	/** @brief Obsolete: This function is used to render a single mesh by individually binding it's resources.
+	 * It shouldn't be preferred anymore, as redundant bindings are a problem using this.
+	 * @param mesh - The mesh to be rendered
+	 * @param pipeline - The mesh pipeline
+	 * @param materialTable - The corresponding material table
+	 * @param transform - The transform matrix
+	 */
 	void Renderer::SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform)
 	{
 		Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
