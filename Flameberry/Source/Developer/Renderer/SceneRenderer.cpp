@@ -677,7 +677,9 @@ namespace Flameberry {
 
 		if (shouldRenderSkymap)
 		{
-			if (Ref<Skymap> skymapAsset = AssetManager::GetAsset<Skymap>(skymap->Skymap))
+			Ref<Skymap> skymapAsset = AssetManager::GetAssetAsync<Skymap>(skymap->Skymap);
+
+			if (shouldRenderSkymap = shouldRenderSkymap && skymapAsset)
 			{
 				VkPipelineLayout pipelineLayout = m_SkymapPipeline->GetVulkanPipelineLayout();
 				textureDescSet = skymapAsset->GetDescriptorSet()->GetVulkanDescriptorSet();

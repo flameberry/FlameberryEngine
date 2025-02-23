@@ -39,8 +39,8 @@ namespace Flameberry {
 		void EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute = false) const;
 
 		void WaitIdle() const;
-		void WaitIdleGraphicsQueue() const;
-		void WaitIdleComputeQueue() const;
+		void WaitIdleGraphicsQueue();
+		void WaitIdleComputeQueue();
 
 		std::vector<VkDeviceQueueCreateInfo> CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices);
 

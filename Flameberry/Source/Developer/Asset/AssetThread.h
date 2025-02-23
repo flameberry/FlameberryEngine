@@ -13,10 +13,13 @@ namespace Flameberry {
 	class AssetThread
 	{
 	public:
-		static Ref<Asset> QueueLoad(AssetHandle handle, const AssetMetadata& metadata);
+		AssetThread();
+		~AssetThread();
+
+		Ref<Asset> QueueLoad(AssetHandle handle, const AssetMetadata& metadata);
 
 	private:
-		static void Main();
+		void Main();
 
 	private:
 		struct AssetLoadParameters
@@ -26,15 +29,17 @@ namespace Flameberry {
 		};
 
 	private:
+		std::atomic<bool> m_Running;
+
 		// The assets whose load is pending are kept here
-		static std::queue<AssetLoadParameters> s_AssetLoadParametersQueue;
-		static std::mutex s_AssetLoadQueueMutex;
+		std::queue<AssetLoadParameters> m_AssetLoadParametersQueue;
+		std::mutex m_AssetLoadQueueMutex;
 
 		// The assets which are loaded and ready are stored here until they are returned to the requester
-		static std::unordered_map<AssetHandle, Ref<Asset>> s_ReadyAssetMap;
-		static std::mutex s_ReadyAssetMapMutex;
+		std::unordered_map<AssetHandle, Ref<Asset>> m_ReadyAssetMap;
+		std::mutex m_ReadyAssetMapMutex;
 
-		static std::thread s_AssetThread;
+		std::thread m_AssetThread;
 	};
 
 } // namespace Flameberry

@@ -155,13 +155,15 @@ namespace Flameberry {
 		vkDeviceWaitIdle(m_VulkanDevice);
 	}
 
-	void VulkanDevice::WaitIdleGraphicsQueue() const
+	void VulkanDevice::WaitIdleGraphicsQueue()
 	{
+		std::scoped_lock lock(m_QueueMutex);
 		vkQueueWaitIdle(m_GraphicsQueue);
 	}
 
-	void VulkanDevice::WaitIdleComputeQueue() const
+	void VulkanDevice::WaitIdleComputeQueue()
 	{
+		std::scoped_lock lock(m_QueueMutex);
 		vkQueueWaitIdle(m_ComputeQueue);
 	}
 

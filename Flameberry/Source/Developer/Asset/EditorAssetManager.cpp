@@ -94,7 +94,7 @@ namespace Flameberry {
 		else
 		{
 			// 4. Queue Loading of Asset if not already loaded
-			asset = AssetThread::QueueLoad(handle, metadata);
+			asset = m_AssetThread->QueueLoad(handle, metadata);
 
 			if (asset)
 			{
