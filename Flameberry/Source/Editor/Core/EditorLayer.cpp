@@ -279,6 +279,7 @@ namespace Flameberry {
 		bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left)
 			&& m_DidViewportBegin
 			&& !m_IsAnyOverlayHovered
+			&& !m_IsCameraMoving
 			&& !m_IsGizmoActive;
 
 		if (attemptedToSelect)
@@ -411,8 +412,15 @@ namespace Flameberry {
 			projectionMatrix[1][1] *= -1;
 			glm::mat4 viewMatrix = m_ActiveCameraController.GetCamera().GetViewMatrix();
 
+			auto& style = ImGuizmo::GetStyle();
+			style.Colors[ImGuizmo::COLOR::DIRECTION_X] = ImGui::ColorConvertU32ToFloat4(0xFF715ED8);
+			style.Colors[ImGuizmo::COLOR::DIRECTION_Y] = ImGui::ColorConvertU32ToFloat4(0xFF25AA25);
+			style.Colors[ImGuizmo::COLOR::DIRECTION_Z] = ImGui::ColorConvertU32ToFloat4(0xFFCC532C);
+			style.Colors[ImGuizmo::COLOR::SELECTION] = ImGui::ColorConvertU32ToFloat4(0xFF20AACC);
+
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
+			ImGuizmo::SetGizmoSizeClipSpace(0.155f);
 
 			float windowWidth = (float)ImGui::GetWindowWidth();
 			float windowHeight = (float)ImGui::GetWindowHeight();
