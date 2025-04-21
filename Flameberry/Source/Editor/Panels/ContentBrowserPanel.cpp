@@ -182,10 +182,10 @@ namespace Flameberry {
 
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
 
-		if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
+		if (ImGui::ImageButton("##BackArrow", reinterpret_cast<ImTextureID>(m_IconTextures[FBY_BACK_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
 			m_CurrentDirectory = m_CurrentDirectory.parent_path();
 		ImGui::SameLine(0.0f, 0.0f);
-		if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
+		if (ImGui::ImageButton("##ForwardArrow", reinterpret_cast<ImTextureID>(m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet()), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
 			m_CurrentDirectory = m_CurrentDirectory.parent_path();
 
 		ImGui::SameLine();
