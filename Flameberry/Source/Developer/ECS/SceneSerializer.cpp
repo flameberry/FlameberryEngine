@@ -312,7 +312,7 @@ namespace Flameberry {
 				if (auto script = entity["ScriptComponent"])
 				{
 					auto& scriptComp =
-						destScene->m_Registry->emplace<ScriptComponent>(deserializedEntity);
+						destScene->m_Registry->EmplaceComponent<ScriptComponent>(deserializedEntity);
 					scriptComp.AssemblyQualifiedClassName =
 						script["AssemblyQualifiedClassName"].as<std::string>();
 
@@ -614,9 +614,9 @@ namespace Flameberry {
 			out << YAML::EndMap; // Spot Light Component
 		}
 
-		if (scene->m_Registry->has<ScriptComponent>(entity))
+		if (scene->m_Registry->HasComponent<ScriptComponent>(entity))
 		{
-			auto& script = scene->m_Registry->get<ScriptComponent>(entity);
+			auto& script = scene->m_Registry->GetComponent<ScriptComponent>(entity);
 			out << YAML::Key << "ScriptComponent" << YAML::BeginMap;
 			out << YAML::Key << "AssemblyQualifiedClassName" << YAML::Value
 				<< script.AssemblyQualifiedClassName;
@@ -700,7 +700,7 @@ namespace Flameberry {
 			out << YAML::EndMap; // Script Component
 		}
 
-		if (scene->m_Registry->has<RigidBodyComponent>(entity))
+		if (scene->m_Registry->HasComponent<RigidBodyComponent>(entity))
 		{
 			auto& rigidBody = scene->m_Registry->GetComponent<RigidBodyComponent>(entity);
 			out << YAML::Key << "RigidBodyComponent" << YAML::BeginMap;

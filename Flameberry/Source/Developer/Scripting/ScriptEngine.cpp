@@ -177,13 +177,13 @@ namespace Flameberry {
 		// Also used to keep track of all loaded user classes
 		std::unordered_map<std::string, Ref<ManagedClass>> ClassFullNameToManagedClass;
 		// Used to manage runtime actors in the scene
-		std::unordered_map<fbentt::entity::handle_type, Ref<ManagedActor>> ManagedActors;
+		std::unordered_map<FEntity::THandleType, Ref<ManagedActor>> ManagedActors;
 
-		using HasComponentFunction = bool (*)(fbentt::entity entity);
+		using HasComponentFunction = bool (*)(FEntity entity);
 		std::unordered_map<MonoType*, HasComponentFunction> ComponentTypeHashToHasComponentFunction;
 
 		// Editor Specific Field Buffers
-		std::unordered_map<fbentt::entity::handle_type, ScriptFieldBufferMap> LocalScriptFieldBufferMap;
+		std::unordered_map<FEntity::THandleType, ScriptFieldBufferMap> LocalScriptFieldBufferMap;
 	};
 
 	static ScriptEngineData* s_Data;
@@ -208,282 +208,282 @@ namespace Flameberry {
 			glm::vec3& translation)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			translation = s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Translation;
+			translation = s_Data->ActiveScene->GetRegistry()->GetComponent<TransformComponent>(entity).Translation;
 		}
 
 		void TransformComponent_SetTranslation(uint64_t entity,
 			const glm::vec3& translation)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Translation = translation;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<TransformComponent>(entity).Translation = translation;
 		}
 
 		void TransformComponent_GetRotation(uint64_t entity, glm::vec3& rotation)
 		{
 			FBY_ASSERT(s_Data->ActiveScene,
 				"InternalCall: Active scene must not be null");
-			rotation = s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Rotation;
+			rotation = s_Data->ActiveScene->GetRegistry()->GetComponent<TransformComponent>(entity).Rotation;
 		}
 
 		void TransformComponent_SetRotation(uint64_t entity,
 			const glm::vec3& rotation)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Rotation = rotation;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<TransformComponent>(entity).Rotation = rotation;
 		}
 
 		void TransformComponent_GetScale(uint64_t entity, glm::vec3& scale)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			scale = s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Scale;
+			scale = s_Data->ActiveScene->GetRegistry()->GetComponent<TransformComponent>(entity).Scale;
 		}
 
 		void TransformComponent_SetScale(uint64_t entity, const glm::vec3& scale)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<TransformComponent>(entity).Scale = scale;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<TransformComponent>(entity).Scale = scale;
 		}
 
 		void CameraComponent_GetIsPrimary(uint64_t entity, bool& isPrimary)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			isPrimary = s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).IsPrimary;
+			isPrimary = s_Data->ActiveScene->GetRegistry()->GetComponent<CameraComponent>(entity).IsPrimary;
 		}
 
 		// Need to take in uint8_t instead of bool for some reason to make it work
 		void CameraComponent_SetIsPrimary(uint64_t entity, uint8_t isPrimary)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).IsPrimary = (bool)isPrimary;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<CameraComponent>(entity).IsPrimary = (bool)isPrimary;
 		}
 
 		void CameraComponent_GetProjectionType(uint64_t entity,
 			ProjectionType& projectionType)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			projectionType = s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.GetSettings().ProjectionType;
+			projectionType = s_Data->ActiveScene->GetRegistry()->GetComponent<CameraComponent>(entity).Camera.GetSettings().ProjectionType;
 		}
 
 		void CameraComponent_SetProjectionType(uint64_t entity,
 			const ProjectionType& projectionType)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.SetProjectionType(projectionType);
+			s_Data->ActiveScene->GetRegistry()->GetComponent<CameraComponent>(entity).Camera.SetProjectionType(projectionType);
 		}
 
 		void CameraComponent_GetFOVOrZoom(uint64_t entity, float& fovOrZoom)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			fovOrZoom = s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.GetSettings().FOV;
+			fovOrZoom = s_Data->ActiveScene->GetRegistry()->GetComponent<CameraComponent>(entity).Camera.GetSettings().FOV;
 		}
 
 		void CameraComponent_SetFOVOrZoom(uint64_t entity, float fovOrZoom)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.UpdateWithFOVorZoom(fovOrZoom);
+			s_Data->ActiveScene->GetRegistry()->GetComponent<CameraComponent>(entity).Camera.UpdateWithFOVorZoom(fovOrZoom);
 		}
 
 		void CameraComponent_GetNear(uint64_t entity, float& near)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			near = s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.GetSettings().Near;
+			near = s_Data->ActiveScene->GetRegistry()->GetComponent<CameraComponent>(entity).Camera.GetSettings().Near;
 		}
 
 		void CameraComponent_SetNear(uint64_t entity, float near)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.UpdateWithNear(near);
+			s_Data->ActiveScene->GetRegistry()->GetComponent<CameraComponent>(entity).Camera.UpdateWithNear(near);
 		}
 
 		void CameraComponent_GetFar(uint64_t entity, float& far)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			far = s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.GetSettings().Far;
+			far = s_Data->ActiveScene->GetRegistry()->GetComponent<CameraComponent>(entity).Camera.GetSettings().Far;
 		}
 
 		void CameraComponent_SetFar(uint64_t entity, float far)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<CameraComponent>(entity).Camera.UpdateWithFar(far);
+			s_Data->ActiveScene->GetRegistry()->GetComponent<CameraComponent>(entity).Camera.UpdateWithFar(far);
 		}
 
 		void SkyLightComponent_GetColor(uint64_t entity, glm::vec3& color)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			color = s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).Color;
+			color = s_Data->ActiveScene->GetRegistry()->GetComponent<SkyLightComponent>(entity).Color;
 		}
 
 		void SkyLightComponent_SetColor(uint64_t entity, const glm::vec3& color)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).Color = color;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<SkyLightComponent>(entity).Color = color;
 		}
 
 		void SkyLightComponent_GetIntensity(uint64_t entity, float& intensity)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			intensity = s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).Intensity;
+			intensity = s_Data->ActiveScene->GetRegistry()->GetComponent<SkyLightComponent>(entity).Intensity;
 		}
 
 		void SkyLightComponent_SetIntensity(uint64_t entity, float intensity)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).Intensity = intensity;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<SkyLightComponent>(entity).Intensity = intensity;
 		}
 
 		void SkyLightComponent_GetEnableSkyMap(uint64_t entity, bool& enableSkyMap)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			enableSkyMap = s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableSkymap;
+			enableSkyMap = s_Data->ActiveScene->GetRegistry()->GetComponent<SkyLightComponent>(entity).EnableSkymap;
 		}
 
 		void SkyLightComponent_SetEnableSkyMap(uint64_t entity, uint8_t enableSkyMap)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableSkymap = (bool)enableSkyMap;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<SkyLightComponent>(entity).EnableSkymap = (bool)enableSkyMap;
 		}
 
 		void SkyLightComponent_GetEnableReflections(uint64_t entity,
 			bool& enableReflections)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			enableReflections = s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableReflections;
+			enableReflections = s_Data->ActiveScene->GetRegistry()->GetComponent<SkyLightComponent>(entity).EnableReflections;
 		}
 
 		void SkyLightComponent_SetEnableReflections(uint64_t entity,
 			uint8_t enableReflections)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<SkyLightComponent>(entity).EnableReflections = (bool)enableReflections;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<SkyLightComponent>(entity).EnableReflections = (bool)enableReflections;
 		}
 
 		void DirectionalLightComponent_GetColor(uint64_t entity, glm::vec3& color)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			color = s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).Color;
+			color = s_Data->ActiveScene->GetRegistry()->GetComponent<DirectionalLightComponent>(entity).Color;
 		}
 
 		void DirectionalLightComponent_SetColor(uint64_t entity,
 			const glm::vec3& color)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).Color = color;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<DirectionalLightComponent>(entity).Color = color;
 		}
 
 		void DirectionalLightComponent_GetIntensity(uint64_t entity, float& intensity)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			intensity = s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).Intensity;
+			intensity = s_Data->ActiveScene->GetRegistry()->GetComponent<DirectionalLightComponent>(entity).Intensity;
 		}
 
 		void DirectionalLightComponent_SetIntensity(uint64_t entity,
 			const float& intensity)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).Intensity = intensity;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<DirectionalLightComponent>(entity).Intensity = intensity;
 		}
 
 		void DirectionalLightComponent_GetLightSize(uint64_t entity, float& lightSize)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			lightSize = s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).LightSize;
+			lightSize = s_Data->ActiveScene->GetRegistry()->GetComponent<DirectionalLightComponent>(entity).LightSize;
 		}
 
 		void DirectionalLightComponent_SetLightSize(uint64_t entity,
 			const float& lightSize)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<DirectionalLightComponent>(entity).LightSize = lightSize;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<DirectionalLightComponent>(entity).LightSize = lightSize;
 		}
 
 		void PointLightComponent_GetColor(uint64_t entity, glm::vec3& color)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			color = s_Data->ActiveScene->GetRegistry()->get<PointLightComponent>(entity).Color;
+			color = s_Data->ActiveScene->GetRegistry()->GetComponent<PointLightComponent>(entity).Color;
 		}
 
 		void PointLightComponent_SetColor(uint64_t entity, const glm::vec3& color)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<PointLightComponent>(entity).Color = color;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<PointLightComponent>(entity).Color = color;
 		}
 
 		void PointLightComponent_GetIntensity(uint64_t entity, float& intensity)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			intensity = s_Data->ActiveScene->GetRegistry()->get<PointLightComponent>(entity).Intensity;
+			intensity = s_Data->ActiveScene->GetRegistry()->GetComponent<PointLightComponent>(entity).Intensity;
 		}
 
 		void PointLightComponent_SetIntensity(uint64_t entity, const float& intensity)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<PointLightComponent>(entity).Intensity = intensity;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<PointLightComponent>(entity).Intensity = intensity;
 		}
 
 		void RigidBodyComponent_GetRigidBodyType(
 			uint64_t entity, RigidBodyComponent::RigidBodyType& rigidBodyType)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			rigidBodyType = s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Type;
+			rigidBodyType = s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).Type;
 		}
 
 		void RigidBodyComponent_SetRigidBodyType(
 			uint64_t entity, const RigidBodyComponent::RigidBodyType& rigidBodyType)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Type = rigidBodyType;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).Type = rigidBodyType;
 		}
 
 		void RigidBodyComponent_GetDensity(uint64_t entity, float& density)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			density = s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Density;
+			density = s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).Density;
 		}
 
 		void RigidBodyComponent_SetDensity(uint64_t entity, float density)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Density = density;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).Density = density;
 		}
 
 		void RigidBodyComponent_GetStaticFriction(uint64_t entity,
 			float& staticFriction)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			staticFriction = s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).StaticFriction;
+			staticFriction = s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).StaticFriction;
 		}
 
 		void RigidBodyComponent_SetStaticFriction(uint64_t entity,
 			float staticFriction)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).StaticFriction = staticFriction;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).StaticFriction = staticFriction;
 		}
 
 		void RigidBodyComponent_GetDynamicFriction(uint64_t entity,
 			float& dynamicFriction)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			dynamicFriction = s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).DynamicFriction;
+			dynamicFriction = s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).DynamicFriction;
 		}
 
 		void RigidBodyComponent_SetDynamicFriction(uint64_t entity,
 			float dynamicFriction)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).DynamicFriction = dynamicFriction;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).DynamicFriction = dynamicFriction;
 		}
 
 		void RigidBodyComponent_GetRestitution(uint64_t entity, float& restitution)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			restitution = s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Restitution;
+			restitution = s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).Restitution;
 		}
 
 		void RigidBodyComponent_SetRestitution(uint64_t entity, float restitution)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).Restitution = restitution;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).Restitution = restitution;
 		}
 
 		enum class ForceMode : uint8_t
@@ -498,62 +498,62 @@ namespace Flameberry {
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
 
-			JPH::Body* rigidBodyRuntimePtr = (JPH::Body*)s_Data->ActiveScene->GetRegistry()->get<RigidBodyComponent>(entity).RuntimeRigidBody;
+			JPH::Body* rigidBodyRuntimePtr = (JPH::Body*)s_Data->ActiveScene->GetRegistry()->GetComponent<RigidBodyComponent>(entity).RuntimeRigidBody;
 			rigidBodyRuntimePtr->AddForce(JPH::RVec3(force.x, force.y, force.z));
 		}
 
 		void BoxColliderComponent_GetSize(uint64_t entity, glm::vec3& size)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			size = s_Data->ActiveScene->GetRegistry()->get<BoxColliderComponent>(entity).Size;
+			size = s_Data->ActiveScene->GetRegistry()->GetComponent<BoxColliderComponent>(entity).Size;
 		}
 
 		void BoxColliderComponent_SetSize(uint64_t entity, const glm::vec3& size)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<BoxColliderComponent>(entity).Size = size;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<BoxColliderComponent>(entity).Size = size;
 		}
 
 		void SphereColliderComponent_GetRadius(uint64_t entity, float& radius)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			radius = s_Data->ActiveScene->GetRegistry()->get<SphereColliderComponent>(entity).Radius;
+			radius = s_Data->ActiveScene->GetRegistry()->GetComponent<SphereColliderComponent>(entity).Radius;
 		}
 
 		void CapsuleColliderComponent_GetAxisType(uint64_t entity, AxisType& axisType)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			axisType = s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Axis;
+			axisType = s_Data->ActiveScene->GetRegistry()->GetComponent<CapsuleColliderComponent>(entity).Axis;
 		}
 
 		void CapsuleColliderComponent_SetAxisType(uint64_t entity, const AxisType& axisType)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Axis = axisType;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<CapsuleColliderComponent>(entity).Axis = axisType;
 		}
 
 		void CapsuleColliderComponent_GetRadius(uint64_t entity, float& radius)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			radius = s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Radius;
+			radius = s_Data->ActiveScene->GetRegistry()->GetComponent<CapsuleColliderComponent>(entity).Radius;
 		}
 
 		void CapsuleColliderComponent_SetRadius(uint64_t entity, float radius)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Radius = radius;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<CapsuleColliderComponent>(entity).Radius = radius;
 		}
 
 		void CapsuleColliderComponent_GetHeight(uint64_t entity, float& height)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			height = s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Height;
+			height = s_Data->ActiveScene->GetRegistry()->GetComponent<CapsuleColliderComponent>(entity).Height;
 		}
 
 		void CapsuleColliderComponent_SetHeight(uint64_t entity, float height)
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
-			s_Data->ActiveScene->GetRegistry()->get<CapsuleColliderComponent>(entity).Height = height;
+			s_Data->ActiveScene->GetRegistry()->GetComponent<CapsuleColliderComponent>(entity).Height = height;
 		}
 	} // namespace InternalCalls
 
@@ -723,10 +723,10 @@ namespace Flameberry {
 		MonoType* managedType = mono_reflection_type_from_name((char*)fmt::format("Flameberry.{}", name).c_str(), s_Data->CoreAssemblyImage);
 		FBY_ASSERT(managedType != nullptr, "Internal Error: Component not available in Script-Core");
 
-		s_Data->ComponentTypeHashToHasComponentFunction[managedType] = [](fbentt::entity entity) -> bool
+		s_Data->ComponentTypeHashToHasComponentFunction[managedType] = [](FEntity entity) -> bool
 		{
 			FBY_ASSERT(s_Data->ActiveScene, "Internal Error: Scene should not be nullptr");
-			return s_Data->ActiveScene->GetRegistry()->has<Component>(entity);
+			return s_Data->ActiveScene->GetRegistry()->HasComponent<Component>(entity);
 		};
 	}
 
@@ -769,9 +769,9 @@ namespace Flameberry {
 			return;
 
 		for (const auto entity :
-			s_Data->ActiveScene->GetRegistry()->group<ScriptComponent>())
+			s_Data->ActiveScene->GetRegistry()->Group<ScriptComponent>())
 		{
-			auto& sc = s_Data->ActiveScene->GetRegistry()->get<ScriptComponent>(entity);
+			auto& sc = s_Data->ActiveScene->GetRegistry()->GetComponent<ScriptComponent>(entity);
 
 			// This should prevent any empty named entity from participating in the scripting process
 			if (!sc.AssemblyQualifiedClassName.empty())
@@ -819,7 +819,7 @@ namespace Flameberry {
 		return s_Data->ClassFullNameToManagedClass;
 	}
 
-	Ref<ManagedActor> ScriptEngine::GetManagedActor(fbentt::entity entity)
+	Ref<ManagedActor> ScriptEngine::GetManagedActor(FEntity entity)
 	{
 		auto it = s_Data->ManagedActors.find(entity);
 		if (it == s_Data->ManagedActors.end())
@@ -830,7 +830,7 @@ namespace Flameberry {
 		return it->second;
 	}
 
-	std::unordered_map<fbentt::entity::handle_type, ScriptFieldBufferMap>& ScriptEngine::GetLocalScriptFieldBufferMap()
+	std::unordered_map<FEntity::THandleType, ScriptFieldBufferMap>& ScriptEngine::GetLocalScriptFieldBufferMap()
 	{
 		return s_Data->LocalScriptFieldBufferMap;
 	}
@@ -915,7 +915,7 @@ namespace Flameberry {
 	// ------------------------------------ Managed Actor
 	// ------------------------------------
 
-	ManagedActor::ManagedActor(const Ref<ManagedClass>& managedClass, fbentt::entity entity)
+	ManagedActor::ManagedActor(const Ref<ManagedClass>& managedClass, FEntity entity)
 		: m_ManagedClass(managedClass)
 	{
 		m_Constructor = s_Data->ActorClass->GetClassMethod(".ctor", 1);

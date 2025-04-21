@@ -108,7 +108,7 @@ namespace Flameberry {
 	class ManagedActor
 	{
 	public:
-		ManagedActor(const Ref<ManagedClass>& managedClass, fbentt::entity entity);
+		ManagedActor(const Ref<ManagedClass>& managedClass, FEntity entity);
 		~ManagedActor();
 
 		Ref<ManagedClass> GetManagedClass() const { return m_ManagedClass; }
@@ -170,8 +170,8 @@ namespace Flameberry {
 		static void OnRuntimeStop();
 		static void OnRuntimeUpdate(float delta);
 
-		static Ref<ManagedActor> GetManagedActor(fbentt::entity entity);
-		static std::unordered_map<fbentt::entity::handle_type, ScriptFieldBufferMap>&
+		static Ref<ManagedActor> GetManagedActor(FEntity entity);
+		static std::unordered_map<FEntity::THandleType, ScriptFieldBufferMap>&
 		GetLocalScriptFieldBufferMap();
 
 	private:

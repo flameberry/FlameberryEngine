@@ -547,7 +547,7 @@ namespace Flameberry {
 
 			DrawComponent<ScriptComponent>(ICON_LC_SCROLL " Script", [&]()
 				{
-					auto& sc = m_Context->GetRegistry()->get<ScriptComponent>(m_SelectionContext);
+					auto& sc = m_Context->GetRegistry()->GetComponent<ScriptComponent>(m_SelectionContext);
 
 					if (ImGui::BeginTable("ScriptComponentAttributes", 2, s_TableFlags))
 					{
