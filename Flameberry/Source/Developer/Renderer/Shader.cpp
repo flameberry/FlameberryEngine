@@ -61,7 +61,7 @@ namespace Flameberry {
 				case SPV_REFLECT_FORMAT_R64G64B64A64_SFLOAT:
 					return ShaderDataType::Float4;
 				default:
-					FBY_ASSERT(0, "Type Description of Flag: {} not handled by Shader Class!");
+					FBY_ASSERT(0, "Type Description of Flag: {} not handled by Shader Class!", (uint8_t)format);
 					return ShaderDataType::None;
 			}
 		}
@@ -301,14 +301,14 @@ namespace Flameberry {
 					}
 
 					ReflectionDescriptorBindingSpecification reflectionDescriptorBindingSpecification{
-						fullName, // Name
-						binding->set, // Set
-						binding->binding, // Binding
-						binding->count, // Count
-						(VkDescriptorType)binding->descriptor_type, // Type
+						fullName,													 // Name
+						binding->set,												 // Set
+						binding->binding,											 // Binding
+						binding->count,												 // Count
+						(VkDescriptorType)binding->descriptor_type,					 // Type
 						(VkShaderStageFlags)reflectionShaderModule.GetShaderStage(), // VulkanShaderStage
-						rendererOnly, // IsRendererOnly
-						isDescriptorTypeImage // IsDescriptorTypeImage
+						rendererOnly,												 // IsRendererOnly
+						isDescriptorTypeImage										 // IsDescriptorTypeImage
 					};
 
 					uint64_t combinedValue = Utils::CantorPairingFunction(binding->set, binding->binding);

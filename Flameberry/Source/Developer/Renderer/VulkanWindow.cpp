@@ -72,7 +72,7 @@ namespace Flameberry {
 				WindowResizedEvent event(width, height);
 				pWindow->m_EventCallBack(event);
 
-				FBY_LOG(event.ToString());
+				FBY_LOG("{}", event.ToString());
 			});
 
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)

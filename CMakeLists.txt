@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 # Main Project
 project(FlameberryEngine VERSION 1.0)
 
-# C++17 or higher version of C++ Required
-set(CMAKE_CXX_STANDARD 17)
+# C++20 or higher version of C++ Required
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 # Xcode scheme generation is helpful for things like passing command line arguments for development

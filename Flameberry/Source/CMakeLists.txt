@@ -7,10 +7,20 @@ set(INTERPROCEDURAL_OPTIMIZATION ON)
 add_subdirectory(ThirdParty/JoltPhysics/Build)
 SET_INTERPROCEDURAL_OPTIMIZATION()
 
+# SPIRV-Reflect
+set(SPIRV_REFLECT_EXECUTABLE OFF CACHE BOOL "Build SPIRV-Reflect executable" FORCE)
+set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build SPIRV-Reflect as a static library" FORCE)
+add_subdirectory(ThirdParty/SPIRV-Reflect)
+
+# Add MsdfAtlasGen and it's dependencies
+add_subdirectory(ThirdParty/MsdfAtlasGen)
+
 if(WIN32)
     set(ASSIMP_WARNINGS_AS_ERRORS OFF)
 endif()
 
+set(ASSIMP_INSTALL OFF)
+set(ASSIMP_BUILD_ZLIB OFF CACHE BOOL "Assimp Build ZLib" FORCE)
 add_subdirectory(ThirdParty/Assimp)
 
 if(APPLE)
@@ -21,14 +31,6 @@ endif()
 # This is to ensure the include/assimp/config.h that is generated in the assimp build directory is found
 get_target_property(ASSIMP_INCLUDE_DIRS assimp INTERFACE_INCLUDE_DIRECTORIES)
 list(APPEND FBY_INCLUDE_DIRS ${ASSIMP_INCLUDE_DIRS})
-
-# SPIRV-Reflect
-set(SPIRV_REFLECT_EXECUTABLE OFF CACHE BOOL "Build SPIRV-Reflect executable" FORCE)
-set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build SPIRV-Reflect as a static library" FORCE)
-add_subdirectory(ThirdParty/SPIRV-Reflect)
-
-# Add MsdfAtlasGen and it's dependencies
-add_subdirectory(ThirdParty/MsdfAtlasGen)
 
 # Add Source Targets
 add_subdirectory(Developer)

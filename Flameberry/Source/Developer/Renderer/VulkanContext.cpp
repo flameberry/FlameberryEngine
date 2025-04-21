@@ -19,7 +19,7 @@ namespace Flameberry {
 #endif
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		VK_KHR_MULTIVIEW_EXTENSION_NAME,
-		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME
+		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
 	};
 
 	VulkanContext* VulkanContext::s_CurrentContext = nullptr;
