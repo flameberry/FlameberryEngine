@@ -45,7 +45,7 @@ namespace Flameberry {
 		void Set<Ref<Texture2D>>(const std::string& uniformName, const Ref<Texture2D>& texture)
 		{
 			const auto& binding = m_Shader->GetBinding(uniformName);
-			FBY_ASSERT(binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor");
+			FBY_ASSERT(binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor", uniformName);
 
 			// How to assemble this?
 			VkDescriptorImageInfo imageInfo{};
@@ -61,7 +61,7 @@ namespace Flameberry {
 		void Set(const std::string& uniformName, const Ref<Image>& image, VkSampler sampler, VkImageLayout imageLayout)
 		{
 			const auto& binding = m_Shader->GetBinding(uniformName);
-			FBY_ASSERT(binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor");
+			FBY_ASSERT(binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor", uniformName);
 
 			// How to assemble this?
 			VkDescriptorImageInfo imageInfo{};
@@ -78,7 +78,7 @@ namespace Flameberry {
 		void Set<Ref<Buffer>>(const std::string& uniformName, const Ref<Buffer>& uniformBuffer)
 		{
 			const auto& binding = m_Shader->GetBinding(uniformName);
-			FBY_ASSERT(!binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not a Buffer Descriptor");
+			FBY_ASSERT(!binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not a Buffer Descriptor", uniformName);
 
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = uniformBuffer->GetVulkanBuffer();

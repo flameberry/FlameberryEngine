@@ -4,7 +4,6 @@
 #include <filesystem>
 
 #include "Core/Application.h"
-#include "Asset/AssetManager.h"
 #include "Asset/EditorAssetManager.h"
 #include "Asset/RuntimeAssetManager.h"
 
@@ -106,7 +105,7 @@ namespace Flameberry {
 
 	void Project::Save()
 	{
-		std::string fileName = m_Config.Name + ".fbproj";
+		const std::string fileName = m_Config.Name + ".fbproj";
 		ProjectSerializer::SerializeProject(m_ProjectDirectory / fileName, this);
 	}
 

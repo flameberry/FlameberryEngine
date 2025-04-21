@@ -40,7 +40,7 @@ namespace std {
 	template <>
 	struct hash<Flameberry::DescriptorSetLayoutSpecification>
 	{
-		size_t operator()(const Flameberry::DescriptorSetLayoutSpecification& specification) const
+		size_t operator()(const Flameberry::DescriptorSetLayoutSpecification& specification) const noexcept
 		{
 			// Should 32 bit murmur hash be used? Or should 128 bits hash be used and sliced back to 64 bits?
 			uint32_t hashValue;

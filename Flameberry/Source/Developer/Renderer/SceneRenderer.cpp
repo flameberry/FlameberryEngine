@@ -504,15 +504,15 @@ namespace Flameberry {
 		m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SunIcon.png");
 	}
 
-	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera, const glm::vec3& cameraPosition, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
+	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera, const glm::vec3& cameraPosition, FEntity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
 	{
 		RenderScene(viewportSize, scene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), cameraPosition, camera.GetSettings().Near, camera.GetSettings().Far, selectedEntity, renderGrid, renderDebugIcons, renderOutline, renderPhysicsCollider);
 	}
 
-	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, fbentt::entity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
+	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, FEntity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
 	{
 		uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
-		std::vector<fbentt::entity> pointLightEntityHandles, spotLightEntityHandles;
+		std::vector<FEntity> pointLightEntityHandles, spotLightEntityHandles;
 
 		m_ViewportSize = viewportSize;
 
@@ -554,9 +554,9 @@ namespace Flameberry {
 
 		// Keep the skylight ready
 		SkyLightComponent* skymap = nullptr;
-		for (const auto entity : scene->GetRegistry()->group<TransformComponent, SkyLightComponent>())
+		for (const auto entity : scene->GetRegistry()->Group<TransformComponent, SkyLightComponent>())
 		{
-			skymap = scene->GetRegistry()->try_get<SkyLightComponent>(entity);
+			skymap = scene->GetRegistry()->TryGetComponent<SkyLightComponent>(entity);
 			sceneUniformBufferData.SkyLightIntensity = skymap->Intensity;
 		}
 
@@ -564,9 +564,9 @@ namespace Flameberry {
 		bool shouldRenderShadows = false;
 
 		// Update Directional Lights
-		for (const auto& entity : scene->GetRegistry()->group<TransformComponent, DirectionalLightComponent>())
+		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, DirectionalLightComponent>())
 		{
-			auto [transform, dirLight] = scene->GetRegistry()->get<TransformComponent, DirectionalLightComponent>(entity);
+			auto [transform, dirLight] = scene->GetRegistry()->GetComponent<TransformComponent, DirectionalLightComponent>(entity);
 			sceneUniformBufferData.directionalLight.Color = dirLight.Color;
 			sceneUniformBufferData.directionalLight.Intensity = dirLight.Intensity;
 
@@ -602,9 +602,9 @@ namespace Flameberry {
 		sceneUniformBufferData.RendererSettings.GammaCorrectionFactor = m_RendererSettings.GammaCorrectionFactor;
 		sceneUniformBufferData.RendererSettings.Exposure = m_RendererSettings.Exposure;
 
-		for (const auto& entity : scene->GetRegistry()->group<TransformComponent, PointLightComponent>())
+		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, PointLightComponent>())
 		{
-			const auto& [transform, light] = scene->GetRegistry()->get<TransformComponent, PointLightComponent>(entity);
+			const auto& [transform, light] = scene->GetRegistry()->GetComponent<TransformComponent, PointLightComponent>(entity);
 			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Position = transform.Translation;
 			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Color = light.Color;
 			sceneUniformBufferData.PointLights[sceneUniformBufferData.PointLightCount].Intensity = light.Intensity;
@@ -613,9 +613,9 @@ namespace Flameberry {
 			pointLightEntityHandles.emplace_back(entity);
 		}
 
-		for (const auto& entity : scene->GetRegistry()->group<TransformComponent, SpotLightComponent>())
+		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, SpotLightComponent>())
 		{
-			const auto& [transform, light] = scene->GetRegistry()->get<TransformComponent, SpotLightComponent>(entity);
+			const auto& [transform, light] = scene->GetRegistry()->GetComponent<TransformComponent, SpotLightComponent>(entity);
 			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Position = transform.Translation;
 			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Direction = glm::rotate(glm::quat(transform.Rotation), glm::vec3(0.000001f, -1.0f, 0.0f));
 			sceneUniformBufferData.SpotLights[sceneUniformBufferData.SpotLightCount].Color = light.Color;
@@ -642,11 +642,11 @@ namespace Flameberry {
 					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr);
 				});
 
-			for (const auto& entity : scene->GetRegistry()->group<TransformComponent, MeshComponent>())
+			for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>())
 			{
-				const auto& [transform, mesh] = scene->GetRegistry()->get<TransformComponent, MeshComponent>(entity);
+				const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
 
-				if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
+				if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
 				{
 					ModelMatrixPushConstantData pushContantData;
 					pushContantData.ModelMatrix = transform.CalculateTransform();
@@ -672,26 +672,31 @@ namespace Flameberry {
 
 		/////////////////////////////////////////// Skymap Rendering ////////////////////////////////////////////
 
-		bool shouldRenderSkymap = skymap && skymap->EnableSkymap && AssetManager::IsAssetHandleValid(skymap->Skymap);
+		bool shouldRenderSkymap = skymap && skymap->EnableSkymap;
 		VkDescriptorSet textureDescSet = VK_NULL_HANDLE;
 
 		if (shouldRenderSkymap)
 		{
-			VkPipelineLayout pipelineLayout = m_SkymapPipeline->GetVulkanPipelineLayout();
-			textureDescSet = AssetManager::GetAsset<Skymap>(skymap->Skymap)->GetDescriptorSet()->GetVulkanDescriptorSet();
+			Ref<Skymap> skymapAsset = AssetManager::GetAssetAsync<Skymap>(skymap->Skymap);
 
-			SkymapPushConstantObject pco;
-			pco.ViewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
-			pco.Exposure = m_RendererSettings.Exposure;
+			if (shouldRenderSkymap = shouldRenderSkymap && skymapAsset)
+			{
+				VkPipelineLayout pipelineLayout = m_SkymapPipeline->GetVulkanPipelineLayout();
+				textureDescSet = skymapAsset->GetDescriptorSet()->GetVulkanDescriptorSet();
 
-			Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-				{
-					Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-					VkDescriptorSet descSets[] = { textureDescSet };
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
-					vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SkymapPushConstantObject), &pco);
-					vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
-				});
+				SkymapPushConstantObject pco;
+				pco.ViewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
+				pco.Exposure = m_RendererSettings.Exposure;
+
+				Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco, textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+					{
+						Renderer::RT_BindPipeline(cmdBuffer, pipeline);
+						VkDescriptorSet descSets[] = { textureDescSet };
+						vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
+						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SkymapPushConstantObject), &pco);
+						vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
+					});
+			}
 		}
 
 		///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
@@ -713,8 +718,8 @@ namespace Flameberry {
         // Without sorting
         for (const auto& entity : scene->GetRegistry()->view<TransformComponent, MeshComponent>())
         {
-            const auto& [transform, mesh] = scene->GetRegistry()->get<TransformComponent, MeshComponent>(entity);
-            if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle); staticMesh)
+            const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
+            if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle); staticMesh)
                 Renderer::SubmitMeshWithMaterial(staticMesh, m_MeshPipeline, mesh.OverridenMaterialTable, transform.GetTransform());
         }
 #else
@@ -731,11 +736,11 @@ namespace Flameberry {
 		if (m_RendererSettings.FrustumCulling)
 			cameraFrustum.ExtractFrustumPlanes(cameraBufferData.ViewProjectionMatrix);
 
-		for (const auto& entity : scene->GetRegistry()->group<TransformComponent, MeshComponent>())
+		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>())
 		{
-			const auto& [transform, mesh] = scene->GetRegistry()->get<TransformComponent, MeshComponent>(entity);
+			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
 
-			if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
+			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
 			{
 				uint32_t submeshIndex = 0;
 
@@ -834,35 +839,35 @@ namespace Flameberry {
 			// Render Point Light Icons
 			Renderer2D::SetActiveTexture(m_PointLightIcon);
 			for (uint32_t i = 0; i < sceneUniformBufferData.PointLightCount; i++)
-				Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix, fbentt::to_index(pointLightEntityHandles[i]));
+				Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color, viewMatrix, pointLightEntityHandles[i].GetIndex());
 			Renderer2D::FlushQuads();
 
 			// Render Spot Light Icons
 			Renderer2D::SetActiveTexture(m_SpotLightIcon);
 			for (uint32_t i = 0; i < sceneUniformBufferData.SpotLightCount; i++)
-				Renderer2D::AddBillboard(sceneUniformBufferData.SpotLights[i].Position, 1.0f, sceneUniformBufferData.SpotLights[i].Color, viewMatrix, fbentt::to_index(spotLightEntityHandles[i]));
+				Renderer2D::AddBillboard(sceneUniformBufferData.SpotLights[i].Position, 1.0f, sceneUniformBufferData.SpotLights[i].Color, viewMatrix, spotLightEntityHandles[i].GetIndex());
 			Renderer2D::FlushQuads();
 
 			Renderer2D::SetActiveTexture(m_CameraIcon);
-			for (auto entity : scene->GetRegistry()->group<TransformComponent, CameraComponent>())
+			for (auto entity : scene->GetRegistry()->Group<TransformComponent, CameraComponent>())
 			{
-				auto& transform = scene->GetRegistry()->get<TransformComponent>(entity);
-				Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
+				auto& transform = scene->GetRegistry()->GetComponent<TransformComponent>(entity);
+				Renderer2D::AddBillboard(transform.Translation, 0.7f, glm::vec3(1), viewMatrix, entity.GetIndex());
 			}
 			Renderer2D::FlushQuads();
 
 			Renderer2D::SetActiveTexture(m_DirectionalLightIcon);
-			for (auto entity : scene->GetRegistry()->group<TransformComponent, DirectionalLightComponent>())
+			for (auto entity : scene->GetRegistry()->Group<TransformComponent, DirectionalLightComponent>())
 			{
-				auto& transform = scene->GetRegistry()->get<TransformComponent>(entity);
-				Renderer2D::AddBillboard(transform.Translation, 1.2f, glm::vec3(1), viewMatrix, fbentt::to_index(entity));
+				auto& transform = scene->GetRegistry()->GetComponent<TransformComponent>(entity);
+				Renderer2D::AddBillboard(transform.Translation, 1.2f, glm::vec3(1), viewMatrix, entity.GetIndex());
 			}
 			Renderer2D::FlushQuads();
 		}
 
-		if (renderPhysicsCollider && selectedEntity != fbentt::null)
+		if (renderPhysicsCollider && selectedEntity != FEntity::Null)
 		{
-			if (auto* transform = scene->GetRegistry()->try_get<TransformComponent>(selectedEntity))
+			if (auto* transform = scene->GetRegistry()->TryGetComponent<TransformComponent>(selectedEntity))
 			{
 				// Draw Physics Collider
 				SubmitPhysicsColliderGeometry(scene, selectedEntity, *transform); // NOTE: This function will check if any of the colliders is present
@@ -871,12 +876,12 @@ namespace Flameberry {
 		}
 
 		// Render all the text in the scene
-		for (const auto entity : scene->GetRegistry()->group<TransformComponent, TextComponent>())
+		for (const auto entity : scene->GetRegistry()->Group<TransformComponent, TextComponent>())
 		{
-			const auto& [transform, text] = scene->GetRegistry()->get<TransformComponent, TextComponent>(entity);
+			const auto& [transform, text] = scene->GetRegistry()->GetComponent<TransformComponent, TextComponent>(entity);
 
 			Ref<Font> font = AssetManager::GetAsset<Font>(text.Font);
-			Renderer2D::AddText(text.TextString, font, transform.CalculateTransform(), { text.Color, text.Kerning, text.LineSpacing }, fbentt::to_index(entity));
+			Renderer2D::AddText(text.TextString, font, transform.CalculateTransform(), { text.Color, text.Kerning, text.LineSpacing }, entity.GetIndex());
 		}
 
 		Renderer2D::EndScene();
@@ -1038,15 +1043,15 @@ namespace Flameberry {
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
 			});
 
-		for (const auto& entity : scene->GetRegistry()->group<TransformComponent, MeshComponent>())
+		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>())
 		{
-			const auto& [transform, mesh] = scene->GetRegistry()->get<TransformComponent, MeshComponent>(entity);
+			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
 
-			if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
+			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
 			{
 				MousePickingPushConstantData pushContantData;
 				pushContantData.ModelMatrix = transform.CalculateTransform();
-				pushContantData.EntityIndex = fbentt::to_index(entity);
+				pushContantData.EntityIndex = entity.GetIndex();
 
 				Renderer::Submit([staticMesh, mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 					{
@@ -1077,10 +1082,7 @@ namespace Flameberry {
 
 		// Text Entities
 		indexCount = 6 * Renderer2D::GetRendererData().TextVertexBufferOffset / (4 * sizeof(TextVertex));
-		Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
-							 mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
-							 vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
-							 vertexBuffer = Renderer2D::GetRendererData().TextVertexBuffer->GetVulkanBuffer(),
+		Renderer::Submit([vertexBuffer = Renderer2D::GetRendererData().TextVertexBuffer->GetVulkanBuffer(),
 							 indexBuffer = Renderer2D::GetRendererData().TextIndexBuffer->GetVulkanBuffer(),
 							 indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
@@ -1097,7 +1099,7 @@ namespace Flameberry {
 	}
 
 	// TODO: Move this to EditorLayer.cpp ASAP
-	void SceneRenderer::SubmitPhysicsColliderGeometry(const Ref<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
+	void SceneRenderer::SubmitPhysicsColliderGeometry(const Ref<Scene>& scene, FEntity entity, TransformComponent& transform)
 	{
 		// TODO: Optimise this function (maybe embed the vertices (?))
 		GLM_CONSTEXPR glm::vec3 greenColor(0.2f, 1.0f, 0.2f);
@@ -1105,8 +1107,7 @@ namespace Flameberry {
 		const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
 
 		// Render Physics Colliders
-		auto* boxCollider = scene->GetRegistry()->try_get<BoxColliderComponent>(entity);
-		if (boxCollider)
+		if (auto* boxCollider = scene->GetRegistry()->TryGetComponent<BoxColliderComponent>(entity))
 		{
 			const glm::vec3 halfExtent = transform.Scale * boxCollider->Size * 0.5f + bias;
 
@@ -1141,7 +1142,7 @@ namespace Flameberry {
 			Renderer2D::AddLine(vertex3, vertex1, greenColor);
 			Renderer2D::AddLine(vertex7, vertex5, greenColor);
 		}
-		else if (auto* sphereCollider = scene->GetRegistry()->try_get<SphereColliderComponent>(entity); sphereCollider)
+		else if (auto* sphereCollider = scene->GetRegistry()->TryGetComponent<SphereColliderComponent>(entity); sphereCollider)
 		{
 			// Define the radius of the sphere
 			float radius = sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z) + bias;
@@ -1177,7 +1178,7 @@ namespace Flameberry {
 			Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), greenColor);
 			Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, transform.Translation + glm::vec3(0.0f, 0.0f, radius), greenColor);
 		}
-		else if (auto* capsuleCollider = scene->GetRegistry()->try_get<CapsuleColliderComponent>(entity); capsuleCollider)
+		else if (auto* capsuleCollider = scene->GetRegistry()->TryGetComponent<CapsuleColliderComponent>(entity); capsuleCollider)
 		{
 			// Define the radius and half height of the capsule
 			float halfHeight = 0.5f * capsuleCollider->Height * transform.Scale.y;
@@ -1200,10 +1201,10 @@ namespace Flameberry {
 	}
 
 	// TODO: Move this to EditorLayer.cpp ASAP
-	void SceneRenderer::SubmitCameraViewGeometry(const Ref<Scene>& scene, fbentt::entity entity, TransformComponent& transform)
+	void SceneRenderer::SubmitCameraViewGeometry(const Ref<Scene>& scene, FEntity entity, TransformComponent& transform)
 	{
 		GLM_CONSTEXPR glm::vec3 color(0.961f, 0.796f, 0.486f); // TODO: Replace with Theme::AccentColor
-		if (auto* cameraComp = scene->GetRegistry()->try_get<CameraComponent>(entity))
+		if (auto* cameraComp = scene->GetRegistry()->TryGetComponent<CameraComponent>(entity))
 		{
 			const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
 			const auto& settings = cameraComp->Camera.GetSettings();

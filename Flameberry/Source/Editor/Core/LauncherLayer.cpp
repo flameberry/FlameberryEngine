@@ -142,14 +142,14 @@ namespace Flameberry {
 				{
 					if (!m_ProjectNameBuffer.empty())
 					{
-                        if ((m_Project = Project::CreateProjectOnDisk(projectParentPath, m_ProjectNameBuffer)))
-                        {
-                            // Finally add project entry to GlobalProjectRegistry
-                            ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
-                            
-                            // Signal callback to EditorApplication class
-                            m_ShouldClose = true;
-                        }
+						if ((m_Project = Project::CreateProjectOnDisk(projectParentPath, m_ProjectNameBuffer)))
+						{
+							// Finally add project entry to GlobalProjectRegistry
+							ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
+
+							// Signal callback to EditorApplication class
+							m_ShouldClose = true;
+						}
 						else
 						{
 							const std::string projectDirectoryStr = m_Project->GetProjectDirectory().string();

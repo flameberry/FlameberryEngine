@@ -113,7 +113,10 @@ namespace Flameberry {
 
 		vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex]);
 
-		VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrameIndex]));
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely([fence = m_InFlightFences[m_CurrentFrameIndex], graphicsQueue, submitInfo]()
+			{
+				VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence));
+			});
 
 		VkSwapchainKHR swapchains[] = { m_VkSwapChain };
 

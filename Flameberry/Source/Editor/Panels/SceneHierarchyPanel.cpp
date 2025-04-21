@@ -20,15 +20,16 @@ namespace Flameberry {
 
 	void SceneHierarchyPanel::OnUIRender()
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, Theme::WindowBgGrey);
-		ImGui::Begin("Scene Hierarchy");
-		ImGui::PopStyleColor();
-		ImGui::PopStyleVar();
+		{
+			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+			UI::ScopedStyleColor windowBg(ImGuiCol_WindowBg, Theme::WindowBgGrey);
+
+			ImGui::Begin("Scene Hierarchy");
+		}
 
 		m_IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 
-		const float padding = 12.0f;
+		constexpr float padding = 12.0f;
 		const float width = ImGui::GetContentRegionAvail().x - 2.0f * padding;
 		ImGui::SetCursorPos(ImVec2(padding, 4 + ImGui::GetCursorPosY()));
 
@@ -42,20 +43,6 @@ namespace Flameberry {
 		}
 
 		m_IsSearchBarFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
-
-		// Type bar
-		ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_TableBorderLight, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
-		if (ImGui::BeginTable("TypeBar", 2, ImGuiTableFlags_Borders))
-		{
-			ImGui::TableSetupColumn(ICON_LC_TAG " Label", ImGuiTableColumnFlags_WidthStretch);
-			ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, ImGui::GetWindowWidth() / 4.0f);
-			ImGui::TableHeadersRow();
-			ImGui::EndTable();
-		}
-		ImGui::PopStyleColor(2);
-
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y);
 
 		{
 			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 4));
@@ -75,21 +62,45 @@ namespace Flameberry {
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
 			{
-				const fbentt::entity payloadEntity = *((const fbentt::entity*)payload->Data);
-				m_Context->ReparentEntity(payloadEntity, fbentt::null);
+				const FEntity payloadEntity = *((const FEntity*)payload->Data);
+				m_Context->ReparentEntity(payloadEntity, FEntity::Null);
 			}
 			ImGui::EndDragDropTarget();
 		}
 
-		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
-		m_IsSelectedNodeDisplayed = false;
+		// Entity Hierarchy Table
+		{
+			UI::ScopedStyleColor tableBorderStrong(ImGuiCol_TableBorderStrong, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
+			UI::ScopedStyleColor tableBorderLight(ImGuiCol_TableBorderLight, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
 
-		DisplayEntityTree(m_Context->GetWorldEntity());
+			ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingStretchProp
+				| ImGuiTableFlags_PadOuterX
+				| ImGuiTableFlags_BordersInnerV
+				| ImGuiTableFlags_NoBordersInBody
+				| ImGuiTableFlags_ScrollY;
 
-		ImGui::PopStyleVar();
+			if (ImGui::BeginTable("SceneHierarchyTable", 3, tableFlags))
+			{
+				ImGui::TableSetupScrollFreeze(3, 1);
+				ImGui::TableSetupColumn(ICON_LC_EYE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::CalcTextSize(ICON_LC_EYE).x);
+				ImGui::TableSetupColumn("Item Label", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
+				ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::GetWindowWidth() / 4.5f);
+
+				ImGui::TableHeadersRow();
+				{
+					UI::ScopedStyleVariable cellPadding(ImGuiStyleVar_CellPadding, ImVec2(0, 1));
+					UI::ScopedStyleVariable indentSpacing(ImGuiStyleVar_IndentSpacing, 12.0f);
+
+					m_IsSelectedNodeDisplayed = false;
+					DisplayEntityTree(m_Context->GetWorldEntity());
+				}
+
+				ImGui::EndTable();
+			}
+		}
 
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
-			m_SelectionContext = fbentt::null;
+			m_SelectionContext = FEntity::Null;
 
 		ImGui::EndChild();
 		ImGui::End();
@@ -109,13 +120,13 @@ namespace Flameberry {
 		if (ImGui::InputText("###Rename", &m_RenameBuffer, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
 		{
 			tag = m_RenameBuffer;
-			m_RenamedEntity = fbentt::null;
+			m_RenamedEntity = FEntity::Null;
 		}
 		ImGui::PopItemWidth();
 
 		// Remove the input box when it is defocused/deactivated
 		if (ImGui::IsItemDeactivated())
-			m_RenamedEntity = fbentt::null;
+			m_RenamedEntity = FEntity::Null;
 	}
 
 	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
@@ -124,16 +135,16 @@ namespace Flameberry {
 		m_InspectorPanel->SetContext(m_Context);
 	}
 
-	void SceneHierarchyPanel::SetSelectionContext(fbentt::entity entity)
+	void SceneHierarchyPanel::SetSelectionContext(FEntity entity)
 	{
 		m_SelectionContext = entity;
 		m_InspectorPanel->SetSelectionContext(m_SelectionContext);
 	}
 
-	void SceneHierarchyPanel::DisplayEntityTree(fbentt::entity entity)
+	void SceneHierarchyPanel::DisplayEntityTree(FEntity entity)
 	{
 		// "Name" of the entity
-		auto& tag = m_Context->GetRegistry()->get<TagComponent>(entity).Tag;
+		auto& tag = m_Context->GetRegistry()->GetComponent<TagComponent>(entity).Tag;
 
 		// If the current entity matches the search, then it is to be highlighted
 		bool highlight = false;
@@ -148,103 +159,136 @@ namespace Flameberry {
 
 		// Entity state
 		const bool isWorldEntity = m_Context->IsWorldEntity(entity);
+		const bool isCollectionEntity = m_Context->GetRegistry()->HasComponent<CollectionComponent>(entity);
 		const bool isRenamed = m_RenamedEntity == entity;
 		const bool isSelected = m_SelectionContext == entity;
+
 		m_IsSelectedNodeDisplayed = m_IsSelectedNodeDisplayed || isSelected;
+		FBY_ASSERT(!(isWorldEntity && isCollectionEntity), "World Entity cannot be a Collection Entity!");
 
 		bool hasChild = false;
 
-		if (auto* relation = m_Context->GetRegistry()->try_get<RelationshipComponent>(entity))
-			hasChild = relation->FirstChild != fbentt::null;
+		if (auto* relation = m_Context->GetRegistry()->TryGetComponent<RelationshipComponent>(entity))
+			hasChild = relation->FirstChild != FEntity::Null;
 
 		const int treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow
 			| ImGuiTreeNodeFlags_FramePadding
 			| ImGuiTreeNodeFlags_AllowItemOverlap
 			| (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
 			| (hasChild ? 0 : ImGuiTreeNodeFlags_Leaf)
-			| (isRenamed ? 0 : ImGuiTreeNodeFlags_SpanFullWidth);
+			| (isRenamed ? 0 : ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_SpanAllColumns);
+
+		bool shouldDeleteEntity = false, shouldDuplicateEntity = false;
+		bool isEntityTreeNodeOpen = false;
 
 		ImGui::PushID((const void*)(uint64_t)entity);
-
-		// Set the current entity tree node expanded until the selected node is visible
-		if (!m_IsSelectedNodeDisplayed)
-			ImGui::SetNextItemOpen(true, ImGuiCond_Always);
-
-		bool open;
 		{
-			// Styling of the Entity TreeNode
+			const float greyShade = isSelected ? 75.0f / 255.0f : 126.0f / 255.0f;
+			const ImVec4 greyColor(greyShade, greyShade, greyShade, 1.0f);
 			const float textColor = isSelected ? 0.0f : 1.0f;
-			UI::ScopedStyleColor headerColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
-			UI::ScopedStyleColor headerActiveColor(ImGuiCol_HeaderActive, Theme::AccentColorLight);
-			UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
-			UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
-			UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
-			UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
-			UI::ScopedStyleColor textC2(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f }, highlight);
 
-			// Display the actual entity node with it's tag
-			open = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s %s", isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : ICON_LC_BOX, tag.c_str());
-		}
-
-		// Select entity if clicked
-		if (ImGui::IsItemClicked())
-			m_SelectionContext = entity;
-
-		// World Entity should not be renamed
-		if (!isWorldEntity)
-		{
-			// Check for rename shortcuts being used
-			if (isSelected && ImGui::IsWindowFocused())
 			{
-				ImGuiIO& io = ImGui::GetIO();
-				if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
-					m_RenamedEntity = entity;
+				ImGui::TableNextColumn();
+				ImGui::AlignTextToFramePadding();
+
+				// TODO: Add actual functionality to this
+				const bool visibility = true;
+
+				// Only display icon when entity node is hovered
+				const bool isEntityNodeHovered = ImGui::GetHoveredID() == ImGui::GetID((const void*)(uint64_t)entity);
+				ImGui::TextColored(isEntityNodeHovered ? ImVec4(textColor, textColor, textColor, 1.0f) : ImVec4(0, 0, 0, 0), visibility ? ICON_LC_EYE : ICON_LC_EYE_OFF);
+
+				// if (ImGui::IsItemClicked())
+				// 	visibility = !visibility;
+			}
+
+			// Set the current entity tree node expanded until the selected node is visible
+			if (!m_IsSelectedNodeDisplayed)
+				ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+
+			ImGui::TableNextColumn();
+
+			{
+				// Styling of the Entity TreeNode
+				UI::ScopedStyleColor headerColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
+				UI::ScopedStyleColor headerActiveColor(ImGuiCol_HeaderActive, Theme::AccentColorLight, isSelected);
+				UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
+				UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
+				UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+				UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
+				UI::ScopedStyleColor textC2(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f }, highlight);
+
+				// Figure out the entity icon to be displayed
+				const char* iconCStr = isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : (isCollectionEntity ? ICON_LC_LIBRARY : ICON_LC_BOX);
+
+				// Display the actual entity node with it's tag
+				isEntityTreeNodeOpen = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s %s", iconCStr, tag.c_str());
+			}
+
+			// Select entity if clicked
+			// Only select the object if it is clicked and not being dragged and not toggled open
+			if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+				m_SelectionContext = entity;
+
+			// World Entity should not be renamed
+			if (!isWorldEntity)
+			{
+				// Check for rename shortcuts being used
+				if (isSelected && ImGui::IsWindowFocused())
+				{
+					ImGuiIO& io = ImGui::GetIO();
+					if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
+						m_RenamedEntity = entity;
+				}
+			}
+
+			// Display Context Menu
+			if (ImGui::BeginPopupContextItem("EntityNodeContextMenu", m_PopupFlags))
+			{
+				DisplayCreateEntityMenu(entity);
+
+				// World Entity should not be renamed, duplicated, deleted
+				ImGui::BeginDisabled(isWorldEntity);
+				{
+					if (ImGui::MenuItem(ICON_LC_TEXT_CURSOR_INPUT "\tRename"))
+						m_RenamedEntity = entity;
+
+					if (ImGui::MenuItem(ICON_LC_COPY "\tDuplicate Entity"))
+						shouldDuplicateEntity = true;
+
+					if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete Entity"))
+						shouldDeleteEntity = true;
+				}
+				ImGui::EndDisabled();
+
+				ImGui::EndPopup();
+			}
+
+			// Drag entities to drop them on other entities
+			if (ImGui::BeginDragDropSource())
+			{
+				ImGui::SetDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE", &entity, sizeof(entity), ImGuiCond_Once);
+				ImGui::Text("%s", tag.c_str());
+				ImGui::EndDragDropSource();
+			}
+
+			// Drop entities onto each other to reparent them
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
+				{
+					const FEntity payloadEntity = *((const FEntity*)payload->Data);
+					m_Context->ReparentEntity(payloadEntity, entity);
+				}
+				ImGui::EndDragDropTarget();
+			}
+
+			// Type Column
+			{
+				ImGui::TableNextColumn();
+				ImGui::TextColored(greyColor, isWorldEntity ? "Root" : (isCollectionEntity ? "Collection" : "Entity"));
 			}
 		}
-
-		// Display Context Menu
-		bool shouldDeleteEntity = false, shouldDuplicateEntity = false;
-
-		if (ImGui::BeginPopupContextItem("EntityNodeContextMenu", m_PopupFlags))
-		{
-			DisplayCreateEntityMenu(entity);
-
-			// World Entity should not be renamed, duplicated, deleted
-			ImGui::BeginDisabled(isWorldEntity);
-			{
-				if (ImGui::MenuItem(ICON_LC_TEXT_CURSOR_INPUT "\tRename"))
-					m_RenamedEntity = entity;
-
-				if (ImGui::MenuItem(ICON_LC_COPY "\tDuplicate Entity"))
-					shouldDuplicateEntity = true;
-
-				if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete Entity"))
-					shouldDeleteEntity = true;
-			}
-			ImGui::EndDisabled();
-
-			ImGui::EndPopup();
-		}
-
-		// Drag entities to drop them on other entities
-		if (ImGui::BeginDragDropSource())
-		{
-			ImGui::SetDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE", &entity, sizeof(entity), ImGuiCond_Once);
-			ImGui::Text("%s", tag.c_str());
-			ImGui::EndDragDropSource();
-		}
-
-		// Drop entities onto each other to reparent them
-		if (ImGui::BeginDragDropTarget())
-		{
-			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
-			{
-				const fbentt::entity payloadEntity = *((const fbentt::entity*)payload->Data);
-				m_Context->ReparentEntity(payloadEntity, entity);
-			}
-			ImGui::EndDragDropTarget();
-		}
-
 		ImGui::PopID();
 
 		// Rename Entity
@@ -255,14 +299,14 @@ namespace Flameberry {
 		}
 
 		// Display all the children of the entity if the current node is expanded
-		if (open)
+		if (isEntityTreeNodeOpen)
 		{
 			if (hasChild)
 			{
-				fbentt::entity child = m_Context->GetRegistry()->get<RelationshipComponent>(entity).FirstChild;
-				while (child != fbentt::null)
+				FEntity child = m_Context->GetRegistry()->GetComponent<RelationshipComponent>(entity).FirstChild;
+				while (child != FEntity::Null)
 				{
-					auto temp = m_Context->GetRegistry()->get<RelationshipComponent>(child).NextSibling;
+					auto temp = m_Context->GetRegistry()->GetComponent<RelationshipComponent>(child).NextSibling;
 					DisplayEntityTree(child);
 					child = temp;
 				}
@@ -282,14 +326,25 @@ namespace Flameberry {
 		{
 			m_Context->DestroyEntityTree(entity);
 			if (m_SelectionContext == entity)
-				m_SelectionContext = fbentt::null;
+				m_SelectionContext = FEntity::Null;
 		}
 	}
 
-	void SceneHierarchyPanel::DisplayCreateEntityMenu(fbentt::entity parent)
+	void SceneHierarchyPanel::DisplayCreateEntityMenu(FEntity parent)
 	{
+		static uint32_t collectionCount = 0;
+
 		if (ImGui::BeginMenu(ICON_LC_PLUS "\tCreate"))
 		{
+			if (ImGui::MenuItem(ICON_LC_LIBRARY "\tCollection"))
+			{
+				const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", collectionCount), parent);
+				m_SelectionContext = entity;
+				collectionCount++;
+			}
+
+			ImGui::SeparatorText("3D");
+
 			if (ImGui::MenuItem(ICON_LC_SQUARE "\tEmpty"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Empty", parent);
@@ -298,51 +353,61 @@ namespace Flameberry {
 			if (ImGui::MenuItem(ICON_LC_TEXT "\tText"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Text", parent);
-				m_Context->GetRegistry()->emplace<TextComponent>(entity);
+				m_Context->GetRegistry()->EmplaceComponent<TextComponent>(entity);
 				m_SelectionContext = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_CUBOID "\tMesh"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("StaticMesh", parent);
-				m_Context->GetRegistry()->emplace<MeshComponent>(entity);
+				m_Context->GetRegistry()->EmplaceComponent<MeshComponent>(entity);
 				m_SelectionContext = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_CAMERA "\tCamera"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Camera", parent);
-				m_Context->GetRegistry()->emplace<CameraComponent>(entity);
+				m_Context->GetRegistry()->EmplaceComponent<CameraComponent>(entity);
 				m_SelectionContext = entity;
 			}
+
+			ImGui::SeparatorText("Lighting");
+
 			if (ImGui::BeginMenu("Light"))
 			{
 				if (ImGui::MenuItem(ICON_LC_SUNRISE "\tSky Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Sky Light", parent);
-					m_Context->GetRegistry()->emplace<SkyLightComponent>(entity);
+					m_Context->GetRegistry()->EmplaceComponent<SkyLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_SUN "\tDirectional Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Directional Light", parent);
-					m_Context->GetRegistry()->emplace<DirectionalLightComponent>(entity);
+					m_Context->GetRegistry()->EmplaceComponent<DirectionalLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_LIGHTBULB "\tPoint Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Point Light", parent);
-					m_Context->GetRegistry()->emplace<PointLightComponent>(entity);
+					m_Context->GetRegistry()->EmplaceComponent<PointLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_CONE "\tSpot Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Spot Light", parent);
-					m_Context->GetRegistry()->emplace<SpotLightComponent>(entity);
+					m_Context->GetRegistry()->EmplaceComponent<SpotLightComponent>(entity);
 					m_SelectionContext = entity;
 				}
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenu();
 		}
+	}
+
+	FEntity SceneHierarchyPanel::CreateCollectionEntity(const std::string& name, FEntity parent)
+	{
+		FEntity entity = m_Context->CreateEntityWithTagAndParent(name, parent);
+		m_Context->GetRegistry()->EmplaceComponent<CollectionComponent>(entity);
+		return entity;
 	}
 
 } // namespace Flameberry

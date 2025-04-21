@@ -246,11 +246,11 @@ namespace Flameberry {
 		}
 
 		// Prints the names of the validation layers available
-		std::string layer_list = "";
+		std::string layer_list;
 		for (uint16_t i = 0; i < layerCount; i++)
 		{
 			layer_list += available_layers[i].layerName;
-			if (!(i == layerCount - 1))
+			if (i != layerCount - 1)
 				layer_list += ", ";
 		}
 		FBY_TRACE("Found the following Vulkan Validation Layers: {}", layer_list);

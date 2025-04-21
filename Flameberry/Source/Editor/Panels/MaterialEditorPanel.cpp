@@ -24,7 +24,6 @@ namespace Flameberry {
 			if (UI::BeginKeyValueTable("MaterialAttributeTable"))
 			{
 				UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1);
-				UI::ScopedStyleColor borderColor(ImGuiCol_Border, Theme::FrameBorder);
 
 				UI::TableKeyElement("Name");
 

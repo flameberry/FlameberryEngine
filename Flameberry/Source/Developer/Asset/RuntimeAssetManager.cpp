@@ -8,6 +8,12 @@ namespace Flameberry {
 		return nullptr;
 	}
 
+	Ref<Asset> RuntimeAssetManager::GetAssetAsync(AssetHandle handle)
+	{
+		FBY_ASSERT(false, "RuntimeAssetManager::GetAssetAsync(): Not implemented yet!");
+		return nullptr;
+	}
+
 	bool RuntimeAssetManager::IsAssetHandleValid(AssetHandle handle) const
 	{
 		FBY_ASSERT(false, "RuntimeAssetManager::IsAssetHandleValid(): Not implemented yet!");

@@ -63,12 +63,12 @@ namespace Flameberry {
 		iconFontConfig.MergeMode = true;
 		iconFontConfig.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
 		iconFontConfig.GlyphOffset = ImVec2(0, 2.5f * DPI_SCALE);
-		static const ImWchar iconRanges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
+		static constexpr ImWchar iconRanges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
 
 		io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/lucide/lucide.ttf", fontSize, &iconFontConfig, iconRanges);
 
 		// ImGui layout save location
-		io.IniFilename = NULL;
+		io.IniFilename = nullptr;
 		ImGui::LoadIniSettingsFromDisk(s_ImGuiLayoutPath);
 
 		// Setup Dear ImGui style

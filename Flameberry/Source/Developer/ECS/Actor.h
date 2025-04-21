@@ -12,10 +12,10 @@ namespace Flameberry {
 		virtual ~Actor() = default;
 
 		template <typename... T>
-		decltype(auto) GetComponent()
+		decltype(auto) GetComponent() const
 		{
 			if (m_SceneRef)
-				return m_SceneRef->GetRegistry()->get<T...>(m_Entity);
+				return m_SceneRef->GetRegistry()->GetComponent<T...>(m_Entity);
 		}
 
 		virtual void OnInstanceCreated() = 0;
@@ -24,7 +24,7 @@ namespace Flameberry {
 
 	private:
 		Scene* m_SceneRef;
-		fbentt::entity m_Entity;
+		FEntity m_Entity;
 
 		friend class Scene;
 	};

@@ -54,12 +54,13 @@ namespace Flameberry {
 				layer->OnUpdate(delta);
 
 			// ImGui Rendering is submitted as a render command because otherwise it behaves oddly and gives validation errors
-			Renderer::Submit([app = this](VkCommandBuffer, uint32_t) {
-				app->m_ImGuiLayer->Begin();
-				for (auto& layer : app->m_LayerStack)
-					layer->OnUIRender();
-				app->m_ImGuiLayer->End();
-			});
+			Renderer::Submit([app = this](VkCommandBuffer, uint32_t)
+				{
+					app->m_ImGuiLayer->Begin();
+					for (auto& layer : app->m_LayerStack)
+						layer->OnUIRender();
+					app->m_ImGuiLayer->End();
+				});
 
 			// This is where the rendering of the entire frame is done
 			// All the render commands are executed one by one here

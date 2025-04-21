@@ -11,7 +11,7 @@ namespace Flameberry {
 	{
 	public:
 		ImGuiLayer();
-		~ImGuiLayer() = default;
+		~ImGuiLayer() override = default;
 
 		void OnCreate() override;
 		void OnUpdate(float delta) override {};

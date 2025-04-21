@@ -19,7 +19,7 @@ namespace Flameberry {
 	class Buffer
 	{
 	public:
-		Buffer(const BufferSpecification& specification);
+		explicit Buffer(const BufferSpecification& specification);
 		~Buffer();
 
 		void WriteToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
@@ -35,7 +35,7 @@ namespace Flameberry {
 		VkDeviceSize GetBufferSize() const { return m_AlignmentSize * m_BufferSpec.InstanceCount; }
 
 	private:
-		VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
+		static VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
 
 	private:
 		VkBuffer m_VkBuffer = VK_NULL_HANDLE;

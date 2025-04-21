@@ -85,7 +85,7 @@ namespace Flameberry {
 			commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 			commandPoolCreateInfo.queueFamilyIndex = m_QueueFamilyIndices.ComputeQueueFamilyIndex;
 			commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		
+
 			VK_CHECK_RESULT(vkCreateCommandPool(m_VulkanDevice, &commandPoolCreateInfo, nullptr, &m_ComputeQueueCommandPool));
 		}
 	}
@@ -117,8 +117,12 @@ namespace Flameberry {
 		vk_submit_info.pCommandBuffers = &commandBuffer;
 
 		VkQueue vulkanQueue = isCompute ? m_ComputeQueue : m_GraphicsQueue;
-		vkQueueSubmit(vulkanQueue, 1, &vk_submit_info, VK_NULL_HANDLE);
-		vkQueueWaitIdle(vulkanQueue);
+
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely([=]()
+			{
+				vkQueueSubmit(vulkanQueue, 1, &vk_submit_info, VK_NULL_HANDLE);
+				vkQueueWaitIdle(vulkanQueue);
+			});
 
 		vkFreeCommandBuffers(m_VulkanDevice, m_GraphicsQueueCommandPool, 1, &commandBuffer);
 	}
@@ -151,13 +155,15 @@ namespace Flameberry {
 		vkDeviceWaitIdle(m_VulkanDevice);
 	}
 
-	void VulkanDevice::WaitIdleGraphicsQueue() const
+	void VulkanDevice::WaitIdleGraphicsQueue()
 	{
+		std::scoped_lock lock(m_QueueMutex);
 		vkQueueWaitIdle(m_GraphicsQueue);
 	}
-	
-	void VulkanDevice::WaitIdleComputeQueue() const
+
+	void VulkanDevice::WaitIdleComputeQueue()
 	{
+		std::scoped_lock lock(m_QueueMutex);
 		vkQueueWaitIdle(m_ComputeQueue);
 	}
 

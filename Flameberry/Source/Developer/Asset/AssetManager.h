@@ -26,6 +26,13 @@ namespace Flameberry {
 			return std::static_pointer_cast<T>(Project::GetActiveProject()->GetAssetManager()->GetAsset(handle));
 		}
 
+		template <typename T>
+		static Ref<T> GetAssetAsync(AssetHandle handle)
+		{
+			static_assert(std::is_base_of_v<Asset, T>, "The class given must be derived from `Asset`");
+			return std::static_pointer_cast<T>(Project::GetActiveProject()->GetAssetManager()->GetAssetAsync(handle));
+		}
+
 		static bool IsAssetHandleValid(AssetHandle handle)
 		{
 			return Project::GetActiveProject()->GetAssetManager()->IsAssetHandleValid(handle);

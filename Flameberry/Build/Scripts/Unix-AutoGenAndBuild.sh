@@ -40,6 +40,6 @@ fi
 "$cmakeCommand" -Wno-dev -DCMAKE_BUILD_TYPE="$buildConfig" -DCMAKE_EXPORT_COMPILE_COMMANDS=$compileCommandsFlag -S. -BFlameberry/Intermediate/Build/Auto
 # Copy compile_commands.json to the root project folder to provide intellisense for various code editors
 cp Flameberry/Intermediate/Build/Auto/compile_commands.json .
-"$cmakeCommand" --build Flameberry/Intermediate/Build/Auto
+"$cmakeCommand" --build Flameberry/Intermediate/Build/Auto -j4
 
 popd

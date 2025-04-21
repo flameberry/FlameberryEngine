@@ -37,6 +37,7 @@ namespace Flameberry {
 	class Asset
 	{
 	public:
+		virtual ~Asset() = default;
 		AssetHandle Handle;
 
 		AssetFlags Flags = 0;

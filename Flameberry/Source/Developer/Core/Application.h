@@ -41,12 +41,12 @@ namespace Flameberry {
 	class Application
 	{
 	public:
-		Application(const ApplicationSpecification& specification);
+		explicit Application(const ApplicationSpecification& specification);
 		~Application();
 		void Run();
 
 		Window& GetWindow() { return *m_Window; }
-		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+		[[nodiscard]] const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 		static Application& Get() { return *s_Instance; }
 
 		static Application* CreateClientApp(const ApplicationCommandLineArgs& appCmdLineArgs);

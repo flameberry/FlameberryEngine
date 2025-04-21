@@ -19,7 +19,7 @@ namespace Flameberry {
 #endif
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		VK_KHR_MULTIVIEW_EXTENSION_NAME,
-		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME
+		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
 	};
 
 	VulkanContext* VulkanContext::s_CurrentContext = nullptr;
@@ -76,8 +76,7 @@ namespace Flameberry {
 
 		m_VulkanDevice = CreateRef<VulkanDevice>(m_VkPhysicalDevice, pWindow);
 
-		// const uint32_t maxDescSets = 300;
-		const uint32_t maxDescSets = 500;
+		constexpr uint32_t maxDescSets = 500;
 
 		std::vector<VkDescriptorPoolSize> poolSizes = {
 			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 * 8 },
@@ -148,7 +147,7 @@ namespace Flameberry {
 			vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures2);
 
 			bool isPhysicalDeviceValid = indices.GraphicsQueueFamilyIndex != -1
-				&& indices.ComputeQueueFamilyIndex!= -1
+				&& indices.ComputeQueueFamilyIndex != -1
 				&& indices.PresentationSupportedQueueFamilyIndex != -1
 				&& foundRequiredExtensions
 				&& isSwapchainAdequate

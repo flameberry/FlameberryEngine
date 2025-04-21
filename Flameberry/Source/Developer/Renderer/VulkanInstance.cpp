@@ -104,7 +104,7 @@ namespace Flameberry {
 
 		if (enableValidationLayers)
 		{
-			FBY_LOG(validationLayers[0]);
+			FBY_LOG("{}", validationLayers[0]);
 			vk_create_info.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			vk_create_info.ppEnabledLayerNames = validationLayers.data();
 

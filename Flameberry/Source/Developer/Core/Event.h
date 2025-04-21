@@ -37,7 +37,7 @@ namespace Flameberry {
 
 	struct Event
 	{
-		bool Handled;
+		bool Handled = false;
 
 		virtual ~Event() = default;
 		virtual EventType GetType() const = 0;

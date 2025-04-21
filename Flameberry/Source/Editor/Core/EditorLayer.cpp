@@ -241,17 +241,17 @@ namespace Flameberry {
 
 				// TODO: Design this better
 				const auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
-				if (cameraEntity != fbentt::null)
+				if (cameraEntity != FEntity::Null)
 				{
-					auto [transform, cameraComp] = m_ActiveScene->GetRegistry()->get<TransformComponent, CameraComponent>(cameraEntity);
+					auto [transform, cameraComp] = m_ActiveScene->GetRegistry()->GetComponent<TransformComponent, CameraComponent>(cameraEntity);
 					auto& camera = cameraComp.Camera;
 					camera.SetView(transform.Translation, transform.Rotation);
-					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, transform.Translation, fbentt::null, false, false, false, false);
+					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, transform.Translation, FEntity::Null, false, false, false, false);
 				}
 				else
 				{
 					const auto& camera = m_ActiveCameraController.GetCamera();
-					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), fbentt::null, false, false, false, false);
+					m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), FEntity::Null, false, false, false, false);
 				}
 				break;
 			}
@@ -290,8 +290,8 @@ namespace Flameberry {
 			int32_t* data = (int32_t*)m_MousePickingBuffer->GetMappedMemory();
 			int32_t entityIndex = data[0];
 			m_MousePickingBuffer->UnmapMemory();
-			m_SceneHierarchyPanel->SetSelectionContext((entityIndex != -1) ? m_ActiveScene->GetRegistry()->get_entity_at_index(entityIndex) : fbentt::null);
-			FBY_LOG("Selected Entity Index: {}", entityIndex);
+			m_SceneHierarchyPanel->SetSelectionContext((entityIndex != -1) ? m_ActiveScene->GetRegistry()->GetEntityAtIndex(entityIndex) : FEntity::Null);
+			// FBY_LOG("Selected Entity Index: {}", entityIndex);
 			m_IsMousePickingBufferReady = false;
 		}
 
@@ -299,6 +299,7 @@ namespace Flameberry {
 		bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left)
 			&& m_DidViewportBegin
 			&& !m_IsAnyOverlayHovered
+			&& !m_IsCameraMoving
 			&& !m_IsGizmoActive;
 
 		if (attemptedToSelect)
@@ -330,7 +331,7 @@ namespace Flameberry {
 			OpenScene(m_ScenePathToBeOpened);
 			m_ShouldOpenAnotherScene = false;
 			m_ScenePathToBeOpened = "";
-			m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
+			m_SceneHierarchyPanel->SetSelectionContext(FEntity::Null);
 		}
 	}
 
@@ -373,8 +374,6 @@ namespace Flameberry {
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 		m_RenderViewportSize = { viewportPanelSize.x * ImGui::GetWindowDpiScale(), viewportPanelSize.y * ImGui::GetWindowDpiScale() };
 
-		const float DPI_SCALE = ImGui::GetWindowDpiScale();
-
 		m_IsViewportHovered = ImGui::IsWindowHovered();
 		// For the Camera Input if other windows are focused but the user right clicks this window then set focus for the camera to continue moving without affecting other windows
 		if (m_IsViewportHovered && ImGui::IsMouseDown(ImGuiMouseButton_Right))
@@ -409,13 +408,13 @@ namespace Flameberry {
 					{
 						const AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(filePath);
 
-						const fbentt::entity entity = m_ActiveScene->CreateEntityWithTagTransformAndParent("StaticMesh", fbentt::null);
+						const FEntity entity = m_ActiveScene->CreateEntityWithTagTransformAndParent(filePath.stem().string(), FEntity::Null);
 
 						constexpr float distance = 5.0f;
-						auto& transform = m_ActiveScene->GetRegistry()->get<TransformComponent>(entity);
+						auto& transform = m_ActiveScene->GetRegistry()->GetComponent<TransformComponent>(entity);
 						transform.Translation = m_ActiveCameraController.GetPosition() + m_ActiveCameraController.GetDirection() * distance;
 
-						m_ActiveScene->GetRegistry()->emplace<MeshComponent>(entity, handle);
+						m_ActiveScene->GetRegistry()->EmplaceComponent<MeshComponent>(entity, handle);
 
 						m_SceneHierarchyPanel->SetSelectionContext(entity);
 					}
@@ -428,20 +427,27 @@ namespace Flameberry {
 
 		// ImGuizmo
 		const auto& selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
-		if (selectedEntity != fbentt::null && m_GizmoType != -1 && m_EditorState == EditorState::Edit)
+		if (selectedEntity != FEntity::Null && m_GizmoType != -1 && m_EditorState == EditorState::Edit)
 		{
 			glm::mat4 projectionMatrix = m_ActiveCameraController.GetCamera().GetProjectionMatrix();
 			projectionMatrix[1][1] *= -1;
 			glm::mat4 viewMatrix = m_ActiveCameraController.GetCamera().GetViewMatrix();
 
+			auto& style = ImGuizmo::GetStyle();
+			style.Colors[ImGuizmo::COLOR::DIRECTION_X] = ImGui::ColorConvertU32ToFloat4(0xFF715ED8);
+			style.Colors[ImGuizmo::COLOR::DIRECTION_Y] = ImGui::ColorConvertU32ToFloat4(0xFF25AA25);
+			style.Colors[ImGuizmo::COLOR::DIRECTION_Z] = ImGui::ColorConvertU32ToFloat4(0xFFCC532C);
+			style.Colors[ImGuizmo::COLOR::SELECTION] = ImGui::ColorConvertU32ToFloat4(0xFF20AACC);
+
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
+			ImGuizmo::SetGizmoSizeClipSpace(0.155f);
 
 			float windowWidth = (float)ImGui::GetWindowWidth();
 			float windowHeight = (float)ImGui::GetWindowHeight();
 			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
 
-			auto& transformComp = m_ActiveScene->GetRegistry()->get<TransformComponent>(selectedEntity);
+			auto& transformComp = m_ActiveScene->GetRegistry()->GetComponent<TransformComponent>(selectedEntity);
 			glm::mat4 transform = transformComp.CalculateTransform();
 
 			bool snap = Input::IsKeyPressed(KeyCode::LeftControl);
@@ -459,9 +465,9 @@ namespace Flameberry {
 				glm::vec3 translation, rotation, scale;
 				Math::DecomposeTransform(transform, translation, rotation, scale);
 
-				const glm::vec3 deltaTranslation = translation - transformComp.Translation;
 				const glm::vec3 deltaRotation = rotation - transformComp.Rotation;
-				const glm::vec3 deltaScale = scale - transformComp.Scale;
+				// const glm::vec3 deltaTranslation = translation - transformComp.Translation;
+				// const glm::vec3 deltaScale = scale - transformComp.Scale;
 
 				transformComp.Translation = translation;
 				transformComp.Rotation += deltaRotation;
@@ -549,7 +555,7 @@ namespace Flameberry {
 				if (ctrl_or_cmd && m_EditorState == EditorState::Edit)
 				{
 					const auto selectionContext = m_SceneHierarchyPanel->GetSelectionContext();
-					if (selectionContext != fbentt::null)
+					if (selectionContext != FEntity::Null)
 					{
 						const auto duplicateEntity = m_ActiveScene->DuplicateEntity(selectionContext);
 						m_SceneHierarchyPanel->SetSelectionContext(duplicateEntity);
@@ -601,12 +607,15 @@ namespace Flameberry {
 				if (ctrl_or_cmd)
 				{
 					const auto entity = m_SceneHierarchyPanel->GetSelectionContext();
-					if (entity != fbentt::null)
+					if (entity != FEntity::Null)
 					{
 						m_ActiveScene->DestroyEntityTree(entity);
-						m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
+						m_SceneHierarchyPanel->SetSelectionContext(FEntity::Null);
 					}
 				}
+				break;
+			case KeyCode::Escape:
+				m_SceneHierarchyPanel->SetSelectionContext(FEntity::Null);
 				break;
 		}
 	}
@@ -707,7 +716,7 @@ namespace Flameberry {
 	{
 		m_ActiveScene = scene;
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
-		m_SceneHierarchyPanel->SetSelectionContext(fbentt::null);
+		m_SceneHierarchyPanel->SetSelectionContext(FEntity::Null);
 	}
 
 	void EditorLayer::UI_Menubar()
@@ -1116,9 +1125,6 @@ namespace Flameberry {
 
 	void EditorLayer::UI_AssetRegistry()
 	{
-		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
-		static constexpr float LabelWidth = 100.0f;
-
 		ImGui::Begin("Asset Registry");
 
 		if (UI::BeginKeyValueTable("##AssetRegistryTable"))

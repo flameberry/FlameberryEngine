@@ -18,7 +18,8 @@ logs/
 *.sln
 .vs/
 
-# Pycharm folders
+# Jetbrains folders
+.fleet/
 .idea/
 __pycache__/
 

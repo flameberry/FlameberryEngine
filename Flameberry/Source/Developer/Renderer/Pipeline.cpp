@@ -14,55 +14,38 @@ namespace Flameberry {
 		{
 			case ShaderDataType::None:
 				return VK_FORMAT_UNDEFINED;
-				break;
 			case ShaderDataType::Float:
 				return VK_FORMAT_R32_SFLOAT;
-				break;
 			case ShaderDataType::Float2:
 				return VK_FORMAT_R32G32_SFLOAT;
-				break;
 			case ShaderDataType::Float3:
 				return VK_FORMAT_R32G32B32_SFLOAT;
-				break;
 			case ShaderDataType::Float4:
 				return VK_FORMAT_R32G32B32A32_SFLOAT;
-				break;
 			case ShaderDataType::UInt:
 				return VK_FORMAT_R32_UINT;
-				break;
 			case ShaderDataType::UInt2:
 				return VK_FORMAT_R32G32_UINT;
-				break;
 			case ShaderDataType::UInt3:
 				return VK_FORMAT_R32G32B32_UINT;
-				break;
 			case ShaderDataType::UInt4:
 				return VK_FORMAT_R32G32B32_UINT;
-				break;
 			case ShaderDataType::Int:
 				return VK_FORMAT_R32_SINT;
-				break;
 			case ShaderDataType::Int2:
 				return VK_FORMAT_R32G32_SINT;
-				break;
 			case ShaderDataType::Int3:
 				return VK_FORMAT_R32G32B32_SINT;
-				break;
 			case ShaderDataType::Int4:
 				return VK_FORMAT_R32G32B32A32_SINT;
-				break;
 			case ShaderDataType::Float3x3:
 				return VK_FORMAT_R32G32B32_SFLOAT;
-				break;
 			case ShaderDataType::Float4x4:
 				return VK_FORMAT_R32G32B32A32_SFLOAT;
-				break;
 			case ShaderDataType::Bool:
 				return VK_FORMAT_R8_UINT;
-				break;
 			default:
 				return VK_FORMAT_UNDEFINED;
-				break;
 		}
 	}
 
@@ -72,67 +55,46 @@ namespace Flameberry {
 		{
 			case ShaderDataType::None:
 				return 0;
-				break;
 			case ShaderDataType::Float:
 				return 4;
-				break;
 			case ShaderDataType::Float2:
 				return 4 * 2;
-				break;
 			case ShaderDataType::Float3:
 				return 4 * 3;
-				break;
 			case ShaderDataType::Float4:
 				return 4 * 4;
-				break;
 			case ShaderDataType::UInt:
 				return 4;
-				break;
 			case ShaderDataType::UInt2:
 				return 4 * 2;
-				break;
 			case ShaderDataType::UInt3:
 				return 4 * 3;
-				break;
 			case ShaderDataType::UInt4:
 				return 4 * 4;
-				break;
 			case ShaderDataType::Int:
 				return 4;
-				break;
 			case ShaderDataType::Int2:
 				return 4 * 2;
-				break;
 			case ShaderDataType::Int3:
 				return 4 * 3;
-				break;
 			case ShaderDataType::Int4:
 				return 4 * 4;
-				break;
 			case ShaderDataType::Float3x3:
 				return 4 * 3 * 3;
-				break;
 			case ShaderDataType::Float4x4:
 				return 4 * 4 * 4;
-				break;
 			case ShaderDataType::Bool:
 				return 1;
-				break;
 			case ShaderDataType::Dummy1:
 				return 1;
-				break;
 			case ShaderDataType::Dummy4:
 				return 4;
-				break;
 			case ShaderDataType::Dummy8:
 				return 8;
-				break;
 			case ShaderDataType::Dummy12:
 				return 12;
-				break;
 			case ShaderDataType::Dummy16:
 				return 16;
-				break;
 		}
 		return 0;
 	}
@@ -370,7 +332,7 @@ namespace Flameberry {
 		if (m_Specification.DynamicStencilOp)
 			dynamicStates.emplace_back(VK_DYNAMIC_STATE_STENCIL_OP);
 
-		if (m_Specification.Viewport.width == 0 || m_Specification.Viewport.width == 0)
+		if (m_Specification.Viewport.width == 0 || m_Specification.Viewport.height == 0)
 		{
 			pipelineViewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 			pipelineViewportStateCreateInfo.viewportCount = 1;

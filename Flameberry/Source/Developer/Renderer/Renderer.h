@@ -50,10 +50,18 @@ namespace Flameberry {
 		static VkCommandBuffer GetActiveVulkanCommandBuffer() { return s_CommandBuffers[s_RT_FrameIndex]->GetVulkanCommandBuffer(); }
 
 		// Rendering Utilities
-		static void SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform);
 		static void RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline);
 		static void RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material);
 		static void RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer);
+
+		/** @brief Obsolete: This function is used to render a single mesh by individually binding it's resources.
+		 * It shouldn't be preferred anymore, as redundant bindings are a problem using this.
+		 * @param mesh - The mesh to be rendered
+		 * @param pipeline - The mesh pipeline
+		 * @param materialTable - The corresponding material table
+		 * @param transform - The transform matrix
+		 */
+		static void SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform);
 
 		// Retrieve Generic Resources
 		static Ref<Texture2D> GetCheckerboardTexture() { return s_CheckerboardTexture; }
@@ -68,7 +76,6 @@ namespace Flameberry {
 
 		static RendererFrameStats s_RendererFrameStats;
 
-		// Critical Variables
 		static std::vector<Command> s_CommandQueue;
 
 		// Query Pool

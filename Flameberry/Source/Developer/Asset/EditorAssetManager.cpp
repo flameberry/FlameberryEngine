@@ -4,7 +4,9 @@
 #include "Core/YamlUtils.h"
 
 #include "Project/Project.h"
+
 #include "Asset/AssetImporter.h"
+#include "AssetThread.h"
 
 namespace Flameberry {
 
@@ -63,6 +65,44 @@ namespace Flameberry {
 			asset->Handle = handle;
 
 			m_LoadedAssets[asset->Handle] = asset;
+		}
+
+		// 5. Return the loaded asset
+		return asset;
+	}
+
+	Ref<Asset> EditorAssetManager::GetAssetAsync(AssetHandle handle)
+	{
+		// 1. Check if handle is valid
+		if (!IsAssetHandleValid(handle))
+			return nullptr;
+
+		// Get the metadata
+		const AssetMetadata& metadata = m_AssetRegistry.at(handle);
+
+		Ref<Asset> asset;
+
+		// 2. Check if the asset is MemoryOnly
+		if (metadata.IsMemoryAsset && IsMemoryAsset(handle))
+			return m_MemoryOnlyAssets.at(handle);
+
+		// 3. Check if the asset is loaded
+		if (IsAssetLoaded(handle))
+		{
+			asset = m_LoadedAssets.at(handle);
+		}
+		else
+		{
+			// 4. Queue Loading of Asset if not already loaded
+			asset = m_AssetThread->QueueLoad(handle, metadata);
+
+			if (asset)
+			{
+				// Set the already known AssetHandle for this asset
+				asset->Handle = handle;
+
+				m_LoadedAssets[asset->Handle] = asset;
+			}
 		}
 
 		// 5. Return the loaded asset

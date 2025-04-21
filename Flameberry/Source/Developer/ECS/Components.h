@@ -44,6 +44,12 @@ namespace Flameberry {
 			: Tag(tag) {}
 	};
 
+	// Editor Only
+	// For scene structure tidying purposes only
+	struct CollectionComponent
+	{
+	};
+
 	struct CameraComponent
 	{
 		GenericCamera Camera;
@@ -100,13 +106,13 @@ namespace Flameberry {
 
 	struct RelationshipComponent
 	{
-		fbentt::entity Parent{};
-		fbentt::entity FirstChild{};
-		fbentt::entity PrevSibling{};
-		fbentt::entity NextSibling{};
+		FEntity Parent{};
+		FEntity FirstChild{};
+		FEntity PrevSibling{};
+		FEntity NextSibling{};
 
 		RelationshipComponent()
-			: Parent(fbentt::null), FirstChild(fbentt::null), PrevSibling(fbentt::null), NextSibling(fbentt::null)
+			: Parent(FEntity::Null), FirstChild(FEntity::Null), PrevSibling(FEntity::Null), NextSibling(FEntity::Null)
 		{
 		}
 
@@ -204,6 +210,9 @@ namespace Flameberry {
 	{
 	};
 
-	using AllComponents = ComponentList<TransformComponent, CameraComponent, SkyLightComponent, MeshComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent, TextComponent>;
+	using AllComponents = ComponentList<TransformComponent, CollectionComponent, CameraComponent, MeshComponent,
+		SkyLightComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent,
+		RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent,
+		TextComponent>;
 
 } // namespace Flameberry

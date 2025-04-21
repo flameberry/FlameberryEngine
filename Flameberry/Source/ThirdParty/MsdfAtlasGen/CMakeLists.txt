@@ -1,35 +1,10 @@
-# ZLib
-if(NOT ZLIB_FOUND)
-	if(NOT TARGET zlibstatic)
-		add_subdirectory(ZLib)
-	endif()
+find_package(ZLIB REQUIRED)
 
-	add_library(ZLIB::ZLIB ALIAS zlibstatic)
-	get_target_property(ZLIB_INCLUDE_DIR zlibstatic INTERFACE_INCLUDE_DIRECTORIES)
-
-	set(ZLIB_FOUND TRUE PARENT_SCOPE)
-	set(ZLIB_LIBRARIES zlibstatic PARENT_SCOPE)
-
-	if(WIN32)
-		get_target_property(ZLIB_BINARY_DIR zlibstatic BINARY_DIR)
-		set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR} ${ZLIB_BINARY_DIR} PARENT_SCOPE)
-	endif()
-endif()
-
-if(WIN32)
-	set(ZLIB_LIBRARY zlibstatic)
-endif()
-
-# LibPNG
 add_subdirectory(LibPng)
 add_library(PNG::PNG ALIAS png_static) # Needed for msdfgen find_package(PNG REQUIRED)
 
 # This directory contains the pnglibconf.h file which is needed for compilation of msdfgen-ext
 get_target_property(PNG_BINARY_DIR png_static BINARY_DIR)
-
-if(WIN32)
-	unset(ZLIB_LIBRARY)
-endif()
 
 # Freetype
 add_subdirectory(Freetype)

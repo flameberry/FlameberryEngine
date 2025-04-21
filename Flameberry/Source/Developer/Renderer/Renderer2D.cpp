@@ -452,16 +452,17 @@ namespace Flameberry {
 			auto pipelineLayout = s_Renderer2DData.QuadPipeline->GetVulkanPipelineLayout();
 			auto indexCount = 6 * (uint32_t)s_Renderer2DData.QuadVertices.size() / 4;
 
-			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.TextureMap->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.QuadVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-				Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
-				VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
+			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.TextureMap->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.QuadVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+				{
+					Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
+					VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
-				VkDeviceSize offsets[] = { offset };
-				vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
-				vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-				vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
-			});
+					VkDeviceSize offsets[] = { offset };
+					vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+					vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+					vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+				});
 			s_Renderer2DData.QuadVertexBufferOffset += s_Renderer2DData.QuadVertices.size() * sizeof(QuadVertex);
 			s_Renderer2DData.QuadVertices.clear();
 		}
@@ -469,7 +470,7 @@ namespace Flameberry {
 
 	void Renderer2D::EndScene()
 	{
-		if (s_Renderer2DData.LineVertices.size())
+		if (!s_Renderer2DData.LineVertices.empty())
 		{
 			FBY_ASSERT(s_Renderer2DData.LineVertices.size() <= 2 * MAX_LINES, "MAX_LINES limit reached!");
 			s_Renderer2DData.LineVertexBuffer->WriteToBuffer(s_Renderer2DData.LineVertices.data(), s_Renderer2DData.LineVertices.size() * sizeof(LineVertex), 0);
@@ -479,15 +480,16 @@ namespace Flameberry {
 			const VkPipelineLayout pipelineLayout = s_Renderer2DData.LinePipeline->GetVulkanPipelineLayout();
 			const VkPipeline vulkanPipeline = s_Renderer2DData.LinePipeline->GetVulkanPipeline();
 
-			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, vertexBuffer, vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-				Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
+			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, vertexBuffer, vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+				{
+					Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
 
-				VkDeviceSize offsets[] = { 0 };
-				vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+					VkDeviceSize offsets[] = { 0 };
+					vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
 
-				vkCmdDraw(cmdBuffer, vertexCount, 1, 0, 0);
-			});
+					vkCmdDraw(cmdBuffer, vertexCount, 1, 0, 0);
+				});
 			s_Renderer2DData.LineVertices.clear();
 		}
 
@@ -506,16 +508,17 @@ namespace Flameberry {
 				const uint32_t vertexCount = (uint32_t)batch.TextVertices.size();
 				const uint32_t indexCount = 6 * (uint32_t)batch.TextVertices.size() / 4;
 
-				Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = batch.FontAtlasTexture->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.TextVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-					Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
-					VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
+				Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = batch.FontAtlasTexture->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.TextVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+					{
+						Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
+						VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
+						vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
-					VkDeviceSize offsets[] = { offset };
-					vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
-					vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-					vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
-				});
+						VkDeviceSize offsets[] = { offset };
+						vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+						vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+						vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+					});
 				s_Renderer2DData.TextVertexBufferOffset += batch.TextVertices.size() * sizeof(TextVertex);
 			}
 		}

@@ -13,6 +13,8 @@ namespace Flameberry {
 	{
 	public:
 		Ref<Asset> GetAsset(AssetHandle handle) override;
+		Ref<Asset> GetAssetAsync(AssetHandle handle) override;
+
 		bool IsAssetHandleValid(AssetHandle handle) const override;
 		bool IsAssetLoaded(AssetHandle handle) const override;
 
