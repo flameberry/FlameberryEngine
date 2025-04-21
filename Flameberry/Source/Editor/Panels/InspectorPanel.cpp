@@ -126,7 +126,8 @@ namespace Flameberry {
 			);
 
 			DrawComponent<TextComponent>(
-				ICON_LC_TEXT " Text", [&]()
+				ICON_LC_TEXT " Text",
+ [&]()
 				{
 					auto& text = m_Context->GetRegistry()->GetComponent<TextComponent>(m_SelectionContext);
 
@@ -143,7 +144,12 @@ namespace Flameberry {
 						Ref<Texture2D> fontPreview = fontAsset ? fontAsset->GetAtlasTexture() : Font::GetDefault()->GetAtlasTexture();
 
 						// Display font preview
-						ImGui::Image(fontPreview->CreateOrGetDescriptorSet(), ImVec2(80, 80), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+						ImGui::Image((ImTextureID)fontPreview->CreateOrGetDescriptorSet(),
+									 ImVec2(80, 80),
+									 ImVec2(0, 1),
+									 ImVec2(1, 0),
+									 ImVec4(1, 1, 1, 1),
+									 ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
 						if (ImGui::BeginDragDropTarget())
 						{
@@ -233,7 +239,7 @@ namespace Flameberry {
 							const float aspectRatio = (float)thumbnail->GetImageSpecification().Width / (float)thumbnail->GetImageSpecification().Height;
 
 							// Show Environment Map Preview
-							ImGui::Image(thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
+							ImGui::Image((ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
 
 							if (ImGui::BeginDragDropTarget())
 							{

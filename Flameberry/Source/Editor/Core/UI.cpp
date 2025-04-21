@@ -262,7 +262,7 @@ namespace Flameberry::UI {
 			constexpr float size = 80.0f;
 
 			// Show Asset Preview
-			ImGui::Image(thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
+			ImGui::Image((ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
 			ImGui::SameLine();
 			ImGui::Text("%s", filepath.stem().string().c_str());
 

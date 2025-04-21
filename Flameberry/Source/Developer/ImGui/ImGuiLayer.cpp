@@ -42,7 +42,8 @@ namespace Flameberry {
 		constexpr float DPI_SCALE = 2.0f;
 
 		config.OversampleH = 3;
-		config.GlyphExtraSpacing = ImVec2(1.4f, 0.62f);
+		// config.GlyphExtraSpacing = ImVec2(1.4f, 0.62f);
+		config.GlyphExtraAdvanceX = 1.4f;
 		config.RasterizerMultiply = 1.1f;
 		config.OversampleV = 3;
 #else
@@ -170,7 +171,7 @@ namespace Flameberry {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
 	}
 
 	void ImGuiLayer::End()
