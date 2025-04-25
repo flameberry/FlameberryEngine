@@ -156,7 +156,7 @@ namespace Flameberry::UI {
 	bool ContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
 	{
 		std::string filePathStr = filepath.string();
-		const char* filePathCStr = filePathStr.c_str();
+		const char* filePathCStrID = (filePathStr + "X").c_str();
 
 		bool isDirectory = std::filesystem::is_directory(filepath);
 
@@ -211,7 +211,7 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
 			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 
-			ImGui::ImageButton(filePathCStr, reinterpret_cast<ImTextureID>(thumbnail->CreateOrGetDescriptorSet()), ImVec2(thumbnailWidth, thumbnailHeight));
+			ImGui::ImageButton(filePathCStrID, (ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(thumbnailWidth, thumbnailHeight));
 		}
 
 		const auto& filename = keepExtension ? filepath.filename().string() : filepath.stem().string();
@@ -244,7 +244,7 @@ namespace Flameberry::UI {
 
 		ImGui::EndGroup();
 
-		if (ImGui::BeginPopupContextItem(filePathCStr))
+		if (ImGui::BeginPopupContextItem(filePathCStrID))
 		{
 			if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete"))
 			{
@@ -257,7 +257,7 @@ namespace Flameberry::UI {
 
 		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 		{
-			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filePathCStr, (strlen(filePathCStr) + 1) * sizeof(char), ImGuiCond_Once);
+			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filePathStr.c_str(), (strlen(filePathStr.c_str()) + 1) * sizeof(char), ImGuiCond_Once);
 
 			constexpr float size = 80.0f;
 

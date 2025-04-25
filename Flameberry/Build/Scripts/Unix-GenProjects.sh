@@ -2,6 +2,20 @@
 pushd "$(dirname "$0")/../../.."
 set -e
 
+openFlag=OFF
+
+while getopts "o" opt; do
+	case $opt in
+		o)
+			openFlag=ON
+			;;
+		\?)
+			echo "Invalid option: -$OPTARG" >&2
+			exit 1
+			;;
+	esac
+done
+
 metaFilePath="./Build/Scripts/Setup.meta"
 cmakeCommand="cmake"
 
@@ -25,6 +39,10 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 	"$cmakeCommand" -Wno-dev -S. -BFlameberry/Intermediate/Build/Xcode -G"Xcode"
 else
 	"$cmakeCommand" -Wno-dev -S. -BFlameberry/Intermediate/Build
+fi
+
+if openFlag=ON; then
+    open Flameberry/Intermediate/Build/Xcode/FlameberryEngine.xcodeproj
 fi
 
 popd

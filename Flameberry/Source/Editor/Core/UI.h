@@ -16,36 +16,6 @@
 
 namespace Flameberry {
 
-	inline ImVec4 operator*(const ImVec4& a, const ImVec4& b)
-	{
-		return ImVec4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
-	}
-
-	inline ImVec4 operator*(const ImVec4& a, float b)
-	{
-		return ImVec4(a.x * b, a.y * b, a.z * b, a.w * b);
-	}
-
-	inline ImVec2 operator+(const ImVec2& a, const ImVec2& b)
-	{
-		return ImVec2(a.x + b.x, a.y + b.y);
-	}
-
-	inline ImVec2 operator-(const ImVec2& a, const ImVec2& b)
-	{
-		return ImVec2(a.x - b.x, a.y - b.y);
-	}
-
-	inline ImVec2 operator*(const ImVec2& a, float b)
-	{
-		return ImVec2(a.x * b, a.y * b);
-	}
-
-	inline ImVec2 operator/(const ImVec2& a, float b)
-	{
-		return ImVec2(a.x / b, a.y / b);
-	}
-
 	/**
 	 * Contains all the UI widgets used by Flameberry
 	 */
