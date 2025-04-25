@@ -69,7 +69,136 @@ namespace Flameberry {
 		Init();
 	}
 
-	void SceneRenderer::Init()
+	void SceneRenderer::PrepareShadowMappingRenderPass()
+	{
+		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		const Ref<SwapChain> swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
+		const uint32_t imageCount = swapchain->GetSwapChainImageCount();
+
+		// Creating shadow map framebuffer and render pass  -----------------------------------------------------------------------
+		FramebufferSpecification shadowMapFramebufferSpec;
+		shadowMapFramebufferSpec.Width = SceneRendererSettings::CascadeSize;
+		shadowMapFramebufferSpec.Height = SceneRendererSettings::CascadeSize;
+		shadowMapFramebufferSpec.Attachments = { { VK_FORMAT_D32_SFLOAT, SceneRendererSettings::CascadeCount } };
+		shadowMapFramebufferSpec.Samples = 1;
+		shadowMapFramebufferSpec.DepthStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+		shadowMapFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+
+		RenderPassSpecification shadowMapRenderPassSpec;
+		shadowMapRenderPassSpec.TargetFramebuffers.resize(imageCount);
+		shadowMapRenderPassSpec.Dependencies = {
+			{
+				VK_SUBPASS_EXTERNAL,						  // uint32_t                   srcSubpass
+				0,											  // uint32_t                   dstSubpass
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,		  // VkPipelineStageFlags       srcStageMask
+				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,	  // VkPipelineStageFlags       dstStageMask
+				VK_ACCESS_SHADER_READ_BIT,					  // VkAccessFlags              srcAccessMask
+				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              dstAccessMask
+				VK_DEPENDENCY_BY_REGION_BIT					  // VkDependencyFlags          dependencyFlags
+			},
+			{
+				0,											  // uint32_t                   srcSubpass
+				VK_SUBPASS_EXTERNAL,						  // uint32_t                   dstSubpass
+				VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,	  // VkPipelineStageFlags       srcStageMask
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,		  // VkPipelineStageFlags       dstStageMask
+				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              srcAccessMask
+				VK_ACCESS_SHADER_READ_BIT,					  // VkAccessFlags              dstAccessMask
+				VK_DEPENDENCY_BY_REGION_BIT					  // VkDependencyFlags          dependencyFlags
+			}
+		};
+
+		for (uint32_t i = 0; i < imageCount; i++)
+			shadowMapRenderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(shadowMapFramebufferSpec);
+
+		m_ShadowMapRenderPass = CreateRef<RenderPass>(shadowMapRenderPassSpec);
+
+		// Shadow Map Pipeline ----------------------------------------------------------------------------
+		auto bufferSize = sizeof(glm::mat4) * SceneRendererSettings::CascadeCount;
+
+		BufferSpecification uniformBufferSpec;
+		uniformBufferSpec.InstanceCount = 1;
+		uniformBufferSpec.InstanceSize = bufferSize;
+		uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+		m_ShadowMapUniformBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (auto& uniformBuffer : m_ShadowMapUniformBuffers)
+		{
+			uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
+			uniformBuffer->MapMemory(bufferSize);
+		}
+
+		// Creating Descriptors ----------------------------------------------------------------------------
+		DescriptorSetLayoutSpecification shadowDescSetLayoutSpec;
+		shadowDescSetLayoutSpec.Bindings.emplace_back();
+		shadowDescSetLayoutSpec.Bindings[0].binding = 0;
+		shadowDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		shadowDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
+		shadowDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		m_ShadowMapDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(shadowDescSetLayoutSpec);
+
+		DescriptorSetSpecification shadowMapDescSetSpec;
+		shadowMapDescSetSpec.Layout = m_ShadowMapDescriptorSetLayout;
+
+		m_ShadowMapDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			m_ShadowMapDescriptorSets[i] = CreateRef<DescriptorSet>(shadowMapDescSetSpec);
+
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.buffer = m_ShadowMapUniformBuffers[i]->GetVulkanBuffer();
+			bufferInfo.range = bufferSize;
+			bufferInfo.offset = 0;
+
+			m_ShadowMapDescriptorSets[i]->WriteBuffer(0, bufferInfo);
+
+			m_ShadowMapDescriptorSets[i]->Update();
+		}
+
+		// Creating shadow map pipeline ----------------------------------------------------------------------------
+		PipelineSpecification pipelineSpec{};
+		pipelineSpec.Shader = ShaderLibrary::Get("DirectionalShadowMap");
+		pipelineSpec.RenderPass = m_ShadowMapRenderPass;
+
+		pipelineSpec.VertexLayout = {
+			ShaderDataType::Float3,	 // a_Position
+			ShaderDataType::Dummy12, // Normal (Unnecessary)
+			ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
+			ShaderDataType::Dummy12, // Tangent (Unnecessary)
+			ShaderDataType::Dummy12	 // BiTangent (Unnecessary)
+		};
+
+		pipelineSpec.Viewport.width = SceneRendererSettings::CascadeSize;
+		pipelineSpec.Viewport.height = SceneRendererSettings::CascadeSize;
+		pipelineSpec.Scissor = { { 0, 0 }, { SceneRendererSettings::CascadeSize, SceneRendererSettings::CascadeSize } };
+
+		pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
+		pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		pipelineSpec.DepthClampEnable = true;
+
+		m_ShadowMapPipeline = CreateRef<Pipeline>(pipelineSpec);
+
+		// Creating sampler for the shadow map ----------------------------------------------------------------------------
+		VkSamplerCreateInfo sampler_info{};
+		sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		sampler_info.magFilter = VK_FILTER_LINEAR;
+		sampler_info.minFilter = VK_FILTER_LINEAR;
+		sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		sampler_info.anisotropyEnable = VK_FALSE;
+		sampler_info.mipLodBias = 0.0f;
+		sampler_info.maxAnisotropy = 1.0f;
+		sampler_info.minLod = 0.0f;
+		sampler_info.maxLod = 1.0f;
+		sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+		sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+		VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_ShadowMapSampler));
+	}
+
+	void SceneRenderer::PrepareGeometryRenderPass()
 	{
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
@@ -77,431 +206,321 @@ namespace Flameberry {
 		auto sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 		auto swapchainImageFormat = swapchain->GetSwapChainImageFormat();
 
-		m_RendererData = CreateUnique<RendererData>();
+		// Scene Uniform Buffers ----------------------------------------------------------------------------
+		VkDeviceSize uniformBufferSize = sizeof(CameraUniformBufferObject);
 
-		/////////////////////////////////////// Preparing Shadow Mapping Pass ///////////////////////////////////////
+		BufferSpecification uniformBufferSpec;
+		uniformBufferSpec.InstanceCount = 1;
+		uniformBufferSpec.InstanceSize = uniformBufferSize;
+		uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+		m_CameraUniformBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (auto& uniformBuffer : m_CameraUniformBuffers)
 		{
-			FramebufferSpecification shadowMapFramebufferSpec;
-			shadowMapFramebufferSpec.Width = SceneRendererSettings::CascadeSize;
-			shadowMapFramebufferSpec.Height = SceneRendererSettings::CascadeSize;
-			shadowMapFramebufferSpec.Attachments = { { VK_FORMAT_D32_SFLOAT, SceneRendererSettings::CascadeCount } };
-			shadowMapFramebufferSpec.Samples = 1;
-			shadowMapFramebufferSpec.DepthStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-			shadowMapFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+			uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
+			uniformBuffer->MapMemory(uniformBufferSize);
+		}
 
-			RenderPassSpecification shadowMapRenderPassSpec;
-			shadowMapRenderPassSpec.TargetFramebuffers.resize(imageCount);
-			shadowMapRenderPassSpec.Dependencies = {
-				{
-					VK_SUBPASS_EXTERNAL,						  // uint32_t                   srcSubpass
-					0,											  // uint32_t                   dstSubpass
-					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,		  // VkPipelineStageFlags       srcStageMask
-					VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,	  // VkPipelineStageFlags       dstStageMask
-					VK_ACCESS_SHADER_READ_BIT,					  // VkAccessFlags              srcAccessMask
-					VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              dstAccessMask
-					VK_DEPENDENCY_BY_REGION_BIT					  // VkDependencyFlags          dependencyFlags
-				},
-				{
-					0,											  // uint32_t                   srcSubpass
-					VK_SUBPASS_EXTERNAL,						  // uint32_t                   dstSubpass
-					VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,	  // VkPipelineStageFlags       srcStageMask
-					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,		  // VkPipelineStageFlags       dstStageMask
-					VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              srcAccessMask
-					VK_ACCESS_SHADER_READ_BIT,					  // VkAccessFlags              dstAccessMask
-					VK_DEPENDENCY_BY_REGION_BIT					  // VkDependencyFlags          dependencyFlags
-				}
+		// Creating Descriptors ----------------------------------------------------------------------------
+		DescriptorSetLayoutSpecification cameraBufferDescLayoutSpec;
+		cameraBufferDescLayoutSpec.Bindings.emplace_back();
+
+		cameraBufferDescLayoutSpec.Bindings[0].binding = 0;
+		cameraBufferDescLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		cameraBufferDescLayoutSpec.Bindings[0].descriptorCount = 1;
+		cameraBufferDescLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		m_CameraBufferDescSetLayout = DescriptorSetLayout::CreateOrGetCached(cameraBufferDescLayoutSpec);
+
+		DescriptorSetSpecification cameraBufferDescSetSpec;
+		cameraBufferDescSetSpec.Layout = m_CameraBufferDescSetLayout;
+
+		m_CameraBufferDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			m_CameraBufferDescriptorSets[i] = CreateRef<DescriptorSet>(cameraBufferDescSetSpec);
+
+			VkDescriptorBufferInfo vk_descriptor_buffer_info{};
+			vk_descriptor_buffer_info.buffer = m_CameraUniformBuffers[i]->GetVulkanBuffer();
+			vk_descriptor_buffer_info.offset = 0;
+			vk_descriptor_buffer_info.range = uniformBufferSize;
+
+			m_CameraBufferDescriptorSets[i]->WriteBuffer(0, vk_descriptor_buffer_info);
+			m_CameraBufferDescriptorSets[i]->Update();
+		}
+
+		// Creating Framebuffers and Rendering Pass ----------------------------------------------------------------------------
+		FramebufferSpecification sceneFramebufferSpec;
+		sceneFramebufferSpec.Width = m_ViewportSize.x;
+		sceneFramebufferSpec.Height = m_ViewportSize.y;
+		sceneFramebufferSpec.Attachments = { swapchainImageFormat, SwapChain::GetDepthFormat() };
+		sceneFramebufferSpec.Samples = sampleCount;
+		sceneFramebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
+		sceneFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+		// Don't store multisample color attachment
+		sceneFramebufferSpec.ColorStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		// For outline compositing
+		sceneFramebufferSpec.StencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+		RenderPassSpecification sceneRenderPassSpec;
+		sceneRenderPassSpec.TargetFramebuffers.resize(imageCount);
+		sceneRenderPassSpec.Dependencies = {
+			{
+				VK_SUBPASS_EXTERNAL,						  // uint32_t                   srcSubpass
+				0,											  // uint32_t                   dstSubpass
+				VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,	  // VkPipelineStageFlags       srcStageMask
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,		  // VkPipelineStageFlags       dstStageMask
+				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              srcAccessMask
+				VK_ACCESS_SHADER_READ_BIT,					  // VkAccessFlags              dstAccessMask
+				VK_DEPENDENCY_BY_REGION_BIT					  // VkDependencyFlags          dependencyFlags
+			},
+			{
+				0,											   // uint32_t                   srcSubpass
+				VK_SUBPASS_EXTERNAL,						   // uint32_t                   dstSubpass
+				VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // VkPipelineStageFlags       srcStageMask
+				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,			   // VkPipelineStageFlags       dstStageMask
+				VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,		   // VkAccessFlags              srcAccessMask
+				VK_ACCESS_MEMORY_READ_BIT,					   // VkAccessFlags              dstAccessMask
+				VK_DEPENDENCY_BY_REGION_BIT					   // VkDependencyFlags          dependencyFlags
+			}
+		};
+
+		for (uint32_t i = 0; i < imageCount; i++)
+			sceneRenderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(sceneFramebufferSpec);
+
+		m_GeometryPass = CreateRef<RenderPass>(sceneRenderPassSpec);
+
+		// Creating pipelines ----------------------------------------------------------------------------
+		CreateMeshPipeline();
+		CreateSkymapPipeline();
+		CreateGridPipeline();
+	}
+
+	void SceneRenderer::PreparePostProcessingRenderPass()
+	{
+		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
+		auto imageCount = swapchain->GetSwapChainImageCount();
+		auto sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+		auto swapchainImageFormat = swapchain->GetSwapChainImageFormat();
+
+		FramebufferSpecification framebufferSpec{};
+		framebufferSpec.Width = m_ViewportSize.x;
+		framebufferSpec.Height = m_ViewportSize.y;
+		framebufferSpec.Attachments = { swapchainImageFormat, VK_FORMAT_D32_SFLOAT };
+		framebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
+		framebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+		framebufferSpec.Samples = 1;
+
+		RenderPassSpecification renderPassSpec{};
+		renderPassSpec.TargetFramebuffers.resize(swapchain->GetSwapChainImageCount());
+		for (uint32_t i = 0; i < renderPassSpec.TargetFramebuffers.size(); i++)
+			renderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(framebufferSpec);
+
+		m_CompositePass = CreateRef<RenderPass>(renderPassSpec);
+
+		DescriptorSetLayoutSpecification layoutSpec;
+		layoutSpec.Bindings.resize(1);
+
+		layoutSpec.Bindings[0].binding = 0;
+		layoutSpec.Bindings[0].descriptorCount = 1;
+		layoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		layoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		m_CompositePassDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(layoutSpec);
+
+		DescriptorSetSpecification setSpec;
+		setSpec.Layout = m_CompositePassDescriptorSetLayout;
+
+		m_CompositePassDescriptorSets.resize(imageCount);
+		for (uint8_t i = 0; i < m_CompositePassDescriptorSets.size(); i++)
+		{
+			m_CompositePassDescriptorSets[i] = CreateRef<DescriptorSet>(setSpec);
+
+			VkDescriptorImageInfo imageInfo{
+				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetVulkanImageView(),
+				.sampler = m_VkTextureSampler
 			};
 
-			for (uint32_t i = 0; i < imageCount; i++)
-				shadowMapRenderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(shadowMapFramebufferSpec);
+			m_CompositePassDescriptorSets[i]->WriteImage(0, imageInfo);
 
-			m_ShadowMapRenderPass = CreateRef<RenderPass>(shadowMapRenderPassSpec);
-
-			// Shadow Map Pipeline
-			auto bufferSize = sizeof(glm::mat4) * SceneRendererSettings::CascadeCount;
-
-			BufferSpecification uniformBufferSpec;
-			uniformBufferSpec.InstanceCount = 1;
-			uniformBufferSpec.InstanceSize = bufferSize;
-			uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-			uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-			m_ShadowMapUniformBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-			for (auto& uniformBuffer : m_ShadowMapUniformBuffers)
-			{
-				uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
-				uniformBuffer->MapMemory(bufferSize);
-			}
-
-			// Creating Descriptors
-			DescriptorSetLayoutSpecification shadowDescSetLayoutSpec;
-			shadowDescSetLayoutSpec.Bindings.emplace_back();
-			shadowDescSetLayoutSpec.Bindings[0].binding = 0;
-			shadowDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			shadowDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
-			shadowDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-			m_ShadowMapDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(shadowDescSetLayoutSpec);
-
-			DescriptorSetSpecification shadowMapDescSetSpec;
-			shadowMapDescSetSpec.Layout = m_ShadowMapDescriptorSetLayout;
-
-			m_ShadowMapDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-			for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-			{
-				m_ShadowMapDescriptorSets[i] = CreateRef<DescriptorSet>(shadowMapDescSetSpec);
-
-				VkDescriptorBufferInfo bufferInfo{};
-				bufferInfo.buffer = m_ShadowMapUniformBuffers[i]->GetVulkanBuffer();
-				bufferInfo.range = bufferSize;
-				bufferInfo.offset = 0;
-
-				m_ShadowMapDescriptorSets[i]->WriteBuffer(0, bufferInfo);
-
-				m_ShadowMapDescriptorSets[i]->Update();
-			}
-
-			PipelineSpecification pipelineSpec{};
-			pipelineSpec.Shader = ShaderLibrary::Get("DirectionalShadowMap");
-			pipelineSpec.RenderPass = m_ShadowMapRenderPass;
-
-			pipelineSpec.VertexLayout = {
-				ShaderDataType::Float3,	 // a_Position
-				ShaderDataType::Dummy12, // Normal (Unnecessary)
-				ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
-				ShaderDataType::Dummy12, // Tangent (Unnecessary)
-				ShaderDataType::Dummy12	 // BiTangent (Unnecessary)
-			};
-
-			pipelineSpec.Viewport.width = SceneRendererSettings::CascadeSize;
-			pipelineSpec.Viewport.height = SceneRendererSettings::CascadeSize;
-			pipelineSpec.Scissor = { { 0, 0 }, { SceneRendererSettings::CascadeSize, SceneRendererSettings::CascadeSize } };
-
-			pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
-			pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-			pipelineSpec.DepthClampEnable = true;
-
-			m_ShadowMapPipeline = CreateRef<Pipeline>(pipelineSpec);
-
-			VkSamplerCreateInfo sampler_info{};
-			sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-			sampler_info.magFilter = VK_FILTER_LINEAR;
-			sampler_info.minFilter = VK_FILTER_LINEAR;
-			sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-			sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-			sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-			sampler_info.anisotropyEnable = VK_FALSE;
-			sampler_info.mipLodBias = 0.0f;
-			sampler_info.maxAnisotropy = 1.0f;
-			sampler_info.minLod = 0.0f;
-			sampler_info.maxLod = 1.0f;
-			sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-			sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-
-			VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_ShadowMapSampler));
+			m_CompositePassDescriptorSets[i]->Update();
 		}
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		////////////////////////////////////////// Preparing Geometry Pass //////////////////////////////////////////
+		PipelineSpecification pipelineSpec{};
+
+		pipelineSpec.Shader = CreateRef<Shader>(
+			FBY_PROJECT_DIR "Flameberry/shaders/vulkan/bin/composite.vert.spv",
+			FBY_PROJECT_DIR "Flameberry/shaders/vulkan/bin/composite.frag.spv");
+
+		pipelineSpec.RenderPass = m_CompositePass;
+		pipelineSpec.VertexLayout = {};
+
+		pipelineSpec.BlendingEnable = true;
+		pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
+
+		m_CompositePipeline = CreateRef<Pipeline>(pipelineSpec);
+	}
+
+	void SceneRenderer::CreateMeshPipeline()
+	{
+		const VkDeviceSize uniformBufferSize = sizeof(SceneUniformBufferData);
+
+		BufferSpecification bufferSpec;
+		bufferSpec.InstanceCount = 1;
+		bufferSpec.InstanceSize = uniformBufferSize;
+		bufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		bufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+		m_SceneUniformBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (auto& uniformBuffer : m_SceneUniformBuffers)
 		{
-			// Scene
-			VkDeviceSize uniformBufferSize = sizeof(CameraUniformBufferObject);
-
-			BufferSpecification uniformBufferSpec;
-			uniformBufferSpec.InstanceCount = 1;
-			uniformBufferSpec.InstanceSize = uniformBufferSize;
-			uniformBufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-			uniformBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-			m_CameraUniformBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-			for (auto& uniformBuffer : m_CameraUniformBuffers)
-			{
-				uniformBuffer = std::make_unique<Buffer>(uniformBufferSpec);
-				uniformBuffer->MapMemory(uniformBufferSize);
-			}
-
-			// Creating Descriptors
-			DescriptorSetLayoutSpecification cameraBufferDescLayoutSpec;
-			cameraBufferDescLayoutSpec.Bindings.emplace_back();
-
-			cameraBufferDescLayoutSpec.Bindings[0].binding = 0;
-			cameraBufferDescLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			cameraBufferDescLayoutSpec.Bindings[0].descriptorCount = 1;
-			cameraBufferDescLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-			m_CameraBufferDescSetLayout = DescriptorSetLayout::CreateOrGetCached(cameraBufferDescLayoutSpec);
-
-			DescriptorSetSpecification cameraBufferDescSetSpec;
-			cameraBufferDescSetSpec.Layout = m_CameraBufferDescSetLayout;
-
-			m_CameraBufferDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-			for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-			{
-				m_CameraBufferDescriptorSets[i] = CreateRef<DescriptorSet>(cameraBufferDescSetSpec);
-
-				VkDescriptorBufferInfo vk_descriptor_buffer_info{};
-				vk_descriptor_buffer_info.buffer = m_CameraUniformBuffers[i]->GetVulkanBuffer();
-				vk_descriptor_buffer_info.offset = 0;
-				vk_descriptor_buffer_info.range = uniformBufferSize;
-
-				m_CameraBufferDescriptorSets[i]->WriteBuffer(0, vk_descriptor_buffer_info);
-				m_CameraBufferDescriptorSets[i]->Update();
-			}
-
-			FramebufferSpecification sceneFramebufferSpec;
-			sceneFramebufferSpec.Width = m_ViewportSize.x;
-			sceneFramebufferSpec.Height = m_ViewportSize.y;
-			sceneFramebufferSpec.Attachments = { swapchainImageFormat, SwapChain::GetDepthFormat() };
-			sceneFramebufferSpec.Samples = sampleCount;
-			sceneFramebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
-			sceneFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
-			// Don't store multisample color attachment
-			sceneFramebufferSpec.ColorStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			// For outline compositing
-			sceneFramebufferSpec.StencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-
-			RenderPassSpecification sceneRenderPassSpec;
-			sceneRenderPassSpec.TargetFramebuffers.resize(imageCount);
-			sceneRenderPassSpec.Dependencies = {
-				{
-					VK_SUBPASS_EXTERNAL,						  // uint32_t                   srcSubpass
-					0,											  // uint32_t                   dstSubpass
-					VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,	  // VkPipelineStageFlags       srcStageMask
-					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,		  // VkPipelineStageFlags       dstStageMask
-					VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              srcAccessMask
-					VK_ACCESS_SHADER_READ_BIT,					  // VkAccessFlags              dstAccessMask
-					VK_DEPENDENCY_BY_REGION_BIT					  // VkDependencyFlags          dependencyFlags
-				},
-				{
-					0,											   // uint32_t                   srcSubpass
-					VK_SUBPASS_EXTERNAL,						   // uint32_t                   dstSubpass
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // VkPipelineStageFlags       srcStageMask
-					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,			   // VkPipelineStageFlags       dstStageMask
-					VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,		   // VkAccessFlags              srcAccessMask
-					VK_ACCESS_MEMORY_READ_BIT,					   // VkAccessFlags              dstAccessMask
-					VK_DEPENDENCY_BY_REGION_BIT					   // VkDependencyFlags          dependencyFlags
-				}
-			};
-
-			for (uint32_t i = 0; i < imageCount; i++)
-				sceneRenderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(sceneFramebufferSpec);
-
-			m_GeometryPass = CreateRef<RenderPass>(sceneRenderPassSpec);
-
-			{
-				// Creating Mesh Pipeline
-				VkDeviceSize uniformBufferSize = sizeof(SceneUniformBufferData);
-
-				BufferSpecification bufferSpec;
-				bufferSpec.InstanceCount = 1;
-				bufferSpec.InstanceSize = uniformBufferSize;
-				bufferSpec.Usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-				bufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-				m_SceneUniformBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-				for (auto& uniformBuffer : m_SceneUniformBuffers)
-				{
-					uniformBuffer = std::make_unique<Buffer>(bufferSpec);
-					uniformBuffer->MapMemory(uniformBufferSize);
-				}
-
-				DescriptorSetLayoutSpecification sceneDescSetLayoutSpec;
-				sceneDescSetLayoutSpec.Bindings.resize(1);
-
-				// Scene Uniform Buffer
-				sceneDescSetLayoutSpec.Bindings[0].binding = 0;
-				sceneDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-				sceneDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
-				sceneDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-				m_SceneDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(sceneDescSetLayoutSpec);
-
-				DescriptorSetSpecification sceneDescSetSpec;
-				sceneDescSetSpec.Layout = m_SceneDescriptorSetLayout;
-
-				m_SceneDataDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-				for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-				{
-					m_SceneDataDescriptorSets[i] = CreateRef<DescriptorSet>(sceneDescSetSpec);
-
-					VkDescriptorBufferInfo bufferInfo{};
-					bufferInfo.range = sizeof(SceneUniformBufferData);
-					bufferInfo.offset = 0;
-					bufferInfo.buffer = m_SceneUniformBuffers[i]->GetVulkanBuffer();
-
-					m_SceneDataDescriptorSets[i]->WriteBuffer(0, bufferInfo);
-					m_SceneDataDescriptorSets[i]->Update();
-				}
-
-				DescriptorSetLayoutSpecification shadowMapRefDescSetLayoutSpec;
-				shadowMapRefDescSetLayoutSpec.Bindings.resize(1);
-
-				// Shadow Map
-				shadowMapRefDescSetLayoutSpec.Bindings[0].binding = 0;
-				shadowMapRefDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-				shadowMapRefDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
-				shadowMapRefDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-				m_ShadowMapRefDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(shadowMapRefDescSetLayoutSpec);
-
-				DescriptorSetSpecification shadowMapRefDescSetSpec;
-				shadowMapRefDescSetSpec.Layout = m_ShadowMapRefDescriptorSetLayout;
-
-				m_ShadowMapRefDescSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-				for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-				{
-					m_ShadowMapRefDescSets[i] = CreateRef<DescriptorSet>(shadowMapRefDescSetSpec);
-
-					VkDescriptorImageInfo imageInfo{};
-					imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-					imageInfo.imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetVulkanImageView();
-					imageInfo.sampler = m_ShadowMapSampler;
-
-					m_ShadowMapRefDescSets[i]->WriteImage(0, imageInfo);
-					m_ShadowMapRefDescSets[i]->Update();
-				}
-
-				PipelineSpecification pipelineSpec{};
-
-				pipelineSpec.Shader = ShaderLibrary::Get("PBR");
-				pipelineSpec.RenderPass = m_GeometryPass;
-
-				pipelineSpec.VertexLayout = {
-					ShaderDataType::Float3, // a_Position
-					ShaderDataType::Float3, // a_Normal
-					ShaderDataType::Float2, // a_TextureCoords
-					ShaderDataType::Float3, // a_Tangent
-					ShaderDataType::Float3	// a_BiTangent
-				};
-				pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
-
-				pipelineSpec.BlendingEnable = true;
-
-				pipelineSpec.StencilTestEnable = true;
-				pipelineSpec.StencilOpState.failOp = VK_STENCIL_OP_KEEP;
-				pipelineSpec.StencilOpState.depthFailOp = VK_STENCIL_OP_REPLACE;
-				pipelineSpec.StencilOpState.passOp = VK_STENCIL_OP_REPLACE;
-				pipelineSpec.StencilOpState.compareOp = VK_COMPARE_OP_ALWAYS;
-				pipelineSpec.StencilOpState.compareMask = 0xFF;
-				pipelineSpec.StencilOpState.reference = 1;
-				pipelineSpec.StencilOpState.writeMask = 1;
-
-				m_MeshPipeline = CreateRef<Pipeline>(pipelineSpec);
-			}
-
-			// Skybox Pipeline
-			{
-				Flameberry::PipelineSpecification pipelineSpec{};
-				pipelineSpec.Shader = ShaderLibrary::Get("Skymap");
-				pipelineSpec.RenderPass = m_GeometryPass;
-
-				pipelineSpec.VertexLayout = {};
-
-				VkSampleCountFlagBits sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
-				pipelineSpec.Samples = sampleCount;
-
-				pipelineSpec.CullMode = VK_CULL_MODE_NONE;
-
-				pipelineSpec.DepthTestEnable = true;
-				pipelineSpec.DepthWriteEnable = false;
-				pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-
-				m_SkymapPipeline = CreateRef<Pipeline>(pipelineSpec);
-			}
-			m_VkTextureSampler = Texture2D::GetDefaultSampler();
+			uniformBuffer = std::make_unique<Buffer>(bufferSpec);
+			uniformBuffer->MapMemory(uniformBufferSize);
 		}
+
+		DescriptorSetLayoutSpecification sceneDescSetLayoutSpec;
+		sceneDescSetLayoutSpec.Bindings.resize(1);
+
+		// Scene Uniform Buffer
+		sceneDescSetLayoutSpec.Bindings[0].binding = 0;
+		sceneDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		sceneDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
+		sceneDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		m_SceneDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(sceneDescSetLayoutSpec);
+
+		DescriptorSetSpecification sceneDescSetSpec;
+		sceneDescSetSpec.Layout = m_SceneDescriptorSetLayout;
+
+		m_SceneDataDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			// Creating Grid Pipeline
-			PipelineSpecification pipelineSpec{};
-			pipelineSpec.Shader = ShaderLibrary::Get("InfiniteGrid");
-			pipelineSpec.RenderPass = m_GeometryPass;
+			m_SceneDataDescriptorSets[i] = CreateRef<DescriptorSet>(sceneDescSetSpec);
 
-			pipelineSpec.VertexLayout = {};
-			pipelineSpec.BlendingEnable = true;
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.range = sizeof(SceneUniformBufferData);
+			bufferInfo.offset = 0;
+			bufferInfo.buffer = m_SceneUniformBuffers[i]->GetVulkanBuffer();
 
-			VkSampleCountFlagBits sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
-			pipelineSpec.Samples = sampleCount;
-
-			m_GridPipeline = CreateRef<Pipeline>(pipelineSpec);
-
-			m_GridMaterial = CreateRef<Material>(pipelineSpec.Shader);
-			m_GridMaterial->Set("u_GridSettings.Fading", 1.0f);
-			m_GridMaterial->Set("u_GridSettings.Near", 0.1f);
-			m_GridMaterial->Set("u_GridSettings.Far", 100.0f);
+			m_SceneDataDescriptorSets[i]->WriteBuffer(0, bufferInfo);
+			m_SceneDataDescriptorSets[i]->Update();
 		}
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-        ////////////////////////////////////////// Preparing Composite Pass /////////////////////////////////////////
-        {
-            // Create render pass
-            FramebufferSpecification framebufferSpec{};
-            framebufferSpec.Width = m_ViewportSize.x;
-            framebufferSpec.Height = m_ViewportSize.y;
-            framebufferSpec.Attachments = { swapchainImageFormat, VK_FORMAT_D32_SFLOAT };
-            framebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
-            framebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
-            framebufferSpec.Samples = 1;
+		DescriptorSetLayoutSpecification shadowMapRefDescSetLayoutSpec;
+		shadowMapRefDescSetLayoutSpec.Bindings.resize(1);
 
-            RenderPassSpecification renderPassSpec{};
-            renderPassSpec.TargetFramebuffers.resize(swapchain->GetSwapChainImageCount());
-            for (uint32_t i = 0; i < renderPassSpec.TargetFramebuffers.size(); i++)
-                renderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(framebufferSpec);
+		// Shadow Map Reference
+		shadowMapRefDescSetLayoutSpec.Bindings[0].binding = 0;
+		shadowMapRefDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		shadowMapRefDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
+		shadowMapRefDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-            m_CompositePass = CreateRef<RenderPass>(renderPassSpec);
+		m_ShadowMapRefDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(shadowMapRefDescSetLayoutSpec);
 
-            DescriptorSetLayoutSpecification layoutSpec;
-            layoutSpec.Bindings.resize(1);
+		DescriptorSetSpecification shadowMapRefDescSetSpec;
+		shadowMapRefDescSetSpec.Layout = m_ShadowMapRefDescriptorSetLayout;
 
-            layoutSpec.Bindings[0].binding = 0;
-            layoutSpec.Bindings[0].descriptorCount = 1;
-            layoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            layoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		m_ShadowMapRefDescSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (uint32_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			m_ShadowMapRefDescSets[i] = CreateRef<DescriptorSet>(shadowMapRefDescSetSpec);
 
-            m_CompositePassDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(layoutSpec);
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			imageInfo.imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetVulkanImageView();
+			imageInfo.sampler = m_ShadowMapSampler;
 
-            DescriptorSetSpecification setSpec;
-            setSpec.Layout = m_CompositePassDescriptorSetLayout;
+			m_ShadowMapRefDescSets[i]->WriteImage(0, imageInfo);
+			m_ShadowMapRefDescSets[i]->Update();
+		}
 
-            m_CompositePassDescriptorSets.resize(imageCount);
-            for (uint8_t i = 0; i < m_CompositePassDescriptorSets.size(); i++)
-            {
-                m_CompositePassDescriptorSets[i] = CreateRef<DescriptorSet>(setSpec);
+		PipelineSpecification pipelineSpec{};
 
-                VkDescriptorImageInfo imageInfo{
-                    .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                    .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetImageView(),
-                    .sampler = m_VkTextureSampler
-                };
+		pipelineSpec.Shader = ShaderLibrary::Get("PBR");
+		pipelineSpec.RenderPass = m_GeometryPass;
 
-                m_CompositePassDescriptorSets[i]->WriteImage(0, imageInfo);
+		pipelineSpec.VertexLayout = {
+			ShaderDataType::Float3, // a_Position
+			ShaderDataType::Float3, // a_Normal
+			ShaderDataType::Float2, // a_TextureCoords
+			ShaderDataType::Float3, // a_Tangent
+			ShaderDataType::Float3	// a_BiTangent
+		};
+		pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
-                m_CompositePassDescriptorSets[i]->Update();
-            }
+		pipelineSpec.BlendingEnable = true;
 
-            PipelineSpecification pipelineSpec{};
-            pipelineSpec.PipelineLayout.DescriptorSetLayouts = { m_CompositePassDescriptorSetLayout };
+		pipelineSpec.StencilTestEnable = true;
+		pipelineSpec.StencilOpState.failOp = VK_STENCIL_OP_KEEP;
+		pipelineSpec.StencilOpState.depthFailOp = VK_STENCIL_OP_REPLACE;
+		pipelineSpec.StencilOpState.passOp = VK_STENCIL_OP_REPLACE;
+		pipelineSpec.StencilOpState.compareOp = VK_COMPARE_OP_ALWAYS;
+		pipelineSpec.StencilOpState.compareMask = 0xFF;
+		pipelineSpec.StencilOpState.reference = 1;
+		pipelineSpec.StencilOpState.writeMask = 1;
 
-            pipelineSpec.Shader = CreateRef<Shader>(FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/composite.vert.spv", FBY_PROJECT_DIR"Flameberry/shaders/vulkan/bin/composite.frag.spv");
-            pipelineSpec.RenderPass = m_CompositePass;
+		m_MeshPipeline = CreateRef<Pipeline>(pipelineSpec);
+	}
 
-            pipelineSpec.VertexLayout = {};
+	void SceneRenderer::CreateSkymapPipeline()
+	{
+		Flameberry::PipelineSpecification pipelineSpec{};
+		pipelineSpec.Shader = ShaderLibrary::Get("Skymap");
+		pipelineSpec.RenderPass = m_GeometryPass;
 
-            pipelineSpec.BlendingEnable = true;
-            pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
+		pipelineSpec.VertexLayout = {};
 
-            m_CompositePipeline = CreateRef<Pipeline>(pipelineSpec);
-        }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#endif
+		VkSampleCountFlagBits sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+		pipelineSpec.Samples = sampleCount;
 
-		Renderer2D::Init(m_GeometryPass);
+		pipelineSpec.CullMode = VK_CULL_MODE_NONE;
 
-		// Textures
+		pipelineSpec.DepthTestEnable = true;
+		pipelineSpec.DepthWriteEnable = false;
+		pipelineSpec.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+
+		m_SkymapPipeline = CreateRef<Pipeline>(pipelineSpec);
+	}
+
+	void SceneRenderer::CreateGridPipeline()
+	{
+		PipelineSpecification pipelineSpec{};
+		pipelineSpec.Shader = ShaderLibrary::Get("InfiniteGrid");
+		pipelineSpec.RenderPass = m_GeometryPass;
+
+		pipelineSpec.VertexLayout = {};
+		pipelineSpec.BlendingEnable = true;
+
+		VkSampleCountFlagBits sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+		pipelineSpec.Samples = sampleCount;
+
+		m_GridPipeline = CreateRef<Pipeline>(pipelineSpec);
+
+		m_GridMaterial = CreateRef<Material>(pipelineSpec.Shader);
+		m_GridMaterial->Set("u_GridSettings.Fading", 1.0f);
+		m_GridMaterial->Set("u_GridSettings.Near", 0.1f);
+		m_GridMaterial->Set("u_GridSettings.Far", 100.0f);
+	}
+
+	void SceneRenderer::Init()
+	{
+		// Loading Renderer-Specific Textures
 		m_PointLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/BulbIcon.png");
 		m_SpotLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SpotLightIcon.png");
 		m_CameraIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/CameraIcon.png");
 		m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SunIcon.png");
+
+		m_RendererData = CreateUnique<RendererData>();
+		m_VkTextureSampler = Texture2D::GetDefaultSampler();
+
+		PrepareShadowMappingRenderPass();
+		PrepareGeometryRenderPass();
+		// PreparePostProcessingRenderPass();
+
+		Renderer2D::Init(m_GeometryPass);
 	}
 
 	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera, const glm::vec3& cameraPosition, FEntity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
@@ -869,7 +888,6 @@ namespace Flameberry {
 		{
 			if (auto* transform = scene->GetRegistry()->TryGetComponent<TransformComponent>(selectedEntity))
 			{
-				// Draw Physics Collider
 				SubmitPhysicsColliderGeometry(scene, selectedEntity, *transform); // NOTE: This function will check if any of the colliders is present
 				SubmitCameraViewGeometry(scene, selectedEntity, *transform);
 			}
@@ -910,27 +928,23 @@ namespace Flameberry {
 
 		m_GeometryPass->End();
 
-#if 0
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////// Composite Pass /////////////////////////////////////////////
+		// CompositePass();
+	}
 
-        m_CompositePass->Begin();
-        m_CompositePipeline->Bind();
+	void SceneRenderer::CompositePass()
+	{
+		std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+			descSets[i] = m_CompositePassDescriptorSets[i]->GetVulkanDescriptorSet();
 
-        std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-            descSets[i] = m_CompositePassDescriptorSets[i]->GetDescriptorSet();
-
-        Renderer::Submit([pipelineLayout = m_CompositePipeline->GetLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-            {
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
-                vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
-            }
-        );
-        m_CompositePass->End();
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-#endif
+		m_CompositePass->Begin();
+		Renderer::Submit([pipeline = m_CompositePipeline->GetVulkanPipeline(), pipelineLayout = m_CompositePipeline->GetVulkanPipelineLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+			{
+				Renderer::RT_BindPipeline(cmdBuffer, pipeline);
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
+				vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+			});
+		m_CompositePass->End();
 	}
 
 	void SceneRenderer::CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection)
@@ -1107,97 +1121,12 @@ namespace Flameberry {
 		const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
 
 		// Render Physics Colliders
-		if (auto* boxCollider = scene->GetRegistry()->TryGetComponent<BoxColliderComponent>(entity))
-		{
-			const glm::vec3 halfExtent = transform.Scale * boxCollider->Size * 0.5f + bias;
-
-			// Calculate the positions of the vertices of the collider
-			glm::vec3 vertex1 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, -halfExtent.y, -halfExtent.z));
-			glm::vec3 vertex2 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, -halfExtent.y, -halfExtent.z));
-			glm::vec3 vertex3 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, halfExtent.y, -halfExtent.z));
-			glm::vec3 vertex4 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, halfExtent.y, -halfExtent.z));
-			glm::vec3 vertex5 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, -halfExtent.y, halfExtent.z));
-			glm::vec3 vertex6 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, -halfExtent.y, halfExtent.z));
-			glm::vec3 vertex7 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(halfExtent.x, halfExtent.y, halfExtent.z));
-			glm::vec3 vertex8 = glm::vec3(transform.Translation + rotationMatrix * glm::vec3(-halfExtent.x, halfExtent.y, halfExtent.z));
-
-			Renderer2D::AddLine(vertex1, vertex2, greenColor); // Edge 1
-			Renderer2D::AddLine(vertex2, vertex3, greenColor); // Edge 2
-			Renderer2D::AddLine(vertex3, vertex4, greenColor); // Edge 3
-			Renderer2D::AddLine(vertex4, vertex1, greenColor); // Edge 4
-			Renderer2D::AddLine(vertex5, vertex6, greenColor); // Edge 5
-			Renderer2D::AddLine(vertex6, vertex7, greenColor); // Edge 6
-			Renderer2D::AddLine(vertex7, vertex8, greenColor); // Edge 7
-			Renderer2D::AddLine(vertex8, vertex5, greenColor); // Edge 8
-			Renderer2D::AddLine(vertex1, vertex5, greenColor); // Edge 9
-			Renderer2D::AddLine(vertex2, vertex6, greenColor); // Edge 10
-			Renderer2D::AddLine(vertex3, vertex7, greenColor); // Edge 11
-			Renderer2D::AddLine(vertex4, vertex8, greenColor); // Edge 12
-
-			// Diagonals
-			Renderer2D::AddLine(vertex1, vertex6, greenColor);
-			Renderer2D::AddLine(vertex2, vertex7, greenColor);
-			Renderer2D::AddLine(vertex3, vertex8, greenColor);
-			Renderer2D::AddLine(vertex4, vertex5, greenColor);
-			Renderer2D::AddLine(vertex3, vertex1, greenColor);
-			Renderer2D::AddLine(vertex7, vertex5, greenColor);
-		}
+		if (const auto* boxCollider = scene->GetRegistry()->TryGetComponent<BoxColliderComponent>(entity))
+			SubmitBoxColliderGeometry(*boxCollider, transform, rotationMatrix, greenColor, bias);
 		else if (auto* sphereCollider = scene->GetRegistry()->TryGetComponent<SphereColliderComponent>(entity); sphereCollider)
-		{
-			// Define the radius of the sphere
-			float radius = sphereCollider->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z) + bias;
-
-			// Define the number of lines
-			int numLines = 32;
-
-			// Calculate the angle between each line segment
-			float segmentAngle = 2 * glm::pi<float>() / numLines;
-
-			glm::vec3 vertices[2] = {};
-			vertices[0] = { radius, 0.0f, 0.0f };
-
-			uint8_t index = 1;
-			// Calculate the vertices for the circle
-			for (int i = 0; i < numLines; i++)
-			{
-				float theta = i * segmentAngle;
-				vertices[index].x = radius * cos(theta);
-				vertices[index].y = radius * sin(theta);
-				vertices[index].z = 0.0f;
-
-				const auto& pos = vertices[(index + 1) % 2];
-				const auto& pos2 = vertices[index];
-				Renderer2D::AddLine(pos + transform.Translation, pos2 + transform.Translation, greenColor);
-				Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, glm::vec3(pos2.x, pos2.z, pos2.y) + transform.Translation, greenColor);
-				Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, glm::vec3(pos2.z, pos2.y, pos2.x) + transform.Translation, greenColor);
-				index = (index + 1) % 2;
-			}
-
-			const auto& pos = vertices[(index + 1) % 2];
-			Renderer2D::AddLine(pos + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), greenColor);
-			Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), greenColor);
-			Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, transform.Translation + glm::vec3(0.0f, 0.0f, radius), greenColor);
-		}
+			SubmitSphereColliderGeometry(*sphereCollider, transform, greenColor, bias);
 		else if (auto* capsuleCollider = scene->GetRegistry()->TryGetComponent<CapsuleColliderComponent>(entity); capsuleCollider)
-		{
-			// Define the radius and half height of the capsule
-			float halfHeight = 0.5f * capsuleCollider->Height * transform.Scale.y;
-			float radius = capsuleCollider->Radius * glm::max(transform.Scale.x, transform.Scale.z) + bias;
-
-			Renderer2D::AddLine(transform.Translation + rotationMatrix * glm::vec3(radius, halfHeight, 0), transform.Translation + rotationMatrix * glm::vec3(radius, -halfHeight, 0), greenColor);
-			Renderer2D::AddLine(transform.Translation + rotationMatrix * glm::vec3(-radius, halfHeight, 0), transform.Translation + rotationMatrix * glm::vec3(-radius, -halfHeight, 0), greenColor);
-			Renderer2D::AddLine(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, radius), transform.Translation + rotationMatrix * glm::vec3(0, -halfHeight, radius), greenColor);
-			Renderer2D::AddLine(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, -radius), transform.Translation + rotationMatrix * glm::vec3(0, -halfHeight, -radius), greenColor);
-
-			Renderer2D::AddCircle(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, 0), radius, glm::quat(transform.Rotation), greenColor);
-			Renderer2D::AddCircle(transform.Translation + rotationMatrix * glm::vec3(0, -halfHeight, 0), radius, glm::quat(transform.Rotation), greenColor);
-
-			// Hemispheres
-			Renderer2D::AddSemiCircle(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, 0, glm::pi<float>())), greenColor);
-			Renderer2D::AddSemiCircle(transform.Translation + rotationMatrix * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, glm::pi<float>() / 2.0f, glm::pi<float>())), greenColor);
-			Renderer2D::AddSemiCircle(transform.Translation - rotationMatrix * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, 0, 0)), greenColor);
-			Renderer2D::AddSemiCircle(transform.Translation - rotationMatrix * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, glm::pi<float>() / 2.0f, 0)), greenColor);
-		}
+			SubmitCapsuleColliderGeometry(*capsuleCollider, transform, rotationMatrix, greenColor, bias);
 	}
 
 	// TODO: Move this to EditorLayer.cpp ASAP
@@ -1276,6 +1205,100 @@ namespace Flameberry {
 				}
 			}
 		}
+	}
+
+	void SceneRenderer::SubmitBoxColliderGeometry(const BoxColliderComponent& boxCollider, const TransformComponent& transform, const glm::mat3& rotation, const glm::vec3& color, const float bias)
+	{
+		const glm::vec3 halfExtent = transform.Scale * boxCollider.Size * 0.5f + bias;
+
+		// Calculate the positions of the vertices of the collider
+		glm::vec3 vertex1 = glm::vec3(transform.Translation + rotation * glm::vec3(-halfExtent.x, -halfExtent.y, -halfExtent.z));
+		glm::vec3 vertex2 = glm::vec3(transform.Translation + rotation * glm::vec3(halfExtent.x, -halfExtent.y, -halfExtent.z));
+		glm::vec3 vertex3 = glm::vec3(transform.Translation + rotation * glm::vec3(halfExtent.x, halfExtent.y, -halfExtent.z));
+		glm::vec3 vertex4 = glm::vec3(transform.Translation + rotation * glm::vec3(-halfExtent.x, halfExtent.y, -halfExtent.z));
+		glm::vec3 vertex5 = glm::vec3(transform.Translation + rotation * glm::vec3(-halfExtent.x, -halfExtent.y, halfExtent.z));
+		glm::vec3 vertex6 = glm::vec3(transform.Translation + rotation * glm::vec3(halfExtent.x, -halfExtent.y, halfExtent.z));
+		glm::vec3 vertex7 = glm::vec3(transform.Translation + rotation * glm::vec3(halfExtent.x, halfExtent.y, halfExtent.z));
+		glm::vec3 vertex8 = glm::vec3(transform.Translation + rotation * glm::vec3(-halfExtent.x, halfExtent.y, halfExtent.z));
+
+		Renderer2D::AddLine(vertex1, vertex2, color); // Edge 1
+		Renderer2D::AddLine(vertex2, vertex3, color); // Edge 2
+		Renderer2D::AddLine(vertex3, vertex4, color); // Edge 3
+		Renderer2D::AddLine(vertex4, vertex1, color); // Edge 4
+		Renderer2D::AddLine(vertex5, vertex6, color); // Edge 5
+		Renderer2D::AddLine(vertex6, vertex7, color); // Edge 6
+		Renderer2D::AddLine(vertex7, vertex8, color); // Edge 7
+		Renderer2D::AddLine(vertex8, vertex5, color); // Edge 8
+		Renderer2D::AddLine(vertex1, vertex5, color); // Edge 9
+		Renderer2D::AddLine(vertex2, vertex6, color); // Edge 10
+		Renderer2D::AddLine(vertex3, vertex7, color); // Edge 11
+		Renderer2D::AddLine(vertex4, vertex8, color); // Edge 12
+
+		// Diagonals
+		Renderer2D::AddLine(vertex1, vertex6, color);
+		Renderer2D::AddLine(vertex2, vertex7, color);
+		Renderer2D::AddLine(vertex3, vertex8, color);
+		Renderer2D::AddLine(vertex4, vertex5, color);
+		Renderer2D::AddLine(vertex3, vertex1, color);
+		Renderer2D::AddLine(vertex7, vertex5, color);
+	}
+
+	void SceneRenderer::SubmitSphereColliderGeometry(const SphereColliderComponent& sphereCollider, const TransformComponent& transform, const glm::vec3& color, const float bias)
+	{
+		// Define the radius of the sphere
+		float radius = sphereCollider.Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z) + bias;
+
+		// Define the number of lines
+		int numLines = 32;
+
+		// Calculate the angle between each line segment
+		float segmentAngle = 2 * glm::pi<float>() / numLines;
+
+		glm::vec3 vertices[2] = {};
+		vertices[0] = { radius, 0.0f, 0.0f };
+
+		uint8_t index = 1;
+		// Calculate the vertices for the circle
+		for (int i = 0; i < numLines; i++)
+		{
+			float theta = i * segmentAngle;
+			vertices[index].x = radius * cos(theta);
+			vertices[index].y = radius * sin(theta);
+			vertices[index].z = 0.0f;
+
+			const auto& pos = vertices[(index + 1) % 2];
+			const auto& pos2 = vertices[index];
+			Renderer2D::AddLine(pos + transform.Translation, pos2 + transform.Translation, color);
+			Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, glm::vec3(pos2.x, pos2.z, pos2.y) + transform.Translation, color);
+			Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, glm::vec3(pos2.z, pos2.y, pos2.x) + transform.Translation, color);
+			index = (index + 1) % 2;
+		}
+
+		const auto& pos = vertices[(index + 1) % 2];
+		Renderer2D::AddLine(pos + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), color);
+		Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), color);
+		Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, transform.Translation + glm::vec3(0.0f, 0.0f, radius), color);
+	}
+
+	void SceneRenderer::SubmitCapsuleColliderGeometry(const CapsuleColliderComponent& capsuleCollider, const TransformComponent& transform, const glm::mat3& rotation, const glm::vec3& color, const float bias)
+	{
+		// Define the radius and half height of the capsule
+		float halfHeight = 0.5f * capsuleCollider.Height * transform.Scale.y;
+		float radius = capsuleCollider.Radius * glm::max(transform.Scale.x, transform.Scale.z) + bias;
+
+		Renderer2D::AddLine(transform.Translation + rotation * glm::vec3(radius, halfHeight, 0), transform.Translation + rotation * glm::vec3(radius, -halfHeight, 0), color);
+		Renderer2D::AddLine(transform.Translation + rotation * glm::vec3(-radius, halfHeight, 0), transform.Translation + rotation * glm::vec3(-radius, -halfHeight, 0), color);
+		Renderer2D::AddLine(transform.Translation + rotation * glm::vec3(0, halfHeight, radius), transform.Translation + rotation * glm::vec3(0, -halfHeight, radius), color);
+		Renderer2D::AddLine(transform.Translation + rotation * glm::vec3(0, halfHeight, -radius), transform.Translation + rotation * glm::vec3(0, -halfHeight, -radius), color);
+
+		Renderer2D::AddCircle(transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius, glm::quat(transform.Rotation), color);
+		Renderer2D::AddCircle(transform.Translation + rotation * glm::vec3(0, -halfHeight, 0), radius, glm::quat(transform.Rotation), color);
+
+		// Hemispheres
+		Renderer2D::AddSemiCircle(transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, 0, glm::pi<float>())), color);
+		Renderer2D::AddSemiCircle(transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, glm::pi<float>() / 2.0f, glm::pi<float>())), color);
+		Renderer2D::AddSemiCircle(transform.Translation - rotation * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, 0, 0)), color);
+		Renderer2D::AddSemiCircle(transform.Translation - rotation * glm::vec3(0, halfHeight, 0), radius, glm::quat(glm::vec3(glm::pi<float>() / 2.0f, glm::pi<float>() / 2.0f, 0)), color);
 	}
 
 	SceneRenderer::~SceneRenderer()

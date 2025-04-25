@@ -33,8 +33,10 @@ namespace Flameberry {
 		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;	// Enable Docking
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+
 		// io.ConfigViewportsNoAutoMerge = true;
 		// io.ConfigViewportsNoTaskBarIcon = true;
+		io.ConfigDebugHighlightIdConflicts = false;
 
 		ImFontConfig config{};
 
@@ -318,6 +320,8 @@ namespace Flameberry {
 
 		colors[ImGuiCol_TabHovered] = ImVec4(0.49f, 0.43f, 0.24f, 1.00f);
 		colors[ImGuiCol_TabActive] = ImVec4(0.31f, 0.28f, 0.23f, 1.00f);
+		// colors[ImGuiCol_TabSelectedOverline] = ImVec4(1.00f, 0.71f, 0.00f, 1.00f);
+		colors[ImGuiCol_TabSelectedOverline] = Theme::AccentColor;
 
 		// colors[ImGuiCol_WindowBg] = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
 		colors[ImGuiCol_WindowBg] = Theme::WindowBgGrey;

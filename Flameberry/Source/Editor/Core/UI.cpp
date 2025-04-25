@@ -156,7 +156,7 @@ namespace Flameberry::UI {
 	bool ContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
 	{
 		std::string filePathStr = filepath.string();
-		const char* filePathCStrID = (filePathStr + "X").c_str();
+		const char* filePathCStrID = filePathStr.c_str();
 
 		bool isDirectory = std::filesystem::is_directory(filepath);
 
@@ -182,7 +182,7 @@ namespace Flameberry::UI {
 
 		const auto& cursorPos = ImGui::GetCursorScreenPos();
 		bool hovered, held;
-		bool isDoubleClicked = ImGui::ButtonBehavior(ImRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight)), ImGui::GetID(filepath.c_str()), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
+		bool isDoubleClicked = ImGui::ButtonBehavior(ImRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight)), ImGui::GetID(filePathCStrID), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
 
 		if (!isDirectory)
 		{

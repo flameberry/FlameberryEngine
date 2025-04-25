@@ -86,8 +86,25 @@ namespace Flameberry {
 		void Init();
 
 		void CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection);
+
+		// Debug Utilities
 		void SubmitPhysicsColliderGeometry(const Ref<Scene>& scene, FEntity entity, TransformComponent& transform);
 		void SubmitCameraViewGeometry(const Ref<Scene>& scene, FEntity entity, TransformComponent& transform);
+		void SubmitBoxColliderGeometry(const BoxColliderComponent& boxCollider, const TransformComponent& transform, const glm::mat3& rotation, const glm::vec3& color, const float bias);
+		void SubmitSphereColliderGeometry(const SphereColliderComponent& sphereCollider, const TransformComponent& transform, const glm::vec3& color, const float bias);
+		void SubmitCapsuleColliderGeometry(const CapsuleColliderComponent& capsuleCollider, const TransformComponent& transform, const glm::mat3& rotation, const glm::vec3& color, const float bias);
+
+		// Render Passes
+		void PrepareShadowMappingRenderPass();
+		void PrepareGeometryRenderPass();
+		void PreparePostProcessingRenderPass();
+
+		void CompositePass();
+
+		// Pipelines
+		void CreateMeshPipeline();
+		void CreateSkymapPipeline();
+		void CreateGridPipeline();
 
 	private:
 		glm::vec2 m_ViewportSize;
