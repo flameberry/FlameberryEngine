@@ -33,11 +33,11 @@ namespace Flameberry {
 		bool OnUpdateOrthographic(float delta);
 
 	private:
-		glm::vec3 m_Position, m_Direction;
+		glm::vec3 m_Position, m_Direction, m_Velocity;
 		GenericCamera m_Camera;
 
-		glm::vec3 m_RightDirection = {0, 0, 0}, m_UpDirection{ 0, 1, 0 };
-		glm::vec2 m_LastMousePosition = {0, 0};
+		glm::vec3 m_RightDirection = { 0, 0, 0 }, m_UpDirection{ 0, 1, 0 };
+		glm::vec2 m_LastMousePosition = { 0, 0 };
 		glm::vec3 m_FocalPoint{ 0.0f };
 	};
 
