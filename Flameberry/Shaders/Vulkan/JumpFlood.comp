@@ -1,0 +1,131 @@
+#version 450
+
+layout(set = 0, binding = 0, rgba8) uniform writeonly image2D _FBY_u_ColorSampler;
+layout(set = 0, binding = 1) uniform usampler2DMS _FBY_u_StencilSampler;
+layout(set = 0, binding = 2, rg32f) uniform image2D _FBY_u_JumpFloodImage1;
+layout(set = 0, binding = 3, rg32f) uniform image2D _FBY_u_JumpFloodImage2;
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(push_constant) uniform JumpFloodSettings {
+    vec3 u_OutlineColor;
+    int u_StepSize;
+    int u_ReadFromFirst;
+    bool u_IsInitialPass, u_IsFinalPass;
+};
+
+void InitPass(vec2 UV)
+{
+    const ivec2 imgSize = textureSize(_FBY_u_StencilSampler);
+    const uint stencil = texelFetch(_FBY_u_StencilSampler, ivec2(gl_GlobalInvocationID.xy), 0).r;
+
+    const ivec2 offsets[] = {
+            ivec2(-1, 0),
+            ivec2(0, -1),
+            ivec2(1, 0),
+            ivec2(0, 1)
+        };
+
+    bool border = false;
+
+    for (int i = 0; i < 4; i++)
+    {
+        ivec2 sampleCoord = ivec2(gl_GlobalInvocationID.xy) + offsets[i];
+
+        // Check if sample coordinates are out of bounds
+        if (sampleCoord.x >= 0 && sampleCoord.x < imgSize.x && sampleCoord.y >= 0 && sampleCoord.y < imgSize.y)
+        {
+            const uint sampledValue = texelFetch(_FBY_u_StencilSampler, sampleCoord, 0).r;
+
+            if (stencil != sampledValue)
+            {
+                border = true;
+                break;
+            }
+        }
+    }
+
+    imageStore(_FBY_u_JumpFloodImage1, ivec2(gl_GlobalInvocationID.xy), vec4(border ? UV : vec2(-1), 0, 1));
+
+    // Note: Temp Visualisation
+    // imageStore(_FBY_u_ColorSampler, ivec2(gl_GlobalInvocationID.xy), vec4(stencil == 1 ? UV : vec2(0), 0, 1));
+}
+
+void FinalPass()
+{
+    vec2 color;
+
+    if (u_ReadFromFirst == 0)
+        color = imageLoad(_FBY_u_JumpFloodImage1, ivec2(gl_GlobalInvocationID.xy)).rg;
+    else
+        color = imageLoad(_FBY_u_JumpFloodImage2, ivec2(gl_GlobalInvocationID.xy)).rg;
+
+    if (color.x >= 0.0 && color.y >= 0.0)
+        imageStore(_FBY_u_ColorSampler, ivec2(gl_GlobalInvocationID.xy), vec4(u_OutlineColor, 1));
+}
+
+vec4 StepJFA(vec2 UV, int stepSize)
+{
+    const ivec2 imgSize = imageSize(_FBY_u_JumpFloodImage1);
+    const vec2 pixelPos = UV * vec2(imgSize);
+
+    float bestDistance = 99999.0;
+    vec2 bestUV = vec2(-1.0, -1.0);
+
+    for (int y = -1; y <= 1; ++y)
+    {
+        for (int x = -1; x <= 1; ++x)
+        {
+            ivec2 offsetCoord = ivec2(gl_GlobalInvocationID.xy) + ivec2(x, y) * stepSize;
+
+            // Clamp offsetCoord inside the image
+            offsetCoord = clamp(offsetCoord, ivec2(0), imgSize - ivec2(1));
+
+            vec2 sampleUV;
+            if (u_ReadFromFirst == 0)
+                sampleUV = imageLoad(_FBY_u_JumpFloodImage1, offsetCoord).xy;
+            else
+                sampleUV = imageLoad(_FBY_u_JumpFloodImage2, offsetCoord).xy;
+
+            // If sample is invalid (-1, -1), skip
+            if (sampleUV.x < 0.0 || sampleUV.y < 0.0)
+                continue;
+
+            vec2 samplePixelPos = sampleUV * vec2(imgSize);
+            float dist = length(samplePixelPos - pixelPos);
+
+            if (dist < bestDistance) {
+                bestDistance = dist;
+                bestUV = sampleUV;
+            }
+        }
+    }
+
+    return vec4(bestUV, 0.0, 1.0);
+}
+
+void JumpFloodPass(vec2 UV, int stepSize)
+{
+    vec4 bestColor = StepJFA(UV, stepSize);
+
+    if (u_ReadFromFirst == 1)
+        imageStore(_FBY_u_JumpFloodImage1, ivec2(gl_GlobalInvocationID.xy), bestColor);
+    else
+        imageStore(_FBY_u_JumpFloodImage2, ivec2(gl_GlobalInvocationID.xy), bestColor);
+}
+
+void main()
+{
+    const ivec2 imgSize = textureSize(_FBY_u_StencilSampler);
+    if (gl_GlobalInvocationID.x >= imgSize.x || gl_GlobalInvocationID.y >= imgSize.y)
+        return;
+
+    const vec2 UV = gl_GlobalInvocationID.xy / vec2(imgSize);
+
+    if (u_IsInitialPass)
+        InitPass(UV);
+    else if (u_IsFinalPass)
+        FinalPass();
+    else
+        JumpFloodPass(UV, u_StepSize);
+}

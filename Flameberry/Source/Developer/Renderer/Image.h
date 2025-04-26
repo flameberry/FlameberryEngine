@@ -11,6 +11,9 @@ namespace Flameberry {
 		VkImageAspectFlags AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 		VkImageViewType ViewType = VK_IMAGE_VIEW_TYPE_2D;
 		uint32_t BaseMipLevel = 0, BaseArrayLayer = 0, LayerCount = 1;
+
+		// Experimenting with this format which should be efficient but confusing and unsafe
+		ImageViewSpecification* pNext = nullptr;
 	};
 
 	struct ImageSpecification
@@ -21,40 +24,42 @@ namespace Flameberry {
 		VkImageTiling Tiling = VK_IMAGE_TILING_OPTIMAL;
 		VkImageUsageFlags Usage;
 		VkMemoryPropertyFlags MemoryProperties;
-		ImageViewSpecification ViewSpecification;
 		VkImageCreateFlags Flags = 0;
+
+		ImageViewSpecification ViewSpecification;
 	};
 
 	class Image
 	{
 	public:
 		Image(const ImageSpecification& specification);
-		Image(const Ref<Image>& image, const ImageViewSpecification& viewSpecification);
 		~Image();
 
 		void GenerateMipmaps(VkImageLayout oldLayout, VkImageLayout newLayout);
 		void CmdGenerateMipmaps(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 		void WriteFromBuffer(VkBuffer srcBuffer);
+		void OnResize(uint32_t width, uint32_t height);
 
 		// This function just straight up creates, begins and ends a command buffer, which might be inefficient
 		void TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
 		void CmdTransitionLayout(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
 
 		VkImage GetVulkanImage() const { return m_VkImage; }
-		VkImageView GetVulkanImageView() const { return m_VkImageView; }
+		VkImageView GetVulkanImageView(int idx = 0) const { return m_VulkanImageViews[idx]; }
 
 		ImageSpecification GetSpecification() const { return m_Specification; }
 		VkMemoryRequirements GetMemoryRequirements() const { return m_MemoryRequirements; }
 
 	private:
+		void Invalidate();
+
+	private:
 		VkImage m_VkImage;
-		VkImageView m_VkImageView;
+		std::vector<VkImageView> m_VulkanImageViews;
 		VkDeviceMemory m_VkImageDeviceMemory;
 
 		VkMemoryRequirements m_MemoryRequirements;
 		ImageSpecification m_Specification;
-
-		uint32_t* m_ReferenceCount;
 	};
 } // namespace Flameberry

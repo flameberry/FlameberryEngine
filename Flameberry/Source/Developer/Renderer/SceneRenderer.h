@@ -31,7 +31,10 @@ namespace Flameberry {
 		bool GridFading = true;
 		float GridNear = 0.1f, GridFar = 100.0f;
 
-		static constexpr uint32_t CascadeCount = 4, CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
+		float SelectionOutlineWidth = 1.0f;
+
+		static constexpr uint32_t CascadeCount = 4,
+								  CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
 	};
 
 	struct Cascade
@@ -60,7 +63,7 @@ namespace Flameberry {
 
 	struct RendererData
 	{
-		std::vector<RenderObject> RenderObjects;
+		std::vector<RenderObject> RenderObjects, SelectedRenderObjects;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////
@@ -97,8 +100,10 @@ namespace Flameberry {
 		// Render Passes
 		void PrepareShadowMappingRenderPass();
 		void PrepareGeometryRenderPass();
-		void PreparePostProcessingRenderPass();
+		void PrepareJumpFloodPass();
+		void PrepareCompositeRenderPass();
 
+		void JumpFloodPass();
 		void CompositePass();
 
 		// Pipelines
@@ -131,6 +136,11 @@ namespace Flameberry {
 
 		Cascade m_Cascades[SceneRendererSettings::CascadeCount];
 		SceneRendererSettings m_RendererSettings;
+
+		// Jump Flood Algorithm
+		Ref<Image> m_JumpFloodImage1[SwapChain::MAX_FRAMES_IN_FLIGHT], m_JumpFloodImage2[SwapChain::MAX_FRAMES_IN_FLIGHT];
+		Ref<ComputePipeline> m_JumpFloodPipeline;
+		Ref<DescriptorSet> m_JumpFloodDescSets[SwapChain::MAX_FRAMES_IN_FLIGHT];
 
 		// Post processing
 		Ref<RenderPass> m_CompositePass;

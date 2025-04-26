@@ -22,6 +22,14 @@ namespace Flameberry {
 			|| format == VK_FORMAT_D32_SFLOAT_S8_UINT;
 	}
 
+	bool RenderCommand::DoesFormatSupportStencilAttachment(VkFormat format)
+	{
+		return format == VK_FORMAT_S8_UINT
+			|| format == VK_FORMAT_D16_UNORM_S8_UINT
+			|| format == VK_FORMAT_D24_UNORM_S8_UINT
+			|| format == VK_FORMAT_D32_SFLOAT_S8_UINT;
+	}
+
 	void RenderCommand::WritePixelFromImageToBuffer(VkBuffer buffer, VkImage image, VkImageLayout currentImageLayout, const glm::vec2& pixelOffset)
 	{
 		const auto& device = VulkanContext::GetCurrentDevice();
@@ -197,11 +205,6 @@ namespace Flameberry {
 		}
 		FBY_ERROR("Failed to find valid memory type!");
 		return -1;
-	}
-
-	bool RenderCommand::HasStencilComponent(VkFormat format)
-	{
-		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 	}
 
 	VkFormat RenderCommand::GetSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidateFormats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags)

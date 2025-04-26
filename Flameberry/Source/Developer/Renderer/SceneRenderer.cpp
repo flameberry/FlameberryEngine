@@ -63,6 +63,14 @@ namespace Flameberry {
 		alignas(16) SceneRendererSettingsUniform RendererSettings;
 	};
 
+	struct JumpFloodSettingsGPURepresentation
+	{
+		glm::vec3 OutlineColor;
+		int StepSize;
+		int ReadFromFirst = 0;
+		FBoolean IsInitialPass = FTrue, IsFinalPass = FFalse;
+	};
+
 	SceneRenderer::SceneRenderer(const glm::vec2& viewportSize)
 		: m_ViewportSize(viewportSize)
 	{
@@ -297,7 +305,77 @@ namespace Flameberry {
 		CreateGridPipeline();
 	}
 
-	void SceneRenderer::PreparePostProcessingRenderPass()
+	void SceneRenderer::PrepareJumpFloodPass()
+	{
+		// Creation of Jump Flood Images ------------------------------------------------------
+		ImageSpecification imageSpec;
+		imageSpec.Width = m_ViewportSize.x;
+		imageSpec.Height = m_ViewportSize.y;
+		imageSpec.Format = VK_FORMAT_R32G32_SFLOAT;
+		imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+
+		// Storage Image for the compute shaders to store data from the jump flood pass
+		imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+		for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			// These 2 images are for storing intermediate jump flood pass data,
+			// from which the final outline is gonna be copied onto the main render output
+			m_JumpFloodImage1[i] = CreateRef<Image>(imageSpec);
+			m_JumpFloodImage2[i] = CreateRef<Image>(imageSpec);
+
+			// Could be done in one command buffer
+			m_JumpFloodImage1[i]->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+			m_JumpFloodImage2[i]->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		}
+
+		// Creation of the pipeline ---------------------------------------------------------
+		ComputePipelineSpecification pipelineSpec;
+		pipelineSpec.Shader = ShaderLibrary::Get("JumpFlood");
+
+		m_JumpFloodPipeline = CreateRef<ComputePipeline>(pipelineSpec);
+
+		// Creation of Descriptor Sets ------------------------------------------------------
+		DescriptorSetSpecification descSetSpec;
+		// Get the DescriptorSetLayout for the Set of Index: 0 from the pipeline
+		descSetSpec.Layout = m_JumpFloodPipeline->GetDescriptorSetLayout(0);
+
+		// Creating/Updating Descriptor Sets ------------------------------------------------------
+		for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			m_JumpFloodDescSets[i] = CreateRef<DescriptorSet>(descSetSpec);
+
+			// First binding is the actual geometry pass image on which the outline is to be drawn
+			VkDescriptorImageInfo geometryPassImageInfo{};
+			geometryPassImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+			geometryPassImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetVulkanImageView();
+			geometryPassImageInfo.sampler = Texture2D::GetDefaultSampler();
+
+			VkDescriptorImageInfo stencilBufferImageInfo{};
+			stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+			stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetDepthAndOrStencilAttachment()->GetVulkanImageView(1);
+			stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
+
+			VkDescriptorImageInfo jumpFloodImage1Info{};
+			jumpFloodImage1Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+			jumpFloodImage1Info.imageView = m_JumpFloodImage1[i]->GetVulkanImageView();
+			jumpFloodImage1Info.sampler = VK_NULL_HANDLE;
+
+			VkDescriptorImageInfo jumpFloodImage2Info{};
+			jumpFloodImage2Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+			jumpFloodImage2Info.imageView = m_JumpFloodImage2[i]->GetVulkanImageView();
+			jumpFloodImage2Info.sampler = VK_NULL_HANDLE;
+
+			m_JumpFloodDescSets[i]->WriteImage(0, geometryPassImageInfo);
+			m_JumpFloodDescSets[i]->WriteImage(1, stencilBufferImageInfo);
+			m_JumpFloodDescSets[i]->WriteImage(2, jumpFloodImage1Info);
+			m_JumpFloodDescSets[i]->WriteImage(3, jumpFloodImage2Info);
+			m_JumpFloodDescSets[i]->Update();
+		}
+	}
+
+	void SceneRenderer::PrepareCompositeRenderPass()
 	{
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
@@ -430,7 +508,7 @@ namespace Flameberry {
 
 			VkDescriptorImageInfo imageInfo{};
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAttachment()->GetVulkanImageView();
+			imageInfo.imageView = m_ShadowMapRenderPass->GetSpecification().TargetFramebuffers[i]->GetDepthAndOrStencilAttachment()->GetVulkanImageView();
 			imageInfo.sampler = m_ShadowMapSampler;
 
 			m_ShadowMapRefDescSets[i]->WriteImage(0, imageInfo);
@@ -518,7 +596,8 @@ namespace Flameberry {
 
 		PrepareShadowMappingRenderPass();
 		PrepareGeometryRenderPass();
-		// PreparePostProcessingRenderPass();
+		PrepareJumpFloodPass();
+		// PrepareCompositeRenderPass();
 
 		Renderer2D::Init(m_GeometryPass);
 	}
@@ -542,6 +621,38 @@ namespace Flameberry {
 				if (!(m_ViewportSize.x == 0 || m_ViewportSize.y == 0) && (framebufferSpec.Width != m_ViewportSize.x || framebufferSpec.Height != m_ViewportSize.y))
 				{
 					m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass());
+
+					// Resizing Jump Flood Images
+					m_JumpFloodImage1[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y);
+					m_JumpFloodImage2[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y);
+
+					// Update Jump Flood Descriptor Sets
+					// First binding is the actual geometry pass image on which the outline is to be drawn
+					VkDescriptorImageInfo geometryPassImageInfo{};
+					geometryPassImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+					geometryPassImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetVulkanImageView();
+					geometryPassImageInfo.sampler = Texture2D::GetDefaultSampler();
+
+					VkDescriptorImageInfo stencilBufferImageInfo{};
+					stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+					stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetDepthAndOrStencilAttachment()->GetVulkanImageView(1);
+					stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
+
+					VkDescriptorImageInfo jumpFloodImage1Info{};
+					jumpFloodImage1Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+					jumpFloodImage1Info.imageView = m_JumpFloodImage1[imageIndex]->GetVulkanImageView();
+					jumpFloodImage1Info.sampler = VK_NULL_HANDLE;
+
+					VkDescriptorImageInfo jumpFloodImage2Info{};
+					jumpFloodImage2Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+					jumpFloodImage2Info.imageView = m_JumpFloodImage2[imageIndex]->GetVulkanImageView();
+					jumpFloodImage2Info.sampler = VK_NULL_HANDLE;
+
+					m_JumpFloodDescSets[imageIndex]->WriteImage(0, geometryPassImageInfo);
+					m_JumpFloodDescSets[imageIndex]->WriteImage(1, stencilBufferImageInfo);
+					m_JumpFloodDescSets[imageIndex]->WriteImage(2, jumpFloodImage1Info);
+					m_JumpFloodDescSets[imageIndex]->WriteImage(3, jumpFloodImage2Info);
+					m_JumpFloodDescSets[imageIndex]->Update();
 
 #if 0
                     VkDescriptorImageInfo imageInfo{
@@ -757,6 +868,10 @@ namespace Flameberry {
 
 		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>())
 		{
+			// Render selected entity separately for rendering 3d outline
+			if (selectedEntity == entity)
+				continue;
+
 			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
 
 			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
@@ -849,6 +964,83 @@ namespace Flameberry {
 			boundTransform = obj.Transform;
 		}
 #endif
+
+		//////////////////////////////////////////////// Rendering Selected Entity ////////////////////////////////////////////////
+
+		const bool canRenderOutline = selectedEntity != FEntity::Null && scene->GetRegistry()->HasComponent<TransformComponent, MeshComponent>(selectedEntity);
+
+		if (canRenderOutline)
+		{
+			// Clear the stencil buffer to allow Jump Flood Pass to see only the selected entity
+			Renderer::Submit([viewportSize = m_ViewportSize](VkCommandBuffer cmdBuffer, uint32_t)
+				{
+					VkClearAttachment clearAttachment[] = {
+						// Clear the stencil
+						{
+							.colorAttachment = 1 /* Stencil attachment index */,
+							.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT,
+							.clearValue = 0.0f /* Stencil clear value */
+						}
+					};
+
+					VkClearRect clearRect{};
+					clearRect.rect.offset = { 0, 0 };
+					clearRect.rect.extent = { (uint)viewportSize.x, (uint)viewportSize.y };
+					clearRect.baseArrayLayer = 0;
+					clearRect.layerCount = 1;
+
+					vkCmdClearAttachments(cmdBuffer, 1, clearAttachment, 1, &clearRect);
+				});
+
+			// Render the selected entity mesh
+			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(selectedEntity);
+
+			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
+			{
+				uint32_t submeshIndex = 0;
+
+				for (const auto& submesh : staticMesh->GetSubMeshes())
+				{
+					if (m_RendererSettings.FrustumCulling)
+					{
+						const auto modelMatrix = transform.CalculateTransform();
+
+						// TODO: Move this outside of the `if (m_RendererSettings.FrustumCulling)`
+						if (m_RendererSettings.ShowBoundingBoxes)
+							Renderer2D::AddAABB(submesh.AABB, modelMatrix, glm::vec4(1, 1, 0, 1));
+
+						// Skip processing the mesh if it is out of the camera frustum
+						if (!IsAABBInsideFrustum(submesh.AABB, modelMatrix, cameraFrustum))
+							continue;
+					}
+
+					// The Assumption here is every mesh loaded will have a Material, i.e. materialAsset won't be nullptr
+					Ref<MaterialAsset> materialAsset;
+					if (const auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
+						materialAsset = AssetManager::GetAsset<MaterialAsset>(it->second);
+					else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
+						materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
+
+					Renderer::Submit([pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(),
+										 viewportSize = m_ViewportSize,
+										 material = materialAsset->GetUnderlyingMaterial(),
+										 vertexBuffer = staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
+										 indexBuffer = staticMesh->GetIndexBuffer()->GetVulkanBuffer(),
+										 transform = transform.CalculateTransform(),
+										 indexCount = submesh.IndexCount,
+										 indexOffset = submesh.IndexOffset](VkCommandBuffer cmdBuffer, uint32_t)
+						{
+							Renderer::RT_BindMaterial(cmdBuffer, pipelineLayout, material);
+							Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
+							vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
+							vkCmdDrawIndexed(cmdBuffer, indexCount, 1, indexOffset, 0, 0);
+						});
+
+					submeshIndex++;
+				}
+			}
+		}
+
 		////////////////////////////////////////////// 2D Rendering //////////////////////////////////////////////
 
 		Renderer2D::BeginScene(m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet());
@@ -928,7 +1120,64 @@ namespace Flameberry {
 
 		m_GeometryPass->End();
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		if (canRenderOutline)
+			JumpFloodPass();
+
 		// CompositePass();
+	}
+
+	void SceneRenderer::JumpFloodPass()
+	{
+		Renderer::Submit([=, jumpFloodDescSets = m_JumpFloodDescSets, viewportSize = m_ViewportSize,
+							 pipeline = m_JumpFloodPipeline->GetVulkanPipeline(),
+							 pipelineLayout = m_JumpFloodPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+			{
+				JumpFloodSettingsGPURepresentation jumpFloodSettings;
+				jumpFloodSettings.OutlineColor = { Theme::AccentColor.x, Theme::AccentColor.y, Theme::AccentColor.z };
+				jumpFloodSettings.IsInitialPass = FTrue;
+				jumpFloodSettings.IsFinalPass = FFalse;
+				jumpFloodSettings.ReadFromFirst = 0;
+
+				// Transition the image to be suitable for writing
+				m_GeometryPass->GetSpecification()
+					.TargetFramebuffers[imageIndex]
+					->GetColorResolveAttachment(0)
+					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
+
+				m_GeometryPass->GetSpecification()
+					.TargetFramebuffers[imageIndex]
+					->GetDepthAndOrStencilAttachment()
+					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+
+				const VkDescriptorSet descSet = jumpFloodDescSets[imageIndex]->GetVulkanDescriptorSet();
+				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSet, 0, 0);
+
+				// Init Pass
+				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(JumpFloodSettingsGPURepresentation), &jumpFloodSettings);
+				vkCmdDispatch(cmdBuffer, viewportSize.x / 8, viewportSize.y / 8, 1);
+				jumpFloodSettings.IsInitialPass = FFalse;
+
+				const int steps = glm::ceil(glm::log(m_RendererSettings.SelectionOutlineWidth + 1.0) / glm::log(2));
+
+				for (int i = steps; i >= 0; i--)
+				{
+					jumpFloodSettings.StepSize = glm::pow(2, i) + 0.5f;
+
+					vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(JumpFloodSettingsGPURepresentation), &jumpFloodSettings);
+					vkCmdDispatch(cmdBuffer, viewportSize.x / 8, viewportSize.y / 8, 1);
+
+					// Switch buffers per pass
+					jumpFloodSettings.ReadFromFirst = 1 - jumpFloodSettings.ReadFromFirst;
+				}
+
+				// Final Pass
+				jumpFloodSettings.IsFinalPass = FTrue;
+				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(JumpFloodSettingsGPURepresentation), &jumpFloodSettings);
+				vkCmdDispatch(cmdBuffer, viewportSize.x / 8, viewportSize.y / 8, 1);
+			});
 	}
 
 	void SceneRenderer::CompositePass()

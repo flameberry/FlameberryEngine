@@ -238,7 +238,6 @@ namespace Flameberry {
 		Ref<DescriptorSet> cubemapGenerationDescriptorSet;
 		{
 			ComputePipelineSpecification pipelineSpec;
-			// TODO: Should this be moved into ShaderLibrary?
 			pipelineSpec.Shader = ShaderLibrary::Get("HDRToCubemap");
 			cubemapGenerationPipeline = CreateRef<ComputePipeline>(pipelineSpec);
 

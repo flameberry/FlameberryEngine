@@ -7,7 +7,21 @@
 namespace Flameberry {
 
 	Image::Image(const ImageSpecification& specification)
-		: m_Specification(specification), m_ReferenceCount(new uint32_t(1))
+		: m_Specification(specification)
+	{
+		Invalidate();
+	}
+
+	Image::~Image()
+	{
+		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		for (VkImageView view : m_VulkanImageViews)
+			vkDestroyImageView(device, view, nullptr);
+		vkDestroyImage(device, m_VkImage, nullptr);
+		vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
+	}
+
+	void Image::Invalidate()
 	{
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
@@ -41,64 +55,48 @@ namespace Flameberry {
 		VK_CHECK_RESULT(vkAllocateMemory(device, &allocInfo, nullptr, &m_VkImageDeviceMemory));
 		vkBindImageMemory(device, m_VkImage, m_VkImageDeviceMemory, 0);
 
-		// Creating Image View
-		VkImageViewCreateInfo vk_image_view_create_info{};
-		vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		vk_image_view_create_info.image = m_VkImage;
+		// Creating Image Views
+		int i = 0;
 
-		// This line is really weird
-		vk_image_view_create_info.viewType = m_Specification.ViewSpecification.ViewType == VK_IMAGE_VIEW_TYPE_2D && m_Specification.ViewSpecification.LayerCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : m_Specification.ViewSpecification.ViewType;
-
-		vk_image_view_create_info.format = m_Specification.Format;
-		vk_image_view_create_info.subresourceRange.aspectMask = m_Specification.ViewSpecification.AspectFlags;
-		vk_image_view_create_info.subresourceRange.baseMipLevel = m_Specification.ViewSpecification.BaseMipLevel;
-		vk_image_view_create_info.subresourceRange.levelCount = m_Specification.MipLevels;
-		vk_image_view_create_info.subresourceRange.baseArrayLayer = m_Specification.ViewSpecification.BaseArrayLayer;
-		vk_image_view_create_info.subresourceRange.layerCount = m_Specification.ViewSpecification.LayerCount;
-		vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-		vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-		vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-		vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-		VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView));
-	}
-
-	Image::Image(const Ref<Image>& image, const ImageViewSpecification& viewSpecification)
-		: m_VkImage(image->m_VkImage), m_VkImageDeviceMemory(image->m_VkImageDeviceMemory), m_Specification(image->m_Specification), m_ReferenceCount(image->m_ReferenceCount)
-	{
-		m_Specification.ViewSpecification = viewSpecification;
-
-		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		VkImageViewCreateInfo vk_image_view_create_info{};
-		vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		vk_image_view_create_info.image = m_VkImage;
-		vk_image_view_create_info.viewType = m_Specification.ViewSpecification.LayerCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
-		vk_image_view_create_info.format = m_Specification.Format;
-		vk_image_view_create_info.subresourceRange.aspectMask = m_Specification.ViewSpecification.AspectFlags;
-		vk_image_view_create_info.subresourceRange.baseMipLevel = m_Specification.ViewSpecification.BaseMipLevel;
-		vk_image_view_create_info.subresourceRange.levelCount = m_Specification.MipLevels;
-		vk_image_view_create_info.subresourceRange.baseArrayLayer = m_Specification.ViewSpecification.BaseArrayLayer;
-		vk_image_view_create_info.subresourceRange.layerCount = m_Specification.ViewSpecification.LayerCount;
-		vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-		vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-		vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-		vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-		VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VkImageView));
-
-		(*m_ReferenceCount)++;
-	}
-
-	Image::~Image()
-	{
-		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		vkDestroyImageView(device, m_VkImageView, nullptr);
-		if (--(*m_ReferenceCount) == 0)
+		for (const ImageViewSpecification* ptr = &m_Specification.ViewSpecification; ptr; ptr = ptr->pNext)
 		{
-			vkDestroyImage(device, m_VkImage, nullptr);
-			vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
-			delete m_ReferenceCount;
+			VkImageViewCreateInfo vk_image_view_create_info{};
+			vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			vk_image_view_create_info.image = m_VkImage;
+
+			// This line is really weird
+			vk_image_view_create_info.viewType = ptr->ViewType == VK_IMAGE_VIEW_TYPE_2D && ptr->LayerCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : ptr->ViewType;
+
+			vk_image_view_create_info.format = m_Specification.Format;
+			vk_image_view_create_info.subresourceRange.aspectMask = ptr->AspectFlags;
+			vk_image_view_create_info.subresourceRange.baseMipLevel = ptr->BaseMipLevel;
+			vk_image_view_create_info.subresourceRange.levelCount = m_Specification.MipLevels;
+			vk_image_view_create_info.subresourceRange.baseArrayLayer = ptr->BaseArrayLayer;
+			vk_image_view_create_info.subresourceRange.layerCount = ptr->LayerCount;
+			vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+			vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+			vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+			vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+			m_VulkanImageViews.emplace_back();
+			VK_CHECK_RESULT(vkCreateImageView(device, &vk_image_view_create_info, nullptr, &m_VulkanImageViews[i]));
+			i++;
 		}
+	}
+
+	void Image::OnResize(uint32_t width, uint32_t height)
+	{
+		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
+		for (VkImageView view : m_VulkanImageViews)
+			vkDestroyImageView(device, view, nullptr);
+
+		vkDestroyImage(device, m_VkImage, nullptr);
+		vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
+
+		m_Specification.Width = width;
+		m_Specification.Height = height;
+		Invalidate();
 	}
 
 	void Image::GenerateMipmaps(VkImageLayout oldLayout, VkImageLayout newLayout)

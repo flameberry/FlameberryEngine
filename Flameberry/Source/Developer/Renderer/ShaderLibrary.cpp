@@ -25,6 +25,7 @@ namespace Flameberry {
 			"IrradianceMap.comp.spv",
 			"PrefilteredMap.comp.spv",
 			"BRDFLUT.comp.spv",
+			"JumpFlood.comp.spv",
 		};
 
 		for (const auto& path : paths)

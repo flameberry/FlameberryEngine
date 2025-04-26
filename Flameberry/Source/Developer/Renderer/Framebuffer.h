@@ -53,7 +53,7 @@ namespace Flameberry {
 
 		Ref<Image> GetColorAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[attachmentIndex]; }
 		Ref<Image> GetColorResolveAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[m_DepthAttachmentIndex + 1 + attachmentIndex]; }
-		Ref<Image> GetDepthAttachment() const { return m_FramebufferImages[m_DepthAttachmentIndex]; }
+		Ref<Image> GetDepthAndOrStencilAttachment() const { return m_FramebufferImages[m_DepthAttachmentIndex]; }
 
 		void SetClearColorValue(const VkClearColorValue& value) { m_FramebufferSpec.ClearColorValue = value; }
 

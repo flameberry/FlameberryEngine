@@ -1079,6 +1079,9 @@ namespace Flameberry {
 				UI::TableKeyElement("Grid Far");
 				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Far", &settings.GridFar, 0.01f, settings.GridNear));
 
+				UI::TableKeyElement("Selection Outline Width");
+				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Selection_Outline_Width", &settings.SelectionOutlineWidth, 0.01f, 0.0f, 100.0f)); // Temp upper bound to outline width
+
 				UI::EndKeyValueTable();
 			}
 		}
