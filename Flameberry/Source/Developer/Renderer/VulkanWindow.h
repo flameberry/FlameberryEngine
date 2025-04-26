@@ -32,7 +32,7 @@ namespace Flameberry {
 		void SetEventCallBack(const std::function<void(Event&)>& fn) override;
 		void SetPosition(int xpos, int ypos) override;
 		void SetSize(int width, int height) override;
-		void SetTitle(const char* title) override;
+		void SetTitle(const std::string& title) override;
 		void SetSecondaryTitle(const char* secondaryTitle) override;
 		void SetTitlebarGradient(const glm::vec4& color) override;
 		void MoveToCenter() override;

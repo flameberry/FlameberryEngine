@@ -20,15 +20,15 @@ namespace Flameberry {
 	struct WindowSpecification
 	{
 		int Width, Height;
-		const char* Title = "";
-		const char* SecondaryTitle = "";
+		std::string Title = "";
+		std::string SecondaryTitle = "";
 		bool VSync;
 
 		bool NativeTitlebar;
 		glm::vec4 TitlebarGradientColor;
 		static constexpr int TitlebarHeight = 34;
 
-		WindowSpecification(int width = 1280, int height = 720, const char* title = FBY_WINDOW_TITLE)
+		WindowSpecification(int width = 1280, int height = 720, const std::string& title = FBY_WINDOW_TITLE)
 			: Width(width)
 			, Height(height)
 			, Title(title)
@@ -60,7 +60,7 @@ namespace Flameberry {
 
 		virtual void SetPosition(int xpos, int ypos) = 0;
 		virtual void SetSize(int width, int height) = 0;
-		virtual void SetTitle(const char* title) = 0;
+		virtual void SetTitle(const std::string& title) = 0;
 		virtual void SetSecondaryTitle(const char* title) = 0;
 		virtual void SetTitlebarGradient(const glm::vec4& color) = 0;
 		virtual void MoveToCenter() = 0;

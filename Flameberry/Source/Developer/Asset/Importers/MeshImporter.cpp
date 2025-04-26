@@ -36,7 +36,6 @@ namespace Flameberry {
 			vkCmdCopyBuffer(cmdBuffer.GetVulkanCommandBuffer(), srcBuffer, dstBuffer, 1, &vk_buffer_copy_info);
 			cmdBuffer.End();
 
-			// Test
 			VkCommandBuffer vulkanCmdBuffer = cmdBuffer.GetVulkanCommandBuffer();
 			VkQueue graphicsQueue = VulkanContext::GetCurrentDevice()->GetGraphicsQueue();
 
