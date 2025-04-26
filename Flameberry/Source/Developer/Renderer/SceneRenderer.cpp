@@ -311,7 +311,7 @@ namespace Flameberry {
 		ImageSpecification imageSpec;
 		imageSpec.Width = m_ViewportSize.x;
 		imageSpec.Height = m_ViewportSize.y;
-		imageSpec.Format = VK_FORMAT_R32G32_SFLOAT;
+		imageSpec.Format = VK_FORMAT_R16G16_SFLOAT;
 		imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
@@ -341,32 +341,6 @@ namespace Flameberry {
 		// Get the DescriptorSetLayout for the Set of Index: 0 from the pipeline
 		descSetSpec.Layout = m_JumpFloodPipeline->GetDescriptorSetLayout(0);
 
-		// Create sampler for accessing stencil buffer
-		VkSamplerCreateInfo samplerInfo{};
-		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerInfo.magFilter = VK_FILTER_LINEAR;
-		samplerInfo.minFilter = VK_FILTER_LINEAR;
-		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.anisotropyEnable = VK_TRUE;
-
-		VkPhysicalDeviceProperties properties;
-		vkGetPhysicalDeviceProperties(VulkanContext::GetPhysicalDevice(), &properties);
-
-		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-		samplerInfo.borderColor = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
-		samplerInfo.unnormalizedCoordinates = VK_FALSE;
-		samplerInfo.compareEnable = VK_FALSE;
-		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		samplerInfo.mipLodBias = 0.0f;
-		samplerInfo.minLod = 0.0f;
-		samplerInfo.maxLod = 0.0f;
-
-		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		VK_CHECK_RESULT(vkCreateSampler(device, &samplerInfo, nullptr, &m_StencilBufferSampler));
-
 		// Creating/Updating Descriptor Sets ------------------------------------------------------
 		for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
 		{
@@ -381,7 +355,7 @@ namespace Flameberry {
 			VkDescriptorImageInfo stencilBufferImageInfo{};
 			stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 			stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetDepthAndOrStencilAttachment()->GetVulkanImageView(1);
-			stencilBufferImageInfo.sampler = m_StencilBufferSampler;
+			stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
 
 			VkDescriptorImageInfo jumpFloodImage1Info{};
 			jumpFloodImage1Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -662,7 +636,7 @@ namespace Flameberry {
 					VkDescriptorImageInfo stencilBufferImageInfo{};
 					stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 					stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetDepthAndOrStencilAttachment()->GetVulkanImageView(1);
-					stencilBufferImageInfo.sampler = m_StencilBufferSampler;
+					stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
 
 					VkDescriptorImageInfo jumpFloodImage1Info{};
 					jumpFloodImage1Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
