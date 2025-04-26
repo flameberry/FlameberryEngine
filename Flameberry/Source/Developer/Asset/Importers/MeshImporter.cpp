@@ -76,6 +76,9 @@ namespace Flameberry {
 		float roughness, metallic;
 		material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
 		material->Get(AI_MATKEY_METALLIC_FACTOR, metallic);
+		
+		roughness = glm::clamp(roughness, 0.0f, 1.0f);
+		metallic = glm::clamp(metallic, 0.0f, 1.0f);
 
 		materialAsset->SetAlbedo({ albedo.r, albedo.g, albedo.b });
 		materialAsset->SetRoughness(roughness);
