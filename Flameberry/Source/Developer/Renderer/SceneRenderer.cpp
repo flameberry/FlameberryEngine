@@ -857,6 +857,7 @@ namespace Flameberry {
 
 		// TODO: Temporarily placing this code here, it is inefficient to keep this array filled till the next frame
 		m_RendererData->RenderObjects.clear();
+		m_RendererData->SelectedRenderObjects.clear();
 
 		/////////////////////////////////////// Gathering All Render Objects ///////////////////////////////////////
 
@@ -868,10 +869,6 @@ namespace Flameberry {
 
 		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>())
 		{
-			// Render selected entity separately for rendering 3d outline
-			if (selectedEntity == entity)
-				continue;
-
 			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
 
 			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
@@ -902,8 +899,10 @@ namespace Flameberry {
 					else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
 						materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
 
+					auto& renderObjects = selectedEntity == entity ? m_RendererData->SelectedRenderObjects : m_RendererData->RenderObjects;
+
 					// Add it to final list of render objects
-					m_RendererData->RenderObjects.emplace_back(
+					renderObjects.emplace_back(
 						staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
 						staticMesh->GetIndexBuffer()->GetVulkanBuffer(),
 						submesh.IndexOffset,
@@ -916,58 +915,11 @@ namespace Flameberry {
 			}
 		}
 
-		///////////////////////////////////////////////// Sorting /////////////////////////////////////////////////
-		{
-			FBY_PROFILE_SCOPE("Sort_RenderObjects");
-			/// Sorting the render objects according to the material IDs
-			auto cmp = [](const RenderObject& a, const RenderObject& b)
-			{
-				return a.MaterialAsset->Handle < b.MaterialAsset->Handle;
-			};
-			std::stable_sort(m_RendererData->RenderObjects.begin(), m_RendererData->RenderObjects.end(), cmp);
-		}
-
-		//////////////////////////////////////////////// Rendering ////////////////////////////////////////////////
-
-		AssetHandle boundMaterialHandle = 0;
-		VkBuffer boundVertexBuffer = VK_NULL_HANDLE;
-		TransformComponent* boundTransform = nullptr;
-
-		for (const auto& obj : m_RendererData->RenderObjects)
-		{
-			Renderer::Submit([bindMaterial = boundMaterialHandle != obj.MaterialAsset->Handle,
-								 bindVertexAndIndexBuffers = boundVertexBuffer != obj.VertexBuffer,
-								 bindTransform = boundTransform != obj.Transform,
-								 pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(),
-								 material = obj.MaterialAsset->GetUnderlyingMaterial(),
-								 vertexBuffer = obj.VertexBuffer,
-								 indexBuffer = obj.IndexBuffer,
-								 transform = obj.Transform->CalculateTransform(),
-								 indexCount = obj.IndexCount,
-								 indexOffset = obj.IndexOffset](VkCommandBuffer cmdBuffer, uint32_t)
-				{
-					if (bindMaterial)
-						Renderer::RT_BindMaterial(cmdBuffer, pipelineLayout, material);
-
-					if (bindVertexAndIndexBuffers)
-						Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
-
-					if (bindTransform)
-						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
-
-					// Draw the object
-					vkCmdDrawIndexed(cmdBuffer, indexCount, 1, indexOffset, 0, 0);
-				});
-
-			boundMaterialHandle = obj.MaterialAsset->Handle;
-			boundVertexBuffer = obj.VertexBuffer;
-			boundTransform = obj.Transform;
-		}
-#endif
+		SubmitRenderObjects(m_RendererData->RenderObjects);
 
 		//////////////////////////////////////////////// Rendering Selected Entity ////////////////////////////////////////////////
 
-		const bool canRenderOutline = selectedEntity != FEntity::Null && scene->GetRegistry()->HasComponent<TransformComponent, MeshComponent>(selectedEntity);
+		const bool canRenderOutline = !m_RendererData->SelectedRenderObjects.empty();
 
 		if (canRenderOutline)
 		{
@@ -992,54 +944,10 @@ namespace Flameberry {
 					vkCmdClearAttachments(cmdBuffer, 1, clearAttachment, 1, &clearRect);
 				});
 
-			// Render the selected entity mesh
-			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(selectedEntity);
-
-			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
-			{
-				uint32_t submeshIndex = 0;
-
-				for (const auto& submesh : staticMesh->GetSubMeshes())
-				{
-					if (m_RendererSettings.FrustumCulling)
-					{
-						const auto modelMatrix = transform.CalculateTransform();
-
-						// TODO: Move this outside of the `if (m_RendererSettings.FrustumCulling)`
-						if (m_RendererSettings.ShowBoundingBoxes)
-							Renderer2D::AddAABB(submesh.AABB, modelMatrix, glm::vec4(1, 1, 0, 1));
-
-						// Skip processing the mesh if it is out of the camera frustum
-						if (!IsAABBInsideFrustum(submesh.AABB, modelMatrix, cameraFrustum))
-							continue;
-					}
-
-					// The Assumption here is every mesh loaded will have a Material, i.e. materialAsset won't be nullptr
-					Ref<MaterialAsset> materialAsset;
-					if (const auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
-						materialAsset = AssetManager::GetAsset<MaterialAsset>(it->second);
-					else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
-						materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
-
-					Renderer::Submit([pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(),
-										 viewportSize = m_ViewportSize,
-										 material = materialAsset->GetUnderlyingMaterial(),
-										 vertexBuffer = staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
-										 indexBuffer = staticMesh->GetIndexBuffer()->GetVulkanBuffer(),
-										 transform = transform.CalculateTransform(),
-										 indexCount = submesh.IndexCount,
-										 indexOffset = submesh.IndexOffset](VkCommandBuffer cmdBuffer, uint32_t)
-						{
-							Renderer::RT_BindMaterial(cmdBuffer, pipelineLayout, material);
-							Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
-							vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
-							vkCmdDrawIndexed(cmdBuffer, indexCount, 1, indexOffset, 0, 0);
-						});
-
-					submeshIndex++;
-				}
-			}
+			// Render selected objects here
+			SubmitRenderObjects(m_RendererData->SelectedRenderObjects);
 		}
+#endif
 
 		////////////////////////////////////////////// 2D Rendering //////////////////////////////////////////////
 
@@ -1126,6 +1034,57 @@ namespace Flameberry {
 			JumpFloodPass();
 
 		// CompositePass();
+	}
+
+	void SceneRenderer::SubmitRenderObjects(std::vector<RenderObject>& renderObjects)
+	{
+		///////////////////////////////////////////////// Sorting /////////////////////////////////////////////////
+		{
+			FBY_PROFILE_SCOPE("Sort_RenderObjects");
+			/// Sorting the render objects according to the material IDs
+			auto cmp = [](const RenderObject& a, const RenderObject& b)
+			{
+				return a.MaterialAsset->Handle < b.MaterialAsset->Handle;
+			};
+			std::stable_sort(renderObjects.begin(), renderObjects.end(), cmp);
+		}
+
+		//////////////////////////////////////////////// Rendering ////////////////////////////////////////////////
+
+		AssetHandle boundMaterialHandle = 0;
+		VkBuffer boundVertexBuffer = VK_NULL_HANDLE;
+		TransformComponent* boundTransform = nullptr;
+
+		for (const auto& obj : renderObjects)
+		{
+			Renderer::Submit([bindMaterial = boundMaterialHandle != obj.MaterialAsset->Handle,
+								 bindVertexAndIndexBuffers = boundVertexBuffer != obj.VertexBuffer,
+								 bindTransform = boundTransform != obj.Transform,
+								 pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(),
+								 material = obj.MaterialAsset->GetUnderlyingMaterial(),
+								 vertexBuffer = obj.VertexBuffer,
+								 indexBuffer = obj.IndexBuffer,
+								 transform = obj.Transform->CalculateTransform(),
+								 indexCount = obj.IndexCount,
+								 indexOffset = obj.IndexOffset](VkCommandBuffer cmdBuffer, uint32_t)
+				{
+					if (bindMaterial)
+						Renderer::RT_BindMaterial(cmdBuffer, pipelineLayout, material);
+
+					if (bindVertexAndIndexBuffers)
+						Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
+
+					if (bindTransform)
+						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
+
+					// Draw the object
+					vkCmdDrawIndexed(cmdBuffer, indexCount, 1, indexOffset, 0, 0);
+				});
+
+			boundMaterialHandle = obj.MaterialAsset->Handle;
+			boundVertexBuffer = obj.VertexBuffer;
+			boundTransform = obj.Transform;
+		}
 	}
 
 	void SceneRenderer::JumpFloodPass()

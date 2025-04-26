@@ -88,6 +88,8 @@ namespace Flameberry {
 	private:
 		void Init();
 
+		void SubmitRenderObjects(std::vector<RenderObject>& renderObjects);
+
 		void CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection);
 
 		// Debug Utilities
