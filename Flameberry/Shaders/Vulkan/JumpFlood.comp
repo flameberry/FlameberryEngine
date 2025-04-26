@@ -46,9 +46,6 @@ void InitPass(vec2 UV)
     }
 
     imageStore(_FBY_u_JumpFloodImage1, ivec2(gl_GlobalInvocationID.xy), vec4(border ? UV : vec2(-1), 0, 1));
-
-    // Note: Temp Visualisation
-    // imageStore(_FBY_u_ColorSampler, ivec2(gl_GlobalInvocationID.xy), vec4(stencil == 1 ? UV : vec2(0), 0, 1));
 }
 
 void FinalPass()
@@ -92,7 +89,7 @@ vec4 StepJFA(vec2 UV, int stepSize)
                 continue;
 
             vec2 samplePixelPos = sampleUV * vec2(imgSize);
-            float dist = length(samplePixelPos - pixelPos);
+            float dist = distance(samplePixelPos, pixelPos);
 
             if (dist < bestDistance) {
                 bestDistance = dist;

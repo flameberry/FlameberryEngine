@@ -341,6 +341,32 @@ namespace Flameberry {
 		// Get the DescriptorSetLayout for the Set of Index: 0 from the pipeline
 		descSetSpec.Layout = m_JumpFloodPipeline->GetDescriptorSetLayout(0);
 
+		// Create sampler for accessing stencil buffer
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_LINEAR;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.anisotropyEnable = VK_TRUE;
+
+		VkPhysicalDeviceProperties properties;
+		vkGetPhysicalDeviceProperties(VulkanContext::GetPhysicalDevice(), &properties);
+
+		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerInfo.mipLodBias = 0.0f;
+		samplerInfo.minLod = 0.0f;
+		samplerInfo.maxLod = 0.0f;
+
+		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		VK_CHECK_RESULT(vkCreateSampler(device, &samplerInfo, nullptr, &m_StencilBufferSampler));
+
 		// Creating/Updating Descriptor Sets ------------------------------------------------------
 		for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
 		{
@@ -355,7 +381,7 @@ namespace Flameberry {
 			VkDescriptorImageInfo stencilBufferImageInfo{};
 			stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 			stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetDepthAndOrStencilAttachment()->GetVulkanImageView(1);
-			stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
+			stencilBufferImageInfo.sampler = m_StencilBufferSampler;
 
 			VkDescriptorImageInfo jumpFloodImage1Info{};
 			jumpFloodImage1Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -636,7 +662,7 @@ namespace Flameberry {
 					VkDescriptorImageInfo stencilBufferImageInfo{};
 					stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 					stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetDepthAndOrStencilAttachment()->GetVulkanImageView(1);
-					stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
+					stencilBufferImageInfo.sampler = m_StencilBufferSampler;
 
 					VkDescriptorImageInfo jumpFloodImage1Info{};
 					jumpFloodImage1Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -1114,9 +1140,11 @@ namespace Flameberry {
 				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSet, 0, 0);
 
+				const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(viewportSize.x / 8, viewportSize.y / 8));
+
 				// Init Pass
 				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(JumpFloodSettingsGPURepresentation), &jumpFloodSettings);
-				vkCmdDispatch(cmdBuffer, viewportSize.x / 8, viewportSize.y / 8, 1);
+				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 				jumpFloodSettings.IsInitialPass = FFalse;
 
 				const int steps = glm::ceil(glm::log(m_RendererSettings.SelectionOutlineWidth + 1.0) / glm::log(2));
@@ -1126,7 +1154,7 @@ namespace Flameberry {
 					jumpFloodSettings.StepSize = glm::pow(2, i) + 0.5f;
 
 					vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(JumpFloodSettingsGPURepresentation), &jumpFloodSettings);
-					vkCmdDispatch(cmdBuffer, viewportSize.x / 8, viewportSize.y / 8, 1);
+					vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 
 					// Switch buffers per pass
 					jumpFloodSettings.ReadFromFirst = 1 - jumpFloodSettings.ReadFromFirst;
@@ -1135,7 +1163,7 @@ namespace Flameberry {
 				// Final Pass
 				jumpFloodSettings.IsFinalPass = FTrue;
 				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(JumpFloodSettingsGPURepresentation), &jumpFloodSettings);
-				vkCmdDispatch(cmdBuffer, viewportSize.x / 8, viewportSize.y / 8, 1);
+				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 			});
 	}
 

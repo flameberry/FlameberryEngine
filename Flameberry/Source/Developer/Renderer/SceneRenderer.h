@@ -143,6 +143,7 @@ namespace Flameberry {
 		Ref<Image> m_JumpFloodImage1[SwapChain::MAX_FRAMES_IN_FLIGHT], m_JumpFloodImage2[SwapChain::MAX_FRAMES_IN_FLIGHT];
 		Ref<ComputePipeline> m_JumpFloodPipeline;
 		Ref<DescriptorSet> m_JumpFloodDescSets[SwapChain::MAX_FRAMES_IN_FLIGHT];
+		VkSampler m_StencilBufferSampler;
 
 		// Post processing
 		Ref<RenderPass> m_CompositePass;
