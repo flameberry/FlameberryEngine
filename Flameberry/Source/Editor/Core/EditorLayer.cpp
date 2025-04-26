@@ -429,8 +429,9 @@ namespace Flameberry {
 			auto& transformComp = m_ActiveScene->GetRegistry()->GetComponent<TransformComponent>(selectedEntity);
 			glm::mat4 transform = transformComp.CalculateTransform();
 
-			bool snap = Input::IsKeyPressed(KeyCode::LeftControl);
-			float snapValue = 0.5f;
+			float snapValue = Input::IsKeyPressed(KeyCode::LeftControl) ? 0.1f : (Input::IsKeyPressed(KeyCode::LeftShift) ? 1.0f : 0.0f);
+			const bool snap = (snapValue != 0.0f);
+
 			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
 				snapValue = 45.0f;
 
