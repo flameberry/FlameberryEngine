@@ -9,6 +9,8 @@
 #include "Core/Core.h"
 #include "Core/Input.h"
 
+#include "ECS/Components.h"
+
 namespace Flameberry {
 
 	EditorCameraController::EditorCameraController(const glm::vec3& position, const glm::vec3& direction, const GenericCameraSettings& settings)
@@ -50,6 +52,29 @@ namespace Flameberry {
 
 	bool EditorCameraController::OnUpdatePerspective(float delta)
 	{
+		// Camera is mid-flight reaching to the framing position
+		// ...so no movements using mouse are allowed
+		if (m_ShouldFrame)
+		{
+			float smoothFactor = 1.0f - glm::exp(-10.0f * delta); // Faster convergence
+
+			// Ease-In Multiplier: based on how far we still are
+			float distance = glm::distance(m_Position, m_TargetPosition);
+			float easeIn = glm::clamp(distance / 5.0f, 0.0f, 1.0f); // 5.0 is "ease-in distance range"
+
+			smoothFactor *= easeIn;
+
+			m_Position = glm::mix(m_Position, m_TargetPosition, smoothFactor);
+
+			m_Direction = glm::normalize(m_TargetFocusPoint - m_Position);
+			m_Camera.SetView_Direction(m_Position, m_Direction);
+
+			if (distance < 0.2f || glm::length(m_TargetPosition - m_Position) * delta < 0.01f)
+				m_ShouldFrame = false;
+
+			return true;
+		}
+
 		glm::vec2 mousePos = Input::GetCursorPosition();
 		glm::vec2 mouseDelta = (mousePos - m_LastMousePosition);
 		m_LastMousePosition = mousePos;
@@ -121,6 +146,47 @@ namespace Flameberry {
 		}
 
 		return true;
+	}
+
+	void EditorCameraController::FrameEntity(const TransformComponent& transform, const AABB& aabb)
+	{
+		// Get AABB in local space
+		glm::vec3 aabbMin = aabb.Min;
+		glm::vec3 aabbMax = aabb.Max;
+
+		// Transform AABB to world space
+		glm::vec3 worldAABBMin = transform.Translation + aabbMin * transform.Scale;
+		glm::vec3 worldAABBMax = transform.Translation + aabbMax * transform.Scale;
+
+		glm::vec3 center = (worldAABBMin + worldAABBMax) * 0.5f;
+		glm::vec3 extents = (worldAABBMax - worldAABBMin) * 0.5f;
+
+		// Bounding sphere radius (sqrt(x² + y² + z²))
+		float radius = glm::length(extents);
+
+		// Calculate the distance we need based on FOV to fit the sphere
+		float fov = glm::radians(m_Camera.GetSettings().FOV);
+		float distance = radius / glm::sin(fov / 2.0f);
+
+		// Target position
+		m_TargetPosition = center - m_Direction * distance;
+		m_TargetFocusPoint = center; // We want to look at the center
+
+		m_ShouldFrame = true;
+	}
+
+	void EditorCameraController::FrameEntity(const TransformComponent& transform)
+	{
+		glm::vec3 center = transform.Translation;
+
+		// Fixed distance value you want (you can tweak this)
+		const float fixedDistance = 5.0f;
+
+		// Target position = offset backwards from center
+		m_TargetPosition = center - m_Direction * fixedDistance;
+		m_TargetFocusPoint = center; // Still want to look at the center
+
+		m_ShouldFrame = true;
 	}
 
 	bool EditorCameraController::OnUpdateOrthographic(float delta)

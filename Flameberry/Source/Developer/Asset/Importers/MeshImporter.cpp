@@ -75,7 +75,7 @@ namespace Flameberry {
 		float roughness, metallic;
 		material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
 		material->Get(AI_MATKEY_METALLIC_FACTOR, metallic);
-		
+
 		roughness = glm::clamp(roughness, 0.0f, 1.0f);
 		metallic = glm::clamp(metallic, 0.0f, 1.0f);
 
@@ -154,7 +154,7 @@ namespace Flameberry {
 		return materialAsset->Handle;
 	}
 
-	static void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles)
+	static void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles, AABB& meshAABB)
 	{
 		uint32_t indexBase = refVertices.size();
 
@@ -185,21 +185,29 @@ namespace Flameberry {
 			refMatHandles[mesh->mMaterialIndex],
 			indexOffset,
 			(uint32_t)refIndices.size() - indexOffset,
-			AABB(glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z), glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)) });
+			AABB(glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z),
+				glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)) });
+
+		// Check and update mesh's AABB
+		if (meshAABB.Min.x > mesh->mAABB.mMin.x || meshAABB.Min.y > mesh->mAABB.mMin.y || meshAABB.Min.z > mesh->mAABB.mMin.z)
+			meshAABB.Min = { mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z };
+
+		if (meshAABB.Max.x < mesh->mAABB.mMax.x || meshAABB.Max.y < mesh->mAABB.mMax.y || meshAABB.Max.z < mesh->mAABB.mMax.z)
+			meshAABB.Max = { mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z };
 	}
 
-	static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles)
+	static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles, AABB& meshAABB)
 	{
 		// Process all the node's meshes (if any)
 		for (uint32_t i = 0; i < node->mNumMeshes; i++)
 		{
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			ProcessMesh(mesh, scene, refVertices, refIndices, refSubMeshes, refMatHandles);
+			ProcessMesh(mesh, scene, refVertices, refIndices, refSubMeshes, refMatHandles, meshAABB);
 		}
 
 		// Then do the same for each of its children
 		for (uint32_t i = 0; i < node->mNumChildren; i++)
-			ProcessNode(node->mChildren[i], scene, refVertices, refIndices, refSubMeshes, refMatHandles);
+			ProcessNode(node->mChildren[i], scene, refVertices, refIndices, refSubMeshes, refMatHandles, meshAABB);
 	}
 
 	Ref<StaticMesh> MeshImporter::LoadMesh(const std::filesystem::path& path)
@@ -230,6 +238,7 @@ namespace Flameberry {
 		std::vector<uint32_t> indices;
 		std::vector<SubMesh> submeshes;
 		std::vector<AssetHandle> materialHandles;
+		AABB meshAABB;
 
 		FBY_LOG("Number of materials in mesh: {}: {}", path, scene->mNumMaterials);
 
@@ -241,7 +250,7 @@ namespace Flameberry {
 		}
 
 		// Load Meshes
-		ProcessNode(scene->mRootNode, scene, vertices, indices, submeshes, materialHandles);
+		ProcessNode(scene->mRootNode, scene, vertices, indices, submeshes, materialHandles, meshAABB);
 
 		Ref<Buffer> vertexBuffer, indexBuffer;
 
@@ -300,7 +309,7 @@ namespace Flameberry {
 		}
 
 		FBY_INFO("Loaded Model: '{}': Vertices: {}, Indices: {}", path, vertices.size(), indices.size());
-		Ref<StaticMesh> mesh = CreateRef<StaticMesh>(vertexBuffer, indexBuffer, submeshes);
+		Ref<StaticMesh> mesh = CreateRef<StaticMesh>(vertexBuffer, indexBuffer, submeshes, meshAABB);
 		mesh->SetName(path.stem().string());
 		return mesh;
 	}

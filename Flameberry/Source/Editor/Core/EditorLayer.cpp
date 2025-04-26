@@ -582,6 +582,31 @@ namespace Flameberry {
 				if (ctrl_or_cmd)
 					m_EnableGrid = !m_EnableGrid;
 				break;
+			case KeyCode::F:
+			{
+				// Frame the entity, i.e., focus the editor camera on the selected entity
+				const FEntity selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
+				if (selectedEntity != FEntity::Null)
+				{
+					// This branch is for entities that have a mesh component
+					// .. they need to be focused such that the entire mesh is in view of the camera
+					// i.e., the AABB of the mesh shall fit in the camera
+					if (m_ActiveScene->GetRegistry()->HasComponent<MeshComponent>(selectedEntity))
+					{
+						const auto& [transform, mesh] = m_ActiveScene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(selectedEntity);
+						if (Ref<StaticMesh> staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
+							m_ActiveCameraController.FrameEntity(transform, staticMesh->GetAABB());
+					}
+					// This branch is for entities that don't have a mesh component, viz., camera, lights etc.
+					// they can be focused in a way that the camera reaches a fixed distance away from them
+					else if (m_ActiveScene->GetRegistry()->HasComponent<TransformComponent>(selectedEntity))
+					{
+						const auto& transform = m_ActiveScene->GetRegistry()->GetComponent<TransformComponent>(selectedEntity);
+						m_ActiveCameraController.FrameEntity(transform);
+					}
+				}
+				break;
+			}
 			case KeyCode::Backspace:
 				if (ctrl_or_cmd)
 				{
