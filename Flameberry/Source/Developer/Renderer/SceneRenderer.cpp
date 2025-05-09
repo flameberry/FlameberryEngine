@@ -1,15 +1,16 @@
 #include "SceneRenderer.h"
 
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Asset/Importers/TextureImporter.h"
 #include "Core/Core.h"
-#include "Core/Log.h"
 #include "Core/Profiler.h"
 
 #include "ECS/Components.h"
+#include "Renderer/DescriptorSet.h"
+#include "Renderer/Image.h"
 #include "Renderer/Pipeline.h"
 #include "VulkanDebug.h"
 #include "VulkanContext.h"
@@ -305,6 +306,140 @@ namespace Flameberry {
 		CreateGridPipeline();
 	}
 
+	void SceneRenderer::PrepareBloomImageAndDescriptors()
+	{
+		// Look up physical device capabilities to bind descriptor sets
+		const uint32_t maxDescriptorSetsAllowed = VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
+
+		// Calculate the number of mip levels based upon the image dimensions
+		// Each mip will represent a roughness level that we will calculate the prefiltered map for
+		const uint32_t mipLevels = static_cast<uint32_t>(floor(log2(glm::min(m_ViewportSize.x, m_ViewportSize.y)))) + 1;
+
+		FBY_INFO("Mip levels: {}", mipLevels);
+
+		// Basically we batch multiple descriptor sets corresponding to each mip level into a descriptor image array
+		// And that array has a limit, i.e., maxDescriptorSetsAllowed
+		// My device has 8 as the limit, so there is a need to divide the mipLevels into batches of mipLevels / 8
+		const uint32_t numDescriptorSetsPerFrame = ceil(mipLevels / maxDescriptorSetsAllowed);
+
+		// Creation of Bloom Images ------------------------------------------------------
+		ImageSpecification imageSpec;
+		imageSpec.Width = m_ViewportSize.x;
+		imageSpec.Height = m_ViewportSize.y;
+		imageSpec.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
+		imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		imageSpec.MipLevels = mipLevels;
+		imageSpec.ViewCreationMode = ImageViewCreationMode::CreateOnePerMipMap;
+
+		// Experimental API
+		m_BloomImageResource.ForEach([&](Ref<Image>& bloomImage, uint32_t)
+			{
+				bloomImage = CreateRef<Image>(imageSpec);
+
+				// Generate MipMaps ------------------------------------------------------------------------
+				VkCommandBuffer cmdBuffer;
+
+				VulkanContext::GetCurrentDevice()->BeginSingleTimeCommandBuffer(cmdBuffer);
+				bloomImage->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+				bloomImage->CmdGenerateMipmaps(cmdBuffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
+				VulkanContext::GetCurrentDevice()->EndSingleTimeCommandBuffer(cmdBuffer);
+			});
+
+		// Creation of Bloom Descriptor Sets ------------------------------------------------------
+		DescriptorSetSpecification descSetSpec;
+		descSetSpec.Layout = m_BloomPipeline->GetDescriptorSetLayout(0);
+
+		m_BloomDescriptorSetResources.resize(numDescriptorSetsPerFrame);
+
+		for (int i = 0; i < numDescriptorSetsPerFrame; i++)
+		{
+			m_BloomDescriptorSetResources[i].ForEach([&](Ref<DescriptorSet>& descriptorSet, uint32_t idx)
+				{
+					descriptorSet = CreateRef<DescriptorSet>(descSetSpec);
+
+					VkDescriptorImageInfo targetImageInfo{};
+					targetImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[idx]->GetColorResolveAttachment(0)->GetVulkanImageView();
+					targetImageInfo.sampler = VK_NULL_HANDLE;
+					targetImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+					const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed);
+					std::vector<VkDescriptorImageInfo> bloomImageInfos(numImageViews);
+
+					for (int j = 0; j < numImageViews; j++)
+					{
+						bloomImageInfos[j].sampler = VK_NULL_HANDLE;
+						bloomImageInfos[j].imageView = m_BloomImageResource[idx]->GetVulkanImageView(i * maxDescriptorSetsAllowed + j);
+						bloomImageInfos[j].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+					}
+
+					descriptorSet->WriteImage(0, targetImageInfo);
+					descriptorSet->WriteImageArray(1, bloomImageInfos.data(), numImageViews);
+					descriptorSet->Update();
+				});
+		}
+	}
+
+	void SceneRenderer::PrepareBloomPass()
+	{
+		// Creation of Bloom Pipeline ------------------------------------------------------
+		ComputePipelineSpecification pipelineSpec;
+		pipelineSpec.Shader = ShaderLibrary::Get("Bloom");
+		m_BloomPipeline = CreateRef<ComputePipeline>(pipelineSpec);
+
+		PrepareBloomImageAndDescriptors();
+	}
+
+	void SceneRenderer::InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize)
+	{
+		// Look up physical device capabilities to bind descriptor sets
+		const uint32_t maxDescriptorSetsAllowed = VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
+
+		// Calculate the number of mip levels based upon the image dimensions
+		// Each mip will represent a roughness level that we will calculate the prefiltered map for
+		const uint32_t mipLevels = static_cast<uint32_t>(floor(log2(glm::min(m_ViewportSize.x, m_ViewportSize.y)))) + 1;
+
+		// Basically we batch multiple descriptor sets corresponding to each mip level into a descriptor image array
+		// And that array has a limit, i.e., maxDescriptorSetsAllowed
+		// My device has 8 as the limit, so there is a need to divide the mipLevels into batches of mipLevels / 8
+		const uint32_t numDescriptorSetsPerFrame = ceil(mipLevels / maxDescriptorSetsAllowed);
+
+		// TODO: This else part can be combined with the if part, it'll be way better in terms of maintainability
+		m_BloomImageResource[resourceIndex]->OnResize(newBloomImgSize.x, newBloomImgSize.y, mipLevels);
+		m_BloomImageResource[resourceIndex]->GenerateMipmaps(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+
+		if (m_BloomDescriptorSetResources.size() != numDescriptorSetsPerFrame)
+			m_BloomDescriptorSetResources.resize(numDescriptorSetsPerFrame);
+
+		DescriptorSetSpecification descSetSpec;
+		descSetSpec.Layout = m_BloomPipeline->GetDescriptorSetLayout(0);
+
+		for (int i = 0; i < m_BloomDescriptorSetResources.size(); i++)
+		{
+			if (!m_BloomDescriptorSetResources[i][resourceIndex])
+				m_BloomDescriptorSetResources[i][resourceIndex] = CreateRef<DescriptorSet>(descSetSpec);
+
+			VkDescriptorImageInfo targetImageInfo{};
+			targetImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->GetColorResolveAttachment(0)->GetVulkanImageView();
+			targetImageInfo.sampler = VK_NULL_HANDLE;
+			targetImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+			const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed);
+			std::vector<VkDescriptorImageInfo> bloomImageInfos(numImageViews);
+
+			for (int j = 0; j < numImageViews; j++)
+			{
+				bloomImageInfos[j].sampler = VK_NULL_HANDLE;
+				bloomImageInfos[j].imageView = m_BloomImageResource[resourceIndex]->GetVulkanImageView(i * maxDescriptorSetsAllowed + j);
+				bloomImageInfos[j].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+			}
+
+			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImage(0, targetImageInfo);
+			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImageArray(1, bloomImageInfos.data(), numImageViews);
+			m_BloomDescriptorSetResources[i][resourceIndex]->Update();
+		}
+	}
+
 	void SceneRenderer::PrepareJumpFloodPass()
 	{
 		// Creation of Jump Flood Images ------------------------------------------------------
@@ -354,7 +489,7 @@ namespace Flameberry {
 
 			VkDescriptorImageInfo stencilBufferImageInfo{};
 			stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-			stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetDepthAndOrStencilAttachment()->GetVulkanImageView(1);
+			stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetStencilAttachmentImageView();
 			stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
 
 			VkDescriptorImageInfo jumpFloodImage1Info{};
@@ -417,9 +552,9 @@ namespace Flameberry {
 			m_CompositePassDescriptorSets[i] = CreateRef<DescriptorSet>(setSpec);
 
 			VkDescriptorImageInfo imageInfo{
-				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				.sampler = m_VkTextureSampler,
 				.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetVulkanImageView(),
-				.sampler = m_VkTextureSampler
+				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			};
 
 			m_CompositePassDescriptorSets[i]->WriteImage(0, imageInfo);
@@ -596,6 +731,7 @@ namespace Flameberry {
 
 		PrepareShadowMappingRenderPass();
 		PrepareGeometryRenderPass();
+		PrepareBloomPass();
 		PrepareJumpFloodPass();
 		// PrepareCompositeRenderPass();
 
@@ -615,12 +751,14 @@ namespace Flameberry {
 		m_ViewportSize = viewportSize;
 
 		// Resize Framebuffers
-		Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+		Renderer::Submit([&](VkCommandBuffer, uint32_t imageIndex)
 			{
 				const auto& framebufferSpec = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification();
 				if (!(m_ViewportSize.x == 0 || m_ViewportSize.y == 0) && (framebufferSpec.Width != m_ViewportSize.x || framebufferSpec.Height != m_ViewportSize.y))
 				{
 					m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass());
+
+					InvalidateBloomPass(imageIndex, m_ViewportSize);
 
 					// Resizing Jump Flood Images
 					m_JumpFloodImage1[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y);
@@ -635,7 +773,7 @@ namespace Flameberry {
 
 					VkDescriptorImageInfo stencilBufferImageInfo{};
 					stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-					stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetDepthAndOrStencilAttachment()->GetVulkanImageView(1);
+					stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetStencilAttachmentImageView();
 					stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
 
 					VkDescriptorImageInfo jumpFloodImage1Info{};
@@ -831,7 +969,7 @@ namespace Flameberry {
 
 		///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
 
-		Renderer::Submit([=, pipeline = m_MeshPipeline->GetVulkanPipeline(), pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+		Renderer::Submit([=, this, pipeline = m_MeshPipeline->GetVulkanPipeline(), pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
 				VkDescriptorSet descriptorSets[] = {
 					m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
@@ -929,8 +1067,8 @@ namespace Flameberry {
 					VkClearAttachment clearAttachment[] = {
 						// Clear the stencil
 						{
-							.colorAttachment = 1 /* Stencil attachment index */,
 							.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT,
+							.colorAttachment = 1 /* Stencil attachment index */,
 							.clearValue = 0.0f /* Stencil clear value */
 						}
 					};
@@ -1030,6 +1168,8 @@ namespace Flameberry {
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+		BloomPass();
+
 		if (canRenderOutline)
 			JumpFloodPass();
 
@@ -1087,9 +1227,40 @@ namespace Flameberry {
 		}
 	}
 
+	void SceneRenderer::BloomPass()
+	{
+		Renderer::Submit([=, this, pipelineLayout = m_BloomPipeline->GetVulkanPipelineLayout(),
+							 pipeline = m_BloomPipeline->GetVulkanPipeline(),
+							 bloomDescSetResources = m_BloomDescriptorSetResources,
+							 viewportSize = m_ViewportSize](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+			{
+				// Transition the image to be suitable for writing
+				m_GeometryPass->GetSpecification()
+					.TargetFramebuffers[imageIndex]
+					->GetColorResolveAttachment(0)
+					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
+
+				m_GeometryPass->GetSpecification()
+					.TargetFramebuffers[imageIndex]
+					->GetDepthAndOrStencilAttachment()
+					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+
+				std::vector<VkDescriptorSet> descSets(bloomDescSetResources.size());
+				for (int i = 0; i < descSets.size(); i++)
+					descSets[i] = bloomDescSetResources[i][imageIndex]->GetVulkanDescriptorSet();
+
+				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, descSets.size(), descSets.data(), 0, 0);
+
+				const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(viewportSize.x / 8, viewportSize.y / 8));
+
+				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
+			});
+	}
+
 	void SceneRenderer::JumpFloodPass()
 	{
-		Renderer::Submit([=, jumpFloodDescSets = m_JumpFloodDescSets, viewportSize = m_ViewportSize,
+		Renderer::Submit([=, this, jumpFloodDescSets = m_JumpFloodDescSets, viewportSize = m_ViewportSize,
 							 pipeline = m_JumpFloodPipeline->GetVulkanPipeline(),
 							 pipelineLayout = m_JumpFloodPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{

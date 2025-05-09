@@ -1,0 +1,28 @@
+#version 450
+
+layout(constant_id = 0) const uint c_MaxDescriptorSetsAllowed = 8;
+layout(constant_id = 1) const uint c_MipLevels = 10;
+
+layout(set = 0, binding = 0, rgba8) uniform image2D _FBY_u_TargetImage;
+layout(set = 0, binding = 1, rgba16f) uniform writeonly image2D _FBY_u_BloomImages[c_MaxDescriptorSetsAllowed];
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+#define BLOOM_MODE_DOWNSAMPLE_FIRST 0
+#define BLOOM_MODE_DOWNSAMPLE 1
+#define BLOOM_MODE_UPSAMPLE 2
+
+layout(push_constant) uniform BloomSettings {
+	float Threshold;
+	uint BloomShaderMode;
+} u_BloomSettings;
+
+void main()
+{
+	imageStore(_FBY_u_BloomImages[0], ivec2(gl_GlobalInvocationID.xy), vec4(1, 1, 0, 1));
+	imageStore(_FBY_u_BloomImages[1], ivec2(gl_GlobalInvocationID.xy), vec4(1, 0, 1, 1));
+	imageStore(_FBY_u_BloomImages[2], ivec2(gl_GlobalInvocationID.xy), vec4(0, 1, 1, 1));
+	imageStore(_FBY_u_BloomImages[3], ivec2(gl_GlobalInvocationID.xy), vec4(0, 0, 1, 1));
+	imageStore(_FBY_u_BloomImages[4], ivec2(gl_GlobalInvocationID.xy), vec4(0, 1, 0, 1));
+	imageStore(_FBY_u_BloomImages[5], ivec2(gl_GlobalInvocationID.xy), vec4(1, 0, 0, 1));
+}

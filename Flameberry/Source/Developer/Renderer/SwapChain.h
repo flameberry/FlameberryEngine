@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-#include "Image.h"
+#include "Core/Core.h"
 
 namespace Flameberry {
 

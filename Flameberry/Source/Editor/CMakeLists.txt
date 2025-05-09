@@ -1,7 +1,7 @@
 file(GLOB_RECURSE SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 
 add_executable(FlameberryEditor ${SRC_FILES})
-target_compile_features(FlameberryEditor PUBLIC cxx_std_17)
+target_compile_features(FlameberryEditor PUBLIC cxx_std_20)
 
 set_custom_build_properties(FlameberryEditor)
 

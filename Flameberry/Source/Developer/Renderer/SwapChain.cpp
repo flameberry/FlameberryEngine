@@ -4,7 +4,6 @@
 
 #include "RenderCommand.h"
 #include "VulkanContext.h"
-#include "Image.h"
 
 namespace Flameberry {
 

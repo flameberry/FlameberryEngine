@@ -1,5 +1,6 @@
 #include "Framebuffer.h"
 
+#include "Renderer/Image.h"
 #include "VulkanContext.h"
 #include "VulkanDebug.h"
 #include "RenderCommand.h"
@@ -36,16 +37,17 @@ namespace Flameberry {
 		vk_framebuffer_create_info.layers = 1;
 
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		VK_CHECK_RESULT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VkFramebuffer));
+		VK_CHECK_RESULT(vkCreateFramebuffer(device, &vk_framebuffer_create_info, nullptr, &m_VulkanFramebuffer));
 	}
 
 	void Framebuffer::Invalidate()
 	{
-		if (m_VkFramebuffer != VK_NULL_HANDLE)
+		if (m_VulkanFramebuffer != VK_NULL_HANDLE)
 		{
 			const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			VulkanContext::GetCurrentDevice()->WaitIdle();
-			vkDestroyFramebuffer(device, m_VkFramebuffer, nullptr);
+			vkDestroyFramebuffer(device, m_VulkanFramebuffer, nullptr);
+			vkDestroyImageView(device, m_StencilAttachmentImageView, nullptr);
 
 			m_FramebufferImages.clear();
 		}
@@ -68,7 +70,7 @@ namespace Flameberry {
 			imageSpec.ViewSpecification.LayerCount = attachment.LayerCount;
 
 			// Create this object just in case a stencil attachment exists in the framebuffer specification
-			ImageViewSpecification* stencilViewSpec = nullptr;
+			bool doesHaveStencilAttachment = false;
 
 			if (RenderCommand::DoesFormatSupportDepthAttachment(attachment.Format))
 			{
@@ -76,14 +78,7 @@ namespace Flameberry {
 				imageSpec.Usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 				m_DepthAttachmentIndex = m_FramebufferImages.size();
 
-				if (RenderCommand::DoesFormatSupportStencilAttachment(attachment.Format))
-				{
-					// This method of providing another ImageView to an Image is experimental
-					// it needs workarounds like creating ImageViewSpecification on the heap
-					stencilViewSpec = new ImageViewSpecification(imageSpec.ViewSpecification);
-					stencilViewSpec->AspectFlags = VK_IMAGE_ASPECT_STENCIL_BIT;
-					imageSpec.ViewSpecification.pNext = stencilViewSpec;
-				}
+				doesHaveStencilAttachment = RenderCommand::DoesFormatSupportStencilAttachment(attachment.Format);
 			}
 			else
 			{
@@ -92,11 +87,20 @@ namespace Flameberry {
 
 				colorAttachments.emplace_back(attachment);
 			}
-			m_FramebufferImages.emplace_back(CreateRef<Image>(imageSpec));
 
-			// Delete the stencil view image specification created due to the experimental image view workflow
-			if (stencilViewSpec)
-				delete stencilViewSpec;
+			const Ref<Image>& attachmentImage = m_FramebufferImages.emplace_back(CreateRef<Image>(imageSpec));
+
+			// In Future, this step must be done implicitly within the Image class by providing the
+			// stencil image view specification to it beforehand
+			if (doesHaveStencilAttachment)
+			{
+				// Create and store the stencil attachment image view in this class only
+				// In future this must belong to the Image class corresponding to stencil/depth attachment
+				ImageViewSpecification stencilViewSpec = imageSpec.ViewSpecification;
+				stencilViewSpec.AspectFlags = VK_IMAGE_ASPECT_STENCIL_BIT;
+
+				m_StencilAttachmentImageView = Utils::CreateImageViewUsingSpecification(attachmentImage->GetVulkanImage(), attachmentImage->GetSpecification().Format, stencilViewSpec);
+			}
 		}
 
 		if (m_FramebufferSpec.Samples > 1)
@@ -125,7 +129,8 @@ namespace Flameberry {
 	Framebuffer::~Framebuffer()
 	{
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		vkDestroyFramebuffer(device, m_VkFramebuffer, nullptr);
+		vkDestroyFramebuffer(device, m_VulkanFramebuffer, nullptr);
+		vkDestroyImageView(device, m_StencilAttachmentImageView, nullptr);
 	}
 
 } // namespace Flameberry

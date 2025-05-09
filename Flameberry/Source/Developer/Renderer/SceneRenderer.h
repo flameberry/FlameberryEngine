@@ -6,6 +6,8 @@
 #include "MaterialAsset.h"
 #include "ECS/Components.h"
 #include "ECS/Scene.h"
+#include "Renderer/SwapChain.h"
+#include "FrameResource.h"
 
 namespace Flameberry {
 
@@ -102,9 +104,16 @@ namespace Flameberry {
 		// Render Passes
 		void PrepareShadowMappingRenderPass();
 		void PrepareGeometryRenderPass();
+		void PrepareBloomPass();
 		void PrepareJumpFloodPass();
 		void PrepareCompositeRenderPass();
 
+		// As the bloom pass is dependent on the viewport size, the size of it's associated images needs to be updated
+		// i.e., the images need to be resized and descriptors need to be updated
+		void InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize);
+		void PrepareBloomImageAndDescriptors();
+
+		void BloomPass();
 		void JumpFloodPass();
 		void CompositePass();
 
@@ -143,6 +152,11 @@ namespace Flameberry {
 		Ref<Image> m_JumpFloodImage1[SwapChain::MAX_FRAMES_IN_FLIGHT], m_JumpFloodImage2[SwapChain::MAX_FRAMES_IN_FLIGHT];
 		Ref<ComputePipeline> m_JumpFloodPipeline;
 		Ref<DescriptorSet> m_JumpFloodDescSets[SwapChain::MAX_FRAMES_IN_FLIGHT];
+
+		// Bloom Pass
+		std::vector<TFrameResource<DescriptorSet>> m_BloomDescriptorSetResources;
+		Ref<ComputePipeline> m_BloomPipeline;
+		TFrameResource<Image> m_BloomImageResource;
 
 		// Post processing
 		Ref<RenderPass> m_CompositePass;
