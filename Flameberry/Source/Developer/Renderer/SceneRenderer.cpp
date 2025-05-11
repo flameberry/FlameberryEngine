@@ -377,6 +377,11 @@ namespace Flameberry {
 					targetImageInfo.sampler = VK_NULL_HANDLE;
 					targetImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
+					VkDescriptorImageInfo bloomReadOnlyImageInfo{};
+					bloomReadOnlyImageInfo.imageView = m_BloomImageResource[idx]->GetVulkanImageView();
+					bloomReadOnlyImageInfo.sampler = Texture2D::GetDefaultSampler();
+					bloomReadOnlyImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
 					// The + 1 is added because now we are adding one redundant binding in the descriptor image array to enable using the
 					// output of the last element of the array in the previous pass as an input, and the first element of the
 					// array of the current pass as the output.
@@ -396,7 +401,8 @@ namespace Flameberry {
 					}
 
 					descriptorSet->WriteImage(0, targetImageInfo);
-					descriptorSet->WriteImageArray(1, bloomImageInfos.data(), numImageViews);
+					descriptorSet->WriteImage(1, bloomReadOnlyImageInfo);
+					descriptorSet->WriteImageArray(2, bloomImageInfos.data(), numImageViews);
 					descriptorSet->Update();
 				});
 			FBY_LOG("DescriptorSet ends here");
@@ -447,6 +453,11 @@ namespace Flameberry {
 			targetImageInfo.sampler = VK_NULL_HANDLE;
 			targetImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
+			VkDescriptorImageInfo bloomReadOnlyImageInfo{};
+			bloomReadOnlyImageInfo.imageView = m_BloomImageResource[resourceIndex]->GetVulkanImageView();
+			bloomReadOnlyImageInfo.sampler = Texture2D::GetDefaultSampler();
+			bloomReadOnlyImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
 			// The + 1 is added because now we are adding one redundant binding in the descriptor image array to enable using the
 			// output of the last element of the array in the previous pass as an input, and the first element of the
 			// array of the current pass as the output.
@@ -466,7 +477,8 @@ namespace Flameberry {
 			}
 
 			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImage(0, targetImageInfo);
-			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImageArray(1, bloomImageInfos.data(), numImageViews);
+			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImage(1, bloomReadOnlyImageInfo);
+			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImageArray(2, bloomImageInfos.data(), numImageViews);
 			m_BloomDescriptorSetResources[i][resourceIndex]->Update();
 		}
 	}
