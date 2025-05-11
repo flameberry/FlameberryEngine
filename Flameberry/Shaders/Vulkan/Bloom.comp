@@ -11,12 +11,13 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 #define BLOOM_STAGE_PREFILTER 0
 #define BLOOM_STAGE_DOWNSAMPLE 1
-#define BLOOM_STAGE_UPSAMPLE 2
+#define BLOOM_STAGE_UPSAMPLE_FIRST 2
+#define BLOOM_STAGE_UPSAMPLE 3
 
 const float Epsilon = 1.0e-4;
 
 layout(push_constant) uniform BloomSettings {
- 	float Threshold, Knee;
+	float Threshold, Knee;
 	uint BloomStage;
 	uint InputIndex, OutputIndex;
 } u_BloomSettings;
@@ -25,53 +26,74 @@ layout(push_constant) uniform BloomSettings {
 // curve = (threshold - knee, knee * 2, 0.25 / knee)
 vec4 QuadraticThreshold(vec4 color, float threshold, vec3 curve)
 {
-    // Maximum pixel brightness
-    float brightness = max(max(color.r, color.g), color.b);
-    // Quadratic curve
-    float rq = clamp(brightness - curve.x, 0.0, curve.y);
-    rq = (rq * rq) * curve.z;
-    color *= max(rq, brightness - threshold) / max(brightness, Epsilon);
-    return color;
+	// Maximum pixel brightness
+	float brightness = max(max(color.r, color.g), color.b);
+	// Quadratic curve
+	float rq = clamp(brightness - curve.x, 0.0, curve.y);
+	rq = (rq * rq) * curve.z;
+	color *= max(rq, brightness - threshold) / max(brightness, Epsilon);
+	return color;
 }
 
 vec4 PrefilterStage(vec4 color, vec4 params)
 {
-    float clampValue = 20.0f;
-    color = min(vec4(clampValue), color);
-    color = QuadraticThreshold(color, params.x, params.yzw);
-    return color;
+	float clampValue = 20.0f;
+	color = min(vec4(clampValue), color);
+	color = QuadraticThreshold(color, params.x, params.yzw);
+	return color;
 }
 
 vec3 DownsampleBox13(sampler2D tex, float lod, vec2 uv, vec2 texelSize)
 {
-    // Center (1.0 weight)
-    vec3 A = textureLod(tex, uv, lod).rgb;
+	// Center (1.0 weight)
+	vec3 A = textureLod(tex, uv, lod).rgb;
 
-    texelSize *= 2.0f; // Sample from center of texels
+	texelSize *= 4.0f; // Sample from center of texels
 
-    // Inner box (4 samples at 0.5 weight)
-    vec3 B = textureLod(tex, uv + texelSize * vec2(-1.0f, -1.0f), lod).rgb;
-    vec3 C = textureLod(tex, uv + texelSize * vec2(-1.0f, 1.0f), lod).rgb;
-    vec3 D = textureLod(tex, uv + texelSize * vec2(1.0f, 1.0f), lod).rgb;
-    vec3 E = textureLod(tex, uv + texelSize * vec2(1.0f, -1.0f), lod).rgb;
+	// Inner box (4 samples at 0.5 weight)
+	vec3 B = textureLod(tex, uv + texelSize * vec2(-1.0f, -1.0f), lod).rgb;
+	vec3 C = textureLod(tex, uv + texelSize * vec2(-1.0f, 1.0f), lod).rgb;
+	vec3 D = textureLod(tex, uv + texelSize * vec2(1.0f, 1.0f), lod).rgb;
+	vec3 E = textureLod(tex, uv + texelSize * vec2(1.0f, -1.0f), lod).rgb;
 
-    // Outer box (8 samples at 0.125 weight)
-    vec3 F = textureLod(tex, uv + texelSize * vec2(-2.0f, -2.0f), lod).rgb;
-    vec3 G = textureLod(tex, uv + texelSize * vec2(-2.0f, 0.0f), lod).rgb;
-    vec3 H = textureLod(tex, uv + texelSize * vec2(0.0f, 2.0f), lod).rgb;
-    vec3 I = textureLod(tex, uv + texelSize * vec2(2.0f, 2.0f), lod).rgb;
-    vec3 J = textureLod(tex, uv + texelSize * vec2(2.0f, -2.0f), lod).rgb;
-    vec3 K = textureLod(tex, uv + texelSize * vec2(2.0f, 0.0f), lod).rgb;
-    vec3 L = textureLod(tex, uv + texelSize * vec2(0.0f, -2.0f), lod).rgb;
-    vec3 M = textureLod(tex, uv + texelSize * vec2(-2.0f, 2.0f), lod).rgb;
+	// Outer box (8 samples at 0.125 weight)
+	vec3 F = textureLod(tex, uv + texelSize * vec2(-2.0f, -2.0f), lod).rgb;
+	vec3 G = textureLod(tex, uv + texelSize * vec2(-2.0f, 0.0f), lod).rgb;
+	vec3 H = textureLod(tex, uv + texelSize * vec2(0.0f, 2.0f), lod).rgb;
+	vec3 I = textureLod(tex, uv + texelSize * vec2(2.0f, 2.0f), lod).rgb;
+	vec3 J = textureLod(tex, uv + texelSize * vec2(2.0f, -2.0f), lod).rgb;
+	vec3 K = textureLod(tex, uv + texelSize * vec2(2.0f, 0.0f), lod).rgb;
+	vec3 L = textureLod(tex, uv + texelSize * vec2(0.0f, -2.0f), lod).rgb;
+	vec3 M = textureLod(tex, uv + texelSize * vec2(-2.0f, 2.0f), lod).rgb;
 
-    // Weighted sum (1.0 + 4*0.5 + 8*0.125 = 4.0 total weight)
-    vec3 result = A * 1.0; // Center
-    result += (B + C + D + E) * 0.5; // Inner box
-    result += (F + G + H + I + J + K + L + M) * 0.125; // Outer box
-    
-    // Normalize by total weight
-    return result / 4.0;
+	// Weighted sum (1.0 + 4*0.5 + 8*0.125 = 4.0 total weight)
+	vec3 result = A * 1.0; // Center
+	result += (B + C + D + E) * 0.5; // Inner box
+	result += (F + G + H + I + J + K + L + M) * 0.125; // Outer box
+
+	// Normalize by total weight
+	return result / 4.0;
+}
+
+vec3 UpsampleTent9(sampler2D tex, float lod, vec2 uv, vec2 texelSize, float radius)
+{
+	vec4 offset = texelSize.xyxy * vec4(1.0f, 1.0f, -1.0f, 0.0f) * radius;
+
+	// Center
+	vec3 result = textureLod(tex, uv, lod).rgb * 4.0f;
+
+	result += textureLod(tex, uv - offset.xy, lod).rgb;
+	result += textureLod(tex, uv - offset.wy, lod).rgb * 2.0;
+	result += textureLod(tex, uv - offset.zy, lod).rgb;
+
+	result += textureLod(tex, uv + offset.zw, lod).rgb * 2.0;
+	result += textureLod(tex, uv + offset.xw, lod).rgb * 2.0;
+
+	result += textureLod(tex, uv + offset.zy, lod).rgb;
+	result += textureLod(tex, uv + offset.wy, lod).rgb * 2.0;
+	result += textureLod(tex, uv + offset.xy, lod).rgb;
+
+	return result * (1.0f / 16.0f);
 }
 
 void main()
@@ -82,8 +104,8 @@ void main()
 	const vec2 imgSize = vec2(imageSize(_FBY_u_BloomImages[u_BloomSettings.OutputIndex]));
 
 	ivec2 invocID = ivec2(gl_GlobalInvocationID);
-    vec2 texCoords = vec2(float(invocID.x) / imgSize.x, float(invocID.y) / imgSize.y);
-    texCoords += (1.0f / imgSize) * 0.5f;
+	vec2 texCoords = vec2(float(invocID.x) / imgSize.x, float(invocID.y) / imgSize.y);
+	texCoords += (1.0f / imgSize) * 0.5f;
 
 	vec2 texSize = vec2(textureSize(_FBY_u_BloomImageSampler, int(u_BloomSettings.InputIndex)));
 
@@ -98,7 +120,29 @@ void main()
 	{
 		// vec4 color = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], ivec2(gl_GlobalInvocationID.xy));
 		vec4 color = vec4(1.0);
-		color.rgb = DownsampleBox13(_FBY_u_BloomImageSampler, float(u_BloomSettings.OutputIndex), texCoords, 1.0f / texSize);
+		color.rgb = DownsampleBox13(_FBY_u_BloomImageSampler, float(u_BloomSettings.InputIndex), texCoords, 1.0f / texSize);
+		imageStore(_FBY_u_BloomImages[u_BloomSettings.OutputIndex], ivec2(gl_GlobalInvocationID.xy), color);
+	}
+	else if (u_BloomSettings.BloomStage == BLOOM_STAGE_UPSAMPLE_FIRST)
+	{
+		vec2 bloomTexSize = vec2(textureSize(_FBY_u_BloomImageSampler, int(u_BloomSettings.InputIndex)));
+		float sampleScale = 4.0f;
+		vec3 upsampledTexture = UpsampleTent9(_FBY_u_BloomImageSampler, u_BloomSettings.InputIndex, texCoords, 1.0f / bloomTexSize, sampleScale);
+
+		vec3 existing = textureLod(_FBY_u_BloomImageSampler, texCoords, u_BloomSettings.OutputIndex).rgb;
+		vec4 color = vec4(1.0);
+		color.rgb = existing + upsampledTexture;
+		imageStore(_FBY_u_BloomImages[u_BloomSettings.OutputIndex], ivec2(gl_GlobalInvocationID.xy), color);
+	}
+	else if (u_BloomSettings.BloomStage == BLOOM_STAGE_UPSAMPLE)
+	{
+		vec4 color = vec4(1.0);
+		vec2 bloomTexSize = vec2(textureSize(_FBY_u_BloomImageSampler, int(u_BloomSettings.InputIndex)));
+		float sampleScale = 4.0f;
+		vec3 upsampledTexture = UpsampleTent9(_FBY_u_BloomImageSampler, u_BloomSettings.InputIndex, texCoords, 1.0f / bloomTexSize, sampleScale);
+
+		vec3 existing = textureLod(_FBY_u_BloomImageSampler, texCoords, u_BloomSettings.OutputIndex).rgb;
+		color.rgb = existing + upsampledTexture;
 		imageStore(_FBY_u_BloomImages[u_BloomSettings.OutputIndex], ivec2(gl_GlobalInvocationID.xy), color);
 	}
 }
