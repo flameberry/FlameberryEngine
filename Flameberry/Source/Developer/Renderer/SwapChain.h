@@ -2,7 +2,6 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
-#include <memory>
 
 #include "Core/Core.h"
 

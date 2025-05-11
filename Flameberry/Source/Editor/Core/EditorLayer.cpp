@@ -1105,8 +1105,14 @@ namespace Flameberry {
 				UI::TableKeyElement("Grid Far");
 				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Far", &settings.GridFar, 0.01f, settings.GridNear));
 
-				UI::TableKeyElement("Selection Outline Width");
-				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Selection_Outline_Width", &settings.SelectionOutlineWidth, 0.01f, 0.0f, 100.0f)); // Temp upper bound to outline width
+				UI::TableKeyElement("Enable Bloom");
+				ImGui::Checkbox("##EnableBloom", &settings.EnableBloom);
+
+				UI::TableKeyElement("Bloom Threshold");
+				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomThreshold", &settings.BloomThreshold, 0.01f, 0.0f, 100.0f));
+
+				UI::TableKeyElement("Bloom Knee");
+				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomKnee", &settings.BloomKnee, 0.01f, 0.0f, 100.0f));
 
 				UI::EndKeyValueTable();
 			}

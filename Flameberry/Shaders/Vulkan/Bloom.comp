@@ -4,25 +4,107 @@ layout(constant_id = 0) const uint c_MaxDescriptorSetsAllowed = 8;
 layout(constant_id = 1) const uint c_MipLevels = 10;
 
 layout(set = 0, binding = 0, rgba8) uniform image2D _FBY_u_TargetImage;
-layout(set = 0, binding = 1, rgba16f) uniform writeonly image2D _FBY_u_BloomImages[c_MaxDescriptorSetsAllowed];
+layout(set = 0, binding = 1, rgba16f) uniform image2D _FBY_u_BloomImages[c_MaxDescriptorSetsAllowed];
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-#define BLOOM_MODE_DOWNSAMPLE_FIRST 0
-#define BLOOM_MODE_DOWNSAMPLE 1
-#define BLOOM_MODE_UPSAMPLE 2
+#define BLOOM_STAGE_PREFILTER 0
+#define BLOOM_STAGE_DOWNSAMPLE 1
+#define BLOOM_STAGE_UPSAMPLE 2
+
+const float Epsilon = 1.0e-4;
 
 layout(push_constant) uniform BloomSettings {
-	float Threshold;
-	uint BloomShaderMode;
+ 	float Threshold, Knee;
+	uint BloomStage;
+	uint InputIndex, OutputIndex;
 } u_BloomSettings;
+
+float Noise(vec2 position)
+{
+    const vec3 magic = vec3(12.9898f, 78.233f, 43758.5453123f);
+    return fract(magic.z * sin(dot(position.xy, magic.xy)));
+}
+
+// Quadratic color thresholding
+// curve = (threshold - knee, knee * 2, 0.25 / knee)
+vec4 QuadraticThreshold(vec4 color, float threshold, vec3 curve)
+{
+    // Maximum pixel brightness
+    float brightness = max(max(color.r, color.g), color.b);
+    // Quadratic curve
+    float rq = clamp(brightness - curve.x, 0.0, curve.y);
+    rq = (rq * rq) * curve.z;
+    color *= max(rq, brightness - threshold) / max(brightness, Epsilon);
+    return color;
+}
+
+vec4 PrefilterStage(vec4 color, vec4 params)
+{
+    float clampValue = 20.0f;
+    color = min(vec4(clampValue), color);
+    color = QuadraticThreshold(color, params.x, params.yzw);
+    return color;
+}
+
+vec3 DownsampleBox13(ivec2 pixelCoord)
+{
+    // Center
+    vec3 A = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord).rgb;
+
+    // Inner box
+    vec3 B = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(-1, -1)).rgb;
+    vec3 C = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(-1, 1)).rgb;
+    vec3 D = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(1, 1)).rgb;
+    vec3 E = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(1, -1)).rgb;
+
+    // Outer box
+    vec3 F = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(-2, -2)).rgb;
+    vec3 G = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(-2, 0)).rgb;
+    vec3 H = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(0, 2)).rgb;
+    vec3 I = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(2, 2)).rgb;
+    vec3 J = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(2, 2)).rgb;
+    vec3 K = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(2, 0)).rgb;
+    vec3 L = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(-2, -2)).rgb;
+    vec3 M = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], pixelCoord + ivec2(0, -2)).rgb;
+
+    // Weights
+    vec3 result = vec3(0.0);
+    // Inner box
+    result += (B + C + D + E) * 0.5f;
+    // Bottom-left box
+    result += (F + G + A + M) * 0.125f;
+    // Top-left box
+    result += (G + H + I + A) * 0.125f;
+    // Top-right box
+    result += (A + I + J + K) * 0.125f;
+    // Bottom-right box
+    result += (M + A + K + L) * 0.125f;
+
+    // 4 samples each
+    result *= 0.25f;
+
+    return result;
+}
 
 void main()
 {
-	imageStore(_FBY_u_BloomImages[0], ivec2(gl_GlobalInvocationID.xy), vec4(1, 1, 0, 1));
-	imageStore(_FBY_u_BloomImages[1], ivec2(gl_GlobalInvocationID.xy), vec4(1, 0, 1, 1));
-	imageStore(_FBY_u_BloomImages[2], ivec2(gl_GlobalInvocationID.xy), vec4(0, 1, 1, 1));
-	imageStore(_FBY_u_BloomImages[3], ivec2(gl_GlobalInvocationID.xy), vec4(0, 0, 1, 1));
-	imageStore(_FBY_u_BloomImages[4], ivec2(gl_GlobalInvocationID.xy), vec4(0, 1, 0, 1));
-	imageStore(_FBY_u_BloomImages[5], ivec2(gl_GlobalInvocationID.xy), vec4(1, 0, 0, 1));
+	// (x) threshold, (y) threshold - knee, (z) knee * 2, (w) 0.25 / knee
+	const vec4 params = vec4(u_BloomSettings.Threshold, u_BloomSettings.Threshold - u_BloomSettings.Knee, u_BloomSettings.Knee * 2.0, 0.25 / u_BloomSettings.Knee);
+
+	const vec2 imgSize = vec2(imageSize(_FBY_u_BloomImages[u_BloomSettings.OutputIndex]));
+
+	if (u_BloomSettings.BloomStage == BLOOM_STAGE_PREFILTER)
+	{
+		vec4 color = imageLoad(_FBY_u_TargetImage, ivec2(gl_GlobalInvocationID.xy));
+		color = PrefilterStage(color, params);
+		color.a = 1.0f; // Confirm whether we need this
+		imageStore(_FBY_u_BloomImages[u_BloomSettings.OutputIndex], ivec2(gl_GlobalInvocationID.xy), color);
+	}
+	else if (u_BloomSettings.BloomStage == BLOOM_STAGE_DOWNSAMPLE)
+	{
+		vec4 color = imageLoad(_FBY_u_BloomImages[u_BloomSettings.InputIndex], ivec2(gl_GlobalInvocationID.xy));
+		color.rgb = DownsampleBox13(ivec2(gl_GlobalInvocationID.xy));
+		imageStore(_FBY_u_BloomImages[u_BloomSettings.OutputIndex], ivec2(gl_GlobalInvocationID.xy), color);
+	}
 }

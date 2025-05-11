@@ -1,10 +1,7 @@
 #pragma once
 
-#include "Flameberry.h"
-
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
-#include "Panels/InspectorPanel.h"
 #include "Core/UI.h"
 
 namespace Flameberry {

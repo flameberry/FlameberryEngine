@@ -35,6 +35,10 @@ namespace Flameberry {
 
 		float SelectionOutlineWidth = 1.0f;
 
+		// Bloom Settings
+		bool EnableBloom = true;
+		float BloomThreshold = 1.5f, BloomKnee = 0.1f;
+
 		static constexpr uint32_t CascadeCount = 4,
 								  CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
 	};

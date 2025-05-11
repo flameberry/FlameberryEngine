@@ -72,6 +72,20 @@ namespace Flameberry {
 		FBoolean IsInitialPass = FTrue, IsFinalPass = FFalse;
 	};
 
+	enum class BloomStage : uint32_t
+	{
+		Prefilter = 0,
+		DownSample,
+		UpSample,
+	};
+
+	struct BloomSettingsGPURepresentation
+	{
+		float Threshold = 1.0f, Knee = 0.0f;
+		BloomStage Stage;
+		uint32_t InputIndex = 0, OutputIndex = 0;
+	};
+
 	SceneRenderer::SceneRenderer(const glm::vec2& viewportSize)
 		: m_ViewportSize(viewportSize)
 	{
@@ -88,7 +102,8 @@ namespace Flameberry {
 		FramebufferSpecification shadowMapFramebufferSpec;
 		shadowMapFramebufferSpec.Width = SceneRendererSettings::CascadeSize;
 		shadowMapFramebufferSpec.Height = SceneRendererSettings::CascadeSize;
-		shadowMapFramebufferSpec.Attachments = { { VK_FORMAT_D32_SFLOAT, SceneRendererSettings::CascadeCount } };
+		// Switched from using VK_FORMAT_D32_SFLOAT to now VK_FORMAT_D16_UNORM
+		shadowMapFramebufferSpec.Attachments = { { VK_FORMAT_D16_UNORM, SceneRendererSettings::CascadeCount } };
 		shadowMapFramebufferSpec.Samples = 1;
 		shadowMapFramebufferSpec.DepthStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 		shadowMapFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
@@ -161,7 +176,6 @@ namespace Flameberry {
 			bufferInfo.offset = 0;
 
 			m_ShadowMapDescriptorSets[i]->WriteBuffer(0, bufferInfo);
-
 			m_ShadowMapDescriptorSets[i]->Update();
 		}
 
@@ -210,10 +224,10 @@ namespace Flameberry {
 	void SceneRenderer::PrepareGeometryRenderPass()
 	{
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
-		auto imageCount = swapchain->GetSwapChainImageCount();
-		auto sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
-		auto swapchainImageFormat = swapchain->GetSwapChainImageFormat();
+		const auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
+		const uint32_t imageCount = swapchain->GetSwapChainImageCount();
+		const auto sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
+		const VkFormat swapchainImageFormat = swapchain->GetSwapChainImageFormat();
 
 		// Scene Uniform Buffers ----------------------------------------------------------------------------
 		VkDeviceSize uniformBufferSize = sizeof(CameraUniformBufferObject);
@@ -320,7 +334,7 @@ namespace Flameberry {
 		// Basically we batch multiple descriptor sets corresponding to each mip level into a descriptor image array
 		// And that array has a limit, i.e., maxDescriptorSetsAllowed
 		// My device has 8 as the limit, so there is a need to divide the mipLevels into batches of mipLevels / 8
-		const uint32_t numDescriptorSetsPerFrame = ceil(mipLevels / maxDescriptorSetsAllowed);
+		const uint32_t numDescriptorSetsPerFrame = ceil((float)mipLevels / (float)maxDescriptorSetsAllowed);
 
 		// Creation of Bloom Images ------------------------------------------------------
 		ImageSpecification imageSpec;
@@ -363,13 +377,21 @@ namespace Flameberry {
 					targetImageInfo.sampler = VK_NULL_HANDLE;
 					targetImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-					const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed);
+					// The + 1 is added because now we are adding one redundant binding in the descriptor image array to enable using the
+					// output of the last element of the array in the previous pass as an input, and the first element of the
+					// array of the current pass as the output.
+					const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed + 1);
+
 					std::vector<VkDescriptorImageInfo> bloomImageInfos(numImageViews);
 
 					for (int j = 0; j < numImageViews; j++)
 					{
+						// Interesting indexing choices here
+						// TODO: Explain this
+						const uint32_t viewIndex = i * maxDescriptorSetsAllowed + j - i;
+
 						bloomImageInfos[j].sampler = VK_NULL_HANDLE;
-						bloomImageInfos[j].imageView = m_BloomImageResource[idx]->GetVulkanImageView(i * maxDescriptorSetsAllowed + j);
+						bloomImageInfos[j].imageView = m_BloomImageResource[idx]->GetVulkanImageView(viewIndex);
 						bloomImageInfos[j].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 					}
 
@@ -377,6 +399,7 @@ namespace Flameberry {
 					descriptorSet->WriteImageArray(1, bloomImageInfos.data(), numImageViews);
 					descriptorSet->Update();
 				});
+			FBY_LOG("DescriptorSet ends here");
 		}
 	}
 
@@ -402,7 +425,7 @@ namespace Flameberry {
 		// Basically we batch multiple descriptor sets corresponding to each mip level into a descriptor image array
 		// And that array has a limit, i.e., maxDescriptorSetsAllowed
 		// My device has 8 as the limit, so there is a need to divide the mipLevels into batches of mipLevels / 8
-		const uint32_t numDescriptorSetsPerFrame = ceil(mipLevels / maxDescriptorSetsAllowed);
+		const uint32_t numDescriptorSetsPerFrame = ceil((float)mipLevels / (float)maxDescriptorSetsAllowed);
 
 		// TODO: This else part can be combined with the if part, it'll be way better in terms of maintainability
 		m_BloomImageResource[resourceIndex]->OnResize(newBloomImgSize.x, newBloomImgSize.y, mipLevels);
@@ -424,13 +447,21 @@ namespace Flameberry {
 			targetImageInfo.sampler = VK_NULL_HANDLE;
 			targetImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-			const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed);
+			// The + 1 is added because now we are adding one redundant binding in the descriptor image array to enable using the
+			// output of the last element of the array in the previous pass as an input, and the first element of the
+			// array of the current pass as the output.
+			const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed + 1);
+
 			std::vector<VkDescriptorImageInfo> bloomImageInfos(numImageViews);
 
 			for (int j = 0; j < numImageViews; j++)
 			{
+				// Interesting indexing choices here
+				// TODO: Explain this
+				const uint32_t viewIndex = i * maxDescriptorSetsAllowed + j - i;
+
 				bloomImageInfos[j].sampler = VK_NULL_HANDLE;
-				bloomImageInfos[j].imageView = m_BloomImageResource[resourceIndex]->GetVulkanImageView(i * maxDescriptorSetsAllowed + j);
+				bloomImageInfos[j].imageView = m_BloomImageResource[resourceIndex]->GetVulkanImageView(viewIndex);
 				bloomImageInfos[j].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 			}
 
@@ -1168,7 +1199,8 @@ namespace Flameberry {
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		BloomPass();
+		if (m_RendererSettings.EnableBloom)
+			BloomPass();
 
 		if (canRenderOutline)
 			JumpFloodPass();
@@ -1229,10 +1261,14 @@ namespace Flameberry {
 
 	void SceneRenderer::BloomPass()
 	{
-		Renderer::Submit([=, this, pipelineLayout = m_BloomPipeline->GetVulkanPipelineLayout(),
+		// Look up physical device capabilities to bind descriptor sets
+		const uint32_t maxDescriptorSetsAllowed = VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
+
+		Renderer::Submit([this, pipelineLayout = m_BloomPipeline->GetVulkanPipelineLayout(),
 							 pipeline = m_BloomPipeline->GetVulkanPipeline(),
 							 bloomDescSetResources = m_BloomDescriptorSetResources,
-							 viewportSize = m_ViewportSize](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+							 viewportSize = m_ViewportSize,
+							 maxDescriptorSetsAllowed](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
 				// Transition the image to be suitable for writing
 				m_GeometryPass->GetSpecification()
@@ -1240,21 +1276,58 @@ namespace Flameberry {
 					->GetColorResolveAttachment(0)
 					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
 
-				m_GeometryPass->GetSpecification()
-					.TargetFramebuffers[imageIndex]
-					->GetDepthAndOrStencilAttachment()
-					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
-
 				std::vector<VkDescriptorSet> descSets(bloomDescSetResources.size());
 				for (int i = 0; i < descSets.size(); i++)
 					descSets[i] = bloomDescSetResources[i][imageIndex]->GetVulkanDescriptorSet();
 
 				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, descSets.size(), descSets.data(), 0, 0);
 
-				const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(viewportSize.x / 8, viewportSize.y / 8));
+				const float imageWidth = m_BloomImageResource[imageIndex]->GetSpecification().Width;
+				const float imageHeight = m_BloomImageResource[imageIndex]->GetSpecification().Height;
 
-				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
+				// Pre-filer pass
+				{
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSets[0], 0, 0);
+
+					BloomSettingsGPURepresentation bloomSettings;
+					bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
+					bloomSettings.Knee = m_RendererSettings.BloomKnee;
+					bloomSettings.Stage = BloomStage::Prefilter;
+					bloomSettings.InputIndex = -1; // Because to the BloomStage::Prefilter flag, it is implied that this value is garbage
+					bloomSettings.OutputIndex = 0;
+
+					vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation), &bloomSettings);
+
+					const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(imageWidth / 8, imageHeight / 8));
+					vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
+				}
+
+				// Down-sampling passes
+				const uint32_t mipLevels = m_BloomImageResource[imageIndex]->GetSpecification().MipLevels;
+
+				for (uint32_t bIndex = 0, bStart = 0; bStart < mipLevels; bStart += maxDescriptorSetsAllowed - 1, bIndex++)
+				{
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSets[bIndex], 0, 0);
+
+					for (uint32_t offset = 1; offset < glm::min(maxDescriptorSetsAllowed, mipLevels - bStart); offset++)
+					{
+						// Note: `offset` is the index of the image2D element in the desciptor set's image array
+						const uint32_t mipIndex = bStart + offset; // Target of current pass
+						const float mipWidth = std::max(1u, (uint32_t)imageWidth >> mipIndex);
+						const float mipHeight = std::max(1u, (uint32_t)imageHeight >> mipIndex);
+						const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(mipWidth / 8, mipHeight / 8));
+
+						BloomSettingsGPURepresentation bloomSettings;
+						bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
+						bloomSettings.Knee = m_RendererSettings.BloomKnee;
+						bloomSettings.Stage = BloomStage::DownSample;
+						bloomSettings.InputIndex = offset - 1;
+						bloomSettings.OutputIndex = offset;
+
+						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation), &bloomSettings);
+						vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
+					}
+				}
 			});
 	}
 

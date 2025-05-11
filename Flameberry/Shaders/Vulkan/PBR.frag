@@ -501,6 +501,9 @@ void main()
 
     o_FragColor = vec4(intermediateColor, 1.0f);
 
+	// Experimental: Only for testing bloom
+	o_FragColor += vec4(vec3(100.0), 0.0);
+
     if (u_SceneData.SceneRendererSettings.ShowCascades == 1)
     {
         uint cascadeIndex = 0;
