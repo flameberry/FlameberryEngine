@@ -76,15 +76,15 @@ namespace Flameberry {
 	{
 		Prefilter = 0,
 		DownSample,
-		UpSampleFirst,
 		UpSample,
+		Compositing
 	};
 
 	struct BloomSettingsGPURepresentation
 	{
-		float Threshold = 1.0f, Knee = 0.0f;
+		float Threshold = 1.0f, Knee = 0.0f, Intensity = 1.0f, SpreadScale = 1.0f;
 		BloomStage Stage;
-		uint32_t InputIndex = 0, OutputIndex = 0;
+		uint32_t InputIndex = 0, OutputIndex = 0, MipOffset = 0;
 	};
 
 	SceneRenderer::SceneRenderer(const glm::vec2& viewportSize)
@@ -342,12 +342,12 @@ namespace Flameberry {
 		imageSpec.Height = m_ViewportSize.y;
 		imageSpec.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
 		imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		imageSpec.MipLevels = mipLevels;
 		imageSpec.ViewCreationMode = ImageViewCreationMode::CreateOnePerMipMap;
 
 		// Experimental API
-		m_BloomImageResource.ForEach([&](Ref<Image>& bloomImage, uint32_t)
+		m_BloomImageResource.ForEach([&](Ref<Image>& bloomImage, uint32_t idx)
 			{
 				bloomImage = CreateRef<Image>(imageSpec);
 
@@ -358,6 +358,13 @@ namespace Flameberry {
 				bloomImage->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 				bloomImage->CmdGenerateMipmaps(cmdBuffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
 				VulkanContext::GetCurrentDevice()->EndSingleTimeCommandBuffer(cmdBuffer);
+
+				// Generate Image View for all mip levels --------------------------------------------------
+				ImageViewSpecification viewSpecification;
+				viewSpecification.BaseMipLevel = 0;
+				viewSpecification.LevelCount = mipLevels;
+
+				m_BloomImageCompleteViews[idx] = Utils::CreateImageViewUsingSpecification(bloomImage->GetVulkanImage(), imageSpec.Format, viewSpecification);
 			});
 
 		// Creation of Bloom Descriptor Sets ------------------------------------------------------
@@ -378,8 +385,8 @@ namespace Flameberry {
 					targetImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
 					VkDescriptorImageInfo bloomReadOnlyImageInfo{};
-					bloomReadOnlyImageInfo.imageView = m_BloomImageResource[idx]->GetVulkanImageView();
-					bloomReadOnlyImageInfo.sampler = Texture2D::GetDefaultSampler();
+					bloomReadOnlyImageInfo.imageView = m_BloomImageCompleteViews[idx];
+					bloomReadOnlyImageInfo.sampler = m_BloomSampler;
 					bloomReadOnlyImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
 					// The + 1 is added because now we are adding one redundant binding in the descriptor image array to enable using the
@@ -407,6 +414,8 @@ namespace Flameberry {
 				});
 			FBY_LOG("DescriptorSet ends here");
 		}
+
+		CreateBloomSampler(mipLevels);
 	}
 
 	void SceneRenderer::PrepareBloomPass()
@@ -417,6 +426,34 @@ namespace Flameberry {
 		m_BloomPipeline = CreateRef<ComputePipeline>(pipelineSpec);
 
 		PrepareBloomImageAndDescriptors();
+	}
+
+	void SceneRenderer::CreateBloomSampler(const uint32_t mipLevels)
+	{
+		VkSamplerCreateInfo sampler_info{};
+		sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		sampler_info.magFilter = VK_FILTER_LINEAR;
+		sampler_info.minFilter = VK_FILTER_LINEAR;
+		sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		sampler_info.anisotropyEnable = VK_TRUE;
+
+		VkPhysicalDeviceProperties properties;
+		vkGetPhysicalDeviceProperties(VulkanContext::GetPhysicalDevice(), &properties);
+
+		sampler_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+		sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		sampler_info.unnormalizedCoordinates = VK_FALSE;
+		sampler_info.compareEnable = VK_FALSE;
+		sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+		sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		sampler_info.mipLodBias = 0.0f;
+		sampler_info.minLod = 0.0f;
+		sampler_info.maxLod = (float)mipLevels - 1.0f;
+
+		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_BloomSampler));
 	}
 
 	void SceneRenderer::InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize)
@@ -433,9 +470,31 @@ namespace Flameberry {
 		// My device has 8 as the limit, so there is a need to divide the mipLevels into batches of mipLevels / 8
 		const uint32_t numDescriptorSetsPerFrame = ceil((float)mipLevels / (float)maxDescriptorSetsAllowed);
 
+		// Recreating bloom sampler
+		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		if (mipLevels != m_BloomImageResource[resourceIndex]->GetSpecification().MipLevels)
+		{
+			vkDestroySampler(device, m_BloomSampler, nullptr);
+			CreateBloomSampler(mipLevels);
+		}
+
 		// TODO: This else part can be combined with the if part, it'll be way better in terms of maintainability
 		m_BloomImageResource[resourceIndex]->OnResize(newBloomImgSize.x, newBloomImgSize.y, mipLevels);
 		m_BloomImageResource[resourceIndex]->GenerateMipmaps(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+
+		{
+			// Regenerate Image View for all mip levels
+			vkDestroyImageView(device, m_BloomImageCompleteViews[resourceIndex], nullptr);
+
+			ImageViewSpecification viewSpecification;
+			viewSpecification.BaseMipLevel = 0;
+			viewSpecification.LevelCount = mipLevels;
+
+			m_BloomImageCompleteViews[resourceIndex] = Utils::CreateImageViewUsingSpecification(
+				m_BloomImageResource[resourceIndex]->GetVulkanImage(),
+				m_BloomImageResource[resourceIndex]->GetSpecification().Format,
+				viewSpecification);
+		}
 
 		if (m_BloomDescriptorSetResources.size() != numDescriptorSetsPerFrame)
 			m_BloomDescriptorSetResources.resize(numDescriptorSetsPerFrame);
@@ -454,8 +513,8 @@ namespace Flameberry {
 			targetImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
 			VkDescriptorImageInfo bloomReadOnlyImageInfo{};
-			bloomReadOnlyImageInfo.imageView = m_BloomImageResource[resourceIndex]->GetVulkanImageView();
-			bloomReadOnlyImageInfo.sampler = Texture2D::GetDefaultSampler();
+			bloomReadOnlyImageInfo.imageView = m_BloomImageCompleteViews[resourceIndex];
+			bloomReadOnlyImageInfo.sampler = m_BloomSampler;
 			bloomReadOnlyImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
 			// The + 1 is added because now we are adding one redundant binding in the descriptor image array to enable using the
@@ -1304,6 +1363,8 @@ namespace Flameberry {
 					BloomSettingsGPURepresentation bloomSettings;
 					bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
 					bloomSettings.Knee = m_RendererSettings.BloomKnee;
+					bloomSettings.Intensity = m_RendererSettings.BloomIntensity;
+					bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 					bloomSettings.Stage = BloomStage::Prefilter;
 					bloomSettings.InputIndex = -1; // Because to the BloomStage::Prefilter flag, it is implied that this value is garbage
 					bloomSettings.OutputIndex = 0;
@@ -1335,9 +1396,12 @@ namespace Flameberry {
 						BloomSettingsGPURepresentation bloomSettings;
 						bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
 						bloomSettings.Knee = m_RendererSettings.BloomKnee;
+						bloomSettings.Intensity = m_RendererSettings.BloomIntensity;
+						bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 						bloomSettings.Stage = BloomStage::DownSample;
 						bloomSettings.InputIndex = offset - 1;
 						bloomSettings.OutputIndex = offset;
+						bloomSettings.MipOffset = bStart;
 
 						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation), &bloomSettings);
 						vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
@@ -1346,7 +1410,7 @@ namespace Flameberry {
 					}
 				}
 
-				bool first = true, firstPass = true;
+				bool first = true;
 
 				// Up-sampling passes
 				for (int bEnd = mipLevels - mipLevels % (maxDescriptorSetsAllowed - 1), bIndex = descSets.size() - 1; bEnd >= 0; bEnd -= maxDescriptorSetsAllowed - 1, bIndex--)
@@ -1357,8 +1421,6 @@ namespace Flameberry {
 					// And an offset value in every iteration refers to the output index in the desc image array in the current pass
 					for (int offset = glm::min(maxDescriptorSetsAllowed, mipLevels - bEnd) - 1 - 1; offset >= 0; offset--)
 					{
-						FBY_LOG("Input: {}, Output: {}", bEnd + offset + 1, bEnd + offset);
-
 						const uint32_t mipIndex = bEnd + offset; // Target of current pass
 						const float mipWidth = std::max(1u, (uint32_t)imageWidth >> mipIndex);
 						const float mipHeight = std::max(1u, (uint32_t)imageHeight >> mipIndex);
@@ -1367,15 +1429,12 @@ namespace Flameberry {
 						BloomSettingsGPURepresentation bloomSettings;
 						bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
 						bloomSettings.Knee = m_RendererSettings.BloomKnee;
+						bloomSettings.Intensity = m_RendererSettings.BloomIntensity;
+						bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 						bloomSettings.Stage = BloomStage::UpSample;
 						bloomSettings.InputIndex = offset + 1;
 						bloomSettings.OutputIndex = offset;
-
-						if (firstPass)
-						{
-							bloomSettings.Stage = BloomStage::UpSampleFirst;
-							firstPass = false;
-						}
+						bloomSettings.MipOffset = bEnd;
 
 						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation), &bloomSettings);
 						vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
@@ -1812,6 +1871,9 @@ namespace Flameberry {
 	{
 		auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkDestroySampler(device, m_ShadowMapSampler, nullptr);
+		vkDestroySampler(device, m_BloomSampler, nullptr);
+		for (auto& view : m_BloomImageCompleteViews)
+			vkDestroyImageView(device, view, nullptr);
 	}
 
 } // namespace Flameberry

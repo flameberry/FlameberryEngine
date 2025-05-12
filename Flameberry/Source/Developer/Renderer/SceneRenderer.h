@@ -8,6 +8,7 @@
 #include "ECS/Scene.h"
 #include "Renderer/SwapChain.h"
 #include "FrameResource.h"
+#include "vulkan/vulkan_core.h"
 
 namespace Flameberry {
 
@@ -37,7 +38,7 @@ namespace Flameberry {
 
 		// Bloom Settings
 		bool EnableBloom = true;
-		float BloomThreshold = 1.5f, BloomKnee = 0.1f;
+		float BloomThreshold = 1.5f, BloomKnee = 0.1f, BloomIntensity = 1.0f, BloomSpreadScale = 1.0f;
 
 		static constexpr uint32_t CascadeCount = 4,
 								  CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
@@ -116,6 +117,7 @@ namespace Flameberry {
 		// i.e., the images need to be resized and descriptors need to be updated
 		void InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize);
 		void PrepareBloomImageAndDescriptors();
+		void CreateBloomSampler(const uint32_t mipLevels);
 
 		void BloomPass();
 		void JumpFloodPass();
@@ -161,6 +163,8 @@ namespace Flameberry {
 		std::vector<TFrameResource<DescriptorSet>> m_BloomDescriptorSetResources;
 		Ref<ComputePipeline> m_BloomPipeline;
 		TFrameResource<Image> m_BloomImageResource;
+		VkImageView m_BloomImageCompleteViews[SwapChain::MAX_FRAMES_IN_FLIGHT];
+		VkSampler m_BloomSampler;
 
 		// Post processing
 		Ref<RenderPass> m_CompositePass;
