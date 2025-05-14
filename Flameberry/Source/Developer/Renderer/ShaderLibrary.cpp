@@ -27,6 +27,7 @@ namespace Flameberry {
 			"BRDFLUT.comp.spv",
 			"JumpFlood.comp.spv",
 			"Bloom.comp.spv",
+			"CompositePass.comp.spv",
 		};
 
 		for (const auto& path : paths)

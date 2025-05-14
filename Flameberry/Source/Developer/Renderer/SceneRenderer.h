@@ -85,7 +85,7 @@ namespace Flameberry {
 		void RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, FEntity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true, bool renderOutline = true, bool renderPhysicsCollider = true);
 
 		VkImageView GetGeometryPassOutputImageView(uint32_t index) const { return m_GeometryPass->GetSpecification().TargetFramebuffers[index]->GetColorResolveAttachment(0)->GetVulkanImageView(); }
-		VkImageView GetCompositePassOutputImageView(uint32_t index) const { return m_CompositePass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetVulkanImageView(); }
+		VkImageView GetCompositePassOutputImageView(uint32_t index) const { return m_CompositingPass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetVulkanImageView(); }
 
 		SceneRendererSettings& GetRendererSettingsRef() { return m_RendererSettings; }
 		void RenderSceneForMousePicking(const Ref<Scene>& scene, const Ref<RenderPass>& renderPass, const Ref<Pipeline>& pipeline, const Ref<Pipeline>& pipeline2D, const glm::vec2& mousePos);
@@ -115,13 +115,15 @@ namespace Flameberry {
 
 		// As the bloom pass is dependent on the viewport size, the size of it's associated images needs to be updated
 		// i.e., the images need to be resized and descriptors need to be updated
-		void InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize);
 		void PrepareBloomImageAndDescriptors();
 		void CreateBloomSampler(const uint32_t mipLevels);
 
+		void InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize);
+		void InvalidateCompositingPass(const uint32_t resourceIndex);
+
 		void BloomPass();
 		void JumpFloodPass();
-		void CompositePass();
+		void CompositingPass();
 
 		// Pipelines
 		void CreateMeshPipeline();
@@ -166,11 +168,10 @@ namespace Flameberry {
 		VkImageView m_BloomImageCompleteViews[SwapChain::MAX_FRAMES_IN_FLIGHT];
 		VkSampler m_BloomSampler;
 
-		// Post processing
-		Ref<RenderPass> m_CompositePass;
-		Ref<Pipeline> m_CompositePipeline;
-		Ref<DescriptorSetLayout> m_CompositePassDescriptorSetLayout;
-		std::vector<Ref<DescriptorSet>> m_CompositePassDescriptorSets;
+		// Compositing Pass
+		Ref<RenderPass> m_CompositingPass;
+		Ref<ComputePipeline> m_CompositingPipeline;
+		TFrameResource<DescriptorSet> m_TargetImageAccessDescSet;
 
 		// Textures
 		Ref<Texture2D> m_PointLightIcon, m_SpotLightIcon, m_CameraIcon, m_DirectionalLightIcon;

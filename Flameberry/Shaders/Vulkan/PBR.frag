@@ -493,17 +493,10 @@ void main()
     vec3 normal = GetPixelNormal();
     vec3 intermediateColor = PBR_TotalLight(normal);
 
-    // HDR tone mapping
-    intermediateColor = ToneMapWithExposure(intermediateColor, u_SceneData.SceneRendererSettings.Exposure);
-
-    // Gamma correction
-    if (u_SceneData.SceneRendererSettings.GammaCorrectionFactor != 1.0f)
-        intermediateColor = pow(intermediateColor, vec3(1.0f / u_SceneData.SceneRendererSettings.GammaCorrectionFactor));
-
     o_FragColor = vec4(intermediateColor, 1.0f);
 
 	// Experimental: Only for testing bloom
-	o_FragColor = vec4(vec3(14.75, 9.125, 1.71), 1.0);
+	// o_FragColor = vec4(vec3(14.75, 9.125, 1.71), 1.0);
 
     if (u_SceneData.SceneRendererSettings.ShowCascades == 1)
     {

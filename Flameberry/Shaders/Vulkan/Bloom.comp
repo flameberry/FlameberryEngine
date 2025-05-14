@@ -178,10 +178,10 @@ void main()
 	{
 		const vec3 upsampled = UpsampleTent9(_FBY_u_BloomImageSampler, u_BloomSettings.InputIndex + u_BloomSettings.MipOffset, textureCoords, 1.0 / texSize, u_BloomSettings.SpreadScale);
 		const vec3 existing = textureLod(_FBY_u_BloomImageSampler, textureCoords, int(u_BloomSettings.OutputIndex + u_BloomSettings.MipOffset)).rgb;
-
 		const vec4 original = imageLoad(_FBY_u_TargetImage, ivec2(gl_GlobalInvocationID.xy));
-		color.rgb = existing + upsampled;
-		color.rgb = AcesFilmicToneMapWithExposure(color.rgb, u_BloomSettings.Exposure);
+
+		color.rgb = existing + upsampled + original.rgb;
+		color.a = original.a;
 	}
 
 	if (u_BloomSettings.BloomStage == BLOOM_STAGE_COMPOSITING)

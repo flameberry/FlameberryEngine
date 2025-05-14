@@ -87,6 +87,11 @@ namespace Flameberry {
 		uint32_t InputIndex = 0, OutputIndex = 0, MipOffset = 0;
 	};
 
+	struct CompositionSettingsGPURepresentation
+	{
+		float GammaCorrectionFactor, Exposure;
+	};
+
 	SceneRenderer::SceneRenderer(const glm::vec2& viewportSize)
 		: m_ViewportSize(viewportSize)
 	{
@@ -614,69 +619,38 @@ namespace Flameberry {
 
 	void SceneRenderer::PrepareCompositeRenderPass()
 	{
-		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		auto swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
-		auto imageCount = swapchain->GetSwapChainImageCount();
-		auto sampleCount = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
-		auto swapchainImageFormat = swapchain->GetSwapChainImageFormat();
+		ComputePipelineSpecification pipelineSpec;
+		pipelineSpec.Shader = ShaderLibrary::Get("CompositePass");
 
-		FramebufferSpecification framebufferSpec{};
-		framebufferSpec.Width = m_ViewportSize.x;
-		framebufferSpec.Height = m_ViewportSize.y;
-		framebufferSpec.Attachments = { swapchainImageFormat, VK_FORMAT_D32_SFLOAT };
-		framebufferSpec.ClearColorValue = { 0.0f, 0.0f, 0.0f, 1.0f };
-		framebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
-		framebufferSpec.Samples = 1;
+		m_CompositingPipeline = CreateRef<ComputePipeline>(pipelineSpec);
 
-		RenderPassSpecification renderPassSpec{};
-		renderPassSpec.TargetFramebuffers.resize(swapchain->GetSwapChainImageCount());
-		for (uint32_t i = 0; i < renderPassSpec.TargetFramebuffers.size(); i++)
-			renderPassSpec.TargetFramebuffers[i] = CreateRef<Framebuffer>(framebufferSpec);
+		// Create Desciptor Sets
+		DescriptorSetSpecification descSetSpecification;
+		descSetSpecification.Layout = m_CompositingPipeline->GetDescriptorSetLayout(0);
 
-		m_CompositePass = CreateRef<RenderPass>(renderPassSpec);
+		m_TargetImageAccessDescSet.ForEach([this, descSetSpecification](Ref<DescriptorSet>& descriptorSet, uint32_t idx)
+			{
+				descriptorSet = CreateRef<DescriptorSet>(descSetSpecification);
 
-		DescriptorSetLayoutSpecification layoutSpec;
-		layoutSpec.Bindings.resize(1);
+				VkDescriptorImageInfo imageInfo{};
+				imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+				imageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[idx]->GetColorResolveAttachment(0)->GetVulkanImageView();
+				imageInfo.sampler = VK_NULL_HANDLE;
 
-		layoutSpec.Bindings[0].binding = 0;
-		layoutSpec.Bindings[0].descriptorCount = 1;
-		layoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		layoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				descriptorSet->WriteImage(0, imageInfo);
+				descriptorSet->Update();
+			});
+	}
 
-		m_CompositePassDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(layoutSpec);
+	void SceneRenderer::InvalidateCompositingPass(const uint32_t resourceIndex)
+	{
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		imageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->GetColorResolveAttachment(0)->GetVulkanImageView();
+		imageInfo.sampler = VK_NULL_HANDLE;
 
-		DescriptorSetSpecification setSpec;
-		setSpec.Layout = m_CompositePassDescriptorSetLayout;
-
-		m_CompositePassDescriptorSets.resize(imageCount);
-		for (uint8_t i = 0; i < m_CompositePassDescriptorSets.size(); i++)
-		{
-			m_CompositePassDescriptorSets[i] = CreateRef<DescriptorSet>(setSpec);
-
-			VkDescriptorImageInfo imageInfo{
-				.sampler = m_VkTextureSampler,
-				.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetVulkanImageView(),
-				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			};
-
-			m_CompositePassDescriptorSets[i]->WriteImage(0, imageInfo);
-
-			m_CompositePassDescriptorSets[i]->Update();
-		}
-
-		PipelineSpecification pipelineSpec{};
-
-		pipelineSpec.Shader = CreateRef<Shader>(
-			FBY_PROJECT_DIR "Flameberry/shaders/vulkan/bin/composite.vert.spv",
-			FBY_PROJECT_DIR "Flameberry/shaders/vulkan/bin/composite.frag.spv");
-
-		pipelineSpec.RenderPass = m_CompositePass;
-		pipelineSpec.VertexLayout = {};
-
-		pipelineSpec.BlendingEnable = true;
-		pipelineSpec.CullMode = VK_CULL_MODE_FRONT_BIT;
-
-		m_CompositePipeline = CreateRef<Pipeline>(pipelineSpec);
+		m_TargetImageAccessDescSet[resourceIndex]->WriteImage(0, imageInfo);
+		m_TargetImageAccessDescSet[resourceIndex]->Update();
 	}
 
 	void SceneRenderer::CreateMeshPipeline()
@@ -835,7 +809,7 @@ namespace Flameberry {
 		PrepareGeometryRenderPass();
 		PrepareBloomPass();
 		PrepareJumpFloodPass();
-		// PrepareCompositeRenderPass();
+		PrepareCompositeRenderPass();
 
 		Renderer2D::Init(m_GeometryPass);
 	}
@@ -861,9 +835,11 @@ namespace Flameberry {
 					m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass());
 
 					InvalidateBloomPass(imageIndex, m_ViewportSize);
+					InvalidateCompositingPass(imageIndex);
 
 					// Resizing Jump Flood Images
-					m_JumpFloodImage1[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y);
+					m_JumpFloodImage1[imageIndex]
+						->OnResize(m_ViewportSize.x, m_ViewportSize.y);
 					m_JumpFloodImage2[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y);
 
 					// Update Jump Flood Descriptor Sets
@@ -893,19 +869,6 @@ namespace Flameberry {
 					m_JumpFloodDescSets[imageIndex]->WriteImage(2, jumpFloodImage1Info);
 					m_JumpFloodDescSets[imageIndex]->WriteImage(3, jumpFloodImage2Info);
 					m_JumpFloodDescSets[imageIndex]->Update();
-
-#if 0
-                    VkDescriptorImageInfo imageInfo{
-                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                        .imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetImageView(),
-                        .sampler = m_VkTextureSampler
-                    };
-
-                    m_CompositePassDescriptorSets[imageIndex]->WriteImage(0, imageInfo);
-
-                    m_CompositePassDescriptorSets[imageIndex]->Update();
-                    m_CompositePass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_CompositePass->GetRenderPass());
-#endif
 				}
 
 				// VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
@@ -1276,6 +1239,8 @@ namespace Flameberry {
 		if (canRenderOutline)
 			JumpFloodPass();
 
+		CompositingPass();
+
 		// CompositePass();
 	}
 
@@ -1498,20 +1463,25 @@ namespace Flameberry {
 			});
 	}
 
-	void SceneRenderer::CompositePass()
+	void SceneRenderer::CompositingPass()
 	{
-		std::vector<VkDescriptorSet> descSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
-		for (uint8_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-			descSets[i] = m_CompositePassDescriptorSets[i]->GetVulkanDescriptorSet();
-
-		m_CompositePass->Begin();
-		Renderer::Submit([pipeline = m_CompositePipeline->GetVulkanPipeline(), pipelineLayout = m_CompositePipeline->GetVulkanPipelineLayout(), descSets](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+		Renderer::Submit([this, pipeline = m_CompositingPipeline->GetVulkanPipeline(), pipelineLayout = m_CompositingPipeline->GetVulkanPipelineLayout(),
+							 descSets = m_TargetImageAccessDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
-				Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descSets[imageIndex], 0, nullptr);
-				vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+				const VkDescriptorSet descSet = descSets[imageIndex]->GetVulkanDescriptorSet();
+				const glm::vec2 threadGroupSize(
+					m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification().Width / 8,
+					m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification().Height / 8);
+
+				CompositionSettingsGPURepresentation compositionSettings;
+				compositionSettings.GammaCorrectionFactor = m_RendererSettings.GammaCorrectionFactor;
+				compositionSettings.Exposure = m_RendererSettings.Exposure;
+
+				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSet, 0, nullptr);
+				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(CompositionSettingsGPURepresentation), &compositionSettings);
+				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 			});
-		m_CompositePass->End();
 	}
 
 	void SceneRenderer::CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection)
