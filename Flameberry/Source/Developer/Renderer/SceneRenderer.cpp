@@ -82,7 +82,7 @@ namespace Flameberry {
 
 	struct BloomSettingsGPURepresentation
 	{
-		float Threshold = 1.0f, Knee = 0.0f, Exposure = 1.0f, SpreadScale = 1.0f;
+		float Threshold = 1.0f, Knee = 0.0f, SpreadScale = 1.0f;
 		BloomStage Stage;
 		uint32_t InputIndex = 0, OutputIndex = 0, MipOffset = 0;
 	};
@@ -617,6 +617,41 @@ namespace Flameberry {
 		}
 	}
 
+	void SceneRenderer::InvalidateJumpFloodPass(const uint32_t resourceIndex, const glm::vec2& newJumpFloodImgSize)
+	{
+		// Resizing Jump Flood Images
+		m_JumpFloodImage1[resourceIndex]->OnResize(newJumpFloodImgSize.x, newJumpFloodImgSize.y);
+		m_JumpFloodImage2[resourceIndex]->OnResize(newJumpFloodImgSize.x, newJumpFloodImgSize.y);
+
+		// Update Jump Flood Descriptor Sets
+		// First binding is the actual geometry pass image on which the outline is to be drawn
+		VkDescriptorImageInfo geometryPassImageInfo{};
+		geometryPassImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		geometryPassImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->GetColorResolveAttachment(0)->GetVulkanImageView();
+		geometryPassImageInfo.sampler = Texture2D::GetDefaultSampler();
+
+		VkDescriptorImageInfo stencilBufferImageInfo{};
+		stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->GetStencilAttachmentImageView();
+		stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
+
+		VkDescriptorImageInfo jumpFloodImage1Info{};
+		jumpFloodImage1Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		jumpFloodImage1Info.imageView = m_JumpFloodImage1[resourceIndex]->GetVulkanImageView();
+		jumpFloodImage1Info.sampler = VK_NULL_HANDLE;
+
+		VkDescriptorImageInfo jumpFloodImage2Info{};
+		jumpFloodImage2Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		jumpFloodImage2Info.imageView = m_JumpFloodImage2[resourceIndex]->GetVulkanImageView();
+		jumpFloodImage2Info.sampler = VK_NULL_HANDLE;
+
+		m_JumpFloodDescSets[resourceIndex]->WriteImage(0, geometryPassImageInfo);
+		m_JumpFloodDescSets[resourceIndex]->WriteImage(1, stencilBufferImageInfo);
+		m_JumpFloodDescSets[resourceIndex]->WriteImage(2, jumpFloodImage1Info);
+		m_JumpFloodDescSets[resourceIndex]->WriteImage(3, jumpFloodImage2Info);
+		m_JumpFloodDescSets[resourceIndex]->Update();
+	}
+
 	void SceneRenderer::PrepareCompositeRenderPass()
 	{
 		ComputePipelineSpecification pipelineSpec;
@@ -835,40 +870,8 @@ namespace Flameberry {
 					m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass());
 
 					InvalidateBloomPass(imageIndex, m_ViewportSize);
+					InvalidateJumpFloodPass(imageIndex, m_ViewportSize);
 					InvalidateCompositingPass(imageIndex);
-
-					// Resizing Jump Flood Images
-					m_JumpFloodImage1[imageIndex]
-						->OnResize(m_ViewportSize.x, m_ViewportSize.y);
-					m_JumpFloodImage2[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y);
-
-					// Update Jump Flood Descriptor Sets
-					// First binding is the actual geometry pass image on which the outline is to be drawn
-					VkDescriptorImageInfo geometryPassImageInfo{};
-					geometryPassImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-					geometryPassImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetVulkanImageView();
-					geometryPassImageInfo.sampler = Texture2D::GetDefaultSampler();
-
-					VkDescriptorImageInfo stencilBufferImageInfo{};
-					stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-					stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetStencilAttachmentImageView();
-					stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
-
-					VkDescriptorImageInfo jumpFloodImage1Info{};
-					jumpFloodImage1Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-					jumpFloodImage1Info.imageView = m_JumpFloodImage1[imageIndex]->GetVulkanImageView();
-					jumpFloodImage1Info.sampler = VK_NULL_HANDLE;
-
-					VkDescriptorImageInfo jumpFloodImage2Info{};
-					jumpFloodImage2Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-					jumpFloodImage2Info.imageView = m_JumpFloodImage2[imageIndex]->GetVulkanImageView();
-					jumpFloodImage2Info.sampler = VK_NULL_HANDLE;
-
-					m_JumpFloodDescSets[imageIndex]->WriteImage(0, geometryPassImageInfo);
-					m_JumpFloodDescSets[imageIndex]->WriteImage(1, stencilBufferImageInfo);
-					m_JumpFloodDescSets[imageIndex]->WriteImage(2, jumpFloodImage1Info);
-					m_JumpFloodDescSets[imageIndex]->WriteImage(3, jumpFloodImage2Info);
-					m_JumpFloodDescSets[imageIndex]->Update();
 				}
 
 				// VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
@@ -1236,12 +1239,10 @@ namespace Flameberry {
 		if (m_RendererSettings.EnableBloom)
 			BloomPass();
 
-		if (canRenderOutline)
-			JumpFloodPass();
-
 		CompositingPass();
 
-		// CompositePass();
+		if (canRenderOutline)
+			JumpFloodPass();
 	}
 
 	void SceneRenderer::SubmitRenderObjects(std::vector<RenderObject>& renderObjects)
@@ -1328,7 +1329,6 @@ namespace Flameberry {
 					BloomSettingsGPURepresentation bloomSettings;
 					bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
 					bloomSettings.Knee = m_RendererSettings.BloomKnee;
-					bloomSettings.Exposure = m_RendererSettings.BloomExposure;
 					bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 					bloomSettings.Stage = BloomStage::Prefilter;
 					bloomSettings.InputIndex = -1; // Because to the BloomStage::Prefilter flag, it is implied that this value is garbage
@@ -1361,7 +1361,6 @@ namespace Flameberry {
 						BloomSettingsGPURepresentation bloomSettings;
 						bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
 						bloomSettings.Knee = m_RendererSettings.BloomKnee;
-						bloomSettings.Exposure = m_RendererSettings.BloomExposure;
 						bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 						bloomSettings.Stage = BloomStage::DownSample;
 						bloomSettings.InputIndex = offset - 1;
@@ -1394,7 +1393,6 @@ namespace Flameberry {
 						BloomSettingsGPURepresentation bloomSettings;
 						bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
 						bloomSettings.Knee = m_RendererSettings.BloomKnee;
-						bloomSettings.Exposure = m_RendererSettings.BloomExposure;
 						bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 						bloomSettings.Stage = mipIndex == 0 ? BloomStage::Compositing : BloomStage::UpSample;
 						// bloomSettings.Stage = BloomStage::UpSample;

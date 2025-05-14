@@ -38,7 +38,7 @@ namespace Flameberry {
 
 		// Bloom Settings
 		bool EnableBloom = true;
-		float BloomThreshold = 1.5f, BloomKnee = 0.1f, BloomExposure = 1.0f, BloomSpreadScale = 1.0f;
+		float BloomThreshold = 1.5f, BloomKnee = 0.1f, BloomSpreadScale = 1.0f;
 
 		static constexpr uint32_t CascadeCount = 4,
 								  CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
@@ -119,6 +119,7 @@ namespace Flameberry {
 		void CreateBloomSampler(const uint32_t mipLevels);
 
 		void InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize);
+		void InvalidateJumpFloodPass(const uint32_t resourceIndex, const glm::vec2& newJumpFloodImgSize);
 		void InvalidateCompositingPass(const uint32_t resourceIndex);
 
 		void BloomPass();

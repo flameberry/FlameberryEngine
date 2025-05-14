@@ -20,7 +20,7 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 const float Epsilon = 1.0e-4;
 
 layout(push_constant) uniform BloomSettings {
-    float Threshold, Knee, Exposure, SpreadScale;
+    float Threshold, Knee, SpreadScale;
     uint BloomStage;
     uint InputIndex, OutputIndex, MipOffset;
 } u_BloomSettings;
