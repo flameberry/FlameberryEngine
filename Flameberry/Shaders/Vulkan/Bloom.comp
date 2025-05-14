@@ -14,7 +14,6 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 #define BLOOM_STAGE_UPSAMPLE 2
 #define BLOOM_STAGE_COMPOSITING 3
 
-#include "Include/CubemapCommon.glsl"
 #include "Include/HDRCommon.glsl"
 
 const float Epsilon = 1.0e-4;
