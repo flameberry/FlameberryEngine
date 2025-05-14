@@ -1111,8 +1111,8 @@ namespace Flameberry {
 				UI::TableKeyElement("Bloom Threshold");
 				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomThreshold", &settings.BloomThreshold, 0.01f, 0.0f, 100.0f));
 
-				UI::TableKeyElement("Bloom Intensity");
-				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomIntensity", &settings.BloomIntensity, 0.01f, 0.0f, 1000.0f));
+				UI::TableKeyElement("Bloom Exposure");
+				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomExposure", &settings.BloomExposure, 0.005f, 0.0f, 1000.0f));
 
 				UI::TableKeyElement("Bloom Spread Scale");
 				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomSpreadScale", &settings.BloomSpreadScale, 0.01f, 0.0f, 1000.0f));

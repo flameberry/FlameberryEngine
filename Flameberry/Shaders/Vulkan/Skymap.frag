@@ -19,7 +19,7 @@ layout(push_constant) uniform UniformBufferObject {
     float u_Exposure;
 };
 
-#include "include/CubemapCommon.glsl"
+#include "Include/HDRCommon.glsl"
 
 void main()
 {

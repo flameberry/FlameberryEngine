@@ -82,7 +82,7 @@ namespace Flameberry {
 
 	struct BloomSettingsGPURepresentation
 	{
-		float Threshold = 1.0f, Knee = 0.0f, Intensity = 1.0f, SpreadScale = 1.0f;
+		float Threshold = 1.0f, Knee = 0.0f, Exposure = 1.0f, SpreadScale = 1.0f;
 		BloomStage Stage;
 		uint32_t InputIndex = 0, OutputIndex = 0, MipOffset = 0;
 	};
@@ -1363,7 +1363,7 @@ namespace Flameberry {
 					BloomSettingsGPURepresentation bloomSettings;
 					bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
 					bloomSettings.Knee = m_RendererSettings.BloomKnee;
-					bloomSettings.Intensity = m_RendererSettings.BloomIntensity;
+					bloomSettings.Exposure = m_RendererSettings.BloomExposure;
 					bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 					bloomSettings.Stage = BloomStage::Prefilter;
 					bloomSettings.InputIndex = -1; // Because to the BloomStage::Prefilter flag, it is implied that this value is garbage
@@ -1396,7 +1396,7 @@ namespace Flameberry {
 						BloomSettingsGPURepresentation bloomSettings;
 						bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
 						bloomSettings.Knee = m_RendererSettings.BloomKnee;
-						bloomSettings.Intensity = m_RendererSettings.BloomIntensity;
+						bloomSettings.Exposure = m_RendererSettings.BloomExposure;
 						bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 						bloomSettings.Stage = BloomStage::DownSample;
 						bloomSettings.InputIndex = offset - 1;
@@ -1429,9 +1429,10 @@ namespace Flameberry {
 						BloomSettingsGPURepresentation bloomSettings;
 						bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
 						bloomSettings.Knee = m_RendererSettings.BloomKnee;
-						bloomSettings.Intensity = m_RendererSettings.BloomIntensity;
+						bloomSettings.Exposure = m_RendererSettings.BloomExposure;
 						bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
-						bloomSettings.Stage = BloomStage::UpSample;
+						bloomSettings.Stage = mipIndex == 0 ? BloomStage::Compositing : BloomStage::UpSample;
+						// bloomSettings.Stage = BloomStage::UpSample;
 						bloomSettings.InputIndex = offset + 1;
 						bloomSettings.OutputIndex = offset;
 						bloomSettings.MipOffset = bEnd;

@@ -16,6 +16,7 @@ layout(location = 0) out vec4 o_FragColor;
 #include "Include/poisson.glsl"
 
 #include "Include/CubemapCommon.glsl"
+#include "Include/HDRCommon.glsl"
 
 const mat4 g_BiasMatrix = mat4(
         0.5, 0.0, 0.0, 0.0,
@@ -502,7 +503,7 @@ void main()
     o_FragColor = vec4(intermediateColor, 1.0f);
 
 	// Experimental: Only for testing bloom
-	o_FragColor += vec4(vec3(100.0), 0.0);
+	o_FragColor = vec4(vec3(5), 1.0);
 
     if (u_SceneData.SceneRendererSettings.ShowCascades == 1)
     {
