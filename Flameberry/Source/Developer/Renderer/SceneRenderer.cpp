@@ -1209,7 +1209,9 @@ namespace Flameberry {
 			const auto& [transform, text] = scene->GetRegistry()->GetComponent<TransformComponent, TextComponent>(entity);
 
 			Ref<Font> font = AssetManager::GetAsset<Font>(text.Font);
-			Renderer2D::AddText(text.TextString, font, transform.CalculateTransform(), { text.Color, text.Kerning, text.LineSpacing }, entity.GetIndex());
+
+			// So instead of using a push constant to provide the emission to the text pipeline, we just multiply the color by the emission value
+			Renderer2D::AddText(text.TextString, font, transform.CalculateTransform(), { text.Color * text.Emission, text.Kerning, text.LineSpacing }, entity.GetIndex());
 		}
 
 		Renderer2D::EndScene();

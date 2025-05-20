@@ -196,8 +196,11 @@ namespace Flameberry {
 		AssetHandle Font = 0;
 
 		glm::vec3 Color{ 1.0f };
-		float Kerning;
-		float LineSpacing;
+
+		// For showing up in the bloom pipeline
+		float Emission = 1.0f;
+
+		float Kerning, LineSpacing;
 	};
 
 	template <typename... Component>

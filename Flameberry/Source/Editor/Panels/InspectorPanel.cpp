@@ -12,6 +12,7 @@
 #include "Project/Project.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/Skymap.h"
+#include "imgui.h"
 
 namespace Flameberry {
 
@@ -127,7 +128,7 @@ namespace Flameberry {
 
 			DrawComponent<TextComponent>(
 				ICON_LC_TEXT " Text",
- [&]()
+				[&]()
 				{
 					auto& text = m_Context->GetRegistry()->GetComponent<TextComponent>(m_SelectionContext);
 
@@ -145,11 +146,11 @@ namespace Flameberry {
 
 						// Display font preview
 						ImGui::Image((ImTextureID)fontPreview->CreateOrGetDescriptorSet(),
-									 ImVec2(80, 80),
-									 ImVec2(0, 1),
-									 ImVec2(1, 0),
-									 ImVec4(1, 1, 1, 1),
-									 ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+							ImVec2(80, 80),
+							ImVec2(0, 1),
+							ImVec2(1, 0),
+							ImVec4(1, 1, 1, 1),
+							ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
 						if (ImGui::BeginDragDropTarget())
 						{
@@ -181,6 +182,9 @@ namespace Flameberry {
 
 						UI::TableKeyElement("Color");
 						ImGui::ColorEdit3("##TextColor", glm::value_ptr(text.Color));
+
+						UI::TableKeyElement("Emission");
+						ImGui::DragFloat("##Emission", &text.Emission, 0.025f, 1.0f);
 
 						UI::TableKeyElement("Kerning");
 						ImGui::DragFloat("##Kerning", &text.Kerning, 0.025f);
