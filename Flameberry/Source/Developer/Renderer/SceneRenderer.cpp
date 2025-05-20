@@ -12,6 +12,7 @@
 #include "Renderer/DescriptorSet.h"
 #include "Renderer/Image.h"
 #include "Renderer/Pipeline.h"
+#include "Renderer/Shader.h"
 #include "VulkanDebug.h"
 #include "VulkanContext.h"
 #include "Renderer.h"
@@ -360,8 +361,7 @@ namespace Flameberry {
 				VkCommandBuffer cmdBuffer;
 
 				VulkanContext::GetCurrentDevice()->BeginSingleTimeCommandBuffer(cmdBuffer);
-				bloomImage->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-				bloomImage->CmdGenerateMipmaps(cmdBuffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
+				bloomImage->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 				VulkanContext::GetCurrentDevice()->EndSingleTimeCommandBuffer(cmdBuffer);
 
 				// Generate Image View for all mip levels --------------------------------------------------
@@ -417,7 +417,6 @@ namespace Flameberry {
 					descriptorSet->WriteImageArray(2, bloomImageInfos.data(), numImageViews);
 					descriptorSet->Update();
 				});
-			FBY_LOG("DescriptorSet ends here");
 		}
 
 		CreateBloomSampler(mipLevels);
@@ -425,9 +424,15 @@ namespace Flameberry {
 
 	void SceneRenderer::PrepareBloomPass()
 	{
+		// Look up physical device capabilities to bind descriptor sets
+		const uint32_t maxDescriptorSetsAllowed = VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
+
 		// Creation of Bloom Pipeline ------------------------------------------------------
 		ComputePipelineSpecification pipelineSpec;
 		pipelineSpec.Shader = ShaderLibrary::Get("Bloom");
+		pipelineSpec.SpecializationConstantLayout = { { 0, ShaderDataType::UInt } };
+		pipelineSpec.SpecializationConstantData = &maxDescriptorSetsAllowed;
+
 		m_BloomPipeline = CreateRef<ComputePipeline>(pipelineSpec);
 
 		PrepareBloomImageAndDescriptors();
@@ -483,9 +488,8 @@ namespace Flameberry {
 			CreateBloomSampler(mipLevels);
 		}
 
-		// TODO: This else part can be combined with the if part, it'll be way better in terms of maintainability
 		m_BloomImageResource[resourceIndex]->OnResize(newBloomImgSize.x, newBloomImgSize.y, mipLevels);
-		m_BloomImageResource[resourceIndex]->GenerateMipmaps(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		m_BloomImageResource[resourceIndex]->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 		{
 			// Regenerate Image View for all mip levels

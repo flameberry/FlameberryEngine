@@ -1,7 +1,6 @@
 #version 450
 
 layout(constant_id = 0) const uint c_MaxDescriptorSetsAllowed = 8;
-layout(constant_id = 1) const uint c_MipLevels = 10;
 
 layout(set = 0, binding = 0, rgba16f) uniform image2D _FBY_u_TargetImage;
 layout(set = 0, binding = 1) uniform sampler2D _FBY_u_BloomImageSampler;
