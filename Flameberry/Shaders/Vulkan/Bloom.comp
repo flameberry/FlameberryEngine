@@ -2,9 +2,9 @@
 
 layout(constant_id = 0) const uint c_MaxDescriptorSetsAllowed = 8;
 
-layout(set = 0, binding = 0, rgba16f) uniform image2D _FBY_u_TargetImage;
-layout(set = 0, binding = 1) uniform sampler2D _FBY_u_BloomImageSampler;
-layout(set = 0, binding = 2, rgba16f) uniform image2D _FBY_u_BloomImages[c_MaxDescriptorSetsAllowed];
+layout(set = 0, binding = 0) uniform sampler2D _FBY_u_BloomImageSampler;
+layout(set = 0, binding = 1, rgba16f) uniform image2D _FBY_u_BloomImages[c_MaxDescriptorSetsAllowed];
+layout(set = 1, binding = 0, rgba16f) uniform image2D _FBY_u_TargetImage;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 

@@ -325,6 +325,34 @@ namespace Flameberry {
 		CreateMeshPipeline();
 		CreateSkymapPipeline();
 		CreateGridPipeline();
+
+		// Create Descriptor Set that serves as a writing target for all post-processing passes ----------
+		DescriptorSetLayoutSpecification descSetLayoutSpec;
+		descSetLayoutSpec.Bindings = {
+			{ .binding = 0,
+				.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+				.descriptorCount = 1,
+				.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+				.pImmutableSamplers = nullptr }
+		};
+
+		m_PostProcessingTargetImageDescSetLayout = CreateRef<DescriptorSetLayout>(descSetLayoutSpec);
+
+		DescriptorSetSpecification descSetSpec;
+		descSetSpec.Layout = m_PostProcessingTargetImageDescSetLayout;
+
+		m_PostProcessingTargetImageDescSet.ForEach([&](Ref<DescriptorSet>& descriptorSet, uint32_t idx)
+			{
+				descriptorSet = CreateRef<DescriptorSet>(descSetSpec);
+
+				VkDescriptorImageInfo imageInfo{};
+				imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+				imageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[idx]->GetColorResolveAttachment(0)->GetVulkanImageView();
+				imageInfo.sampler = VK_NULL_HANDLE;
+
+				descriptorSet->WriteImage(0, imageInfo);
+				descriptorSet->Update();
+			});
 	}
 
 	void SceneRenderer::PrepareBloomImageAndDescriptors()
@@ -384,11 +412,6 @@ namespace Flameberry {
 				{
 					descriptorSet = CreateRef<DescriptorSet>(descSetSpec);
 
-					VkDescriptorImageInfo targetImageInfo{};
-					targetImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[idx]->GetColorResolveAttachment(0)->GetVulkanImageView();
-					targetImageInfo.sampler = VK_NULL_HANDLE;
-					targetImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-
 					VkDescriptorImageInfo bloomReadOnlyImageInfo{};
 					bloomReadOnlyImageInfo.imageView = m_BloomImageCompleteViews[idx];
 					bloomReadOnlyImageInfo.sampler = m_BloomSampler;
@@ -412,9 +435,8 @@ namespace Flameberry {
 						bloomImageInfos[j].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 					}
 
-					descriptorSet->WriteImage(0, targetImageInfo);
-					descriptorSet->WriteImage(1, bloomReadOnlyImageInfo);
-					descriptorSet->WriteImageArray(2, bloomImageInfos.data(), numImageViews);
+					descriptorSet->WriteImage(0, bloomReadOnlyImageInfo);
+					descriptorSet->WriteImageArray(1, bloomImageInfos.data(), numImageViews);
 					descriptorSet->Update();
 				});
 		}
@@ -464,6 +486,20 @@ namespace Flameberry {
 
 		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_BloomSampler));
+	}
+
+	void SceneRenderer::InvalidateGeometryPass(const uint32_t resourceIndex, const glm::vec2& viewportSize)
+	{
+		m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->OnResize(viewportSize.x, viewportSize.y, m_GeometryPass->GetRenderPass());
+
+		// Update descriptor set associated with the geometry pass
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		imageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->GetColorResolveAttachment(0)->GetVulkanImageView();
+		imageInfo.sampler = VK_NULL_HANDLE;
+
+		m_PostProcessingTargetImageDescSet[resourceIndex]->WriteImage(0, imageInfo);
+		m_PostProcessingTargetImageDescSet[resourceIndex]->Update();
 	}
 
 	void SceneRenderer::InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize)
@@ -516,11 +552,6 @@ namespace Flameberry {
 			if (!m_BloomDescriptorSetResources[i][resourceIndex])
 				m_BloomDescriptorSetResources[i][resourceIndex] = CreateRef<DescriptorSet>(descSetSpec);
 
-			VkDescriptorImageInfo targetImageInfo{};
-			targetImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->GetColorResolveAttachment(0)->GetVulkanImageView();
-			targetImageInfo.sampler = VK_NULL_HANDLE;
-			targetImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-
 			VkDescriptorImageInfo bloomReadOnlyImageInfo{};
 			bloomReadOnlyImageInfo.imageView = m_BloomImageCompleteViews[resourceIndex];
 			bloomReadOnlyImageInfo.sampler = m_BloomSampler;
@@ -544,9 +575,8 @@ namespace Flameberry {
 				bloomImageInfos[j].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 			}
 
-			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImage(0, targetImageInfo);
-			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImage(1, bloomReadOnlyImageInfo);
-			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImageArray(2, bloomImageInfos.data(), numImageViews);
+			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImage(0, bloomReadOnlyImageInfo);
+			m_BloomDescriptorSetResources[i][resourceIndex]->WriteImageArray(1, bloomImageInfos.data(), numImageViews);
 			m_BloomDescriptorSetResources[i][resourceIndex]->Update();
 		}
 	}
@@ -592,12 +622,6 @@ namespace Flameberry {
 		{
 			m_JumpFloodDescSets[i] = CreateRef<DescriptorSet>(descSetSpec);
 
-			// First binding is the actual geometry pass image on which the outline is to be drawn
-			VkDescriptorImageInfo geometryPassImageInfo{};
-			geometryPassImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-			geometryPassImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetColorResolveAttachment(0)->GetVulkanImageView();
-			geometryPassImageInfo.sampler = Texture2D::GetDefaultSampler();
-
 			VkDescriptorImageInfo stencilBufferImageInfo{};
 			stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 			stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetStencilAttachmentImageView();
@@ -613,10 +637,9 @@ namespace Flameberry {
 			jumpFloodImage2Info.imageView = m_JumpFloodImage2[i]->GetVulkanImageView();
 			jumpFloodImage2Info.sampler = VK_NULL_HANDLE;
 
-			m_JumpFloodDescSets[i]->WriteImage(0, geometryPassImageInfo);
-			m_JumpFloodDescSets[i]->WriteImage(1, stencilBufferImageInfo);
-			m_JumpFloodDescSets[i]->WriteImage(2, jumpFloodImage1Info);
-			m_JumpFloodDescSets[i]->WriteImage(3, jumpFloodImage2Info);
+			m_JumpFloodDescSets[i]->WriteImage(0, stencilBufferImageInfo);
+			m_JumpFloodDescSets[i]->WriteImage(1, jumpFloodImage1Info);
+			m_JumpFloodDescSets[i]->WriteImage(2, jumpFloodImage2Info);
 			m_JumpFloodDescSets[i]->Update();
 		}
 	}
@@ -628,12 +651,6 @@ namespace Flameberry {
 		m_JumpFloodImage2[resourceIndex]->OnResize(newJumpFloodImgSize.x, newJumpFloodImgSize.y);
 
 		// Update Jump Flood Descriptor Sets
-		// First binding is the actual geometry pass image on which the outline is to be drawn
-		VkDescriptorImageInfo geometryPassImageInfo{};
-		geometryPassImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		geometryPassImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->GetColorResolveAttachment(0)->GetVulkanImageView();
-		geometryPassImageInfo.sampler = Texture2D::GetDefaultSampler();
-
 		VkDescriptorImageInfo stencilBufferImageInfo{};
 		stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->GetStencilAttachmentImageView();
@@ -649,10 +666,9 @@ namespace Flameberry {
 		jumpFloodImage2Info.imageView = m_JumpFloodImage2[resourceIndex]->GetVulkanImageView();
 		jumpFloodImage2Info.sampler = VK_NULL_HANDLE;
 
-		m_JumpFloodDescSets[resourceIndex]->WriteImage(0, geometryPassImageInfo);
-		m_JumpFloodDescSets[resourceIndex]->WriteImage(1, stencilBufferImageInfo);
-		m_JumpFloodDescSets[resourceIndex]->WriteImage(2, jumpFloodImage1Info);
-		m_JumpFloodDescSets[resourceIndex]->WriteImage(3, jumpFloodImage2Info);
+		m_JumpFloodDescSets[resourceIndex]->WriteImage(0, stencilBufferImageInfo);
+		m_JumpFloodDescSets[resourceIndex]->WriteImage(1, jumpFloodImage1Info);
+		m_JumpFloodDescSets[resourceIndex]->WriteImage(2, jumpFloodImage2Info);
 		m_JumpFloodDescSets[resourceIndex]->Update();
 	}
 
@@ -662,34 +678,6 @@ namespace Flameberry {
 		pipelineSpec.Shader = ShaderLibrary::Get("CompositePass");
 
 		m_CompositingPipeline = CreateRef<ComputePipeline>(pipelineSpec);
-
-		// Create Desciptor Sets
-		DescriptorSetSpecification descSetSpecification;
-		descSetSpecification.Layout = m_CompositingPipeline->GetDescriptorSetLayout(0);
-
-		m_TargetImageAccessDescSet.ForEach([this, descSetSpecification](Ref<DescriptorSet>& descriptorSet, uint32_t idx)
-			{
-				descriptorSet = CreateRef<DescriptorSet>(descSetSpecification);
-
-				VkDescriptorImageInfo imageInfo{};
-				imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-				imageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[idx]->GetColorResolveAttachment(0)->GetVulkanImageView();
-				imageInfo.sampler = VK_NULL_HANDLE;
-
-				descriptorSet->WriteImage(0, imageInfo);
-				descriptorSet->Update();
-			});
-	}
-
-	void SceneRenderer::InvalidateCompositingPass(const uint32_t resourceIndex)
-	{
-		VkDescriptorImageInfo imageInfo{};
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		imageInfo.imageView = m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->GetColorResolveAttachment(0)->GetVulkanImageView();
-		imageInfo.sampler = VK_NULL_HANDLE;
-
-		m_TargetImageAccessDescSet[resourceIndex]->WriteImage(0, imageInfo);
-		m_TargetImageAccessDescSet[resourceIndex]->Update();
 	}
 
 	void SceneRenderer::CreateMeshPipeline()
@@ -871,11 +859,9 @@ namespace Flameberry {
 				const auto& framebufferSpec = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification();
 				if (!(m_ViewportSize.x == 0 || m_ViewportSize.y == 0) && (framebufferSpec.Width != m_ViewportSize.x || framebufferSpec.Height != m_ViewportSize.y))
 				{
-					m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_GeometryPass->GetRenderPass());
-
+					InvalidateGeometryPass(imageIndex, m_ViewportSize);
 					InvalidateBloomPass(imageIndex, m_ViewportSize);
 					InvalidateJumpFloodPass(imageIndex, m_ViewportSize);
-					InvalidateCompositingPass(imageIndex);
 				}
 
 				// VkClearColorValue color = { scene->GetClearColor().x, scene->GetClearColor().y, scene->GetClearColor().z, 1.0f };
@@ -1321,9 +1307,11 @@ namespace Flameberry {
 					->GetColorResolveAttachment(0)
 					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
 
-				std::vector<VkDescriptorSet> descSets(bloomDescSetResources.size());
-				for (int i = 0; i < descSets.size(); i++)
-					descSets[i] = bloomDescSetResources[i][imageIndex]->GetVulkanDescriptorSet();
+				const VkDescriptorSet targetDescSet = m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet();
+
+				std::vector<VkDescriptorSet> bloomDescSets(bloomDescSetResources.size());
+				for (int i = 0; i < bloomDescSets.size(); i++)
+					bloomDescSets[i] = bloomDescSetResources[i][imageIndex]->GetVulkanDescriptorSet();
 
 				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 
@@ -1332,7 +1320,12 @@ namespace Flameberry {
 
 				// Pre-filer pass
 				{
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSets[0], 0, 0);
+					VkDescriptorSet descSets[] = {
+						bloomDescSets[0],
+						targetDescSet
+					};
+
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
 
 					BloomSettingsGPURepresentation bloomSettings;
 					bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
@@ -1354,7 +1347,12 @@ namespace Flameberry {
 
 				for (uint32_t bIndex = 0, bStart = 0; bStart < mipLevels; bStart += maxDescriptorSetsAllowed - 1, bIndex++)
 				{
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSets[bIndex], 0, 0);
+					VkDescriptorSet descSets[] = {
+						bloomDescSets[bIndex],
+						targetDescSet
+					};
+
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
 					lastBatchSize = 0;
 
 					for (uint32_t offset = 1; offset < glm::min(maxDescriptorSetsAllowed, mipLevels - bStart); offset++)
@@ -1385,9 +1383,14 @@ namespace Flameberry {
 				bool first = true;
 
 				// Up-sampling passes
-				for (int bEnd = mipLevels - mipLevels % (maxDescriptorSetsAllowed - 1), bIndex = descSets.size() - 1; bEnd >= 0; bEnd -= maxDescriptorSetsAllowed - 1, bIndex--)
+				for (int bEnd = mipLevels - mipLevels % (maxDescriptorSetsAllowed - 1), bIndex = bloomDescSets.size() - 1; bEnd >= 0; bEnd -= maxDescriptorSetsAllowed - 1, bIndex--)
 				{
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSets[bIndex], 0, 0);
+					VkDescriptorSet descSets[] = {
+						bloomDescSets[bIndex],
+						targetDescSet
+					};
+
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
 
 					// The rightmost -1 is because the last element of the descriptor image array is used only as input
 					// And an offset value in every iteration refers to the output index in the desc image array in the current pass
@@ -1441,9 +1444,13 @@ namespace Flameberry {
 					->GetDepthAndOrStencilAttachment()
 					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 
-				const VkDescriptorSet descSet = jumpFloodDescSets[imageIndex]->GetVulkanDescriptorSet();
+				VkDescriptorSet descSets[] = {
+					jumpFloodDescSets[imageIndex]->GetVulkanDescriptorSet(),
+					m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet()
+				};
+
 				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSet, 0, 0);
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
 
 				const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(viewportSize.x / 8, viewportSize.y / 8));
 
@@ -1474,10 +1481,9 @@ namespace Flameberry {
 
 	void SceneRenderer::CompositingPass()
 	{
-		Renderer::Submit([this, pipeline = m_CompositingPipeline->GetVulkanPipeline(), pipelineLayout = m_CompositingPipeline->GetVulkanPipelineLayout(),
-							 descSets = m_TargetImageAccessDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+		Renderer::Submit([this, pipeline = m_CompositingPipeline->GetVulkanPipeline(), pipelineLayout = m_CompositingPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
-				const VkDescriptorSet descSet = descSets[imageIndex]->GetVulkanDescriptorSet();
+				const VkDescriptorSet descSet = m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet();
 
 				const float imageWidth = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification().Width;
 				const float imageHeight = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification().Height;

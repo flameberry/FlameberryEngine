@@ -118,9 +118,9 @@ namespace Flameberry {
 		void PrepareBloomImageAndDescriptors();
 		void CreateBloomSampler(const uint32_t mipLevels);
 
+		void InvalidateGeometryPass(const uint32_t resourceIndex, const glm::vec2& viewportSize);
 		void InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize);
 		void InvalidateJumpFloodPass(const uint32_t resourceIndex, const glm::vec2& newJumpFloodImgSize);
-		void InvalidateCompositingPass(const uint32_t resourceIndex);
 
 		void BloomPass();
 		void JumpFloodPass();
@@ -145,6 +145,8 @@ namespace Flameberry {
 		Ref<Pipeline> m_MeshPipeline, m_SkymapPipeline, m_GridPipeline;
 		VkSampler m_VkTextureSampler;
 		Ref<Material> m_GridMaterial;
+		TFrameResource<DescriptorSet> m_PostProcessingTargetImageDescSet;
+		Ref<DescriptorSetLayout> m_PostProcessingTargetImageDescSetLayout;
 
 		// Shadow Map
 		Ref<RenderPass> m_ShadowMapRenderPass;
@@ -172,7 +174,6 @@ namespace Flameberry {
 		// Compositing Pass
 		Ref<RenderPass> m_CompositingPass;
 		Ref<ComputePipeline> m_CompositingPipeline;
-		TFrameResource<DescriptorSet> m_TargetImageAccessDescSet;
 
 		// Textures
 		Ref<Texture2D> m_PointLightIcon, m_SpotLightIcon, m_CameraIcon, m_DirectionalLightIcon;
