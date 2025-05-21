@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vulkan/vulkan_core.h"
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -64,7 +65,7 @@ namespace Flameberry {
 		VkImage GetVulkanImage() const { return m_VulkanImage; }
 		VkImageView GetVulkanImageView(int idx = 0) const;
 		ImageSpecification GetSpecification() const { return m_Specification; }
-		VkMemoryRequirements GetMemoryRequirements() const { return m_MemoryRequirements; }
+		VkImageLayout GetActiveImageLayout() const { return m_ActiveImageLayout; }
 
 	private:
 		void Invalidate();
@@ -72,8 +73,9 @@ namespace Flameberry {
 	private:
 		VkImage m_VulkanImage;
 		VkDeviceMemory m_VkImageDeviceMemory;
-
 		VkMemoryRequirements m_MemoryRequirements;
+
+		VkImageLayout m_ActiveImageLayout;
 		ImageSpecification m_Specification;
 
 		// (Aditya): So I've made this decision choice to have a separate member for storing mipmap views

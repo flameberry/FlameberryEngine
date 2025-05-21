@@ -1428,10 +1428,13 @@ namespace Flameberry {
 				jumpFloodSettings.ReadFromFirst = 0;
 
 				// Transition the image to be suitable for writing
-				m_GeometryPass->GetSpecification()
-					.TargetFramebuffers[imageIndex]
-					->GetColorResolveAttachment(0)
-					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
+				// The if-statement is to ensure that if some other pass has already transitioned the layout to general then
+				// do not re-transition it (Example: Bloom Pass will most likely already transition layout to general)
+				if (m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetActiveImageLayout() == VK_IMAGE_LAYOUT_GENERAL)
+					m_GeometryPass->GetSpecification()
+						.TargetFramebuffers[imageIndex]
+						->GetColorResolveAttachment(0)
+						->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
 
 				m_GeometryPass->GetSpecification()
 					.TargetFramebuffers[imageIndex]
@@ -1475,9 +1478,11 @@ namespace Flameberry {
 							 descSets = m_TargetImageAccessDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
 				const VkDescriptorSet descSet = descSets[imageIndex]->GetVulkanDescriptorSet();
-				const glm::vec2 threadGroupSize(
-					m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification().Width / 8,
-					m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification().Height / 8);
+
+				const float imageWidth = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification().Width;
+				const float imageHeight = m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification().Height;
+
+				const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(imageWidth / 8, imageHeight / 8));
 
 				CompositionSettingsGPURepresentation compositionSettings;
 				compositionSettings.GammaCorrectionFactor = m_RendererSettings.GammaCorrectionFactor;

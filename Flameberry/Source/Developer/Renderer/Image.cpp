@@ -34,7 +34,7 @@ namespace Flameberry {
 	}
 
 	Image::Image(const ImageSpecification& specification)
-		: m_Specification(specification)
+		: m_Specification(specification), m_ActiveImageLayout(VK_IMAGE_LAYOUT_UNDEFINED)
 	{
 		Invalidate();
 	}
@@ -437,6 +437,8 @@ namespace Flameberry {
 			0, nullptr,
 			0, nullptr,
 			1, &imageMemoryBarrier);
+
+		m_ActiveImageLayout = newLayout;
 	}
 
 	namespace Utils {
