@@ -70,12 +70,12 @@ void main()
 
     if (abs(fragPos3D.x) <= axesLineWidth.x)
     {
-        baseGridColor.r = 1.0;
+        baseGridColor.rgb = vec3(1, 0.05, 0.05);
         lineWidth = axesLineWidth;
     }
     if (abs(fragPos3D.z) <= axesLineWidth.y)
     {
-        baseGridColor.z = 1.0;
+        baseGridColor.rgb = vec3(0.05, 0.05, 1);
         lineWidth = axesLineWidth;
     }
 

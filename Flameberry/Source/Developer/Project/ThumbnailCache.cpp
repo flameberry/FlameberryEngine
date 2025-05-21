@@ -22,7 +22,7 @@ namespace Flameberry {
 		}
 
 		// TODO: Expand the number of extensions
-		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame || (assetPath.extension() != ".png" && assetPath.extension() != ".jpg" && assetPath.extension() != ".hdr" && assetPath.extension() != ".tga"))
+		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame || Utils::GetAssetTypeFromFileExtension(assetPath.extension()) != AssetType::Texture2D)
 			return nullptr;
 
 		const auto thumbnail = std::static_pointer_cast<Texture2D>(TextureImporter::LoadTexture2DResized(assetPath, 128, 128, false));
