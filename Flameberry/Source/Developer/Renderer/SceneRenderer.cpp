@@ -1211,7 +1211,9 @@ namespace Flameberry {
 			Ref<Font> font = AssetManager::GetAsset<Font>(text.Font);
 
 			// So instead of using a push constant to provide the emission to the text pipeline, we just multiply the color by the emission value
-			Renderer2D::AddText(text.TextString, font, transform.CalculateTransform(), { text.Color * text.Emission, text.Kerning, text.LineSpacing }, entity.GetIndex());
+			const glm::vec3 finalTextColor = text.Color + text.Color * text.EmissiveFactor;
+
+			Renderer2D::AddText(text.TextString, font, transform.CalculateTransform(), { finalTextColor, text.Kerning, text.LineSpacing }, entity.GetIndex());
 		}
 
 		Renderer2D::EndScene();

@@ -184,7 +184,7 @@ namespace Flameberry {
 						ImGui::ColorEdit3("##TextColor", glm::value_ptr(text.Color));
 
 						UI::TableKeyElement("Emission");
-						ImGui::DragFloat("##Emission", &text.Emission, 0.025f, 1.0f);
+						ImGui::DragFloat("##Emission", &text.EmissiveFactor, 0.025f, 1.0f);
 
 						UI::TableKeyElement("Kerning");
 						ImGui::DragFloat("##Kerning", &text.Kerning, 0.025f);

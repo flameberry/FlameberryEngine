@@ -198,7 +198,7 @@ namespace Flameberry {
 		glm::vec3 Color{ 1.0f };
 
 		// For showing up in the bloom pipeline
-		float Emission = 1.0f;
+		float EmissiveFactor = 0.0f;
 
 		float Kerning, LineSpacing;
 	};

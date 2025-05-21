@@ -161,7 +161,7 @@ namespace Flameberry {
 					textComp.TextString = text["TextString"].as<std::string>();
 					textComp.Font = text["Font"].as<AssetHandle>();
 					textComp.Color = text["Color"].as<glm::vec3>();
-					textComp.Emission = text["Emission"].as<float>();
+					textComp.EmissiveFactor = text["EmissiveFactor"].as<float>();
 					textComp.Kerning = text["Kerning"].as<float>();
 					textComp.LineSpacing = text["LineSpacing"].as<float>();
 				}
@@ -343,7 +343,7 @@ namespace Flameberry {
 			out << YAML::Key << "TextString" << YAML::Value << text.TextString;
 			out << YAML::Key << "Font" << YAML::Value << text.Font;
 			out << YAML::Key << "Color" << YAML::Value << text.Color;
-			out << YAML::Key << "Emission" << YAML::Value << text.Emission;
+			out << YAML::Key << "EmissiveFactor" << YAML::Value << text.EmissiveFactor;
 			out << YAML::Key << "Kerning" << YAML::Value << text.Kerning;
 			out << YAML::Key << "LineSpacing" << YAML::Value << text.LineSpacing;
 			out << YAML::EndMap; // Text Component

@@ -125,6 +125,10 @@ namespace Flameberry {
 					ImGui::DragFloat("##Metallic", &uniformDataRef.Metallic, 0.005f, 0.0f, 1.0f);
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
+					UI::TableKeyElement("Emissive");
+					ImGui::DragFloat("##Emissive", &uniformDataRef.EmissiveFactor, 0.025f, 0.0f);
+					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
+
 					ImGui::PopItemWidth();
 
 					// Serialize the material automatically when changed
