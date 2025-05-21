@@ -3,7 +3,7 @@
 layout(constant_id = 0) const int c_MipLevels = 10;
 
 layout(set = 0, binding = 0) uniform samplerCube _FBY_u_Cubemap;
-layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_PrefilteredMap;
+layout(set = 0, binding = 1, rgba16f) uniform writeonly imageCube _FBY_u_PrefilteredMap;
 
 layout(push_constant) uniform Data {
     float Resolution, MipLevel;
@@ -66,7 +66,7 @@ vec3 PrefilterEnvMap(vec3 R, float roughness, float resolution, uint sampleCount
 
 void main()
 {
-    const uint sampleCount = 1024u;
+    const uint sampleCount = 128u;
     const float resolutionMultiplier = 2.0f;
     const ivec2 imgSize = imageSize(_FBY_u_PrefilteredMap);
 

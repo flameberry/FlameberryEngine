@@ -1,7 +1,7 @@
 #version 450
 
 layout(set = 0, binding = 0) uniform sampler2D _FBY_u_EquirectangularImage;
-layout(set = 0, binding = 1, rgba32f) uniform writeonly imageCube _FBY_u_Cubemap;
+layout(set = 0, binding = 1, rgba16f) uniform writeonly imageCube _FBY_u_Cubemap;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
