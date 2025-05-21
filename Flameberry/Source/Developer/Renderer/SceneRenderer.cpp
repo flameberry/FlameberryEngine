@@ -85,7 +85,7 @@ namespace Flameberry {
 	{
 		float Threshold = 1.0f, Knee = 0.0f, SpreadScale = 1.0f;
 		BloomStage Stage;
-		uint32_t InputIndex = 0, OutputIndex = 0, MipOffset = 0;
+		uint32_t InputMipIndex = 0, OutputMipIndex = 0, OutputStorageIndex = 0;
 	};
 
 	struct CompositionSettingsGPURepresentation
@@ -417,18 +417,13 @@ namespace Flameberry {
 					bloomReadOnlyImageInfo.sampler = m_BloomSampler;
 					bloomReadOnlyImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-					// The + 1 is added because now we are adding one redundant binding in the descriptor image array to enable using the
-					// output of the last element of the array in the previous pass as an input, and the first element of the
-					// array of the current pass as the output.
-					const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed + 1);
+					const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed);
 
 					std::vector<VkDescriptorImageInfo> bloomImageInfos(numImageViews);
 
 					for (int j = 0; j < numImageViews; j++)
 					{
-						// Interesting indexing choices here
-						// TODO: Explain this
-						const uint32_t viewIndex = i * maxDescriptorSetsAllowed + j - i;
+						const uint32_t viewIndex = i * maxDescriptorSetsAllowed + j;
 
 						bloomImageInfos[j].sampler = VK_NULL_HANDLE;
 						bloomImageInfos[j].imageView = m_BloomImageResource[idx]->GetVulkanImageView(viewIndex);
@@ -542,7 +537,13 @@ namespace Flameberry {
 		}
 
 		if (m_BloomDescriptorSetResources.size() != numDescriptorSetsPerFrame)
+		{
+			// Do this to avoid deleting descriptor sets due to shrinking of vector during use of that DescriptorSet in previous frames
+			if (m_BloomDescriptorSetResources.size() > numDescriptorSetsPerFrame)
+				VulkanContext::GetCurrentDevice()->WaitIdle();
+
 			m_BloomDescriptorSetResources.resize(numDescriptorSetsPerFrame);
+		}
 
 		DescriptorSetSpecification descSetSpec;
 		descSetSpec.Layout = m_BloomPipeline->GetDescriptorSetLayout(0);
@@ -557,18 +558,13 @@ namespace Flameberry {
 			bloomReadOnlyImageInfo.sampler = m_BloomSampler;
 			bloomReadOnlyImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-			// The + 1 is added because now we are adding one redundant binding in the descriptor image array to enable using the
-			// output of the last element of the array in the previous pass as an input, and the first element of the
-			// array of the current pass as the output.
-			const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed + 1);
+			const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed);
 
 			std::vector<VkDescriptorImageInfo> bloomImageInfos(numImageViews);
 
 			for (int j = 0; j < numImageViews; j++)
 			{
-				// Interesting indexing choices here
-				// TODO: Explain this
-				const uint32_t viewIndex = i * maxDescriptorSetsAllowed + j - i;
+				const uint32_t viewIndex = i * maxDescriptorSetsAllowed + j;
 
 				bloomImageInfos[j].sampler = VK_NULL_HANDLE;
 				bloomImageInfos[j].imageView = m_BloomImageResource[resourceIndex]->GetVulkanImageView(viewIndex);
@@ -1296,7 +1292,6 @@ namespace Flameberry {
 
 		Renderer::Submit([this, pipelineLayout = m_BloomPipeline->GetVulkanPipelineLayout(),
 							 pipeline = m_BloomPipeline->GetVulkanPipeline(),
-							 bloomDescSetResources = m_BloomDescriptorSetResources,
 							 viewportSize = m_ViewportSize,
 							 maxDescriptorSetsAllowed](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
@@ -1308,9 +1303,9 @@ namespace Flameberry {
 
 				const VkDescriptorSet targetDescSet = m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet();
 
-				std::vector<VkDescriptorSet> bloomDescSets(bloomDescSetResources.size());
+				std::vector<VkDescriptorSet> bloomDescSets(m_BloomDescriptorSetResources.size());
 				for (int i = 0; i < bloomDescSets.size(); i++)
-					bloomDescSets[i] = bloomDescSetResources[i][imageIndex]->GetVulkanDescriptorSet();
+					bloomDescSets[i] = m_BloomDescriptorSetResources[i][imageIndex]->GetVulkanDescriptorSet();
 
 				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 
@@ -1331,8 +1326,9 @@ namespace Flameberry {
 					bloomSettings.Knee = m_RendererSettings.BloomKnee;
 					bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 					bloomSettings.Stage = BloomStage::Prefilter;
-					bloomSettings.InputIndex = -1; // Because to the BloomStage::Prefilter flag, it is implied that this value is garbage
-					bloomSettings.OutputIndex = 0;
+					bloomSettings.InputMipIndex = -1; // Because to the BloomStage::Prefilter flag, it is implied that this value is garbage
+					bloomSettings.OutputMipIndex = 0;
+					bloomSettings.OutputStorageIndex = 0;
 
 					vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation), &bloomSettings);
 
@@ -1342,9 +1338,8 @@ namespace Flameberry {
 
 				// Down-sampling passes
 				const uint32_t mipLevels = m_BloomImageResource[imageIndex]->GetSpecification().MipLevels;
-				uint32_t lastBatchSize = 0;
 
-				for (uint32_t bIndex = 0, bStart = 0; bStart < mipLevels; bStart += maxDescriptorSetsAllowed - 1, bIndex++)
+				for (uint32_t bIndex = 0, bStart = 0; bStart < mipLevels; bStart += maxDescriptorSetsAllowed, bIndex++)
 				{
 					VkDescriptorSet descSets[] = {
 						bloomDescSets[bIndex],
@@ -1352,13 +1347,16 @@ namespace Flameberry {
 					};
 
 					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
-					lastBatchSize = 0;
 
-					for (uint32_t offset = 1; offset < glm::min(maxDescriptorSetsAllowed, mipLevels - bStart); offset++)
+					for (uint32_t offset = 0; offset < glm::min(maxDescriptorSetsAllowed, mipLevels - bStart); offset++)
 					{
-
 						// Note: `offset` is the index of the image2D element in the desciptor set's image array
 						const uint32_t mipIndex = bStart + offset; // Target of current pass
+
+						// mipIndex => 0 is written to by Prefilter Pass
+						if (mipIndex == 0)
+							continue;
+
 						const float mipWidth = std::max(1u, (uint32_t)imageWidth >> mipIndex);
 						const float mipHeight = std::max(1u, (uint32_t)imageHeight >> mipIndex);
 						const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(mipWidth / 8, mipHeight / 8));
@@ -1368,21 +1366,19 @@ namespace Flameberry {
 						bloomSettings.Knee = m_RendererSettings.BloomKnee;
 						bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 						bloomSettings.Stage = BloomStage::DownSample;
-						bloomSettings.InputIndex = offset - 1;
-						bloomSettings.OutputIndex = offset;
-						bloomSettings.MipOffset = bStart;
+						bloomSettings.InputMipIndex = mipIndex - 1;
+						bloomSettings.OutputMipIndex = mipIndex;
+						bloomSettings.OutputStorageIndex = offset;
 
 						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation), &bloomSettings);
 						vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
-
-						lastBatchSize++;
 					}
 				}
 
-				bool first = true;
-
 				// Up-sampling passes
-				for (int bEnd = mipLevels - mipLevels % (maxDescriptorSetsAllowed - 1), bIndex = bloomDescSets.size() - 1; bEnd >= 0; bEnd -= maxDescriptorSetsAllowed - 1, bIndex--)
+				const int lastBStart = ((mipLevels - 1) / maxDescriptorSetsAllowed) * maxDescriptorSetsAllowed;
+
+				for (int bStart = lastBStart, bIndex = bloomDescSets.size() - 1; bStart >= 0; bStart -= maxDescriptorSetsAllowed, bIndex--)
 				{
 					VkDescriptorSet descSets[] = {
 						bloomDescSets[bIndex],
@@ -1391,11 +1387,14 @@ namespace Flameberry {
 
 					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
 
-					// The rightmost -1 is because the last element of the descriptor image array is used only as input
-					// And an offset value in every iteration refers to the output index in the desc image array in the current pass
-					for (int offset = glm::min(maxDescriptorSetsAllowed, mipLevels - bEnd) - 1 - 1; offset >= 0; offset--)
+					for (int offset = glm::min(maxDescriptorSetsAllowed, mipLevels - bStart) - 1; offset >= 0; offset--)
 					{
-						const uint32_t mipIndex = bEnd + offset; // Target of current pass
+						const uint32_t mipIndex = bStart + offset; // Target of current pass
+
+						// mipIndex => 0 is written to by Prefilter Pass
+						if (mipIndex == mipLevels - 1)
+							continue;
+
 						const float mipWidth = std::max(1u, (uint32_t)imageWidth >> mipIndex);
 						const float mipHeight = std::max(1u, (uint32_t)imageHeight >> mipIndex);
 						const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(mipWidth / 8, mipHeight / 8));
@@ -1405,10 +1404,9 @@ namespace Flameberry {
 						bloomSettings.Knee = m_RendererSettings.BloomKnee;
 						bloomSettings.SpreadScale = m_RendererSettings.BloomSpreadScale;
 						bloomSettings.Stage = mipIndex == 0 ? BloomStage::Compositing : BloomStage::UpSample;
-						// bloomSettings.Stage = BloomStage::UpSample;
-						bloomSettings.InputIndex = offset + 1;
-						bloomSettings.OutputIndex = offset;
-						bloomSettings.MipOffset = bEnd;
+						bloomSettings.InputMipIndex = mipIndex + 1;
+						bloomSettings.OutputMipIndex = mipIndex;
+						bloomSettings.OutputStorageIndex = offset;
 
 						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation), &bloomSettings);
 						vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
