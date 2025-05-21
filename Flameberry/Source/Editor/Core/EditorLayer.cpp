@@ -164,21 +164,12 @@ namespace Flameberry {
 		uint32_t imageCount = swapchain->GetSwapChainImageCount();
 
 		m_ViewportDescriptorSets.resize(imageCount);
-		m_CompositePassViewportDescriptorSets.resize(imageCount);
 		for (int i = 0; i < imageCount; i++)
 		{
 			m_ViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
 				Texture2D::GetDefaultSampler(),
 				m_SceneRenderer->GetGeometryPassOutputImageView(i),
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-#if 0
-            m_CompositePassViewportDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
-                Texture2D::GetDefaultSampler(),
-                m_SceneRenderer->GetCompositePassOutputImageView(i),
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            );
-#endif
 		}
 	}
 
@@ -195,13 +186,6 @@ namespace Flameberry {
 		if (m_IsCameraMoving || m_IsViewportHovered)
 			m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 		Application::Get().BlockAllEvents(m_IsCameraMoving);
-
-		if (m_ShouldReloadMeshShaders)
-		{
-			VulkanContext::GetCurrentDevice()->WaitIdle();
-			m_SceneRenderer->ReloadMeshShaders();
-			m_ShouldReloadMeshShaders = false;
-		}
 
 		// Updating Scene
 		switch (m_EditorState)
@@ -250,9 +234,6 @@ namespace Flameberry {
 			{
 				// TODO: Update these descriptors only when there corresponding framebuffer is updated
 				InvalidateViewportImGuiDescriptorSet(imageIndex);
-#if 0
-                InvalidateCompositePassImGuiDescriptorSet(imageIndex);
-#endif
 			});
 
 		// Retrieving the entity index from the mouse picking framebuffer
@@ -481,22 +462,6 @@ namespace Flameberry {
 		VkWriteDescriptorSet write_desc[1] = {};
 		write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		write_desc[0].dstSet = m_ViewportDescriptorSets[index];
-		write_desc[0].descriptorCount = 1;
-		write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		write_desc[0].pImageInfo = desc_image;
-		vkUpdateDescriptorSets(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), 1, write_desc, 0, nullptr);
-	}
-
-	void EditorLayer::InvalidateCompositePassImGuiDescriptorSet(uint32_t index) const
-	{
-		VkDescriptorImageInfo desc_image[1] = {};
-		desc_image[0].sampler = Texture2D::GetDefaultSampler();
-		desc_image[0].imageView = m_SceneRenderer->GetCompositePassOutputImageView(index);
-		desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-		VkWriteDescriptorSet write_desc[1] = {};
-		write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		write_desc[0].dstSet = m_CompositePassViewportDescriptorSets[index];
 		write_desc[0].descriptorCount = 1;
 		write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		write_desc[0].pImageInfo = desc_image;
@@ -1020,21 +985,6 @@ namespace Flameberry {
 		if (toggleAssetRegistry)
 			UI_AssetRegistry();
 	}
-	void EditorLayer::UI_CompositeView()
-	{
-		// Display composited framebuffer
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-		ImGui::Begin("Composite Result");
-		ImGui::PopStyleVar();
-
-		ImVec2 compositeViewportSize = ImGui::GetContentRegionAvail();
-
-		ImGui::Image(
-			reinterpret_cast<ImTextureID>(m_CompositePassViewportDescriptorSets[VulkanContext::GetCurrentWindow()->GetSwapChain()->GetAcquiredImageIndex()]),
-			ImVec2{ compositeViewportSize.x, compositeViewportSize.y });
-
-		ImGui::End();
-	}
 
 	void EditorLayer::UI_RendererSettings()
 	{
@@ -1062,12 +1012,6 @@ namespace Flameberry {
 			if (UI::BeginKeyValueTable("##RendererSettings_Attributes", 0, 140.0f))
 			{
 				auto& settings = m_SceneRenderer->GetRendererSettingsRef();
-
-				UI::TableKeyElement("Mesh Shader");
-
-				ImGui::Button("Reload");
-				if (ImGui::IsItemClicked())
-					m_ShouldReloadMeshShaders = true;
 
 				UI::TableKeyElement("Frustum Culling");
 				ImGui::Checkbox("##Frustum_Culling", &settings.FrustumCulling);

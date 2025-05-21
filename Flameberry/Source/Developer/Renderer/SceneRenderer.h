@@ -90,8 +90,6 @@ namespace Flameberry {
 		SceneRendererSettings& GetRendererSettingsRef() { return m_RendererSettings; }
 		void RenderSceneForMousePicking(const Ref<Scene>& scene, const Ref<RenderPass>& renderPass, const Ref<Pipeline>& pipeline, const Ref<Pipeline>& pipeline2D, const glm::vec2& mousePos);
 
-		void ReloadMeshShaders();
-
 	private:
 		void Init();
 
@@ -143,7 +141,6 @@ namespace Flameberry {
 		std::vector<Ref<DescriptorSet>> m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
 		std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
 		Ref<Pipeline> m_MeshPipeline, m_SkymapPipeline, m_GridPipeline;
-		VkSampler m_VkTextureSampler;
 		Ref<Material> m_GridMaterial;
 		TFrameResource<DescriptorSet> m_PostProcessingTargetImageDescSet;
 		Ref<DescriptorSetLayout> m_PostProcessingTargetImageDescSetLayout;

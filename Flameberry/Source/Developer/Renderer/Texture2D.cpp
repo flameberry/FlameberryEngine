@@ -1,7 +1,6 @@
 #include "Texture2D.h"
 
 #include "Core/Assert.h"
-#include "Renderer/Pipeline.h"
 #include "VulkanDebug.h"
 #include "Buffer.h"
 
@@ -24,8 +23,10 @@ namespace Flameberry {
 					return 4;
 				case VK_FORMAT_R32G32B32A32_SFLOAT:
 					return 4 * 4;
+				default:
+					FBY_ASSERT(0, "Unsupported texture format");
+					return 0;
 			}
-			FBY_ASSERT(0, "Unsupported texture format");
 		}
 
 	} // namespace Utils
@@ -86,6 +87,7 @@ namespace Flameberry {
 		m_TextureImageSpecification.Usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		m_TextureImageSpecification.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		m_TextureImageSpecification.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+		m_TextureImageSpecification.ViewSpecification.LevelCount = mipLevels;
 
 		m_TextureImage = CreateRef<Image>(m_TextureImageSpecification);
 

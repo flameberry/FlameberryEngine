@@ -830,7 +830,6 @@ namespace Flameberry {
 		m_DirectionalLightIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SunIcon.png");
 
 		m_RendererData = CreateUnique<RendererData>();
-		m_VkTextureSampler = Texture2D::GetDefaultSampler();
 
 		PrepareShadowMappingRenderPass();
 		PrepareGeometryRenderPass();
@@ -1659,11 +1658,6 @@ namespace Flameberry {
 			});
 
 		renderPass->End();
-	}
-
-	void SceneRenderer::ReloadMeshShaders()
-	{
-		m_MeshPipeline->ReloadShaders();
 	}
 
 	// TODO: Move this to EditorLayer.cpp ASAP

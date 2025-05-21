@@ -47,7 +47,8 @@ namespace Flameberry {
 	// TODO: Needs work quality wise
 	Ref<Texture2D> TextureImporter::LoadTexture2DResized(const std::filesystem::path& path, int newWidth, int newHeight, bool bGenerateMipmaps)
 	{
-		auto calcWidthHeight = [](const int width, const int height, int& newWidth, int& newHeight) {
+		auto calcWidthHeight = [](const int width, const int height, int& newWidth, int& newHeight)
+		{
 			if (width >= height)
 			{
 				newWidth = width > newWidth ? newWidth : width;

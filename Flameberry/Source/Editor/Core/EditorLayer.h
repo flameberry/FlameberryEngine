@@ -30,7 +30,6 @@ namespace Flameberry {
 		void OnMouseScrolledEvent(MouseScrollEvent& e);
 
 		void InvalidateViewportImGuiDescriptorSet(uint32_t index) const;
-		void InvalidateCompositePassImGuiDescriptorSet(uint32_t index) const;
 
 		void OpenProject();
 		void OpenProject(const std::string& path);
@@ -48,7 +47,6 @@ namespace Flameberry {
 
 		void UI_Menubar();
 		void UI_Toolbar();
-		void UI_CompositeView();
 		void UI_RendererSettings();
 		void UI_AssetRegistry();
 		void UI_GizmoOverlay(const ImVec2& workPos);
@@ -62,9 +60,6 @@ namespace Flameberry {
 
 	private:
 		EditorCameraController m_ActiveCameraController;
-
-		// Test
-		bool m_ShouldReloadMeshShaders = false;
 
 		// Scalars
 		EditorState m_EditorState = EditorState::Edit;
@@ -94,7 +89,6 @@ namespace Flameberry {
 		Ref<Scene> m_ActiveScene, m_ActiveSceneBackUpCopy;
 
 		std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
-		std::vector<VkDescriptorSet> m_CompositePassViewportDescriptorSets;
 
 		// UI
 		Ref<SceneHierarchyPanel> m_SceneHierarchyPanel;
@@ -103,7 +97,6 @@ namespace Flameberry {
 		// Mouse Picking
 		Unique<Buffer> m_MousePickingBuffer;
 		Ref<RenderPass> m_MousePickingRenderPass;
-
 		Ref<Pipeline> m_MousePickingPipeline, m_MousePicking2DPipeline;
 		Ref<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
 
