@@ -184,7 +184,7 @@ namespace Flameberry {
 			m_HasViewportSizeChanged = false;
 		}
 
-		if (m_IsCameraMoving || m_IsViewportHovered)
+		if ((m_IsCameraMoving || m_IsViewportHovered) && m_EditorState != EditorState::Play)
 			m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 		Application::Get().BlockAllEvents(m_IsCameraMoving);
 
