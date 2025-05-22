@@ -112,6 +112,7 @@ namespace Flameberry {
 			nsc.Actor->OnUpdate(delta);
 
 		OnPhysicsSimulate(delta);
+		OnUpdateTransformHierarchy();
 	}
 
 	void Scene::OnStartSimulation()
@@ -127,6 +128,7 @@ namespace Flameberry {
 			return;
 
 		OnPhysicsSimulate(delta);
+		OnUpdateTransformHierarchy();
 	}
 
 	void Scene::OnStopSimulation()
@@ -242,6 +244,7 @@ namespace Flameberry {
 
 			transform.Translation = { position.GetX(), position.GetY(), position.GetZ() };
 			transform.Rotation = glm::eulerAngles(glm::quat(quat.GetW(), quat.GetX(), quat.GetY(), quat.GetZ()));
+			transform.DirtyFlag = true;
 		}
 	}
 
@@ -305,7 +308,7 @@ namespace Flameberry {
 				UpdateTransformHierarchy(it, transform ? transform->GlobalTransform : glm::mat4(1.0f), !isDirty);
 	}
 
-	void Scene::UpdateTransformHierarchy()
+	void Scene::OnUpdateTransformHierarchy()
 	{
 		FBY_PROFILE_SCOPE("UpdateTransformHierarchy");
 		UpdateTransformHierarchy(m_WorldEntity, glm::mat4(1.0f), true);
@@ -443,7 +446,7 @@ namespace Flameberry {
 		// Updating Transform --------------------------------------------------------------------------------------
 		if (auto* transform = m_Registry->TryGetComponent<TransformComponent>(entity))
 		{
-			UpdateTransformHierarchy();
+			OnUpdateTransformHierarchy();
 
 			glm::vec3 translation, rotation, scale;
 			Math::DecomposeTransform(transform->GlobalTransform, translation, rotation, scale);

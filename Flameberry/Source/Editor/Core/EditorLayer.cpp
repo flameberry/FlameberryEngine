@@ -188,15 +188,14 @@ namespace Flameberry {
 			m_IsCameraMoving = m_ActiveCameraController.OnUpdate(delta);
 		Application::Get().BlockAllEvents(m_IsCameraMoving);
 
-		// Updating Scene
+		// Updating Scene ----------------------------------------------------------------------------------------
 		switch (m_EditorState)
 		{
 			case EditorState::Edit:
 			{
-				// TODO: Design this better
 				const auto& camera = m_ActiveCameraController.GetCamera();
 
-				m_ActiveScene->UpdateTransformHierarchy();
+				m_ActiveScene->OnUpdateTransformHierarchy();
 
 				// Actual Rendering (All scene related render passes)
 				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
@@ -206,7 +205,6 @@ namespace Flameberry {
 			{
 				m_ActiveScene->OnUpdateRuntime(delta);
 
-				// TODO: Design this better
 				const auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
 				if (cameraEntity != FEntity::Null)
 				{
@@ -232,7 +230,7 @@ namespace Flameberry {
 			}
 		}
 
-		// Update all image index related descriptors
+		// Update all image index related descriptors ------------------------------------------------------------
 		Renderer::Submit([&](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
 				// TODO: Update these descriptors only when there corresponding framebuffer is updated

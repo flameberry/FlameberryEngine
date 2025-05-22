@@ -35,7 +35,7 @@ namespace Flameberry {
 		 * Traverses through the entire entity hierarchy tree
 		 * and updates the transforms only if the dirty flag is set
 		 */
-		void UpdateTransformHierarchy();
+		void OnUpdateTransformHierarchy();
 
 		FEntity CreateEntityWithTagAndParent(const std::string& tag, FEntity parent);
 		FEntity CreateEntityWithTagTransformAndParent(const std::string& tag, FEntity parent);
