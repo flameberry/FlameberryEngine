@@ -51,12 +51,6 @@ namespace Flameberry {
 			ImGui::BeginChild("##EntityList", ImVec2(-1, -1), 0, ImGuiWindowFlags_AlwaysUseWindowPadding);
 		}
 
-		if (ImGui::BeginPopupContextWindow((const char*)nullptr, m_PopupFlags))
-		{
-			DisplayCreateEntityMenu();
-			ImGui::EndPopup();
-		}
-
 		ImRect windowRect(ImGui::GetWindowPos(), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y));
 		if (ImGui::BeginDragDropTargetCustom(windowRect, ImGui::GetID("##EntityList")))
 		{
@@ -99,8 +93,16 @@ namespace Flameberry {
 			}
 		}
 
+		// Deselect all entities when left-clicked on blank space
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
 			m_SelectionContext = FEntity::Null;
+
+		// Open popup when right-clicked on blank space
+		if (ImGui::BeginPopupContextItem("CreateEntityNodeContextMenu", m_PopupFlags))
+		{
+			DisplayCreateEntityMenu(m_Context->GetWorldEntity());
+			ImGui::EndPopup();
+		}
 
 		ImGui::EndChild();
 		ImGui::End();
@@ -336,11 +338,14 @@ namespace Flameberry {
 
 		if (ImGui::BeginMenu(ICON_LC_PLUS "\tCreate"))
 		{
-			if (ImGui::MenuItem(ICON_LC_LIBRARY "\tCollection"))
+			if (parent == m_Context->GetWorldEntity())
 			{
-				const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", collectionCount), parent);
-				m_SelectionContext = entity;
-				collectionCount++;
+				if (ImGui::MenuItem(ICON_LC_LIBRARY "\tCollection"))
+				{
+					const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", collectionCount), parent);
+					m_SelectionContext = entity;
+					collectionCount++;
+				}
 			}
 
 			ImGui::SeparatorText("3D");
