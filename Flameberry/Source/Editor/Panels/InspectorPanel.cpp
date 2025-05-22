@@ -108,20 +108,24 @@ namespace Flameberry {
 				ICON_LC_SCALE_3D " Transform", [&]()
 				{
 					auto& transform = m_Context->GetRegistry()->GetComponent<TransformComponent>(m_SelectionContext);
+					bool isTransformEdited = false;
 
 					if (UI::BeginKeyValueTable("TransformComponentAttributes"))
 					{
 						UI::TableKeyElement("Translation");
-						UI::Vec3Control("Translation", transform.Translation, 0.0f, 0.01f, ImGui::GetColumnWidth());
+						isTransformEdited |= UI::Vec3Control("Translation", transform.Translation, 0.0f, 0.01f, ImGui::GetColumnWidth());
 
 						UI::TableKeyElement("Rotation");
-						UI::Vec3Control("Rotation", transform.Rotation, 0.0f, 0.01f, ImGui::GetColumnWidth());
+						isTransformEdited |= UI::Vec3Control("Rotation", transform.Rotation, 0.0f, 0.01f, ImGui::GetColumnWidth());
 
 						UI::TableKeyElement("Scale");
-						UI::Vec3Control("Scale", transform.Scale, 1.0f, 0.01f, ImGui::GetColumnWidth());
+						isTransformEdited |= UI::Vec3Control("Scale", transform.Scale, 1.0f, 0.01f, ImGui::GetColumnWidth());
 
 						UI::EndKeyValueTable();
 					}
+
+					if (isTransformEdited)
+						transform.DirtyFlag = true;
 				},
 				false // removable = false
 			);

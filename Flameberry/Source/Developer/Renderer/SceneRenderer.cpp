@@ -970,7 +970,7 @@ namespace Flameberry {
 				if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
 				{
 					ModelMatrixPushConstantData pushContantData;
-					pushContantData.ModelMatrix = transform.CalculateTransform();
+					pushContantData.ModelMatrix = transform.GlobalTransform;
 					Renderer::Submit([staticMesh, shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 						{
 							vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
@@ -1072,7 +1072,7 @@ namespace Flameberry {
 				{
 					if (m_RendererSettings.FrustumCulling)
 					{
-						const auto modelMatrix = transform.CalculateTransform();
+						const auto& modelMatrix = transform.GlobalTransform;
 
 						// TODO: Move this outside of the `if (m_RendererSettings.FrustumCulling)`
 						if (m_RendererSettings.ShowBoundingBoxes)
@@ -1122,7 +1122,7 @@ namespace Flameberry {
 						{
 							.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT,
 							.colorAttachment = 1 /* Stencil attachment index */,
-							.clearValue = 0.0f /* Stencil clear value */
+							.clearValue = { 0.0f } /* Stencil clear value */
 						}
 					};
 
@@ -1194,7 +1194,7 @@ namespace Flameberry {
 			// So instead of using a push constant to provide the emission to the text pipeline, we just multiply the color by the emission value
 			const glm::vec3 finalTextColor = text.Color + text.Color * text.EmissiveFactor;
 
-			Renderer2D::AddText(text.TextString, font, transform.CalculateTransform(), { finalTextColor, text.Kerning, text.LineSpacing }, entity.GetIndex());
+			Renderer2D::AddText(text.TextString, font, transform.GlobalTransform, { finalTextColor, text.Kerning, text.LineSpacing }, entity.GetIndex());
 		}
 
 		Renderer2D::EndScene();
@@ -1262,7 +1262,7 @@ namespace Flameberry {
 								 material = obj.MaterialAsset->GetUnderlyingMaterial(),
 								 vertexBuffer = obj.VertexBuffer,
 								 indexBuffer = obj.IndexBuffer,
-								 transform = obj.Transform->CalculateTransform(),
+								 transform = obj.Transform->GlobalTransform,
 								 indexCount = obj.IndexCount,
 								 indexOffset = obj.IndexOffset](VkCommandBuffer cmdBuffer, uint32_t)
 				{
@@ -1615,7 +1615,7 @@ namespace Flameberry {
 			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle))
 			{
 				MousePickingPushConstantData pushContantData;
-				pushContantData.ModelMatrix = transform.CalculateTransform();
+				pushContantData.ModelMatrix = transform.GlobalTransform;
 				pushContantData.EntityIndex = entity.GetIndex();
 
 				Renderer::Submit([staticMesh, mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(), pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex)

@@ -11,6 +11,7 @@
 
 #include "Physics/Physics.h"
 #include "Renderer/ShaderLibrary.h"
+#include "glm/gtc/type_ptr.hpp"
 
 namespace Flameberry {
 
@@ -194,6 +195,8 @@ namespace Flameberry {
 			{
 				// TODO: Design this better
 				const auto& camera = m_ActiveCameraController.GetCamera();
+
+				m_ActiveScene->UpdateTransformHierarchy();
 
 				// Actual Rendering (All scene related render passes)
 				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
@@ -385,71 +388,22 @@ namespace Flameberry {
 			ImGui::EndDragDropTarget();
 		}
 
-		// ImGuizmo
-		const auto& selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
-		if (selectedEntity != FEntity::Null && m_GizmoType != -1 && m_EditorState == EditorState::Edit)
-		{
-			glm::mat4 projectionMatrix = m_ActiveCameraController.GetCamera().GetProjectionMatrix();
-			projectionMatrix[1][1] *= -1;
-			glm::mat4 viewMatrix = m_ActiveCameraController.GetCamera().GetViewMatrix();
+		UI_GizmoControls();
 
-			auto& style = ImGuizmo::GetStyle();
-			style.Colors[ImGuizmo::COLOR::DIRECTION_X] = ImGui::ColorConvertU32ToFloat4(0xFF715ED8);
-			style.Colors[ImGuizmo::COLOR::DIRECTION_Y] = ImGui::ColorConvertU32ToFloat4(0xFF25AA25);
-			style.Colors[ImGuizmo::COLOR::DIRECTION_Z] = ImGui::ColorConvertU32ToFloat4(0xFFCC532C);
-			style.Colors[ImGuizmo::COLOR::SELECTION] = ImGui::ColorConvertU32ToFloat4(0xFF20AACC);
-
-			ImGuizmo::SetOrthographic(false);
-			ImGuizmo::SetDrawlist();
-			ImGuizmo::SetGizmoSizeClipSpace(0.155f);
-
-			float windowWidth = (float)ImGui::GetWindowWidth();
-			float windowHeight = (float)ImGui::GetWindowHeight();
-			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-
-			auto& transformComp = m_ActiveScene->GetRegistry()->GetComponent<TransformComponent>(selectedEntity);
-			glm::mat4 transform = transformComp.CalculateTransform();
-
-			float snapValue = Input::IsKeyPressed(KeyCode::LeftControl) ? 0.1f : (Input::IsKeyPressed(KeyCode::LeftShift) ? 1.0f : 0.0f);
-			const bool snap = (snapValue != 0.0f);
-
-			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
-				snapValue = 45.0f;
-
-			float snapValues[3] = { snapValue, snapValue, snapValue };
-
-			ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, snap ? snapValues : nullptr);
-			m_IsGizmoActive = ImGuizmo::IsUsing();
-			if (m_IsGizmoActive)
-			{
-				m_IsGizmoActive = true;
-				glm::vec3 translation, rotation, scale;
-				Math::DecomposeTransform(transform, translation, rotation, scale);
-
-				const glm::vec3 deltaRotation = rotation - transformComp.Rotation;
-				// const glm::vec3 deltaTranslation = translation - transformComp.Translation;
-				// const glm::vec3 deltaScale = scale - transformComp.Scale;
-
-				transformComp.Translation = translation;
-				transformComp.Rotation += deltaRotation;
-				transformComp.Scale = scale;
-			}
-		}
 		ImVec2 workPos = ImGui::GetWindowContentRegionMin();
 		workPos.x += ImGui::GetWindowPos().x;
 		workPos.y += ImGui::GetWindowPos().y;
 		ImVec2 workSize = ImGui::GetWindowSize();
 		ImGui::End();
 
-		m_IsAnyOverlayHovered = false;
-
 		m_SceneHierarchyPanel->OnUIRender();
 
-		UI_GizmoOverlay(workPos);
+		m_IsAnyOverlayHovered = false;
+
+		UI_GizmoModeOverlay(workPos);
 		UI_ToolbarOverlay(workPos, workSize);
 		UI_ViewportSettingsOverlay(workPos, workSize);
 		UI_BottomPanel();
-		// UI_CompositeView();
 	}
 
 	void EditorLayer::InvalidateViewportImGuiDescriptorSet(uint32_t index) const
@@ -771,7 +725,83 @@ namespace Flameberry {
 		ImGui::PopStyleVar(2);
 	}
 
-	void EditorLayer::UI_GizmoOverlay(const ImVec2& workPos)
+	void EditorLayer::UI_GizmoControls()
+	{
+		if (const auto selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
+			selectedEntity != FEntity::Null && m_GizmoType != -1 && m_EditorState == EditorState::Edit)
+		{
+			glm::mat4 projectionMatrix = m_ActiveCameraController.GetCamera().GetProjectionMatrix();
+			projectionMatrix[1][1] *= -1;
+			glm::mat4 viewMatrix = m_ActiveCameraController.GetCamera().GetViewMatrix();
+
+			auto& style = ImGuizmo::GetStyle();
+			style.Colors[ImGuizmo::COLOR::DIRECTION_X] = ImGui::ColorConvertU32ToFloat4(0xFF715ED8);
+			style.Colors[ImGuizmo::COLOR::DIRECTION_Y] = ImGui::ColorConvertU32ToFloat4(0xFF25AA25);
+			style.Colors[ImGuizmo::COLOR::DIRECTION_Z] = ImGui::ColorConvertU32ToFloat4(0xFFCC532C);
+			style.Colors[ImGuizmo::COLOR::SELECTION] = ImGui::ColorConvertU32ToFloat4(0xFF20AACC);
+
+			ImGuizmo::SetOrthographic(false);
+			ImGuizmo::SetDrawlist();
+			ImGuizmo::SetGizmoSizeClipSpace(0.155f);
+
+			float windowWidth = (float)ImGui::GetWindowWidth();
+			float windowHeight = (float)ImGui::GetWindowHeight();
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+			auto& transformComp = m_ActiveScene->GetRegistry()->GetComponent<TransformComponent>(selectedEntity);
+			glm::mat4 globalTransform = transformComp.GlobalTransform;
+
+			float snapValue = Input::IsKeyPressed(KeyCode::LeftControl) ? 0.1f : (Input::IsKeyPressed(KeyCode::LeftShift) ? 1.0f : 0.0f);
+			const bool snap = (snapValue != 0.0f);
+
+			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+				snapValue = 45.0f;
+
+			float snapValues[3] = { snapValue, snapValue, snapValue };
+
+			ImGuizmo::Manipulate(glm::value_ptr(viewMatrix),
+				glm::value_ptr(projectionMatrix),
+				(ImGuizmo::OPERATION)m_GizmoType,
+				ImGuizmo::LOCAL,
+				glm::value_ptr(globalTransform),
+				nullptr,
+				snap ? snapValues : nullptr);
+
+			if ((m_IsGizmoActive = ImGuizmo::IsUsing()))
+			{
+				m_IsGizmoActive = true;
+
+				glm::vec3 translation, rotation, scale;
+
+				if (const FEntity parentEntity = m_ActiveScene->GetRegistry()->GetComponent<RelationshipComponent>(selectedEntity).Parent;
+					auto* parentTransform = m_ActiveScene->GetRegistry()->TryGetComponent<TransformComponent>(parentEntity))
+				{
+					const glm::mat4 updatedLocalTransform = glm::inverse(parentTransform->GlobalTransform) * globalTransform;
+					Math::DecomposeTransform(updatedLocalTransform, translation, rotation, scale);
+				}
+				else
+				{
+					Math::DecomposeTransform(globalTransform, translation, rotation, scale);
+				}
+
+				transformComp.Translation = translation;
+				transformComp.Rotation = rotation;
+				transformComp.Scale = scale;
+				transformComp.DirtyFlag = true;
+
+				// const glm::vec3 deltaRotation = rotation - transformComp.Rotation;
+				// const glm::vec3 deltaTranslation = translation - (glm::vec3)transformComp.GlobalTransform[3];
+				// const glm::vec3 deltaScale = scale - transformComp.Scale;
+
+				// transformComp.Translation += deltaTranslation;
+				// transformComp.Rotation = rotation;
+				// transformComp.Scale = scale;
+				// transformComp.DirtyFlag = true;
+			}
+		}
+	}
+
+	void EditorLayer::UI_GizmoModeOverlay(const ImVec2& workPos)
 	{
 		ImVec2 window_pos;
 		window_pos.x = workPos.x + s_OverlayPadding;

@@ -6,7 +6,6 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/Core.h"
-#include "Core/Algorithm.h"
 
 #include "ImGui/Theme.h"
 
@@ -314,8 +313,9 @@ namespace Flameberry::UI {
 		return isDoubleClicked;
 	}
 
-	void Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)
+	bool Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)
 	{
+		bool isEdited = false;
 		ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0);
 
 		float lineHeight = ImGui::GetTextLineHeight() + 2.0f * ImGui::GetStyle().FramePadding.y;
@@ -332,11 +332,15 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
 
 			if (ImGui::Button("##X_Button", buttonSize))
+			{
 				value.x = defaultValue;
+				isEdited = true;
+			}
 		}
 
 		ImGui::SameLine();
 		ImGui::DragFloat("##X", &value.x, dragSpeed, 0.0f, 0.0f, "%.2f");
+		isEdited |= ImGui::IsItemEdited();
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -346,11 +350,15 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
 
 			if (ImGui::Button("##Y_Button", buttonSize))
+			{
 				value.y = defaultValue;
+				isEdited = true;
+			}
 		}
 
 		ImGui::SameLine();
 		ImGui::DragFloat("##Y", &value.y, dragSpeed, 0.0f, 0.0f, "%.2f");
+		isEdited |= ImGui::IsItemEdited();
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -360,14 +368,20 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
 
 			if (ImGui::Button("##Z_Button", buttonSize))
+			{
 				value.z = defaultValue;
+				isEdited = true;
+			}
 		}
 
 		ImGui::SameLine();
 		ImGui::DragFloat("##Z", &value.z, dragSpeed, 0.0f, 0.0f, "%.2f");
+		isEdited |= ImGui::IsItemEdited();
 		ImGui::PopItemWidth();
 
 		ImGui::PopID();
+
+		return isEdited;
 	}
 
 	//////////////////////////////////////////// Scoped UI Utilities ////////////////////////////////////////////

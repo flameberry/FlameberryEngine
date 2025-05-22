@@ -6,12 +6,7 @@
 #include "Core/Timer.h"
 #include "Components.h"
 
-#include "Asset/AssetManager.h"
-#include "Asset/EditorAssetManager.h"
-#include "Asset/Importers/MeshImporter.h"
-#include "Renderer/MaterialAsset.h"
 #include "Renderer/GenericCamera.h"
-#include "Renderer/Skymap.h"
 
 namespace Flameberry {
 
