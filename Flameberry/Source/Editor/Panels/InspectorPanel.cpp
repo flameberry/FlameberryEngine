@@ -238,10 +238,9 @@ namespace Flameberry {
 								const auto& filePath = AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skymap->Handle).FilePath;
 								thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
 							}
-							else
-							{
+
+							if (!thumbnail)
 								thumbnail = Renderer::GetCheckerboardTexture();
-							}
 
 							constexpr float size = 80.0f;
 							const float aspectRatio = (float)thumbnail->GetImageSpecification().Width / (float)thumbnail->GetImageSpecification().Height;
