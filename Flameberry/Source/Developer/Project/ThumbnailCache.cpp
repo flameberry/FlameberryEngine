@@ -22,13 +22,12 @@ namespace Flameberry {
 				return cachedThumbnail.Image;
 		}
 
+		AssetType type;
+
 		// TODO: Expand the number of extensions
-		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame)
-		{
-			AssetType type = Utils::GetAssetTypeFromFileExtension(assetPath.extension());
-			if (type != AssetType::Texture2D && type != AssetType::Skymap)
-				return nullptr;
-		}
+		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame
+			|| (type = Utils::GetAssetTypeFromFileExtension(assetPath.extension()), type != AssetType::Texture2D && type != AssetType::Skymap))
+			return nullptr;
 
 		const auto thumbnail = std::static_pointer_cast<Texture2D>(TextureImporter::LoadTexture2DResized(assetPath, 128, 128, false));
 		auto& cachedThumbnail = m_CachedThumbnails[assetPath];
