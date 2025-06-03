@@ -90,7 +90,7 @@ layout(push_constant) uniform MeshData {
     layout(offset = 64) vec3 u_Albedo;
     float u_Roughness;
     float u_Metallic;
-	float u_EmissiveFactor;
+    float u_EmissiveFactor;
 
     uint u_UseAlbedoMap, u_UseNormalMap, u_UseRoughnessMap, u_UseAmbientMap, u_UseMetallicMap;
 };
@@ -494,8 +494,8 @@ void main()
     vec3 normal = GetPixelNormal();
     vec3 intermediateColor = PBR_TotalLight(normal);
 
-	// Emissive Material
-	intermediateColor += GetPixelColor() * u_EmissiveFactor;
+    // Emissive Material
+    intermediateColor += GetPixelColor() * u_EmissiveFactor;
 
     o_FragColor = vec4(intermediateColor, 1.0f);
 

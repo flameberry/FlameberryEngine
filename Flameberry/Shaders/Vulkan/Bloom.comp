@@ -23,7 +23,7 @@ layout(push_constant) uniform BloomSettings {
     uint InputMipIndex, OutputMipIndex, OutputStorageIndex;
 } u_BloomSettings;
 
-vec4 QuadraticThreshold(vec4 color, float threshold, vec3 curve) 
+vec4 QuadraticThreshold(vec4 color, float threshold, vec3 curve)
 {
     float brightness = max(max(color.r, color.g), color.b);
     float rq = clamp(brightness - curve.x, 0.0, curve.y);
@@ -42,42 +42,42 @@ vec4 Prefilter(vec4 color, vec2 uv, vec4 params)
 
 vec3 DownsampleBox13_Prefilter()
 {
-	ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-	// Center
-	vec3 A = imageLoad(_FBY_u_TargetImage, pixelCoord).rgb;
+    // Center
+    vec3 A = imageLoad(_FBY_u_TargetImage, pixelCoord).rgb;
 
-	// Inner Box
-	vec3 B = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(-1, -1)).rgb;
-	vec3 C = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(-1,  1)).rgb;
-	vec3 D = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2( 1,  1)).rgb;
-	vec3 E = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2( 1, -1)).rgb;
+    // Inner Box
+    vec3 B = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(-1, -1)).rgb;
+    vec3 C = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(-1, 1)).rgb;
+    vec3 D = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(1, 1)).rgb;
+    vec3 E = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(1, -1)).rgb;
 
-	vec3 F = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(-2, -2)).rgb;
-	vec3 G = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(-2,  0)).rgb;
-	vec3 H = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2( 0,  2)).rgb;
-	vec3 I = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2( 2,  2)).rgb;
-	vec3 J = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2( 2,  2)).rgb;
-	vec3 K = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2( 2,  0)).rgb;
-	vec3 L = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(-2, -2)).rgb;
-	vec3 M = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2( 0, -2)).rgb;
+    vec3 F = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(-2, -2)).rgb;
+    vec3 G = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(-2, 0)).rgb;
+    vec3 H = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(0, 2)).rgb;
+    vec3 I = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(2, 2)).rgb;
+    vec3 J = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(2, 2)).rgb;
+    vec3 K = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(2, 0)).rgb;
+    vec3 L = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(-2, -2)).rgb;
+    vec3 M = imageLoad(_FBY_u_TargetImage, pixelCoord + ivec2(0, -2)).rgb;
 
-	vec3 result = vec3(0.0);
-	// Inner Box
-	result += (B + C + D + E) * 0.5;
-	// Bottom-left Box
-	result += (F + G + A + M) * 0.125;
-	// Top-left Box
-	result += (G + H + I + A) * 0.125;
-	// Top-right Box
-	result += (A + I + J + K) * 0.125;
-	// Bottom-right Box
-	result += (M + A + K + L) * 0.125;
+    vec3 result = vec3(0.0);
+    // Inner Box
+    result += (B + C + D + E) * 0.5;
+    // Bottom-left Box
+    result += (F + G + A + M) * 0.125;
+    // Top-left Box
+    result += (G + H + I + A) * 0.125;
+    // Top-right Box
+    result += (A + I + J + K) * 0.125;
+    // Bottom-right Box
+    result += (M + A + K + L) * 0.125;
 
-	// 4 samples each
-	result *= 0.25f;
+    // 4 samples each
+    result *= 0.25f;
 
-	return result;
+    return result;
 }
 
 vec3 DownsampleBox13(sampler2D tex, float lod, vec2 uv, vec2 texelSize)
@@ -85,7 +85,7 @@ vec3 DownsampleBox13(sampler2D tex, float lod, vec2 uv, vec2 texelSize)
     // Center
     vec3 A = textureLod(tex, uv, lod).rgb;
 
-    texelSize *= 0.5f;// Sample from center of texels
+    texelSize *= 0.5f; // Sample from center of texels
 
     // Inner box
     vec3 B = textureLod(tex, uv + texelSize * vec2(-1.0f, -1.0f), lod).rgb;
@@ -145,45 +145,45 @@ vec3 UpsampleTent9(sampler2D tex, float lod, vec2 uv, vec2 texelSize, float radi
 
 void main()
 {
-	// (x) threshold, (y) threshold - knee, (z) knee * 2, (w) 0.25 / knee
-	const vec4 params = vec4(u_BloomSettings.Threshold, u_BloomSettings.Threshold - u_BloomSettings.Knee, u_BloomSettings.Knee * 2.0, 0.25 / u_BloomSettings.Knee);
+    // (x) threshold, (y) threshold - knee, (z) knee * 2, (w) 0.25 / knee
+    const vec4 params = vec4(u_BloomSettings.Threshold, u_BloomSettings.Threshold - u_BloomSettings.Knee, u_BloomSettings.Knee * 2.0, 0.25 / u_BloomSettings.Knee);
 
-	const vec2 imgSize = vec2(imageSize(_FBY_u_BloomImages[u_BloomSettings.OutputStorageIndex]));
-	vec2 textureCoords = gl_GlobalInvocationID.xy / imgSize;
-	textureCoords += (1.0 / imgSize) * 0.5;
+    const vec2 imgSize = vec2(imageSize(_FBY_u_BloomImages[u_BloomSettings.OutputStorageIndex]));
+    vec2 textureCoords = gl_GlobalInvocationID.xy / imgSize;
+    textureCoords += (1.0 / imgSize) * 0.5;
 
-	const vec2 texSize = vec2(textureSize(_FBY_u_BloomImageSampler, int(u_BloomSettings.InputMipIndex)));
+    const vec2 texSize = vec2(textureSize(_FBY_u_BloomImageSampler, int(u_BloomSettings.InputMipIndex)));
 
-	vec4 color = vec4(0, 0, 0, 1);
+    vec4 color = vec4(0, 0, 0, 1);
 
-	if (u_BloomSettings.BloomStage == BLOOM_STAGE_PREFILTER)
-	{
-		color.rgb = DownsampleBox13_Prefilter();
-		color = Prefilter(color, textureCoords, params);
-		color.a = 1.0;
-	}
-	else if (u_BloomSettings.BloomStage == BLOOM_STAGE_DOWNSAMPLE)
-	{
-		color.rgb = DownsampleBox13(_FBY_u_BloomImageSampler, u_BloomSettings.InputMipIndex, textureCoords, 1.0 / texSize);
-	}
-	else if (u_BloomSettings.BloomStage == BLOOM_STAGE_UPSAMPLE)
-	{
-		const vec3 upsampled = UpsampleTent9(_FBY_u_BloomImageSampler, u_BloomSettings.InputMipIndex, textureCoords, 1.0 / texSize, u_BloomSettings.SpreadScale);
-		const vec3 existing = textureLod(_FBY_u_BloomImageSampler, textureCoords, int(u_BloomSettings.OutputMipIndex)).rgb;
-		color.rgb = existing + upsampled;
-	}
-	else if (u_BloomSettings.BloomStage == BLOOM_STAGE_COMPOSITING)
-	{
-		const vec3 upsampled = UpsampleTent9(_FBY_u_BloomImageSampler, u_BloomSettings.InputMipIndex, textureCoords, 1.0 / texSize, u_BloomSettings.SpreadScale);
-		const vec3 existing = textureLod(_FBY_u_BloomImageSampler, textureCoords, int(u_BloomSettings.OutputMipIndex)).rgb;
-		const vec4 original = imageLoad(_FBY_u_TargetImage, ivec2(gl_GlobalInvocationID.xy));
+    if (u_BloomSettings.BloomStage == BLOOM_STAGE_PREFILTER)
+    {
+        color.rgb = DownsampleBox13_Prefilter();
+        color = Prefilter(color, textureCoords, params);
+        color.a = 1.0;
+    }
+    else if (u_BloomSettings.BloomStage == BLOOM_STAGE_DOWNSAMPLE)
+    {
+        color.rgb = DownsampleBox13(_FBY_u_BloomImageSampler, u_BloomSettings.InputMipIndex, textureCoords, 1.0 / texSize);
+    }
+    else if (u_BloomSettings.BloomStage == BLOOM_STAGE_UPSAMPLE)
+    {
+        const vec3 upsampled = UpsampleTent9(_FBY_u_BloomImageSampler, u_BloomSettings.InputMipIndex, textureCoords, 1.0 / texSize, u_BloomSettings.SpreadScale);
+        const vec3 existing = textureLod(_FBY_u_BloomImageSampler, textureCoords, int(u_BloomSettings.OutputMipIndex)).rgb;
+        color.rgb = existing + upsampled;
+    }
+    else if (u_BloomSettings.BloomStage == BLOOM_STAGE_COMPOSITING)
+    {
+        const vec3 upsampled = UpsampleTent9(_FBY_u_BloomImageSampler, u_BloomSettings.InputMipIndex, textureCoords, 1.0 / texSize, u_BloomSettings.SpreadScale);
+        const vec3 existing = textureLod(_FBY_u_BloomImageSampler, textureCoords, int(u_BloomSettings.OutputMipIndex)).rgb;
+        const vec4 original = imageLoad(_FBY_u_TargetImage, ivec2(gl_GlobalInvocationID.xy));
 
-		color.rgb = existing + upsampled + original.rgb;
-		color.a = original.a;
-	}
+        color.rgb = existing + upsampled + original.rgb;
+        color.a = original.a;
+    }
 
-	if (u_BloomSettings.BloomStage == BLOOM_STAGE_COMPOSITING)
-		imageStore(_FBY_u_TargetImage, ivec2(gl_GlobalInvocationID.xy), color);
-	else
-		imageStore(_FBY_u_BloomImages[u_BloomSettings.OutputStorageIndex], ivec2(gl_GlobalInvocationID.xy), color);
+    if (u_BloomSettings.BloomStage == BLOOM_STAGE_COMPOSITING)
+        imageStore(_FBY_u_TargetImage, ivec2(gl_GlobalInvocationID.xy), color);
+    else
+        imageStore(_FBY_u_BloomImages[u_BloomSettings.OutputStorageIndex], ivec2(gl_GlobalInvocationID.xy), color);
 }

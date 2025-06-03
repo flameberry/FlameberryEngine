@@ -24,7 +24,6 @@ namespace Flameberry {
 
 		AssetType type;
 
-		// TODO: Expand the number of extensions
 		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame
 			|| (type = Utils::GetAssetTypeFromFileExtension(assetPath.extension()), type != AssetType::Texture2D && type != AssetType::Skymap))
 			return nullptr;
