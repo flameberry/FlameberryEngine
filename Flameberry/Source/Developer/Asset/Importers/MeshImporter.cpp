@@ -229,7 +229,7 @@ namespace Flameberry {
 		// If the import failed, report it
 		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE))
 		{
-			FBY_ERROR("{}", importer.GetErrorString());
+			FBY_ERROR("Mesh Importing failed: {}", importer.GetErrorString());
 			return nullptr;
 		}
 

@@ -22,7 +22,7 @@ namespace Flameberry {
 	{
 		{
 			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-			UI::ScopedStyleColor windowBg(ImGuiCol_WindowBg, Theme::WindowBgGrey);
+			UI::ScopedStyleColor windowBg(ImGuiCol_WindowBg, Theme::WindowBg);
 
 			ImGui::Begin("Scene Hierarchy");
 		}
@@ -46,7 +46,7 @@ namespace Flameberry {
 
 		{
 			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 4));
-			UI::ScopedStyleColor childBg(ImGuiCol_ChildBg, Theme::WindowBg);
+			UI::ScopedStyleColor childBg(ImGuiCol_ChildBg, Theme::WindowBgDark);
 
 			ImGui::BeginChild("##EntityList", ImVec2(-1, -1), 0, ImGuiWindowFlags_AlwaysUseWindowPadding);
 		}

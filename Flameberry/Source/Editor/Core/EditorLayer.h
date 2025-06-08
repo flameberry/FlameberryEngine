@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Core/UI.h"
+#include "Panels/LogPanel.h"
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
-#include "Core/UI.h"
 
 namespace Flameberry {
 
@@ -25,10 +26,12 @@ namespace Flameberry {
 		void OnEvent(Event& e) override;
 		void OnDestroy() override;
 
+	private:
 		void OnKeyPressedEvent(KeyPressedEvent& e);
 		void OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
 		void OnMouseScrolledEvent(MouseScrollEvent& e);
 
+		void PrepareMousePickingPass();
 		void InvalidateViewportImGuiDescriptorSet(uint32_t index) const;
 
 		void OpenProject();
@@ -94,6 +97,7 @@ namespace Flameberry {
 		// UI
 		Ref<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Ref<ContentBrowserPanel> m_ContentBrowserPanel;
+		Ref<LogPanel> m_LogPanel;
 
 		// Mouse Picking
 		Unique<Buffer> m_MousePickingBuffer;

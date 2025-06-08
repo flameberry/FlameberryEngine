@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <IconFontCppHeaders/IconsLucide.h>
 
-#include "Flameberry.h"
 #include "Core/UI.h"
 #include "Project/Project.h"
 #include "imgui.h"
@@ -146,16 +145,14 @@ namespace Flameberry {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 7 });
 		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
 
-		ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBgGrey);
+		ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBg);
 		ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, -1.0f), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_AlwaysUseWindowPadding);
 		ImGui::PopStyleColor();
 
 		for (auto& directory : std::filesystem::directory_iterator(Project::GetActiveProject()->GetConfig().AssetDirectory))
 		{
 			if (directory.is_directory())
-			{
 				RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator(directory));
-			}
 		}
 
 		// Add Shadow Effect
@@ -191,10 +188,7 @@ namespace Flameberry {
 		ImGui::SameLine();
 
 		{
-			UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1.0f, m_IsSearchBoxFocused);
-			UI::ScopedStyleColor borderColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f });
-
-			UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
+			UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
 		}
 
 		m_IsSearchBoxFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
@@ -345,7 +339,7 @@ namespace Flameberry {
 		std::string_view currentPath(currentDirectory.c_str());
 
 		ImGui::GetWindowDrawList()->AddRectFilled(clipRect.Min, clipRect.Max,
-			ImGui::ColorConvertFloat4ToU32(Theme::FrameBg),
+			ImGui::ColorConvertFloat4ToU32(Theme::ImGuiTitleBg),
 			style.FrameRounding);
 		ImGui::GetWindowDrawList()->AddRect(clipRect.Min, clipRect.Max,
 			IM_COL32(70, 70, 70, 255),

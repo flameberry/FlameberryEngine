@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 #include <IconFontCppHeaders/IconsLucide.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
@@ -11,37 +12,8 @@
 
 #include "Physics/Physics.h"
 #include "Renderer/ShaderLibrary.h"
-#include "glm/gtc/type_ptr.hpp"
 
 namespace Flameberry {
-
-	class MovingActor : public Flameberry::Actor
-	{
-	public:
-		void OnInstanceCreated() override
-		{
-			FBY_LOG("Created MovingActor!");
-		}
-		void OnInstanceDeleted() override
-		{
-			FBY_LOG("Deleted MovingActor!");
-		}
-		void OnUpdate(float delta) override
-		{
-			auto& transform = GetComponent<TransformComponent>();
-
-			float speed = 10.0f;
-
-			if (Input::IsKeyPressed(KeyCode::W))
-				transform.Translation.z -= speed * delta;
-			if (Input::IsKeyPressed(KeyCode::S))
-				transform.Translation.z += speed * delta;
-			if (Input::IsKeyPressed(KeyCode::A))
-				transform.Translation.x -= speed * delta;
-			if (Input::IsKeyPressed(KeyCode::D))
-				transform.Translation.x += speed * delta;
-		}
-	};
 
 	EditorLayer::EditorLayer(const Ref<Project>& project)
 		: m_Project(project)
@@ -84,80 +56,13 @@ namespace Flameberry {
 		m_ActiveScene = CreateRef<Scene>();
 		m_SceneHierarchyPanel = CreateRef<SceneHierarchyPanel>(m_ActiveScene);
 		m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
+		m_LogPanel = CreateRef<LogPanel>();
 
 		// Open the start scene
 		if (AssetManager::IsAssetHandleValid(m_Project->GetConfig().StartScene))
 			OpenScene(m_Project->GetConfig().StartScene);
 
-		/////////////////////////////////////// Preparing Mouse Picking Pass ////////////////////////////////////////
-
-		BufferSpecification mousePickingBufferSpec;
-		mousePickingBufferSpec.InstanceCount = 1;
-		mousePickingBufferSpec.InstanceSize = sizeof(int32_t);
-		mousePickingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		mousePickingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-		m_MousePickingBuffer = std::make_unique<Buffer>(mousePickingBufferSpec);
-
-		FramebufferSpecification mousePickingFramebufferSpec;
-		mousePickingFramebufferSpec.Width = m_ViewportSize.x;
-		mousePickingFramebufferSpec.Height = m_ViewportSize.y;
-		mousePickingFramebufferSpec.Samples = 1;
-		mousePickingFramebufferSpec.Attachments = { VK_FORMAT_R32_SINT, VK_FORMAT_D32_SFLOAT };
-		mousePickingFramebufferSpec.ClearColorValue.int32[0] = -1;
-		mousePickingFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
-
-		RenderPassSpecification mousePickingRenderPassSpec;
-		mousePickingRenderPassSpec.TargetFramebuffers = { CreateRef<Framebuffer>(mousePickingFramebufferSpec) };
-
-		m_MousePickingRenderPass = CreateRef<RenderPass>(mousePickingRenderPassSpec);
-
-		// Creating Descriptors
-		DescriptorSetLayoutSpecification mousePickingDescSetLayoutSpec;
-		mousePickingDescSetLayoutSpec.Bindings.emplace_back();
-		mousePickingDescSetLayoutSpec.Bindings[0].binding = 0;
-		mousePickingDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		mousePickingDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
-		mousePickingDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		mousePickingDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
-
-		m_MousePickingDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(mousePickingDescSetLayoutSpec);
-
-		{
-			// Pipeline Creation
-			PipelineSpecification pipelineSpec{};
-			pipelineSpec.Shader = ShaderLibrary::Get("MousePicking");
-			pipelineSpec.RenderPass = m_MousePickingRenderPass;
-
-			pipelineSpec.VertexLayout = {
-				ShaderDataType::Float3,	 // a_Position
-				ShaderDataType::Dummy12, // Normal (Unnecessary)
-				ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
-				ShaderDataType::Dummy12, // Tangent (Unnecessary)
-				ShaderDataType::Dummy12	 // BiTangent (Unnecessary)
-			};
-
-			m_MousePickingPipeline = CreateRef<Pipeline>(pipelineSpec);
-		}
-
-		{
-			// Pipeline Creation
-			PipelineSpecification pipelineSpec{};
-			pipelineSpec.Shader = ShaderLibrary::Get("MousePicking2D");
-			pipelineSpec.RenderPass = m_MousePickingRenderPass;
-
-			pipelineSpec.VertexLayout = {
-				ShaderDataType::Float3,	 // a_Position
-				ShaderDataType::Dummy12, // Color (Unnecessary)
-				ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
-				ShaderDataType::Int		 // a_EntityIndex
-			};
-			pipelineSpec.CullMode = VK_CULL_MODE_NONE;
-
-			m_MousePicking2DPipeline = CreateRef<Pipeline>(pipelineSpec);
-		}
-
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		PrepareMousePickingPass();
 
 		m_SceneRenderer = std::make_unique<SceneRenderer>(m_RenderViewportSize);
 
@@ -949,7 +854,7 @@ namespace Flameberry {
 
 	void EditorLayer::UI_BottomPanel()
 	{
-		static bool toggleContentBrowser = false, toggleRendererSettings = false, toggleAssetRegistry = false;
+		static bool toggleContentBrowser = true, toggleRendererSettings = true, toggleAssetRegistry = false;
 		ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
 
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse
@@ -963,7 +868,7 @@ namespace Flameberry {
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, paddingY));
-		ImGui::PushStyleColor(ImGuiCol_MenuBarBg, Theme::WindowBgGrey);
+		ImGui::PushStyleColor(ImGuiCol_MenuBarBg, Theme::WindowBg);
 		bool begin = ImGui::BeginViewportSideBar("##MainStatusBar", viewport, ImGuiDir_Down, height, windowFlags);
 		ImGui::PopStyleColor();
 		ImGui::PopStyleVar(2);
@@ -1012,6 +917,11 @@ namespace Flameberry {
 			UI_RendererSettings();
 		if (toggleAssetRegistry)
 			UI_AssetRegistry();
+
+		for (static int i = 10; i >= 0; i--)
+			m_LogPanel->AddInfo("Warning Number: {}", i);
+
+		m_LogPanel->OnUIRender();
 	}
 
 	void EditorLayer::UI_RendererSettings()
@@ -1145,6 +1055,75 @@ namespace Flameberry {
 		m_ActiveScene->OnStartSimulation();
 
 		m_EditorState = EditorState::Simulate;
+	}
+
+	void EditorLayer::PrepareMousePickingPass()
+	{
+		BufferSpecification mousePickingBufferSpec;
+		mousePickingBufferSpec.InstanceCount = 1;
+		mousePickingBufferSpec.InstanceSize = sizeof(int32_t);
+		mousePickingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		mousePickingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+		m_MousePickingBuffer = std::make_unique<Buffer>(mousePickingBufferSpec);
+
+		FramebufferSpecification mousePickingFramebufferSpec;
+		mousePickingFramebufferSpec.Width = m_ViewportSize.x;
+		mousePickingFramebufferSpec.Height = m_ViewportSize.y;
+		mousePickingFramebufferSpec.Samples = 1;
+		mousePickingFramebufferSpec.Attachments = { VK_FORMAT_R32_SINT, VK_FORMAT_D32_SFLOAT };
+		mousePickingFramebufferSpec.ClearColorValue.int32[0] = -1;
+		mousePickingFramebufferSpec.DepthStencilClearValue = { 1.0f, 0 };
+
+		RenderPassSpecification mousePickingRenderPassSpec;
+		mousePickingRenderPassSpec.TargetFramebuffers = { CreateRef<Framebuffer>(mousePickingFramebufferSpec) };
+
+		m_MousePickingRenderPass = CreateRef<RenderPass>(mousePickingRenderPassSpec);
+
+		// Creating Descriptors
+		DescriptorSetLayoutSpecification mousePickingDescSetLayoutSpec;
+		mousePickingDescSetLayoutSpec.Bindings.emplace_back();
+		mousePickingDescSetLayoutSpec.Bindings[0].binding = 0;
+		mousePickingDescSetLayoutSpec.Bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		mousePickingDescSetLayoutSpec.Bindings[0].descriptorCount = 1;
+		mousePickingDescSetLayoutSpec.Bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		mousePickingDescSetLayoutSpec.Bindings[0].pImmutableSamplers = nullptr;
+
+		m_MousePickingDescriptorSetLayout = DescriptorSetLayout::CreateOrGetCached(mousePickingDescSetLayoutSpec);
+
+		{
+			// Pipeline Creation
+			PipelineSpecification pipelineSpec{};
+			pipelineSpec.Shader = ShaderLibrary::Get("MousePicking");
+			pipelineSpec.RenderPass = m_MousePickingRenderPass;
+
+			pipelineSpec.VertexLayout = {
+				ShaderDataType::Float3,	 // a_Position
+				ShaderDataType::Dummy12, // Normal (Unnecessary)
+				ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
+				ShaderDataType::Dummy12, // Tangent (Unnecessary)
+				ShaderDataType::Dummy12	 // BiTangent (Unnecessary)
+			};
+
+			m_MousePickingPipeline = CreateRef<Pipeline>(pipelineSpec);
+		}
+
+		{
+			// Pipeline Creation
+			PipelineSpecification pipelineSpec{};
+			pipelineSpec.Shader = ShaderLibrary::Get("MousePicking2D");
+			pipelineSpec.RenderPass = m_MousePickingRenderPass;
+
+			pipelineSpec.VertexLayout = {
+				ShaderDataType::Float3,	 // a_Position
+				ShaderDataType::Dummy12, // Color (Unnecessary)
+				ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
+				ShaderDataType::Int		 // a_EntityIndex
+			};
+			pipelineSpec.CullMode = VK_CULL_MODE_NONE;
+
+			m_MousePicking2DPipeline = CreateRef<Pipeline>(pipelineSpec);
+		}
 	}
 
 } // namespace Flameberry

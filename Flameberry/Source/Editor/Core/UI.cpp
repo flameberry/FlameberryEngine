@@ -53,9 +53,9 @@ namespace Flameberry::UI {
 		return ImGui::Button(label, size);
 	}
 
-	void InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint)
+	void InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint, bool focused)
 	{
-		ScopedStyleColor borderColor(ImGuiCol_Border, IM_COL32(70, 70, 70, 255));
+		ScopedStyleColor borderColor(ImGuiCol_Border, ImGui::ColorConvertFloat4ToU32(Theme::AccentColor), focused);
 		ScopedStyleVariable frameRounding(ImGuiStyleVar_FrameRounding, 4);
 		ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0.5f);
 
