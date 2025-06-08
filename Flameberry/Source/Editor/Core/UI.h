@@ -14,6 +14,20 @@
 		ImGui::PopItemWidth();           \
 	}
 
+#define FBY_UI_TABLE_ELEMENT(name, element) \
+	{                                       \
+		UI::TableKeyElement(name);          \
+		element;                            \
+	}
+
+#define FBY_UI_TABLE_ELEMENT_WIDTH_MAX(name, element) \
+	{                                                 \
+		UI::TableKeyElement(name);                    \
+		ImGui::PushItemWidth(-1);                     \
+		element;                                      \
+		ImGui::PopItemWidth();                        \
+	}
+
 namespace Flameberry {
 
 	/**

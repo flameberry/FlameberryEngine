@@ -80,10 +80,7 @@ namespace Flameberry {
 					const auto& metadata = AssetManager::As<EditorAssetManager>()->GetAssetMetadata(m_EditingContext->Handle);
 
 					if (!metadata.IsMemoryAsset)
-					{
-						UI::TableKeyElement("FilePath");
-						ImGui::TextWrapped("%s", metadata.FilePath.c_str());
-					}
+						FBY_UI_TABLE_ELEMENT("FilePath", ImGui::TextWrapped("%s", metadata.FilePath.c_str()));
 
 					MaterialStructGPURepresentation& uniformDataRef = m_EditingContext->GetMaterialDataRef();
 
@@ -113,20 +110,16 @@ namespace Flameberry {
 
 					ImGui::PushItemWidth(-1.0f);
 
-					UI::TableKeyElement("Albedo");
-					ImGui::ColorEdit3("##Albedo", glm::value_ptr(uniformDataRef.Albedo));
+					FBY_UI_TABLE_ELEMENT("Albedo", ImGui::ColorEdit3("##Albedo", glm::value_ptr(uniformDataRef.Albedo)));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
-					UI::TableKeyElement("Roughness");
-					ImGui::DragFloat("##Roughness", &uniformDataRef.Roughness, 0.01f, 0.0f, 1.0f);
+					FBY_UI_TABLE_ELEMENT("Roughness", ImGui::DragFloat("##Roughness", &uniformDataRef.Roughness, 0.01f, 0.0f, 1.0f));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
-					UI::TableKeyElement("Metallic");
-					ImGui::DragFloat("##Metallic", &uniformDataRef.Metallic, 0.005f, 0.0f, 1.0f);
+					FBY_UI_TABLE_ELEMENT("Metallic", ImGui::DragFloat("##Metallic", &uniformDataRef.Metallic, 0.005f, 0.0f, 1.0f));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
-					UI::TableKeyElement("Emissive");
-					ImGui::DragFloat("##Emissive", &uniformDataRef.EmissiveFactor, 0.025f, 0.0f);
+					FBY_UI_TABLE_ELEMENT("Emissive", ImGui::DragFloat("##Emissive", &uniformDataRef.EmissiveFactor, 0.025f, 0.0f));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
 					ImGui::PopItemWidth();

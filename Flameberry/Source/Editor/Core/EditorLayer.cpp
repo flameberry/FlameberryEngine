@@ -1035,59 +1035,30 @@ namespace Flameberry {
 		}
 		ImGui::NewLine();
 
-		if (ImGui::CollapsingHeader("Scene Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
+		constexpr ImGuiTreeNodeFlags collapsingHeaderFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed;
+
+		if (ImGui::CollapsingHeader("Scene Renderer", collapsingHeaderFlags))
 		{
 			if (UI::BeginKeyValueTable("##RendererSettings_Attributes", 0, 140.0f))
 			{
 				auto& settings = m_SceneRenderer->GetRendererSettingsRef();
 
-				UI::TableKeyElement("Frustum Culling");
-				ImGui::Checkbox("##Frustum_Culling", &settings.FrustumCulling);
-
-				UI::TableKeyElement("Show Bounding Boxes");
-				ImGui::Checkbox("##Show_Bounding_Boxes", &settings.ShowBoundingBoxes);
-
-				UI::TableKeyElement("Enable Shadows");
-				ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows);
-
-				UI::TableKeyElement("Show Cascades");
-				ImGui::Checkbox("##Show_Cascades", &settings.ShowCascades);
-
-				UI::TableKeyElement("Soft Shadows");
-				ImGui::Checkbox("##Soft_Shadows", &settings.SoftShadows);
-
-				UI::TableKeyElement("Lambda Split");
-				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f));
-
-				UI::TableKeyElement("Sky Reflections");
-				ImGui::Checkbox("##Sky_Reflections", &settings.SkyReflections);
-
-				UI::TableKeyElement("Gamma Correction");
-				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Gamma_Correction_Factor", &settings.GammaCorrectionFactor, 0.001f, 0.0f, 10.0f));
-
-				UI::TableKeyElement("Exposure");
-				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f));
-
-				UI::TableKeyElement("Grid Fading");
-				FBY_PUSH_WIDTH_MAX(ImGui::Checkbox("##Grid_Fading", &settings.GridFading));
-
-				UI::TableKeyElement("Grid Near");
-				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Near", &settings.GridNear, 0.01f, 0.0f, settings.GridFar));
-
-				UI::TableKeyElement("Grid Far");
-				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Far", &settings.GridFar, 0.01f, settings.GridNear));
-
-				UI::TableKeyElement("Enable Bloom");
-				ImGui::Checkbox("##EnableBloom", &settings.EnableBloom);
-
-				UI::TableKeyElement("Bloom Threshold");
-				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomThreshold", &settings.BloomThreshold, 0.01f, 0.0f, 100.0f));
-
-				UI::TableKeyElement("Bloom Spread Scale");
-				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomSpreadScale", &settings.BloomSpreadScale, 0.01f, 0.0f, 1000.0f));
-
-				UI::TableKeyElement("Bloom Knee");
-				FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomKnee", &settings.BloomKnee, 0.01f, 0.0f, 100.0f));
+				FBY_UI_TABLE_ELEMENT("Frustum Culling", ImGui::Checkbox("##Frustum_Culling", &settings.FrustumCulling));
+				FBY_UI_TABLE_ELEMENT("Show Bounding Boxes", ImGui::Checkbox("##Show_Bounding_Boxes", &settings.ShowBoundingBoxes));
+				FBY_UI_TABLE_ELEMENT("Enable Shadows", ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows));
+				FBY_UI_TABLE_ELEMENT("Show Cascades", ImGui::Checkbox("##Show_Cascades", &settings.ShowCascades));
+				FBY_UI_TABLE_ELEMENT("Soft Shadows", ImGui::Checkbox("##SoftShadows", &settings.SoftShadows));
+				FBY_UI_TABLE_ELEMENT("Lambda Split", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f)));
+				FBY_UI_TABLE_ELEMENT("Sky Reflections", ImGui::Checkbox("##Sky_Reflections", &settings.SkyReflections));
+				FBY_UI_TABLE_ELEMENT("Gamma Correction", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Gamma_Correction_Factor", &settings.GammaCorrectionFactor, 0.001f, 0.0f, 10.0f)));
+				FBY_UI_TABLE_ELEMENT("Exposure", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f)));
+				FBY_UI_TABLE_ELEMENT("Enable Bloom", ImGui::Checkbox("##EnableBloom", &settings.EnableBloom));
+				FBY_UI_TABLE_ELEMENT("Bloom Threshold", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomThreshold", &settings.BloomThreshold, 0.01f, 0.0f, 100.0f)));
+				FBY_UI_TABLE_ELEMENT("Bloom Spread Scale", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomSpreadScale", &settings.BloomSpreadScale, 0.01f, 0.0f, 1000.0f)));
+				FBY_UI_TABLE_ELEMENT("Bloom Knee", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomKnee", &settings.BloomKnee, 0.01f, 0.0f, 100.0f)));
+				FBY_UI_TABLE_ELEMENT("Grid Fading", FBY_PUSH_WIDTH_MAX(ImGui::Checkbox("##Grid_Fading", &settings.GridFading)));
+				FBY_UI_TABLE_ELEMENT("Grid Near", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Near", &settings.GridNear, 0.01f, 0.0f, settings.GridFar)));
+				FBY_UI_TABLE_ELEMENT("Grid Far", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Far", &settings.GridFar, 0.01f, settings.GridNear)));
 
 				UI::EndKeyValueTable();
 			}
@@ -1103,18 +1074,12 @@ namespace Flameberry {
 		{
 			for (const auto& [handle, metadata] : AssetManager::As<EditorAssetManager>()->GetAssetRegistry())
 			{
-				UI::TableKeyElement("Handle");
-				ImGui::Text("%llu", (UUID::ValueType)handle);
-
-				UI::TableKeyElement("FilePath");
-				ImGui::Text("%s", metadata.FilePath.c_str());
-
-				UI::TableKeyElement("Type");
 				const std::string typeStr = Utils::AssetTypeEnumToString(metadata.Type);
-				ImGui::Text("%s", typeStr.c_str());
 
-				UI::TableKeyElement("IsMemoryAsset");
-				ImGui::Text("%s", metadata.IsMemoryAsset ? "True" : "False");
+				FBY_UI_TABLE_ELEMENT("Handle", ImGui::Text("%llu", (UUID::ValueType)handle));
+				FBY_UI_TABLE_ELEMENT("FilePath", ImGui::Text("%s", metadata.FilePath.c_str()));
+				FBY_UI_TABLE_ELEMENT("Type", ImGui::Text("%s", typeStr.c_str()));
+				FBY_UI_TABLE_ELEMENT("IsMemoryAsset", ImGui::Text("%s", metadata.IsMemoryAsset ? "True" : "False"));
 			}
 
 			UI::EndKeyValueTable();
