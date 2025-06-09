@@ -4,6 +4,7 @@
 
 #include "Flameberry.h"
 #include "MaterialEditorPanel.h"
+#include "imgui.h"
 
 namespace Flameberry {
 
@@ -61,16 +62,21 @@ namespace Flameberry {
 			const ImVec2 contentRegionAvail = ImGui::GetContentRegionAvail();
 
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 4));
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 6));
 
 			auto& style = ImGui::GetStyle();
 			const float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
 
-			const bool open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
+			constexpr ImGuiTreeNodeFlags headerFlags = ImGuiTreeNodeFlags_DefaultOpen
+				| ImGuiTreeNodeFlags_SpanAvailWidth
+				| ImGuiTreeNodeFlags_FramePadding
+				| ImGuiTreeNodeFlags_AllowOverlap;
+
+			const bool open = ImGui::CollapsingHeader(name, headerFlags);
 			ImGui::PopStyleVar();
 
 			ImGui::SameLine(contentRegionAvail.x - lineHeight);
-			ImGui::Button(ICON_LC_SETTINGS, ImVec2(0.0f, lineHeight));
+			ImGui::Button(ICON_LC_SETTINGS, ImVec2(lineHeight, lineHeight));
 			ImGui::PopStyleVar();
 
 			bool shouldRemoveComp = false;
@@ -88,6 +94,7 @@ namespace Flameberry {
 				fn();
 
 			ImGui::PopID();
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y);
 
 			if (shouldRemoveComp)
 				m_Context->GetRegistry()->EraseComponent<ComponentType>(m_SelectionContext);

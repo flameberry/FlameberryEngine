@@ -306,7 +306,15 @@ namespace Flameberry {
 		UI_GizmoModeOverlay(workPos);
 		UI_ToolbarOverlay(workPos, workSize);
 		UI_ViewportSettingsOverlay(workPos, workSize);
+
+#if 0
 		UI_BottomPanel();
+#else
+		m_ContentBrowserPanel->OnUIRender();
+		UI_RendererSettings();
+		UI_AssetRegistry();
+		m_LogPanel->OnUIRender();
+#endif
 	}
 
 	void EditorLayer::InvalidateViewportImGuiDescriptorSet(uint32_t index) const
@@ -918,60 +926,67 @@ namespace Flameberry {
 		if (toggleAssetRegistry)
 			UI_AssetRegistry();
 
-		for (static int i = 10; i >= 0; i--)
-			m_LogPanel->AddInfo("Warning Number: {}", i);
-
 		m_LogPanel->OnUIRender();
 	}
 
 	void EditorLayer::UI_RendererSettings()
 	{
-		constexpr ImGuiTableFlags flags = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible;
+		ImGui::Begin("Renderer");
 
-		ImGui::Begin("Renderer Settings");
-
-		if (ImGui::CollapsingHeader("Frame Statistics (Geometry Pass Only)", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed))
+		ImGui::PushStyleVar(ImGuiStyleVar_TabBarBorderSize, 1);
+		ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
+		if (ImGui::BeginTabBar("Scene Renderer", tabBarFlags))
 		{
-			ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			FBY_DISPLAY_SCOPE_DETAILS_IMGUI();
+			UI::ScopedStyleVariable tabBorder(ImGuiStyleVar_TabBarBorderSize, 1);
+			UI::ScopedStyleColor tabBg(ImGuiCol_Tab, Theme::ImGuiTitleBg);
 
-			const auto& rendererFrameStats = Renderer::GetRendererFrameStats();
-			// ImGui::Text("Mesh Count: %u", rendererFrameStats.MeshCount);
-			// ImGui::Text("SubMesh Count: %u", rendererFrameStats.SubMeshCount);
-			ImGui::Text("Bound Materials: %u", rendererFrameStats.BoundMaterials);
-			ImGui::Text("Vertex and IndexBuffer State Switches: %u", rendererFrameStats.VertexAndIndexBufferStateSwitches);
-			// ImGui::Text("Mesh Draw Calls: %u", rendererFrameStats.DrawCallCount);
-			// ImGui::Text("Indices: %u", rendererFrameStats.IndexCount);
-		}
-		ImGui::NewLine();
-
-		constexpr ImGuiTreeNodeFlags collapsingHeaderFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed;
-
-		if (ImGui::CollapsingHeader("Scene Renderer", collapsingHeaderFlags))
-		{
-			if (UI::BeginKeyValueTable("##RendererSettings_Attributes", 0, 140.0f))
+			if (ImGui::BeginTabItem("Settings"))
 			{
-				auto& settings = m_SceneRenderer->GetRendererSettingsRef();
+				constexpr ImGuiTreeNodeFlags collapsingHeaderFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed;
+				if (ImGui::CollapsingHeader("Scene Renderer", collapsingHeaderFlags))
+				{
+					if (UI::BeginKeyValueTable("##RendererSettings_Attributes", 0, 140.0f))
+					{
+						auto& settings = m_SceneRenderer->GetRendererSettingsRef();
 
-				FBY_UI_TABLE_ELEMENT("Frustum Culling", ImGui::Checkbox("##Frustum_Culling", &settings.FrustumCulling));
-				FBY_UI_TABLE_ELEMENT("Show Bounding Boxes", ImGui::Checkbox("##Show_Bounding_Boxes", &settings.ShowBoundingBoxes));
-				FBY_UI_TABLE_ELEMENT("Enable Shadows", ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows));
-				FBY_UI_TABLE_ELEMENT("Show Cascades", ImGui::Checkbox("##Show_Cascades", &settings.ShowCascades));
-				FBY_UI_TABLE_ELEMENT("Soft Shadows", ImGui::Checkbox("##SoftShadows", &settings.SoftShadows));
-				FBY_UI_TABLE_ELEMENT("Lambda Split", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f)));
-				FBY_UI_TABLE_ELEMENT("Sky Reflections", ImGui::Checkbox("##Sky_Reflections", &settings.SkyReflections));
-				FBY_UI_TABLE_ELEMENT("Gamma Correction", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Gamma_Correction_Factor", &settings.GammaCorrectionFactor, 0.001f, 0.0f, 10.0f)));
-				FBY_UI_TABLE_ELEMENT("Exposure", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f)));
-				FBY_UI_TABLE_ELEMENT("Enable Bloom", ImGui::Checkbox("##EnableBloom", &settings.EnableBloom));
-				FBY_UI_TABLE_ELEMENT("Bloom Threshold", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomThreshold", &settings.BloomThreshold, 0.01f, 0.0f, 100.0f)));
-				FBY_UI_TABLE_ELEMENT("Bloom Spread Scale", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomSpreadScale", &settings.BloomSpreadScale, 0.01f, 0.0f, 1000.0f)));
-				FBY_UI_TABLE_ELEMENT("Bloom Knee", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomKnee", &settings.BloomKnee, 0.01f, 0.0f, 100.0f)));
-				FBY_UI_TABLE_ELEMENT("Grid Fading", FBY_PUSH_WIDTH_MAX(ImGui::Checkbox("##Grid_Fading", &settings.GridFading)));
-				FBY_UI_TABLE_ELEMENT("Grid Near", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Near", &settings.GridNear, 0.01f, 0.0f, settings.GridFar)));
-				FBY_UI_TABLE_ELEMENT("Grid Far", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Far", &settings.GridFar, 0.01f, settings.GridNear)));
+						FBY_UI_TABLE_ELEMENT("Frustum Culling", ImGui::Checkbox("##Frustum_Culling", &settings.FrustumCulling));
+						FBY_UI_TABLE_ELEMENT("Show Bounding Boxes", ImGui::Checkbox("##Show_Bounding_Boxes", &settings.ShowBoundingBoxes));
+						FBY_UI_TABLE_ELEMENT("Enable Shadows", ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows));
+						FBY_UI_TABLE_ELEMENT("Show Cascades", ImGui::Checkbox("##Show_Cascades", &settings.ShowCascades));
+						FBY_UI_TABLE_ELEMENT("Soft Shadows", ImGui::Checkbox("##SoftShadows", &settings.SoftShadows));
+						FBY_UI_TABLE_ELEMENT("Lambda Split", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Lambda_Split", &settings.CascadeLambdaSplit, 0.001f, 0.0f, 1.0f)));
+						FBY_UI_TABLE_ELEMENT("Sky Reflections", ImGui::Checkbox("##Sky_Reflections", &settings.SkyReflections));
+						FBY_UI_TABLE_ELEMENT("Gamma Correction", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Gamma_Correction_Factor", &settings.GammaCorrectionFactor, 0.001f, 0.0f, 10.0f)));
+						FBY_UI_TABLE_ELEMENT("Exposure", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f)));
+						FBY_UI_TABLE_ELEMENT("Enable Bloom", ImGui::Checkbox("##EnableBloom", &settings.EnableBloom));
+						FBY_UI_TABLE_ELEMENT("Bloom Threshold", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomThreshold", &settings.BloomThreshold, 0.01f, 0.0f, 100.0f)));
+						FBY_UI_TABLE_ELEMENT("Bloom Spread Scale", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomSpreadScale", &settings.BloomSpreadScale, 0.01f, 0.0f, 1000.0f)));
+						FBY_UI_TABLE_ELEMENT("Bloom Knee", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomKnee", &settings.BloomKnee, 0.01f, 0.0f, 100.0f)));
+						FBY_UI_TABLE_ELEMENT("Grid Fading", FBY_PUSH_WIDTH_MAX(ImGui::Checkbox("##Grid_Fading", &settings.GridFading)));
+						FBY_UI_TABLE_ELEMENT("Grid Near", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Near", &settings.GridNear, 0.01f, 0.0f, settings.GridFar)));
+						FBY_UI_TABLE_ELEMENT("Grid Far", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Far", &settings.GridFar, 0.01f, settings.GridNear)));
 
-				UI::EndKeyValueTable();
+						UI::EndKeyValueTable();
+					}
+				}
+				ImGui::EndTabItem();
 			}
+			if (ImGui::BeginTabItem("Frame"))
+			{
+				ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+				FBY_DISPLAY_SCOPE_DETAILS_IMGUI();
+
+				const auto& rendererFrameStats = Renderer::GetRendererFrameStats();
+				// ImGui::Text("Mesh Count: %u", rendererFrameStats.MeshCount);
+				// ImGui::Text("SubMesh Count: %u", rendererFrameStats.SubMeshCount);
+				ImGui::Text("Bound Materials: %u", rendererFrameStats.BoundMaterials);
+				ImGui::Text("Vertex and IndexBuffer State Switches: %u", rendererFrameStats.VertexAndIndexBufferStateSwitches);
+				// ImGui::Text("Mesh Draw Calls: %u", rendererFrameStats.DrawCallCount);
+				// ImGui::Text("Indices: %u", rendererFrameStats.IndexCount);
+				ImGui::EndTabItem();
+			}
+			ImGui::EndTabBar();
+			ImGui::PopStyleVar();
 		}
 		ImGui::End();
 	}

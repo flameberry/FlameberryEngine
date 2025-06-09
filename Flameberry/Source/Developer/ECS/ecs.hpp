@@ -333,6 +333,11 @@ namespace Flameberry {
 		inline bool Empty() const { return m_EntityBuffer.empty(); }
 
 		/**
+		 * Returns the number of entities in the registry
+		 */
+		inline uint32_t Size() const { return m_EntityBuffer.size() - m_FreeEntityBuffer.size(); }
+
+		/**
 		 * Iterates over all entities in the scene
 		 * @param _Fn: A function with a param of type `const ecs::entity&` which represents the current entity being iterated
 		 */

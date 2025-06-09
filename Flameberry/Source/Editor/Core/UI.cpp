@@ -5,9 +5,29 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <IconFontCppHeaders/IconsLucide.h>
 
+#include "Asset/Asset.h"
 #include "Core/Core.h"
 
 #include "ImGui/Theme.h"
+
+namespace Flameberry::Utils {
+
+	std::string FormatFileSize(uintmax_t sizeBytes)
+	{
+		const char* sizes[] = { "B", "KB", "MB", "GB", "TB" };
+		int order = 0;
+		double size = static_cast<double>(sizeBytes);
+
+		while (size >= 1024.0 && order < 4)
+		{
+			order++;
+			size /= 1024.0;
+		}
+
+		return fmt::format("{:.2f} {}", size, sizes[order]);
+	}
+
+} // namespace Flameberry::Utils
 
 namespace Flameberry::UI {
 
@@ -151,16 +171,12 @@ namespace Flameberry::UI {
 		ImGui::EndTable();
 	}
 
-	// TODO: Call one of 2 functions one for Folder Thumbnail and other for file
+	// TODO: Add display information on Hover
 	bool ContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
 	{
 		std::string filePathStr = filepath.string();
 		const char* filePathCStrID = filePathStr.c_str();
-
-		bool isDirectory = std::filesystem::is_directory(filepath);
-
-		ImGuiStyle& style = ImGui::GetStyle();
-
+		const bool isDirectory = std::filesystem::is_directory(filepath);
 		const auto& specification = thumbnail->GetImageSpecification();
 		const float aspectRatio = (float)specification.Width / (float)specification.Height;
 
@@ -168,20 +184,23 @@ namespace Flameberry::UI {
 		float height = size;
 
 		constexpr float borderThickness = 1.5f;
-
 		const float thumbnailWidth = specification.Width >= specification.Height ? size - 2.0f * borderThickness : height * aspectRatio;
 		const float thumbnailHeight = specification.Width >= specification.Height ? width / aspectRatio : size - 2.0f * borderThickness;
 
+		ImGuiStyle& style = ImGui::GetStyle();
 		const auto& framePadding = style.FramePadding;
 		height += framePadding.y;
 
 		const float textHeight = ImGui::GetTextLineHeightWithSpacing();
 		const float fullWidth = width;
-		const float fullHeight = height + 2 * textHeight;
-
+		const float fullHeight = height + 2 * textHeight + 2 * ImGui::GetStyle().ItemSpacing.y;
 		const auto& cursorPos = ImGui::GetCursorScreenPos();
+
 		bool hovered, held;
-		bool isDoubleClicked = ImGui::ButtonBehavior(ImRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight)), ImGui::GetID(filePathCStrID), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
+		ImRect bb = ImRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight));
+		ImGuiID id = ImGui::GetID(filePathCStrID);
+		bool isDoubleClicked = ImGui::ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
+		ImGui::ItemAdd(bb, id);
 
 		if (!isDirectory)
 		{
@@ -195,6 +214,42 @@ namespace Flameberry::UI {
 			constexpr ImVec2 offset(shadowThickness, shadowThickness);
 			ImGui::GetWindowDrawList()->AddRect(cursorPos + offset, cursorPos + ImVec2(fullWidth, fullHeight) + offset, IM_COL32(25, 25, 25, 255), 3, 0, shadowThickness);
 			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
+		}
+
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+		{
+			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filePathStr.c_str(), (strlen(filePathStr.c_str()) + 1) * sizeof(char), ImGuiCond_Once);
+
+			constexpr float size = 80.0f;
+
+			// Show Asset Preview
+			ImGui::Image((ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
+			ImGui::SameLine();
+			ImGui::Text("%s", filepath.stem().string().c_str());
+
+			ImGui::EndDragDropSource();
+		}
+		else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+		{
+			const std::string assetTypeStr = Utils::AssetTypeEnumToString(Utils::GetAssetTypeFromFileExtension(filepath.extension()));
+			const std::string fileSizeStr = isDirectory ? "N/A" : Utils::FormatFileSize(std::filesystem::file_size(filepath));
+
+			ImGui::BeginTooltip();
+			ImGui::Text("Path: %s", filePathStr.c_str());
+			ImGui::Text("Type: %s", isDirectory ? "Directory" : assetTypeStr.c_str());
+			ImGui::Text("Size: %s", fileSizeStr.c_str());
+			ImGui::EndTooltip();
+		}
+
+		if (ImGui::BeginPopupContextItem(filePathCStrID))
+		{
+			if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete"))
+			{
+				// Add a confirm pop up
+				// std::filesystem::remove(filepath);
+				FBY_LOG("Delete");
+			}
+			ImGui::EndMenu();
 		}
 
 		ImGui::BeginGroup();
@@ -243,30 +298,6 @@ namespace Flameberry::UI {
 
 		ImGui::EndGroup();
 
-		if (ImGui::BeginPopupContextItem(filePathCStrID))
-		{
-			if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete"))
-			{
-				// Add a confirm pop up
-				// std::filesystem::remove(filepath);
-				FBY_LOG("Delete");
-			}
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-		{
-			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filePathStr.c_str(), (strlen(filePathStr.c_str()) + 1) * sizeof(char), ImGuiCond_Once);
-
-			constexpr float size = 80.0f;
-
-			// Show Asset Preview
-			ImGui::Image((ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
-			ImGui::SameLine();
-			ImGui::Text("%s", filepath.stem().string().c_str());
-
-			ImGui::EndDragDropSource();
-		}
 		outItemSize = ImVec2(fullWidth, fullHeight);
 		return isDoubleClicked;
 	}

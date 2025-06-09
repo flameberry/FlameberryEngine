@@ -308,7 +308,7 @@ namespace Flameberry {
 		auto& colors = style.Colors;
 
 		// Headers
-		colors[ImGuiCol_Header] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
+		colors[ImGuiCol_Header] = ImVec4{ 0.225f, 0.225f, 0.225f, 1.0f };
 		colors[ImGuiCol_HeaderHovered] = ImVec4{ 0.3f, 0.305f, 0.31f, 1.0f };
 		colors[ImGuiCol_HeaderActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 
@@ -316,9 +316,8 @@ namespace Flameberry {
 		colors[ImGuiCol_Tab] = Theme::WindowBg;
 		colors[ImGuiCol_TabUnfocused] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
-
 		colors[ImGuiCol_TabHovered] = ImVec4(0.49f, 0.43f, 0.24f, 1.00f);
-		colors[ImGuiCol_TabActive] = ImVec4(52.0f / 255, 51.0f / 255, 39.0f / 255, 1.0f);
+		colors[ImGuiCol_TabActive] = ImVec4(95.0f / 255, 93.0f / 255, 79.0f / 255, 1.0f);
 
 		colors[ImGuiCol_WindowBg] = Theme::WindowBg;
 		colors[ImGuiCol_Border] = Theme::WindowBgDark;
@@ -355,7 +354,8 @@ namespace Flameberry {
 		colors[ImGuiCol_SeparatorActive] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
 
 		colors[ImGuiCol_NavHighlight] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-		colors[ImGuiCol_PopupBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+		// colors[ImGuiCol_PopupBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+		colors[ImGuiCol_PopupBg] = Theme::FrameBg;
 
 		colors[ImGuiCol_DragDropTarget] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
 	}

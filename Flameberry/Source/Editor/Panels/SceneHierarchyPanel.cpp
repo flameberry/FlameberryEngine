@@ -6,6 +6,7 @@
 
 #include "Core/UI.h"
 #include "ECS/Components.h"
+#include "fmt/base.h"
 
 namespace Flameberry {
 
@@ -75,9 +76,11 @@ namespace Flameberry {
 
 			if (ImGui::BeginTable("SceneHierarchyTable", 3, tableFlags))
 			{
+				const std::string label = fmt::format("Entity Label ({} Entities)", m_Context->GetRegistry()->Size());
+
 				ImGui::TableSetupScrollFreeze(3, 1);
 				ImGui::TableSetupColumn(ICON_LC_EYE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::CalcTextSize(ICON_LC_EYE).x);
-				ImGui::TableSetupColumn("Item Label", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
+				ImGui::TableSetupColumn(label.c_str(), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
 				ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::GetWindowWidth() / 4.5f);
 
 				ImGui::TableHeadersRow();
@@ -218,7 +221,7 @@ namespace Flameberry {
 				UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 				UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 				UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
-				UI::ScopedStyleColor textC2(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f }, highlight);
+				UI::ScopedStyleColor textC2(ImGuiCol_Text, Theme::ErrorColor, highlight);
 
 				// Figure out the entity icon to be displayed
 				const char* iconCStr = isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : (isCollectionEntity ? ICON_LC_LIBRARY : ICON_LC_BOX);
@@ -348,7 +351,7 @@ namespace Flameberry {
 				}
 			}
 
-			ImGui::SeparatorText("3D");
+			// ImGui::SeparatorText("3D");
 
 			if (ImGui::MenuItem(ICON_LC_SQUARE "\tEmpty"))
 			{
@@ -374,7 +377,7 @@ namespace Flameberry {
 				m_SelectionContext = entity;
 			}
 
-			ImGui::SeparatorText("Lighting");
+			// ImGui::SeparatorText("Lighting");
 
 			if (ImGui::BeginMenu("Light"))
 			{

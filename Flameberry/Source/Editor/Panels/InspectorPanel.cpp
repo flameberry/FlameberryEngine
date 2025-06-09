@@ -420,13 +420,12 @@ namespace Flameberry {
 									ImGui::TableNextColumn();
 
 									ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f));
-
 									if (ImGui::IsItemClicked())
 										UI::OpenSelectionWidget("##MaterialSelectionWidget");
 
 									if (UI::BeginSelectionWidget("##MaterialSelectionWidget", &m_SearchInputBuffer2))
 									{
-										for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetLoadedAssets()) // TODO: Revisit
+										auto displayMaterialEntry = [&, this](AssetHandle, const Ref<Asset>& asset)
 										{
 											if (asset->GetAssetType() == AssetType::Material)
 											{
@@ -436,13 +435,25 @@ namespace Flameberry {
 												{
 													const int index = Algorithm::KmpSearch(m->GetName().c_str(), m_SearchInputBuffer2.c_str(), true);
 													if (index == -1)
-														continue;
+														return false;
 												}
 
 												if (UI::SelectionWidgetElement(m->GetName().c_str(), m->Handle == mat->Handle))
 													mesh.OverridenMaterialTable[submeshIndex] = m->Handle;
 											}
-										}
+											return true;
+										};
+
+										// Show Loaded Assets
+										for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetLoadedAssets())
+											if (!displayMaterialEntry(handle, asset))
+												continue;
+
+										// Show Memory Only Assets
+										for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetMemoryOnlyAssets())
+											if (!displayMaterialEntry(handle, asset))
+												continue;
+
 										UI::EndSelectionWidget();
 									}
 
