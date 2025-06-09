@@ -7,8 +7,8 @@ namespace Flameberry {
 	class Theme
 	{
 	public:
-		static constexpr ImVec4 AccentColor = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-		static constexpr ImVec4 AccentColorLight = ImVec4(254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f);
+		static constexpr ImVec4 AccentColor = ImVec4(252.0f / 255, 221.0f / 255, 141.0f / 255, 1.0f);
+		static constexpr ImVec4 AccentColorLight = ImVec4(254.0f / 255.0f, 231.0f / 255.0f, 177.0f / 255.0f, 1.0f);
 		static constexpr ImVec4 WindowBgDark = ImVec4(27.0f / 255, 27.0f / 255, 27.0f / 255, 1.00f);
 		static constexpr ImVec4 WindowBg = ImVec4(42.0f / 255, 42.0f / 255, 42.0f / 255, 1.00f);
 		static constexpr ImVec4 TableBorder = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);

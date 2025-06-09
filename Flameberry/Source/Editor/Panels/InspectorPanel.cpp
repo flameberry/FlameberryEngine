@@ -423,7 +423,7 @@ namespace Flameberry {
 									if (ImGui::IsItemClicked())
 										UI::OpenSelectionWidget("##MaterialSelectionWidget");
 
-									if (UI::BeginSelectionWidget("##MaterialSelectionWidget", &m_SearchInputBuffer2))
+									if (UI::BeginSelectionWidget("##MaterialSelectionWidget", "Select Material", &m_SearchInputBuffer2))
 									{
 										auto displayMaterialEntry = [&, this](AssetHandle, const Ref<Asset>& asset)
 										{

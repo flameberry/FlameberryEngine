@@ -37,6 +37,25 @@ static std::vector<std::string> g_IconPaths = {
 
 namespace Flameberry {
 
+	namespace Utils {
+
+		std::string FormatFileSize(uintmax_t sizeBytes)
+		{
+			const char* sizes[] = { "B", "KB", "MB", "GB", "TB" };
+			int order = 0;
+			double size = static_cast<double>(sizeBytes);
+
+			while (size >= 1024.0 && order < 4)
+			{
+				order++;
+				size /= 1024.0;
+			}
+
+			return fmt::format("{:.2f} {}", size, sizes[order]);
+		}
+
+	} // namespace Utils
+
 	ContentBrowserPanel::ContentBrowserPanel()
 		: m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory) // Getting Asset Directory via this method to get the relative path only
 		, m_VkTextureSampler(Texture2D::GetDefaultSampler())
@@ -285,7 +304,7 @@ namespace Flameberry {
 				thumbnail = m_IconTextures[currentIconIndex];
 			}
 
-			if (UI::ContentBrowserItem(filePath, m_ThumbnailSize, thumbnail, itemSize, !isFileSupported) && isDirectory)
+			if (DisplayContentBrowserItem(filePath, m_ThumbnailSize, thumbnail, itemSize, !isFileSupported) && isDirectory)
 				m_CurrentDirectory = directory.path();
 
 			if (ImGui::GetColumnIndex() == columns - 1)
@@ -322,6 +341,136 @@ namespace Flameberry {
 		}
 		ImGui::EndChild();
 		ImGui::End();
+	}
+
+	bool ContentBrowserPanel::DisplayContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
+	{
+		std::string filePathStr = filepath.string();
+		const char* filePathCStrID = filePathStr.c_str();
+		const bool isDirectory = std::filesystem::is_directory(filepath);
+		const auto& specification = thumbnail->GetImageSpecification();
+		const float aspectRatio = (float)specification.Width / (float)specification.Height;
+
+		const float width = size;
+		float height = size;
+
+		constexpr float borderThickness = 1.5f;
+		const float thumbnailWidth = specification.Width >= specification.Height ? size - 2.0f * borderThickness : height * aspectRatio;
+		const float thumbnailHeight = specification.Width >= specification.Height ? width / aspectRatio : size - 2.0f * borderThickness;
+
+		ImGuiStyle& style = ImGui::GetStyle();
+		const auto& framePadding = style.FramePadding;
+		height += framePadding.y;
+
+		const float textHeight = ImGui::GetTextLineHeightWithSpacing();
+		const float fullWidth = width;
+		const float fullHeight = height + 2 * textHeight + 2 * ImGui::GetStyle().ItemSpacing.y;
+		const auto& cursorPos = ImGui::GetCursorScreenPos();
+
+		bool hovered, held;
+		ImRect bb = ImRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight));
+		ImGuiID id = ImGui::GetID(filePathCStrID);
+		bool isDoubleClicked = ImGui::ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
+		ImGui::ItemAdd(bb, id);
+
+		if (!isDirectory)
+		{
+			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
+			ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), cursorPos + ImVec2(fullWidth, fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
+			ImGui::GetWindowDrawList()->AddRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), hovered ? ImGui::ColorConvertFloat4ToU32(Theme::AccentColor) : 0xff000000, 3, 0, borderThickness);
+		}
+		else if (hovered)
+		{
+			constexpr float shadowThickness = 2.0f;
+			constexpr ImVec2 offset(shadowThickness, shadowThickness);
+			ImGui::GetWindowDrawList()->AddRect(cursorPos + offset, cursorPos + ImVec2(fullWidth, fullHeight) + offset, IM_COL32(25, 25, 25, 255), 3, 0, shadowThickness);
+			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
+		}
+
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+		{
+			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filePathStr.c_str(), (strlen(filePathStr.c_str()) + 1) * sizeof(char), ImGuiCond_Once);
+
+			constexpr float size = 80.0f;
+
+			// Show Asset Preview
+			ImGui::Image((ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
+			ImGui::SameLine();
+			ImGui::Text("%s", filepath.stem().string().c_str());
+
+			ImGui::EndDragDropSource();
+		}
+		else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+		{
+			const std::string assetTypeStr = Utils::AssetTypeEnumToString(Utils::GetAssetTypeFromFileExtension(filepath.extension()));
+			const std::string fileSizeStr = isDirectory ? "N/A" : Utils::FormatFileSize(std::filesystem::file_size(filepath));
+
+			ImGui::BeginTooltip();
+			ImGui::Text("Path: %s", filePathStr.c_str());
+			ImGui::Text("Type: %s", isDirectory ? "Directory" : assetTypeStr.c_str());
+			ImGui::Text("Size: %s", fileSizeStr.c_str());
+			ImGui::EndTooltip();
+		}
+
+		if (ImGui::BeginPopupContextItem(filePathCStrID))
+		{
+			if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete"))
+			{
+				// Add a confirm pop up
+				// std::filesystem::remove(filepath);
+				FBY_LOG("Delete");
+			}
+			ImGui::EndMenu();
+		}
+
+		ImGui::BeginGroup();
+
+		const float centerTranslationWidth = width / 2.0f - thumbnailWidth / 2.0f;
+		const float centerTranslationHeight = height / 2.0f - thumbnailHeight / 2.0f;
+
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + centerTranslationWidth - framePadding.x);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + centerTranslationHeight - framePadding.y);
+
+		{
+			UI::ScopedStyleColor button(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+			UI::ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+			UI::ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+
+			ImGui::ImageButton(filePathCStrID, (ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(thumbnailWidth, thumbnailHeight));
+		}
+
+		const auto& filename = keepExtension ? filepath.filename().string() : filepath.stem().string();
+		const auto cursorPosX = ImGui::GetCursorPosX();
+		ImGui::SetCursorPosX(cursorPosX + framePadding.x);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y + centerTranslationHeight);
+
+		const auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
+		const auto aWidth = ImGui::CalcTextSize("a").x;
+		const uint32_t characters = fullWidth / aWidth;
+
+		// Format and align text based on whether the item is a directory or a file
+		if (isDirectory)
+		{
+			if (textWidth > fullWidth)
+				ImGui::Text("%.*s%s", characters, filename.c_str(), "...");
+			else
+			{
+				ImGui::SetCursorPosX(glm::max(cursorPosX + framePadding.x, cursorPosX + (fullWidth - textWidth) * 0.5f));
+				ImGui::Text("%s", filename.c_str());
+			}
+		}
+		else
+		{
+			if (textWidth > 2.0f * fullWidth)
+				ImGui::TextWrapped("%.*s%s", 2 * characters, filename.c_str(), "...");
+			else
+				ImGui::TextWrapped("%s", filename.c_str());
+		}
+
+		ImGui::EndGroup();
+
+		outItemSize = ImVec2(fullWidth, fullHeight);
+		return isDoubleClicked;
 	}
 
 	void ContentBrowserPanel::UI_CurrentPathBar()

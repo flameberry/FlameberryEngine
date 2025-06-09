@@ -1,8 +1,8 @@
 #include "LogPanel.h"
 
+#include <IconFontCppHeaders/IconsLucide.h>
 #include <fmt/chrono.h>
 #include <imgui.h>
-#include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/Algorithm.h"
 #include "Core/UI.h"

@@ -18,6 +18,7 @@ namespace Flameberry {
 		void RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator);
 		bool IsPathInHierarchy(const std::filesystem::path& key, const std::filesystem::path& parent);
 
+		bool DisplayContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension);
 		void UI_CurrentPathBar();
 
 	private:
