@@ -50,7 +50,7 @@ namespace Flameberry {
 
 	void LogPanel::OnUIRender()
 	{
-		ImGui::Begin("Console");
+		ImGui::Begin("Logs");
 
 		DisplayToolbar();
 
@@ -221,6 +221,7 @@ namespace Flameberry {
 		// Column 1: log message text
 		ImGui::TableNextColumn();
 		ImGui::Text("%s", logEntry.Message.c_str());
+		ImGui::SetItemTooltip("%s", logEntry.Message.c_str());
 	}
 
 	void LogPanel::ClearLog()

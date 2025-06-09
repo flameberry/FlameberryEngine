@@ -273,6 +273,7 @@ namespace Flameberry {
 					else if (Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh)
 					{
 						const AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(filePath);
+						if (!handle) m_LogPanel->AddError("Failed to load asset: {}", filePath);
 
 						const FEntity entity = m_ActiveScene->CreateEntityWithTagTransformAndParent(filePath.stem().string(), FEntity::Null);
 
@@ -284,9 +285,15 @@ namespace Flameberry {
 
 						m_SceneHierarchyPanel->SetSelectionContext(entity);
 					}
+					else
+					{
+						m_LogPanel->AddError("Incompatible file (not a scene or mesh source) dropped onto viewport: {}", path);
+					}
 				}
 				else
-					FBY_WARN("Bad File given as Scene!");
+				{
+					m_LogPanel->AddError("Bad file dropped onto viewport: {}", path);
+				}
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -487,7 +494,10 @@ namespace Flameberry {
 	void EditorLayer::SaveScene()
 	{
 		if (!m_EditorScenePath.empty())
+		{
 			SceneSerializer::SerializeSceneToFile(m_EditorScenePath.c_str(), m_ActiveScene);
+			m_LogPanel->AddInfo("Saved scene");
+		}
 		else
 			SaveSceneAs();
 	}
@@ -500,6 +510,7 @@ namespace Flameberry {
 			SceneSerializer::SerializeSceneToFile(savePath.c_str(), m_ActiveScene);
 			m_EditorScenePath = savePath;
 			FBY_LOG("Scene saved to path: {}", savePath);
+			m_LogPanel->AddInfo("Saved scene to file: {}", savePath);
 			return;
 		}
 		FBY_ERROR("Failed to save scene!");
@@ -515,6 +526,7 @@ namespace Flameberry {
 			m_ActiveScene->OnViewportResize(m_ViewportSize);
 
 			FBY_INFO("Loaded Scene: {}", m_EditorScenePath);
+			m_LogPanel->AddInfo("Loaded scene: {}", m_EditorScenePath);
 		}
 	}
 
@@ -545,6 +557,8 @@ namespace Flameberry {
 
 		if (m_EditorState == EditorState::Play)
 			m_ActiveSceneBackUpCopy = nullptr;
+
+		m_LogPanel->AddInfo("Created new scene");
 	}
 
 	void EditorLayer::SetActiveScene(const Ref<Scene>& scene)
@@ -1024,9 +1038,11 @@ namespace Flameberry {
 		{
 			case EditorState::Play:
 				m_ActiveScene->OnStopRuntime();
+				m_LogPanel->AddInfo("Stopped playing scene.");
 				break;
 			case EditorState::Simulate:
 				m_ActiveScene->OnStopSimulation();
+				m_LogPanel->AddInfo("Stopped simulation.");
 				break;
 		}
 
@@ -1053,6 +1069,7 @@ namespace Flameberry {
 		m_ActiveScene->OnStartRuntime();
 
 		m_EditorState = EditorState::Play;
+		m_LogPanel->AddInfo("Playing scene...");
 	}
 
 	void EditorLayer::OnSceneSimulate()
@@ -1070,6 +1087,7 @@ namespace Flameberry {
 		m_ActiveScene->OnStartSimulation();
 
 		m_EditorState = EditorState::Simulate;
+		m_LogPanel->AddInfo("Simulating scene...");
 	}
 
 	void EditorLayer::PrepareMousePickingPass()
