@@ -351,7 +351,7 @@ namespace Flameberry {
 				}
 			}
 
-			// ImGui::SeparatorText("3D");
+			ImGui::SeparatorText("3D");
 
 			if (ImGui::MenuItem(ICON_LC_SQUARE "\tEmpty"))
 			{
@@ -377,7 +377,7 @@ namespace Flameberry {
 				m_SelectionContext = entity;
 			}
 
-			// ImGui::SeparatorText("Lighting");
+			ImGui::SeparatorText("Lighting");
 
 			if (ImGui::BeginMenu("Light"))
 			{
