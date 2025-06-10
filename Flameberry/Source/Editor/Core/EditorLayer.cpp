@@ -12,7 +12,6 @@
 
 #include "Physics/Physics.h"
 #include "Renderer/ShaderLibrary.h"
-#include "Renderer/Skymap.h"
 #include "Scripting/ScriptEngine.h"
 
 namespace Flameberry {
@@ -103,13 +102,6 @@ namespace Flameberry {
 
 		// Reloading all pending Assets
 		ReloadAssemblySafely();
-
-		if (m_ShouldReloadMeshShaders)
-		{
-			VulkanContext::GetCurrentDevice()->WaitIdle();
-			m_SceneRenderer->ReloadMeshShaders();
-			m_ShouldReloadMeshShaders = false;
-		}
 
 		if (m_HasViewportSizeChanged)
 		{
@@ -969,9 +961,12 @@ namespace Flameberry {
 			UI_RendererSettings();
 		if (toggleAssetRegistry)
 			UI_AssetRegistry();
+		m_LogPanel->OnUIRender();
+	}
+
 	void EditorLayer::ReloadAssemblySafely()
-		constexpr auto waitTimeForPendingChanges = 100; // milliseconds
 	{
+		constexpr auto waitTimeForPendingChanges = 100; // milliseconds
 		// Checking to see if we have waited for enough time since the first change in
 		// the file path To ensure we don't reload multiple times during the same
 		// update cycle Where multiple updates are made simultaneously by the C#
@@ -983,10 +978,6 @@ namespace Flameberry {
 
 			ScriptEngine::ReloadAppAssembly();
 		}
-	}
-	}
-
-		m_LogPanel->OnUIRender();
 	}
 
 	void EditorLayer::UI_RendererSettings()

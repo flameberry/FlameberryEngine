@@ -7,8 +7,8 @@
 #include <mono/metadata/attrdefs.h>
 #include <mono/metadata/mono-config.h>
 
-#include <Jolt/Jolt.h>
 // Jolt includes
+#include <Jolt/Jolt.h>
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/TempAllocator.h>
@@ -84,7 +84,7 @@ namespace Flameberry {
 			uint32_t fileSize = 0;
 			char* fileData = ReadBytes(assemblyPath, &fileSize);
 
-			// NOTE: We can't use this image for anything other than loading the assembly
+			// Note: We can't use this image for anything other than loading the assembly
 			// because this image doesn't have a reference to the assembly
 			MonoImageOpenStatus status;
 			MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
@@ -555,6 +555,7 @@ namespace Flameberry {
 			FBY_ASSERT(s_Data->ActiveScene, "InternalCall: Active scene must not be null");
 			s_Data->ActiveScene->GetRegistry()->GetComponent<CapsuleColliderComponent>(entity).Height = height;
 		}
+
 	} // namespace InternalCalls
 
 	void ScriptEngine::Init(const std::filesystem::path& appAssemblyPath)
@@ -677,7 +678,7 @@ namespace Flameberry {
 		mono_domain_set(s_Data->AppDomain, true);
 
 		// Loading Core Mono Assembly
-		s_Data->CoreAssemblyPath = FBY_PROJECT_DIR "Flameberry/Source/Developer/ScriptingAPI/bin/Debug/net7.0/FlameberryScriptCore.dll";
+		s_Data->CoreAssemblyPath = FBY_PROJECT_DIR "Flameberry/Source/Developer/ScriptingInterface/bin/Debug/net7.0/FlameberryScriptCore.dll";
 		s_Data->CoreAssembly = MonoUtils::LoadMonoAssembly(s_Data->CoreAssemblyPath);
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 	}

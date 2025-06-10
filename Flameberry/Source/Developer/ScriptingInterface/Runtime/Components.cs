@@ -346,6 +346,7 @@ namespace Flameberry
 
     public class SphereColliderComponent : Component
     {
+        // Note: Radius can't be modified because it won't affect the runtime
         public float Radius
         {
             get
@@ -364,6 +365,7 @@ namespace Flameberry
 
     public class CapsuleColliderComponent : Component
     {
+        // Note: Collider properities can't be modified because it won't affect the runtime
         public AxisType Axis
         {
             get
@@ -371,10 +373,10 @@ namespace Flameberry
                 InternalCalls.CapsuleColliderComponent_GetAxisType(Actor.ID, out AxisType axisType);
                 return axisType;
             }
-            set
-            {
-                InternalCalls.CapsuleColliderComponent_SetAxisType(Actor.ID, ref value);
-            }
+            // set
+            // {
+            //     InternalCalls.CapsuleColliderComponent_SetAxisType(Actor.ID, ref value);
+            // }
         }
 
         public float Radius
@@ -384,10 +386,10 @@ namespace Flameberry
                 InternalCalls.CapsuleColliderComponent_GetRadius(Actor.ID, out float radius);
                 return radius;
             }
-            set
-            {
-                InternalCalls.CapsuleColliderComponent_SetRadius(Actor.ID, ref value);
-            }
+            // set
+            // {
+            //     InternalCalls.CapsuleColliderComponent_SetRadius(Actor.ID, ref value);
+            // }
         }
 
         public float Height
@@ -397,10 +399,10 @@ namespace Flameberry
                 InternalCalls.CapsuleColliderComponent_GetHeight(Actor.ID, out float height);
                 return height;
             }
-            set
-            {
-                InternalCalls.CapsuleColliderComponent_SetHeight(Actor.ID, ref value);
-            }
+            // set
+            // {
+            //     InternalCalls.CapsuleColliderComponent_SetHeight(Actor.ID, ref value);
+            // }
         }
     }
 }

@@ -539,7 +539,7 @@ namespace Flameberry {
 						if (ImGui::IsItemClicked())
 							UI::OpenSelectionWidget("##ScriptActorClasses");
 
-						if (UI::BeginSelectionWidget("##ScriptActorClasses", &m_SearchInputBuffer1))
+						if (UI::BeginSelectionWidget("##ScriptActorClasses", "Select Class", &m_SearchInputBuffer1))
 						{
 							for (const auto& [actorClassName, _] : actorClasses)
 							{
