@@ -34,7 +34,7 @@ namespace Flameberry {
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		m_Window = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Title, nullptr, nullptr);
+		m_Window = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Title.c_str(), nullptr, nullptr);
 		FBY_ASSERT(m_Window, "GLFW window is null!");
 		FBY_INFO("Created GLFW window of title '{}' and dimensions ({}, {})", m_Specification.Title, m_Specification.Width, m_Specification.Height);
 	}
@@ -150,11 +150,11 @@ namespace Flameberry {
 		m_Specification.Height = height;
 	}
 
-	void VulkanWindow::SetTitle(const char* title)
+	void VulkanWindow::SetTitle(const std::string& title)
 	{
 		m_Specification.Title = title;
 		if (m_Specification.NativeTitlebar)
-			glfwSetWindowTitle(m_Window, m_Specification.Title);
+			glfwSetWindowTitle(m_Window, m_Specification.Title.c_str());
 		else
 			Platform::TitlebarNative::SetPrimaryTitle(m_Specification.Title);
 	}

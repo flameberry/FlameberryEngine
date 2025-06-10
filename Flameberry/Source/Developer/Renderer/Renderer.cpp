@@ -31,6 +31,11 @@ namespace Flameberry {
 
 	void Renderer::Init()
 	{
+		// Check the amount of maximum storage images are allowed
+		VkPhysicalDeviceProperties properties = VulkanContext::GetPhysicalDeviceProperties();
+		FBY_INFO("Maximum Descriptor Sets that can be bound: {}", properties.limits.maxBoundDescriptorSets);
+		FBY_INFO("Maximum Descriptor Set Storage Images: {}", properties.limits.maxDescriptorSetStorageImages);
+
 		// Create the generic texture descriptor layout
 		Texture2D::InitStaticResources();
 		Skymap::Init();

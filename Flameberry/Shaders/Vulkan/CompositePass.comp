@@ -1,0 +1,19 @@
+#version 450
+
+layout(set = 0, binding = 0, rgba16f) uniform image2D _FBY_u_TargetImage;
+
+layout(push_constant) uniform CompositionSettings {
+	float GammaCorrectionFactor, Exposure;
+} u_CompositionSettings;
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+#include "Include/HDRCommon.glsl"
+
+void main()
+{
+	vec4 color = imageLoad(_FBY_u_TargetImage, ivec2(gl_GlobalInvocationID.xy));
+	color.rgb = AcesFilmicToneMapWithExposure(color.rgb, u_CompositionSettings.Exposure);
+	color.rgb = pow(color.rgb, vec3(1.0f / u_CompositionSettings.GammaCorrectionFactor));
+	imageStore(_FBY_u_TargetImage, ivec2(gl_GlobalInvocationID.xy), color);
+}

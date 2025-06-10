@@ -70,6 +70,7 @@ namespace Flameberry {
 
 		out << YAML::Key << "Roughness" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Roughness");
 		out << YAML::Key << "Metallic" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Metallic");
+		out << YAML::Key << "EmissiveFactor" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_EmissiveFactor");
 		out << YAML::Key << "UseAlbedoMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAlbedoMap");
 		out << YAML::Key << "AlbedoMap" << YAML::Value << materialAsset->m_AlbedoMap;
 		out << YAML::Key << "UseNormalMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseNormalMap");
@@ -94,18 +95,19 @@ namespace Flameberry {
 
 		const YAML::Node data = YAML::Load(ss.str());
 		const YAML::Node root = data["Material"];
-        
-        if (!root)
+
+		if (!root)
 		{
-            FBY_ERROR("Failed to load Flameberry Material from path: {}", path);
-            return nullptr;
-        }
+			FBY_ERROR("Failed to load Flameberry Material from path: {}", path);
+			return nullptr;
+		}
 
 		Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>(root["Name"].as<std::string>());
 
 		materialAsset->SetAlbedo(root["Albedo"].as<glm::vec3>());
 		materialAsset->SetRoughness(root["Roughness"].as<float>());
 		materialAsset->SetMetallic(root["Metallic"].as<float>());
+		materialAsset->SetEmissiveFactor(root["EmissiveFactor"].as<float>());
 
 		materialAsset->SetUseAlbedoMap(root["UseAlbedoMap"].as<bool>());
 		materialAsset->SetUseNormalMap(root["UseNormalMap"].as<bool>());
@@ -114,7 +116,7 @@ namespace Flameberry {
 		materialAsset->SetUseMetallicMap(root["UseMetallicMap"].as<bool>());
 
 		// TODO: Batch update the descriptor set of `m_MaterialRef`
-        if (auto mapHandle = root["AlbedoMap"].as<AssetHandle>(); AssetManager::IsAssetHandleValid(mapHandle))
+		if (auto mapHandle = root["AlbedoMap"].as<AssetHandle>(); AssetManager::IsAssetHandleValid(mapHandle))
 			materialAsset->SetAlbedoMap(mapHandle);
 
 		if (auto mapHandle = root["NormalMap"].as<AssetHandle>(); AssetManager::IsAssetHandleValid(mapHandle))

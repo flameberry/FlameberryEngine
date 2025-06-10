@@ -18,7 +18,7 @@ endif()
 exclude_from_list(SRC_FILES ${EXCLUDE_FILES})
 
 add_library(Flameberry STATIC ${SRC_FILES} ${FBY_DEPENDENCY_SOURCE})
-target_compile_features(Flameberry PUBLIC cxx_std_17)
+target_compile_features(Flameberry PUBLIC cxx_std_20)
 
 add_dependencies(Flameberry CompileShadersTarget)
 

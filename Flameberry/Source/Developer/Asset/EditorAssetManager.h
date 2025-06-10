@@ -25,6 +25,7 @@ namespace Flameberry {
 
 		const AssetRegistry& GetAssetRegistry() const { return m_AssetRegistry; }
 		const AssetMap& GetLoadedAssets() const { return m_LoadedAssets; }
+		const AssetMap& GetMemoryOnlyAssets() const { return m_MemoryOnlyAssets; }
 		const AssetMetadata& GetAssetMetadata(AssetHandle handle) const { return m_AssetRegistry.at(handle); }
 
 		void SerializeAssetRegistry();

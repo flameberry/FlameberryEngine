@@ -16,6 +16,7 @@ layout(location = 0) out vec4 o_FragColor;
 #include "Include/poisson.glsl"
 
 #include "Include/CubemapCommon.glsl"
+#include "Include/HDRCommon.glsl"
 
 const mat4 g_BiasMatrix = mat4(
         0.5, 0.0, 0.0, 0.0,
@@ -89,6 +90,7 @@ layout(push_constant) uniform MeshData {
     layout(offset = 64) vec3 u_Albedo;
     float u_Roughness;
     float u_Metallic;
+    float u_EmissiveFactor;
 
     uint u_UseAlbedoMap, u_UseNormalMap, u_UseRoughnessMap, u_UseAmbientMap, u_UseMetallicMap;
 };
@@ -492,12 +494,8 @@ void main()
     vec3 normal = GetPixelNormal();
     vec3 intermediateColor = PBR_TotalLight(normal);
 
-    // HDR tone mapping
-    intermediateColor = ToneMapWithExposure(intermediateColor, u_SceneData.SceneRendererSettings.Exposure);
-
-    // Gamma correction
-    if (u_SceneData.SceneRendererSettings.GammaCorrectionFactor != 1.0f)
-        intermediateColor = pow(intermediateColor, vec3(1.0f / u_SceneData.SceneRendererSettings.GammaCorrectionFactor));
+    // Emissive Material
+    intermediateColor += GetPixelColor() * u_EmissiveFactor;
 
     o_FragColor = vec4(intermediateColor, 1.0f);
 

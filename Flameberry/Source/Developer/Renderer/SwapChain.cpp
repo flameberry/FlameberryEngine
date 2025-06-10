@@ -1,10 +1,12 @@
 #include "SwapChain.h"
 
+#include <algorithm>
+
+#include "Core/Assert.h"
 #include "VulkanDebug.h"
 
 #include "RenderCommand.h"
 #include "VulkanContext.h"
-#include "Image.h"
 
 namespace Flameberry {
 
@@ -29,10 +31,14 @@ namespace Flameberry {
 		m_VkSwapChainImageFormat = vk_surface_format.format;
 		m_VkSwapChainExtent2D = vk_extent_2d;
 
-		uint32_t imageCount = vk_swap_chain_details.SurfaceCapabilities.minImageCount + 1;
+		const uint32_t minImageCount = vk_swap_chain_details.SurfaceCapabilities.minImageCount;
+		const uint32_t maxImageCount = vk_swap_chain_details.SurfaceCapabilities.maxImageCount;
 
-		if ((vk_swap_chain_details.SurfaceCapabilities.maxImageCount > 0) && (imageCount > vk_swap_chain_details.SurfaceCapabilities.maxImageCount))
-			imageCount = vk_swap_chain_details.SurfaceCapabilities.maxImageCount;
+		// Check if the MAX_FRAMES_IN_FLIGHT value is within bounds
+		FBY_ASSERT(MAX_FRAMES_IN_FLIGHT >= minImageCount && MAX_FRAMES_IN_FLIGHT <= maxImageCount, "Frames-in-flight requested ({}) must be within the range: [{} , {}]", MAX_FRAMES_IN_FLIGHT, minImageCount, maxImageCount);
+
+		// Upper limit is set by keeping in mind, that when maxImageCount is 0 => there is no upper bound
+		const uint32_t imageCount = std::clamp(MAX_FRAMES_IN_FLIGHT, minImageCount, maxImageCount > 0 ? maxImageCount : MAX_FRAMES_IN_FLIGHT);
 
 		VkSwapchainCreateInfoKHR vulkanSwapchainCreateInfo{};
 		vulkanSwapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -140,7 +146,7 @@ namespace Flameberry {
 		const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
 		return RenderCommand::GetSupportedFormat(
 			physicalDevice,
-			{ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT },
+			{ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT },
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 	}
@@ -202,9 +208,10 @@ namespace Flameberry {
 
 	VkSurfaceFormatKHR SwapChain::SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats)
 	{
+		// VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_B8G8R8A8_UNORM
 		for (const auto& format : available_formats)
 		{
-			if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+			if (format.format == VK_FORMAT_R16G16B16A16_SFLOAT && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 				return format;
 		}
 		// Implement choosing of the next best format after UNORM R8B8G8A8 format

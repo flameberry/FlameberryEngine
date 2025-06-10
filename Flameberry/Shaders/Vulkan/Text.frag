@@ -7,7 +7,8 @@ layout(location = 0) out vec4 o_FragColor;
 
 layout(set = 1, binding = 0) uniform sampler2D u_FontAtlasSampler;
 
-float median(float r, float g, float b) {
+float median(float r, float g, float b)
+{
     return max(min(r, g), min(max(r, g), b));
 }
 

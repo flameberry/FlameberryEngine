@@ -5,8 +5,6 @@
 #include <unordered_map>
 #include <vulkan/vulkan.h>
 
-#include "Core/UUID.h"
-
 #include "Image.h"
 #include "DescriptorSet.h"
 #include "Asset/Asset.h"

@@ -24,7 +24,18 @@ namespace Flameberry {
 		void OnUpdateSimulation(float delta);
 		void OnStopSimulation();
 
+		void Step(int steps) { m_StepFrames = steps; }
+		bool IsRuntimeActive() const { return m_IsRuntimeActive; }
+		bool IsRuntimePaused() const { return m_IsRuntimePaused; }
+		void SetRuntimePaused(bool value) { m_IsRuntimePaused = value; }
+
 		void OnViewportResize(const glm::vec2& viewportSize);
+
+		/**
+		 * Traverses through the entire entity hierarchy tree
+		 * and updates the transforms only if the dirty flag is set
+		 */
+		void OnUpdateTransformHierarchy();
 
 		FEntity CreateEntityWithTagAndParent(const std::string& tag, FEntity parent);
 		FEntity CreateEntityWithTagTransformAndParent(const std::string& tag, FEntity parent);
@@ -35,12 +46,6 @@ namespace Flameberry {
 		FEntity DuplicatePureEntity(FEntity src);
 		FEntity DuplicateEntityTree(FEntity src);
 
-		bool IsRuntimeActive() const { return m_IsRuntimeActive; }
-		bool IsRuntimePaused() const { return m_IsRuntimePaused; }
-
-		void SetRuntimePaused(bool value) { m_IsRuntimePaused = value; }
-		void Step(int steps) { m_StepFrames = steps; }
-
 		inline std::string GetName() const { return m_Name; }
 		inline Ref<FRegistry> GetRegistry() const { return m_Registry; }
 		inline FEntity GetWorldEntity() const { return m_WorldEntity; }
@@ -50,6 +55,12 @@ namespace Flameberry {
 		FBY_DECLARE_ASSET_TYPE(AssetType::Scene);
 
 	private:
+		/**
+		 * Traverses through the provided entity hierarchy tree
+		 * and updates the transforms only if the dirty flag is set
+		 */
+		void UpdateTransformHierarchy(FEntity entity, const glm::mat4& parentTransform, bool lazyUpdate);
+
 		/**
 		 * Creates an entity as a child of the given parent
 		 * If parent is null, entity will be created with the world entity being it's parent

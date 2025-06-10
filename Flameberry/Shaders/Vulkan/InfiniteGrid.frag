@@ -66,16 +66,16 @@ void main()
     const vec2 axesLineWidth = vec2(0.02);
     vec2 lineWidth = vec2(0.01);
     vec2 lineWidth2 = vec2(0.02);
-    vec3 baseGridColor = vec3(0.2);
+    vec3 baseGridColor = vec3(0.1);
 
     if (abs(fragPos3D.x) <= axesLineWidth.x)
     {
-        baseGridColor.r = 1.0;
+        baseGridColor.rgb = vec3(1, 0.05, 0.05);
         lineWidth = axesLineWidth;
     }
     if (abs(fragPos3D.z) <= axesLineWidth.y)
     {
-        baseGridColor.z = 1.0;
+        baseGridColor.rgb = vec3(0.05, 0.05, 1);
         lineWidth = axesLineWidth;
     }
 

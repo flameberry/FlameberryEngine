@@ -33,8 +33,10 @@ namespace Flameberry {
 		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;	// Enable Docking
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+
 		// io.ConfigViewportsNoAutoMerge = true;
 		// io.ConfigViewportsNoTaskBarIcon = true;
+		io.ConfigDebugHighlightIdConflicts = false;
 
 		ImFontConfig config{};
 
@@ -42,7 +44,8 @@ namespace Flameberry {
 		constexpr float DPI_SCALE = 2.0f;
 
 		config.OversampleH = 3;
-		config.GlyphExtraSpacing = ImVec2(1.4f, 0.62f);
+		// config.GlyphExtraSpacing = ImVec2(1.4f, 0.62f);
+		config.GlyphExtraAdvanceX = 1.4f;
 		config.RasterizerMultiply = 1.1f;
 		config.OversampleV = 3;
 #else
@@ -170,8 +173,7 @@ namespace Flameberry {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		// ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-		ImGui::DockSpaceOverViewport();
+		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
 	}
 
 	void ImGuiLayer::End()
@@ -298,61 +300,62 @@ namespace Flameberry {
 		style.PopupRounding = 3;
 		style.CellPadding = ImVec2(8, 7);
 		style.ScrollbarSize = 12;
-		// style.DockingSeparatorSize = 3;
+		style.DockingSeparatorSize = 2;
 		style.WindowMenuButtonPosition = ImGuiDir_Left;
-		style.TabBorderSize = 0;
+		style.TabBarBorderSize = 0;
+		style.TabBarOverlineSize = 0;
 
 		auto& colors = style.Colors;
 
 		// Headers
-		colors[ImGuiCol_Header] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
+		colors[ImGuiCol_Header] = ImVec4{ 0.225f, 0.225f, 0.225f, 1.0f };
 		colors[ImGuiCol_HeaderHovered] = ImVec4{ 0.3f, 0.305f, 0.31f, 1.0f };
 		colors[ImGuiCol_HeaderActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 
 		// Tabs
-		colors[ImGuiCol_Tab] = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-		// colors[ImGuiCol_TabHovered] = ImVec4{ 0.3f, 0.305f, 0.31f, 1.0f };
-		// colors[ImGuiCol_TabActive] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
+		colors[ImGuiCol_Tab] = Theme::WindowBg;
 		colors[ImGuiCol_TabUnfocused] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
-
 		colors[ImGuiCol_TabHovered] = ImVec4(0.49f, 0.43f, 0.24f, 1.00f);
-		colors[ImGuiCol_TabActive] = ImVec4(0.31f, 0.28f, 0.23f, 1.00f);
+		colors[ImGuiCol_TabActive] = ImVec4(95.0f / 255, 93.0f / 255, 79.0f / 255, 1.0f);
 
-		// colors[ImGuiCol_WindowBg] = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
-		colors[ImGuiCol_WindowBg] = Theme::WindowBgGrey;
-		colors[ImGuiCol_Border] = Theme::WindowBg;
+		colors[ImGuiCol_WindowBg] = Theme::WindowBg;
+		colors[ImGuiCol_Border] = Theme::WindowBgDark;
 
 		// Frame
-		colors[ImGuiCol_FrameBg] = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
+		colors[ImGuiCol_FrameBg] = ImVec4(0.015f, 0.015f, 0.015f, 1.0f);
 		colors[ImGuiCol_FrameBgHovered] = ImVec4{ 0.11f, 0.11f, 0.11f, 1.0f };
 		colors[ImGuiCol_FrameBgActive] = ImVec4{ 0.08f, 0.08f, 0.08f, 1.0f };
 
-		// colors[ImGuiCol_TitleBg] = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
-		colors[ImGuiCol_TitleBg] = Theme::WindowBg;
+		colors[ImGuiCol_TitleBg] = Theme::ImGuiTitleBg;
 		colors[ImGuiCol_TitleBgActive] = colors[ImGuiCol_TitleBg];
 		colors[ImGuiCol_TitleBgCollapsed] = colors[ImGuiCol_TitleBg];
 
 		colors[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
-		colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.0f, 1.0f, 1.0f, 16.0f / 255.0f);
+		colors[ImGuiCol_TableRowBg] = ImVec4(39.0f / 255, 39.0f / 255.0f, 39.0f / 255, 1.0f);
+		colors[ImGuiCol_TableRowBgAlt] = ImVec4(47.0f / 255, 47.0f / 255.0f, 47.0f / 255, 1.0f);
+		colors[ImGuiCol_TableHeaderBg] = ImVec4(53.0f / 255, 53.0f / 255.0f, 53.0f / 255, 1.0f);
+
 		colors[ImGuiCol_TableBorderLight] = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
 		colors[ImGuiCol_TableBorderStrong] = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
 
 		// Button
-		colors[ImGuiCol_Button] = ImVec4{ 0.2f, 0.2f, 0.2f, 1.0f };
+		colors[ImGuiCol_Button] = Theme::FrameBg;
 		colors[ImGuiCol_ButtonHovered] = ImVec4{ 0.3f, 0.3f, 0.3f, 1.0f };
 		colors[ImGuiCol_ButtonActive] = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
 
-		colors[ImGuiCol_CheckMark] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-		colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-		colors[ImGuiCol_ResizeGripActive] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
+		colors[ImGuiCol_CheckMark] = Theme::AccentColor;
+		colors[ImGuiCol_ResizeGrip] = Theme::AccentColor;
+		colors[ImGuiCol_ResizeGripHovered] = Theme::AccentColor;
+		colors[ImGuiCol_ResizeGripActive] = Theme::AccentColor;
 
 		colors[ImGuiCol_Separator] = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
 		colors[ImGuiCol_SeparatorHovered] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
 		colors[ImGuiCol_SeparatorActive] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
 
 		colors[ImGuiCol_NavHighlight] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-		colors[ImGuiCol_PopupBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+		// colors[ImGuiCol_PopupBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+		colors[ImGuiCol_PopupBg] = Theme::FrameBg;
 
 		colors[ImGuiCol_DragDropTarget] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
 	}

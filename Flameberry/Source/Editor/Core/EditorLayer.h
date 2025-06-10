@@ -1,13 +1,10 @@
 #pragma once
 
-#include "Flameberry.h"
-
 #include <FileWatch/FileWatch.hpp>
-
+#include "Panels/LogPanel.h"
+#include "Core/UI.h"
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
-#include "Panels/InspectorPanel.h"
-#include "Core/UI.h"
 
 namespace Flameberry {
 
@@ -30,12 +27,13 @@ namespace Flameberry {
 		void OnEvent(Event& e) override;
 		void OnDestroy() override;
 
+	private:
 		void OnKeyPressedEvent(KeyPressedEvent& e);
 		void OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
 		void OnMouseScrolledEvent(MouseScrollEvent& e);
 
+		void PrepareMousePickingPass();
 		void InvalidateViewportImGuiDescriptorSet(uint32_t index) const;
-		void InvalidateCompositePassImGuiDescriptorSet(uint32_t index) const;
 
 		void OpenProject();
 		void OpenProject(const std::string& path);
@@ -53,10 +51,10 @@ namespace Flameberry {
 
 		void UI_Menubar();
 		void UI_Toolbar();
-		void UI_CompositeView();
 		void UI_RendererSettings();
 		void UI_AssetRegistry();
-		void UI_GizmoOverlay(const ImVec2& workPos);
+		void UI_GizmoControls();
+		void UI_GizmoModeOverlay(const ImVec2& workPos);
 		void UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize);
 		void UI_ViewportSettingsOverlay(const ImVec2& workPos, const ImVec2& workSize);
 		void UI_BottomPanel();
@@ -70,9 +68,6 @@ namespace Flameberry {
 
 	private:
 		EditorCameraController m_ActiveCameraController;
-
-		// Test
-		bool m_ShouldReloadMeshShaders = false;
 
 		// Scalars
 		EditorState m_EditorState = EditorState::Edit;
@@ -102,16 +97,15 @@ namespace Flameberry {
 		Ref<Scene> m_ActiveScene, m_ActiveSceneBackUpCopy;
 
 		std::vector<VkDescriptorSet> m_ViewportDescriptorSets;
-		std::vector<VkDescriptorSet> m_CompositePassViewportDescriptorSets;
 
 		// UI
 		Ref<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Ref<ContentBrowserPanel> m_ContentBrowserPanel;
+		Ref<LogPanel> m_LogPanel;
 
 		// Mouse Picking
 		Unique<Buffer> m_MousePickingBuffer;
 		Ref<RenderPass> m_MousePickingRenderPass;
-
 		Ref<Pipeline> m_MousePickingPipeline, m_MousePicking2DPipeline;
 		Ref<DescriptorSetLayout> m_MousePickingDescriptorSetLayout;
 

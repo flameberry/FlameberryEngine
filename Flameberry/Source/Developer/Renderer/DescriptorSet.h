@@ -7,6 +7,7 @@
 #include "Core/Core.h"
 
 namespace Flameberry {
+
 	class DescriptorPool
 	{
 	public:
@@ -70,4 +71,5 @@ namespace Flameberry {
 		DescriptorSetSpecification m_Specification;
 		VkDescriptorSet m_DescriptorSet;
 	};
+
 } // namespace Flameberry

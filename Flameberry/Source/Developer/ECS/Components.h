@@ -9,7 +9,6 @@
 #include "ecs.hpp"
 #include "Asset/Asset.h"
 #include "Renderer/GenericCamera.h"
-#include "Renderer/Font.h"
 #include "Actor.h"
 
 namespace Flameberry {
@@ -24,16 +23,28 @@ namespace Flameberry {
 
 	struct TransformComponent
 	{
-		glm::vec3 Translation, Rotation, Scale;
+		glm::vec3 Translation, Rotation, Scale; // Local Transform Variables
+		glm::mat4 GlobalTransform;
+		bool DirtyFlag = true;
 
 		TransformComponent()
 			: Translation(0.0f), Rotation(0.0f), Scale(1.0f) {}
 
-		glm::mat4 CalculateTransform() const
+		glm::mat4 CalculateLocalTransform() const
 		{
 			return glm::translate(glm::mat4(1.0f), Translation)
 				* glm::toMat4(glm::quat(Rotation))
 				* glm::scale(glm::mat4(1.0f), Scale);
+		}
+
+		void CalcAndCacheGlobalTransform(const glm::mat4& globalTransform)
+		{
+			const glm::mat4& localTransform = glm::translate(glm::mat4(1.0f), Translation)
+				* glm::toMat4(glm::quat(Rotation))
+				* glm::scale(glm::mat4(1.0f), Scale);
+
+			GlobalTransform = globalTransform * localTransform;
+			DirtyFlag = false;
 		}
 	};
 
@@ -201,8 +212,11 @@ namespace Flameberry {
 		AssetHandle Font = 0;
 
 		glm::vec3 Color{ 1.0f };
-		float Kerning;
-		float LineSpacing;
+
+		// For showing up in the bloom pipeline
+		float EmissiveFactor = 0.0f;
+
+		float Kerning, LineSpacing;
 	};
 
 	template <typename... Component>

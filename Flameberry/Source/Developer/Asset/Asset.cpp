@@ -54,6 +54,7 @@ namespace Flameberry {
 				return AssetType::Skymap;
 			if (typeStr == "Font")
 				return AssetType::Font;
+			return AssetType::None;
 		}
 
 		std::string AssetTypeEnumToString(AssetType assetType)
@@ -72,6 +73,8 @@ namespace Flameberry {
 					return "Skymap";
 				case AssetType::Font:
 					return "Font";
+				case AssetType::None:
+					return "None";
 			}
 		}
 

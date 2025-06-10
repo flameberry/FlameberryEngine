@@ -3,7 +3,9 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
+#include "Core/Core.h"
 #include "Image.h"
+#include "vulkan/vulkan_core.h"
 
 namespace Flameberry {
 
@@ -49,11 +51,12 @@ namespace Flameberry {
 		void OnResize(uint32_t width, uint32_t height, VkRenderPass renderPass);
 
 		FramebufferSpecification GetSpecification() const { return m_FramebufferSpec; }
-		VkFramebuffer GetVulkanFramebuffer() const { return m_VkFramebuffer; }
+		VkFramebuffer GetVulkanFramebuffer() const { return m_VulkanFramebuffer; }
 
 		Ref<Image> GetColorAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[attachmentIndex]; }
 		Ref<Image> GetColorResolveAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[m_DepthAttachmentIndex + 1 + attachmentIndex]; }
-		Ref<Image> GetDepthAttachment() const { return m_FramebufferImages[m_DepthAttachmentIndex]; }
+		Ref<Image> GetDepthAndOrStencilAttachment() const { return m_FramebufferImages[m_DepthAttachmentIndex]; }
+		VkImageView GetStencilAttachmentImageView() const { return m_StencilAttachmentImageView; }
 
 		void SetClearColorValue(const VkClearColorValue& value) { m_FramebufferSpec.ClearColorValue = value; }
 
@@ -65,7 +68,10 @@ namespace Flameberry {
 		uint32_t m_DepthAttachmentIndex = -1;
 
 		FramebufferSpecification m_FramebufferSpec;
-		VkFramebuffer m_VkFramebuffer = VK_NULL_HANDLE;
+		VkFramebuffer m_VulkanFramebuffer = VK_NULL_HANDLE;
+
+		// Experiemntal
+		VkImageView m_StencilAttachmentImageView = VK_NULL_HANDLE;
 	};
 
 } // namespace Flameberry

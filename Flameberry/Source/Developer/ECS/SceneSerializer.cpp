@@ -6,10 +6,6 @@
 #include "Core/Timer.h"
 #include "Components.h"
 
-#include "Asset/AssetManager.h"
-#include "Asset/EditorAssetManager.h"
-#include "Asset/Importers/MeshImporter.h"
-#include "Renderer/MaterialAsset.h"
 #include "Renderer/GenericCamera.h"
 #include "Renderer/Skymap.h"
 #include "Scripting/ScriptEngine.h"
@@ -241,6 +237,7 @@ namespace Flameberry {
 					textComp.TextString = text["TextString"].as<std::string>();
 					textComp.Font = text["Font"].as<AssetHandle>();
 					textComp.Color = text["Color"].as<glm::vec3>();
+					textComp.EmissiveFactor = text["EmissiveFactor"].as<float>();
 					textComp.Kerning = text["Kerning"].as<float>();
 					textComp.LineSpacing = text["LineSpacing"].as<float>();
 				}
@@ -532,6 +529,7 @@ namespace Flameberry {
 			out << YAML::Key << "TextString" << YAML::Value << text.TextString;
 			out << YAML::Key << "Font" << YAML::Value << text.Font;
 			out << YAML::Key << "Color" << YAML::Value << text.Color;
+			out << YAML::Key << "EmissiveFactor" << YAML::Value << text.EmissiveFactor;
 			out << YAML::Key << "Kerning" << YAML::Value << text.Kerning;
 			out << YAML::Key << "LineSpacing" << YAML::Value << text.LineSpacing;
 			out << YAML::EndMap; // Text Component

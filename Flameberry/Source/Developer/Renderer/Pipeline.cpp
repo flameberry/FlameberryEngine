@@ -119,9 +119,7 @@ namespace Flameberry {
 					VkPushConstantRange{
 						(VkShaderStageFlags)specification.VulkanShaderStage,
 						specification.Offset,
-						specification.Size 
-					}
-				);
+						specification.Size });
 				pcOffsetToIndex[specification.Offset] = (uint32_t)outPushConstantRanges.size() - 1;
 			}
 		}
@@ -401,15 +399,6 @@ namespace Flameberry {
 		vk_graphics_pipeline_create_info.basePipelineIndex = -1;
 
 		VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_GraphicsPipeline));
-	}
-
-	void Pipeline::ReloadShaders()
-	{
-		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		vkDestroyPipeline(device, m_GraphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
-
-		CreatePipeline();
 	}
 
 	Pipeline::~Pipeline()

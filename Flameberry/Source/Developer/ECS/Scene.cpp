@@ -17,10 +17,12 @@
 #include <Jolt/Physics/Body/MassProperties.h>
 
 #include "Core/Assert.h"
+#include "Core/Log.h"
 #include "Core/Profiler.h"
 #include "Components.h"
 
 #include "ECS/ecs.hpp"
+#include "Math/Math.h"
 #include "Physics/Physics.h"
 #include "Physics/InterfaceImpls.h"
 #include "Scripting/ScriptEngine.h"
@@ -37,6 +39,7 @@ namespace Flameberry {
 		m_WorldEntity = m_Registry->CreateEntity();
 		m_Registry->EmplaceComponent<IDComponent>(m_WorldEntity);
 		m_Registry->EmplaceComponent<TagComponent>(m_WorldEntity, "World");
+		m_Registry->EmplaceComponent<RelationshipComponent>(m_WorldEntity);
 	}
 
 	Scene::Scene(const Ref<Scene>& other)
@@ -113,6 +116,7 @@ namespace Flameberry {
 
 		OnPhysicsSimulate(delta);
 		ScriptEngine::OnRuntimeUpdate(delta);
+		OnUpdateTransformHierarchy();
 	}
 
 	void Scene::OnStartSimulation()
@@ -128,6 +132,7 @@ namespace Flameberry {
 			return;
 
 		OnPhysicsSimulate(delta);
+		OnUpdateTransformHierarchy();
 	}
 
 	void Scene::OnStopSimulation()
@@ -243,6 +248,7 @@ namespace Flameberry {
 
 			transform.Translation = { position.GetX(), position.GetY(), position.GetZ() };
 			transform.Rotation = glm::eulerAngles(glm::quat(quat.GetW(), quat.GetX(), quat.GetY(), quat.GetZ()));
+			transform.DirtyFlag = true;
 		}
 	}
 
@@ -283,12 +289,33 @@ namespace Flameberry {
 	FEntity Scene::GetPrimaryCameraEntity() const
 	{
 		for (auto entity : m_Registry->Group<CameraComponent>())
-		{
-			auto& cameraComp = m_Registry->GetComponent<CameraComponent>(entity);
-			if (cameraComp.IsPrimary)
+			if (auto& cameraComp = m_Registry->GetComponent<CameraComponent>(entity); cameraComp.IsPrimary)
 				return entity;
-		}
+
 		return {};
+	}
+
+	void Scene::UpdateTransformHierarchy(FEntity entity, const glm::mat4& parentTransform, bool lazyUpdate)
+	{
+		if (entity == FEntity::Null)
+			return;
+
+		// Update Transform if dirty
+		TransformComponent* transform = nullptr;
+		bool isDirty = false;
+
+		if ((transform = m_Registry->TryGetComponent<TransformComponent>(entity)) && (!lazyUpdate || (isDirty = transform->DirtyFlag)))
+			transform->CalcAndCacheGlobalTransform(parentTransform);
+
+		if (auto* relation = m_Registry->TryGetComponent<RelationshipComponent>(entity))
+			for (FEntity it = relation->FirstChild; it != FEntity::Null; it = m_Registry->GetComponent<RelationshipComponent>(it).NextSibling)
+				UpdateTransformHierarchy(it, transform ? transform->GlobalTransform : glm::mat4(1.0f), !isDirty);
+	}
+
+	void Scene::OnUpdateTransformHierarchy()
+	{
+		FBY_PROFILE_SCOPE("UpdateTransformHierarchy");
+		UpdateTransformHierarchy(m_WorldEntity, glm::mat4(1.0f), true);
 	}
 
 	FEntity Scene::CreateEntityWithParent(FEntity parent)
@@ -393,14 +420,6 @@ namespace Flameberry {
 		if (IsEntityInHierarchy(destParent, entity))
 			return;
 
-		// TODO: Shouldn't all entities have RelationshipComponent? As they all are children of WorldEntity
-		if (!m_Registry->HasComponent<RelationshipComponent>(entity))
-			m_Registry->EmplaceComponent<RelationshipComponent>(entity);
-
-		// TODO: Shouldn't all entities have RelationshipComponent? As they all are children of WorldEntity
-		if (!m_Registry->HasComponent<RelationshipComponent>(destParent))
-			m_Registry->EmplaceComponent<RelationshipComponent>(destParent);
-
 		auto& relation = m_Registry->GetComponent<RelationshipComponent>(entity);
 		const auto oldParent = relation.Parent;
 
@@ -427,6 +446,33 @@ namespace Flameberry {
 		if (relation.NextSibling != FEntity::Null)
 			m_Registry->GetComponent<RelationshipComponent>(relation.NextSibling).PrevSibling = entity;
 		newParentRel.FirstChild = entity;
+
+		// Updating Transform --------------------------------------------------------------------------------------
+		if (auto* transform = m_Registry->TryGetComponent<TransformComponent>(entity))
+		{
+			OnUpdateTransformHierarchy();
+
+			glm::vec3 translation, rotation, scale;
+			Math::DecomposeTransform(transform->GlobalTransform, translation, rotation, scale);
+
+			if (auto* parentTransform = m_Registry->TryGetComponent<TransformComponent>(destParent))
+			{
+				glm::vec3 parentTranslation, parentRotation, parentScale;
+				Math::DecomposeTransform(parentTransform->GlobalTransform, parentTranslation, parentRotation, parentScale);
+
+				transform->Translation = translation - parentTranslation;
+				transform->Rotation = rotation - parentRotation;
+				transform->Scale = scale / parentScale;
+			}
+			else
+			{
+				transform->Translation = translation;
+				transform->Rotation = rotation;
+				transform->Scale = scale;
+			}
+
+			transform->DirtyFlag = true;
+		}
 	}
 
 	bool Scene::Recursive_IsEntityInHierarchy(FEntity key, FEntity parent)

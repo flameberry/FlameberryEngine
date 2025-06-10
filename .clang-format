@@ -10,7 +10,8 @@ AlignTrailingComments: true
 AllowShortBlocksOnASingleLine: Empty
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
-AllowShortLambdasOnASingleLine: None
+AllowShortLambdasOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Always
 BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true

@@ -1,5 +1,6 @@
 #include "ThumbnailCache.h"
 
+#include "Asset/Asset.h"
 #include "Asset/Importers/TextureImporter.h"
 
 namespace Flameberry {
@@ -21,8 +22,10 @@ namespace Flameberry {
 				return cachedThumbnail.Image;
 		}
 
-		// TODO: Expand the number of extensions
-		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame || (assetPath.extension() != ".png" && assetPath.extension() != ".jpg" && assetPath.extension() != ".hdr" && assetPath.extension() != ".tga"))
+		AssetType type;
+
+		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame
+			|| (type = Utils::GetAssetTypeFromFileExtension(assetPath.extension()), type != AssetType::Texture2D && type != AssetType::Skymap))
 			return nullptr;
 
 		const auto thumbnail = std::static_pointer_cast<Texture2D>(TextureImporter::LoadTexture2DResized(assetPath, 128, 128, false));

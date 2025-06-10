@@ -4,9 +4,7 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <IconFontCppHeaders/IconsLucide.h>
-
-#include "Core/Core.h"
-#include "Core/Algorithm.h"
+#include <fmt/format.h>
 
 #include "ImGui/Theme.h"
 
@@ -54,9 +52,24 @@ namespace Flameberry::UI {
 		return ImGui::Button(label, size);
 	}
 
-	void InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint)
+	void AlignedText(const char* text, float alignment)
 	{
-		ScopedStyleColor borderColor(ImGuiCol_Border, IM_COL32(70, 70, 70, 255));
+		const ImGuiStyle& style = ImGui::GetStyle();
+		const ImVec2 size = ImGui::CalcTextSize(text);
+
+		const float width = size.x ? size.x : ImGui::CalcTextSize(text).x + style.FramePadding.x * 2.0f;
+		const float avail = ImGui::GetContentRegionAvail().x;
+
+		const float off = (avail - width) * alignment;
+		if (off > 0.0f)
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+
+		ImGui::Text("%s", text);
+	}
+
+	void InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint, bool focused)
+	{
+		ScopedStyleColor borderColor(ImGuiCol_Border, ImGui::ColorConvertFloat4ToU32(Theme::AccentColor), focused);
 		ScopedStyleVariable frameRounding(ImGuiStyleVar_FrameRounding, 4);
 		ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0.5f);
 
@@ -73,10 +86,8 @@ namespace Flameberry::UI {
 		g_UIState.IsSelectionWidgetJustOpened = true;
 	}
 
-	bool BeginSelectionWidget(const char* label, std::string* inputBuffer)
+	bool BeginSelectionWidget(const char* label, const char* title, std::string* inputBuffer)
 	{
-		ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(2, 2));
-
 		const std::string labelFmt = fmt::format("{}Popup", label);
 
 		if (ImGui::BeginPopup(labelFmt.c_str()))
@@ -87,17 +98,17 @@ namespace Flameberry::UI {
 				g_UIState.IsSelectionWidgetJustOpened = false;
 			}
 
+			UI::AlignedText(title, 0.5f);
 			{
 				ScopedStyleColor borderColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, g_UIState.IsSelectionWidgetSearchBoxFocused);
 				ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1.0f, g_UIState.IsSelectionWidgetSearchBoxFocused);
 
 				const std::string inputBoxLabel = fmt::format("{}SearchBar", label);
-
 				InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, ICON_LC_SEARCH " Search...");
 			}
 
 			g_UIState.IsSelectionWidgetSearchBoxFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
-			g_UIState.HasSelectionWidgetListBoxBegun = ImGui::BeginListBox("##ScriptActorClassesListBox");
+			g_UIState.HasSelectionWidgetListBoxBegun = ImGui::BeginListBox(labelFmt.c_str());
 
 			return true;
 		}
@@ -114,7 +125,6 @@ namespace Flameberry::UI {
 
 		if (isSelected)
 			ImGui::SetItemDefaultFocus();
-
 		return false;
 	}
 
@@ -152,125 +162,7 @@ namespace Flameberry::UI {
 		ImGui::EndTable();
 	}
 
-	// TODO: Call one of 2 functions one for Folder Thumbnail and other for file
-	bool ContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
-	{
-		std::string filePathStr = filepath.string();
-		const char* filePathCStr = filePathStr.c_str();
-
-		bool isDirectory = std::filesystem::is_directory(filepath);
-
-		ImGuiStyle& style = ImGui::GetStyle();
-
-		const auto& specification = thumbnail->GetImageSpecification();
-		const float aspectRatio = (float)specification.Width / (float)specification.Height;
-
-		const float width = size;
-		float height = size;
-
-		constexpr float borderThickness = 1.5f;
-
-		const float thumbnailWidth = specification.Width >= specification.Height ? size - 2.0f * borderThickness : height * aspectRatio;
-		const float thumbnailHeight = specification.Width >= specification.Height ? width / aspectRatio : size - 2.0f * borderThickness;
-
-		const auto& framePadding = style.FramePadding;
-		height += framePadding.y;
-
-		const float textHeight = ImGui::GetTextLineHeightWithSpacing();
-		const float fullWidth = width;
-		const float fullHeight = height + 2 * textHeight;
-
-		const auto& cursorPos = ImGui::GetCursorScreenPos();
-		bool hovered, held;
-		bool isDoubleClicked = ImGui::ButtonBehavior(ImRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight)), ImGui::GetID(filepath.c_str()), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
-
-		if (!isDirectory)
-		{
-			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
-			ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), cursorPos + ImVec2(fullWidth, fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
-			ImGui::GetWindowDrawList()->AddRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), hovered ? ImGui::ColorConvertFloat4ToU32(Theme::AccentColor) : 0xff000000, 3, 0, borderThickness);
-		}
-		else if (hovered)
-		{
-			constexpr float shadowThickness = 2.0f;
-			constexpr ImVec2 offset(shadowThickness, shadowThickness);
-			ImGui::GetWindowDrawList()->AddRect(cursorPos + offset, cursorPos + ImVec2(fullWidth, fullHeight) + offset, IM_COL32(25, 25, 25, 255), 3, 0, shadowThickness);
-			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
-		}
-
-		ImGui::BeginGroup();
-
-		const float centerTranslationWidth = width / 2.0f - thumbnailWidth / 2.0f;
-		const float centerTranslationHeight = height / 2.0f - thumbnailHeight / 2.0f;
-
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + centerTranslationWidth - framePadding.x);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + centerTranslationHeight - framePadding.y);
-
-		{
-			ScopedStyleColor button(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
-
-			ImGui::Image(reinterpret_cast<ImTextureID>(thumbnail->CreateOrGetDescriptorSet()), ImVec2(thumbnailWidth, thumbnailHeight));
-		}
-
-		const auto& filename = keepExtension ? filepath.filename().string() : filepath.stem().string();
-		const auto cursorPosX = ImGui::GetCursorPosX();
-		ImGui::SetCursorPosX(cursorPosX + framePadding.x);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y + centerTranslationHeight);
-
-		const auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
-		const auto aWidth = ImGui::CalcTextSize("a").x;
-		const uint32_t characters = fullWidth / aWidth;
-
-		// Format and align text based on whether the item is a directory or a file
-		if (isDirectory)
-		{
-			if (textWidth > fullWidth)
-				ImGui::Text("%.*s%s", characters, filename.c_str(), "...");
-			else
-			{
-				ImGui::SetCursorPosX(glm::max(cursorPosX + framePadding.x, cursorPosX + (fullWidth - textWidth) * 0.5f));
-				ImGui::Text("%s", filename.c_str());
-			}
-		}
-		else
-		{
-			if (textWidth > 2.0f * fullWidth)
-				ImGui::TextWrapped("%.*s%s", 2 * characters, filename.c_str(), "...");
-			else
-				ImGui::TextWrapped("%s", filename.c_str());
-		}
-
-		ImGui::EndGroup();
-
-		if (ImGui::BeginPopupContextItem(filePathCStr))
-		{
-			if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete"))
-			{
-				// Add a confirm pop up
-				// std::filesystem::remove(filepath);
-				FBY_LOG("Delete");
-			}
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-		{
-			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filePathCStr, (strlen(filePathCStr) + 1) * sizeof(char), ImGuiCond_Once);
-
-			constexpr float size = 80.0f;
-
-			// Show Asset Preview
-			ImGui::Image((ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
-			ImGui::SameLine();
-			ImGui::Text("%s", filepath.stem().string().c_str());
-
-			ImGui::EndDragDropSource();
-		}
-		outItemSize = ImVec2(fullWidth, fullHeight);
-		return isDoubleClicked;
-	}
+	// TODO: Add display information on Hover
 
 	bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled)
 	{
@@ -314,8 +206,9 @@ namespace Flameberry::UI {
 		return isDoubleClicked;
 	}
 
-	void Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)
+	bool Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)
 	{
+		bool isEdited = false;
 		ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0);
 
 		float lineHeight = ImGui::GetTextLineHeight() + 2.0f * ImGui::GetStyle().FramePadding.y;
@@ -332,11 +225,15 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
 
 			if (ImGui::Button("##X_Button", buttonSize))
+			{
 				value.x = defaultValue;
+				isEdited = true;
+			}
 		}
 
 		ImGui::SameLine();
 		ImGui::DragFloat("##X", &value.x, dragSpeed, 0.0f, 0.0f, "%.2f");
+		isEdited |= ImGui::IsItemEdited();
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -346,11 +243,15 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
 
 			if (ImGui::Button("##Y_Button", buttonSize))
+			{
 				value.y = defaultValue;
+				isEdited = true;
+			}
 		}
 
 		ImGui::SameLine();
 		ImGui::DragFloat("##Y", &value.y, dragSpeed, 0.0f, 0.0f, "%.2f");
+		isEdited |= ImGui::IsItemEdited();
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -360,14 +261,20 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
 
 			if (ImGui::Button("##Z_Button", buttonSize))
+			{
 				value.z = defaultValue;
+				isEdited = true;
+			}
 		}
 
 		ImGui::SameLine();
 		ImGui::DragFloat("##Z", &value.z, dragSpeed, 0.0f, 0.0f, "%.2f");
+		isEdited |= ImGui::IsItemEdited();
 		ImGui::PopItemWidth();
 
 		ImGui::PopID();
+
+		return isEdited;
 	}
 
 	//////////////////////////////////////////// Scoped UI Utilities ////////////////////////////////////////////

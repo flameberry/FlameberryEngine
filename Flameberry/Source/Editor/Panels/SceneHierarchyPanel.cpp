@@ -6,6 +6,7 @@
 
 #include "Core/UI.h"
 #include "ECS/Components.h"
+#include "fmt/base.h"
 
 namespace Flameberry {
 
@@ -22,7 +23,7 @@ namespace Flameberry {
 	{
 		{
 			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-			UI::ScopedStyleColor windowBg(ImGuiCol_WindowBg, Theme::WindowBgGrey);
+			UI::ScopedStyleColor windowBg(ImGuiCol_WindowBg, Theme::WindowBg);
 
 			ImGui::Begin("Scene Hierarchy");
 		}
@@ -46,15 +47,9 @@ namespace Flameberry {
 
 		{
 			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 4));
-			UI::ScopedStyleColor childBg(ImGuiCol_ChildBg, Theme::WindowBg);
+			UI::ScopedStyleColor childBg(ImGuiCol_ChildBg, Theme::WindowBgDark);
 
 			ImGui::BeginChild("##EntityList", ImVec2(-1, -1), 0, ImGuiWindowFlags_AlwaysUseWindowPadding);
-		}
-
-		if (ImGui::BeginPopupContextWindow((const char*)nullptr, m_PopupFlags))
-		{
-			DisplayCreateEntityMenu();
-			ImGui::EndPopup();
 		}
 
 		ImRect windowRect(ImGui::GetWindowPos(), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y));
@@ -81,9 +76,11 @@ namespace Flameberry {
 
 			if (ImGui::BeginTable("SceneHierarchyTable", 3, tableFlags))
 			{
+				const std::string label = fmt::format("Label ({} Entities)", m_Context->GetRegistry()->Size());
+
 				ImGui::TableSetupScrollFreeze(3, 1);
 				ImGui::TableSetupColumn(ICON_LC_EYE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::CalcTextSize(ICON_LC_EYE).x);
-				ImGui::TableSetupColumn("Item Label", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
+				ImGui::TableSetupColumn(label.c_str(), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
 				ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::GetWindowWidth() / 4.5f);
 
 				ImGui::TableHeadersRow();
@@ -99,8 +96,16 @@ namespace Flameberry {
 			}
 		}
 
+		// Deselect all entities when left-clicked on blank space
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
 			m_SelectionContext = FEntity::Null;
+
+		// Open popup when right-clicked on blank space
+		if (ImGui::BeginPopupContextItem("CreateEntityNodeContextMenu", m_PopupFlags))
+		{
+			DisplayCreateEntityMenu(m_Context->GetWorldEntity());
+			ImGui::EndPopup();
+		}
 
 		ImGui::EndChild();
 		ImGui::End();
@@ -216,7 +221,7 @@ namespace Flameberry {
 				UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 				UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 				UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
-				UI::ScopedStyleColor textC2(ImGuiCol_Text, ImVec4{ 1.0f, 0.236f, 0.0f, 1.0f }, highlight);
+				UI::ScopedStyleColor textC2(ImGuiCol_Text, Theme::ErrorColor, highlight);
 
 				// Figure out the entity icon to be displayed
 				const char* iconCStr = isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : (isCollectionEntity ? ICON_LC_LIBRARY : ICON_LC_BOX);
@@ -336,11 +341,14 @@ namespace Flameberry {
 
 		if (ImGui::BeginMenu(ICON_LC_PLUS "\tCreate"))
 		{
-			if (ImGui::MenuItem(ICON_LC_LIBRARY "\tCollection"))
+			if (parent == m_Context->GetWorldEntity())
 			{
-				const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", collectionCount), parent);
-				m_SelectionContext = entity;
-				collectionCount++;
+				if (ImGui::MenuItem(ICON_LC_LIBRARY "\tCollection"))
+				{
+					const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", collectionCount), parent);
+					m_SelectionContext = entity;
+					collectionCount++;
+				}
 			}
 
 			ImGui::SeparatorText("3D");

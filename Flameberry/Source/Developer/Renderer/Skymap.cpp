@@ -14,6 +14,7 @@
 #include "Renderer/Texture2D.h"
 #include "Renderer/VulkanDebug.h"
 #include "Renderer/Material.h"
+#include "vulkan/vulkan_core.h"
 
 namespace Flameberry {
 
@@ -89,14 +90,14 @@ namespace Flameberry {
 		// Calculate the number of mip levels based upon the image dimensions
 		// Each mip will represent a roughness level that we will calculate the prefiltered map for
 		const uint32_t mipLevels = static_cast<uint32_t>(floor(log2(width / 4))) + 1;
-		// const uint32_t mipLevels = 8;
 
 		// Creation of the destination cubemap where our main skymap will be stored
 		{
 			ImageSpecification imageSpec;
 			imageSpec.Width = width / 4;  // Questionable
 			imageSpec.Height = width / 4; // Questionable
-			imageSpec.Format = VK_FORMAT_R32G32B32A32_SFLOAT;
+			// Explore VK_FORMAT_B10G11R11_UFLOAT_PACK32 && VK_FORMAT_R32G32B32A32_SFLOAT && VK_FORMAT_R16G16B16A16_SFLOAT
+			imageSpec.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
 			// 6 Layers for 6 faces
 			imageSpec.ArrayLayers = 6;
 			imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
@@ -125,7 +126,8 @@ namespace Flameberry {
 			ImageSpecification imageSpec;
 			imageSpec.Width = width / 4;  // Questionable
 			imageSpec.Height = width / 4; // Questionable
-			imageSpec.Format = VK_FORMAT_R32G32B32A32_SFLOAT;
+			// Explore VK_FORMAT_B10G11R11_UFLOAT_PACK32 && VK_FORMAT_R32G32B32A32_SFLOAT && VK_FORMAT_R16G16B16A16_SFLOAT
+			imageSpec.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
 			imageSpec.ArrayLayers = 6;
 			imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 			imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -147,7 +149,8 @@ namespace Flameberry {
 			ImageSpecification imageSpec;
 			imageSpec.Width = width / 4;  // Questionable
 			imageSpec.Height = width / 4; // Questionable
-			imageSpec.Format = VK_FORMAT_R32G32B32A32_SFLOAT;
+			// Explore VK_FORMAT_B10G11R11_UFLOAT_PACK32 && VK_FORMAT_R32G32B32A32_SFLOAT && VK_FORMAT_R16G16B16A16_SFLOAT
+			imageSpec.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
 			imageSpec.ArrayLayers = 6;
 			imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 			imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -238,7 +241,6 @@ namespace Flameberry {
 		Ref<DescriptorSet> cubemapGenerationDescriptorSet;
 		{
 			ComputePipelineSpecification pipelineSpec;
-			// TODO: Should this be moved into ShaderLibrary?
 			pipelineSpec.Shader = ShaderLibrary::Get("HDRToCubemap");
 			cubemapGenerationPipeline = CreateRef<ComputePipeline>(pipelineSpec);
 

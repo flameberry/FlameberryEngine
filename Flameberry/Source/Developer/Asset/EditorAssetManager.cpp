@@ -59,12 +59,13 @@ namespace Flameberry {
 		else
 		{
 			// 4. Load Asset if not already loaded
-			asset = AssetImporter::ImportAsset(handle, metadata);
+			if ((asset = AssetImporter::ImportAsset(handle, metadata)))
+			{
+				// Set the already known AssetHandle for this asset
+				asset->Handle = handle;
 
-			// Set the already known AssetHandle for this asset
-			asset->Handle = handle;
-
-			m_LoadedAssets[asset->Handle] = asset;
+				m_LoadedAssets[asset->Handle] = asset;
+			}
 		}
 
 		// 5. Return the loaded asset
