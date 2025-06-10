@@ -13,7 +13,7 @@
 
 enum FileTypeIndex
 {
-	DEFAULT = 2,
+	DEFAULT = 0,
 	FOLDER,
 	BERRY,
 	OBJ,
@@ -23,8 +23,6 @@ enum FileTypeIndex
 };
 
 static std::vector<std::string> g_IconPaths = {
-	FBY_PROJECT_DIR "Flameberry/Assets/Icons/ArrowBackIcon.png",
-	FBY_PROJECT_DIR "Flameberry/Assets/Icons/ArrowNextIcon.png",
 	FBY_PROJECT_DIR "Flameberry/Assets/Icons/FileIconDefault.png",
 	FBY_PROJECT_DIR "Flameberry/Assets/Icons/FolderIconYellow.png",
 	FBY_PROJECT_DIR "Flameberry/Assets/Icons/FileIconBerry.png",
@@ -32,7 +30,6 @@ static std::vector<std::string> g_IconPaths = {
 	FBY_PROJECT_DIR "Flameberry/Assets/Icons/FileIconGLTF.png",
 	FBY_PROJECT_DIR "Flameberry/Assets/Icons/FileIconFBX.png",
 	FBY_PROJECT_DIR "Flameberry/Assets/Icons/FileIconFBMAT.png",
-	FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon.png"
 };
 
 namespace Flameberry {
@@ -196,20 +193,15 @@ namespace Flameberry {
 
 		constexpr float arrowSize = 14.0f;
 
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-
-		if (ImGui::ImageButton("##BackArrow", (ImTextureID)m_IconTextures[FBY_BACK_ARROW_ICON]->CreateOrGetDescriptorSet(), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
+		if (ImGui::Button(ICON_LC_ARROW_LEFT) && m_CurrentDirectory != "Content")
 			m_CurrentDirectory = m_CurrentDirectory.parent_path();
-		ImGui::SameLine(0.0f, 0.0f);
-		if (ImGui::ImageButton("##ForwardArrow", (ImTextureID)m_IconTextures[FBY_FORWARD_ARROW_ICON]->CreateOrGetDescriptorSet(), ImVec2{ arrowSize, arrowSize }) && m_CurrentDirectory != "Content")
-			m_CurrentDirectory = m_CurrentDirectory.parent_path();
-
 		ImGui::SameLine();
 
-		{
-			UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
-		}
+		if (ImGui::Button(ICON_LC_ARROW_RIGHT) && m_CurrentDirectory != "Content")
+			m_CurrentDirectory = m_CurrentDirectory.parent_path();
+		ImGui::SameLine();
 
+		UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
 		m_IsSearchBoxFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
 
 		ImGui::SameLine();
@@ -222,10 +214,7 @@ namespace Flameberry {
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(ImGui::GetWindowSize().x - totalIconWidth);
 
-		ImGui::ImageButton("##ContentBrowserPanelSettingsButton", reinterpret_cast<ImTextureID>(m_IconTextures[FBY_SETTINGS_ICON]->CreateOrGetDescriptorSet()), ImVec2(arrowSize, arrowSize), ImVec2(0, 0), ImVec2(1.0f, 1.0f));
-
-		ImGui::PopStyleColor();
-
+		ImGui::Button(ICON_LC_SETTINGS);
 		if (ImGui::IsItemClicked())
 			ImGui::OpenPopup("##ContentBrowserPanelSettingsPopup");
 
@@ -403,7 +392,7 @@ namespace Flameberry {
 		else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
 		{
 			const std::string assetTypeStr = Utils::AssetTypeEnumToString(Utils::GetAssetTypeFromFileExtension(filepath.extension()));
-			const std::string fileSizeStr = isDirectory ? "N/A" : Utils::FormatFileSize(std::filesystem::file_size(filepath));
+			const std::string fileSizeStr = isDirectory ? "-/-" : Utils::FormatFileSize(std::filesystem::file_size(filepath));
 
 			ImGui::BeginTooltip();
 			ImGui::Text("Path: %s", filePathStr.c_str());

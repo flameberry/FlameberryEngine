@@ -76,7 +76,7 @@ namespace Flameberry {
 
 			if (ImGui::BeginTable("SceneHierarchyTable", 3, tableFlags))
 			{
-				const std::string label = fmt::format("Entity Label ({} Entities)", m_Context->GetRegistry()->Size());
+				const std::string label = fmt::format("Label ({} Entities)", m_Context->GetRegistry()->Size());
 
 				ImGui::TableSetupScrollFreeze(3, 1);
 				ImGui::TableSetupColumn(ICON_LC_EYE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::CalcTextSize(ICON_LC_EYE).x);
