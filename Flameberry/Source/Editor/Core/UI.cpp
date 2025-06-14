@@ -6,6 +6,7 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 #include <fmt/format.h>
 
+#include "Core/Log.h"
 #include "ImGui/Theme.h"
 
 namespace Flameberry::UI {
@@ -67,15 +68,45 @@ namespace Flameberry::UI {
 		ImGui::Text("%s", text);
 	}
 
-	void InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint, bool focused)
+	bool InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint, bool focused)
 	{
-		ScopedStyleColor borderColor(ImGuiCol_Border, ImGui::ColorConvertFloat4ToU32(Theme::AccentColor), focused);
-		ScopedStyleVariable frameRounding(ImGuiStyleVar_FrameRounding, 4);
-		ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0.5f);
+		ScopedStyleColor buttonColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+		ScopedStyleColor buttonHoverColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+		ScopedStyleColor buttonActiveColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+
+		constexpr ImGuiInputTextFlags flags = ImGuiInputTextFlags_AutoSelectAll;
 
 		ImGui::PushItemWidth(width);
-		ImGui::InputTextWithHint(label, inputHint, inputBuffer);
+		// Get current cursor position and input box size
+		bool isActive = false;
+		ImVec2 inputPos = ImGui::GetCursorScreenPos();
+		ImVec2 inputSize = ImVec2(width, ImGui::GetFrameHeight());
+		{
+			ScopedStyleColor borderColor(ImGuiCol_Border, ImGui::ColorConvertFloat4ToU32(Theme::AccentColor), focused);
+			ScopedStyleVariable frameRounding(ImGuiStyleVar_FrameRounding, 4);
+			ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0.5f);
+
+			// Allow overlap for the upcoming button
+			ImGui::SetNextItemAllowOverlap();
+			ImGui::InputTextWithHint(label, inputHint, inputBuffer, flags);
+			isActive = ImGui::IsItemActive() || ImGui::IsItemFocused();
+		}
 		ImGui::PopItemWidth();
+
+		// Only show the clear button if there is text
+		if (!inputBuffer->empty())
+		{
+			ImGui::SameLine(0.0f, 0.0f);
+			ImGui::SetCursorScreenPos(ImVec2(inputPos.x + width - inputSize.y, inputPos.y));
+
+			ImGui::Button(ICON_LC_X, ImVec2(inputSize.y, inputSize.y));
+			if (ImGui::IsItemClicked())
+			{
+				inputBuffer->clear();
+				ImGui::SetKeyboardFocusHere(-1);
+			}
+		}
+		return isActive;
 	}
 
 	void OpenSelectionWidget(const char* label)
@@ -104,10 +135,8 @@ namespace Flameberry::UI {
 				ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1.0f, g_UIState.IsSelectionWidgetSearchBoxFocused);
 
 				const std::string inputBoxLabel = fmt::format("{}SearchBar", label);
-				InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, ICON_LC_SEARCH " Search...");
+				g_UIState.IsSelectionWidgetSearchBoxFocused = InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, ICON_LC_SEARCH " Search...");
 			}
-
-			g_UIState.IsSelectionWidgetSearchBoxFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
 			g_UIState.HasSelectionWidgetListBoxBegun = ImGui::BeginListBox(labelFmt.c_str());
 
 			return true;

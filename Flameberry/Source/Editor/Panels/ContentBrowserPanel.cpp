@@ -201,8 +201,7 @@ namespace Flameberry {
 			m_CurrentDirectory = m_CurrentDirectory.parent_path();
 		ImGui::SameLine();
 
-		UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
-		m_IsSearchBoxFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
+		m_IsSearchBoxFocused = UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
 
 		ImGui::SameLine();
 

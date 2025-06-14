@@ -19,3 +19,5 @@
 	#define FBY_INTERNAL_DO_ON_ASSERT(x, ...)
 	#define FBY_ASSERT(x, ...)
 #endif
+
+#define FBY_UNREACHABLE() FBY_ASSERT(0, "This control path must be unreachable.")

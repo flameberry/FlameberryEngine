@@ -40,10 +40,8 @@ namespace Flameberry {
 			UI::ScopedStyleColor borderColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, m_IsSearchBarFocused);
 			UI::ScopedStyleColor frameBg(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
 
-			UI::InputBox("##SceneHierarchySearchBar", width, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
+			m_IsSearchBarFocused = UI::InputBox("##SceneHierarchySearchBar", width, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
 		}
-
-		m_IsSearchBarFocused = ImGui::IsItemActive() && ImGui::IsItemFocused();
 
 		{
 			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 4));

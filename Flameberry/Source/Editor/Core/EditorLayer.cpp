@@ -6,6 +6,7 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Core/Assert.h"
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
 #include "Core/UI.h"
@@ -355,6 +356,8 @@ namespace Flameberry {
 				break;
 			case EventType::None:
 				break;
+			default:
+				break;
 		}
 
 		if (m_DidViewportBegin && m_IsViewportHovered)
@@ -458,6 +461,8 @@ namespace Flameberry {
 				break;
 			case KeyCode::Escape:
 				m_SceneHierarchyPanel->SetSelectionContext(FEntity::Null);
+				break;
+			default:
 				break;
 		}
 	}
@@ -624,6 +629,8 @@ namespace Flameberry {
 			case EditorState::Play:
 				ImGui::ImageButton("ScenePlayButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(0.5f, 1.0f), ImVec4(0, 0, 0, 0), Theme::AccentColor);
 				break;
+			default:
+				FBY_UNREACHABLE();
 		}
 
 		if (ImGui::IsItemClicked() && m_EditorState == EditorState::Edit)
@@ -639,6 +646,8 @@ namespace Flameberry {
 			case EditorState::Play:
 				ImGui::ImageButton("SceneStopButton", reinterpret_cast<ImTextureID>(m_PlayAndStopIcon->CreateOrGetDescriptorSet()), ImVec2(buttonSize, buttonSize), ImVec2(0.5f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0, 0, 0, 0), ImVec4(1, 0, 0, 1));
 				break;
+			default:
+				FBY_UNREACHABLE();
 		}
 
 		if (ImGui::IsItemClicked() && m_EditorState == EditorState::Play)
@@ -732,7 +741,7 @@ namespace Flameberry {
 		window_pos.x = workPos.x + s_OverlayPadding;
 		window_pos.y = workPos.y + s_OverlayPadding;
 
-		UI_Overlay("##GizmoOverlay", window_pos, [=]()
+		UI_Overlay("##GizmoOverlay", window_pos, [=, this]()
 			{
 				if (ImGui::ImageButton("SelectModeButton", reinterpret_cast<ImTextureID>(m_CursorIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), m_GizmoType == -1 ? Theme::AccentColor : ImVec4(1, 1, 1, 1)))
 				{
@@ -774,7 +783,7 @@ namespace Flameberry {
 				break;
 		}
 
-		UI_Overlay("##ToolbarOverlay", window_pos, [=]()
+		UI_Overlay("##ToolbarOverlay", window_pos, [=, this]()
 			{
 				switch (m_EditorState)
 				{
@@ -859,7 +868,7 @@ namespace Flameberry {
 		window_pos.x = workPos.x + workSize.x - 1.5f * s_OverlayPadding - 2 * s_OverlayButtonSize.x;
 		window_pos.y = workPos.y + s_OverlayPadding;
 
-		UI_Overlay("##ViewportSettingsOverlay", window_pos, [=]()
+		UI_Overlay("##ViewportSettingsOverlay", window_pos, [=, this]()
 			{
 				ImGui::ImageButton("##ViewportSettingsButton", reinterpret_cast<ImTextureID>(m_SettingsIcon->CreateOrGetDescriptorSet()), s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1.0f, 1.0f));
 
@@ -1000,8 +1009,8 @@ namespace Flameberry {
 				ImGui::EndTabItem();
 			}
 			ImGui::EndTabBar();
-			ImGui::PopStyleVar();
 		}
+		ImGui::PopStyleVar();
 		ImGui::End();
 	}
 
@@ -1044,6 +1053,8 @@ namespace Flameberry {
 				m_ActiveScene->OnStopSimulation();
 				m_LogPanel->AddInfo("Stopped simulation.");
 				break;
+			default:
+				FBY_UNREACHABLE();
 		}
 
 		// Delete the m_RuntimeScene

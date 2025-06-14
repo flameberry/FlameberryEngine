@@ -96,7 +96,13 @@ namespace Flameberry {
             [nativeWindow setTitlebarAppearsTransparent:YES];
             nativeWindow.titleVisibility = NSWindowTitleHidden;
             
-            NSWindowStyleMask windowMask = NSWindowStyleMaskFullSizeContentView | NSWindowStyleMaskBorderless | NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
+            NSWindowStyleMask windowMask = NSWindowStyleMaskFullSizeContentView
+				| NSWindowStyleMaskBorderless
+				| NSWindowStyleMaskTitled 
+				| NSWindowStyleMaskClosable 
+				| NSWindowStyleMaskMiniaturizable 
+				| NSWindowStyleMaskResizable;
+
             [nativeWindow setStyleMask: windowMask];
             
             // This line is a 'hack' to shift the traffic lights down to match the bigger custom title bar size
