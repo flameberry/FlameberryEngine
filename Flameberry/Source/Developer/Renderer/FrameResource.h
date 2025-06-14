@@ -22,7 +22,7 @@ namespace Flameberry {
 		{
 			return m_Replicas[index];
 		}
-		
+
 		inline const Ref<TResource>& operator[](int index) const
 		{
 			return m_Replicas[index];

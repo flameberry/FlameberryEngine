@@ -1,5 +1,6 @@
 # Mac Specific
 .DS_Store
+./format.sh
 
 # CMake Output Directories
 bin/

@@ -129,7 +129,7 @@ namespace Flameberry {
 			ImGui::SameLine();
 			if (ImGui::Button("..."))
 			{
-                if (const std::string directoryPath = Platform::OpenFolder(); !directoryPath.empty())
+				if (const std::string directoryPath = Platform::OpenFolder(); !directoryPath.empty())
 					m_ProjectPathBuffer = directoryPath;
 			}
 

@@ -351,7 +351,8 @@ namespace Flameberry {
 				imageInfo.sampler = VK_NULL_HANDLE;
 
 				descriptorSet->WriteImage(0, imageInfo);
-				descriptorSet->Update(); });
+				descriptorSet->Update();
+			});
 	}
 
 	void SceneRenderer::PrepareBloomImageAndDescriptors()
@@ -396,7 +397,8 @@ namespace Flameberry {
 				viewSpecification.BaseMipLevel = 0;
 				viewSpecification.LevelCount = mipLevels;
 
-				m_BloomImageCompleteViews[idx] = Utils::CreateImageViewUsingSpecification(bloomImage->GetVulkanImage(), imageSpec.Format, viewSpecification); });
+				m_BloomImageCompleteViews[idx] = Utils::CreateImageViewUsingSpecification(bloomImage->GetVulkanImage(), imageSpec.Format, viewSpecification);
+			});
 
 		// Creation of Bloom Descriptor Sets ------------------------------------------------------
 		DescriptorSetSpecification descSetSpec;
@@ -430,7 +432,8 @@ namespace Flameberry {
 
 					descriptorSet->WriteImage(0, bloomReadOnlyImageInfo);
 					descriptorSet->WriteImageArray(1, bloomImageInfos.data(), numImageViews);
-					descriptorSet->Update(); });
+					descriptorSet->Update();
+				});
 		}
 
 		CreateBloomSampler(mipLevels);
@@ -957,7 +960,8 @@ namespace Flameberry {
 				{
 					// Binding the shadow map pipeline here instead of using the `Pipeline::Bind()` function to reduce `Renderer::Submit()` calls
 					vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr); });
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr);
+				});
 
 			for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>())
 			{
@@ -972,7 +976,8 @@ namespace Flameberry {
 							vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ModelMatrixPushConstantData), &pushContantData);
 							Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(), staticMesh->GetIndexBuffer()->GetVulkanBuffer());
 							const uint32_t size = staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
-							vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0); });
+							vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
+						});
 				}
 			}
 			m_ShadowMapRenderPass->End();
@@ -1010,7 +1015,8 @@ namespace Flameberry {
 						VkDescriptorSet descSets[] = { textureDescSet };
 						vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
 						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SkymapPushConstantObject), &pco);
-						vkCmdDraw(cmdBuffer, 36, 1, 0, 0); });
+						vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
+					});
 			}
 		}
 
@@ -1026,7 +1032,8 @@ namespace Flameberry {
 				};
 
 				Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr); });
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+			});
 
 #if 0
         // Without sorting
@@ -1125,7 +1132,8 @@ namespace Flameberry {
 					clearRect.baseArrayLayer = 0;
 					clearRect.layerCount = 1;
 
-					vkCmdClearAttachments(cmdBuffer, 1, clearAttachment, 1, &clearRect); });
+					vkCmdClearAttachments(cmdBuffer, 1, clearAttachment, 1, &clearRect);
+				});
 
 			// Render selected objects here
 			SubmitRenderObjects(m_RendererData->SelectedRenderObjects);
@@ -1209,7 +1217,8 @@ namespace Flameberry {
 					Renderer::RT_BindPipeline(cmdBuffer, pipeline);
 					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
 					Renderer::RT_BindMaterial(cmdBuffer, pipelineLayout, material);
-					vkCmdDraw(cmdBuffer, 6, 1, 0, 0); });
+					vkCmdDraw(cmdBuffer, 6, 1, 0, 0);
+				});
 		}
 
 		m_GeometryPass->End();
@@ -1267,7 +1276,8 @@ namespace Flameberry {
 						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
 
 					// Draw the object
-					vkCmdDrawIndexed(cmdBuffer, indexCount, 1, indexOffset, 0, 0); });
+					vkCmdDrawIndexed(cmdBuffer, indexCount, 1, indexOffset, 0, 0);
+				});
 
 			boundMaterialHandle = obj.MaterialAsset->Handle;
 			boundVertexBuffer = obj.VertexBuffer;
@@ -1401,7 +1411,8 @@ namespace Flameberry {
 						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation), &bloomSettings);
 						vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 					}
-				} });
+				}
+			});
 	}
 
 	void SceneRenderer::JumpFloodPass()
@@ -1461,7 +1472,8 @@ namespace Flameberry {
 				// Final Pass
 				jumpFloodSettings.IsFinalPass = FTrue;
 				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(JumpFloodSettingsGPURepresentation), &jumpFloodSettings);
-				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1); });
+				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
+			});
 	}
 
 	void SceneRenderer::CompositingPass()
@@ -1482,7 +1494,8 @@ namespace Flameberry {
 				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSet, 0, nullptr);
 				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(CompositionSettingsGPURepresentation), &compositionSettings);
-				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1); });
+				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
+			});
 	}
 
 	void SceneRenderer::CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection)
@@ -1592,7 +1605,8 @@ namespace Flameberry {
 		Renderer::Submit([pipeline = pipeline->GetVulkanPipeline(), descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(), mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
 				Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr); });
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
+			});
 
 		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>())
 		{
@@ -1610,7 +1624,8 @@ namespace Flameberry {
 						Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(), staticMesh->GetIndexBuffer()->GetVulkanBuffer());
 
 						const uint32_t size = staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
-						vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0); });
+						vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
+					});
 			}
 		}
 
@@ -1627,7 +1642,8 @@ namespace Flameberry {
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePicking2DPipelineLayout, 0, 1, &descSet, 0, nullptr);
 
 				Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
-				vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0); });
+				vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+			});
 
 		// Text Entities
 		indexCount = 6 * Renderer2D::GetRendererData().TextVertexBufferOffset / (4 * sizeof(TextVertex));
@@ -1636,7 +1652,8 @@ namespace Flameberry {
 							 indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
 				Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
-				vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0); });
+				vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+			});
 
 		renderPass->End();
 	}

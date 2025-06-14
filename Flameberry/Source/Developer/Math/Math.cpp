@@ -90,4 +90,4 @@ namespace Flameberry::Math {
 		return true;
 	}
 
-} // namespace Flameberry
+} // namespace Flameberry::Math
