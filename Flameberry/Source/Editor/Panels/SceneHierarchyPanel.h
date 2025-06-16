@@ -39,7 +39,9 @@ namespace Flameberry {
 		static constexpr ImGuiPopupFlags m_PopupFlags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
 		std::string m_RenameBuffer, m_SearchInputBuffer;
 
-		bool m_IsSelectedNodeDisplayed = false, m_IsFocused = false, m_IsSearchBarFocused = false;
+		bool m_IsSelectedNodeDisplayed = false;
+		bool m_IsFocused = false;
+		bool m_IsSearchBarFocused = false;
 	};
 
 } // namespace Flameberry

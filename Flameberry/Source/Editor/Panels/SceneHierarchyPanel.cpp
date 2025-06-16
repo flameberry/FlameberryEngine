@@ -7,7 +7,6 @@
 #include "Core/UI.h"
 #include "ECS/Components.h"
 #include "fmt/base.h"
-#include "imgui_internal.h"
 
 namespace Flameberry {
 
@@ -51,23 +50,13 @@ namespace Flameberry {
 			ImGui::BeginChild("##EntityList", ImVec2(-1, -1), 0, ImGuiWindowFlags_AlwaysUseWindowPadding);
 		}
 
-		ImRect windowRect(ImGui::GetWindowPos(), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y));
-		if (ImGui::BeginDragDropTargetCustom(windowRect, ImGui::GetID("##EntityList")))
-		{
-			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
-			{
-				const FEntity payloadEntity = *((const FEntity*)payload->Data);
-				m_Context->ReparentEntity(payloadEntity, FEntity::Null);
-			}
-			ImGui::EndDragDropTarget();
-		}
-
 		// Entity Hierarchy Table
 		{
 			UI::ScopedStyleColor tableBorderStrong(ImGuiCol_TableBorderStrong, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
 			UI::ScopedStyleColor tableBorderLight(ImGuiCol_TableBorderLight, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
 
 			ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingStretchProp
+				| ImGuiTableFlags_Resizable
 				| ImGuiTableFlags_PadOuterX
 				| ImGuiTableFlags_BordersInnerV
 				| ImGuiTableFlags_NoBordersInBody
@@ -105,6 +94,27 @@ namespace Flameberry {
 			DisplayCreateEntityMenu(m_Context->GetWorldEntity());
 			ImGui::EndPopup();
 		}
+
+		// FIXME: Dropping an entity node on the empty background of the window must parent it to the world node
+		// but if I enable this, then this overtakes the entity node's own drop area, which causes this behaviour:
+		// Action: Drag the entity and try to drop it on itself.
+		// Result: Entity gets reparented to the world entity.
+#if 0
+		ImGuiWindow* childWindow = ImGui::GetCurrentWindowRead();
+		ImRect windowRect = childWindow->Rect();
+		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && !ImGui::IsAnyItemHovered())
+		{
+			if (ImGui::BeginDragDropTargetCustom(windowRect, childWindow->ID))
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_SCENE_HIERARCHY_ENTITY_NODE"))
+				{
+					const FEntity payloadEntity = *((const FEntity*)payload->Data);
+					m_Context->ReparentEntity(payloadEntity, FEntity::Null);
+				}
+				ImGui::EndDragDropTarget();
+			}
+		}
+#endif
 
 		ImGui::EndChild();
 		ImGui::End();
