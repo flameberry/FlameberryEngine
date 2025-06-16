@@ -7,6 +7,7 @@
 #include "Core/UI.h"
 #include "ECS/Components.h"
 #include "fmt/base.h"
+#include "imgui_internal.h"
 
 namespace Flameberry {
 
@@ -176,10 +177,12 @@ namespace Flameberry {
 
 		const int treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow
 			| ImGuiTreeNodeFlags_FramePadding
-			| ImGuiTreeNodeFlags_AllowItemOverlap
+			| ImGuiTreeNodeFlags_AllowOverlap
 			| (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
 			| (hasChild ? 0 : ImGuiTreeNodeFlags_Leaf)
-			| (isRenamed ? 0 : ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_SpanAllColumns);
+			| ImGuiTreeNodeFlags_SpanFullWidth
+			| ImGuiTreeNodeFlags_SpanAllColumns
+			| ImGuiTreeNodeFlags_LabelSpanAllColumns;
 
 		bool shouldDeleteEntity = false, shouldDuplicateEntity = false;
 		bool isEntityTreeNodeOpen = false;
@@ -222,10 +225,10 @@ namespace Flameberry {
 				UI::ScopedStyleColor textC2(ImGuiCol_Text, Theme::ErrorColor, highlight);
 
 				// Figure out the entity icon to be displayed
-				const char* iconCStr = isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : (isCollectionEntity ? ICON_LC_LIBRARY : ICON_LC_BOX);
+				const char* iconCStr = isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : (isCollectionEntity ? ICON_LC_FOLDER_OPEN : ICON_LC_BOX);
 
 				// Display the actual entity node with it's tag
-				isEntityTreeNodeOpen = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s %s", iconCStr, tag.c_str());
+				isEntityTreeNodeOpen = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s %s", iconCStr, isRenamed ? "" : tag.c_str());
 			}
 
 			// Select entity if clicked
@@ -234,15 +237,12 @@ namespace Flameberry {
 				m_SelectionContext = entity;
 
 			// World Entity should not be renamed
-			if (!isWorldEntity)
+			// Check for rename shortcuts being used
+			if (!isWorldEntity && isSelected && ImGui::IsWindowFocused())
 			{
-				// Check for rename shortcuts being used
-				if (isSelected && ImGui::IsWindowFocused())
-				{
-					ImGuiIO& io = ImGui::GetIO();
-					if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
-						m_RenamedEntity = entity;
-				}
+				ImGuiIO& io = ImGui::GetIO();
+				if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
+					m_RenamedEntity = entity;
 			}
 
 			// Display Context Menu
@@ -286,6 +286,13 @@ namespace Flameberry {
 				ImGui::EndDragDropTarget();
 			}
 
+			// Rename Entity
+			if (isRenamed)
+			{
+				m_RenameBuffer = tag;
+				RenameNode(tag);
+			}
+
 			// Type Column
 			{
 				ImGui::TableNextColumn();
@@ -293,13 +300,6 @@ namespace Flameberry {
 			}
 		}
 		ImGui::PopID();
-
-		// Rename Entity
-		if (isRenamed)
-		{
-			m_RenameBuffer = tag;
-			RenameNode(tag);
-		}
 
 		// Display all the children of the entity if the current node is expanded
 		if (isEntityTreeNodeOpen)

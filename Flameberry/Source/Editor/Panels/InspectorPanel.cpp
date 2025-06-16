@@ -345,130 +345,128 @@ namespace Flameberry {
 					bool is_open = ImGui::CollapsingHeader(ICON_LC_DRIBBBLE " Materials", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth);
 					ImGui::PopStyleVar();
 
-					if (is_open)
+					if (!is_open) return;
+					if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
 					{
-						if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
+						const uint32_t limit = glm::min<uint32_t>(staticMesh->GetSubMeshes().size(), 8);
+						const float textLineHeightWithSpacing = ImGui::GetTextLineHeightWithSpacing() + 2.0f;
+						const float verticalLength = textLineHeightWithSpacing + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
+						ImGui::SetNextWindowSizeConstraints(ImVec2(-1.0f, verticalLength), ImVec2(-1.0f, verticalLength * limit));
+
+						ImGuiWindowFlags windowFlags = ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY;
+
+						ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+						ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), windowFlags);
+						ImGui::PopStyleVar();
+
+						if (ImGui::BeginTable("MaterialTable", 4, s_TableFlags))
 						{
-							const uint32_t limit = glm::min<uint32_t>(staticMesh->GetSubMeshes().size(), 8);
-							const float textLineHeightWithSpacing = ImGui::GetTextLineHeightWithSpacing() + 2.0f;
-							const float verticalLength = textLineHeightWithSpacing + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
-							ImGui::SetNextWindowSizeConstraints(ImVec2(-1.0f, verticalLength), ImVec2(-1.0f, verticalLength * limit));
+							ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+							ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
+							ImGui::TableSetupColumn("Material_LoadFromAssetsButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
+							ImGui::TableSetupColumn("Material_ResetButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
 
-							ImGuiWindowFlags windowFlags = ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY;
-
-							ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-							ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), windowFlags);
-							ImGui::PopStyleVar();
-
-							if (ImGui::BeginTable("MaterialTable", 4, s_TableFlags))
+							uint32_t submeshIndex = 0;
+							for (const auto& submesh : staticMesh->GetSubMeshes())
 							{
-								ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-								ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
-								ImGui::TableSetupColumn("Material_LoadFromAssetsButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
-								ImGui::TableSetupColumn("Material_ResetButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
+								ImGui::PushID(static_cast<int>(submeshIndex));
 
-								uint32_t submeshIndex = 0;
-								for (const auto& submesh : staticMesh->GetSubMeshes())
+								ImGui::TableNextRow();
+								ImGui::TableNextColumn();
+
+								ImGui::AlignTextToFramePadding();
+								ImGui::Text("Item %d", submeshIndex);
+								ImGui::TableNextColumn();
+
+								Ref<MaterialAsset> mat;
+								if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
+									mat = AssetManager::GetAsset<MaterialAsset>(it->second);
+								else
+									mat = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
+
+								ImGui::Button(
+									mat ? mat->GetName().c_str() : "Null",
+									ImVec2(-1.0f, 0.0f));
+
+								if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+									ImGui::SetTooltip("%s", mat ? mat->GetName().c_str() : "Null");
+
+								if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+									m_MaterialEditorPanel->DisplayMaterial(mat);
+
+								if (ImGui::BeginDragDropTarget())
 								{
-									ImGui::PushID(static_cast<int>(submeshIndex));
-
-									ImGui::TableNextRow();
-									ImGui::TableNextColumn();
-
-									ImGui::AlignTextToFramePadding();
-									ImGui::Text("Item %d", submeshIndex);
-									ImGui::TableNextColumn();
-
-									Ref<MaterialAsset> mat;
-									if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
-										mat = AssetManager::GetAsset<MaterialAsset>(it->second);
-									else
-										mat = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
-
-									ImGui::Button(
-										mat ? mat->GetName().c_str() : "Null",
-										ImVec2(-1.0f, 0.0f));
-
-									if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-										ImGui::SetTooltip("%s", mat ? mat->GetName().c_str() : "Null");
-
-									if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-										m_MaterialEditorPanel->DisplayMaterial(mat);
-
-									if (ImGui::BeginDragDropTarget())
+									if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
 									{
-										if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
-										{
-											const char* path = (const char*)payload->Data;
-											std::filesystem::path matPath{ path };
-											const std::string& ext = matPath.extension().string();
+										const char* path = (const char*)payload->Data;
+										std::filesystem::path matPath{ path };
+										const std::string& ext = matPath.extension().string();
 
-											FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
+										FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
-											bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Material
-												&& std::filesystem::exists(matPath)
-												&& std::filesystem::is_regular_file(matPath);
+										bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Material
+											&& std::filesystem::exists(matPath)
+											&& std::filesystem::is_regular_file(matPath);
 
-											if (shouldImport)
-												mesh.OverridenMaterialTable[submeshIndex] = AssetManager::As<EditorAssetManager>()->ImportAsset(matPath);
-											else
-												FBY_WARN("Bad File given as Material!");
-										}
-										ImGui::EndDragDropTarget();
+										if (shouldImport)
+											mesh.OverridenMaterialTable[submeshIndex] = AssetManager::As<EditorAssetManager>()->ImportAsset(matPath);
+										else
+											FBY_WARN("Bad File given as Material!");
 									}
-
-									ImGui::TableNextColumn();
-
-									ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f));
-									if (ImGui::IsItemClicked())
-										UI::OpenSelectionWidget("##MaterialSelectionWidget");
-
-									if (UI::BeginSelectionWidget("##MaterialSelectionWidget", "Select Material", &m_SearchInputBuffer2))
-									{
-										auto displayMaterialEntry = [&, this](AssetHandle, const Ref<Asset>& asset)
-										{
-											if (asset->GetAssetType() == AssetType::Material)
-											{
-												Ref<MaterialAsset> m = std::static_pointer_cast<MaterialAsset>(asset);
-
-												if (m_SearchInputBuffer2[0] != '\0')
-												{
-													const int index = Algorithm::KmpSearch(m->GetName().c_str(), m_SearchInputBuffer2.c_str(), true);
-													if (index == -1)
-														return false;
-												}
-
-												if (UI::SelectionWidgetElement(m->GetName().c_str(), m->Handle == mat->Handle))
-													mesh.OverridenMaterialTable[submeshIndex] = m->Handle;
-											}
-											return true;
-										};
-
-										// Show Loaded Assets
-										for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetLoadedAssets())
-											if (!displayMaterialEntry(handle, asset))
-												continue;
-
-										// Show Memory Only Assets
-										for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetMemoryOnlyAssets())
-											if (!displayMaterialEntry(handle, asset))
-												continue;
-
-										UI::EndSelectionWidget();
-									}
-
-									ImGui::TableNextColumn();
-									if (ImGui::Button(ICON_LC_ROTATE_CCW))
-										mesh.OverridenMaterialTable.erase(submeshIndex);
-
-									ImGui::PopID();
-
-									submeshIndex++;
+									ImGui::EndDragDropTarget();
 								}
-								ImGui::EndTable();
+
+								ImGui::TableNextColumn();
+
+								ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f));
+								if (ImGui::IsItemClicked())
+									UI::OpenSelectionWidget("##MaterialSelectionWidget");
+
+								if (UI::BeginSelectionWidget("##MaterialSelectionWidget", "Select Material", &m_SearchInputBuffer2))
+								{
+									auto displayMaterialEntry = [&, this](AssetHandle, const Ref<Asset>& asset)
+									{
+										if (asset->GetAssetType() == AssetType::Material)
+										{
+											Ref<MaterialAsset> m = std::static_pointer_cast<MaterialAsset>(asset);
+
+											if (m_SearchInputBuffer2[0] != '\0')
+											{
+												const int index = Algorithm::KmpSearch(m->GetName().c_str(), m_SearchInputBuffer2.c_str(), true);
+												if (index == -1)
+													return false;
+											}
+
+											if (UI::SelectionWidgetElement(m->GetName().c_str(), m->Handle == mat->Handle))
+												mesh.OverridenMaterialTable[submeshIndex] = m->Handle;
+										}
+										return true;
+									};
+
+									// Show Loaded Assets
+									for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetLoadedAssets())
+										if (!displayMaterialEntry(handle, asset))
+											continue;
+
+									// Show Memory Only Assets
+									for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetMemoryOnlyAssets())
+										if (!displayMaterialEntry(handle, asset))
+											continue;
+
+									UI::EndSelectionWidget();
+								}
+
+								ImGui::TableNextColumn();
+								if (ImGui::Button(ICON_LC_ROTATE_CCW))
+									mesh.OverridenMaterialTable.erase(submeshIndex);
+
+								ImGui::PopID();
+
+								submeshIndex++;
 							}
-							ImGui::EndChild();
+							ImGui::EndTable();
 						}
+						ImGui::EndChild();
 					}
 				});
 
