@@ -107,7 +107,7 @@ namespace Flameberry {
             
             // This line is a 'hack' to shift the traffic lights down to match the bigger custom title bar size
             nativeWindow.toolbar = [NSToolbar new]; // <-- Note this is `new` and not `init`
-            // nativeWindow.toolbarStyle = NSWindowToolbarStyleUnified;
+			nativeWindow.toolbarStyle = NSWindowToolbarStyleUnifiedCompact;
             
             // Remove the whitish border from default macos window
             [nativeWindow setOpaque:NO];
@@ -121,18 +121,19 @@ namespace Flameberry {
 
             // Icon
             const char* flameberryIcon = FBY_PROJECT_DIR"Flameberry/Assets/Icons/FlameberryIcon.png";
-            NSString* flameberryIconPath = [[NSString alloc] initWithCString:flameberryIcon encoding:NSASCIIStringEncoding];
-            NSImage* iconImage = [[NSImage alloc] initWithContentsOfFile:flameberryIconPath];
+            // NSString* flameberryIconPath = [[NSString alloc] initWithCString:flameberryIcon encoding:NSASCIIStringEncoding];
+			// NSImage* iconImage = [[NSImage alloc] initWithContentsOfFile:flameberryIconPathNSURL.path];
             
-            if (iconImage)
-            {
-                // Resize the image if needed
-                [iconImage setSize:NSMakeSize(30, 30)]; // Adjust the size as per your requirement
-            }
+//            if (iconImage)
+//            {
+//                // Resize the image if needed
+//                [iconImage setSize:NSMakeSize(30, 30)]; // Adjust the size as per your requirement
+//            }
             
             // Icon Button
             NSButton* iconButton = [[NSButton alloc] initWithFrame:NSMakeRect(75, 2, 30, 30)]; // Adjust the frame as needed
-            [iconButton setImage:iconImage];
+            // [iconButton setImage:[[NSImage alloc] initWithContentsOfFile:@"/Users/flameberry/Developer/Flameberry/FlameberryEngine/Flameberry/Assets/Icons/FlameberryIcon.png"]];
+			[iconButton setTitle:@""];
             [iconButton setButtonType:NSButtonTypeMomentaryPushIn];
             [iconButton setBordered:NO];
             

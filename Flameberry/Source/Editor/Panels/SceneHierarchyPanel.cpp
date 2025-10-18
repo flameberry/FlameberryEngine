@@ -4,9 +4,9 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <IconFontCppHeaders/IconsLucide.h>
 
+#include "Core/EditorContext.h"
 #include "Core/UI.h"
 #include "ECS/Components.h"
-#include "fmt/base.h"
 
 namespace Flameberry {
 
@@ -86,7 +86,7 @@ namespace Flameberry {
 
 		// Deselect all entities when left-clicked on blank space
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
-			m_SelectionContext = FEntity::Null;
+			EditorContext::Get()->SelectedEntity = FEntity::Null;
 
 		// Open popup when right-clicked on blank space
 		if (ImGui::BeginPopupContextItem("CreateEntityNodeContextMenu", m_PopupFlags))
@@ -119,7 +119,6 @@ namespace Flameberry {
 		ImGui::EndChild();
 		ImGui::End();
 
-		m_InspectorPanel->SetSelectionContext(m_SelectionContext);
 		m_InspectorPanel->OnUIRender();
 	}
 
@@ -149,12 +148,6 @@ namespace Flameberry {
 		m_InspectorPanel->SetContext(m_Context);
 	}
 
-	void SceneHierarchyPanel::SetSelectionContext(FEntity entity)
-	{
-		m_SelectionContext = entity;
-		m_InspectorPanel->SetSelectionContext(m_SelectionContext);
-	}
-
 	void SceneHierarchyPanel::DisplayEntityTree(FEntity entity)
 	{
 		// "Name" of the entity
@@ -175,7 +168,7 @@ namespace Flameberry {
 		const bool isWorldEntity = m_Context->IsWorldEntity(entity);
 		const bool isCollectionEntity = m_Context->GetRegistry()->HasComponent<CollectionComponent>(entity);
 		const bool isRenamed = m_RenamedEntity == entity;
-		const bool isSelected = m_SelectionContext == entity;
+		const bool isSelected = EditorContext::Get()->SelectedEntity == entity;
 
 		m_IsSelectedNodeDisplayed = m_IsSelectedNodeDisplayed || isSelected;
 		FBY_ASSERT(!(isWorldEntity && isCollectionEntity), "World Entity cannot be a Collection Entity!");
@@ -244,7 +237,7 @@ namespace Flameberry {
 			// Select entity if clicked
 			// Only select the object if it is clicked and not being dragged and not toggled open
 			if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-				m_SelectionContext = entity;
+				EditorContext::Get()->SelectedEntity = entity;
 
 			// World Entity should not be renamed
 			// Check for rename shortcuts being used
@@ -332,14 +325,14 @@ namespace Flameberry {
 		if (shouldDuplicateEntity)
 		{
 			const auto duplicate = m_Context->DuplicateEntity(entity);
-			m_SelectionContext = duplicate;
+			EditorContext::Get()->SelectedEntity = duplicate;
 		}
 
 		if (shouldDeleteEntity)
 		{
 			m_Context->DestroyEntityTree(entity);
-			if (m_SelectionContext == entity)
-				m_SelectionContext = FEntity::Null;
+			if (EditorContext::Get()->SelectedEntity == entity)
+				EditorContext::Get()->SelectedEntity = FEntity::Null;
 		}
 	}
 
@@ -354,7 +347,7 @@ namespace Flameberry {
 				if (ImGui::MenuItem(ICON_LC_LIBRARY "\tCollection"))
 				{
 					const auto entity = CreateCollectionEntity(fmt::format("Collection - {}", collectionCount), parent);
-					m_SelectionContext = entity;
+					EditorContext::Get()->SelectedEntity = entity;
 					collectionCount++;
 				}
 			}
@@ -364,25 +357,25 @@ namespace Flameberry {
 			if (ImGui::MenuItem(ICON_LC_SQUARE "\tEmpty"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Empty", parent);
-				m_SelectionContext = entity;
+				EditorContext::Get()->SelectedEntity = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_TEXT "\tText"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Text", parent);
 				m_Context->GetRegistry()->EmplaceComponent<TextComponent>(entity);
-				m_SelectionContext = entity;
+				EditorContext::Get()->SelectedEntity = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_CUBOID "\tMesh"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("StaticMesh", parent);
 				m_Context->GetRegistry()->EmplaceComponent<MeshComponent>(entity);
-				m_SelectionContext = entity;
+				EditorContext::Get()->SelectedEntity = entity;
 			}
 			if (ImGui::MenuItem(ICON_LC_CAMERA "\tCamera"))
 			{
 				const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Camera", parent);
 				m_Context->GetRegistry()->EmplaceComponent<CameraComponent>(entity);
-				m_SelectionContext = entity;
+				EditorContext::Get()->SelectedEntity = entity;
 			}
 
 			ImGui::SeparatorText("Lighting");
@@ -393,25 +386,25 @@ namespace Flameberry {
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Sky Light", parent);
 					m_Context->GetRegistry()->EmplaceComponent<SkyLightComponent>(entity);
-					m_SelectionContext = entity;
+					EditorContext::Get()->SelectedEntity = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_SUN "\tDirectional Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Directional Light", parent);
 					m_Context->GetRegistry()->EmplaceComponent<DirectionalLightComponent>(entity);
-					m_SelectionContext = entity;
+					EditorContext::Get()->SelectedEntity = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_LIGHTBULB "\tPoint Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Point Light", parent);
 					m_Context->GetRegistry()->EmplaceComponent<PointLightComponent>(entity);
-					m_SelectionContext = entity;
+					EditorContext::Get()->SelectedEntity = entity;
 				}
 				if (ImGui::MenuItem(ICON_LC_CONE "\tSpot Light"))
 				{
 					const auto entity = m_Context->CreateEntityWithTagTransformAndParent("Spot Light", parent);
 					m_Context->GetRegistry()->EmplaceComponent<SpotLightComponent>(entity);
-					m_SelectionContext = entity;
+					EditorContext::Get()->SelectedEntity = entity;
 				}
 				ImGui::EndMenu();
 			}

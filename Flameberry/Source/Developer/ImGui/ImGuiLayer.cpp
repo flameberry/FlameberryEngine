@@ -41,25 +41,15 @@ namespace Flameberry {
 		ImFontConfig config{};
 
 #ifdef FBY_PLATFORM_MACOS
-		constexpr float DPI_SCALE = 2.0f;
-
-		config.OversampleH = 3;
-		// config.GlyphExtraSpacing = ImVec2(1.4f, 0.62f);
-		config.GlyphExtraAdvanceX = 1.4f;
-		config.RasterizerMultiply = 1.1f;
-		config.OversampleV = 3;
+		constexpr float DPI_SCALE = 1.0f;
+		config.GlyphExtraAdvanceX = 0.5f;
 #else
 		constexpr float DPI_SCALE = 1.0f;
 		config.GlyphExtraSpacing = ImVec2(0.65f, 0.62f);
 #endif
 
-		constexpr float smallFontSize = 12.0f * DPI_SCALE;
-		constexpr float fontSize = 13.5f * DPI_SCALE;
-		constexpr float bigFontSize = 18.0f * DPI_SCALE;
-
-		io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/arial/Arial.ttf", bigFontSize, &config);
+		constexpr float fontSize = 14.0f;
 		io.FontDefault = io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/arial/Arial.ttf", fontSize, &config);
-		io.FontGlobalScale = 1 / DPI_SCALE;
 
 		// Merging Lucide fonts into the default font
 		ImFontConfig iconFontConfig;

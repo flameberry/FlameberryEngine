@@ -2,6 +2,7 @@
 
 #include <IconFontCppHeaders/IconsLucide.h>
 
+#include "Core/EditorContext.h"
 #include "Flameberry.h"
 #include "MaterialEditorPanel.h"
 #include "imgui.h"
@@ -16,7 +17,6 @@ namespace Flameberry {
 		~InspectorPanel() = default;
 
 		void SetContext(const Ref<Scene>& context) { m_Context = context; }
-		void SetSelectionContext(const FEntity& selectionContext) { m_SelectionContext = selectionContext; }
 		void OnUIRender();
 
 	private:
@@ -25,7 +25,6 @@ namespace Flameberry {
 
 		Ref<MaterialEditorPanel> m_MaterialEditorPanel;
 
-		FEntity m_SelectionContext = {};
 		Ref<Scene> m_Context;
 
 		Ref<Texture2D> m_SettingsIcon;
@@ -43,10 +42,10 @@ namespace Flameberry {
 	template <typename ComponentType>
 	void InspectorPanel::DrawAddComponentEntry(const char* name)
 	{
-		if (!m_Context->GetRegistry()->HasComponent<ComponentType>(m_SelectionContext))
+		if (!m_Context->GetRegistry()->HasComponent<ComponentType>(EditorContext::Get()->SelectedEntity))
 		{
 			if (ImGui::MenuItem(name))
-				m_Context->GetRegistry()->EmplaceComponent<ComponentType>(m_SelectionContext);
+				m_Context->GetRegistry()->EmplaceComponent<ComponentType>(EditorContext::Get()->SelectedEntity);
 		}
 	}
 
@@ -55,7 +54,7 @@ namespace Flameberry {
 	{
 		static_assert(std::is_invocable_v<Fn>);
 
-		if (m_Context->GetRegistry()->HasComponent<ComponentType>(m_SelectionContext))
+		if (m_Context->GetRegistry()->HasComponent<ComponentType>(EditorContext::Get()->SelectedEntity))
 		{
 			ImGui::PushID(name);
 
@@ -97,7 +96,7 @@ namespace Flameberry {
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y);
 
 			if (shouldRemoveComp)
-				m_Context->GetRegistry()->EraseComponent<ComponentType>(m_SelectionContext);
+				m_Context->GetRegistry()->EraseComponent<ComponentType>(EditorContext::Get()->SelectedEntity);
 		}
 	}
 

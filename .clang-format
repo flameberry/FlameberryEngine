@@ -12,6 +12,7 @@ AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortLambdasOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: Always
+AllowShortLoopsOnASingleLine: true
 BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true

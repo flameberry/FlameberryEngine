@@ -37,7 +37,7 @@ namespace Flameberry {
 		bool Vec3Control(const std::string& label, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth);
 		bool AlignedButton(const char* label, const ImVec2& size = ImVec2(0.0f, 0.0f), float alignment = 0.5f);
 		void AlignedText(const char* label, float alignment);
-		bool InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint = (const char*)nullptr, bool focused = false);
+		bool InputBox(const char* label, float width, std::string* inputBuffer, const char* inputHint = (const char*)nullptr, bool focused = false);
 
 		void OpenSelectionWidget(const char* label);
 		bool BeginSelectionWidget(const char* label, const char* title, std::string* inputBuffer);

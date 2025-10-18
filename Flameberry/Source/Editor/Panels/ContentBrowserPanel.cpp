@@ -300,6 +300,7 @@ namespace Flameberry {
 				rowIndex++;
 				constexpr float paddingY = 20.0f;
 				ImGui::SetCursorPosY(rowIndex * (itemSize.y + paddingY));
+				ImGui::Dummy(ImVec2(0, 0));
 			}
 
 			ImGui::NextColumn();
@@ -307,7 +308,10 @@ namespace Flameberry {
 		}
 
 		if (ImGui::GetColumnIndex() != 0)
+		{
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + itemSize.y + 10.0f);
+			ImGui::Dummy(ImVec2(0, 0));
+		}
 
 		if (ImGui::BeginPopupContextWindow((const char*)nullptr, m_PopupFlags))
 		{
@@ -433,7 +437,7 @@ namespace Flameberry {
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y + centerTranslationHeight);
 
 		const auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
-		const auto aWidth = ImGui::CalcTextSize("a").x;
+		const auto aWidth = ImGui::CalcTextSize("A").x;
 		const uint32_t characters = fullWidth / aWidth;
 
 		// Format and align text based on whether the item is a directory or a file
@@ -529,7 +533,7 @@ namespace Flameberry {
 			{
 				end++;
 				currentPath.remove_prefix(1);
-				ImGui::Button(ICON_LC_CHEVRON_RIGHT);
+				ImGui::Text(ICON_LC_CHEVRON_RIGHT);
 				ImGui::SameLine();
 			}
 		}

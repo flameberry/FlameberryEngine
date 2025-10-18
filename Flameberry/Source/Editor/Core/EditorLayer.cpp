@@ -6,7 +6,10 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Core/Application.h"
 #include "Core/Assert.h"
+#include "Core/EditorContext.h"
+#include "ECS/ecs.hpp"
 #include "ImGuizmo/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
 #include "Core/UI.h"
@@ -59,6 +62,8 @@ namespace Flameberry {
 		m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
 		m_LogPanel = CreateRef<LogPanel>();
 
+		EditorContext::Create();
+
 		// Open the start scene
 		if (AssetManager::IsAssetHandleValid(m_Project->GetConfig().StartScene))
 			OpenScene(m_Project->GetConfig().StartScene);
@@ -103,8 +108,10 @@ namespace Flameberry {
 
 				m_ActiveScene->OnUpdateTransformHierarchy();
 
+				auto* ctx = EditorContext::Get();
+
 				// Actual Rendering (All scene related render passes)
-				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
+				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), EditorContext::Get()->SelectedEntity, m_EnableGrid);
 				break;
 			}
 			case EditorState::Play:
@@ -132,7 +139,7 @@ namespace Flameberry {
 
 				const auto& camera = m_ActiveCameraController.GetCamera();
 				// Actual Rendering (All scene related render passes)
-				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), m_SceneHierarchyPanel->GetSelectionContext(), m_EnableGrid);
+				m_SceneRenderer->RenderScene(m_RenderViewportSize, m_ActiveScene, camera, m_ActiveCameraController.GetPosition(), EditorContext::Get()->SelectedEntity, m_EnableGrid);
 			}
 		}
 
@@ -158,7 +165,8 @@ namespace Flameberry {
 			int32_t* data = (int32_t*)m_MousePickingBuffer->GetMappedMemory();
 			int32_t entityIndex = data[0];
 			m_MousePickingBuffer->UnmapMemory();
-			m_SceneHierarchyPanel->SetSelectionContext((entityIndex != -1) ? m_ActiveScene->GetRegistry()->GetEntityAtIndex(entityIndex) : FEntity::Null);
+
+			EditorContext::Get()->SelectedEntity = (entityIndex != -1) ? m_ActiveScene->GetRegistry()->GetEntityAtIndex(entityIndex) : FEntity::Null;
 			// FBY_LOG("Selected Entity Index: {}", entityIndex);
 			m_IsMousePickingBufferReady = false;
 		}
@@ -199,12 +207,13 @@ namespace Flameberry {
 			OpenScene(m_ScenePathToBeOpened);
 			m_ShouldOpenAnotherScene = false;
 			m_ScenePathToBeOpened = "";
-			m_SceneHierarchyPanel->SetSelectionContext(FEntity::Null);
+			EditorContext::Get()->SelectedEntity = FEntity::Null;
 		}
 	}
 
 	void EditorLayer::OnDestroy()
 	{
+		EditorContext::Destroy();
 		PhysicsManager::Shutdown();
 		Renderer2D::Shutdown();
 
@@ -238,8 +247,9 @@ namespace Flameberry {
 		if (m_ViewportSize.x != viewportPanelSize.x || m_ViewportSize.y != viewportPanelSize.y)
 			m_HasViewportSizeChanged = true;
 
+		const ImVec2 displayFramebufferScale = ImGui::GetIO().DisplayFramebufferScale;
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
-		m_RenderViewportSize = { viewportPanelSize.x * ImGui::GetWindowDpiScale(), viewportPanelSize.y * ImGui::GetWindowDpiScale() };
+		m_RenderViewportSize = { viewportPanelSize.x * displayFramebufferScale.x, viewportPanelSize.y * displayFramebufferScale.y };
 
 		m_IsViewportHovered = ImGui::IsWindowHovered();
 		// For the Camera Input if other windows are focused but the user right clicks this window then set focus for the camera to continue moving without affecting other windows
@@ -284,7 +294,7 @@ namespace Flameberry {
 
 						m_ActiveScene->GetRegistry()->EmplaceComponent<MeshComponent>(entity, handle);
 
-						m_SceneHierarchyPanel->SetSelectionContext(entity);
+						EditorContext::Get()->SelectedEntity = entity;
 					}
 					else
 					{
@@ -374,11 +384,11 @@ namespace Flameberry {
 				// Duplicate Entity
 				if (ctrl_or_cmd && m_EditorState == EditorState::Edit)
 				{
-					const auto selectionContext = m_SceneHierarchyPanel->GetSelectionContext();
+					const auto selectionContext = EditorContext::Get()->SelectedEntity;
 					if (selectionContext != FEntity::Null)
 					{
 						const auto duplicateEntity = m_ActiveScene->DuplicateEntity(selectionContext);
-						m_SceneHierarchyPanel->SetSelectionContext(duplicateEntity);
+						EditorContext::Get()->SelectedEntity = duplicateEntity;
 					}
 				}
 				break;
@@ -426,7 +436,7 @@ namespace Flameberry {
 			case KeyCode::F:
 			{
 				// Frame the entity, i.e., focus the editor camera on the selected entity
-				const FEntity selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
+				const FEntity selectedEntity = EditorContext::Get()->SelectedEntity;
 				if (selectedEntity != FEntity::Null)
 				{
 					// This branch is for entities that have a mesh component
@@ -451,16 +461,16 @@ namespace Flameberry {
 			case KeyCode::Backspace:
 				if (ctrl_or_cmd)
 				{
-					const auto entity = m_SceneHierarchyPanel->GetSelectionContext();
+					const auto entity = EditorContext::Get()->SelectedEntity;
 					if (entity != FEntity::Null)
 					{
 						m_ActiveScene->DestroyEntityTree(entity);
-						m_SceneHierarchyPanel->SetSelectionContext(FEntity::Null);
+						EditorContext::Get()->SelectedEntity = FEntity::Null;
 					}
 				}
 				break;
 			case KeyCode::Escape:
-				m_SceneHierarchyPanel->SetSelectionContext(FEntity::Null);
+				EditorContext::Get()->SelectedEntity = FEntity::Null;
 				break;
 			default:
 				break;
@@ -570,7 +580,7 @@ namespace Flameberry {
 	{
 		m_ActiveScene = scene;
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
-		m_SceneHierarchyPanel->SetSelectionContext(FEntity::Null);
+		EditorContext::Get()->SelectedEntity = FEntity::Null;
 	}
 
 	void EditorLayer::UI_Menubar()
@@ -661,7 +671,7 @@ namespace Flameberry {
 
 	void EditorLayer::UI_GizmoControls()
 	{
-		if (const auto selectedEntity = m_SceneHierarchyPanel->GetSelectionContext();
+		if (const auto selectedEntity = EditorContext::Get()->SelectedEntity;
 			selectedEntity != FEntity::Null && m_GizmoType != -1 && m_EditorState == EditorState::Edit)
 		{
 			glm::mat4 projectionMatrix = m_ActiveCameraController.GetCamera().GetProjectionMatrix();

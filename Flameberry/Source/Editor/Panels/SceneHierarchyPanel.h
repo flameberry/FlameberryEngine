@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Flameberry.h"
 #include "InspectorPanel.h"
 
 namespace Flameberry {
@@ -15,9 +14,7 @@ namespace Flameberry {
 
 		void RenameNode(std::string& tag);
 		void SetContext(const Ref<Scene>& context);
-		void SetSelectionContext(FEntity entity);
 
-		FEntity GetSelectionContext() const { return m_SelectionContext; }
 		bool IsFocused() const { return m_IsFocused && !m_IsSearchBarFocused && m_RenamedEntity == FEntity::Null; }
 
 		void DisplayEntityTree(FEntity entity);
@@ -30,7 +27,6 @@ namespace Flameberry {
 		FEntity CreateCollectionEntity(const std::string& name, FEntity parent);
 
 	private:
-		FEntity m_SelectionContext = {};
 		FEntity m_RenamedEntity = {};
 
 		Ref<Scene> m_Context;

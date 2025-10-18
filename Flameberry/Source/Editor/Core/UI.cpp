@@ -68,7 +68,7 @@ namespace Flameberry::UI {
 		ImGui::Text("%s", text);
 	}
 
-	bool InputBox(const char* label, const float width, std::string* inputBuffer, const char* inputHint, bool focused)
+	bool InputBox(const char* label, float width, std::string* inputBuffer, const char* inputHint, bool focused)
 	{
 		ScopedStyleColor buttonColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
 		ScopedStyleColor buttonHoverColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
@@ -77,6 +77,7 @@ namespace Flameberry::UI {
 		constexpr ImGuiInputTextFlags flags = ImGuiInputTextFlags_AutoSelectAll;
 
 		ImGui::PushItemWidth(width);
+		width = width == -1.0f ? ImGui::GetContentRegionAvail().x : width;
 		// Get current cursor position and input box size
 		bool isActive = false;
 		ImVec2 inputPos = ImGui::GetCursorScreenPos();

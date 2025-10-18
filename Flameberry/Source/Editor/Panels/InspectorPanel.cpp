@@ -37,16 +37,15 @@ namespace Flameberry {
 		ImGui::Begin("Inspector");
 		ImGui::PopStyleVar();
 
-		if (m_SelectionContext != FEntity::Null)
+		if (EditorContext::Get()->SelectedEntity != FEntity::Null)
 		{
-			auto& tag = m_Context->GetRegistry()->GetComponent<TagComponent>(m_SelectionContext);
-			ImFont* bigFont = ImGui::GetIO().Fonts->Fonts[0];
+			auto& tag = m_Context->GetRegistry()->GetComponent<TagComponent>(EditorContext::Get()->SelectedEntity);
 			ImGuiStyle& style = ImGui::GetStyle();
 
 			const auto& windowPadding = ImGui::GetStyle().WindowPadding;
 			ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPos().x + windowPadding.x, ImGui::GetCursorPos().y + windowPadding.y));
 
-			ImGui::PushFont(bigFont);
+			ImGui::PushFont(NULL, 18.0f);
 			ImGui::Text("%s", tag.Tag.c_str());
 			ImGui::PopFont();
 
@@ -56,8 +55,8 @@ namespace Flameberry {
 			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - style.FramePadding.x * 2.0f - ImGui::CalcTextSize(addComponentText).x - style.ItemSpacing.x);
 
 			// Check if selected entity is a collection entity
-			bool disableAddComponentButton = m_Context->GetRegistry()->HasComponent<CollectionComponent>(m_SelectionContext)
-				|| m_Context->IsWorldEntity(m_SelectionContext);
+			bool disableAddComponentButton = m_Context->GetRegistry()->HasComponent<CollectionComponent>(EditorContext::Get()->SelectedEntity)
+				|| m_Context->IsWorldEntity(EditorContext::Get()->SelectedEntity);
 
 			// Some special entities are not supposed to have all the components
 			ImGui::BeginDisabled(disableAddComponentButton);
@@ -96,7 +95,7 @@ namespace Flameberry {
 #if 0
             DrawComponent<IDComponent>("ID Component", this, [&]()
                 {
-                    auto& ID = m_Context->GetRegistry()->GetComponent<IDComponent>(m_SelectionContext).ID;
+                    auto& ID = m_Context->GetRegistry()->GetComponent<IDComponent>(EditorContext::Get()->SelectedEntity).ID;
                     if (UI::BeginKeyValueTable("IDComponentAttributes"))
                     {
 						UI::TableKeyElement("ID");
@@ -110,7 +109,7 @@ namespace Flameberry {
 			DrawComponent<TransformComponent>(
 				ICON_LC_SCALE_3D " Transform", [&]()
 				{
-					auto& transform = m_Context->GetRegistry()->GetComponent<TransformComponent>(m_SelectionContext);
+					auto& transform = m_Context->GetRegistry()->GetComponent<TransformComponent>(EditorContext::Get()->SelectedEntity);
 					bool isTransformEdited = false;
 
 					if (UI::BeginKeyValueTable("TransformComponentAttributes"))
@@ -132,7 +131,7 @@ namespace Flameberry {
 				ICON_LC_TEXT " Text",
 				[&]()
 				{
-					auto& text = m_Context->GetRegistry()->GetComponent<TextComponent>(m_SelectionContext);
+					auto& text = m_Context->GetRegistry()->GetComponent<TextComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("TextComponentAttributes"))
 					{
@@ -189,9 +188,9 @@ namespace Flameberry {
 				true // removable = true
 			);
 
-			DrawComponent<SkyLightComponent>(ICON_LC_SUNRISE " Sky Light", [=]()
+			DrawComponent<SkyLightComponent>(ICON_LC_SUNRISE " Sky Light", [=, this]()
 				{
-					auto& skyLightComp = m_Context->GetRegistry()->GetComponent<SkyLightComponent>(m_SelectionContext);
+					auto& skyLightComp = m_Context->GetRegistry()->GetComponent<SkyLightComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("SkyLightComponentAttributes"))
 					{
@@ -255,7 +254,7 @@ namespace Flameberry {
 
 			DrawComponent<CameraComponent>(ICON_LC_CAMERA " Camera", [&]()
 				{
-					auto& cameraComp = m_Context->GetRegistry()->GetComponent<CameraComponent>(m_SelectionContext);
+					auto& cameraComp = m_Context->GetRegistry()->GetComponent<CameraComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("CameraComponentAttributes"))
 					{
@@ -310,7 +309,7 @@ namespace Flameberry {
 
 			DrawComponent<MeshComponent>(ICON_LC_CUBOID " Mesh", [&]()
 				{
-					auto& mesh = m_Context->GetRegistry()->GetComponent<MeshComponent>(m_SelectionContext);
+					auto& mesh = m_Context->GetRegistry()->GetComponent<MeshComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("MeshComponentAttributes"))
 					{
@@ -472,7 +471,7 @@ namespace Flameberry {
 
 			DrawComponent<DirectionalLightComponent>(ICON_LC_SUN " Directional Light", [&]()
 				{
-					auto& light = m_Context->GetRegistry()->GetComponent<DirectionalLightComponent>(m_SelectionContext);
+					auto& light = m_Context->GetRegistry()->GetComponent<DirectionalLightComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("DirectionalLightComponentAttributes"))
 					{
@@ -486,7 +485,7 @@ namespace Flameberry {
 
 			DrawComponent<PointLightComponent>(ICON_LC_LIGHTBULB " Point Light", [&]()
 				{
-					auto& light = m_Context->GetRegistry()->GetComponent<PointLightComponent>(m_SelectionContext);
+					auto& light = m_Context->GetRegistry()->GetComponent<PointLightComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("PointLightComponentAttributes"))
 					{
@@ -498,7 +497,7 @@ namespace Flameberry {
 
 			DrawComponent<SpotLightComponent>(ICON_LC_CONE " Spot Light", [&]()
 				{
-					auto& light = m_Context->GetRegistry()->GetComponent<SpotLightComponent>(m_SelectionContext);
+					auto& light = m_Context->GetRegistry()->GetComponent<SpotLightComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("SpotLightComponentAttributes"))
 					{
@@ -512,7 +511,7 @@ namespace Flameberry {
 
 			DrawComponent<RigidBodyComponent>(ICON_LC_BOXES " Rigid Body", [&]()
 				{
-					auto& rigidBody = m_Context->GetRegistry()->GetComponent<RigidBodyComponent>(m_SelectionContext);
+					auto& rigidBody = m_Context->GetRegistry()->GetComponent<RigidBodyComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("RigidBodyComponentAttributes"))
 					{
@@ -551,7 +550,7 @@ namespace Flameberry {
 
 			DrawComponent<BoxColliderComponent>(ICON_LC_BOX " Box Collider", [&]()
 				{
-					auto& boxCollider = m_Context->GetRegistry()->GetComponent<BoxColliderComponent>(m_SelectionContext);
+					auto& boxCollider = m_Context->GetRegistry()->GetComponent<BoxColliderComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("BoxColliderComponentAttributes"))
 					{
@@ -562,7 +561,7 @@ namespace Flameberry {
 
 			DrawComponent<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED " Sphere Collider", [&]()
 				{
-					auto& sphereCollider = m_Context->GetRegistry()->GetComponent<SphereColliderComponent>(m_SelectionContext);
+					auto& sphereCollider = m_Context->GetRegistry()->GetComponent<SphereColliderComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("SphereColliderComponentAttributes"))
 					{
@@ -573,7 +572,7 @@ namespace Flameberry {
 
 			DrawComponent<CapsuleColliderComponent>(ICON_LC_PILL " Capsule Collider", [&]()
 				{
-					auto& capsuleCollider = m_Context->GetRegistry()->GetComponent<CapsuleColliderComponent>(m_SelectionContext);
+					auto& capsuleCollider = m_Context->GetRegistry()->GetComponent<CapsuleColliderComponent>(EditorContext::Get()->SelectedEntity);
 
 					if (UI::BeginKeyValueTable("CapsuleColliderComponentAttributes"))
 					{
