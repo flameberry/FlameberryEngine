@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include <functional>
 #include <GLFW/glfw3.h>
 
 #include "Event.h"

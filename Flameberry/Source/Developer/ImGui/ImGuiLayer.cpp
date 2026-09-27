@@ -200,7 +200,10 @@ namespace Flameberry {
 		vkCmdBeginRenderPass(commandBuffer, &imgui_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
 		// Record dear imgui primitives into command buffer
-		ImGui_ImplVulkan_RenderDrawData(main_draw_data, commandBuffer);
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely([&]()
+			{
+				ImGui_ImplVulkan_RenderDrawData(main_draw_data, commandBuffer);
+			});
 
 		// End ImGui Render Pass
 		vkCmdEndRenderPass(commandBuffer);
@@ -210,7 +213,12 @@ namespace Flameberry {
 		{
 			GLFWwindow* backup_current_context = glfwGetCurrentContext();
 			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
+
+			// The backend submits and presents to the queue for each platform window
+			VulkanContext::GetCurrentDevice()->AccessQueueSafely([]()
+				{
+					ImGui::RenderPlatformWindowsDefault();
+				});
 			glfwMakeContextCurrent(backup_current_context);
 		}
 	}

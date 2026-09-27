@@ -114,7 +114,7 @@ namespace Flameberry {
 		// As the bloom pass is dependent on the viewport size, the size of it's associated images needs to be updated
 		// i.e., the images need to be resized and descriptors need to be updated
 		void PrepareBloomImageAndDescriptors();
-		void CreateBloomSampler(const uint32_t mipLevels);
+		void CreateBloomSampler();
 
 		void InvalidateGeometryPass(const uint32_t resourceIndex, const glm::vec2& viewportSize);
 		void InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize);

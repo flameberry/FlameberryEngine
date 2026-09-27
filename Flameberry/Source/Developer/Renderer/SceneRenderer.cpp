@@ -1,5 +1,6 @@
 #include "SceneRenderer.h"
 
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -380,6 +381,9 @@ namespace Flameberry {
 		imageSpec.MipLevels = mipLevels;
 		imageSpec.ViewCreationMode = ImageViewCreationMode::CreateOnePerMipMap;
 
+		// The sampler has to exist before the descriptor sets below reference it
+		CreateBloomSampler();
+
 		// Experimental API
 		m_BloomImageResource.ForEach([&](Ref<Image>& bloomImage, uint32_t idx)
 			{
@@ -435,8 +439,6 @@ namespace Flameberry {
 					descriptorSet->Update();
 				});
 		}
-
-		CreateBloomSampler(mipLevels);
 	}
 
 	void SceneRenderer::PrepareBloomPass()
@@ -455,7 +457,7 @@ namespace Flameberry {
 		PrepareBloomImageAndDescriptors();
 	}
 
-	void SceneRenderer::CreateBloomSampler(const uint32_t mipLevels)
+	void SceneRenderer::CreateBloomSampler()
 	{
 		VkSamplerCreateInfo sampler_info{};
 		sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -477,7 +479,9 @@ namespace Flameberry {
 		sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 		sampler_info.mipLodBias = 0.0f;
 		sampler_info.minLod = 0.0f;
-		sampler_info.maxLod = (float)mipLevels - 1.0f;
+		// Not clamped to the mip count so that the sampler never has to be recreated when the bloom images are resized,
+		// as it is shared by the descriptor sets of all frames in flight. The image view limits the accessible mips anyway.
+		sampler_info.maxLod = VK_LOD_CLAMP_NONE;
 
 		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_BloomSampler));
@@ -511,13 +515,7 @@ namespace Flameberry {
 		// My device has 8 as the limit, so there is a need to divide the mipLevels into batches of mipLevels / 8
 		const uint32_t numDescriptorSetsPerFrame = ceil((float)mipLevels / (float)maxDescriptorSetsAllowed);
 
-		// Recreating bloom sampler
 		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		if (mipLevels != m_BloomImageResource[resourceIndex]->GetSpecification().MipLevels)
-		{
-			vkDestroySampler(device, m_BloomSampler, nullptr);
-			CreateBloomSampler(mipLevels);
-		}
 
 		m_BloomImageResource[resourceIndex]->OnResize(newBloomImgSize.x, newBloomImgSize.y, mipLevels);
 		m_BloomImageResource[resourceIndex]->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
@@ -645,6 +643,9 @@ namespace Flameberry {
 		// Resizing Jump Flood Images
 		m_JumpFloodImage1[resourceIndex]->OnResize(newJumpFloodImgSize.x, newJumpFloodImgSize.y);
 		m_JumpFloodImage2[resourceIndex]->OnResize(newJumpFloodImgSize.x, newJumpFloodImgSize.y);
+
+		m_JumpFloodImage1[resourceIndex]->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		m_JumpFloodImage2[resourceIndex]->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 		// Update Jump Flood Descriptor Sets
 		VkDescriptorImageInfo stencilBufferImageInfo{};
@@ -1021,7 +1022,7 @@ namespace Flameberry {
 		{
 			Ref<Skymap> skymapAsset = AssetManager::GetAssetAsync<Skymap>(skymap->Skymap);
 
-			if (shouldRenderSkymap = shouldRenderSkymap && skymapAsset)
+			if ((shouldRenderSkymap = shouldRenderSkymap && skymapAsset))
 			{
 				VkPipelineLayout pipelineLayout = m_SkymapPipeline->GetVulkanPipelineLayout();
 				textureDescSet = skymapAsset->GetDescriptorSet()->GetVulkanDescriptorSet();
@@ -1246,6 +1247,16 @@ namespace Flameberry {
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+		// The geometry pass leaves its output in SHADER_READ_ONLY_OPTIMAL (render pass final layout),
+		// but the post-processing compute passes access it as a storage image
+		Renderer::Submit([this](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+			{
+				m_GeometryPass->GetSpecification()
+					.TargetFramebuffers[imageIndex]
+					->GetColorResolveAttachment(0)
+					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
+			});
+
 		if (m_RendererSettings.EnableBloom)
 			BloomPass();
 
@@ -1253,6 +1264,15 @@ namespace Flameberry {
 
 		if (canRenderOutline)
 			JumpFloodPass();
+
+		// Transition the final output back so that it can be sampled (e.g. by the editor viewport)
+		Renderer::Submit([this](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+			{
+				m_GeometryPass->GetSpecification()
+					.TargetFramebuffers[imageIndex]
+					->GetColorResolveAttachment(0)
+					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			});
 	}
 
 	void SceneRenderer::SubmitRenderObjects(std::vector<RenderObject>& renderObjects)
@@ -1316,12 +1336,6 @@ namespace Flameberry {
 							 viewportSize = m_ViewportSize,
 							 maxDescriptorSetsAllowed](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 			{
-				// Transition the image to be suitable for writing
-				m_GeometryPass->GetSpecification()
-					.TargetFramebuffers[imageIndex]
-					->GetColorResolveAttachment(0)
-					->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
-
 				const VkDescriptorSet targetDescSet = m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet();
 
 				std::vector<VkDescriptorSet> bloomDescSets(m_BloomDescriptorSetResources.size());
@@ -1447,15 +1461,6 @@ namespace Flameberry {
 				jumpFloodSettings.IsInitialPass = FTrue;
 				jumpFloodSettings.IsFinalPass = FFalse;
 				jumpFloodSettings.ReadFromFirst = 0;
-
-				// Transition the image to be suitable for writing
-				// The if-statement is to ensure that if some other pass has already transitioned the layout to general then
-				// do not re-transition it (Example: Bloom Pass will most likely already transition layout to general)
-				if (m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetColorResolveAttachment(0)->GetActiveImageLayout() == VK_IMAGE_LAYOUT_GENERAL)
-					m_GeometryPass->GetSpecification()
-						.TargetFramebuffers[imageIndex]
-						->GetColorResolveAttachment(0)
-						->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
 
 				m_GeometryPass->GetSpecification()
 					.TargetFramebuffers[imageIndex]

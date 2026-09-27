@@ -136,7 +136,11 @@ namespace Flameberry {
 		vk_present_info.pSwapchains = swapchains;
 		vk_present_info.pImageIndices = &m_ImageIndex;
 
-		VkResult queuePresentStatus = vkQueuePresentKHR(presentationQueue, &vk_present_info);
+		VkResult queuePresentStatus;
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely([&]()
+			{
+				queuePresentStatus = vkQueuePresentKHR(presentationQueue, &vk_present_info);
+			});
 		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 		return queuePresentStatus;
 	}
@@ -179,7 +183,7 @@ namespace Flameberry {
 	SwapChain::~SwapChain()
 	{
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		vkDeviceWaitIdle(device);
+		VulkanContext::GetCurrentDevice()->WaitIdle();
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{

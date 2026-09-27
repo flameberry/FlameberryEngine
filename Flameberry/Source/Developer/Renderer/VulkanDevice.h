@@ -48,7 +48,7 @@ namespace Flameberry {
 		VkDevice m_VulkanDevice;
 		VkQueue m_GraphicsQueue, m_ComputeQueue, m_PresentationQueue;
 		QueueFamilyIndices m_QueueFamilyIndices;
-		std::mutex m_QueueMutex;
+		mutable std::mutex m_QueueMutex;
 
 		VkCommandPool m_GraphicsQueueCommandPool, m_ComputeQueueCommandPool;
 

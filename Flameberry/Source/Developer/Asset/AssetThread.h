@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <mutex>
+#include <queue>
 
 #include "Core/Core.h"
 

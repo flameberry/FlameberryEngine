@@ -189,6 +189,8 @@ namespace Flameberry {
 		if (mipLevels)
 			m_Specification.MipLevels = mipLevels;
 
+		m_ActiveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
 		Invalidate();
 	}
 
@@ -384,6 +386,12 @@ namespace Flameberry {
 				// Make sure any shader reads from the image have been finished
 				imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
 				break;
+
+			case VK_IMAGE_LAYOUT_GENERAL:
+				// Image is used as a storage image
+				// Make sure any shader writes to the image have been finished
+				imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+				break;
 			default:
 				// Other source layouts aren't handled (yet)
 				break;
@@ -425,13 +433,23 @@ namespace Flameberry {
 
 				imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 				break;
+
+			case VK_IMAGE_LAYOUT_GENERAL:
+				// Image will be used as a storage image
+				imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+				break;
 			default:
 				break;
 		}
 
+		// Host accesses are not part of VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, so the host stage has to be added explicitly
+		VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+		if (imageMemoryBarrier.srcAccessMask & VK_ACCESS_HOST_WRITE_BIT)
+			srcStageMask |= VK_PIPELINE_STAGE_HOST_BIT;
+
 		// Put barrier inside setup command buffer
 		vkCmdPipelineBarrier(cmdBuffer,
-			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+			srcStageMask,
 			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 			0,
 			0, nullptr,

@@ -124,7 +124,7 @@ namespace Flameberry {
 				vkQueueWaitIdle(vulkanQueue);
 			});
 
-		vkFreeCommandBuffers(m_VulkanDevice, m_GraphicsQueueCommandPool, 1, &commandBuffer);
+		vkFreeCommandBuffers(m_VulkanDevice, isCompute ? m_ComputeQueueCommandPool : m_GraphicsQueueCommandPool, 1, &commandBuffer);
 	}
 
 	VulkanDevice::~VulkanDevice()
@@ -152,6 +152,8 @@ namespace Flameberry {
 
 	void VulkanDevice::WaitIdle() const
 	{
+		// vkDeviceWaitIdle requires external synchronization of all queues
+		std::scoped_lock lock(m_QueueMutex);
 		vkDeviceWaitIdle(m_VulkanDevice);
 	}
 
