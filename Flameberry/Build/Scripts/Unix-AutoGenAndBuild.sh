@@ -47,10 +47,8 @@ cp Flameberry/Intermediate/Build/Auto/compile_commands.json .
 "$cmakeCommand" --build Flameberry/Intermediate/Build/Auto -j4
 
 # NOTE: This should be tested on different unix archs and shouldn't be hardcoded like this
-if [ runExecutable ] && [ buildConfig="Debug" ]; then
-	./Flameberry/Intermediate/Bin/Debug/FlameberryEditor-Darwin-arm64/FlameberryEditor_Debug
-elif [ runExecutable ] && [ buildConfig="Release" ]; then
-	./Flameberry/Intermediate/Bin/Release/FlameberryEditor-Darwin-arm64/FlameberryEditor_Release
+if [ "$runExecutable" = "ON" ]; then
+	./Flameberry/Intermediate/Bin/$buildConfig/FlameberryEditor-Darwin-arm64/FlameberryEditor_$buildConfig
 fi
 
 popd
