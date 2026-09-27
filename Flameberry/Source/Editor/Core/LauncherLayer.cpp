@@ -48,7 +48,7 @@ namespace Flameberry {
 		static float firstChildSize = 100.0f, secondChildSize = 220.0f;
 		firstChildSize = ImGui::GetContentRegionAvail().x - secondChildSize - 8.0f;
 
-		ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY, ImGuiChildFlags_AlwaysUseWindowPadding);
+		ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding);
 
 		for (const auto& entry : m_ProjectRegistry)
 		{
@@ -65,7 +65,7 @@ namespace Flameberry {
 
 		ImGui::SameLine();
 
-		ImGui::BeginChild("##ProjectControls", ImVec2(secondChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders, ImGuiChildFlags_AlwaysUseWindowPadding);
+		ImGui::BeginChild("##ProjectControls", ImVec2(secondChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
 
 		if (UI::AlignedButton("New Project", buttonSize))
 			ImGui::OpenPopup("New Project");
