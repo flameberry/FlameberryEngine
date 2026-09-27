@@ -193,47 +193,61 @@ namespace Flameberry::UI {
 	}
 
 	// TODO: Add display information on Hover
-
 	bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled)
 	{
 		constexpr float paddingX = 15.0f, paddingY = 5.0f, spacing = 10.0f;
 		const float itemWidth = ImGui::GetContentRegionAvail().x;
 
-		ImGui::SetNextItemWidth(itemWidth);
-
 		if (disabled)
 			ImGui::BeginDisabled();
 
-		const auto& cursorScreenPos = ImGui::GetCursorScreenPos();
+		// Anchor
+		ImVec2 startPos = ImGui::GetCursorScreenPos();
 
+		// --- Visual content ---
 		ImGui::BeginGroup();
-		ImVec2 cursorPos = ImGui::GetCursorPos();
-		ImGui::SetCursorPosX(cursorPos.x + paddingX);
-		ImGui::SetCursorPosY(cursorPos.y + 2.0f * paddingY);
 
-		auto& bigFont = ImGui::GetIO().Fonts->Fonts[0];
-		ImGui::Text("%s", name);
-
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + paddingX);
+		ImGui::Indent(paddingX);
+		ImGui::Dummy(ImVec2(0.0f, 2.0f * paddingY));
+		ImGui::TextUnformatted(name);
+		ImGui::Dummy(ImVec2(0.0f, spacing));
 		ImGui::TextWrapped("%s", path);
-
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + paddingY);
+		ImGui::Dummy(ImVec2(0.0f, paddingY));
+		ImGui::Unindent(paddingX);
 
 		ImGui::EndGroup();
+
+		// Height is now known
+		float height = ImGui::GetItemRectMax().y - startPos.y;
+
+		// Rewind cursor INSIDE disabled/group scope
+		ImGui::SetCursorScreenPos(startPos);
+
+		// Claim the space BEFORE EndDisabled()
+		bool pressed = ImGui::InvisibleButton(
+			name,
+			ImVec2(itemWidth, height),
+			ImGuiButtonFlags_PressedOnDoubleClick);
+
+		bool hovered = ImGui::IsItemHovered();
+
+		if (hovered)
+		{
+			ImU32 color = ImGui::IsMouseDown(0)
+				? IM_COL32(255, 255, 255, 60)
+				: IM_COL32(255, 255, 255, 30);
+
+			ImGui::GetWindowDrawList()->AddRectFilled(
+				startPos,
+				startPos + ImVec2(itemWidth, height),
+				color,
+				5.0f);
+		}
 
 		if (disabled)
 			ImGui::EndDisabled();
 
-		ImRect itemRect(cursorScreenPos, cursorScreenPos + ImVec2(itemWidth, ImGui::GetCursorPosY() - cursorPos.y));
-		bool hovered, held;
-		bool isDoubleClicked = ImGui::ButtonBehavior(itemRect, ImGui::GetID(name), &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
-
-		if (hovered)
-		{
-			const ImU32 color = ImGui::IsMouseDown(0) ? IM_COL32(255, 255, 255, 60) : IM_COL32(255, 255, 255, 30);
-			ImGui::GetWindowDrawList()->AddRectFilled(itemRect.Min, itemRect.Max, color, 5.0f);
-		}
-		return isDoubleClicked;
+		return pressed;
 	}
 
 	bool Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)

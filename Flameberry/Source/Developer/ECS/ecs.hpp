@@ -269,8 +269,7 @@ namespace Flameberry {
 
 				iterator<TIteratorType...>& operator++()
 				{
-					while (++m_Index < m_ComponentPoolRef->EntitySet.Size() && !m_RegistryRef->HasComponent<TIteratorType...>(m_RegistryRef->m_EntityBuffer[m_ComponentPoolRef->EntitySet[m_Index]]))
-						;
+					while (++m_Index < m_ComponentPoolRef->EntitySet.Size() && !m_RegistryRef->HasComponent<TIteratorType...>(m_RegistryRef->m_EntityBuffer[m_ComponentPoolRef->EntitySet[m_Index]]));
 					return *this;
 				}
 

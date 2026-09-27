@@ -60,6 +60,14 @@ namespace Flameberry {
 
 		io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/lucide/lucide.ttf", fontSize, &iconFontConfig, iconRanges);
 
+		// Setup scaling
+		float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.ScaleAllSizes(main_scale);   // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+		style.FontScaleDpi = main_scale;   // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
+		io.ConfigDpiScaleFonts = true;	   // [Experimental] Automatically overwrite style.FontScaleDpi in Begin() when Monitor DPI changes. This will scale fonts but _NOT_ scale sizes/padding for now.
+		io.ConfigDpiScaleViewports = true; // [Experimental] Scale Dear ImGui and Platform Windows when Monitor DPI changes.
+
 		// ImGui layout save location
 		io.IniFilename = nullptr;
 		ImGui::LoadIniSettingsFromDisk(s_ImGuiLayoutPath);
@@ -68,10 +76,9 @@ namespace Flameberry {
 		SetupImGuiStyle();
 
 		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-		ImGuiStyle& style = ImGui::GetStyle();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			style.WindowRounding = 0.0f;
+			// style.WindowRounding = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
@@ -128,13 +135,13 @@ namespace Flameberry {
 		init_info.Queue = device->GetGraphicsQueue();
 		init_info.PipelineCache = VK_NULL_HANDLE;
 		init_info.DescriptorPool = VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool();
-		init_info.Subpass = 0;
+		init_info.PipelineInfoMain.Subpass = 0;
 		init_info.MinImageCount = vk_swap_chain_details.SurfaceCapabilities.minImageCount;
 		init_info.ImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
-		init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+		init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		init_info.Allocator = VK_NULL_HANDLE;
-		init_info.RenderPass = m_ImGuiLayerRenderPass;
-		// init_info.CheckVkResultFn = vk_check_result;
+		init_info.PipelineInfoMain.RenderPass = m_ImGuiLayerRenderPass;
+		// init_info.PipelineInfoMain.CheckVkResultFn = vk_check_result;
 		ImGui_ImplVulkan_Init(&init_info);
 	}
 

@@ -88,7 +88,7 @@ namespace Flameberry {
 				UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
 				UI::ScopedStyleColor border(ImGuiCol_Border, Theme::WindowBorder);
 
-				ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX);
+				ImGui::BeginChild("##InspectorPanelComponentArea", ImVec2(-1, -1), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeX);
 			}
 
 			ImGui::Spacing();

@@ -836,12 +836,33 @@ namespace Flameberry {
 		Renderer2D::Init(m_GeometryPass);
 	}
 
-	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera, const glm::vec3& cameraPosition, FEntity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
+	void SceneRenderer::RenderScene(
+		const glm::vec2& viewportSize,
+		const Ref<Scene>& scene,
+		const GenericCamera& camera,
+		const glm::vec3& cameraPosition,
+		FEntity selectedEntity,
+		bool renderGrid,
+		bool renderDebugIcons,
+		bool renderOutline,
+		bool renderPhysicsCollider)
 	{
 		RenderScene(viewportSize, scene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), cameraPosition, camera.GetSettings().Near, camera.GetSettings().Far, selectedEntity, renderGrid, renderDebugIcons, renderOutline, renderPhysicsCollider);
 	}
 
-	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, FEntity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider)
+	void SceneRenderer::RenderScene(
+		const glm::vec2& viewportSize,
+		const Ref<Scene>& scene,
+		const glm::mat4& viewMatrix,
+		const glm::mat4& projectionMatrix,
+		const glm::vec3& cameraPosition,
+		float cameraNear,
+		float cameraFar,
+		FEntity selectedEntity,
+		bool renderGrid,
+		bool renderDebugIcons,
+		bool renderOutline,
+		bool renderPhysicsCollider)
 	{
 		uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
 		std::vector<FEntity> pointLightEntityHandles, spotLightEntityHandles;
