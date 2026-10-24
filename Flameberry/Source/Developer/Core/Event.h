@@ -6,8 +6,7 @@
 
 namespace Flameberry {
 
-	enum class EventType : uint8_t
-	{
+	enum class EventType : uint8_t {
 		None = 0,
 		WindowResized,
 		KeyPressed,
@@ -15,26 +14,22 @@ namespace Flameberry {
 		MouseScrolled
 	};
 
-	enum EventCategory : uint8_t
-	{
+	enum EventCategory : uint8_t {
 		None = 0,
 		WindowEventCategory,
 		KeyEventCategory,
 		MouseEventCategory
 	};
 
-#define EVENT_CATEGORY(CATEGORY)                                           \
-	inline EventCategory GetCategory() const override                      \
-	{                                                                      \
-		return CATEGORY;                                                   \
-	}                                                                      \
-	inline bool IsInCategory(const EventCategory& category) const override \
-	{                                                                      \
-		return CATEGORY == category;                                       \
+#define EVENT_CATEGORY(CATEGORY)                                             \
+	inline EventCategory GetCategory() const override {                      \
+		return CATEGORY;                                                     \
+	}                                                                        \
+	inline bool IsInCategory(const EventCategory& category) const override { \
+		return CATEGORY == category;                                         \
 	}
 
-	struct Event
-	{
+	struct Event {
 		bool Handled = false;
 
 		virtual ~Event() = default;
@@ -45,8 +40,7 @@ namespace Flameberry {
 		virtual inline bool IsInCategory(const EventCategory& category) const = 0;
 	};
 
-	struct WindowResizedEvent : public Event
-	{
+	struct WindowResizedEvent : public Event {
 		uint32_t Width, Height;
 
 		WindowResizedEvent(uint32_t width, uint32_t height)
@@ -57,8 +51,7 @@ namespace Flameberry {
 		EVENT_CATEGORY(WindowEventCategory);
 	};
 
-	struct KeyPressedEvent : public Event
-	{
+	struct KeyPressedEvent : public Event {
 		KeyCode Key;
 
 		KeyPressedEvent(KeyCode key)
@@ -69,8 +62,7 @@ namespace Flameberry {
 		EVENT_CATEGORY(KeyEventCategory);
 	};
 
-	struct MouseButtonPressedEvent : public Event
-	{
+	struct MouseButtonPressedEvent : public Event {
 		uint32_t KeyCode;
 
 		MouseButtonPressedEvent(uint32_t keyCode)
@@ -81,8 +73,7 @@ namespace Flameberry {
 		EVENT_CATEGORY(MouseEventCategory);
 	};
 
-	struct MouseScrollEvent : public Event
-	{
+	struct MouseScrollEvent : public Event {
 		double OffsetX, OffsetY;
 
 		MouseScrollEvent(double X, double Y)

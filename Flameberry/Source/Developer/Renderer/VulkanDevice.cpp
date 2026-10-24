@@ -7,8 +7,7 @@
 namespace Flameberry {
 
 	VulkanDevice::VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow)
-		: m_VulkanPhysicalDevice(physicalDevice)
-	{
+		: m_VulkanPhysicalDevice(physicalDevice) {
 		// Getting Queue Family Indices
 		m_QueueFamilyIndices = RenderCommand::GetQueueFamilyIndices(m_VulkanPhysicalDevice, pVulkanWindow->GetWindowSurface());
 
@@ -53,13 +52,10 @@ namespace Flameberry {
 
 		// Validation Layers
 		auto validationLayers = VulkanContext::GetValidationLayerNames();
-		if (VulkanContext::EnableValidationLayers())
-		{
+		if (VulkanContext::EnableValidationLayers()) {
 			vk_device_create_info.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			vk_device_create_info.ppEnabledLayerNames = validationLayers.data();
-		}
-		else
-		{
+		} else {
 			vk_device_create_info.enabledLayerCount = 0;
 		}
 
@@ -90,8 +86,7 @@ namespace Flameberry {
 		}
 	}
 
-	void VulkanDevice::BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute) const
-	{
+	void VulkanDevice::BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute) const {
 		VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{};
 		vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		vk_command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -107,8 +102,7 @@ namespace Flameberry {
 		vkBeginCommandBuffer(commandBuffer, &vk_command_buffer_begin_info);
 	}
 
-	void VulkanDevice::EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute) const
-	{
+	void VulkanDevice::EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute) const {
 		vkEndCommandBuffer(commandBuffer);
 
 		VkSubmitInfo vk_submit_info{};
@@ -118,28 +112,24 @@ namespace Flameberry {
 
 		VkQueue vulkanQueue = isCompute ? m_ComputeQueue : m_GraphicsQueue;
 
-		VulkanContext::GetCurrentDevice()->AccessQueueSafely([=]()
-			{
-				vkQueueSubmit(vulkanQueue, 1, &vk_submit_info, VK_NULL_HANDLE);
-				vkQueueWaitIdle(vulkanQueue);
-			});
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely([=]() {
+			vkQueueSubmit(vulkanQueue, 1, &vk_submit_info, VK_NULL_HANDLE);
+			vkQueueWaitIdle(vulkanQueue);
+		});
 
 		vkFreeCommandBuffers(m_VulkanDevice, isCompute ? m_ComputeQueueCommandPool : m_GraphicsQueueCommandPool, 1, &commandBuffer);
 	}
 
-	VulkanDevice::~VulkanDevice()
-	{
+	VulkanDevice::~VulkanDevice() {
 		vkDestroyCommandPool(m_VulkanDevice, m_GraphicsQueueCommandPool, nullptr);
 		vkDestroyCommandPool(m_VulkanDevice, m_ComputeQueueCommandPool, nullptr);
 		vkDestroyDevice(m_VulkanDevice, nullptr);
 	}
 
-	std::vector<VkDeviceQueueCreateInfo> VulkanDevice::CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices)
-	{
+	std::vector<VkDeviceQueueCreateInfo> VulkanDevice::CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices) {
 		constexpr float queuePriority = 1.0f;
 		std::vector<VkDeviceQueueCreateInfo> vulkanDeviceQueueCreateInfos;
-		for (uint32_t uniqueQueueFamilyIndex : uniqueQueueFamilyIndices)
-		{
+		for (uint32_t uniqueQueueFamilyIndex : uniqueQueueFamilyIndices) {
 			VkDeviceQueueCreateInfo vulkanQueueCreateInfo{};
 			vulkanQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 			vulkanQueueCreateInfo.queueFamilyIndex = uniqueQueueFamilyIndex;
@@ -150,21 +140,18 @@ namespace Flameberry {
 		return vulkanDeviceQueueCreateInfos;
 	}
 
-	void VulkanDevice::WaitIdle() const
-	{
+	void VulkanDevice::WaitIdle() const {
 		// vkDeviceWaitIdle requires external synchronization of all queues
 		std::scoped_lock lock(m_QueueMutex);
 		vkDeviceWaitIdle(m_VulkanDevice);
 	}
 
-	void VulkanDevice::WaitIdleGraphicsQueue()
-	{
+	void VulkanDevice::WaitIdleGraphicsQueue() {
 		std::scoped_lock lock(m_QueueMutex);
 		vkQueueWaitIdle(m_GraphicsQueue);
 	}
 
-	void VulkanDevice::WaitIdleComputeQueue()
-	{
+	void VulkanDevice::WaitIdleComputeQueue() {
 		std::scoped_lock lock(m_QueueMutex);
 		vkQueueWaitIdle(m_ComputeQueue);
 	}

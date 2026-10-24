@@ -22,8 +22,7 @@ namespace Flameberry {
 	Ref<Image> Skymap::s_EmptyCubemap;
 	std::unordered_map<uint32_t, Ref<Image>> Skymap::s_CubemapSizeToBRDFLUTMap;
 
-	Skymap::Skymap(const std::filesystem::path& filepath)
-	{
+	Skymap::Skymap(const std::filesystem::path& filepath) {
 		FBY_SCOPED_TIMER("Cubemap_IrradianceMap_Prefiltered_Gen");
 
 		int width, height, channels, bytesPerChannel;
@@ -165,8 +164,7 @@ namespace Flameberry {
 			m_PrefilteredMap = CreateRef<Image>(imageSpec);
 
 			// Creating image views for accessing each mip in the compute shader
-			for (uint8_t i = 0; i < mipLevels; i++)
-			{
+			for (uint8_t i = 0; i < mipLevels; i++) {
 				VkImageViewCreateInfo imageViewCreateInfo{};
 				imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 				imageViewCreateInfo.image = m_PrefilteredMap->GetVulkanImage();
@@ -214,8 +212,7 @@ namespace Flameberry {
 		const auto brdflutMap = s_CubemapSizeToBRDFLUTMap.find(width / 4);
 		const bool shouldGenBRDFLUT = brdflutMap == s_CubemapSizeToBRDFLUTMap.end();
 
-		if (shouldGenBRDFLUT)
-		{
+		if (shouldGenBRDFLUT) {
 			ImageSpecification imageSpec;
 			imageSpec.Width = width / 4;  // Questionable
 			imageSpec.Height = width / 4; // Questionable
@@ -227,9 +224,7 @@ namespace Flameberry {
 			m_BRDFLUTMap = CreateRef<Image>(imageSpec);
 
 			s_CubemapSizeToBRDFLUTMap[width / 4] = m_BRDFLUTMap;
-		}
-		else
-		{
+		} else {
 			m_BRDFLUTMap = brdflutMap->second;
 		}
 
@@ -320,8 +315,7 @@ namespace Flameberry {
 
 			prefilteredMapMaterial = CreateRef<Material>(prefilteredMapGenerationPipeline->GetSpecification().Shader);
 
-			for (uint8_t i = 0; i < mipLevels; i++)
-			{
+			for (uint8_t i = 0; i < mipLevels; i++) {
 				// Prefiltered Map Descriptor Set
 				DescriptorSetSpecification prefilteredDescSetSpec;
 				// Get the DescriptorSetLayout for the Set of Index: 0 from the pipeline
@@ -351,8 +345,7 @@ namespace Flameberry {
 		Ref<ComputePipeline> pipelineBRDFLUT;
 		Ref<DescriptorSet> descSetBRDFLUT;
 
-		if (shouldGenBRDFLUT)
-		{
+		if (shouldGenBRDFLUT) {
 			ComputePipelineSpecification brdflutPipelineSpec;
 			brdflutPipelineSpec.Shader = ShaderLibrary::Get("BRDFLUT");
 			brdflutPipelineSpec.SpecializationConstantLayout = {
@@ -433,8 +426,7 @@ namespace Flameberry {
 		vkCmdBindPipeline(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipeline);
 
 		uint32_t workGroupSize = width / 4;
-		for (uint8_t i = 0; i < mipLevels; i++)
-		{
+		for (uint8_t i = 0; i < mipLevels; i++) {
 			// Push Constants
 			prefilteredMapMaterial->Set("u_Data.Resolution", (float)width / 4.0f);
 			prefilteredMapMaterial->Set("u_Data.MipLevel", (float)i);
@@ -451,8 +443,7 @@ namespace Flameberry {
 		// After we have written to the prefiltered map, we make it read only
 		m_PrefilteredMap->CmdTransitionLayout(vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		if (shouldGenBRDFLUT)
-		{
+		if (shouldGenBRDFLUT) {
 			m_BRDFLUTMap->CmdTransitionLayout(vulkanCmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 			// Step 4: Generation of the BRDFLUT map
@@ -479,10 +470,9 @@ namespace Flameberry {
 
 		auto computeQueue = VulkanContext::GetCurrentDevice()->GetComputeQueue();
 
-		VulkanContext::GetCurrentDevice()->AccessQueueSafely([submitInfo]()
-			{
-				VK_CHECK_RESULT(vkQueueSubmit(VulkanContext::GetCurrentDevice()->GetComputeQueue(), 1, &submitInfo, VK_NULL_HANDLE));
-			});
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely([submitInfo]() {
+			VK_CHECK_RESULT(vkQueueSubmit(VulkanContext::GetCurrentDevice()->GetComputeQueue(), 1, &submitInfo, VK_NULL_HANDLE));
+		});
 
 		// Now that all the processing is done, we need to bring all the skymap resources into a descriptor set to be used later by the PBR pipeline
 		std::vector<VkDescriptorSetLayoutBinding> descBindings = {
@@ -556,15 +546,13 @@ namespace Flameberry {
 			vkDestroyImageView(device, imageView, nullptr);
 	}
 
-	Skymap::~Skymap()
-	{
+	Skymap::~Skymap() {
 		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkDestroySampler(device, m_BRDFLUTSampler, nullptr);
 		vkDestroySampler(device, m_MultiLODSampler, nullptr);
 	}
 
-	void Skymap::Init()
-	{
+	void Skymap::Init() {
 		// Creation of the destination cubemap where our main skymap will be stored
 		ImageSpecification imageSpec;
 		imageSpec.Width = 1;
@@ -622,8 +610,7 @@ namespace Flameberry {
 		s_EmptyDescriptorSet->Update();
 	}
 
-	void Skymap::Destroy()
-	{
+	void Skymap::Destroy() {
 		s_CubemapSizeToBRDFLUTMap.clear();
 		s_EmptyCubemap = nullptr;
 		s_EmptyDescriptorSet = nullptr;

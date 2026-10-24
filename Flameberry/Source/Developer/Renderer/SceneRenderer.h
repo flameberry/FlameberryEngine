@@ -12,19 +12,16 @@
 
 namespace Flameberry {
 
-	struct ModelMatrixPushConstantData
-	{
+	struct ModelMatrixPushConstantData {
 		glm::mat4 ModelMatrix;
 	};
 
-	struct MousePickingPushConstantData
-	{
+	struct MousePickingPushConstantData {
 		glm::mat4 ModelMatrix;
 		int EntityIndex;
 	};
 
-	struct SceneRendererSettings
-	{
+	struct SceneRendererSettings {
 		bool FrustumCulling = true, ShowBoundingBoxes = false;
 		float GammaCorrectionFactor = 2.2f, Exposure = 1.0f;
 
@@ -44,8 +41,7 @@ namespace Flameberry {
 								  CascadeSize = 1024 * 2; // TODO: Make this a renderer startup setting
 	};
 
-	struct Cascade
-	{
+	struct Cascade {
 		glm::mat4 ViewProjectionMatrix;
 		float DepthSplit;
 	};
@@ -53,8 +49,7 @@ namespace Flameberry {
 	///////////////////////////////////////////////////////////////////////////////////
 	///////// Data Structures for storing all Rendering Information Per Frame /////////
 
-	struct RenderObject
-	{
+	struct RenderObject {
 		VkBuffer VertexBuffer, IndexBuffer;
 		uint32_t IndexOffset, IndexCount;
 
@@ -63,20 +58,17 @@ namespace Flameberry {
 		Ref<MaterialAsset> MaterialAsset;
 
 		RenderObject(VkBuffer vertexBuffer, VkBuffer indexBuffer, uint32_t indexOffset, uint32_t indexCount, TransformComponent* transform, Ref<Flameberry::MaterialAsset> materialAsset)
-			: VertexBuffer(vertexBuffer), IndexBuffer(indexBuffer), IndexOffset(indexOffset), IndexCount(indexCount), Transform(transform), MaterialAsset(materialAsset)
-		{
+			: VertexBuffer(vertexBuffer), IndexBuffer(indexBuffer), IndexOffset(indexOffset), IndexCount(indexCount), Transform(transform), MaterialAsset(materialAsset) {
 		}
 	};
 
-	struct RendererData
-	{
+	struct RendererData {
 		std::vector<RenderObject> RenderObjects, SelectedRenderObjects;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////
 
-	class SceneRenderer
-	{
+	class SceneRenderer {
 	public:
 		SceneRenderer(const glm::vec2& viewportSize);
 		~SceneRenderer();

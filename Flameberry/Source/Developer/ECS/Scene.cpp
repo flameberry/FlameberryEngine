@@ -29,8 +29,7 @@
 namespace Flameberry {
 
 	Scene::Scene()
-		: m_Registry(CreateRef<FRegistry>())
-	{
+		: m_Registry(CreateRef<FRegistry>()) {
 		// Ensure that registry is empty before adding the world node
 		// because the world entity should be the entity with index 0
 		FBY_ASSERT(m_Registry->Empty(), "Registry should be empty before adding the world entity");
@@ -45,8 +44,7 @@ namespace Flameberry {
 		: m_Registry(CreateRef<FRegistry>(*other->m_Registry))
 		, m_Name(other->m_Name)
 		, m_ViewportSize(other->m_ViewportSize)
-		, m_WorldEntity(other->m_WorldEntity)
-	{
+		, m_WorldEntity(other->m_WorldEntity) {
 		FBY_TRACE("Copying Scene...");
 	}
 
@@ -54,18 +52,15 @@ namespace Flameberry {
 		: m_Registry(CreateRef<FRegistry>(*other.m_Registry))
 		, m_Name(other.m_Name)
 		, m_ViewportSize(other.m_ViewportSize)
-		, m_WorldEntity(other.m_WorldEntity)
-	{
+		, m_WorldEntity(other.m_WorldEntity) {
 		FBY_TRACE("Copying Scene...");
 	}
 
-	Scene::~Scene()
-	{
+	Scene::~Scene() {
 		FBY_TRACE("Deleting Scene...");
 	}
 
-	void Scene::OnStartRuntime()
-	{
+	void Scene::OnStartRuntime() {
 		m_IsRuntimeActive = true;
 
 		// Update Cameras
@@ -73,8 +68,7 @@ namespace Flameberry {
 			cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
 
 		// Create Script Actors
-		for (auto entity : m_Registry->Group<NativeScriptComponent>())
-		{
+		for (auto entity : m_Registry->Group<NativeScriptComponent>()) {
 			auto& nsc = m_Registry->GetComponent<NativeScriptComponent>(entity);
 			nsc.Actor = nsc.InitScript();
 			nsc.Actor->m_SceneRef = this;
@@ -86,22 +80,19 @@ namespace Flameberry {
 		OnPhysicsStart();
 	}
 
-	void Scene::OnStopRuntime()
-	{
+	void Scene::OnStopRuntime() {
 		m_IsRuntimeActive = m_IsRuntimePaused = false;
 
 		OnPhysicsStop();
 
 		// Delete Script Actors
-		for (auto& nsc : m_Registry->View<NativeScriptComponent>())
-		{
+		for (auto& nsc : m_Registry->View<NativeScriptComponent>()) {
 			nsc.Actor->OnInstanceDeleted();
 			nsc.DestroyScript(&nsc);
 		}
 	}
 
-	void Scene::OnUpdateRuntime(float delta)
-	{
+	void Scene::OnUpdateRuntime(float delta) {
 		FBY_PROFILE_SCOPE("Scene::OnUpdateRuntime");
 
 		if (!ShouldStep())
@@ -115,13 +106,11 @@ namespace Flameberry {
 		OnUpdateTransformHierarchy();
 	}
 
-	void Scene::OnStartSimulation()
-	{
+	void Scene::OnStartSimulation() {
 		OnPhysicsStart();
 	}
 
-	void Scene::OnUpdateSimulation(float delta)
-	{
+	void Scene::OnUpdateSimulation(float delta) {
 		FBY_PROFILE_SCOPE("Scene::OnUpdateSimulation");
 
 		if (!ShouldStep())
@@ -131,21 +120,17 @@ namespace Flameberry {
 		OnUpdateTransformHierarchy();
 	}
 
-	void Scene::OnStopSimulation()
-	{
+	void Scene::OnStopSimulation() {
 		OnPhysicsStop();
 	}
 
-	void Scene::OnPhysicsStart()
-	{
-		for (auto entity : m_Registry->Group<TransformComponent, RigidBodyComponent>())
-		{
+	void Scene::OnPhysicsStart() {
+		for (auto entity : m_Registry->Group<TransformComponent, RigidBodyComponent>()) {
 			const auto& [transform, rigidBody] = m_Registry->GetComponent<TransformComponent, RigidBodyComponent>(entity);
 
 			JPH::ShapeRefC shapeRef;
 
-			if (auto* boxColliderComponent = m_Registry->TryGetComponent<BoxColliderComponent>(entity))
-			{
+			if (auto* boxColliderComponent = m_Registry->TryGetComponent<BoxColliderComponent>(entity)) {
 				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
 
 				const glm::vec3 boxColliderSize = 0.5f * boxColliderComponent->Size * transform.Scale;
@@ -157,8 +142,7 @@ namespace Flameberry {
 				shapeRef = boxShapeResult.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
 			}
 
-			if (auto* sphereColliderComponent = m_Registry->TryGetComponent<SphereColliderComponent>(entity))
-			{
+			if (auto* sphereColliderComponent = m_Registry->TryGetComponent<SphereColliderComponent>(entity)) {
 				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
 
 				const float sphereColliderRadius = sphereColliderComponent->Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z);
@@ -170,8 +154,7 @@ namespace Flameberry {
 				shapeRef = sphereShapeResult.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
 			}
 
-			if (auto* capsuleColliderComponent = m_Registry->TryGetComponent<CapsuleColliderComponent>(entity))
-			{
+			if (auto* capsuleColliderComponent = m_Registry->TryGetComponent<CapsuleColliderComponent>(entity)) {
 				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
 
 				const float sphereColliderRadius = capsuleColliderComponent->Radius * glm::max(transform.Scale.x, transform.Scale.z);
@@ -187,8 +170,7 @@ namespace Flameberry {
 			JPH::ObjectLayer objectLayer;
 			JPH::EMotionType motionType;
 
-			switch (rigidBody.Type)
-			{
+			switch (rigidBody.Type) {
 				case RigidBodyComponent::RigidBodyType::Static:
 					objectLayer = Layers::NON_MOVING;
 					motionType = JPH::EMotionType::Static;
@@ -227,16 +209,14 @@ namespace Flameberry {
 		PhysicsManager::OptimizeBroadPhase();
 	}
 
-	void Scene::OnPhysicsSimulate(float delta)
-	{
+	void Scene::OnPhysicsSimulate(float delta) {
 		// If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).
 		constexpr int cCollisionSteps = 1;
 
 		// Step the world
 		PhysicsManager::Update(delta, cCollisionSteps);
 
-		for (auto entity : m_Registry->Group<RigidBodyComponent>())
-		{
+		for (auto entity : m_Registry->Group<RigidBodyComponent>()) {
 			auto [transform, rigidBody] = m_Registry->GetComponent<TransformComponent, RigidBodyComponent>(entity);
 			JPH::Body* rigidBodyRuntimePtr = (JPH::Body*)rigidBody.RuntimeRigidBody;
 			JPH::RVec3 position = PhysicsManager::GetBodyInterface().GetCenterOfMassPosition(rigidBodyRuntimePtr->GetID());
@@ -248,20 +228,16 @@ namespace Flameberry {
 		}
 	}
 
-	void Scene::OnPhysicsStop()
-	{
-		for (auto& rigidBody : m_Registry->View<RigidBodyComponent>())
-		{
+	void Scene::OnPhysicsStop() {
+		for (auto& rigidBody : m_Registry->View<RigidBodyComponent>()) {
 			JPH::Body* body = (JPH::Body*)rigidBody.RuntimeRigidBody;
 			PhysicsManager::GetBodyInterface().RemoveBody(body->GetID());
 			PhysicsManager::GetBodyInterface().DestroyBody(body->GetID());
 		}
 	}
 
-	bool Scene::ShouldStep()
-	{
-		if (m_IsRuntimePaused)
-		{
+	bool Scene::ShouldStep() {
+		if (m_IsRuntimePaused) {
 			if (m_StepFrames <= 0)
 				return false;
 			else
@@ -271,19 +247,16 @@ namespace Flameberry {
 		return true;
 	}
 
-	void Scene::OnViewportResize(const glm::vec2& viewportSize)
-	{
+	void Scene::OnViewportResize(const glm::vec2& viewportSize) {
 		m_ViewportSize = viewportSize;
 
-		for (auto& cameraComp : m_Registry->View<CameraComponent>())
-		{
+		for (auto& cameraComp : m_Registry->View<CameraComponent>()) {
 			// TODO: This is fishy, maybe update this only when runtime is started
 			cameraComp.Camera.UpdateWithAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
 		}
 	}
 
-	FEntity Scene::GetPrimaryCameraEntity() const
-	{
+	FEntity Scene::GetPrimaryCameraEntity() const {
 		for (auto entity : m_Registry->Group<CameraComponent>())
 			if (auto& cameraComp = m_Registry->GetComponent<CameraComponent>(entity); cameraComp.IsPrimary)
 				return entity;
@@ -291,8 +264,7 @@ namespace Flameberry {
 		return {};
 	}
 
-	void Scene::UpdateTransformHierarchy(FEntity entity, const glm::mat4& parentTransform, bool lazyUpdate)
-	{
+	void Scene::UpdateTransformHierarchy(FEntity entity, const glm::mat4& parentTransform, bool lazyUpdate) {
 		if (entity == FEntity::Null)
 			return;
 
@@ -308,14 +280,12 @@ namespace Flameberry {
 				UpdateTransformHierarchy(it, transform ? transform->GlobalTransform : glm::mat4(1.0f), !isDirty);
 	}
 
-	void Scene::OnUpdateTransformHierarchy()
-	{
+	void Scene::OnUpdateTransformHierarchy() {
 		FBY_PROFILE_SCOPE("UpdateTransformHierarchy");
 		UpdateTransformHierarchy(m_WorldEntity, glm::mat4(1.0f), true);
 	}
 
-	FEntity Scene::CreateEntityWithParent(FEntity parent)
-	{
+	FEntity Scene::CreateEntityWithParent(FEntity parent) {
 		if (parent == FEntity::Null)
 			parent = m_WorldEntity;
 
@@ -333,8 +303,7 @@ namespace Flameberry {
 		auto& parentRel = m_Registry->GetComponent<RelationshipComponent>(parent);
 		if (parentRel.FirstChild == FEntity::Null)
 			parentRel.FirstChild = entity;
-		else
-		{
+		else {
 			auto sibling = parentRel.FirstChild;
 
 			while (m_Registry->GetComponent<RelationshipComponent>(sibling).NextSibling != FEntity::Null)
@@ -348,8 +317,7 @@ namespace Flameberry {
 		return entity;
 	}
 
-	FEntity Scene::CreateEntityWithTagAndParent(const std::string& tag, FEntity parent)
-	{
+	FEntity Scene::CreateEntityWithTagAndParent(const std::string& tag, FEntity parent) {
 		const FEntity entity = CreateEntityWithParent(parent);
 		m_Registry->EmplaceComponent<IDComponent>(entity);
 		m_Registry->EmplaceComponent<TagComponent>(entity, tag);
@@ -357,32 +325,27 @@ namespace Flameberry {
 		return entity;
 	}
 
-	FEntity Scene::CreateEntityWithTagTransformAndParent(const std::string& tag, FEntity parent)
-	{
+	FEntity Scene::CreateEntityWithTagTransformAndParent(const std::string& tag, FEntity parent) {
 		const auto entity = CreateEntityWithTagAndParent(tag, parent);
 		m_Registry->EmplaceComponent<TransformComponent>(entity);
 
 		return entity;
 	}
 
-	void Scene::DestroyEntityTree(FEntity entity)
-	{
+	void Scene::DestroyEntityTree(FEntity entity) {
 		if (entity == FEntity::Null)
 			return;
 
-		if (m_Registry->HasComponent<RelationshipComponent>(entity))
-		{
+		if (m_Registry->HasComponent<RelationshipComponent>(entity)) {
 			auto& relation = m_Registry->GetComponent<RelationshipComponent>(entity);
 			auto sibling = relation.FirstChild;
-			while (sibling != FEntity::Null)
-			{
+			while (sibling != FEntity::Null) {
 				auto temp = m_Registry->GetComponent<RelationshipComponent>(sibling).NextSibling;
 				DestroyEntityTree(sibling);
 				sibling = temp;
 			}
 
-			if (relation.Parent != FEntity::Null)
-			{
+			if (relation.Parent != FEntity::Null) {
 				auto& parentRel = m_Registry->GetComponent<RelationshipComponent>(relation.Parent);
 				if (parentRel.FirstChild == entity)
 					parentRel.FirstChild = relation.NextSibling;
@@ -395,8 +358,7 @@ namespace Flameberry {
 		m_Registry->DestroyEntity(entity);
 	}
 
-	void Scene::ReparentEntity(FEntity entity, FEntity destParent)
-	{
+	void Scene::ReparentEntity(FEntity entity, FEntity destParent) {
 		FBY_ASSERT(entity != FEntity::Null, "Can't reparent null entity!");
 
 		// Whose responsibility should this be? Should the caller ensure to set destParent to atleast WorldEntity?
@@ -423,8 +385,7 @@ namespace Flameberry {
 		if (oldParent == destParent)
 			return;
 
-		if (oldParent != FEntity::Null)
-		{
+		if (oldParent != FEntity::Null) {
 			auto& oldParentRel = m_Registry->GetComponent<RelationshipComponent>(oldParent);
 			if (oldParentRel.FirstChild == entity)
 				oldParentRel.FirstChild = relation.NextSibling;
@@ -444,24 +405,20 @@ namespace Flameberry {
 		newParentRel.FirstChild = entity;
 
 		// Updating Transform --------------------------------------------------------------------------------------
-		if (auto* transform = m_Registry->TryGetComponent<TransformComponent>(entity))
-		{
+		if (auto* transform = m_Registry->TryGetComponent<TransformComponent>(entity)) {
 			OnUpdateTransformHierarchy();
 
 			glm::vec3 translation, rotation, scale;
 			Math::DecomposeTransform(transform->GlobalTransform, translation, rotation, scale);
 
-			if (auto* parentTransform = m_Registry->TryGetComponent<TransformComponent>(destParent))
-			{
+			if (auto* parentTransform = m_Registry->TryGetComponent<TransformComponent>(destParent)) {
 				glm::vec3 parentTranslation, parentRotation, parentScale;
 				Math::DecomposeTransform(parentTransform->GlobalTransform, parentTranslation, parentRotation, parentScale);
 
 				transform->Translation = translation - parentTranslation;
 				transform->Rotation = rotation - parentRotation;
 				transform->Scale = scale / parentScale;
-			}
-			else
-			{
+			} else {
 				transform->Translation = translation;
 				transform->Rotation = rotation;
 				transform->Scale = scale;
@@ -471,12 +428,10 @@ namespace Flameberry {
 		}
 	}
 
-	bool Scene::Recursive_IsEntityInHierarchy(FEntity key, FEntity parent)
-	{
+	bool Scene::Recursive_IsEntityInHierarchy(FEntity key, FEntity parent) {
 		auto* relation = m_Registry->TryGetComponent<RelationshipComponent>(parent);
 		auto sibling = parent;
-		while (relation && sibling != FEntity::Null)
-		{
+		while (relation && sibling != FEntity::Null) {
 			if (sibling == key)
 				return true;
 
@@ -489,41 +444,34 @@ namespace Flameberry {
 		return false;
 	}
 
-	bool Scene::IsEntityInHierarchy(FEntity key, FEntity parent)
-	{
+	bool Scene::IsEntityInHierarchy(FEntity key, FEntity parent) {
 		auto* relation = m_Registry->TryGetComponent<RelationshipComponent>(parent);
 		return relation ? Recursive_IsEntityInHierarchy(key, relation->FirstChild) : false;
 	}
 
 	template <typename... Component>
-	static void CopyComponentIfExists(Scene* context, FEntity dest, FEntity src)
-	{
-		([&]()
-			{
-				if (auto* comp = context->GetRegistry()->TryGetComponent<Component>(src); comp)
-					context->GetRegistry()->EmplaceComponent<Component>(dest, *comp);
-			}(),
+	static void CopyComponentIfExists(Scene* context, FEntity dest, FEntity src) {
+		([&]() {
+			if (auto* comp = context->GetRegistry()->TryGetComponent<Component>(src); comp)
+				context->GetRegistry()->EmplaceComponent<Component>(dest, *comp);
+		}(),
 			...);
 	}
 
 	template <typename... Component>
-	static void CopyComponentIfExists(ComponentList<Component...>, Scene* context, FEntity dest, FEntity src)
-	{
+	static void CopyComponentIfExists(ComponentList<Component...>, Scene* context, FEntity dest, FEntity src) {
 		CopyComponentIfExists<Component...>(context, dest, src);
 	}
 
-	FEntity Scene::DuplicateEntity(FEntity src)
-	{
-		if (m_Registry->HasComponent<RelationshipComponent>(src))
-		{
+	FEntity Scene::DuplicateEntity(FEntity src) {
+		if (m_Registry->HasComponent<RelationshipComponent>(src)) {
 			FEntity duplicateEntity = DuplicateEntityTree(src);
 
 			auto& destRelation = m_Registry->GetComponent<RelationshipComponent>(duplicateEntity);
 			auto& srcRelation = m_Registry->GetComponent<RelationshipComponent>(src);
 
 			// Handling the `duplicateEntity`'s relation component
-			if (srcRelation.Parent != FEntity::Null)
-			{
+			if (srcRelation.Parent != FEntity::Null) {
 				FEntity srcNextSibling = srcRelation.NextSibling;
 				auto* srcNextSiblingRel = m_Registry->TryGetComponent<RelationshipComponent>(srcNextSibling);
 
@@ -540,8 +488,7 @@ namespace Flameberry {
 		return DuplicatePureEntity(src);
 	}
 
-	FEntity Scene::DuplicatePureEntity(FEntity src)
-	{
+	FEntity Scene::DuplicatePureEntity(FEntity src) {
 		const auto destEntity = m_Registry->CreateEntity();
 		m_Registry->EmplaceComponent<IDComponent>(destEntity);
 		m_Registry->EmplaceComponent<TagComponent>(destEntity, m_Registry->GetComponent<TagComponent>(src).Tag);
@@ -550,8 +497,7 @@ namespace Flameberry {
 		return destEntity;
 	}
 
-	FEntity Scene::DuplicateEntityTree(FEntity src)
-	{
+	FEntity Scene::DuplicateEntityTree(FEntity src) {
 		if (src == FEntity::Null)
 			return FEntity::Null;
 
@@ -565,8 +511,7 @@ namespace Flameberry {
 		FEntity prevDestChild = FEntity::Null;
 		RelationshipComponent* prevDestChildRel = nullptr;
 
-		while (child != FEntity::Null)
-		{
+		while (child != FEntity::Null) {
 			// Create a copy of each children of `src`
 			FEntity destChild = DuplicateEntityTree(child);
 

@@ -5,26 +5,21 @@
 namespace Flameberry {
 
 	AssetThread::AssetThread()
-		: m_Running(true), m_AssetThread(&AssetThread::Main, this)
-	{
+		: m_Running(true), m_AssetThread(&AssetThread::Main, this) {
 	}
 
-	AssetThread::~AssetThread()
-	{
+	AssetThread::~AssetThread() {
 		m_Running = false;
 		m_AssetThread.join();
 	}
 
-	Ref<Asset> AssetThread::QueueLoad(AssetHandle handle, const AssetMetadata& metadata)
-	{
+	Ref<Asset> AssetThread::QueueLoad(AssetHandle handle, const AssetMetadata& metadata) {
 		std::scoped_lock readyLock(m_ReadyAssetMapMutex);
 		{
 			// Check if the asset is present in the ready queue
-			if (auto it = m_ReadyAssetMap.find(handle); it != m_ReadyAssetMap.end())
-			{
+			if (auto it = m_ReadyAssetMap.find(handle); it != m_ReadyAssetMap.end()) {
 				// Check if asset present in the ready queue is loaded yet, i.e., if it's not nullptr
-				if (Ref<Asset> loadedAsset = it->second)
-				{
+				if (Ref<Asset> loadedAsset = it->second) {
 					m_ReadyAssetMap.erase(handle);
 					return loadedAsset;
 				}
@@ -49,10 +44,8 @@ namespace Flameberry {
 		return nullptr;
 	}
 
-	void AssetThread::Main()
-	{
-		while (m_Running)
-		{
+	void AssetThread::Main() {
+		while (m_Running) {
 			bool isLoadPending = false;
 			AssetLoadParameters loadParameters;
 
@@ -60,16 +53,14 @@ namespace Flameberry {
 				// Acquire queue mutex
 				std::scoped_lock loadQueueLock(m_AssetLoadQueueMutex);
 
-				if (!m_AssetLoadParametersQueue.empty())
-				{
+				if (!m_AssetLoadParametersQueue.empty()) {
 					loadParameters = m_AssetLoadParametersQueue.front();
 					m_AssetLoadParametersQueue.pop();
 					isLoadPending = true;
 				}
 			}
 
-			if (isLoadPending)
-			{
+			if (isLoadPending) {
 				// Load the asset here
 				Ref<Asset> loadedAsset = AssetImporter::ImportAsset(loadParameters.Handle, loadParameters.Metadata);
 

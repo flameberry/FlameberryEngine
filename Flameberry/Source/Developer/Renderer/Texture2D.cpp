@@ -13,10 +13,8 @@ namespace Flameberry {
 
 	namespace Utils {
 
-		static uint32_t GetPixelSizeInBytesFromTextureFormat(VkFormat format)
-		{
-			switch (format)
-			{
+		static uint32_t GetPixelSizeInBytesFromTextureFormat(VkFormat format) {
+			switch (format) {
 				case VK_FORMAT_R8G8B8_UNORM:
 					return 3;
 				case VK_FORMAT_R8G8B8A8_UNORM:
@@ -38,8 +36,7 @@ namespace Flameberry {
 
 	std::unordered_map<std::string, Ref<Texture2D>> Texture2D::s_TextureCacheDirectory;
 
-	Texture2D::Texture2D(const std::string& texturePath, bool canGenerateMipMaps, VkSampler sampler)
-	{
+	Texture2D::Texture2D(const std::string& texturePath, bool canGenerateMipMaps, VkSampler sampler) {
 		int width, height, channels;
 
 		void* pixels = nullptr;
@@ -47,14 +44,11 @@ namespace Flameberry {
 		VkFormat format = VK_FORMAT_UNDEFINED;
 		VkDeviceSize imageSize = 0;
 
-		if (stbi_is_hdr(texturePath.c_str()))
-		{
+		if (stbi_is_hdr(texturePath.c_str())) {
 			pixels = stbi_loadf(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			mipLevels = 1;
 			format = VK_FORMAT_R32G32B32A32_SFLOAT;
-		}
-		else
-		{
+		} else {
 			pixels = stbi_load(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
 			format = VK_FORMAT_R8G8B8A8_UNORM;
@@ -66,16 +60,14 @@ namespace Flameberry {
 		stbi_image_free(pixels);
 	}
 
-	Texture2D::Texture2D(const void* data, const Texture2DSpecification& specification)
-	{
+	Texture2D::Texture2D(const void* data, const Texture2DSpecification& specification) {
 		FBY_ASSERT(data, "Texture pixels are empty!");
 		const uint32_t mipLevels = specification.GenerateMipmaps ? static_cast<uint32_t>(std::floor(std::log2(std::max(specification.Width, specification.Height)))) + 1 : 1;
 		const VkDeviceSize imageSize = specification.Width * specification.Height * Utils::GetPixelSizeInBytesFromTextureFormat(specification.Format);
 		SetupTexture(data, specification.Width, specification.Height, imageSize, mipLevels, specification.Format, specification.Sampler);
 	}
 
-	void Texture2D::SetupTexture(const void* data, const float width, const float height, const float imageSize, const uint16_t mipLevels, const VkFormat format, const VkSampler sampler)
-	{
+	void Texture2D::SetupTexture(const void* data, const float width, const float height, const float imageSize, const uint16_t mipLevels, const VkFormat format, const VkSampler sampler) {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 		m_TextureImageSpecification.Width = width;
@@ -111,8 +103,7 @@ namespace Flameberry {
 		else
 			m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		if (sampler == VK_NULL_HANDLE)
-		{
+		if (sampler == VK_NULL_HANDLE) {
 			m_DidCreateSampler = true;
 
 			VkSamplerCreateInfo sampler_info{};
@@ -138,13 +129,11 @@ namespace Flameberry {
 			sampler_info.maxLod = (float)m_TextureImageSpecification.MipLevels;
 
 			VK_CHECK_RESULT(vkCreateSampler(device, &sampler_info, nullptr, &m_Sampler));
-		}
-		else
+		} else
 			m_Sampler = sampler;
 	}
 
-	Texture2D::~Texture2D()
-	{
+	Texture2D::~Texture2D() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		if (m_DescriptorSet != VK_NULL_HANDLE)
 			vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
@@ -152,10 +141,8 @@ namespace Flameberry {
 			vkDestroySampler(device, m_Sampler, nullptr);
 	}
 
-	VkDescriptorSet Texture2D::CreateOrGetDescriptorSet()
-	{
-		if (m_DescriptorSet == VK_NULL_HANDLE)
-		{
+	VkDescriptorSet Texture2D::CreateOrGetDescriptorSet() {
+		if (m_DescriptorSet == VK_NULL_HANDLE) {
 			VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_DescriptorSet, s_DescriptorLayout->GetLayout());
 
 			// Update the Descriptor Set:
@@ -177,15 +164,11 @@ namespace Flameberry {
 		return m_DescriptorSet;
 	}
 
-	Ref<Texture2D> Texture2D::TryGetOrLoadTexture(const std::string& texturePath)
-	{
-		if (s_TextureCacheDirectory.find(texturePath) != s_TextureCacheDirectory.end())
-		{
+	Ref<Texture2D> Texture2D::TryGetOrLoadTexture(const std::string& texturePath) {
+		if (s_TextureCacheDirectory.find(texturePath) != s_TextureCacheDirectory.end()) {
 			FBY_TRACE("Successfully retrieved vulkan texture from cache: {}", texturePath);
 			return s_TextureCacheDirectory[texturePath];
-		}
-		else
-		{
+		} else {
 			Ref<Texture2D> texture = CreateRef<Texture2D>(texturePath);
 			s_TextureCacheDirectory[texturePath] = texture;
 			FBY_TRACE("Texture not found in cache! Loading texture from disk: {}", texturePath);
@@ -193,8 +176,7 @@ namespace Flameberry {
 		}
 	}
 
-	void Texture2D::InitStaticResources()
-	{
+	void Texture2D::InitStaticResources() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 		ImageSpecification imageSpec;
@@ -291,8 +273,7 @@ namespace Flameberry {
 		s_EmptyDescriptorSet->Update();
 	}
 
-	void Texture2D::DestroyStaticResources()
-	{
+	void Texture2D::DestroyStaticResources() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkDestroySampler(device, s_DefaultSampler, nullptr);
 

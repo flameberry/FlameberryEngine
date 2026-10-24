@@ -6,8 +6,7 @@
 
 namespace Flameberry {
 
-	class Profiler
-	{
+	class Profiler {
 	public:
 		Profiler(const std::string& scopeName);
 		~Profiler();

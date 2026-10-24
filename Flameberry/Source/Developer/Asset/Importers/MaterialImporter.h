@@ -5,8 +5,7 @@
 
 namespace Flameberry {
 
-	class MaterialImporter
-	{
+	class MaterialImporter {
 	public:
 		static Ref<MaterialAsset> ImportMaterial(AssetHandle handle, const AssetMetadata& metadata);
 		static Ref<MaterialAsset> LoadMaterial(const std::filesystem::path& path);

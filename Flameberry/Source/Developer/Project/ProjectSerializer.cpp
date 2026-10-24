@@ -6,23 +6,20 @@
 
 namespace Flameberry {
 
-	Ref<Project> ProjectSerializer::DeserializeIntoNewProject(const std::filesystem::path& filePath)
-	{
+	Ref<Project> ProjectSerializer::DeserializeIntoNewProject(const std::filesystem::path& filePath) {
 		Ref<Project> newProject = CreateRef<Project>();
 		if (DeserializeIntoExistingProject(filePath, newProject))
 			return newProject;
 		return nullptr;
 	}
 
-	bool ProjectSerializer::DeserializeIntoExistingProject(const std::filesystem::path& filePath, const Ref<Project>& dest)
-	{
+	bool ProjectSerializer::DeserializeIntoExistingProject(const std::filesystem::path& filePath, const Ref<Project>& dest) {
 		std::ifstream in(filePath);
 		std::stringstream ss;
 		ss << in.rdbuf();
 
 		YAML::Node data = YAML::Load(ss.str());
-		if (!data["Project"])
-		{
+		if (!data["Project"]) {
 			FBY_ERROR("Failed to load project [{}]: 'Project' attribute not present in file!", filePath);
 			return false;
 		};
@@ -31,8 +28,7 @@ namespace Flameberry {
 		dest->m_Config.Name = data["Project"].as<std::string>();
 
 		YAML::Node config = data["Configuration"];
-		if (!config)
-		{
+		if (!config) {
 			FBY_ERROR("Failed to load project [{}]: 'Configuration' attribute not present in file!", filePath);
 			return false;
 		}
@@ -44,8 +40,7 @@ namespace Flameberry {
 		return true;
 	}
 
-	void ProjectSerializer::SerializeProject(const std::filesystem::path& filePath, const Project* project)
-	{
+	void ProjectSerializer::SerializeProject(const std::filesystem::path& filePath, const Project* project) {
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Project" << YAML::Value << project->m_Config.Name;

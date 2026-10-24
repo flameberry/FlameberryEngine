@@ -9,8 +9,7 @@
 
 namespace Flameberry {
 
-	struct FramebufferAttachmentSpecification
-	{
+	struct FramebufferAttachmentSpecification {
 		VkFormat Format;
 		uint32_t LayerCount;
 
@@ -19,19 +18,16 @@ namespace Flameberry {
 		FramebufferAttachmentSpecification(VkFormat format, uint32_t layerCount)
 			: Format(format), LayerCount(layerCount) {}
 
-		bool operator==(const FramebufferAttachmentSpecification& other) const
-		{
+		bool operator==(const FramebufferAttachmentSpecification& other) const {
 			return this->Format == other.Format && this->LayerCount == other.LayerCount;
 		}
 
-		bool operator!=(const FramebufferAttachmentSpecification& other) const
-		{
+		bool operator!=(const FramebufferAttachmentSpecification& other) const {
 			return !(*this == other);
 		}
 	};
 
-	struct FramebufferSpecification
-	{
+	struct FramebufferSpecification {
 		uint32_t Width, Height;
 		std::vector<FramebufferAttachmentSpecification> Attachments;
 		uint32_t Samples;
@@ -41,8 +37,7 @@ namespace Flameberry {
 		VkAttachmentStoreOp ColorStoreOp = VK_ATTACHMENT_STORE_OP_STORE, DepthStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE, StencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	};
 
-	class Framebuffer
-	{
+	class Framebuffer {
 	public:
 		Framebuffer(const FramebufferSpecification& specification);
 		~Framebuffer();

@@ -17,8 +17,7 @@ namespace Flameberry {
 
 	namespace Utils {
 
-		void AssetThread_CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize)
-		{
+		void AssetThread_CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize) {
 			CommandBufferSpecification cmdBufferSpec;
 			cmdBufferSpec.CommandPool = VulkanContext::GetCurrentDevice()->GetComputeCommandPool();
 			cmdBufferSpec.SingleTimeUsage = true;
@@ -44,23 +43,20 @@ namespace Flameberry {
 			vulkanQueueSubmitInfo.commandBufferCount = 1;
 			vulkanQueueSubmitInfo.pCommandBuffers = &vulkanCmdBuffer;
 
-			VulkanContext::GetCurrentDevice()->AccessQueueSafely([graphicsQueue, vulkanQueueSubmitInfo]()
-				{
-					vkQueueSubmit(graphicsQueue, 1, &vulkanQueueSubmitInfo, VK_NULL_HANDLE);
-					vkQueueWaitIdle(graphicsQueue);
-				});
+			VulkanContext::GetCurrentDevice()->AccessQueueSafely([graphicsQueue, vulkanQueueSubmitInfo]() {
+				vkQueueSubmit(graphicsQueue, 1, &vulkanQueueSubmitInfo, VK_NULL_HANDLE);
+				vkQueueWaitIdle(graphicsQueue);
+			});
 		}
 
 	} // namespace Utils
 
-	Ref<StaticMesh> MeshImporter::ImportMesh(AssetHandle handle, const AssetMetadata& metadata)
-	{
+	Ref<StaticMesh> MeshImporter::ImportMesh(AssetHandle handle, const AssetMetadata& metadata) {
 		return LoadMesh(metadata.FilePath);
 	}
 
 	// Returns Flameberry Material Asset Handle
-	static AssetHandle ProcessAndLoadMaterial(aiMaterial* material, const std::filesystem::path& path)
-	{
+	static AssetHandle ProcessAndLoadMaterial(aiMaterial* material, const std::filesystem::path& path) {
 		aiString name;
 		material->Get(AI_MATKEY_NAME, name);
 
@@ -105,8 +101,7 @@ namespace Flameberry {
 
 		std::string albedoStr(albedoMap.C_Str()), normalStr(normalMap.C_Str()), roughnessStr(roughnessMap.C_Str()), ambientStr(ambientMap.C_Str()), metallicStr(metallicMap.C_Str());
 
-		if (materialAsset->IsUsingAlbedoMap())
-		{
+		if (materialAsset->IsUsingAlbedoMap()) {
 			std::replace(albedoStr.begin(), albedoStr.end(), '\\', '/');
 
 			const auto& resolvedPath = std::filesystem::weakly_canonical(path.parent_path() / albedoStr);
@@ -114,8 +109,7 @@ namespace Flameberry {
 			materialAsset->SetAlbedoMap(handle);
 		}
 
-		if (materialAsset->IsUsingNormalMap())
-		{
+		if (materialAsset->IsUsingNormalMap()) {
 			std::replace(normalStr.begin(), normalStr.end(), '\\', '/');
 
 			const auto& resolvedPath = std::filesystem::canonical(path.parent_path() / normalStr);
@@ -123,8 +117,7 @@ namespace Flameberry {
 			materialAsset->SetNormalMap(handle);
 		}
 
-		if (materialAsset->IsUsingRoughnessMap())
-		{
+		if (materialAsset->IsUsingRoughnessMap()) {
 			std::replace(roughnessStr.begin(), roughnessStr.end(), '\\', '/');
 
 			const auto& resolvedPath = std::filesystem::canonical(path.parent_path() / roughnessStr);
@@ -132,8 +125,7 @@ namespace Flameberry {
 			materialAsset->SetRoughnessMap(handle);
 		}
 
-		if (materialAsset->IsUsingMetallicMap())
-		{
+		if (materialAsset->IsUsingMetallicMap()) {
 			std::replace(metallicStr.begin(), metallicStr.end(), '\\', '/');
 
 			const auto& resolvedPath = std::filesystem::canonical(path.parent_path() / metallicStr);
@@ -141,8 +133,7 @@ namespace Flameberry {
 			materialAsset->SetMetallicMap(handle);
 		}
 
-		if (materialAsset->IsUsingAmbientMap())
-		{
+		if (materialAsset->IsUsingAmbientMap()) {
 			std::replace(ambientStr.begin(), ambientStr.end(), '\\', '/');
 
 			const auto& resolvedPath = std::filesystem::canonical(path.parent_path() / ambientStr);
@@ -154,12 +145,10 @@ namespace Flameberry {
 		return materialAsset->Handle;
 	}
 
-	static void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles, AABB& meshAABB)
-	{
+	static void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles, AABB& meshAABB) {
 		uint32_t indexBase = refVertices.size();
 
-		for (uint32_t i = 0; i < mesh->mNumVertices; i++)
-		{
+		for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
 			glm::vec2 textureCoords = mesh->HasTextureCoords(0) ? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y) : glm::vec2(0.0f);
 			glm::vec3 tangent = mesh->HasTangentsAndBitangents() ? glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z) : glm::vec3(0.0f);
 			glm::vec3 bitangent = mesh->HasTangentsAndBitangents() ? glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z) : glm::vec3(0.0f);
@@ -173,8 +162,7 @@ namespace Flameberry {
 		}
 
 		uint32_t indexOffset = refIndices.size();
-		for (uint32_t i = 0; i < mesh->mNumFaces; i++)
-		{
+		for (uint32_t i = 0; i < mesh->mNumFaces; i++) {
 			aiFace face = mesh->mFaces[i];
 			for (uint32_t j = 0; j < face.mNumIndices; j++)
 				refIndices.push_back(indexBase + face.mIndices[j]); // TODO: Make this efficient
@@ -196,11 +184,9 @@ namespace Flameberry {
 			meshAABB.Max = { mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z };
 	}
 
-	static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles, AABB& meshAABB)
-	{
+	static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles, AABB& meshAABB) {
 		// Process all the node's meshes (if any)
-		for (uint32_t i = 0; i < node->mNumMeshes; i++)
-		{
+		for (uint32_t i = 0; i < node->mNumMeshes; i++) {
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 			ProcessMesh(mesh, scene, refVertices, refIndices, refSubMeshes, refMatHandles, meshAABB);
 		}
@@ -210,8 +196,7 @@ namespace Flameberry {
 			ProcessNode(node->mChildren[i], scene, refVertices, refIndices, refSubMeshes, refMatHandles, meshAABB);
 	}
 
-	Ref<StaticMesh> MeshImporter::LoadMesh(const std::filesystem::path& path)
-	{
+	Ref<StaticMesh> MeshImporter::LoadMesh(const std::filesystem::path& path) {
 		FBY_SCOPED_TIMER("Load_Model_Assimp");
 
 		// Create an instance of the Importer class
@@ -227,8 +212,7 @@ namespace Flameberry {
 				| aiProcess_GenBoundingBoxes);
 
 		// If the import failed, report it
-		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE))
-		{
+		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)) {
 			FBY_ERROR("Mesh Importing failed: {}", importer.GetErrorString());
 			return nullptr;
 		}
@@ -243,8 +227,7 @@ namespace Flameberry {
 		FBY_LOG("Number of materials in mesh: {}: {}", path, scene->mNumMaterials);
 
 		// Load Materials
-		for (uint32_t i = 0; i < scene->mNumMaterials; i++)
-		{
+		for (uint32_t i = 0; i < scene->mNumMaterials; i++) {
 			auto* mat = scene->mMaterials[i];
 			materialHandles.emplace_back(ProcessAndLoadMaterial(mat, path));
 		}

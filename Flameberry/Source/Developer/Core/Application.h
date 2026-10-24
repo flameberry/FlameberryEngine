@@ -10,27 +10,23 @@
 
 namespace Flameberry {
 
-	struct ApplicationCommandLineArgs
-	{
+	struct ApplicationCommandLineArgs {
 		int Count;
 		const char** Args;
 
-		const char* operator[](int idx) const
-		{
+		const char* operator[](int idx) const {
 			FBY_ASSERT(idx < Count, "Command Line Arguments: Index '{}' is out of range!", idx);
 			return Args[idx];
 		}
 	};
 
-	enum class ApplicationType : uint8_t
-	{
+	enum class ApplicationType : uint8_t {
 		None = 0,
 		Editor,
 		Runtime,
 	};
 
-	struct ApplicationSpecification
-	{
+	struct ApplicationSpecification {
 		ApplicationType Type = ApplicationType::None;
 		std::string Name;
 		WindowSpecification WindowSpec;
@@ -38,8 +34,7 @@ namespace Flameberry {
 		ApplicationCommandLineArgs CommandLineArgs;
 	};
 
-	class Application
-	{
+	class Application {
 	public:
 		explicit Application(const ApplicationSpecification& specification);
 		~Application();

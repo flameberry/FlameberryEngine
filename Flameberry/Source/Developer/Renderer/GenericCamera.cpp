@@ -8,12 +8,10 @@
 namespace Flameberry {
 
 	GenericCamera::GenericCamera()
-		: m_ProjectionMatrix(1.0f), m_ViewMatrix(1.0f)
-	{
+		: m_ProjectionMatrix(1.0f), m_ViewMatrix(1.0f) {
 	}
 
-	void GenericCamera::SetOrthographic(float aspectRatio, float zoom, float near, float far)
-	{
+	void GenericCamera::SetOrthographic(float aspectRatio, float zoom, float near, float far) {
 		m_CameraSettings.ProjectionType = ProjectionType::Orthographic;
 		m_CameraSettings.AspectRatio = aspectRatio;
 		m_CameraSettings.Zoom = zoom;
@@ -23,8 +21,7 @@ namespace Flameberry {
 		RecalculateProjectionMatrix();
 	}
 
-	void GenericCamera::SetPerspective(float aspectRatio, float FOV, float near, float far)
-	{
+	void GenericCamera::SetPerspective(float aspectRatio, float FOV, float near, float far) {
 		m_CameraSettings.ProjectionType = ProjectionType::Perspective;
 		m_CameraSettings.AspectRatio = aspectRatio;
 		m_CameraSettings.FOV = FOV;
@@ -34,49 +31,41 @@ namespace Flameberry {
 		RecalculateProjectionMatrix();
 	}
 
-	void GenericCamera::SetView(const glm::vec3& position, const glm::vec3& rotation)
-	{
+	void GenericCamera::SetView(const glm::vec3& position, const glm::vec3& rotation) {
 		const glm::vec3 cameraDirection = glm::rotate(glm::quat(rotation), glm::vec3(0, 0, 1));
 		m_ViewMatrix = glm::lookAt(position, position + cameraDirection, glm::vec3(0, 1, 0));
 	}
 
-	void GenericCamera::SetView_Direction(const glm::vec3& position, const glm::vec3& direction)
-	{
+	void GenericCamera::SetView_Direction(const glm::vec3& position, const glm::vec3& direction) {
 		m_ViewMatrix = glm::lookAt(position, position + direction, glm::vec3(0, 1, 0));
 	}
 
-	void GenericCamera::UpdateWithAspectRatio(float aspectRatio)
-	{
+	void GenericCamera::UpdateWithAspectRatio(float aspectRatio) {
 		m_CameraSettings.AspectRatio = aspectRatio;
 
 		RecalculateProjectionMatrix();
 	}
 
-	void GenericCamera::UpdateWithFOVorZoom(float FOV)
-	{
+	void GenericCamera::UpdateWithFOVorZoom(float FOV) {
 		m_CameraSettings.FOV = FOV;
 
 		RecalculateProjectionMatrix();
 	}
 
-	void GenericCamera::UpdateWithNear(float near)
-	{
+	void GenericCamera::UpdateWithNear(float near) {
 		m_CameraSettings.Near = near;
 
 		RecalculateProjectionMatrix();
 	}
 
-	void GenericCamera::UpdateWithFar(float far)
-	{
+	void GenericCamera::UpdateWithFar(float far) {
 		m_CameraSettings.Far = far;
 
 		RecalculateProjectionMatrix();
 	}
 
-	void GenericCamera::RecalculateProjectionMatrix()
-	{
-		switch (m_CameraSettings.ProjectionType)
-		{
+	void GenericCamera::RecalculateProjectionMatrix() {
+		switch (m_CameraSettings.ProjectionType) {
 			case ProjectionType::Orthographic:
 				m_ProjectionMatrix = glm::ortho(-m_CameraSettings.AspectRatio * m_CameraSettings.Zoom, m_CameraSettings.AspectRatio * m_CameraSettings.Zoom, -m_CameraSettings.Zoom, m_CameraSettings.Zoom, m_CameraSettings.Near, m_CameraSettings.Far);
 				m_ProjectionMatrix[1][1] *= -1; // For Vulkan

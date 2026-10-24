@@ -7,8 +7,7 @@
 
 namespace Flameberry {
 
-	struct BufferSpecification
-	{
+	struct BufferSpecification {
 		VkDeviceSize InstanceSize;
 		uint32_t InstanceCount;
 		VkBufferUsageFlags Usage;
@@ -16,8 +15,7 @@ namespace Flameberry {
 		VkDeviceSize MinOffsetAlignment = 0;
 	};
 
-	class Buffer
-	{
+	class Buffer {
 	public:
 		explicit Buffer(const BufferSpecification& specification);
 		~Buffer();

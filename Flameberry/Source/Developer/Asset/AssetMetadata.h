@@ -6,8 +6,7 @@
 
 namespace Flameberry {
 
-	struct AssetMetadata
-	{
+	struct AssetMetadata {
 		AssetType Type;
 		std::string FilePath; // Used as Name for Memory Only assets
 

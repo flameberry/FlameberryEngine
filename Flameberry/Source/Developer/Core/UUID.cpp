@@ -9,17 +9,14 @@ namespace Flameberry {
 	static std::uniform_int_distribution<UUID::ValueType> s_UniformDistribution;
 
 	UUID::UUID()
-		: m_UUID(s_UniformDistribution(s_Engine))
-	{
+		: m_UUID(s_UniformDistribution(s_Engine)) {
 	}
 
 	UUID::UUID(ValueType uuid)
-		: m_UUID(uuid)
-	{
+		: m_UUID(uuid) {
 	}
 
-	UUID::~UUID()
-	{
+	UUID::~UUID() {
 	}
 
 } // namespace Flameberry

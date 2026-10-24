@@ -14,10 +14,8 @@
 namespace Flameberry {
 
 	EditorCameraController::EditorCameraController(const glm::vec3& position, const glm::vec3& direction, const GenericCameraSettings& settings)
-		: m_Position(position), m_Direction(direction), m_Velocity(0.0f)
-	{
-		switch (settings.ProjectionType)
-		{
+		: m_Position(position), m_Direction(direction), m_Velocity(0.0f) {
+		switch (settings.ProjectionType) {
 			case ProjectionType::Orthographic:
 				m_Camera.SetOrthographic(settings.AspectRatio, settings.Zoom, settings.Near, settings.Far);
 				break;
@@ -28,14 +26,11 @@ namespace Flameberry {
 		m_Camera.SetView_Direction(m_Position, m_Direction);
 	}
 
-	EditorCameraController::~EditorCameraController()
-	{
+	EditorCameraController::~EditorCameraController() {
 	}
 
-	bool EditorCameraController::OnUpdate(float delta)
-	{
-		switch (m_Camera.GetSettings().ProjectionType)
-		{
+	bool EditorCameraController::OnUpdate(float delta) {
+		switch (m_Camera.GetSettings().ProjectionType) {
 			case ProjectionType::Perspective:
 				return OnUpdatePerspective(delta);
 			case ProjectionType::Orthographic:
@@ -43,19 +38,16 @@ namespace Flameberry {
 		}
 	}
 
-	void EditorCameraController::SetView(const glm::vec3& position, const glm::vec3& direction)
-	{
+	void EditorCameraController::SetView(const glm::vec3& position, const glm::vec3& direction) {
 		m_Position = position;
 		m_Direction = direction;
 		m_Camera.SetView_Direction(m_Position, m_Direction);
 	}
 
-	bool EditorCameraController::OnUpdatePerspective(float delta)
-	{
+	bool EditorCameraController::OnUpdatePerspective(float delta) {
 		// Camera is mid-flight reaching to the framing position
 		// ...so no movements using mouse are allowed
-		if (m_ShouldFrame)
-		{
+		if (m_ShouldFrame) {
 			float smoothFactor = 1.0f - glm::exp(-10.0f * delta); // Faster convergence
 
 			// Ease-In Multiplier: based on how far we still are
@@ -79,8 +71,7 @@ namespace Flameberry {
 		glm::vec2 mouseDelta = (mousePos - m_LastMousePosition);
 		m_LastMousePosition = mousePos;
 
-		if (!Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
-		{
+		if (!Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT)) {
 			Input::SetCursorMode(GLFW_CURSOR_NORMAL);
 			return false;
 		}
@@ -112,14 +103,11 @@ namespace Flameberry {
 			moveInput -= m_UpDirection;
 
 		bool moved = false;
-		if (glm::length(moveInput) > 0.0f)
-		{
+		if (glm::length(moveInput) > 0.0f) {
 			moveInput = glm::normalize(moveInput);
 			m_Velocity += moveInput * currentMoveSpeed * acceleration * delta;
 			moved = true;
-		}
-		else
-		{
+		} else {
 			// Apply damping when no input
 			m_Velocity -= m_Velocity * glm::min(damping * delta, 1.0f);
 		}
@@ -128,8 +116,7 @@ namespace Flameberry {
 		m_Position += m_Velocity * delta;
 
 		// Rotation Input
-		if (mouseDelta.x != 0.0f || mouseDelta.y != 0.0f)
-		{
+		if (mouseDelta.x != 0.0f || mouseDelta.y != 0.0f) {
 			const float pitchDelta = -mouseDelta.y * rotationSpeed;
 			const float yawDelta = -mouseDelta.x * rotationSpeed;
 
@@ -139,8 +126,7 @@ namespace Flameberry {
 			moved = true;
 		}
 
-		if (moved || glm::length(m_Velocity) > 0.001f)
-		{
+		if (moved || glm::length(m_Velocity) > 0.001f) {
 			m_RightDirection = glm::cross(m_UpDirection, -m_Direction);
 			m_Camera.SetView_Direction(m_Position, m_Direction);
 		}
@@ -148,8 +134,7 @@ namespace Flameberry {
 		return true;
 	}
 
-	void EditorCameraController::FrameEntity(const TransformComponent& transform, const AABB& aabb)
-	{
+	void EditorCameraController::FrameEntity(const TransformComponent& transform, const AABB& aabb) {
 		// Get AABB in local space
 		glm::vec3 aabbMin = aabb.Min;
 		glm::vec3 aabbMax = aabb.Max;
@@ -175,8 +160,7 @@ namespace Flameberry {
 		m_ShouldFrame = true;
 	}
 
-	void EditorCameraController::FrameEntity(const TransformComponent& transform)
-	{
+	void EditorCameraController::FrameEntity(const TransformComponent& transform) {
 		glm::vec3 center = transform.Translation;
 
 		// Fixed distance value you want (you can tweak this)
@@ -189,30 +173,22 @@ namespace Flameberry {
 		m_ShouldFrame = true;
 	}
 
-	bool EditorCameraController::OnUpdateOrthographic(float delta)
-	{
+	bool EditorCameraController::OnUpdateOrthographic(float delta) {
 		bool moved = false;
 		float m_CameraSpeed = 20.0f;
 		static float m_Zoom = 10.0f;
 
 		// Camera Movement
-		if (Input::IsKeyPressed(KeyCode::W))
-		{
+		if (Input::IsKeyPressed(KeyCode::W)) {
 			m_Position.y += m_CameraSpeed * delta;
 			moved = true;
-		}
-		else if (Input::IsKeyPressed(KeyCode::S))
-		{
+		} else if (Input::IsKeyPressed(KeyCode::S)) {
 			m_Position.y -= m_CameraSpeed * delta;
 			moved = true;
-		}
-		else if (Input::IsKeyPressed(KeyCode::D))
-		{
+		} else if (Input::IsKeyPressed(KeyCode::D)) {
 			m_Position.x += m_CameraSpeed * delta;
 			moved = true;
-		}
-		else if (Input::IsKeyPressed(KeyCode::A))
-		{
+		} else if (Input::IsKeyPressed(KeyCode::A)) {
 			m_Position.x -= m_CameraSpeed * delta;
 			moved = true;
 		}
@@ -220,13 +196,11 @@ namespace Flameberry {
 		bool zoomed = false;
 
 		// Zoom Controls
-		if (Input::IsKeyPressed(KeyCode::I))
-		{
+		if (Input::IsKeyPressed(KeyCode::I)) {
 			m_Zoom -= 0.025f;
 			zoomed = true;
 		}
-		if (Input::IsKeyPressed(KeyCode::O))
-		{
+		if (Input::IsKeyPressed(KeyCode::O)) {
 			m_Zoom += 0.025f;
 			zoomed = true;
 		}
@@ -242,15 +216,12 @@ namespace Flameberry {
 		return moved;
 	}
 
-	void EditorCameraController::OnResize(float aspectRatio)
-	{
+	void EditorCameraController::OnResize(float aspectRatio) {
 		m_Camera.UpdateWithAspectRatio(aspectRatio);
 	}
 
-	void EditorCameraController::OnEvent(const Event& e)
-	{
-		switch (e.GetType())
-		{
+	void EditorCameraController::OnEvent(const Event& e) {
+		switch (e.GetType()) {
 			case EventType::MouseScrolled:
 				break;
 		}

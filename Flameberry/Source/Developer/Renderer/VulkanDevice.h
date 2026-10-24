@@ -11,15 +11,13 @@
 
 namespace Flameberry {
 
-	struct QueueFamilyIndices
-	{
+	struct QueueFamilyIndices {
 		uint32_t GraphicsQueueFamilyIndex = -1;
 		uint32_t ComputeQueueFamilyIndex = -1;
 		uint32_t PresentationSupportedQueueFamilyIndex = -1;
 	};
 
-	class VulkanDevice
-	{
+	class VulkanDevice {
 	public:
 		VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow);
 		~VulkanDevice();
@@ -56,8 +54,7 @@ namespace Flameberry {
 	};
 
 	template <typename Fn>
-	inline void VulkanDevice::AccessQueueSafely(Fn&& function)
-	{
+	inline void VulkanDevice::AccessQueueSafely(Fn&& function) {
 		static_assert(std::is_invocable_v<Fn>);
 
 		std::scoped_lock lock(m_QueueMutex);

@@ -13,9 +13,7 @@ namespace Flameberry {
 
 	Application* Application::s_Instance;
 
-	Application::Application(const ApplicationSpecification& specification)
-		: m_Specification(specification)
-	{
+	Application::Application(const ApplicationSpecification& specification) : m_Specification(specification) {
 		s_Instance = this;
 
 		FBY_ASSERT(m_Specification.Type != ApplicationType::None, "ApplicationSpecification: Application Type not specified");
@@ -38,11 +36,9 @@ namespace Flameberry {
 		PushOverlay(m_ImGuiLayer);
 	}
 
-	void Application::Run()
-	{
+	void Application::Run() {
 		float last = 0.0f;
-		while (m_Window->IsRunning())
-		{
+		while (m_Window->IsRunning()) {
 			float now = glfwGetTime();
 			// This is the main delta time of the frame even though it's just a local variable :D
 			float delta = now - last;
@@ -54,13 +50,12 @@ namespace Flameberry {
 				layer->OnUpdate(delta);
 
 			// ImGui Rendering is submitted as a render command because otherwise it behaves oddly and gives validation errors
-			Renderer::Submit([app = this](VkCommandBuffer, uint32_t)
-				{
-					app->m_ImGuiLayer->Begin();
-					for (auto& layer : app->m_LayerStack)
-						layer->OnUIRender();
-					app->m_ImGuiLayer->End();
-				});
+			Renderer::Submit([app = this](VkCommandBuffer, uint32_t) {
+				app->m_ImGuiLayer->Begin();
+				for (auto& layer : app->m_LayerStack)
+					layer->OnUIRender();
+				app->m_ImGuiLayer->End();
+			});
 
 			// This is where the rendering of the entire frame is done
 			// All the render commands are executed one by one here
@@ -69,10 +64,8 @@ namespace Flameberry {
 		}
 	}
 
-	void Application::OnEvent(Event& e)
-	{
-		switch (e.GetType())
-		{
+	void Application::OnEvent(Event& e) {
+		switch (e.GetType()) {
 			case EventType::WindowResized:
 				this->OnWindowResizedEvent(*(WindowResizedEvent*)(&e));
 				break;
@@ -81,10 +74,8 @@ namespace Flameberry {
 				break;
 		}
 
-		if (!m_BlockAllLayerEvents)
-		{
-			for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); it++)
-			{
+		if (!m_BlockAllLayerEvents) {
+			for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); it++) {
 				if (e.Handled)
 					break;
 				(*it)->OnEvent(e);
@@ -92,69 +83,57 @@ namespace Flameberry {
 		}
 	}
 
-	void Application::OnKeyPressedEvent(KeyPressedEvent& e)
-	{
+	void Application::OnKeyPressedEvent(KeyPressedEvent& e) {
 	}
 
-	void Application::OnWindowResizedEvent(WindowResizedEvent& e)
-	{
+	void Application::OnWindowResizedEvent(WindowResizedEvent& e) {
 		// TODO: Wait for Render Thread to finish Rendering
 		m_Window->Resize();
 		m_ImGuiLayer->InvalidateResources();
 	}
 
-	void Application::PushLayer(Layer* layer)
-	{
+	void Application::PushLayer(Layer* layer) {
 		m_LayerStack.insert(m_LayerStack.begin() + m_LayerInsertIndex, layer);
 		m_LayerInsertIndex++;
 		layer->OnCreate();
 	}
 
-	void Application::PopLayer(Layer* layer)
-	{
+	void Application::PopLayer(Layer* layer) {
 		auto iterator = std::find(m_LayerStack.begin(), m_LayerStack.end(), layer);
-		if (iterator != m_LayerStack.begin() + m_LayerInsertIndex)
-		{
+		if (iterator != m_LayerStack.begin() + m_LayerInsertIndex) {
 			(*iterator)->OnDestroy();
 			m_LayerStack.erase(iterator);
 			m_LayerInsertIndex--;
 		}
 	}
 
-	void Application::PopAndDeleteLayer(Layer* layer)
-	{
+	void Application::PopAndDeleteLayer(Layer* layer) {
 		PopLayer(layer);
 		delete layer;
 	}
 
-	void Application::PushOverlay(Layer* overlay)
-	{
+	void Application::PushOverlay(Layer* overlay) {
 		m_LayerStack.emplace_back(overlay);
 		overlay->OnCreate();
 	}
 
-	void Application::PopOverlay(Layer* overlay)
-	{
+	void Application::PopOverlay(Layer* overlay) {
 		auto iterator = std::find(m_LayerStack.begin(), m_LayerStack.end(), overlay);
-		if (iterator != m_LayerStack.end())
-		{
+		if (iterator != m_LayerStack.end()) {
 			(*iterator)->OnDestroy();
 			m_LayerStack.erase(iterator);
 		}
 	}
 
-	void Application::PopAndDeleteOverlay(Layer* overlay)
-	{
+	void Application::PopAndDeleteOverlay(Layer* overlay) {
 		PopOverlay(overlay);
 		delete overlay;
 	}
 
-	Application::~Application()
-	{
+	Application::~Application() {
 		VulkanContext::GetCurrentDevice()->WaitIdle();
 
-		for (auto* layer : m_LayerStack)
-		{
+		for (auto* layer : m_LayerStack) {
 			layer->OnDestroy();
 			delete layer;
 		}

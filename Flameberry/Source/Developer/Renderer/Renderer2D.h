@@ -9,30 +9,26 @@
 
 namespace Flameberry {
 
-	struct LineVertex
-	{
+	struct LineVertex {
 		glm::vec3 Position{ 0.0f };
 		glm::vec3 Color{ 1.0f };
 	};
 
-	struct QuadVertex
-	{
+	struct QuadVertex {
 		glm::vec3 Position{ 0.0f };
 		glm::vec3 Color{ 1.0f };
 		glm::vec2 TextureCoordinates{ 0.0f }; // TODO: Unused
 		int EntityIndex = -1;
 	};
 
-	struct TextVertex
-	{
+	struct TextVertex {
 		glm::vec3 Position{ 0.0f };
 		glm::vec3 Color{ 1.0f };
 		glm::vec2 TextureCoordinates{ 0.0f };
 		int EntityIndex = -1;
 	};
 
-	struct Renderer2DData
-	{
+	struct Renderer2DData {
 		// Lines
 		Ref<Pipeline> LinePipeline;
 		Ref<Buffer> LineVertexBuffer;
@@ -48,8 +44,7 @@ namespace Flameberry {
 		Ref<Buffer> TextVertexBuffer, TextIndexBuffer;
 		uint32_t TextVertexBufferOffset = 0;
 
-		struct TextBatch
-		{
+		struct TextBatch {
 			Ref<Texture2D> FontAtlasTexture;
 			std::vector<TextVertex> TextVertices;
 		};
@@ -61,8 +56,7 @@ namespace Flameberry {
 		Ref<Texture2D> TextureMap;
 	};
 
-	struct TextParams
-	{
+	struct TextParams {
 		glm::vec3 Color;
 		float Kerning;
 		float LineSpacing;
@@ -71,8 +65,7 @@ namespace Flameberry {
 	// To be defined in Components.h
 	enum class AxisType : uint8_t;
 
-	class Renderer2D
-	{
+	class Renderer2D {
 	public:
 		static void Init(const Ref<RenderPass>& renderPass);
 		static void Shutdown();

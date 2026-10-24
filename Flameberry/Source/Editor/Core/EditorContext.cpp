@@ -4,13 +4,11 @@ namespace Flameberry {
 
 	EditorContext* EditorContext::s_Ctx = nullptr;
 
-	void EditorContext::Create()
-	{
+	void EditorContext::Create() {
 		s_Ctx = new EditorContext();
 	}
 
-	void EditorContext::Destroy()
-	{
+	void EditorContext::Destroy() {
 		delete s_Ctx;
 	}
 

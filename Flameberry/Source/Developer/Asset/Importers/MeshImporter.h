@@ -7,8 +7,7 @@
 
 namespace Flameberry {
 
-	class MeshImporter
-	{
+	class MeshImporter {
 	public:
 		static Ref<StaticMesh> ImportMesh(AssetHandle handle, const AssetMetadata& metadata);
 		static Ref<StaticMesh> LoadMesh(const std::filesystem::path& path);

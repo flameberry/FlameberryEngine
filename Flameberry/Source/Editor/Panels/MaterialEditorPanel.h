@@ -4,16 +4,14 @@
 
 namespace Flameberry {
 
-	class MaterialEditorPanel
-	{
+	class MaterialEditorPanel {
 	public:
 		MaterialEditorPanel();
 
 		void OnUIRender();
 		bool DrawMapControls(const char* label, bool& mapEnabledVar, AssetHandle& mapHandle);
 
-		inline void DisplayMaterial(const Ref<MaterialAsset>& material)
-		{
+		inline void DisplayMaterial(const Ref<MaterialAsset>& material) {
 			m_Open = true;
 			m_EditingContext = material;
 		}

@@ -13,10 +13,8 @@ namespace Flameberry {
 
 	namespace Utils {
 
-		inline ImVec4 LogLevelToColor(EditorLogLevel logLevel)
-		{
-			switch (logLevel)
-			{
+		inline ImVec4 LogLevelToColor(EditorLogLevel logLevel) {
+			switch (logLevel) {
 				case EditorLogLevel::Info:
 					return Theme::InfoColor;
 				case EditorLogLevel::Warn:
@@ -26,10 +24,8 @@ namespace Flameberry {
 			}
 		}
 
-		inline const char* LogLevelToString(EditorLogLevel logLevel)
-		{
-			switch (logLevel)
-			{
+		inline const char* LogLevelToString(EditorLogLevel logLevel) {
+			switch (logLevel) {
 				case EditorLogLevel::Info:
 					return "Info";
 				case EditorLogLevel::Warn:
@@ -44,18 +40,15 @@ namespace Flameberry {
 	LogPanel::LogPanel()
 		: m_InfoIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/info.png"))
 		, m_WarningIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/warning.png"))
-		, m_ErrorIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/error.png"))
-	{
+		, m_ErrorIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/error.png")) {
 	}
 
-	void LogPanel::OnUIRender()
-	{
+	void LogPanel::OnUIRender() {
 		ImGui::Begin("Logs");
 
 		DisplayToolbar();
 
-		if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -1), ImGuiChildFlags_NavFlattened))
-		{
+		if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -1), ImGuiChildFlags_NavFlattened)) {
 			constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersInnerV
 				| ImGuiTableFlags_NoKeepColumnsVisible
 				| ImGuiTableFlags_RowBg
@@ -63,8 +56,7 @@ namespace Flameberry {
 				| ImGuiTableFlags_HighlightHoveredColumn
 				| ImGuiTableFlags_ScrollY;
 
-			if (ImGui::BeginTable("##LogTable", 3, tableFlags))
-			{
+			if (ImGui::BeginTable("##LogTable", 3, tableFlags)) {
 				ImGui::TableSetupScrollFreeze(3, 1);
 				ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 80);
 				ImGui::TableSetupColumn("Timestamp", ImGuiTableColumnFlags_WidthFixed, 80);
@@ -73,8 +65,7 @@ namespace Flameberry {
 
 				{
 					UI::ScopedStyleVariable padding(ImGuiStyleVar_CellPadding, ImVec2(0, ImGui::GetStyle().CellPadding.y * 0.75f));
-					for (const auto& log : m_Logs)
-					{
+					for (const auto& log : m_Logs) {
 						if (!m_FilterInfo && log.LogLevel == EditorLogLevel::Info)
 							continue;
 						if (!m_FilterWarning && log.LogLevel == EditorLogLevel::Warn)
@@ -82,8 +73,7 @@ namespace Flameberry {
 						if (!m_FilterError && log.LogLevel == EditorLogLevel::Error)
 							continue;
 
-						if (m_SearchInputBuffer[0] != '\0')
-						{
+						if (m_SearchInputBuffer[0] != '\0') {
 							const int index = Algorithm::KmpSearch(log.Message.c_str(), m_SearchInputBuffer.c_str(), true);
 							if (index == -1)
 								continue;
@@ -105,8 +95,7 @@ namespace Flameberry {
 		ImGui::End();
 	}
 
-	void LogPanel::DisplayToolbar()
-	{
+	void LogPanel::DisplayToolbar() {
 		if (ImGui::Button("Clear"))
 			ClearLog();
 
@@ -138,8 +127,7 @@ namespace Flameberry {
 				ImVec2(0, 0),
 				ImVec2(1, 1),
 				ImVec4(0, 0, 0, 0),
-				m_FilterInfo ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f)))
-		{
+				m_FilterInfo ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f))) {
 			m_FilterInfo = !m_FilterInfo;
 		}
 
@@ -151,8 +139,7 @@ namespace Flameberry {
 				ImVec2(0, 0),
 				ImVec2(1, 1),
 				ImVec4(0, 0, 0, 0),
-				m_FilterWarning ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f)))
-		{
+				m_FilterWarning ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f))) {
 			m_FilterWarning = !m_FilterWarning;
 		}
 
@@ -163,8 +150,7 @@ namespace Flameberry {
 				ImVec2(0, 0),
 				ImVec2(1, 1),
 				ImVec4(0, 0, 0, 0),
-				m_FilterError ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f)))
-		{
+				m_FilterError ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f))) {
 			m_FilterError = !m_FilterError;
 		}
 
@@ -182,15 +168,13 @@ namespace Flameberry {
 
 		ImGui::Separator();
 
-		if (ImGui::BeginPopup("Options"))
-		{
+		if (ImGui::BeginPopup("Options")) {
 			ImGui::Checkbox("Auto-scroll", &m_AutoScroll);
 			ImGui::EndPopup();
 		}
 	}
 
-	void LogPanel::DisplayLogEntry(const EditorLogEntry& logEntry)
-	{
+	void LogPanel::DisplayLogEntry(const EditorLogEntry& logEntry) {
 		constexpr float width = 4.0f;
 		ImGui::TableNextRow();
 
@@ -223,8 +207,7 @@ namespace Flameberry {
 		ImGui::SetItemTooltip("%s", logEntry.Message.c_str());
 	}
 
-	void LogPanel::ClearLog()
-	{
+	void LogPanel::ClearLog() {
 		m_Logs.clear();
 	}
 

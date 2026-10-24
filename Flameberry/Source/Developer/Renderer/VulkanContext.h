@@ -11,8 +11,7 @@
 
 namespace Flameberry {
 
-	class VulkanContext
-	{
+	class VulkanContext {
 	public:
 		VulkanContext(VulkanWindow* pWindow);
 		~VulkanContext();
@@ -20,8 +19,7 @@ namespace Flameberry {
 		static Ref<VulkanInstance> GetCurrentInstance() { return GetCurrentContext()->m_VulkanInstance; }
 		static Ref<VulkanDevice> GetCurrentDevice() { return GetCurrentContext()->m_VulkanDevice; }
 		static VkPhysicalDevice GetPhysicalDevice() { return GetCurrentContext()->m_VkPhysicalDevice; }
-		static VkPhysicalDeviceProperties GetPhysicalDeviceProperties()
-		{
+		static VkPhysicalDeviceProperties GetPhysicalDeviceProperties() {
 			VkPhysicalDeviceProperties properties{};
 			vkGetPhysicalDeviceProperties(GetCurrentContext()->m_VkPhysicalDevice, &properties);
 			return properties;
@@ -36,8 +34,7 @@ namespace Flameberry {
 		static const std::vector<const char*>& GetVulkanDeviceExtensions() { return s_VulkanDeviceExtensions; }
 
 		static void SetCurrentContext(VulkanContext* pContext) { s_CurrentContext = pContext; }
-		static VulkanContext* GetCurrentContext()
-		{
+		static VulkanContext* GetCurrentContext() {
 			if (!s_CurrentContext)
 				FBY_ERROR("Attempted to access current context which is null!");
 			return s_CurrentContext;

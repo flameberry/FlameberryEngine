@@ -7,14 +7,12 @@ namespace Flameberry {
 
 	namespace Algorithm {
 
-		static void calculateLPS(const char* pat, int* lps)
-		{
+		static void calculateLPS(const char* pat, int* lps) {
 			int len = strlen(pat);
 			lps[0] = 0;
 
 			int curr_matched = 0;
-			for (int i = 1; i < len; i++)
-			{
+			for (int i = 1; i < len; i++) {
 				if (pat[curr_matched] == pat[i])
 					curr_matched++;
 				else
@@ -23,26 +21,21 @@ namespace Flameberry {
 			}
 		}
 
-		int KmpSearch(const char* txt, const char* pat, bool ignoreCase)
-		{
+		int KmpSearch(const char* txt, const char* pat, bool ignoreCase) {
 			const int pat_len = strlen(pat);
 			const int txt_len = strlen(txt);
 			int* lps = new int[pat_len];
 			calculateLPS(pat, lps);
 
 			int i = 0, j = -1;
-			while (i < txt_len)
-			{
+			while (i < txt_len) {
 				if (j == pat_len - 1)
 					break;
 
-				if (ignoreCase ? (std::tolower(txt[i]) == std::tolower(pat[j + 1])) : (txt[i] == pat[j + 1]))
-				{
+				if (ignoreCase ? (std::tolower(txt[i]) == std::tolower(pat[j + 1])) : (txt[i] == pat[j + 1])) {
 					j++;
 					i++;
-				}
-				else
-				{
+				} else {
 					if (j == -1)
 						i++;
 					else

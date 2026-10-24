@@ -9,8 +9,7 @@ namespace Flameberry {
 
 	namespace Platform {
 
-		class TitlebarNative
-		{
+		class TitlebarNative {
 		public:
 			static void CreateForGLFWwindow(GLFWwindow* window, float titleBarHeight);
 			static void InvalidateFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight);

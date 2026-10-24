@@ -4,24 +4,20 @@
 
 namespace Flameberry {
 
-	enum class ProjectionType : uint8_t
-	{
+	enum class ProjectionType : uint8_t {
 		Orthographic = 0,
 		Perspective
 	};
 
-	struct GenericCameraSettings
-	{
+	struct GenericCameraSettings {
 		Flameberry::ProjectionType ProjectionType = ProjectionType::Perspective;
 		float AspectRatio, Near, Far;
-		union
-		{
+		union {
 			float Zoom, FOV;
 		};
 	};
 
-	class GenericCamera
-	{
+	class GenericCamera {
 	public:
 		GenericCamera();
 

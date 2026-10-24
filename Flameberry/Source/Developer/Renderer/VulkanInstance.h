@@ -5,8 +5,7 @@
 
 namespace Flameberry {
 
-	class VulkanInstance
-	{
+	class VulkanInstance {
 	public:
 		VulkanInstance();
 		~VulkanInstance();

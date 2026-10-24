@@ -11,14 +11,12 @@
 namespace Flameberry {
 
 	SwapChain::SwapChain(VkSurfaceKHR surface, const Ref<SwapChain>& oldSwapChain)
-		: m_VkSurface(surface)
-	{
+		: m_VkSurface(surface) {
 		CreateSwapChain(oldSwapChain);
 		CreateSyncObjects();
 	}
 
-	void SwapChain::CreateSwapChain(const Ref<SwapChain>& oldSwapChain)
-	{
+	void SwapChain::CreateSwapChain(const Ref<SwapChain>& oldSwapChain) {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		const auto& queueFamilyIndices = VulkanContext::GetCurrentDevice()->GetQueueFamilyIndices();
 		const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
@@ -55,14 +53,11 @@ namespace Flameberry {
 			queueFamilyIndices.PresentationSupportedQueueFamilyIndex
 		};
 
-		if (queueFamilyIndices.GraphicsQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex)
-		{
+		if (queueFamilyIndices.GraphicsQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex) {
 			vulkanSwapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 			vulkanSwapchainCreateInfo.queueFamilyIndexCount = sizeof(vk_queue_indices) / sizeof(uint32_t);
 			vulkanSwapchainCreateInfo.pQueueFamilyIndices = vk_queue_indices;
-		}
-		else
-		{
+		} else {
 			vulkanSwapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			vulkanSwapchainCreateInfo.queueFamilyIndexCount = 0;
 			vulkanSwapchainCreateInfo.pQueueFamilyIndices = nullptr;
@@ -82,8 +77,7 @@ namespace Flameberry {
 		vkGetSwapchainImagesKHR(device, m_VkSwapChain, &m_ImageCount, m_VkSwapChainImages.data());
 	}
 
-	VkResult SwapChain::AcquireNextImage()
-	{
+	VkResult SwapChain::AcquireNextImage() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkWaitForFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex], VK_TRUE, UINT64_MAX);
 
@@ -91,8 +85,7 @@ namespace Flameberry {
 		return imageAcquireStatus;
 	}
 
-	VkResult SwapChain::SubmitCommandBuffer(VkCommandBuffer commandBuffer)
-	{
+	VkResult SwapChain::SubmitCommandBuffer(VkCommandBuffer commandBuffer) {
 		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		const auto graphicsQueue = VulkanContext::GetCurrentDevice()->GetGraphicsQueue();
 		const auto presentationQueue = VulkanContext::GetCurrentDevice()->GetPresentationQueue();
@@ -119,10 +112,9 @@ namespace Flameberry {
 
 		vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex]);
 
-		VulkanContext::GetCurrentDevice()->AccessQueueSafely([fence = m_InFlightFences[m_CurrentFrameIndex], graphicsQueue, submitInfo]()
-			{
-				VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence));
-			});
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely([fence = m_InFlightFences[m_CurrentFrameIndex], graphicsQueue, submitInfo]() {
+			VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence));
+		});
 
 		VkSwapchainKHR swapchains[] = { m_VkSwapChain };
 
@@ -137,16 +129,14 @@ namespace Flameberry {
 		vk_present_info.pImageIndices = &m_ImageIndex;
 
 		VkResult queuePresentStatus;
-		VulkanContext::GetCurrentDevice()->AccessQueueSafely([&]()
-			{
-				queuePresentStatus = vkQueuePresentKHR(presentationQueue, &vk_present_info);
-			});
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely([&]() {
+			queuePresentStatus = vkQueuePresentKHR(presentationQueue, &vk_present_info);
+		});
 		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 		return queuePresentStatus;
 	}
 
-	VkFormat SwapChain::GetDepthFormat()
-	{
+	VkFormat SwapChain::GetDepthFormat() {
 		const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
 		return RenderCommand::GetSupportedFormat(
 			physicalDevice,
@@ -155,8 +145,7 @@ namespace Flameberry {
 			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 	}
 
-	void SwapChain::CreateSyncObjects()
-	{
+	void SwapChain::CreateSyncObjects() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 		m_ImageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -171,8 +160,7 @@ namespace Flameberry {
 		vk_fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		vk_fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-		{
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			VK_CHECK_RESULT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_ImageAvailableSemaphores[i]));
 			VK_CHECK_RESULT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]));
 			VK_CHECK_RESULT(vkCreateFence(device, &vk_fence_create_info, nullptr, &m_InFlightFences[i]));
@@ -180,13 +168,11 @@ namespace Flameberry {
 		FBY_INFO("Created {} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
 	}
 
-	SwapChain::~SwapChain()
-	{
+	SwapChain::~SwapChain() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VulkanContext::GetCurrentDevice()->WaitIdle();
 
-		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-		{
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			vkDestroySemaphore(device, m_ImageAvailableSemaphores[i], nullptr);
 			vkDestroySemaphore(device, m_RenderFinishedSemaphores[i], nullptr);
 			vkDestroyFence(device, m_InFlightFences[i], nullptr);
@@ -196,8 +182,7 @@ namespace Flameberry {
 		vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
 	}
 
-	void SwapChain::Invalidate()
-	{
+	void SwapChain::Invalidate() {
 		FBY_INFO("Invalidating SwapChain...");
 
 		const auto device = VulkanContext::GetCurrentDevice();
@@ -210,11 +195,9 @@ namespace Flameberry {
 		CreateSwapChain(nullptr);
 	}
 
-	VkSurfaceFormatKHR SwapChain::SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats)
-	{
+	VkSurfaceFormatKHR SwapChain::SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats) {
 		// VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_B8G8R8A8_UNORM
-		for (const auto& format : available_formats)
-		{
+		for (const auto& format : available_formats) {
 			if (format.format == VK_FORMAT_R16G16B16A16_SFLOAT && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 				return format;
 		}
@@ -222,22 +205,18 @@ namespace Flameberry {
 		return available_formats[0];
 	}
 
-	VkPresentModeKHR SwapChain::SelectSwapPresentationMode(const std::vector<VkPresentModeKHR>& available_presentation_modes)
-	{
-		for (const auto& mode : available_presentation_modes)
-		{
+	VkPresentModeKHR SwapChain::SelectSwapPresentationMode(const std::vector<VkPresentModeKHR>& available_presentation_modes) {
+		for (const auto& mode : available_presentation_modes) {
 			if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
 				return mode;
 		}
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 
-	VkExtent2D SwapChain::SelectSwapExtent(const VkSurfaceCapabilitiesKHR& surface_capabilities)
-	{
+	VkExtent2D SwapChain::SelectSwapExtent(const VkSurfaceCapabilitiesKHR& surface_capabilities) {
 		if (surface_capabilities.currentExtent.width != UINT32_MAX)
 			return surface_capabilities.currentExtent;
-		else
-		{
+		else {
 			VulkanWindow* pWindow = VulkanContext::GetCurrentWindow();
 			int width, height;
 			glfwGetFramebufferSize(pWindow->GetGLFWwindow(), &width, &height);

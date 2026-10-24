@@ -4,13 +4,11 @@
 
 namespace Flameberry {
 
-	Ref<Skymap> SkymapImporter::ImportSkymap(AssetHandle handle, const AssetMetadata& metadata)
-	{
+	Ref<Skymap> SkymapImporter::ImportSkymap(AssetHandle handle, const AssetMetadata& metadata) {
 		return LoadSkymap(metadata.FilePath);
 	}
 
-	Ref<Skymap> SkymapImporter::LoadSkymap(const std::filesystem::path& path)
-	{
+	Ref<Skymap> SkymapImporter::LoadSkymap(const std::filesystem::path& path) {
 		return CreateRef<Skymap>(path);
 	}
 

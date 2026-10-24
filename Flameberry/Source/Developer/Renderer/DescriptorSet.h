@@ -8,8 +8,7 @@
 
 namespace Flameberry {
 
-	class DescriptorPool
-	{
+	class DescriptorPool {
 	public:
 		DescriptorPool(VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets);
 		~DescriptorPool();
@@ -21,13 +20,11 @@ namespace Flameberry {
 		VkDescriptorPool m_VkDescriptorPool = VK_NULL_HANDLE;
 	};
 
-	struct DescriptorSetLayoutSpecification
-	{
+	struct DescriptorSetLayoutSpecification {
 		std::vector<VkDescriptorSetLayoutBinding> Bindings;
 	};
 
-	class DescriptorSetLayout
-	{
+	class DescriptorSetLayout {
 	public:
 		DescriptorSetLayout(const DescriptorSetLayoutSpecification& specification);
 		~DescriptorSetLayout();
@@ -45,14 +42,12 @@ namespace Flameberry {
 		static std::unordered_map<DescriptorSetLayoutSpecification, Ref<DescriptorSetLayout>> s_CachedDescriptorSetLayouts;
 	};
 
-	struct DescriptorSetSpecification
-	{
+	struct DescriptorSetSpecification {
 		Ref<DescriptorPool> Pool;
 		Ref<DescriptorSetLayout> Layout;
 	};
 
-	class DescriptorSet
-	{
+	class DescriptorSet {
 	public:
 		DescriptorSet(const DescriptorSetSpecification& specification);
 		~DescriptorSet();

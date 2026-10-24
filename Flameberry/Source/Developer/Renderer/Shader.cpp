@@ -13,8 +13,7 @@ namespace Flameberry {
 
 	static std::unordered_map<uint64_t, uint32_t> s_DescriptorSetAndBindingIntegerToArrayIndex;
 
-	bool operator==(const ReflectionDescriptorBindingSpecification& s1, const ReflectionDescriptorBindingSpecification& s2)
-	{
+	bool operator==(const ReflectionDescriptorBindingSpecification& s1, const ReflectionDescriptorBindingSpecification& s2) {
 		return s1.Set == s2.Set
 			&& s1.Binding == s2.Binding
 			&& s1.Type == s2.Type
@@ -25,15 +24,12 @@ namespace Flameberry {
 
 	namespace Utils {
 
-		uint64_t CantorPairingFunction(uint32_t a, uint32_t b)
-		{
+		uint64_t CantorPairingFunction(uint32_t a, uint32_t b) {
 			return (a + b) * (a + b + 1) / 2 + a;
 		}
 
-		bool HasPrefix(const char* str1, const char* prefix)
-		{
-			while (*str1 != '\0' && *prefix != '\0')
-			{
+		bool HasPrefix(const char* str1, const char* prefix) {
+			while (*str1 != '\0' && *prefix != '\0') {
 				if (*str1 != *prefix)
 					return false;
 				++str1;
@@ -42,10 +38,8 @@ namespace Flameberry {
 			return true;
 		}
 
-		static ShaderDataType ReflectionFormatToShaderInputDataType(SpvReflectFormat format)
-		{
-			switch (format)
-			{
+		static ShaderDataType ReflectionFormatToShaderInputDataType(SpvReflectFormat format) {
+			switch (format) {
 				case SPV_REFLECT_FORMAT_R32_UINT:
 					return ShaderDataType::UInt;
 				case SPV_REFLECT_FORMAT_R32_SINT:
@@ -68,8 +62,7 @@ namespace Flameberry {
 
 	} // namespace Utils
 
-	Shader::Shader(const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath)
-	{
+	Shader::Shader(const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath) {
 		// TODO: This is probably some odd behaviour to name the shader with just the vertex shader's name
 		const auto& stem = vertexShaderSpvPath.stem().string();
 		m_Name = stem.substr(0, stem.find('.'));
@@ -88,8 +81,7 @@ namespace Flameberry {
 		m_FragmentShaderModule = CreateVulkanShaderModule(fragmentShaderSpvBinaryCode);
 	}
 
-	Shader::Shader(const std::filesystem::path& spvBinaryPath)
-	{
+	Shader::Shader(const std::filesystem::path& spvBinaryPath) {
 		const auto& stem = spvBinaryPath.stem().string();
 		m_Name = stem.substr(0, stem.find('.'));
 
@@ -101,22 +93,19 @@ namespace Flameberry {
 		m_ShaderModule = CreateVulkanShaderModule(shaderSpvBinaryCode);
 	}
 
-	const ReflectionUniformVariableSpecification& Shader::GetUniform(const std::string& name) const
-	{
+	const ReflectionUniformVariableSpecification& Shader::GetUniform(const std::string& name) const {
 		auto it = m_UniformFullNameToSpecification.find(name);
 		FBY_ASSERT(it != m_UniformFullNameToSpecification.end(), "Uniform does not exist in shader: {}", name);
 		return it->second;
 	}
 
-	const ReflectionDescriptorBindingSpecification& Shader::GetBinding(const std::string& name) const
-	{
+	const ReflectionDescriptorBindingSpecification& Shader::GetBinding(const std::string& name) const {
 		auto it = m_DescriptorBindingVariableFullNameToSpecificationIndex.find(name);
 		FBY_ASSERT(it != m_DescriptorBindingVariableFullNameToSpecificationIndex.end(), "Descriptor Binding does not exist in shader: {}", name);
 		return m_DescriptorBindingSpecifications[it->second];
 	}
 
-	std::vector<char> Shader::LoadShaderSpvCode(const std::filesystem::path& path)
-	{
+	std::vector<char> Shader::LoadShaderSpvCode(const std::filesystem::path& path) {
 		std::ifstream spv_ifstream(path, std::ios::binary);
 		if (!spv_ifstream.is_open())
 			FBY_ERROR("Failed to open SPIRV binary: {}", path);
@@ -130,8 +119,7 @@ namespace Flameberry {
 		return shaderSpvBinaryCode;
 	}
 
-	void Shader::Reflect(const std::vector<char>& shaderSpvBinaryCode)
-	{
+	void Shader::Reflect(const std::vector<char>& shaderSpvBinaryCode) {
 		spv_reflect::ShaderModule reflectionShaderModule(shaderSpvBinaryCode.size(), shaderSpvBinaryCode.data());
 		if (reflectionShaderModule.GetResult() != SPV_REFLECT_RESULT_SUCCESS)
 			FBY_ERROR("Could not process: {} (Is it a valid SPIR-V bytecode?)", m_Name);
@@ -204,8 +192,7 @@ namespace Flameberry {
 			if (count)
 				FBY_LOG("Shader `{}` - Specialization Constants:", m_Name);
 
-			for (uint32_t i = 0; i < count; i++)
-			{
+			for (uint32_t i = 0; i < count; i++) {
 				FBY_LOG("\t{}", specializationConstants[i]->name);
 				FBY_ASSERT(m_SpecializationConstantIDSet.find(specializationConstants[i]->constant_id) == m_SpecializationConstantIDSet.end(), "Specialization Constant IDs must be unique");
 
@@ -223,13 +210,11 @@ namespace Flameberry {
 			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 
 			m_PushConstantSpecifications.reserve(m_PushConstantSpecifications.size() + count);
-			for (uint32_t i = 0; i < count; i++)
-			{
+			for (uint32_t i = 0; i < count; i++) {
 				uint32_t absoluteSize = 0;
 				FBY_LOG("Shader `{}` - PushConstantBlock:", m_Name);
 
-				for (uint32_t j = 0; j < pcblocks[i]->member_count; j++)
-				{
+				for (uint32_t j = 0; j < pcblocks[i]->member_count; j++) {
 					auto& member = pcblocks[i]->members[j];
 					absoluteSize += member.size;
 					FBY_LOG("\tMember Name: {}", member.name);
@@ -269,11 +254,9 @@ namespace Flameberry {
 
 			m_DescriptorSetSpecifications.reserve(m_DescriptorSetSpecifications.size() + count);
 			// Iterating through the reflection descriptor sets to store the binding information needed to create a descriptor set
-			for (uint32_t i = 0; i < count; i++)
-			{
+			for (uint32_t i = 0; i < count; i++) {
 				m_DescriptorBindingSpecifications.reserve(m_DescriptorBindingSpecifications.size() + descSets[i]->binding_count);
-				for (uint32_t j = 0; j < descSets[i]->binding_count; j++)
-				{
+				for (uint32_t j = 0; j < descSets[i]->binding_count; j++) {
 					auto& binding = descSets[i]->bindings[j];
 
 					std::string fullName = binding->name;
@@ -283,14 +266,11 @@ namespace Flameberry {
 						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
 						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE
 						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE
-						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT)
-					{
+						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT) {
 						isDescriptorTypeImage = true;
 						// An image descriptor will be considered renderer only when it's name has the following prefix
 						rendererOnly = Utils::HasPrefix(binding->name, FBY_SHADER_RENDERER_ONLY_PREFIX);
-					}
-					else
-					{
+					} else {
 						isDescriptorTypeImage = false;
 						// A buffer descriptor will be considered renderer only when it's TYPE name (not the alias name) has the following prefix
 						rendererOnly = Utils::HasPrefix(binding->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX);
@@ -313,13 +293,10 @@ namespace Flameberry {
 
 					uint64_t combinedValue = Utils::CantorPairingFunction(binding->set, binding->binding);
 
-					if (auto it = s_DescriptorSetAndBindingIntegerToArrayIndex.find(combinedValue); it != s_DescriptorSetAndBindingIntegerToArrayIndex.end())
-					{
+					if (auto it = s_DescriptorSetAndBindingIntegerToArrayIndex.find(combinedValue); it != s_DescriptorSetAndBindingIntegerToArrayIndex.end()) {
 						FBY_ASSERT(reflectionDescriptorBindingSpecification == m_DescriptorBindingSpecifications[it->second], "Descriptor Sets with the same set number and binding must be the exact same");
 						m_DescriptorBindingSpecifications[it->second].VulkanShaderStage |= reflectionDescriptorBindingSpecification.VulkanShaderStage;
-					}
-					else
-					{
+					} else {
 						// Here all the reflection binding specifications are pushed back
 						// Assumption here is that all the bindings are in order (Yet to find out how would it affect the functioning)
 						m_DescriptorBindingSpecifications.emplace_back(reflectionDescriptorBindingSpecification);
@@ -337,8 +314,7 @@ namespace Flameberry {
 		}
 	}
 
-	VkShaderModule Shader::CreateVulkanShaderModule(const std::vector<char>& shaderSpvBinaryCode)
-	{
+	VkShaderModule Shader::CreateVulkanShaderModule(const std::vector<char>& shaderSpvBinaryCode) {
 		VkShaderModuleCreateInfo shaderModuleCreateInfo{};
 		shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 		shaderModuleCreateInfo.codeSize = shaderSpvBinaryCode.size();
@@ -350,29 +326,23 @@ namespace Flameberry {
 		return vulkanShaderModule;
 	}
 
-	Shader::~Shader()
-	{
+	Shader::~Shader() {
 		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		if (m_VulkanShaderStageFlags & (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT))
-		{
+		if (m_VulkanShaderStageFlags & (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)) {
 			vkDestroyShaderModule(device, m_VertexShaderModule, nullptr);
 			vkDestroyShaderModule(device, m_FragmentShaderModule, nullptr);
-		}
-		else
-		{
+		} else {
 			vkDestroyShaderModule(device, m_ShaderModule, nullptr);
 		}
 	}
 
-	void Shader::GetVertexAndFragmentShaderModules(VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const
-	{
+	void Shader::GetVertexAndFragmentShaderModules(VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const {
 		FBY_ASSERT(m_VulkanShaderStageFlags & (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT), "GetVertexAndFragmentShaderModules() should only be called for Shader made using Vertex and Fragment components both!");
 		*outVertexShaderModule = m_VertexShaderModule;
 		*outFragmentShaderModule = m_FragmentShaderModule;
 	}
 
-	VkShaderModule Shader::GetVulkanShaderModule() const
-	{
+	VkShaderModule Shader::GetVulkanShaderModule() const {
 		FBY_ASSERT((m_VulkanShaderStageFlags > 0) && ((m_VulkanShaderStageFlags & (m_VulkanShaderStageFlags - 1)) == 0), "GetVulkanShaderModule() should only be called for Shader made using single component like Compute or Vertex or Fragment but not a combination of them!");
 		return m_ShaderModule;
 	}

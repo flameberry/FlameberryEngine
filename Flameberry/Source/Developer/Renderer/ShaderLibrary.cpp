@@ -5,8 +5,7 @@ namespace Flameberry {
 	std::unordered_map<std::string, Ref<Shader>> ShaderLibrary::s_ShaderStorage;
 	const std::filesystem::path ShaderLibrary::s_ShaderBaseDirectory = FBY_PROJECT_DIR "Flameberry/Shaders/Vulkan/Compiled";
 
-	void ShaderLibrary::Init()
-	{
+	void ShaderLibrary::Init() {
 		// Currently this is hardcoded as no new shaders are loaded dynamically at runtime
 		const char* paths[][2] = {
 			{ "PBR.vert.spv", "PBR.frag.spv" },
@@ -30,28 +29,24 @@ namespace Flameberry {
 			"CompositePass.comp.spv",
 		};
 
-		for (const auto& path : paths)
-		{
+		for (const auto& path : paths) {
 			Ref<Shader> shader = CreateRef<Shader>(s_ShaderBaseDirectory / path[0], s_ShaderBaseDirectory / path[1]);
 			s_ShaderStorage[shader->GetName()] = shader;
 		}
 
-		for (const auto& path : computeShaderPaths)
-		{
+		for (const auto& path : computeShaderPaths) {
 			Ref<Shader> shader = CreateRef<Shader>(s_ShaderBaseDirectory / path);
 			s_ShaderStorage[shader->GetName()] = shader;
 		}
 	}
 
-	Ref<Shader> ShaderLibrary::Get(const std::string& shaderName)
-	{
+	Ref<Shader> ShaderLibrary::Get(const std::string& shaderName) {
 		auto it = s_ShaderStorage.find(shaderName);
 		FBY_ASSERT(it != s_ShaderStorage.end(), "Shader with name: {} is not loaded into ShaderLibrary yet", shaderName);
 		return it->second;
 	}
 
-	void ShaderLibrary::Shutdown()
-	{
+	void ShaderLibrary::Shutdown() {
 		s_ShaderStorage.clear();
 	}
 

@@ -18,12 +18,10 @@ namespace Flameberry {
 
 	constexpr static const char* s_ImGuiLayoutPath = FBY_PROJECT_DIR "Flameberry/Config/Layouts/BaseEditorLayout.ini";
 
-	ImGuiLayer::ImGuiLayer()
-	{
+	ImGuiLayer::ImGuiLayer() {
 	}
 
-	void ImGuiLayer::OnCreate()
-	{
+	void ImGuiLayer::OnCreate() {
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -76,8 +74,7 @@ namespace Flameberry {
 		SetupImGuiStyle();
 
 		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			// style.WindowRounding = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
@@ -145,8 +142,7 @@ namespace Flameberry {
 		ImGui_ImplVulkan_Init(&init_info);
 	}
 
-	void ImGuiLayer::OnDestroy()
-	{
+	void ImGuiLayer::OnDestroy() {
 		// Saving ImGui Layout
 		ImGui::SaveIniSettingsToDisk(s_ImGuiLayoutPath);
 
@@ -164,8 +160,7 @@ namespace Flameberry {
 			vkDestroyImageView(device, imageView, nullptr);
 	}
 
-	void ImGuiLayer::Begin()
-	{
+	void ImGuiLayer::Begin() {
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -173,8 +168,7 @@ namespace Flameberry {
 		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
 	}
 
-	void ImGuiLayer::End()
-	{
+	void ImGuiLayer::End() {
 		ImGuiIO& io = ImGui::GetIO();
 		io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetSpecification().Width, (float)VulkanContext::GetCurrentWindow()->GetSpecification().Height);
 
@@ -200,31 +194,27 @@ namespace Flameberry {
 		vkCmdBeginRenderPass(commandBuffer, &imgui_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
 		// Record dear imgui primitives into command buffer
-		VulkanContext::GetCurrentDevice()->AccessQueueSafely([&]()
-			{
-				ImGui_ImplVulkan_RenderDrawData(main_draw_data, commandBuffer);
-			});
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely([&]() {
+			ImGui_ImplVulkan_RenderDrawData(main_draw_data, commandBuffer);
+		});
 
 		// End ImGui Render Pass
 		vkCmdEndRenderPass(commandBuffer);
 
 		// Update and Render additional Platform Windows
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			GLFWwindow* backup_current_context = glfwGetCurrentContext();
 			ImGui::UpdatePlatformWindows();
 
 			// The backend submits and presents to the queue for each platform window
-			VulkanContext::GetCurrentDevice()->AccessQueueSafely([]()
-				{
-					ImGui::RenderPlatformWindowsDefault();
-				});
+			VulkanContext::GetCurrentDevice()->AccessQueueSafely([]() {
+				ImGui::RenderPlatformWindowsDefault();
+			});
 			glfwMakeContextCurrent(backup_current_context);
 		}
 	}
 
-	void ImGuiLayer::InvalidateResources()
-	{
+	void ImGuiLayer::InvalidateResources() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VulkanContext::GetCurrentDevice()->WaitIdle();
 
@@ -237,8 +227,7 @@ namespace Flameberry {
 		CreateResources();
 	}
 
-	void ImGuiLayer::CreateResources()
-	{
+	void ImGuiLayer::CreateResources() {
 		const auto& device = VulkanContext::GetCurrentDevice();
 
 		const auto& swapchain = VulkanContext::GetCurrentWindow()->GetSwapChain();
@@ -247,8 +236,7 @@ namespace Flameberry {
 		// Image Views creation
 		m_ImGuiImageViews.resize(imageCount);
 
-		for (uint32_t i = 0; i < imageCount; i++)
-		{
+		for (uint32_t i = 0; i < imageCount; i++) {
 			VkImageViewCreateInfo vk_image_view_create_info{};
 			vk_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			vk_image_view_create_info.image = swapchain->GetImages()[i];
@@ -269,8 +257,7 @@ namespace Flameberry {
 
 		// Creating Framebuffers
 		m_ImGuiFramebuffers.resize(imageCount);
-		for (uint32_t i = 0; i < imageCount; i++)
-		{
+		for (uint32_t i = 0; i < imageCount; i++) {
 			VkImageView attachment[1] = { m_ImGuiImageViews[i] };
 			VkFramebufferCreateInfo info{};
 			info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -285,19 +272,16 @@ namespace Flameberry {
 		}
 	}
 
-	void ImGuiLayer::OnEvent(Event& e)
-	{
+	void ImGuiLayer::OnEvent(Event& e) {
 		// TODO: This currently does nothing
-		if (m_BlockEvents)
-		{
+		if (m_BlockEvents) {
 			ImGuiIO& io = ImGui::GetIO();
 			e.Handled |= e.IsInCategory(EventCategory::MouseEventCategory) && io.WantCaptureMouse;
 			e.Handled |= e.IsInCategory(EventCategory::KeyEventCategory) && io.WantCaptureKeyboard;
 		}
 	}
 
-	void ImGuiLayer::SetupImGuiStyle()
-	{
+	void ImGuiLayer::SetupImGuiStyle() {
 		auto& style = ImGui::GetStyle();
 		style.ColorButtonPosition = ImGuiDir_Left;
 		style.WindowRounding = 5;

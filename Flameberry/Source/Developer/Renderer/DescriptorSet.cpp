@@ -10,8 +10,7 @@
 #include "RenderCommand.h"
 #include "VulkanDebug.h"
 
-bool operator==(const VkDescriptorSetLayoutBinding& b1, const VkDescriptorSetLayoutBinding& b2)
-{
+bool operator==(const VkDescriptorSetLayoutBinding& b1, const VkDescriptorSetLayoutBinding& b2) {
 	return b1.binding == b2.binding
 		&& b1.descriptorCount == b2.descriptorCount
 		&& b1.descriptorType == b2.descriptorType
@@ -25,8 +24,7 @@ namespace Flameberry {
 	// This is to notify the developer about too many comparisons
 	static uint32_t g_DescriptorSetLayoutSpecificationComparisons = 0;
 
-	bool operator==(const DescriptorSetLayoutSpecification& s1, const DescriptorSetLayoutSpecification& s2)
-	{
+	bool operator==(const DescriptorSetLayoutSpecification& s1, const DescriptorSetLayoutSpecification& s2) {
 		// This is to notify the developer about too many comparisons
 		g_DescriptorSetLayoutSpecificationComparisons++;
 
@@ -38,10 +36,8 @@ namespace Flameberry {
 namespace std {
 
 	template <>
-	struct hash<Flameberry::DescriptorSetLayoutSpecification>
-	{
-		size_t operator()(const Flameberry::DescriptorSetLayoutSpecification& specification) const noexcept
-		{
+	struct hash<Flameberry::DescriptorSetLayoutSpecification> {
+		size_t operator()(const Flameberry::DescriptorSetLayoutSpecification& specification) const noexcept {
 			// Should 32 bit murmur hash be used? Or should 128 bits hash be used and sliced back to 64 bits?
 			uint32_t hashValue;
 			MurmurHash3_x86_32(specification.Bindings.data(), sizeof(VkDescriptorSetLayoutBinding) * specification.Bindings.size(), 0, &hashValue);
@@ -53,8 +49,7 @@ namespace std {
 
 namespace Flameberry {
 
-	DescriptorPool::DescriptorPool(VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets)
-	{
+	DescriptorPool::DescriptorPool(VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets) {
 		VkDescriptorPoolCreateInfo vk_descriptor_pool_create_info{};
 		vk_descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		vk_descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
@@ -65,14 +60,12 @@ namespace Flameberry {
 		VK_CHECK_RESULT(vkCreateDescriptorPool(device, &vk_descriptor_pool_create_info, nullptr, &m_VkDescriptorPool));
 	}
 
-	DescriptorPool::~DescriptorPool()
-	{
+	DescriptorPool::~DescriptorPool() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkDestroyDescriptorPool(device, m_VkDescriptorPool, nullptr);
 	}
 
-	bool DescriptorPool::AllocateDescriptorSet(VkDescriptorSet* descriptorSet, VkDescriptorSetLayout descriptorSetLayout)
-	{
+	bool DescriptorPool::AllocateDescriptorSet(VkDescriptorSet* descriptorSet, VkDescriptorSetLayout descriptorSetLayout) {
 		VkDescriptorSetAllocateInfo vk_descriptor_set_allocate_info{};
 		vk_descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		vk_descriptor_set_allocate_info.descriptorPool = m_VkDescriptorPool;
@@ -87,8 +80,7 @@ namespace Flameberry {
 	std::unordered_map<DescriptorSetLayoutSpecification, Ref<DescriptorSetLayout>> DescriptorSetLayout::s_CachedDescriptorSetLayouts;
 
 	DescriptorSetLayout::DescriptorSetLayout(const DescriptorSetLayoutSpecification& specification)
-		: m_DescSetLayoutSpec(specification)
-	{
+		: m_DescSetLayoutSpec(specification) {
 		VkDescriptorSetLayoutCreateInfo vk_descriptor_set_layout_create_info{};
 		vk_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		vk_descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t>(m_DescSetLayoutSpec.Bindings.size());
@@ -98,14 +90,12 @@ namespace Flameberry {
 		VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &vk_descriptor_set_layout_create_info, nullptr, &m_Layout));
 	}
 
-	DescriptorSetLayout::~DescriptorSetLayout()
-	{
+	DescriptorSetLayout::~DescriptorSetLayout() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkDestroyDescriptorSetLayout(device, m_Layout, nullptr);
 	}
 
-	Ref<DescriptorSetLayout> DescriptorSetLayout::CreateOrGetCached(const DescriptorSetLayoutSpecification& specification)
-	{
+	Ref<DescriptorSetLayout> DescriptorSetLayout::CreateOrGetCached(const DescriptorSetLayoutSpecification& specification) {
 #ifdef FBY_DEBUG
 		// Debug only
 		static int calls = 0;
@@ -113,8 +103,7 @@ namespace Flameberry {
 		FBY_TRACE("DescriptorSetLayout Cache Stats: Layouts: {} vs Total calls : {}", s_CachedDescriptorSetLayouts.size(), calls);
 		FBY_ASSERT((float)g_DescriptorSetLayoutSpecificationComparisons < calls, "Too many DescriptorSetLayoutSpecification comparisons, you might want to look into this");
 #endif
-		if (auto it = s_CachedDescriptorSetLayouts.find(specification); it != s_CachedDescriptorSetLayouts.end())
-		{
+		if (auto it = s_CachedDescriptorSetLayouts.find(specification); it != s_CachedDescriptorSetLayouts.end()) {
 			FBY_TRACE("DescriptorSetLayout retrieved from cache!");
 			return it->second;
 		}
@@ -123,14 +112,12 @@ namespace Flameberry {
 		return layout;
 	}
 
-	void DescriptorSetLayout::ClearCache()
-	{
+	void DescriptorSetLayout::ClearCache() {
 		s_CachedDescriptorSetLayouts.clear();
 	}
 
 	DescriptorSet::DescriptorSet(const DescriptorSetSpecification& specification)
-		: m_Specification(specification)
-	{
+		: m_Specification(specification) {
 		auto layout = m_Specification.Layout->GetLayout();
 
 		if (!m_Specification.Pool)
@@ -146,14 +133,12 @@ namespace Flameberry {
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &vk_descriptor_set_allocate_info, &m_DescriptorSet));
 	}
 
-	DescriptorSet::~DescriptorSet()
-	{
+	DescriptorSet::~DescriptorSet() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkFreeDescriptorSets(device, m_Specification.Pool->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
 	}
 
-	void DescriptorSet::WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo)
-	{
+	void DescriptorSet::WriteBuffer(uint32_t binding, VkDescriptorBufferInfo& bufferInfo) {
 		VkWriteDescriptorSet vk_write_descriptor_set{};
 		vk_write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		vk_write_descriptor_set.dstSet = m_DescriptorSet;
@@ -168,8 +153,7 @@ namespace Flameberry {
 		m_WriteInfos.push_back(vk_write_descriptor_set);
 	}
 
-	void DescriptorSet::WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo, uint32_t dstArrayElement)
-	{
+	void DescriptorSet::WriteImage(uint32_t binding, VkDescriptorImageInfo& imageInfo, uint32_t dstArrayElement) {
 		VkWriteDescriptorSet vk_write_descriptor_set{};
 		vk_write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		vk_write_descriptor_set.dstSet = m_DescriptorSet;
@@ -184,8 +168,7 @@ namespace Flameberry {
 		m_WriteInfos.push_back(vk_write_descriptor_set);
 	}
 
-	void DescriptorSet::WriteImageArray(uint32_t binding, VkDescriptorImageInfo* imageInfos, uint32_t imageInfoCount)
-	{
+	void DescriptorSet::WriteImageArray(uint32_t binding, VkDescriptorImageInfo* imageInfos, uint32_t imageInfoCount) {
 		VkWriteDescriptorSet vk_write_descriptor_set{};
 		vk_write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		vk_write_descriptor_set.dstSet = m_DescriptorSet;
@@ -200,10 +183,8 @@ namespace Flameberry {
 		m_WriteInfos.push_back(vk_write_descriptor_set);
 	}
 
-	void DescriptorSet::Update()
-	{
-		if (m_WriteInfos.size())
-		{
+	void DescriptorSet::Update() {
+		if (m_WriteInfos.size()) {
 			const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			vkUpdateDescriptorSets(device, static_cast<uint32_t>(m_WriteInfos.size()), m_WriteInfos.data(), 0, nullptr);
 			m_WriteInfos.clear();

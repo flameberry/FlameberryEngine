@@ -6,8 +6,7 @@
 
 namespace Flameberry {
 
-	class LauncherLayer : public Layer
-	{
+	class LauncherLayer : public Layer {
 	public:
 		LauncherLayer(const std::function<void(const Ref<Project>&)>& callback);
 		virtual ~LauncherLayer() = default;

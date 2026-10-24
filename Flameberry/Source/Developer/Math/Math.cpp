@@ -2,8 +2,7 @@
 
 namespace Flameberry::Math {
 
-	void DecomposeViewMatrix(const glm::mat4& viewMatrix, glm::vec3& eye, glm::vec3& lookDirection, glm::vec3& up)
-	{
+	void DecomposeViewMatrix(const glm::mat4& viewMatrix, glm::vec3& eye, glm::vec3& lookDirection, glm::vec3& up) {
 		// Inverse the view matrix to get the model matrix
 		glm::mat4 modelMatrix = glm::inverse(viewMatrix);
 
@@ -20,8 +19,7 @@ namespace Flameberry::Math {
 		up = glm::vec3(rotationMatrix[1]);
 	}
 
-	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::vec3& rotation, glm::vec3& scale)
-	{
+	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::vec3& rotation, glm::vec3& scale) {
 		// From glm::decompose in matrix_decompose.inl
 		using namespace glm;
 		using T = float;
@@ -34,8 +32,7 @@ namespace Flameberry::Math {
 
 		// First, isolate perspective.  This is the messiest.
 		if (
-			epsilonNotEqual(LocalMatrix[0][3], static_cast<T>(0), epsilon<T>()) || epsilonNotEqual(LocalMatrix[1][3], static_cast<T>(0), epsilon<T>()) || epsilonNotEqual(LocalMatrix[2][3], static_cast<T>(0), epsilon<T>()))
-		{
+			epsilonNotEqual(LocalMatrix[0][3], static_cast<T>(0), epsilon<T>()) || epsilonNotEqual(LocalMatrix[1][3], static_cast<T>(0), epsilon<T>()) || epsilonNotEqual(LocalMatrix[2][3], static_cast<T>(0), epsilon<T>())) {
 			// Clear the perspective partition
 			LocalMatrix[0][3] = LocalMatrix[1][3] = LocalMatrix[2][3] = static_cast<T>(0);
 			LocalMatrix[3][3] = static_cast<T>(1);
@@ -76,13 +73,10 @@ namespace Flameberry::Math {
 #endif
 
 		rotation.y = asin(-Row[0][2]);
-		if (cos(rotation.y) != 0)
-		{
+		if (cos(rotation.y) != 0) {
 			rotation.x = atan2(Row[1][2], Row[2][2]);
 			rotation.z = atan2(Row[0][1], Row[0][0]);
-		}
-		else
-		{
+		} else {
 			rotation.x = atan2(-Row[2][0], Row[1][1]);
 			rotation.z = 0;
 		}

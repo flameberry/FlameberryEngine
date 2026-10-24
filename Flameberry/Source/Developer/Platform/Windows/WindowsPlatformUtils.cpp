@@ -16,32 +16,25 @@ namespace Flameberry {
 
 		void CreateMenuBar() {}
 
-		void OpenInExplorerOrFinder(const char* path)
-		{
+		void OpenInExplorerOrFinder(const char* path) {
 		}
 
-		void TitlebarNative::CreateForGLFWwindow(GLFWwindow* window, float titleBarHeight)
-		{
+		void TitlebarNative::CreateForGLFWwindow(GLFWwindow* window, float titleBarHeight) {
 		}
 
-		void TitlebarNative::InvalidateFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight)
-		{
+		void TitlebarNative::InvalidateFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight) {
 		}
 
-		void TitlebarNative::SetPrimaryTitle(const std::string& title)
-		{
+		void TitlebarNative::SetPrimaryTitle(const std::string& title) {
 		}
 
-		void TitlebarNative::SetSecondaryTitle(const std::string& secondaryTitle)
-		{
+		void TitlebarNative::SetSecondaryTitle(const std::string& secondaryTitle) {
 		}
 
-		void TitlebarNative::SetGradient(const glm::vec4& color)
-		{
+		void TitlebarNative::SetGradient(const glm::vec4& color) {
 		}
 
-		std::string OpenFile(const char* filter)
-		{
+		std::string OpenFile(const char* filter) {
 			OPENFILENAMEA ofn;
 			CHAR szFile[260] = { 0 };
 			CHAR currentDir[256] = { 0 };
@@ -62,8 +55,7 @@ namespace Flameberry {
 			return std::string();
 		}
 
-		std::string OpenFolder()
-		{
+		std::string OpenFolder() {
 			BROWSEINFOA bi;
 			CHAR szFolder[MAX_PATH] = { 0 };
 			CHAR currentDir[MAX_PATH] = { 0 };
@@ -82,11 +74,9 @@ namespace Flameberry {
 			// Open the folder selection dialog
 			LPITEMIDLIST lpItem = SHBrowseForFolderA(&bi);
 
-			if (lpItem != nullptr)
-			{
+			if (lpItem != nullptr) {
 				// Get the folder path from the selection
-				if (SHGetPathFromIDListA(lpItem, szFolder))
-				{
+				if (SHGetPathFromIDListA(lpItem, szFolder)) {
 					return std::string(szFolder);
 				}
 			}
@@ -94,8 +84,7 @@ namespace Flameberry {
 			return std::string();
 		}
 
-		std::string SaveFile(const char* filter)
-		{
+		std::string SaveFile(const char* filter) {
 			OPENFILENAMEA ofn;
 			CHAR szFile[260] = { 0 };
 			CHAR currentDir[256] = { 0 };

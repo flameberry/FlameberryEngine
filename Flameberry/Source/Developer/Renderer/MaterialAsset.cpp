@@ -23,43 +23,37 @@ namespace Flameberry {
 		m_MaterialRef->Set("u_MetallicMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
-	void MaterialAsset::SetAlbedoMap(AssetHandle handle)
-	{
+	void MaterialAsset::SetAlbedoMap(AssetHandle handle) {
 		m_AlbedoMap = handle;
 		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
 		m_MaterialRef->Set("u_AlbedoMapSampler", map);
 	}
 
-	void MaterialAsset::SetNormalMap(AssetHandle handle)
-	{
+	void MaterialAsset::SetNormalMap(AssetHandle handle) {
 		m_NormalMap = handle;
 		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
 		m_MaterialRef->Set("u_NormalMapSampler", map);
 	}
 
-	void MaterialAsset::SetRoughnessMap(AssetHandle handle)
-	{
+	void MaterialAsset::SetRoughnessMap(AssetHandle handle) {
 		m_RoughnessMap = handle;
 		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
 		m_MaterialRef->Set("u_RoughnessMapSampler", map);
 	}
 
-	void MaterialAsset::SetAmbientMap(AssetHandle handle)
-	{
+	void MaterialAsset::SetAmbientMap(AssetHandle handle) {
 		m_AmbientMap = handle;
 		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
 		m_MaterialRef->Set("u_AmbientMapSampler", map);
 	}
 
-	void MaterialAsset::SetMetallicMap(AssetHandle handle)
-	{
+	void MaterialAsset::SetMetallicMap(AssetHandle handle) {
 		m_MetallicMap = handle;
 		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
 		m_MaterialRef->Set("u_MetallicMapSampler", map);
 	}
 
-	void MaterialAssetSerializer::Serialize(const Ref<MaterialAsset>& materialAsset, const std::filesystem::path& path)
-	{
+	void MaterialAssetSerializer::Serialize(const Ref<MaterialAsset>& materialAsset, const std::filesystem::path& path) {
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Material" << YAML::Value << YAML::BeginMap;
@@ -87,8 +81,7 @@ namespace Flameberry {
 		fout << out.c_str();
 	}
 
-	Ref<MaterialAsset> MaterialAssetSerializer::Deserialize(const std::filesystem::path& path)
-	{
+	Ref<MaterialAsset> MaterialAssetSerializer::Deserialize(const std::filesystem::path& path) {
 		std::ifstream in(path);
 		std::stringstream ss;
 		ss << in.rdbuf();
@@ -96,8 +89,7 @@ namespace Flameberry {
 		const YAML::Node data = YAML::Load(ss.str());
 		const YAML::Node root = data["Material"];
 
-		if (!root)
-		{
+		if (!root) {
 			FBY_ERROR("Failed to load Flameberry Material from path: {}", path);
 			return nullptr;
 		}

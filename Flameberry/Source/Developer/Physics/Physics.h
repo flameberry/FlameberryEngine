@@ -8,8 +8,7 @@ namespace JPH {
 
 namespace Flameberry {
 
-	class PhysicsManager
-	{
+	class PhysicsManager {
 	public:
 		static void Init();
 		static void Shutdown();

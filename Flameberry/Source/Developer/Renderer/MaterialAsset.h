@@ -5,16 +5,14 @@
 
 namespace Flameberry {
 
-	struct MaterialStructGPURepresentation
-	{
+	struct MaterialStructGPURepresentation {
 		glm::vec3 Albedo;
 		float Roughness, Metallic, EmissiveFactor;
 		FBoolean UseAlbedoMap, UseNormalMap, UseRoughnessMap, UseAmbientMap, UseMetallicMap;
 	};
 
 	// This class is basically a wrapper for the `Material` class to add utilities for using Materials for Meshes
-	class MaterialAsset : public Asset
-	{
+	class MaterialAsset : public Asset {
 	public:
 		MaterialAsset(const std::string& name);
 
@@ -68,8 +66,7 @@ namespace Flameberry {
 		friend class MaterialEditorPanel;
 	};
 
-	class MaterialAssetSerializer
-	{
+	class MaterialAssetSerializer {
 	public:
 		static void Serialize(const Ref<MaterialAsset>& material, const std::filesystem::path& path);
 		static Ref<MaterialAsset> Deserialize(const std::filesystem::path& path);

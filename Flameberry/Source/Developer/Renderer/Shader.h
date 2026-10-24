@@ -11,23 +11,20 @@
 
 namespace Flameberry {
 
-	struct ReflectionPushConstantSpecification
-	{
+	struct ReflectionPushConstantSpecification {
 		const char* Name;
 		VkShaderStageFlagBits VulkanShaderStage;
 		uint32_t Size, Offset;
 		bool RendererOnly = true;
 	};
 
-	struct ReflectionUniformVariableSpecification
-	{
+	struct ReflectionUniformVariableSpecification {
 		// This `Name` variable currently has no use
 		const char* Name;
 		uint32_t LocalOffset, GlobalOffset, Size;
 	};
 
-	struct ReflectionDescriptorBindingSpecification
-	{
+	struct ReflectionDescriptorBindingSpecification {
 		std::string Name; // For Debug Purposes only, May remove in the future
 		uint32_t Set, Binding, Count;
 		VkDescriptorType Type;
@@ -35,13 +32,11 @@ namespace Flameberry {
 		bool RendererOnly = true, IsDescriptorTypeImage = false;
 	};
 
-	struct ReflectionDescriptorSetSpecification
-	{
+	struct ReflectionDescriptorSetSpecification {
 		uint32_t Set = 0, BindingCount = 0;
 	};
 
-	enum class ShaderDataType : uint8_t
-	{
+	enum class ShaderDataType : uint8_t {
 		None = 0,
 		UInt,
 		UInt2,
@@ -69,14 +64,12 @@ namespace Flameberry {
 	};
 
 	// Boolean data type for representing a GPU Boolean
-	enum FBoolean : uint32_t
-	{
+	enum FBoolean : uint32_t {
 		FFalse = 0u,
 		FTrue = 1u
 	};
 
-	class Shader
-	{
+	class Shader {
 	public:
 		Shader(const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath);
 		Shader(const std::filesystem::path& spvBinaryPath);
@@ -104,8 +97,7 @@ namespace Flameberry {
 	private:
 		std::string m_Name;
 
-		union
-		{
+		union {
 			VkShaderModule m_ShaderModule;
 			struct
 			{

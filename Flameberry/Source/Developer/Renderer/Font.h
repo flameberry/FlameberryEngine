@@ -9,8 +9,7 @@ namespace Flameberry {
 
 	struct MSDFFontData;
 
-	class Font : public Asset
-	{
+	class Font : public Asset {
 	public:
 		Font(const std::filesystem::path& path);
 		~Font();

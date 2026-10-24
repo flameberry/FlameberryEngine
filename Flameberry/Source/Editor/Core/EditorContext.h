@@ -4,8 +4,7 @@
 
 namespace Flameberry {
 
-	struct EditorContext
-	{
+	struct EditorContext {
 		FEntity SelectedEntity;
 
 		static void Create();

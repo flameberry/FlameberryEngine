@@ -7,8 +7,7 @@
 
 namespace Flameberry {
 
-	class ContentBrowserPanel
-	{
+	class ContentBrowserPanel {
 	public:
 		ContentBrowserPanel();
 		~ContentBrowserPanel();

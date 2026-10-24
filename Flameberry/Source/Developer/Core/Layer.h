@@ -4,8 +4,7 @@
 
 namespace Flameberry {
 
-	class Layer
-	{
+	class Layer {
 	public:
 		virtual ~Layer() = default;
 

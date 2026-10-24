@@ -5,13 +5,11 @@
 
 namespace Flameberry {
 
-	Ref<Font> FontImporter::ImportFont(AssetHandle handle, const AssetMetadata& metadata)
-	{
+	Ref<Font> FontImporter::ImportFont(AssetHandle handle, const AssetMetadata& metadata) {
 		return LoadFont(metadata.FilePath);
 	}
 
-	Ref<Font> FontImporter::LoadFont(const std::filesystem::path& path)
-	{
+	Ref<Font> FontImporter::LoadFont(const std::filesystem::path& path) {
 		return CreateRef<Font>(path);
 	}
 

@@ -7,14 +7,12 @@
 
 namespace Flameberry {
 
-	struct RenderPassSpecification
-	{
+	struct RenderPassSpecification {
 		std::vector<Ref<Framebuffer>> TargetFramebuffers;
 		std::vector<VkSubpassDependency> Dependencies;
 	};
 
-	class RenderPass
-	{
+	class RenderPass {
 	public:
 		RenderPass(const RenderPassSpecification& specification);
 		~RenderPass();

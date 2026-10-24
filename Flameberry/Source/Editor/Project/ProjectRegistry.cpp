@@ -7,8 +7,7 @@
 
 namespace Flameberry {
 
-	void ProjectRegistryManager::AppendEntryToGlobalRegistry(Project* project)
-	{
+	void ProjectRegistryManager::AppendEntryToGlobalRegistry(Project* project) {
 		YAML::Emitter out;
 		const auto& filepath = fmt::format("{}/{}.fbproj", project->GetProjectDirectory(), project->GetConfig().Name);
 		out << YAML::BeginMap;
@@ -24,12 +23,10 @@ namespace Flameberry {
 		fout << out.c_str() << '\n';
 	}
 
-	void ProjectRegistryManager::RemoveEntryFromGlobalRegistry(const std::filesystem::path& pathOfProjectEntry)
-	{
+	void ProjectRegistryManager::RemoveEntryFromGlobalRegistry(const std::filesystem::path& pathOfProjectEntry) {
 	}
 
-	ProjectRegistry ProjectRegistryManager::LoadEntireProjectRegistry()
-	{
+	ProjectRegistry ProjectRegistryManager::LoadEntireProjectRegistry() {
 		std::ifstream in(c_GlobalProjectRegistryPath);
 		std::stringstream ss;
 		ss << in.rdbuf();
@@ -37,8 +34,7 @@ namespace Flameberry {
 		YAML::Node data = YAML::Load(ss.str());
 
 		ProjectRegistry registry;
-		for (const auto& entry : data)
-		{
+		for (const auto& entry : data) {
 			ProjectRegistryEntry projectEntry;
 			projectEntry.ProjectFilePath = entry.first.as<std::string>();
 			projectEntry.ProjectName = entry.second["ProjectName"].as<std::string>();
@@ -47,8 +43,7 @@ namespace Flameberry {
 		return registry;
 	}
 
-	void ProjectRegistryManager::ClearAllNonExistingProjectRegistryEntries()
-	{
+	void ProjectRegistryManager::ClearAllNonExistingProjectRegistryEntries() {
 		std::stringstream ss;
 		{
 			std::ifstream fin(c_GlobalProjectRegistryPath);
@@ -57,16 +52,14 @@ namespace Flameberry {
 
 		YAML::Node data = YAML::Load(ss.str());
 
-		for (const auto& entry : data)
-		{
+		for (const auto& entry : data) {
 			const auto& path = entry.first.as<std::string>();
 			if (!std::filesystem::exists(path))
 				data.remove(entry.first.as<std::string>());
 		}
 
 		std::ofstream fout(c_GlobalProjectRegistryPath, std::ios_base::out | std::ios::trunc);
-		if (data.size())
-		{
+		if (data.size()) {
 			fout << data << '\n';
 		}
 	}

@@ -2,8 +2,7 @@
 
 namespace Flameberry {
 
-	void Frustum::ExtractFrustumPlanes(const glm::mat4& viewProjectionMatrix)
-	{
+	void Frustum::ExtractFrustumPlanes(const glm::mat4& viewProjectionMatrix) {
 		// Left plane
 		this->Planes[0] = glm::vec4(
 			viewProjectionMatrix[0][3] + viewProjectionMatrix[0][0],
@@ -47,8 +46,7 @@ namespace Flameberry {
 			viewProjectionMatrix[3][3] - viewProjectionMatrix[3][2]);
 	}
 
-	bool IsAABBInsideFrustum(const AABB& aabb, const glm::mat4& transform, const Frustum& frustum)
-	{
+	bool IsAABBInsideFrustum(const AABB& aabb, const glm::mat4& transform, const Frustum& frustum) {
 		std::array<glm::vec4, 8> vertices = {
 			transform * glm::vec4(aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f),
 			transform * glm::vec4(aabb.Max.x, aabb.Min.y, aabb.Min.z, 1.0f),
@@ -60,14 +58,11 @@ namespace Flameberry {
 			transform * glm::vec4(aabb.Min.x, aabb.Max.y, aabb.Max.z, 1.0f)
 		};
 
-		for (const auto& plane : frustum.Planes)
-		{
+		for (const auto& plane : frustum.Planes) {
 			bool allOutside = true;
 
-			for (const auto& vertex : vertices)
-			{
-				if (glm::dot(glm::vec3(plane), glm::vec3(vertex)) + plane.w > 0)
-				{
+			for (const auto& vertex : vertices) {
+				if (glm::dot(glm::vec3(plane), glm::vec3(vertex)) + plane.w > 0) {
 					allOutside = false;
 					break;
 				}

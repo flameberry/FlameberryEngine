@@ -29,8 +29,7 @@ namespace Flameberry {
 	std::array<uint64_t, 4 * SwapChain::MAX_FRAMES_IN_FLIGHT> Renderer::s_Timestamps;
 	Ref<Texture2D> Renderer::s_CheckerboardTexture;
 
-	void Renderer::Init()
-	{
+	void Renderer::Init() {
 		// Check the amount of maximum storage images are allowed
 		VkPhysicalDeviceProperties properties = VulkanContext::GetPhysicalDeviceProperties();
 		FBY_INFO("Maximum Descriptor Sets that can be bound: {}", properties.limits.maxBoundDescriptorSets);
@@ -71,8 +70,7 @@ namespace Flameberry {
 #endif
 	}
 
-	void Renderer::Shutdown()
-	{
+	void Renderer::Shutdown() {
 #ifdef FBY_ENABLE_QUERY_TIMESTAMP
 
 		vkDestroyQueryPool(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), s_QueryPool, nullptr);
@@ -90,22 +88,19 @@ namespace Flameberry {
 		DescriptorSetLayout::ClearCache(); // TODO: Maybe move this to somewhere obvious like VulkanDevice or Renderer
 	}
 
-	void Renderer::WaitAndRender()
-	{
+	void Renderer::WaitAndRender() {
 		// Update the Frame Index of the Main Thread
 		s_FrameIndex = (s_FrameIndex + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
 		RT_RenderFrame();
 	}
 
-	void Renderer::RT_RenderFrame()
-	{
+	void Renderer::RT_RenderFrame() {
 		FBY_PROFILE_SCOPE("RT_RenderLoop");
 		auto& window = Application::Get().GetWindow();
 		const auto& device = VulkanContext::GetCurrentDevice();
 
 		// Execute all Render Commands
-		if (window.BeginFrame())
-		{
+		if (window.BeginFrame()) {
 			s_CommandBuffers[s_RT_FrameIndex]->Reset();
 			s_CommandBuffers[s_RT_FrameIndex]->Begin();
 
@@ -151,17 +146,14 @@ namespace Flameberry {
 	 * @param materialTable - The corresponding material table
 	 * @param transform - The transform matrix
 	 */
-	void Renderer::SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform)
-	{
-		Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-			{
-				Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, mesh->GetVertexBuffer()->GetVulkanBuffer(), mesh->GetIndexBuffer()->GetVulkanBuffer());
-				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
-			});
+	void Renderer::SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform) {
+		Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, mesh->GetVertexBuffer()->GetVulkanBuffer(), mesh->GetIndexBuffer()->GetVulkanBuffer());
+			vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
+		});
 
 		uint32_t submeshIndex = 0;
-		for (const auto& submesh : mesh->GetSubMeshes())
-		{
+		for (const auto& submesh : mesh->GetSubMeshes()) {
 			// The Assumption here is every mesh loaded will have a Material, i.e. materialAsset won't be nullptr
 			Ref<MaterialAsset> materialAsset;
 			if (auto it = materialTable.find(submeshIndex); it != materialTable.end())
@@ -169,11 +161,10 @@ namespace Flameberry {
 			else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
 				materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
 
-			Renderer::Submit([pipelineLayout = pipeline->GetVulkanPipelineLayout(), materialAsset, submesh = mesh->GetSubMeshes()[submeshIndex]](VkCommandBuffer cmdBuffer, uint32_t)
-				{
-					RT_BindMaterial(cmdBuffer, pipelineLayout, materialAsset->GetUnderlyingMaterial());
-					vkCmdDrawIndexed(cmdBuffer, submesh.IndexCount, 1, submesh.IndexOffset, 0, 0);
-				});
+			Renderer::Submit([pipelineLayout = pipeline->GetVulkanPipelineLayout(), materialAsset, submesh = mesh->GetSubMeshes()[submeshIndex]](VkCommandBuffer cmdBuffer, uint32_t) {
+				RT_BindMaterial(cmdBuffer, pipelineLayout, materialAsset->GetUnderlyingMaterial());
+				vkCmdDrawIndexed(cmdBuffer, submesh.IndexCount, 1, submesh.IndexOffset, 0, 0);
+			});
 			submeshIndex++;
 
 			// Record Statistics
@@ -184,17 +175,14 @@ namespace Flameberry {
 		s_RendererFrameStats.MeshCount++;
 	}
 
-	void Renderer::RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material)
-	{
+	void Renderer::RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material) {
 		vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, material->GetPushConstantOffset(), material->GetUniformDataSize(), material->GetUniformDataPtr());
 
-		if (material->m_DescriptorSets.size())
-		{
+		if (material->m_DescriptorSets.size()) {
 			int idx = 0;
 			std::vector<VkDescriptorSet> descSetArray(material->m_DescriptorSets.size());
 
-			for (const auto& set : material->m_DescriptorSets)
-			{
+			for (const auto& set : material->m_DescriptorSets) {
 				descSetArray[idx] = set->GetVulkanDescriptorSet();
 				idx++;
 			}
@@ -209,8 +197,7 @@ namespace Flameberry {
 		s_RendererFrameStats.BoundMaterials++;
 	}
 
-	void Renderer::RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer)
-	{
+	void Renderer::RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer) {
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
 		vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
@@ -218,13 +205,11 @@ namespace Flameberry {
 		s_RendererFrameStats.VertexAndIndexBufferStateSwitches++;
 	}
 
-	void Renderer::RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline)
-	{
+	void Renderer::RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline) {
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 	}
 
-	void Renderer::ResetStats()
-	{
+	void Renderer::ResetStats() {
 		s_RendererFrameStats.MeshCount = 0;
 		s_RendererFrameStats.SubMeshCount = 0;
 		s_RendererFrameStats.BoundMaterials = 0;
@@ -233,8 +218,7 @@ namespace Flameberry {
 		s_RendererFrameStats.VertexAndIndexBufferStateSwitches = 0;
 	}
 
-	void Renderer::QueryTimestampResults()
-	{
+	void Renderer::QueryTimestampResults() {
 		vkGetQueryPoolResults(
 			VulkanContext::GetCurrentDevice()->GetVulkanDevice(),
 			s_QueryPool,

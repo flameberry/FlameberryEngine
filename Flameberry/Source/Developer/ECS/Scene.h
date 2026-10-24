@@ -6,8 +6,7 @@
 
 namespace Flameberry {
 
-	class Scene : public Asset
-	{
+	class Scene : public Asset {
 	public:
 		Scene();
 		~Scene();

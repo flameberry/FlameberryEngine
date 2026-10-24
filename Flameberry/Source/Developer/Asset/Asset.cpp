@@ -32,16 +32,14 @@ namespace Flameberry {
 			{ ".ttf", AssetType::Font },
 		};
 
-		AssetType GetAssetTypeFromFileExtension(const std::string& extension)
-		{
+		AssetType GetAssetTypeFromFileExtension(const std::string& extension) {
 			const auto it = g_FileExtensionToAssetTypeMap.find(extension);
 			const AssetType assetType = it != g_FileExtensionToAssetTypeMap.end() ? it->second : AssetType::None;
 
 			return assetType;
 		}
 
-		AssetType AssetTypeStringToEnum(const std::string& typeStr)
-		{
+		AssetType AssetTypeStringToEnum(const std::string& typeStr) {
 			if (typeStr == "Scene")
 				return AssetType::Scene;
 			if (typeStr == "Texture2D")
@@ -57,10 +55,8 @@ namespace Flameberry {
 			return AssetType::None;
 		}
 
-		std::string AssetTypeEnumToString(AssetType assetType)
-		{
-			switch (assetType)
-			{
+		std::string AssetTypeEnumToString(AssetType assetType) {
+			switch (assetType) {
 				case AssetType::Scene:
 					return "Scene";
 				case AssetType::Texture2D:

@@ -5,8 +5,7 @@
 
 namespace Flameberry {
 
-	struct MSDFFontData
-	{
+	struct MSDFFontData {
 		std::vector<msdf_atlas::GlyphGeometry> Glyphs;
 		msdf_atlas::FontGeometry FontGeometry;
 	};

@@ -20,11 +20,9 @@ namespace Flameberry {
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		VkDebugUtilsMessageTypeFlagsEXT messageType,
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-		void* userData)
-	{
+		void* userData) {
 #if 1
-		switch (messageSeverity)
-		{
+		switch (messageSeverity) {
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
 				FBY_LOG("{}", pCallbackData->pMessage);
 				break;
@@ -42,8 +40,7 @@ namespace Flameberry {
 				break;
 		}
 #else
-		switch (messageSeverity)
-		{
+		switch (messageSeverity) {
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
 				std::cout << "TRACE: " << pCallbackData->pMessage << std::endl;
 				break;
@@ -64,8 +61,7 @@ namespace Flameberry {
 		return VK_FALSE;
 	}
 
-	VulkanInstance::VulkanInstance()
-	{
+	VulkanInstance::VulkanInstance() {
 		bool enableValidationLayers = VulkanContext::EnableValidationLayers();
 
 		// Creating Vulkan Instance
@@ -102,8 +98,7 @@ namespace Flameberry {
 		VkDebugUtilsMessengerCreateInfoEXT vk_debug_create_info{};
 		auto validationLayers = VulkanContext::GetValidationLayerNames();
 
-		if (enableValidationLayers)
-		{
+		if (enableValidationLayers) {
 			FBY_LOG("{}", validationLayers[0]);
 			vk_create_info.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			vk_create_info.ppEnabledLayerNames = validationLayers.data();
@@ -114,9 +109,7 @@ namespace Flameberry {
 			vk_debug_create_info.pfnUserCallback = vk_debug_callback;
 
 			vk_create_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&vk_debug_create_info;
-		}
-		else
-		{
+		} else {
 			vk_create_info.enabledLayerCount = 0;
 			vk_create_info.pNext = nullptr;
 		}
@@ -124,8 +117,7 @@ namespace Flameberry {
 		VK_CHECK_RESULT(vkCreateInstance(&vk_create_info, nullptr, &m_VkInstance));
 		FBY_INFO("Created Vulkan Instance!");
 
-		if (enableValidationLayers)
-		{
+		if (enableValidationLayers) {
 			// Creating Vulkan Debug Messenger
 			VkDebugUtilsMessengerCreateInfoEXT vk_debug_messenger_create_info{};
 			vk_debug_messenger_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -139,8 +131,7 @@ namespace Flameberry {
 		}
 	}
 
-	VkResult VulkanInstance::CreateDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pMessenger) const
-	{
+	VkResult VulkanInstance::CreateDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pMessenger) const {
 		auto vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VkInstance, "vkCreateDebugUtilsMessengerEXT");
 		if (vkCreateDebugUtilsMessengerEXT)
 			return vkCreateDebugUtilsMessengerEXT(m_VkInstance, pCreateInfo, pAllocator, pMessenger);
@@ -149,8 +140,7 @@ namespace Flameberry {
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 
-	void VulkanInstance::DestroyDebugUtilsMessengerEXT(VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator) const
-	{
+	void VulkanInstance::DestroyDebugUtilsMessengerEXT(VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator) const {
 		auto vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VkInstance, "vkDestroyDebugUtilsMessengerEXT");
 		if (vkDestroyDebugUtilsMessengerEXT)
 			vkDestroyDebugUtilsMessengerEXT(m_VkInstance, messenger, pAllocator);
@@ -158,8 +148,7 @@ namespace Flameberry {
 			FBY_ERROR("Failed to load function 'vkDestroyDebugUtilsMessengerEXT'!");
 	}
 
-	VulkanInstance::~VulkanInstance()
-	{
+	VulkanInstance::~VulkanInstance() {
 		if (VulkanContext::EnableValidationLayers())
 			DestroyDebugUtilsMessengerEXT(m_VkDebugMessenger, nullptr);
 		vkDestroyInstance(m_VkInstance, nullptr);

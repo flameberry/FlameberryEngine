@@ -5,14 +5,12 @@
 
 namespace Flameberry {
 
-	struct CommandBufferSpecification
-	{
+	struct CommandBufferSpecification {
 		VkCommandPool CommandPool;
 		bool IsPrimary = true, SingleTimeUsage = false;
 	};
 
-	class CommandBuffer
-	{
+	class CommandBuffer {
 	public:
 		CommandBuffer(const CommandBufferSpecification& specification);
 		~CommandBuffer();

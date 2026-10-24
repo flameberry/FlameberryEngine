@@ -18,8 +18,7 @@ namespace Flameberry {
 
 	Renderer2DData Renderer2D::s_Renderer2DData;
 
-	void Renderer2D::Init(const Ref<RenderPass>& renderPass)
-	{
+	void Renderer2D::Init(const Ref<RenderPass>& renderPass) {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		{
 			// Line Resources
@@ -71,8 +70,7 @@ namespace Flameberry {
 
 			uint32_t* indices = new uint32_t[MAX_QUAD_INDICES];
 			uint32_t offset = 0;
-			for (uint32_t i = 0; i < MAX_QUAD_INDICES; i += 6)
-			{
+			for (uint32_t i = 0; i < MAX_QUAD_INDICES; i += 6) {
 				indices[i + 0] = offset + 0;
 				indices[i + 1] = offset + 1;
 				indices[i + 2] = offset + 2;
@@ -140,8 +138,7 @@ namespace Flameberry {
 
 			uint32_t* indices = new uint32_t[MAX_QUAD_INDICES];
 			uint32_t offset = 0;
-			for (uint32_t i = 0; i < MAX_QUAD_INDICES; i += 6)
-			{
+			for (uint32_t i = 0; i < MAX_QUAD_INDICES; i += 6) {
 				indices[i + 0] = offset + 0;
 				indices[i + 1] = offset + 1;
 				indices[i + 2] = offset + 2;
@@ -189,42 +186,36 @@ namespace Flameberry {
 		}
 	}
 
-	void Renderer2D::AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color)
-	{
+	void Renderer2D::AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color) {
 		s_Renderer2DData.LineVertices.push_back(LineVertex{ start, color });
 		s_Renderer2DData.LineVertices.push_back(LineVertex{ end, color });
 	}
 
-	void Renderer2D::AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
-	{
+	void Renderer2D::AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments) {
 		GLM_CONSTEXPR float PI = glm::pi<float>();
 		const float angle = PI / segments;
 
 		glm::vec3 lastVertex = position + rotation * glm::vec3(radius, 0.0f, 0.0f);
-		for (int i = 1; i <= segments; i++)
-		{
+		for (int i = 1; i <= segments; i++) {
 			glm::vec3 vertex = position + rotation * glm::vec3(radius * cos(i * angle), 0.0f, radius * sin(i * angle));
 			Renderer2D::AddLine(lastVertex, vertex, color);
 			lastVertex = vertex;
 		}
 	}
 
-	void Renderer2D::AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments)
-	{
+	void Renderer2D::AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments) {
 		GLM_CONSTEXPR float PI = glm::pi<float>();
 		const float angle = 2 * PI / segments;
 
 		glm::vec3 lastVertex = position + rotation * glm::vec3(radius, 0.0f, 0.0f);
-		for (int i = 1; i <= segments; i++)
-		{
+		for (int i = 1; i <= segments; i++) {
 			glm::vec3 vertex = position + rotation * glm::vec3(radius * cos(i * angle), 0.0f, radius * sin(i * angle));
 			Renderer2D::AddLine(lastVertex, vertex, color);
 			lastVertex = vertex;
 		}
 	}
 
-	void Renderer2D::AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex)
-	{
+	void Renderer2D::AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex) {
 		GLM_CONSTEXPR glm::mat4x2 genericVertexOffsets = {
 			{ -1.0f, -1.0f },
 			{ 1.0f, -1.0f },
@@ -235,8 +226,7 @@ namespace Flameberry {
 		const glm::vec3& right = { viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0] };
 		const glm::vec3& up = { viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1] };
 
-		for (uint8_t i = 0; i < 4; i++)
-		{
+		for (uint8_t i = 0; i < 4; i++) {
 			auto& vertex = s_Renderer2DData.QuadVertices.emplace_back();
 
 			vertex.Position = glm::vec3(position
@@ -250,8 +240,7 @@ namespace Flameberry {
 		}
 	}
 
-	void Renderer2D::AddGrid(int gridSize)
-	{
+	void Renderer2D::AddGrid(int gridSize) {
 		constexpr float squareSize = 1.0f;
 		const float length = 2 * gridSize * squareSize;
 
@@ -263,8 +252,7 @@ namespace Flameberry {
 		GLM_CONSTEXPR glm::vec3 redLineColor(1.0f, 0.235f, 0.286f);
 		GLM_CONSTEXPR glm::vec3 blueLineColor(0.286f, 0.235f, 1.0f);
 
-		for (int i = -gridSize; i <= gridSize; i++)
-		{
+		for (int i = -gridSize; i <= gridSize; i++) {
 			bool is_bold = i == 0;
 
 			Renderer2D::AddLine({ current, 0.0f, start }, { current, 0.0f, start + length }, is_bold ? blueLineColor : lineColor);
@@ -273,8 +261,7 @@ namespace Flameberry {
 		}
 	}
 
-	void Renderer2D::AddAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color)
-	{
+	void Renderer2D::AddAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color) {
 		const glm::vec3 vertices[] = {
 			transform * glm::vec4(aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f),
 			transform * glm::vec4(aabb.Max.x, aabb.Min.y, aabb.Min.z, 1.0f),
@@ -297,24 +284,20 @@ namespace Flameberry {
 			Renderer2D::AddLine(vertices[edges[i][0]], vertices[edges[i][1]], color);
 	}
 
-	void Renderer2D::AddText(const std::string& text, const Ref<Font>& fontAsset, const glm::mat4& transform, const TextParams& textParams, int entityIndex)
-	{
+	void Renderer2D::AddText(const std::string& text, const Ref<Font>& fontAsset, const glm::mat4& transform, const TextParams& textParams, int entityIndex) {
 		const Ref<Font> font = fontAsset ? fontAsset : Font::GetDefault();
 
 		const auto it = s_Renderer2DData.FontHandleToBatchIndex.find(font->Handle);
 		uint32_t batchIndex = -1;
 
-		if (it == s_Renderer2DData.FontHandleToBatchIndex.end())
-		{
+		if (it == s_Renderer2DData.FontHandleToBatchIndex.end()) {
 			// Begin Batch
 			auto& batch = s_Renderer2DData.TextBatches.emplace_back();
 			batch.FontAtlasTexture = font->GetAtlasTexture();
 
 			batchIndex = s_Renderer2DData.TextBatches.size() - 1;
 			s_Renderer2DData.FontHandleToBatchIndex[font->Handle] = batchIndex;
-		}
-		else
-		{
+		} else {
 			batchIndex = it->second;
 		}
 
@@ -332,25 +315,21 @@ namespace Flameberry {
 
 		const double spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();
 
-		for (uint32_t i = 0; i < text.size(); i++)
-		{
+		for (uint32_t i = 0; i < text.size(); i++) {
 			const char character = text[i];
 
 			if (character == '\r')
 				continue;
 
-			if (character == '\n')
-			{
+			if (character == '\n') {
 				x = 0.0;
 				y -= fsScale * fontGeometry.getMetrics().lineHeight + textParams.LineSpacing;
 				continue;
 			}
 
-			if (character == ' ')
-			{
+			if (character == ' ') {
 				double advance = spaceGlyphAdvance;
-				if (i < text.size() - 1)
-				{
+				if (i < text.size() - 1) {
 					const char nextCharacter = text[i + 1];
 					fontGeometry.getAdvance(advance, character, nextCharacter);
 				}
@@ -359,8 +338,7 @@ namespace Flameberry {
 				continue;
 			}
 
-			if (character == '\t')
-			{
+			if (character == '\t') {
 				constexpr double tabsize = 4.0;
 				x += tabsize * (fsScale * spaceGlyphAdvance + textParams.Kerning);
 				continue;
@@ -368,13 +346,11 @@ namespace Flameberry {
 
 			auto glyph = fontGeometry.getGlyph(character);
 
-			if (!glyph)
-			{
+			if (!glyph) {
 				FBY_WARN("Unable to load glyph: {}", character);
 				glyph = fontGeometry.getGlyph('?');
 
-				if (!glyph)
-				{
+				if (!glyph) {
 					FBY_ERROR("Unable to load glyph: ?");
 					return;
 				}
@@ -409,8 +385,7 @@ namespace Flameberry {
 			};
 
 			// Add single character
-			for (uint8_t i = 0; i < 4; i++)
-			{
+			for (uint8_t i = 0; i < 4; i++) {
 				auto& vertex = batch.TextVertices.emplace_back();
 
 				vertex.Position = transform * glm::vec4(textCharacterVertexPositions[i], 0.0f, 1.0f);
@@ -420,8 +395,7 @@ namespace Flameberry {
 				vertex.EntityIndex = entityIndex;
 			}
 
-			if (i < text.size() - 1)
-			{
+			if (i < text.size() - 1) {
 				double advance;
 				const char nextCharacter = text[i + 1];
 				fontGeometry.getAdvance(advance, character, nextCharacter);
@@ -431,18 +405,15 @@ namespace Flameberry {
 		}
 	}
 
-	void Renderer2D::BeginScene(VkDescriptorSet globalDescriptorSet)
-	{
+	void Renderer2D::BeginScene(VkDescriptorSet globalDescriptorSet) {
 		s_GlobalDescriptorSet = globalDescriptorSet;
 		s_Renderer2DData.QuadVertexBufferOffset = 0;
 		s_Renderer2DData.TextVertexBufferOffset = 0;
 	}
 
 	// Make sure to call this when you have accumulated all the quads having the same texture map or none
-	void Renderer2D::FlushQuads()
-	{
-		if (s_Renderer2DData.QuadVertices.size())
-		{
+	void Renderer2D::FlushQuads() {
+		if (s_Renderer2DData.QuadVertices.size()) {
 			FBY_ASSERT(s_Renderer2DData.QuadVertices.size() <= MAX_QUAD_VERTICES, "MAX_QUAD_VERTICES limit reached!");
 			s_Renderer2DData.QuadVertexBuffer->WriteToBuffer(s_Renderer2DData.QuadVertices.data(), s_Renderer2DData.QuadVertices.size() * sizeof(QuadVertex), s_Renderer2DData.QuadVertexBufferOffset);
 
@@ -452,26 +423,23 @@ namespace Flameberry {
 			auto pipelineLayout = s_Renderer2DData.QuadPipeline->GetVulkanPipelineLayout();
 			auto indexCount = 6 * (uint32_t)s_Renderer2DData.QuadVertices.size() / 4;
 
-			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.TextureMap->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.QuadVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-				{
-					Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
-					VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
+			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = s_Renderer2DData.TextureMap->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.QuadVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+				Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
+				VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
-					VkDeviceSize offsets[] = { offset };
-					vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
-					vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-					vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
-				});
+				VkDeviceSize offsets[] = { offset };
+				vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+				vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+				vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+			});
 			s_Renderer2DData.QuadVertexBufferOffset += s_Renderer2DData.QuadVertices.size() * sizeof(QuadVertex);
 			s_Renderer2DData.QuadVertices.clear();
 		}
 	}
 
-	void Renderer2D::EndScene()
-	{
-		if (!s_Renderer2DData.LineVertices.empty())
-		{
+	void Renderer2D::EndScene() {
+		if (!s_Renderer2DData.LineVertices.empty()) {
 			FBY_ASSERT(s_Renderer2DData.LineVertices.size() <= 2 * MAX_LINES, "MAX_LINES limit reached!");
 			s_Renderer2DData.LineVertexBuffer->WriteToBuffer(s_Renderer2DData.LineVertices.data(), s_Renderer2DData.LineVertices.size() * sizeof(LineVertex), 0);
 
@@ -480,24 +448,21 @@ namespace Flameberry {
 			const VkPipelineLayout pipelineLayout = s_Renderer2DData.LinePipeline->GetVulkanPipelineLayout();
 			const VkPipeline vulkanPipeline = s_Renderer2DData.LinePipeline->GetVulkanPipeline();
 
-			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, vertexBuffer, vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-				{
-					Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
+			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, vertexBuffer, vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+				Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr);
 
-					VkDeviceSize offsets[] = { 0 };
-					vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+				VkDeviceSize offsets[] = { 0 };
+				vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
 
-					vkCmdDraw(cmdBuffer, vertexCount, 1, 0, 0);
-				});
+				vkCmdDraw(cmdBuffer, vertexCount, 1, 0, 0);
+			});
 			s_Renderer2DData.LineVertices.clear();
 		}
 
 		// Text Rendering
-		for (const auto& batch : s_Renderer2DData.TextBatches)
-		{
-			if (batch.TextVertices.size())
-			{
+		for (const auto& batch : s_Renderer2DData.TextBatches) {
+			if (batch.TextVertices.size()) {
 				FBY_ASSERT(batch.TextVertices.size() <= MAX_QUAD_INDICES, "MAX_QUAD_INDICES reached!");
 				s_Renderer2DData.TextVertexBuffer->WriteToBuffer(batch.TextVertices.data(), batch.TextVertices.size() * sizeof(TextVertex), s_Renderer2DData.TextVertexBufferOffset);
 
@@ -508,17 +473,16 @@ namespace Flameberry {
 				const uint32_t vertexCount = (uint32_t)batch.TextVertices.size();
 				const uint32_t indexCount = 6 * (uint32_t)batch.TextVertices.size() / 4;
 
-				Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = batch.FontAtlasTexture->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.TextVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-					{
-						Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
-						VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
-						vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
+				Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, descSet = batch.FontAtlasTexture->CreateOrGetDescriptorSet(), vertexBuffer, offset = s_Renderer2DData.TextVertexBufferOffset, indexBuffer, indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+					Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
+					VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
-						VkDeviceSize offsets[] = { offset };
-						vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
-						vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-						vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
-					});
+					VkDeviceSize offsets[] = { offset };
+					vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
+					vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+					vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+				});
 				s_Renderer2DData.TextVertexBufferOffset += batch.TextVertices.size() * sizeof(TextVertex);
 			}
 		}
@@ -528,8 +492,7 @@ namespace Flameberry {
 		s_GlobalDescriptorSet = VK_NULL_HANDLE;
 	}
 
-	void Renderer2D::Shutdown()
-	{
+	void Renderer2D::Shutdown() {
 		s_Renderer2DData.LinePipeline = nullptr;
 		s_Renderer2DData.LineVertexBuffer = nullptr;
 

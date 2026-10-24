@@ -6,17 +6,13 @@
 namespace Flameberry {
 
 	ThumbnailCache::ThumbnailCache(const std::filesystem::path& thumbnailCacheDirectory, const ThumbnailCacheConfig& config)
-		: m_ThumbnailCacheDirectory(thumbnailCacheDirectory), m_Config(config)
-	{
-	}
+		: m_ThumbnailCacheDirectory(thumbnailCacheDirectory), m_Config(config) {}
 
-	Ref<Texture2D> ThumbnailCache::GetOrCreateThumbnail(const std::filesystem::path& assetPath)
-	{
+	Ref<Texture2D> ThumbnailCache::GetOrCreateThumbnail(const std::filesystem::path& assetPath) {
 		const std::filesystem::file_time_type lastWriteTime = std::filesystem::last_write_time(assetPath);
 		const uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(lastWriteTime.time_since_epoch()).count();
 
-		if (m_CachedThumbnails.find(assetPath) != m_CachedThumbnails.end())
-		{
+		if (m_CachedThumbnails.find(assetPath) != m_CachedThumbnails.end()) {
 			const auto& cachedThumbnail = m_CachedThumbnails.at(assetPath);
 			if (cachedThumbnail.Timestamp == timestamp)
 				return cachedThumbnail.Image;

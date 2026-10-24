@@ -9,8 +9,7 @@
 
 namespace Flameberry {
 
-	class SkymapImporter
-	{
+	class SkymapImporter {
 	public:
 		static Ref<Skymap> ImportSkymap(AssetHandle handle, const AssetMetadata& metadata);
 		static Ref<Skymap> LoadSkymap(const std::filesystem::path& path);

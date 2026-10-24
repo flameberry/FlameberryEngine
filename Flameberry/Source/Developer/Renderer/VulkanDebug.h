@@ -7,11 +7,9 @@
 
 namespace Flameberry {
 
-	static std::string GetVkResult(VkResult result)
-	{
+	static std::string GetVkResult(VkResult result) {
 		std::string errorString = "";
-		switch (result)
-		{
+		switch (result) {
 			case VK_SUCCESS:
 				break;
 			case VK_NOT_READY:

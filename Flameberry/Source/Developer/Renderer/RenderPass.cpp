@@ -10,13 +10,11 @@
 namespace Flameberry {
 
 	RenderPass::RenderPass(const RenderPassSpecification& specification)
-		: m_RenderPassSpec(specification)
-	{
+		: m_RenderPassSpec(specification) {
 		FBY_ASSERT(m_RenderPassSpec.TargetFramebuffers.size(), "No Target Framebuffers provided to RenderPass!");
 
 		// Checking if all the Framebuffers have same specification
-		for (uint32_t i = 1; i < m_RenderPassSpec.TargetFramebuffers.size(); i++)
-		{
+		for (uint32_t i = 1; i < m_RenderPassSpec.TargetFramebuffers.size(); i++) {
 			const auto& spec = m_RenderPassSpec.TargetFramebuffers[i]->GetSpecification();
 			FBY_ASSERT(spec.Attachments == m_RenderPassSpec.TargetFramebuffers[0]->GetSpecification().Attachments, "Framebuffers having different attachments must not be provided to single RenderPass!");
 			FBY_ASSERT(spec.Samples == m_RenderPassSpec.TargetFramebuffers[0]->GetSpecification().Samples, "Framebuffers having different sample count must not be provided to single RenderPass!");
@@ -24,8 +22,7 @@ namespace Flameberry {
 
 		const auto& framebufferSpec = m_RenderPassSpec.TargetFramebuffers[0]->GetSpecification();
 
-		if (!m_RenderPassSpec.Dependencies.size())
-		{
+		if (!m_RenderPassSpec.Dependencies.size()) {
 			m_RenderPassSpec.Dependencies.resize(2);
 
 			m_RenderPassSpec.Dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -48,8 +45,7 @@ namespace Flameberry {
 		// VkSampleCountFlagBits samples = (VkSampleCountFlagBits)m_RenderPassSpec.Samples;
 		VkSampleCountFlagBits samples;
 
-		switch (framebufferSpec.Samples)
-		{
+		switch (framebufferSpec.Samples) {
 			case 1:
 				samples = VK_SAMPLE_COUNT_1_BIT;
 				break;
@@ -89,8 +85,7 @@ namespace Flameberry {
 		uint32_t layerCount = framebufferSpec.Attachments[0].LayerCount;
 
 		int i = 0;
-		for (const auto& attachment : framebufferSpec.Attachments)
-		{
+		for (const auto& attachment : framebufferSpec.Attachments) {
 			attachments[i].format = attachment.Format;
 			attachments[i].samples = samples;
 			attachments[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -103,8 +98,7 @@ namespace Flameberry {
 			useMultiView = useMultiView || attachment.LayerCount > 1;
 			FBY_ASSERT(layerCount == attachment.LayerCount, "Different Layers for each attachment are not handled correctly yet!");
 
-			if (RenderCommand::DoesFormatSupportDepthAttachment(attachment.Format))
-			{
+			if (RenderCommand::DoesFormatSupportDepthAttachment(attachment.Format)) {
 				attachments[i].stencilLoadOp = framebufferSpec.StencilLoadOp;
 				attachments[i].stencilStoreOp = framebufferSpec.StencilStoreOp;
 
@@ -114,9 +108,7 @@ namespace Flameberry {
 
 				depthRef.attachment = i;
 				depthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			}
-			else
-			{
+			} else {
 				attachments[i].loadOp = framebufferSpec.ColorLoadOp;
 				attachments[i].storeOp = framebufferSpec.ColorStoreOp;
 				attachments[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -125,8 +117,7 @@ namespace Flameberry {
 				ref.attachment = i;
 				ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-				if (framebufferSpec.Samples > 1)
-				{
+				if (framebufferSpec.Samples > 1) {
 					attachments[i + framebufferSpec.Attachments.size()].format = attachment.Format;
 					attachments[i + framebufferSpec.Attachments.size()].samples = VK_SAMPLE_COUNT_1_BIT;
 					attachments[i + framebufferSpec.Attachments.size()].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -191,54 +182,48 @@ namespace Flameberry {
 			framebuffer->CreateVulkanFramebuffer(m_VkRenderPass);
 	}
 
-	void RenderPass::Begin(uint32_t framebufferInstance, VkOffset2D renderAreaOffset, VkExtent2D renderAreaExtent)
-	{
-		Renderer::Submit([renderPass = this, framebufferInstance, renderAreaOffset, renderAreaExtent](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-			{
-				uint32_t index = (framebufferInstance == -1) ? imageIndex : framebufferInstance;
-				const auto& framebufferSpec = renderPass->m_RenderPassSpec.TargetFramebuffers[index]->GetSpecification();
+	void RenderPass::Begin(uint32_t framebufferInstance, VkOffset2D renderAreaOffset, VkExtent2D renderAreaExtent) {
+		Renderer::Submit([renderPass = this, framebufferInstance, renderAreaOffset, renderAreaExtent](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			uint32_t index = (framebufferInstance == -1) ? imageIndex : framebufferInstance;
+			const auto& framebufferSpec = renderPass->m_RenderPassSpec.TargetFramebuffers[index]->GetSpecification();
 
-				std::vector<VkClearValue> clearValues;
-				clearValues.resize(framebufferSpec.Attachments.size());
+			std::vector<VkClearValue> clearValues;
+			clearValues.resize(framebufferSpec.Attachments.size());
 
-				for (uint32_t i = 0; i < framebufferSpec.Attachments.size(); i++)
-				{
-					auto& value = clearValues[i];
-					if (RenderCommand::DoesFormatSupportDepthAttachment(framebufferSpec.Attachments[i].Format))
-						value.depthStencil = framebufferSpec.DepthStencilClearValue;
-					else
-						value.color = framebufferSpec.ClearColorValue;
-				}
+			for (uint32_t i = 0; i < framebufferSpec.Attachments.size(); i++) {
+				auto& value = clearValues[i];
+				if (RenderCommand::DoesFormatSupportDepthAttachment(framebufferSpec.Attachments[i].Format))
+					value.depthStencil = framebufferSpec.DepthStencilClearValue;
+				else
+					value.color = framebufferSpec.ClearColorValue;
+			}
 
-				auto framebuffer = renderPass->m_RenderPassSpec.TargetFramebuffers[index]->GetVulkanFramebuffer();
+			auto framebuffer = renderPass->m_RenderPassSpec.TargetFramebuffers[index]->GetVulkanFramebuffer();
 
-				const auto& renderAreaExt = (renderAreaExtent.width == 0 || renderAreaExtent.height == 0) ? VkExtent2D{ framebufferSpec.Width, framebufferSpec.Height } : renderAreaExtent;
+			const auto& renderAreaExt = (renderAreaExtent.width == 0 || renderAreaExtent.height == 0) ? VkExtent2D{ framebufferSpec.Width, framebufferSpec.Height } : renderAreaExtent;
 
-				VkRenderPassBeginInfo vk_render_pass_begin_info{};
-				vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-				vk_render_pass_begin_info.renderPass = renderPass->m_VkRenderPass;
-				vk_render_pass_begin_info.framebuffer = framebuffer;
+			VkRenderPassBeginInfo vk_render_pass_begin_info{};
+			vk_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			vk_render_pass_begin_info.renderPass = renderPass->m_VkRenderPass;
+			vk_render_pass_begin_info.framebuffer = framebuffer;
 
-				vk_render_pass_begin_info.renderArea.offset = renderAreaOffset;
-				vk_render_pass_begin_info.renderArea.extent = renderAreaExt;
+			vk_render_pass_begin_info.renderArea.offset = renderAreaOffset;
+			vk_render_pass_begin_info.renderArea.extent = renderAreaExt;
 
-				vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clearValues.size());
-				vk_render_pass_begin_info.pClearValues = clearValues.data();
+			vk_render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clearValues.size());
+			vk_render_pass_begin_info.pClearValues = clearValues.data();
 
-				vkCmdBeginRenderPass(cmdBuffer, &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-			});
+			vkCmdBeginRenderPass(cmdBuffer, &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+		});
 	}
 
-	void RenderPass::End()
-	{
-		Renderer::Submit([](VkCommandBuffer cmdBuffer, uint32_t imageIndex)
-			{
-				vkCmdEndRenderPass(cmdBuffer);
-			});
+	void RenderPass::End() {
+		Renderer::Submit([](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			vkCmdEndRenderPass(cmdBuffer);
+		});
 	}
 
-	RenderPass::~RenderPass()
-	{
+	RenderPass::~RenderPass() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkDestroyRenderPass(device, m_VkRenderPass, nullptr);
 	}

@@ -17,8 +17,7 @@
 
 namespace Flameberry {
 
-	struct WindowSpecification
-	{
+	struct WindowSpecification {
 		int Width, Height;
 		std::string Title = "";
 		std::string SecondaryTitle = "";
@@ -33,13 +32,11 @@ namespace Flameberry {
 			, Height(height)
 			, Title(title)
 			, NativeTitlebar(false)
-			, TitlebarGradientColor(Theme::TitlebarGreenColor.x, Theme::TitlebarGreenColor.y, Theme::TitlebarGreenColor.z, Theme::TitlebarGreenColor.w)
-		{
+			, TitlebarGradientColor(Theme::TitlebarGreenColor.x, Theme::TitlebarGreenColor.y, Theme::TitlebarGreenColor.z, Theme::TitlebarGreenColor.w) {
 		}
 	};
 
-	class Window
-	{
+	class Window {
 	public:
 		virtual ~Window() = default;
 		static Ref<Window> Create(const WindowSpecification& specification = WindowSpecification());

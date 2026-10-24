@@ -30,12 +30,10 @@ namespace Flameberry {
 #endif
 
 	VulkanContext::VulkanContext(VulkanWindow* pWindow)
-		: m_Window(pWindow)
-	{
+		: m_Window(pWindow) {
 		FBY_ASSERT(pWindow->GetGLFWwindow(), "Null Window given to Vulkan Context!");
 
-		if (s_EnableValidationLayers)
-		{
+		if (s_EnableValidationLayers) {
 			bool isSupported = RenderCommand::CheckValidationLayerSupport(s_ValidationLayers);
 			if (!isSupported)
 				FBY_ERROR("Validation Layers are not supported!");
@@ -55,8 +53,7 @@ namespace Flameberry {
 
 		// Print Physical Devices Names
 		std::string physical_device_list = "";
-		for (uint16_t i = 0; i < deviceCount; i++)
-		{
+		for (uint16_t i = 0; i < deviceCount; i++) {
 			VkPhysicalDeviceProperties vk_physical_device_props;
 			vkGetPhysicalDeviceProperties(vk_physical_devices[i], &vk_physical_device_props);
 			physical_device_list += vk_physical_device_props.deviceName;
@@ -92,17 +89,14 @@ namespace Flameberry {
 #endif
 	}
 
-	VulkanContext::~VulkanContext()
-	{
+	VulkanContext::~VulkanContext() {
 		m_Window->DestroyVulkanWindowSurface(m_VulkanInstance->GetVulkanInstance());
 	}
 
-	VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& physicalDeviceList, VkSurfaceKHR surface)
-	{
+	VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& physicalDeviceList, VkSurfaceKHR surface) {
 		std::map<int, VkPhysicalDevice> physicalDeviceMap;
 
-		for (auto physicalDevice : physicalDeviceList)
-		{
+		for (auto physicalDevice : physicalDeviceList) {
 			QueueFamilyIndices indices = RenderCommand::GetQueueFamilyIndices(physicalDevice, surface);
 
 			uint32_t extensionCount = 0;
@@ -114,21 +108,17 @@ namespace Flameberry {
 			std::set<std::string> requiredExtensions(s_VulkanDeviceExtensions.begin(), s_VulkanDeviceExtensions.end());
 
 			FBY_INFO("Available Extensions:");
-			for (const auto& extension : availableExtensions)
-			{
+			for (const auto& extension : availableExtensions) {
 				FBY_INFO("\t{}", extension.extensionName);
 				requiredExtensions.erase(extension.extensionName);
 			}
 			bool foundRequiredExtensions = requiredExtensions.empty();
 			bool isSwapchainAdequate = false;
 
-			if (foundRequiredExtensions)
-			{
+			if (foundRequiredExtensions) {
 				SwapChainDetails vulkanSwapchainDetails = RenderCommand::GetSwapChainDetails(physicalDevice, surface);
 				isSwapchainAdequate = (!vulkanSwapchainDetails.SurfaceFormats.empty()) && (!vulkanSwapchainDetails.PresentationModes.empty());
-			}
-			else
-			{
+			} else {
 				FBY_ERROR("Failed to find the following extension(s):");
 				for (const auto& name : requiredExtensions)
 					FBY_ERROR("\t{}", name);

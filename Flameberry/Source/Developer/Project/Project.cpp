@@ -13,8 +13,7 @@ namespace Flameberry {
 
 	Ref<Project> Project::s_ActiveProject;
 
-	Ref<Project> Project::CreateProjectOnDisk(const std::filesystem::path& targetFolder, const std::string& projectName)
-	{
+	Ref<Project> Project::CreateProjectOnDisk(const std::filesystem::path& targetFolder, const std::string& projectName) {
 		ProjectConfig projectConfig;
 		projectConfig.Name = projectName;
 		projectConfig.AssetDirectory = "Content";
@@ -28,8 +27,7 @@ namespace Flameberry {
 		if (!std::filesystem::exists(project->GetProjectDirectory()))
 			std::filesystem::create_directory(project->GetProjectDirectory());
 
-		if (std::filesystem::is_empty(project->GetProjectDirectory()))
-		{
+		if (std::filesystem::is_empty(project->GetProjectDirectory())) {
 			// 2. Serialize the Project
 			project->Save();
 			// 3. Create a Content folder
@@ -45,22 +43,18 @@ namespace Flameberry {
 	}
 
 	Project::Project(const std::filesystem::path& projectDirectory, const ProjectConfig& config)
-		: m_ProjectDirectory(projectDirectory), m_Config(config)
-	{
+		: m_ProjectDirectory(projectDirectory), m_Config(config) {
 		Init();
 	}
 
-	Project::Project()
-	{
+	Project::Project() {
 		Init();
 	}
 
-	void Project::Init()
-	{
+	void Project::Init() {
 		m_ThumbnailCache = CreateRef<ThumbnailCache>(GetThumbnailCacheDirectory());
 
-		switch (Application::Get().GetSpecification().Type)
-		{
+		switch (Application::Get().GetSpecification().Type) {
 			case ApplicationType::Editor:
 				m_AssetManager = CreateRef<EditorAssetManager>();
 				break;
@@ -74,16 +68,13 @@ namespace Flameberry {
 
 	Project::~Project() {}
 
-	void Project::Save()
-	{
+	void Project::Save() {
 		const std::string fileName = m_Config.Name + ".fbproj";
 		ProjectSerializer::SerializeProject(m_ProjectDirectory / fileName, this);
 	}
 
-	Ref<Project> Project::Load(const std::filesystem::path& path)
-	{
-		if (Ref<Project> project = ProjectSerializer::DeserializeIntoNewProject(path))
-		{
+	Ref<Project> Project::Load(const std::filesystem::path& path) {
+		if (Ref<Project> project = ProjectSerializer::DeserializeIntoNewProject(path)) {
 			Ref<EditorAssetManager> editorAssetManager = std::static_pointer_cast<EditorAssetManager>(project->m_AssetManager);
 			editorAssetManager->DeserializeAssetRegistry(project->GetAssetRegistryPath());
 			return project;

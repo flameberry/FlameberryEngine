@@ -12,8 +12,7 @@ namespace Flameberry {
 
 	struct TransformComponent;
 
-	class EditorCameraController
-	{
+	class EditorCameraController {
 	public:
 		EditorCameraController(const glm::vec3& position, const glm::vec3& direction, const GenericCameraSettings& settings);
 		~EditorCameraController();

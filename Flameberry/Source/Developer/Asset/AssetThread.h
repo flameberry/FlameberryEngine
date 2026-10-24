@@ -11,8 +11,7 @@
 
 namespace Flameberry {
 
-	class AssetThread
-	{
+	class AssetThread {
 	public:
 		AssetThread();
 		~AssetThread();
@@ -23,8 +22,7 @@ namespace Flameberry {
 		void Main();
 
 	private:
-		struct AssetLoadParameters
-		{
+		struct AssetLoadParameters {
 			AssetHandle Handle;
 			AssetMetadata Metadata;
 		};

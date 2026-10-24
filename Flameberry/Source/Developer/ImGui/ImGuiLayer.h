@@ -7,8 +7,7 @@
 
 namespace Flameberry {
 
-	class ImGuiLayer : public Layer
-	{
+	class ImGuiLayer : public Layer {
 	public:
 		ImGuiLayer();
 		~ImGuiLayer() override = default;

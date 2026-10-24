@@ -5,8 +5,7 @@
 
 namespace Flameberry {
 
-	class UUID
-	{
+	class UUID {
 	public:
 		using ValueType = uint64_t;
 
@@ -26,10 +25,8 @@ namespace Flameberry {
 namespace std {
 
 	template <>
-	struct hash<Flameberry::UUID>
-	{
-		size_t operator()(const Flameberry::UUID& key) const noexcept
-		{
+	struct hash<Flameberry::UUID> {
+		size_t operator()(const Flameberry::UUID& key) const noexcept {
 			return hash<Flameberry::UUID::ValueType>()((Flameberry::UUID::ValueType)key);
 		}
 	};

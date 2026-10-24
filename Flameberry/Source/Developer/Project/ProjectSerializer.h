@@ -4,8 +4,7 @@
 
 namespace Flameberry {
 
-	class ProjectSerializer
-	{
+	class ProjectSerializer {
 	public:
 		static Ref<Project> DeserializeIntoNewProject(const std::filesystem::path& filePath);
 		static bool DeserializeIntoExistingProject(const std::filesystem::path& filePath, const Ref<Project>& dest);

@@ -6,8 +6,7 @@
 
 namespace Flameberry {
 
-	class Timer
-	{
+	class Timer {
 	public:
 		Timer() { m_Start = std::chrono::high_resolution_clock::now(); }
 		~Timer() = default;
@@ -20,14 +19,12 @@ namespace Flameberry {
 		decltype(std::chrono::high_resolution_clock::now()) m_Start;
 	};
 
-	class ScopedTimer
-	{
+	class ScopedTimer {
 	public:
 		ScopedTimer(const std::string& scopeName)
 			: m_ScopeName(scopeName) { m_Start = std::chrono::high_resolution_clock::now(); }
 
-		~ScopedTimer()
-		{
+		~ScopedTimer() {
 #ifdef FBY_DEBUG
 			auto duration = std::chrono::high_resolution_clock::now() - m_Start;
 			FBY_WARN("{}: process took: {} ms, ({} ns)", m_ScopeName, std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(), std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count());

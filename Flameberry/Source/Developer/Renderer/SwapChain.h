@@ -7,8 +7,7 @@
 
 namespace Flameberry {
 
-	class SwapChain
-	{
+	class SwapChain {
 	public:
 		SwapChain(VkSurfaceKHR surface, const Ref<SwapChain>& oldSwapChain = nullptr);
 		~SwapChain();

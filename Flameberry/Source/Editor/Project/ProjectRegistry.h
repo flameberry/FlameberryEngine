@@ -4,19 +4,16 @@
 
 namespace Flameberry {
 
-	struct ProjectRegistryEntry
-	{
+	struct ProjectRegistryEntry {
 		std::string ProjectName;
 		std::filesystem::path ProjectFilePath;
 
-		bool operator==(const ProjectRegistryEntry& other) const
-		{
+		bool operator==(const ProjectRegistryEntry& other) const {
 			// This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
 			return ProjectFilePath == other.ProjectFilePath;
 		}
 
-		bool operator!=(const ProjectRegistryEntry& other) const
-		{
+		bool operator!=(const ProjectRegistryEntry& other) const {
 			// This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
 			return !(*this == other);
 		}
@@ -26,8 +23,7 @@ namespace Flameberry {
 
 	using ProjectRegistry = std::vector<ProjectRegistryEntry>;
 
-	class ProjectRegistryManager
-	{
+	class ProjectRegistryManager {
 	public:
 		static void AppendEntryToGlobalRegistry(Project* project);
 		static void RemoveEntryFromGlobalRegistry(const std::filesystem::path& pathOfProjectEntry);

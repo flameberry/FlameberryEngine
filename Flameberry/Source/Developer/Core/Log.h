@@ -17,11 +17,9 @@
 #endif
 
 template <>
-struct fmt::formatter<glm::vec3> : formatter<std::string_view>
-{
+struct fmt::formatter<glm::vec3> : formatter<std::string_view> {
 	template <typename FormatContext>
-	auto format(const glm::vec3& vec, FormatContext& ctx) const
-	{
+	auto format(const glm::vec3& vec, FormatContext& ctx) const {
 		return formatter<std::string_view>::format(glm::to_string(vec), ctx);
 	}
 };
@@ -29,19 +27,16 @@ struct fmt::formatter<glm::vec3> : formatter<std::string_view>
 /* Make std::filesystem::path formattable.
  */
 template <>
-struct fmt::formatter<std::filesystem::path> : formatter<std::string_view>
-{
+struct fmt::formatter<std::filesystem::path> : formatter<std::string_view> {
 	template <typename FormatContext>
-	auto format(const std::filesystem::path& path, FormatContext& ctx) const
-	{
+	auto format(const std::filesystem::path& path, FormatContext& ctx) const {
 		return formatter<std::string_view>::format(path.string(), ctx);
 	}
 };
 
 namespace Flameberry {
 
-	enum class LogLevel : uint8_t
-	{
+	enum class LogLevel : uint8_t {
 		Trace = 0,
 		Log,
 		Info,
@@ -50,8 +45,7 @@ namespace Flameberry {
 		Critical
 	};
 
-	class Logger
-	{
+	class Logger {
 	public:
 		inline static Ref<Logger> GetCoreLogger() { return s_CoreLogger; }
 		inline static void SetCoreLogger(const Ref<Logger>& logger) { s_CoreLogger = logger; }
@@ -63,56 +57,48 @@ namespace Flameberry {
 		inline void SetLogLevel(const LogLevel& logLevel) { m_CurrentLogLevel = logLevel; }
 
 		template <typename... Args>
-		void log(const fmt::format_string<Args...>& message, Args&&... args)
-		{
+		void log(const fmt::format_string<Args...>& message, Args&&... args) {
 			if (m_CurrentLogLevel <= LogLevel::Log)
 				fmt::print(fmt::fg(fmt::terminal_color::cyan), "{}: {}\n", GetPrefix(LogLevel::Log), fmt::format(message, std::forward<Args>(args)...));
 		}
 
 		template <typename... Args>
-		void trace(const fmt::format_string<Args...>& message, Args&&... args)
-		{
+		void trace(const fmt::format_string<Args...>& message, Args&&... args) {
 			if (m_CurrentLogLevel <= LogLevel::Trace)
 				fmt::print(fmt::fg(fmt::terminal_color::bright_white), "{}: {}\n", GetPrefix(LogLevel::Trace), fmt::format(message, std::forward<Args>(args)...));
 		}
 
 		template <typename... Args>
-		void info(const fmt::format_string<Args...>& message, Args&&... args)
-		{
+		void info(const fmt::format_string<Args...>& message, Args&&... args) {
 			if (m_CurrentLogLevel <= LogLevel::Info)
 				fmt::print(fmt::fg(fmt::terminal_color::green), "{}: {}\n", GetPrefix(LogLevel::Info), fmt::format(message, std::forward<Args>(args)...));
 		}
 
 		template <typename... Args>
-		void warn(const fmt::format_string<Args...>& message, Args&&... args)
-		{
+		void warn(const fmt::format_string<Args...>& message, Args&&... args) {
 			if (m_CurrentLogLevel <= LogLevel::Warning)
 				fmt::print(fmt::fg(fmt::terminal_color::yellow), "{}: {}\n", GetPrefix(LogLevel::Warning), fmt::format(message, std::forward<Args>(args)...));
 		}
 
 		template <typename... Args>
-		void error(const fmt::format_string<Args...>& message, Args&&... args)
-		{
+		void error(const fmt::format_string<Args...>& message, Args&&... args) {
 			if (m_CurrentLogLevel <= LogLevel::Error)
 				fmt::print(fmt::fg(fmt::terminal_color::red), "{}: {}\n", GetPrefix(LogLevel::Error), fmt::format(message, std::forward<Args>(args)...));
 		}
 
 		template <typename... Args>
-		void critical(const fmt::format_string<Args...>& message, Args&&... args)
-		{
+		void critical(const fmt::format_string<Args...>& message, Args&&... args) {
 			if (m_CurrentLogLevel <= LogLevel::Critical)
 				fmt::print(fmt::fg(fmt::terminal_color::red) | fmt::bg(fmt::color::yellow), "{}: {}\n", GetPrefix(LogLevel::Critical), fmt::format(message, std::forward<Args>(args)...));
 		}
 
 		template <typename... Args>
-		void log_assert(const char* file, int line, const fmt::format_string<Args...>& message, Args&&... args)
-		{
+		void log_assert(const char* file, int line, const fmt::format_string<Args...>& message, Args&&... args) {
 			std::string msg = fmt::format(message, std::forward<Args>(args)...);
 			fmt::print(fmt::fg(fmt::terminal_color::red), "{} [ASSERT] Assertion failed: {} (file: {}, line: {})", GetCurrentTimeString(), msg, file, line);
 		}
 
-		void log_assert(const char* file, int line)
-		{
+		void log_assert(const char* file, int line) {
 			fmt::print(fmt::fg(fmt::terminal_color::red), "{} [ASSERT] Assertion failed: (file: {}, line: {})", GetCurrentTimeString(), file, line);
 		}
 

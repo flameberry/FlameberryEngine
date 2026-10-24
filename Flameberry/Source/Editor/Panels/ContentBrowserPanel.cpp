@@ -11,8 +11,7 @@
 #define FBY_FORWARD_ARROW_ICON 1
 #define FBY_SETTINGS_ICON 9
 
-enum FileTypeIndex
-{
+enum FileTypeIndex {
 	DEFAULT = 0,
 	FOLDER,
 	BERRY,
@@ -36,14 +35,12 @@ namespace Flameberry {
 
 	namespace Utils {
 
-		std::string FormatFileSize(uintmax_t sizeBytes)
-		{
+		std::string FormatFileSize(uintmax_t sizeBytes) {
 			const char* sizes[] = { "B", "KB", "MB", "GB", "TB" };
 			int order = 0;
 			double size = static_cast<double>(sizeBytes);
 
-			while (size >= 1024.0 && order < 4)
-			{
+			while (size >= 1024.0 && order < 4) {
 				order++;
 				size /= 1024.0;
 			}
@@ -55,18 +52,15 @@ namespace Flameberry {
 
 	ContentBrowserPanel::ContentBrowserPanel()
 		: m_CurrentDirectory(Project::GetActiveProject()->GetConfig().AssetDirectory) // Getting Asset Directory via this method to get the relative path only
-		, m_VkTextureSampler(Texture2D::GetDefaultSampler())
-	{
+		, m_VkTextureSampler(Texture2D::GetDefaultSampler()) {
 		for (const auto& path : g_IconPaths)
 			m_IconTextures.emplace_back(CreateRef<Texture2D>(path.c_str(), m_VkTextureSampler));
 	}
 
-	ContentBrowserPanel::~ContentBrowserPanel()
-	{
+	ContentBrowserPanel::~ContentBrowserPanel() {
 	}
 
-	void ContentBrowserPanel::RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator)
-	{
+	void ContentBrowserPanel::RecursivelyAddDirectoryNodes(const std::filesystem::directory_entry& parent, const std::filesystem::directory_iterator& iterator) {
 		constexpr float framePaddingY = 2.5f;
 
 		bool isLeaf = true;
@@ -120,10 +114,8 @@ namespace Flameberry {
 
 		ImGui::PopID();
 
-		if (isOpened)
-		{
-			for (auto& directory : iterator)
-			{
+		if (isOpened) {
+			for (auto& directory : iterator) {
 				if (directory.is_directory())
 					RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator{ directory });
 			}
@@ -131,24 +123,21 @@ namespace Flameberry {
 		}
 	}
 
-	bool ContentBrowserPanel::IsPathInHierarchy(const std::filesystem::path& key, const std::filesystem::path& parent)
-	{
+	bool ContentBrowserPanel::IsPathInHierarchy(const std::filesystem::path& key, const std::filesystem::path& parent) {
 		const auto& keystr = key.string();
 		const auto& parentstr = parent.string();
 
 		if (keystr.size() <= parentstr.size())
 			return false;
 
-		for (int32_t i = (int32_t)(parentstr.size() - 1); i >= 0; i--)
-		{
+		for (int32_t i = (int32_t)(parentstr.size() - 1); i >= 0; i--) {
 			if (keystr[i] != parentstr[i])
 				return false;
 		}
 		return true;
 	}
 
-	void ContentBrowserPanel::OnUIRender()
-	{
+	void ContentBrowserPanel::OnUIRender() {
 		{
 			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 			ImGui::Begin("Content Browser");
@@ -163,12 +152,11 @@ namespace Flameberry {
 
 		ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBg);
 		ImGui::BeginChild("##FileStructurePanel",
-						  ImVec2(m_FirstChildSize, -1.0f),
-						  ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding);
+			ImVec2(m_FirstChildSize, -1.0f),
+			ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding);
 		ImGui::PopStyleColor();
 
-		for (auto& directory : std::filesystem::directory_iterator(Project::GetActiveProject()->GetConfig().AssetDirectory))
-		{
+		for (auto& directory : std::filesystem::directory_iterator(Project::GetActiveProject()->GetConfig().AssetDirectory)) {
 			if (directory.is_directory())
 				RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator(directory));
 		}
@@ -191,9 +179,9 @@ namespace Flameberry {
 		const float bottomChildHeight = ImGui::GetContentRegionAvail().y - topChildHeight;
 
 		ImGui::BeginChild("##ContentBrowserTopBar",
-						  ImVec2(m_SecondChildSize, topChildHeight),
-						  ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding,
-						  ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
+			ImVec2(m_SecondChildSize, topChildHeight),
+			ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding,
+			ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
 		ImGui::PopStyleVar();
 
 		constexpr float arrowSize = 14.0f;
@@ -222,8 +210,7 @@ namespace Flameberry {
 		if (ImGui::IsItemClicked())
 			ImGui::OpenPopup("##ContentBrowserPanelSettingsPopup");
 
-		if (ImGui::BeginPopup("##ContentBrowserPanelSettingsPopup"))
-		{
+		if (ImGui::BeginPopup("##ContentBrowserPanelSettingsPopup")) {
 			ImGui::PushItemWidth(50.0f);
 			ImGui::DragInt("Thumbnail Size", (int32_t*)&m_ThumbnailSize, 1.0f, 50, 400);
 			ImGui::PopItemWidth();
@@ -239,8 +226,8 @@ namespace Flameberry {
 
 		ImGui::SetNextWindowPos(pos);
 		ImGui::BeginChild("##Contents",
-						  ImVec2(m_SecondChildSize, bottomChildHeight),
-						  ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding);
+			ImVec2(m_SecondChildSize, bottomChildHeight),
+			ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding);
 		ImGui::PopStyleVar();
 
 		const float spacing = ImGui::GetStyle().ItemSpacing.x;
@@ -253,15 +240,13 @@ namespace Flameberry {
 
 		Project::GetActiveProject()->GetThumbnailCache()->ResetThumbnailLoadedCounter();
 
-		for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory })
-		{
+		for (const auto& directory : std::filesystem::directory_iterator{ m_CurrentDirectory }) {
 			const std::filesystem::path& filePath = directory.path();
 
 			if (filePath.filename().string() == ".DS_Store")
 				continue;
 
-			if (m_SearchInputBuffer[0] != '\0')
-			{
+			if (m_SearchInputBuffer[0] != '\0') {
 				// TODO: Maybe some optimisation to not search again if the input string is same
 				const std::string filePathWithoutExtension = filePath.filename().replace_extension().string();
 				const int index = Algorithm::KmpSearch(filePathWithoutExtension.c_str(), m_SearchInputBuffer.c_str(), true);
@@ -276,8 +261,7 @@ namespace Flameberry {
 			Ref<Texture2D> thumbnail;
 			if (!isDirectory)
 				thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
-			if (!thumbnail)
-			{
+			if (!thumbnail) {
 				int currentIconIndex;
 				if (isDirectory)
 					currentIconIndex = FileTypeIndex::FOLDER;
@@ -291,8 +275,7 @@ namespace Flameberry {
 					currentIconIndex = FileTypeIndex::FBX;
 				else if (ext == ".fbmat")
 					currentIconIndex = FileTypeIndex::FBMAT;
-				else
-				{
+				else {
 					currentIconIndex = FileTypeIndex::DEFAULT;
 					isFileSupported = false;
 				}
@@ -302,8 +285,7 @@ namespace Flameberry {
 			if (DisplayContentBrowserItem(filePath, m_ThumbnailSize, thumbnail, itemSize, !isFileSupported) && isDirectory)
 				m_CurrentDirectory = directory.path();
 
-			if (ImGui::GetColumnIndex() == columns - 1)
-			{
+			if (ImGui::GetColumnIndex() == columns - 1) {
 				rowIndex++;
 				constexpr float paddingY = 20.0f;
 				ImGui::SetCursorPosY(rowIndex * (itemSize.y + paddingY));
@@ -314,25 +296,20 @@ namespace Flameberry {
 			ImGui::PopID();
 		}
 
-		if (ImGui::GetColumnIndex() != 0)
-		{
+		if (ImGui::GetColumnIndex() != 0) {
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + itemSize.y + 10.0f);
 			ImGui::Dummy(ImVec2(0, 0));
 		}
 
-		if (ImGui::BeginPopupContextWindow((const char*)nullptr, m_PopupFlags))
-		{
-			if (ImGui::BeginMenu(ICON_LC_PLUS "\tCreate"))
-			{
-				if (ImGui::MenuItem(ICON_LC_DRIBBBLE "\tMaterial"))
-				{
+		if (ImGui::BeginPopupContextWindow((const char*)nullptr, m_PopupFlags)) {
+			if (ImGui::BeginMenu(ICON_LC_PLUS "\tCreate")) {
+				if (ImGui::MenuItem(ICON_LC_DRIBBBLE "\tMaterial")) {
 					auto mat = CreateRef<MaterialAsset>("New Material");
 					MaterialAssetSerializer::Serialize(mat, m_CurrentDirectory / "NewMaterial.fbmat");
 				}
 				ImGui::EndMenu();
 			}
-			if (ImGui::MenuItem(ICON_LC_EXTERNAL_LINK "\tOpen In Finder"))
-			{
+			if (ImGui::MenuItem(ICON_LC_EXTERNAL_LINK "\tOpen In Finder")) {
 				const std::string filePathStr = (Project::GetActiveProjectDirectory() / m_CurrentDirectory).string();
 				Platform::OpenInExplorerOrFinder(filePathStr.c_str());
 			}
@@ -342,8 +319,7 @@ namespace Flameberry {
 		ImGui::End();
 	}
 
-	bool ContentBrowserPanel::DisplayContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension)
-	{
+	bool ContentBrowserPanel::DisplayContentBrowserItem(const std::filesystem::path& filepath, float size, const Ref<Texture2D>& thumbnail, ImVec2& outItemSize, bool keepExtension) {
 		std::string filePathStr = filepath.string();
 		const char* filePathCStrID = filePathStr.c_str();
 		const bool isDirectory = std::filesystem::is_directory(filepath);
@@ -372,22 +348,18 @@ namespace Flameberry {
 		bool isDoubleClicked = ImGui::ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick);
 		ImGui::ItemAdd(bb, id);
 
-		if (!isDirectory)
-		{
+		if (!isDirectory) {
 			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, height), 0xff151515, 3, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
 			ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height), cursorPos + ImVec2(fullWidth, fullHeight), 0xff353535, 3, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
 			ImGui::GetWindowDrawList()->AddRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), hovered ? ImGui::ColorConvertFloat4ToU32(Theme::AccentColor) : 0xff000000, 3, 0, borderThickness);
-		}
-		else if (hovered)
-		{
+		} else if (hovered) {
 			constexpr float shadowThickness = 2.0f;
 			constexpr ImVec2 offset(shadowThickness, shadowThickness);
 			ImGui::GetWindowDrawList()->AddRect(cursorPos + offset, cursorPos + ImVec2(fullWidth, fullHeight) + offset, IM_COL32(25, 25, 25, 255), 3, 0, shadowThickness);
 			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
 		}
 
-		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-		{
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
 			ImGui::SetDragDropPayload("FBY_CONTENT_BROWSER_ITEM", filePathStr.c_str(), (strlen(filePathStr.c_str()) + 1) * sizeof(char), ImGuiCond_Once);
 
 			constexpr float size = 80.0f;
@@ -398,9 +370,7 @@ namespace Flameberry {
 			ImGui::Text("%s", filepath.stem().string().c_str());
 
 			ImGui::EndDragDropSource();
-		}
-		else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-		{
+		} else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
 			const std::string assetTypeStr = Utils::AssetTypeEnumToString(Utils::GetAssetTypeFromFileExtension(filepath.extension()));
 			const std::string fileSizeStr = isDirectory ? "-/-" : Utils::FormatFileSize(std::filesystem::file_size(filepath));
 
@@ -411,10 +381,8 @@ namespace Flameberry {
 			ImGui::EndTooltip();
 		}
 
-		if (ImGui::BeginPopupContextItem(filePathCStrID))
-		{
-			if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete"))
-			{
+		if (ImGui::BeginPopupContextItem(filePathCStrID)) {
+			if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete")) {
 				// Add a confirm pop up
 				// std::filesystem::remove(filepath);
 				FBY_LOG("Delete");
@@ -448,18 +416,14 @@ namespace Flameberry {
 		const uint32_t characters = fullWidth / aWidth;
 
 		// Format and align text based on whether the item is a directory or a file
-		if (isDirectory)
-		{
+		if (isDirectory) {
 			if (textWidth > fullWidth)
 				ImGui::Text("%.*s%s", characters, filename.c_str(), "...");
-			else
-			{
+			else {
 				ImGui::SetCursorPosX(glm::max(cursorPosX + framePadding.x, cursorPosX + (fullWidth - textWidth) * 0.5f));
 				ImGui::Text("%s", filename.c_str());
 			}
-		}
-		else
-		{
+		} else {
 			if (textWidth > 2.0f * fullWidth)
 				ImGui::TextWrapped("%.*s%s", 2 * characters, filename.c_str(), "...");
 			else
@@ -472,8 +436,7 @@ namespace Flameberry {
 		return isDoubleClicked;
 	}
 
-	void ContentBrowserPanel::UI_CurrentPathBar()
-	{
+	void ContentBrowserPanel::UI_CurrentPathBar() {
 		const auto& style = ImGui::GetStyle();
 		const float totalIconWidth = 14.0f + 2.0f * style.FramePadding.x + 2.0f * style.ItemSpacing.x;
 		const float currentPathItemWidth = ImGui::GetContentRegionAvail().x - totalIconWidth;
@@ -501,8 +464,7 @@ namespace Flameberry {
 
 		// Initial path is "Content"
 		// Later on path can be "Content/Textures", "Content/Textures/Texture1", "Content/Textures/Texture1/Texture2" etc.
-		while (!currentPath.empty())
-		{
+		while (!currentPath.empty()) {
 			std::size_t position = currentPath.find_first_of(std::filesystem::path::preferred_separator);
 			if (position == std::string::npos)
 				position = currentPath.length();
@@ -520,14 +482,12 @@ namespace Flameberry {
 					ImGui::GetCursorScreenPos().y + ImGui::GetFontSize() + 2.0f * style.FramePadding.y));
 
 			const bool hovered = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(buttonRect.Min, buttonRect.Max, false);
-			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && hovered)
-			{
+			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && hovered) {
 				m_CurrentDirectory = m_CurrentDirectory.string().substr(0, end);
 				break;
 			}
 
-			if (hovered)
-			{
+			if (hovered) {
 				ImGui::GetWindowDrawList()->AddRect(
 					buttonRect.Min, buttonRect.Max,
 					ImGui::ColorConvertFloat4ToU32(Theme::AccentColor),
@@ -536,8 +496,7 @@ namespace Flameberry {
 
 			currentPath.remove_prefix(position);
 
-			if (!currentPath.empty())
-			{
+			if (!currentPath.empty()) {
 				end++;
 				currentPath.remove_prefix(1);
 				ImGui::Text(ICON_LC_CHEVRON_RIGHT);

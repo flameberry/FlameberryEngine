@@ -53,8 +53,7 @@ namespace Flameberry {
 		/**
 		 *  Wrapper around ImGui::Push/PopStyleColor()
 		 */
-		class ScopedStyleColor
-		{
+		class ScopedStyleColor {
 		public:
 			ScopedStyleColor(ImGuiCol idx, ImVec4 col, bool condition = true);
 			ScopedStyleColor(ImGuiCol idx, ImU32 col, bool condition = true);
@@ -67,8 +66,7 @@ namespace Flameberry {
 		/**
 		 *  Wrapper around ImGui::Push/PopStyleVar()
 		 */
-		class ScopedStyleVariable
-		{
+		class ScopedStyleVariable {
 		public:
 			ScopedStyleVariable(ImGuiStyleVar idx, ImVec2 value, bool condition = true);
 			ScopedStyleVariable(ImGuiCol idx, float value, bool condition = true);

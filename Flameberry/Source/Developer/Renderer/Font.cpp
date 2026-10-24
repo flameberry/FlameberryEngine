@@ -8,8 +8,7 @@ namespace Flameberry {
 
 	template <typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
 	static Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName, float fontSize, const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
-		const msdf_atlas::FontGeometry& fontGeometry, uint32_t width, uint32_t height)
-	{
+		const msdf_atlas::FontGeometry& fontGeometry, uint32_t width, uint32_t height) {
 		msdf_atlas::GeneratorAttributes attributes;
 		attributes.config.overlapSupport = true;
 		attributes.scanlinePass = true;
@@ -33,30 +32,26 @@ namespace Flameberry {
 
 	static Ref<Font> s_DefaultFont;
 
-	Ref<Font> Font::GetDefault()
-	{
+	Ref<Font> Font::GetDefault() {
 		if (!s_DefaultFont)
 			s_DefaultFont = CreateRef<Font>(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/opensans/OpenSans-Regular.ttf");
 
 		return s_DefaultFont;
 	}
 
-	void Font::DestroyDefault()
-	{
+	void Font::DestroyDefault() {
 		s_DefaultFont = nullptr;
 	}
 
 	Font::Font(const std::filesystem::path& path)
-		: m_Data(new MSDFFontData())
-	{
+		: m_Data(new MSDFFontData()) {
 		msdfgen::FreetypeHandle* ft = msdfgen::initializeFreetype();
 		FBY_ASSERT(ft, "Failed to initialize freetype!");
 
 		const std::string pathStr = path.string();
 		msdfgen::FontHandle* font = msdfgen::loadFont(ft, pathStr.c_str());
 
-		if (!font)
-		{
+		if (!font) {
 			FBY_ERROR("Failed to load font from: {}", path);
 			return;
 		}
@@ -64,8 +59,7 @@ namespace Flameberry {
 		// Set the font name
 		m_Name = path.stem().string();
 
-		struct CharsetRange
-		{
+		struct CharsetRange {
 			uint32_t Start, End;
 		};
 
@@ -118,8 +112,7 @@ namespace Flameberry {
 			.finish(THREAD_COUNT);
 #else
 		unsigned long long glyphSeed = coloringSeed;
-		for (msdf_atlas::GlyphGeometry& glyph : m_Data->Glyphs)
-		{
+		for (msdf_atlas::GlyphGeometry& glyph : m_Data->Glyphs) {
 			glyphSeed *= LCG_MULTIPLIER;
 			glyph.edgeColoring(msdfgen::edgeColoringInkTrap, DEFAULT_ANGLE_THRESHOLD, glyphSeed);
 		}
@@ -131,8 +124,7 @@ namespace Flameberry {
 		msdfgen::deinitializeFreetype(ft);
 	}
 
-	Font::~Font()
-	{
+	Font::~Font() {
 		delete m_Data;
 	}
 

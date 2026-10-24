@@ -9,8 +9,7 @@
 
 namespace Flameberry {
 
-	struct AssetImporterFunctionMapEntry
-	{
+	struct AssetImporterFunctionMapEntry {
 		AssetType Type;
 		std::function<Ref<Asset>(AssetHandle, const AssetMetadata&)> ImporterFunction;
 	};
@@ -25,10 +24,8 @@ namespace Flameberry {
 		{ AssetType::Font, FontImporter::ImportFont },
 	};
 
-	Ref<Asset> AssetImporter::ImportAsset(AssetHandle handle, const AssetMetadata& metadata)
-	{
-		if (metadata.Type == AssetType::None || (uint16_t)metadata.Type >= sizeof(g_AssetImporterFunctionMap) / sizeof(AssetImporterFunctionMapEntry))
-		{
+	Ref<Asset> AssetImporter::ImportAsset(AssetHandle handle, const AssetMetadata& metadata) {
+		if (metadata.Type == AssetType::None || (uint16_t)metadata.Type >= sizeof(g_AssetImporterFunctionMap) / sizeof(AssetImporterFunctionMapEntry)) {
 			FBY_ERROR("Importer for the requested asset not present!");
 			return nullptr;
 		}

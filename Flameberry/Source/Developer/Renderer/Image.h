@@ -6,8 +6,7 @@
 
 namespace Flameberry {
 
-	enum class ImageViewCreationMode : uint8_t
-	{
+	enum class ImageViewCreationMode : uint8_t {
 		// Ignores `ImageSpecification.ViewSpecification`
 		DontCreate = 0,
 
@@ -23,15 +22,13 @@ namespace Flameberry {
 		CreateForCube
 	};
 
-	struct ImageViewSpecification
-	{
+	struct ImageViewSpecification {
 		VkImageAspectFlags AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 		VkImageViewType ViewType = VK_IMAGE_VIEW_TYPE_2D;
 		uint32_t BaseMipLevel = 0, LevelCount = 1, BaseArrayLayer = 0, LayerCount = 1;
 	};
 
-	struct ImageSpecification
-	{
+	struct ImageSpecification {
 		uint32_t Width, Height;
 		uint32_t Samples = 1, MipLevels = 1, ArrayLayers = 1;
 		VkFormat Format;
@@ -46,8 +43,7 @@ namespace Flameberry {
 		ImageViewSpecification ViewSpecification;
 	};
 
-	class Image
-	{
+	class Image {
 	public:
 		Image(const ImageSpecification& specification);
 		~Image();

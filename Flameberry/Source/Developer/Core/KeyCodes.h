@@ -4,8 +4,7 @@
 
 namespace Flameberry {
 
-	enum KeyCode : uint16_t
-	{
+	enum KeyCode : uint16_t {
 		Space = 32,
 		Apostrophe = 39, /* ' */
 		Comma = 44,		 /* , */

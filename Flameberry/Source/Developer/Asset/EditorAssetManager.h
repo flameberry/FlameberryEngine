@@ -9,8 +9,7 @@ namespace Flameberry {
 
 	using AssetRegistry = std::map<AssetHandle, AssetMetadata>;
 
-	class EditorAssetManager : public IAssetManager
-	{
+	class EditorAssetManager : public IAssetManager {
 	public:
 		Ref<Asset> GetAsset(AssetHandle handle) override;
 		Ref<Asset> GetAssetAsync(AssetHandle handle) override;

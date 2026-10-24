@@ -6,8 +6,7 @@
 namespace Flameberry {
 
 	CommandBuffer::CommandBuffer(const CommandBufferSpecification& specification)
-		: m_Specification(specification)
-	{
+		: m_Specification(specification) {
 		VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
 		commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		commandBufferAllocateInfo.commandBufferCount = 1;
@@ -18,12 +17,10 @@ namespace Flameberry {
 		VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &m_CommandBuffer));
 	}
 
-	CommandBuffer::~CommandBuffer()
-	{
+	CommandBuffer::~CommandBuffer() {
 	}
 
-	void CommandBuffer::Begin()
-	{
+	void CommandBuffer::Begin() {
 		VkCommandBufferBeginInfo commandBufferBeginInfo{};
 		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		commandBufferBeginInfo.flags = m_Specification.SingleTimeUsage ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0;
@@ -31,13 +28,11 @@ namespace Flameberry {
 		VK_CHECK_RESULT(vkBeginCommandBuffer(m_CommandBuffer, &commandBufferBeginInfo));
 	}
 
-	void CommandBuffer::End()
-	{
+	void CommandBuffer::End() {
 		VK_CHECK_RESULT(vkEndCommandBuffer(m_CommandBuffer));
 	}
 
-	void CommandBuffer::Reset()
-	{
+	void CommandBuffer::Reset() {
 		VK_CHECK_RESULT(vkResetCommandBuffer(m_CommandBuffer, 0));
 	}
 

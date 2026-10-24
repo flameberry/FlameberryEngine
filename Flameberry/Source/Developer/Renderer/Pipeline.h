@@ -10,8 +10,7 @@
 
 namespace Flameberry {
 
-	struct SpecializationConstant
-	{
+	struct SpecializationConstant {
 		uint32_t ConstantID;
 		ShaderDataType Type;
 	};
@@ -19,8 +18,7 @@ namespace Flameberry {
 	using VertexInputLayout = std::vector<ShaderDataType>;
 	using SpecializationConstantLayout = std::vector<SpecializationConstant>;
 
-	struct PipelineSpecification
-	{
+	struct PipelineSpecification {
 		Ref<RenderPass> RenderPass;
 		Ref<Shader> Shader;
 
@@ -45,8 +43,7 @@ namespace Flameberry {
 		VkPrimitiveTopology PrimitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	};
 
-	class Pipeline
-	{
+	class Pipeline {
 	public:
 		Pipeline(const PipelineSpecification& pipelineSpec);
 		~Pipeline();
@@ -66,16 +63,14 @@ namespace Flameberry {
 		std::vector<Ref<DescriptorSetLayout>> m_DescriptorSetLayouts;
 	};
 
-	struct ComputePipelineSpecification
-	{
+	struct ComputePipelineSpecification {
 		Ref<Shader> Shader;
 
 		SpecializationConstantLayout SpecializationConstantLayout;
 		const void* SpecializationConstantData = nullptr;
 	};
 
-	class ComputePipeline
-	{
+	class ComputePipeline {
 	public:
 		ComputePipeline(const ComputePipelineSpecification& pipelineSpec);
 		~ComputePipeline();

@@ -2,22 +2,19 @@
 
 #include "Core/UUID.h"
 
-#define FBY_DECLARE_ASSET_TYPE(Type)                              \
-	::Flameberry::AssetType GetAssetType() const override         \
-	{                                                             \
-		return Type;                                              \
-	}                                                             \
-	static constexpr ::Flameberry::AssetType GetStaticAssetType() \
-	{                                                             \
-		return Type;                                              \
+#define FBY_DECLARE_ASSET_TYPE(Type)                                \
+	::Flameberry::AssetType GetAssetType() const override {         \
+		return Type;                                                \
+	}                                                               \
+	static constexpr ::Flameberry::AssetType GetStaticAssetType() { \
+		return Type;                                                \
 	}
 
 namespace Flameberry {
 
 	using AssetHandle = UUID;
 
-	enum class AssetType : uint16_t
-	{
+	enum class AssetType : uint16_t {
 		None = 0,
 		Scene,
 		Texture2D,
@@ -27,15 +24,13 @@ namespace Flameberry {
 		Font,
 	};
 
-	enum class AssetFlag : uint32_t
-	{
+	enum class AssetFlag : uint32_t {
 		None = 0,
 	};
 
 	typedef uint32_t AssetFlags;
 
-	class Asset
-	{
+	class Asset {
 	public:
 		virtual ~Asset() = default;
 		AssetHandle Handle;

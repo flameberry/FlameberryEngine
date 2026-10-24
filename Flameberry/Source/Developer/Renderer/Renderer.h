@@ -15,16 +15,14 @@
 
 namespace Flameberry {
 
-	struct RendererFrameStats
-	{
+	struct RendererFrameStats {
 		uint32_t MeshCount = 0, SubMeshCount = 0, BoundMaterials = 0;
 		uint32_t DrawCallCount = 0, IndexCount = 0;
 
 		uint32_t VertexAndIndexBufferStateSwitches = 0;
 	};
 
-	class Renderer
-	{
+	class Renderer {
 	public:
 		using Command = std::function<void(VkCommandBuffer, uint32_t)>;
 

@@ -7,19 +7,16 @@
 
 namespace Flameberry {
 
-	struct Thumbnail
-	{
+	struct Thumbnail {
 		uint64_t Timestamp;
 		Ref<Texture2D> Image;
 	};
 
-	struct ThumbnailCacheConfig
-	{
+	struct ThumbnailCacheConfig {
 		uint16_t MaxThumbnailsLoadedPerFrame = 1;
 	};
 
-	class ThumbnailCache
-	{
+	class ThumbnailCache {
 	public:
 		ThumbnailCache(const std::filesystem::path& thumbnailCacheDirectory, const ThumbnailCacheConfig& config = ThumbnailCacheConfig());
 

@@ -36,8 +36,7 @@ namespace Flameberry {
 	using Ref = std::shared_ptr<T>;
 
 	template <typename T, typename... Args>
-	constexpr Ref<T> CreateRef(Args&&... args)
-	{
+	constexpr Ref<T> CreateRef(Args&&... args) {
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
 
@@ -45,8 +44,7 @@ namespace Flameberry {
 	using Unique = std::unique_ptr<T>;
 
 	template <typename T, typename... Args>
-	constexpr Unique<T> CreateUnique(Args&&... args)
-	{
+	constexpr Unique<T> CreateUnique(Args&&... args) {
 		return std::make_unique<T>(std::forward<Args>(args)...);
 	}
 

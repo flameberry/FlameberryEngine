@@ -8,21 +8,17 @@
 namespace Flameberry {
 
 	OrthographicCamera::OrthographicCamera(const glm::vec2& viewportSize, float zoom)
-		: m_ViewportSize(viewportSize), m_Zoom(zoom), m_ViewMatrix(1.0f)
-	{
+		: m_ViewportSize(viewportSize), m_Zoom(zoom), m_ViewMatrix(1.0f) {
 		m_AspectRatio = m_ViewportSize.x / m_ViewportSize.y;
 		m_ProjectionMatrix = glm::ortho(-m_AspectRatio * zoom, m_AspectRatio * zoom, -zoom, zoom, -1.0f, 1.0f);
 		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
 	}
 
-	OrthographicCamera::~OrthographicCamera()
-	{
+	OrthographicCamera::~OrthographicCamera() {
 	}
 
-	void OrthographicCamera::OnUpdate(float delta)
-	{
-		if (Input::IsKeyPressed(KeyCode::LeftAlt))
-		{
+	void OrthographicCamera::OnUpdate(float delta) {
+		if (Input::IsKeyPressed(KeyCode::LeftAlt)) {
 			// Camera Movement
 			if (Input::IsKeyPressed(KeyCode::Up))
 				m_CameraPosition.y += m_CameraSpeed * delta;

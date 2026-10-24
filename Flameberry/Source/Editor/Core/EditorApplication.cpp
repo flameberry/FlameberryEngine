@@ -6,27 +6,21 @@
 
 namespace Flameberry {
 
-	class EditorApplication : public Application
-	{
+	class EditorApplication : public Application {
 	public:
 		EditorApplication(const ApplicationSpecification& specification)
-			: Application(specification)
-		{
+			: Application(specification) {
 			// Check for startup project
-			if (specification.CommandLineArgs.Count > 1)
-			{
+			if (specification.CommandLineArgs.Count > 1) {
 				std::filesystem::path projectPath = specification.CommandLineArgs[1];
 
-				if (!std::filesystem::exists(projectPath))
-				{
+				if (!std::filesystem::exists(projectPath)) {
 					FBY_ERROR("Invalid project path passed as command line arguments: {}", projectPath);
 
 					// TODO: Improve this API urgently
 					m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(EditorApplication::OpenProjectWithEditor));
 					PushLayer(m_LauncherLayer);
-				}
-				else
-				{
+				} else {
 					Ref<Project> project = Project::Load(projectPath);
 
 					// Set the secondary title of the window to be the name of the project
@@ -37,21 +31,17 @@ namespace Flameberry {
 					m_EditorLayer = new EditorLayer(project);
 					PushLayer(m_EditorLayer);
 				}
-			}
-			else
-			{
+			} else {
 				// TODO: Improve this API urgently
 				m_LauncherLayer = new LauncherLayer(FBY_BIND_EVENT_FN(EditorApplication::OpenProjectWithEditor));
 				PushLayer(m_LauncherLayer);
 			}
 		}
 
-		~EditorApplication()
-		{
+		~EditorApplication() {
 		}
 
-		void OpenProjectWithEditor(const Ref<Project>& project)
-		{
+		void OpenProjectWithEditor(const Ref<Project>& project) {
 			auto projectRef = project; // This is to prevent `project` being deleted when Layer is poped
 
 			// Remove the Launcher Window Layer
@@ -74,8 +64,7 @@ namespace Flameberry {
 		Layer* m_EditorLayer = nullptr;
 	};
 
-	Application* Application::CreateClientApp(const ApplicationCommandLineArgs& appCmdLineArgs)
-	{
+	Application* Application::CreateClientApp(const ApplicationCommandLineArgs& appCmdLineArgs) {
 		ApplicationSpecification applicationSpec;
 		applicationSpec.Type = ApplicationType::Editor;
 		applicationSpec.Name = "Flameberry-Editor";

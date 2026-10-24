@@ -4,8 +4,7 @@
 
 namespace Flameberry {
 
-	class SceneHierarchyPanel
-	{
+	class SceneHierarchyPanel {
 	public:
 		SceneHierarchyPanel(const Ref<Scene>& context);
 		~SceneHierarchyPanel();

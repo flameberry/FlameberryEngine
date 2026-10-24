@@ -4,8 +4,7 @@
 
 namespace Flameberry {
 
-	class Theme
-	{
+	class Theme {
 	public:
 		static constexpr ImVec4 AccentColor = ImVec4(252.0f / 255, 221.0f / 255, 141.0f / 255, 1.0f);
 		static constexpr ImVec4 AccentColorLight = ImVec4(254.0f / 255.0f, 231.0f / 255.0f, 177.0f / 255.0f, 1.0f);

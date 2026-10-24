@@ -13,16 +13,14 @@
 
 namespace Flameberry {
 
-	struct IDComponent
-	{
+	struct IDComponent {
 		UUID ID;
 		IDComponent(UUID id)
 			: ID(id) {}
 		IDComponent() = default;
 	};
 
-	struct TransformComponent
-	{
+	struct TransformComponent {
 		glm::vec3 Translation, Rotation, Scale; // Local Transform Variables
 		glm::mat4 GlobalTransform;
 		bool DirtyFlag = true;
@@ -30,15 +28,13 @@ namespace Flameberry {
 		TransformComponent()
 			: Translation(0.0f), Rotation(0.0f), Scale(1.0f) {}
 
-		glm::mat4 CalculateLocalTransform() const
-		{
+		glm::mat4 CalculateLocalTransform() const {
 			return glm::translate(glm::mat4(1.0f), Translation)
 				* glm::toMat4(glm::quat(Rotation))
 				* glm::scale(glm::mat4(1.0f), Scale);
 		}
 
-		void CalcAndCacheGlobalTransform(const glm::mat4& globalTransform)
-		{
+		void CalcAndCacheGlobalTransform(const glm::mat4& globalTransform) {
 			const glm::mat4& localTransform = glm::translate(glm::mat4(1.0f), Translation)
 				* glm::toMat4(glm::quat(Rotation))
 				* glm::scale(glm::mat4(1.0f), Scale);
@@ -48,8 +44,7 @@ namespace Flameberry {
 		}
 	};
 
-	struct TagComponent
-	{
+	struct TagComponent {
 		std::string Tag;
 		TagComponent(const std::string& tag = "Default_Entity")
 			: Tag(tag) {}
@@ -57,18 +52,15 @@ namespace Flameberry {
 
 	// Editor Only
 	// For scene structure tidying purposes only
-	struct CollectionComponent
-	{
+	struct CollectionComponent {
 	};
 
-	struct CameraComponent
-	{
+	struct CameraComponent {
 		GenericCamera Camera;
 		bool IsPrimary = false;
 	};
 
-	struct SkyLightComponent
-	{
+	struct SkyLightComponent {
 		glm::vec3 Color{ 0.0f };
 		float Intensity = 0.2f;
 		bool EnableSkymap = false, EnableReflections = false;
@@ -77,8 +69,7 @@ namespace Flameberry {
 	};
 
 	typedef std::unordered_map<uint32_t, AssetHandle> MaterialTable;
-	struct MeshComponent
-	{
+	struct MeshComponent {
 		AssetHandle MeshHandle = 0;
 
 		// This stores the materials that are used for rendering instead of the default ones which are loaded from the mesh source file
@@ -88,8 +79,7 @@ namespace Flameberry {
 			: MeshHandle(meshHandle) {}
 	};
 
-	struct DirectionalLightComponent
-	{
+	struct DirectionalLightComponent {
 		glm::vec3 Color;
 		float Intensity, LightSize;
 
@@ -97,8 +87,7 @@ namespace Flameberry {
 			: Color(1.0f), Intensity(10.0f), LightSize(20.0f) {}
 	};
 
-	struct PointLightComponent
-	{
+	struct PointLightComponent {
 		glm::vec3 Color;
 		float Intensity;
 
@@ -106,8 +95,7 @@ namespace Flameberry {
 			: Color(1.0f), Intensity(10.0f) {}
 	};
 
-	struct SpotLightComponent
-	{
+	struct SpotLightComponent {
 		glm::vec3 Color;
 		float Intensity, InnerConeAngle, OuterConeAngle;
 
@@ -115,57 +103,47 @@ namespace Flameberry {
 			: Color(1.0f), Intensity(10.0f), InnerConeAngle(30.0f), OuterConeAngle(45.0f) {}
 	};
 
-	struct RelationshipComponent
-	{
+	struct RelationshipComponent {
 		FEntity Parent{};
 		FEntity FirstChild{};
 		FEntity PrevSibling{};
 		FEntity NextSibling{};
 
 		RelationshipComponent()
-			: Parent(FEntity::Null), FirstChild(FEntity::Null), PrevSibling(FEntity::Null), NextSibling(FEntity::Null)
-		{
+			: Parent(FEntity::Null), FirstChild(FEntity::Null), PrevSibling(FEntity::Null), NextSibling(FEntity::Null) {
 		}
 
 		RelationshipComponent(const RelationshipComponent& dest)
-			: Parent(dest.Parent), FirstChild(dest.FirstChild), PrevSibling(dest.PrevSibling), NextSibling(dest.NextSibling)
-		{
+			: Parent(dest.Parent), FirstChild(dest.FirstChild), PrevSibling(dest.PrevSibling), NextSibling(dest.NextSibling) {
 		}
 	};
 
-	struct NativeScriptComponent
-	{
+	struct NativeScriptComponent {
 		Flameberry::Actor* Actor;
 
 		Flameberry::Actor* (*InitScript)();
 		void (*DestroyScript)(NativeScriptComponent*);
 
 		template <typename T>
-		void Bind()
-		{
-			InitScript = []()
-			{
+		void Bind() {
+			InitScript = []() {
 				return static_cast<Flameberry::Actor*>(new T());
 			};
-			DestroyScript = [](NativeScriptComponent* nsc)
-			{
+			DestroyScript = [](NativeScriptComponent* nsc) {
 				delete nsc->Actor;
 				nsc->Actor = nullptr;
 			};
 		}
 	};
 
-	enum class AxisType : uint8_t
-	{
+	enum class AxisType : uint8_t {
 		X = 0,
 		Y,
 		Z
 	};
 
-	struct RigidBodyComponent
-	{
-		enum class RigidBodyType : uint8_t
-		{
+	struct RigidBodyComponent {
+		enum class RigidBodyType : uint8_t {
 			Static = 0,
 			Kinematic,
 			Dynamic
@@ -179,30 +157,26 @@ namespace Flameberry {
 		void* RuntimeRigidBody = nullptr;
 	};
 
-	struct BoxColliderComponent
-	{
+	struct BoxColliderComponent {
 		glm::vec3 Size{ 1.0f };
 
 		void* RuntimeShape = nullptr;
 	};
 
-	struct SphereColliderComponent
-	{
+	struct SphereColliderComponent {
 		float Radius = 1.0f;
 
 		void* RuntimeShape = nullptr;
 	};
 
-	struct CapsuleColliderComponent
-	{
+	struct CapsuleColliderComponent {
 		AxisType Axis = AxisType::Y;
 		float Radius = 0.5f, Height = 1.0f;
 
 		void* RuntimeShape = nullptr;
 	};
 
-	struct TextComponent
-	{
+	struct TextComponent {
 		std::string TextString;
 		AssetHandle Font = 0;
 
@@ -215,8 +189,7 @@ namespace Flameberry {
 	};
 
 	template <typename... Component>
-	struct ComponentList
-	{
+	struct ComponentList {
 	};
 
 	using AllComponents = ComponentList<TransformComponent, CollectionComponent, CameraComponent, MeshComponent,

@@ -10,8 +10,7 @@ namespace YAML {
 
 namespace Flameberry {
 
-	class SceneSerializer
-	{
+	class SceneSerializer {
 	public:
 		static Ref<Scene> DeserializeIntoNewScene(const std::filesystem::path& path);
 		static bool DeserializeIntoExistingScene(const std::filesystem::path& path, const Ref<Scene>& destScene);

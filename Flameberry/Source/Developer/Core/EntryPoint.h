@@ -4,8 +4,7 @@
 #include "Core/Timer.h"
 #include "Application.h"
 
-int main(int argc, char const* argv[])
-{
+int main(int argc, char const* argv[]) {
 	Flameberry::Application* clientApp;
 	{
 		FBY_SCOPED_TIMER("Initialisation");

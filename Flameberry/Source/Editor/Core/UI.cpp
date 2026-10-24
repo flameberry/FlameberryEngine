@@ -11,8 +11,7 @@
 
 namespace Flameberry::UI {
 
-	struct UIState
-	{
+	struct UIState {
 		// Fixed Layout/Style Properties
 		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV
 			| ImGuiTableFlags_BordersInnerH
@@ -27,8 +26,7 @@ namespace Flameberry::UI {
 
 	static UIState g_UIState;
 
-	bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size)
-	{
+	bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size) {
 		using namespace ImGui;
 		ImGuiContext& g = *GImGui;
 		ImGuiWindow* window = g.CurrentWindow;
@@ -39,8 +37,7 @@ namespace Flameberry::UI {
 		return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f, 0.0f, 0xFF000000);
 	}
 
-	bool AlignedButton(const char* label, const ImVec2& size, float alignment)
-	{
+	bool AlignedButton(const char* label, const ImVec2& size, float alignment) {
 		const ImGuiStyle& style = ImGui::GetStyle();
 
 		const float width = size.x ? size.x : ImGui::CalcTextSize(label).x + style.FramePadding.x * 2.0f;
@@ -53,8 +50,7 @@ namespace Flameberry::UI {
 		return ImGui::Button(label, size);
 	}
 
-	void AlignedText(const char* text, float alignment)
-	{
+	void AlignedText(const char* text, float alignment) {
 		const ImGuiStyle& style = ImGui::GetStyle();
 		const ImVec2 size = ImGui::CalcTextSize(text);
 
@@ -68,8 +64,7 @@ namespace Flameberry::UI {
 		ImGui::Text("%s", text);
 	}
 
-	bool InputBox(const char* label, float width, std::string* inputBuffer, const char* inputHint, bool focused)
-	{
+	bool InputBox(const char* label, float width, std::string* inputBuffer, const char* inputHint, bool focused) {
 		ScopedStyleColor buttonColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
 		ScopedStyleColor buttonHoverColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 		ScopedStyleColor buttonActiveColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
@@ -95,14 +90,12 @@ namespace Flameberry::UI {
 		ImGui::PopItemWidth();
 
 		// Only show the clear button if there is text
-		if (!inputBuffer->empty())
-		{
+		if (!inputBuffer->empty()) {
 			ImGui::SameLine(0.0f, 0.0f);
 			ImGui::SetCursorScreenPos(ImVec2(inputPos.x + width - inputSize.y, inputPos.y));
 
 			ImGui::Button(ICON_LC_X, ImVec2(inputSize.y, inputSize.y));
-			if (ImGui::IsItemClicked())
-			{
+			if (ImGui::IsItemClicked()) {
 				inputBuffer->clear();
 				ImGui::SetKeyboardFocusHere(-1);
 			}
@@ -110,22 +103,18 @@ namespace Flameberry::UI {
 		return isActive;
 	}
 
-	void OpenSelectionWidget(const char* label)
-	{
+	void OpenSelectionWidget(const char* label) {
 		const std::string labelFmt = fmt::format("{}Popup", label);
 		ImGui::OpenPopup(labelFmt.c_str());
 
 		g_UIState.IsSelectionWidgetJustOpened = true;
 	}
 
-	bool BeginSelectionWidget(const char* label, const char* title, std::string* inputBuffer)
-	{
+	bool BeginSelectionWidget(const char* label, const char* title, std::string* inputBuffer) {
 		const std::string labelFmt = fmt::format("{}Popup", label);
 
-		if (ImGui::BeginPopup(labelFmt.c_str()))
-		{
-			if (g_UIState.IsSelectionWidgetJustOpened)
-			{
+		if (ImGui::BeginPopup(labelFmt.c_str())) {
+			if (g_UIState.IsSelectionWidgetJustOpened) {
 				ImGui::SetKeyboardFocusHere();
 				g_UIState.IsSelectionWidgetJustOpened = false;
 			}
@@ -145,10 +134,8 @@ namespace Flameberry::UI {
 		return false;
 	}
 
-	bool SelectionWidgetElement(const char* label, bool isSelected)
-	{
-		if (ImGui::Selectable(label, &isSelected))
-		{
+	bool SelectionWidgetElement(const char* label, bool isSelected) {
+		if (ImGui::Selectable(label, &isSelected)) {
 			ImGui::CloseCurrentPopup();
 			return true;
 		}
@@ -158,18 +145,15 @@ namespace Flameberry::UI {
 		return false;
 	}
 
-	void EndSelectionWidget()
-	{
+	void EndSelectionWidget() {
 		if (g_UIState.HasSelectionWidgetListBoxBegun)
 			ImGui::EndListBox();
 
 		ImGui::EndPopup();
 	}
 
-	bool BeginKeyValueTable(const char* label, ImGuiTableFlags tableFlags, float labelWidth)
-	{
-		if (ImGui::BeginTable(label, 2, tableFlags ? tableFlags : g_UIState.TableFlags))
-		{
+	bool BeginKeyValueTable(const char* label, ImGuiTableFlags tableFlags, float labelWidth) {
+		if (ImGui::BeginTable(label, 2, tableFlags ? tableFlags : g_UIState.TableFlags)) {
 			ImGui::TableSetupColumn("Attribute_Key", ImGuiTableColumnFlags_WidthFixed, labelWidth != 0.0f ? labelWidth : g_UIState.LabelWidth);
 			ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 			return true;
@@ -177,8 +161,7 @@ namespace Flameberry::UI {
 		return false;
 	}
 
-	void TableKeyElement(const char* label)
-	{
+	void TableKeyElement(const char* label) {
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
 
@@ -187,14 +170,12 @@ namespace Flameberry::UI {
 		ImGui::TableNextColumn();
 	}
 
-	void EndKeyValueTable()
-	{
+	void EndKeyValueTable() {
 		ImGui::EndTable();
 	}
 
 	// TODO: Add display information on Hover
-	bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled)
-	{
+	bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled) {
 		constexpr float paddingX = 15.0f, paddingY = 5.0f, spacing = 10.0f;
 		const float itemWidth = ImGui::GetContentRegionAvail().x;
 
@@ -231,8 +212,7 @@ namespace Flameberry::UI {
 
 		bool hovered = ImGui::IsItemHovered();
 
-		if (hovered)
-		{
+		if (hovered) {
 			ImU32 color = ImGui::IsMouseDown(0)
 				? IM_COL32(255, 255, 255, 60)
 				: IM_COL32(255, 255, 255, 30);
@@ -250,8 +230,7 @@ namespace Flameberry::UI {
 		return pressed;
 	}
 
-	bool Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth)
-	{
+	bool Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth) {
 		bool isEdited = false;
 		ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0);
 
@@ -268,8 +247,7 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
 
-			if (ImGui::Button("##X_Button", buttonSize))
-			{
+			if (ImGui::Button("##X_Button", buttonSize)) {
 				value.x = defaultValue;
 				isEdited = true;
 			}
@@ -286,8 +264,7 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
 
-			if (ImGui::Button("##Y_Button", buttonSize))
-			{
+			if (ImGui::Button("##Y_Button", buttonSize)) {
 				value.y = defaultValue;
 				isEdited = true;
 			}
@@ -304,8 +281,7 @@ namespace Flameberry::UI {
 			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
 			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
 
-			if (ImGui::Button("##Z_Button", buttonSize))
-			{
+			if (ImGui::Button("##Z_Button", buttonSize)) {
 				value.z = defaultValue;
 				isEdited = true;
 			}
@@ -324,41 +300,35 @@ namespace Flameberry::UI {
 	//////////////////////////////////////////// Scoped UI Utilities ////////////////////////////////////////////
 
 	ScopedStyleColor::ScopedStyleColor(ImGuiCol idx, ImVec4 col, bool condition)
-		: m_Condition(condition)
-	{
+		: m_Condition(condition) {
 		if (m_Condition)
 			ImGui::PushStyleColor(idx, col);
 	}
 
 	ScopedStyleColor::ScopedStyleColor(ImGuiCol idx, ImU32 col, bool condition)
-		: m_Condition(condition)
-	{
+		: m_Condition(condition) {
 		if (m_Condition)
 			ImGui::PushStyleColor(idx, col);
 	}
 
-	ScopedStyleColor::~ScopedStyleColor()
-	{
+	ScopedStyleColor::~ScopedStyleColor() {
 		if (m_Condition)
 			ImGui::PopStyleColor();
 	}
 
 	ScopedStyleVariable::ScopedStyleVariable(ImGuiStyleVar idx, ImVec2 value, bool condition)
-		: m_Condition(condition)
-	{
+		: m_Condition(condition) {
 		if (m_Condition)
 			ImGui::PushStyleVar(idx, value);
 	}
 
 	ScopedStyleVariable::ScopedStyleVariable(ImGuiCol idx, float value, bool condition)
-		: m_Condition(condition)
-	{
+		: m_Condition(condition) {
 		if (m_Condition)
 			ImGui::PushStyleVar(idx, value);
 	}
 
-	ScopedStyleVariable::~ScopedStyleVariable()
-	{
+	ScopedStyleVariable::~ScopedStyleVariable() {
 		if (m_Condition)
 			ImGui::PopStyleVar();
 	}

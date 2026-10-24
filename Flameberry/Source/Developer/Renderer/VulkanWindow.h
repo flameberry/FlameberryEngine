@@ -7,8 +7,7 @@
 
 namespace Flameberry {
 
-	class VulkanWindow : public Window
-	{
+	class VulkanWindow : public Window {
 	public:
 		VulkanWindow(const WindowSpecification& specification = WindowSpecification());
 		~VulkanWindow();

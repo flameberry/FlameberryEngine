@@ -6,8 +6,7 @@
 
 namespace Flameberry {
 
-	struct PhysicsManagerData
-	{
+	struct PhysicsManagerData {
 		// This is the max amount of rigid bodies that you can add to the physics system. If you try to add more you'll get an error.
 		// Note: This value is low because this is a simple test. For a real project use something in the order of 65536.
 		const JPH::uint MaxBodies = 1024;
@@ -54,16 +53,14 @@ namespace Flameberry {
 
 		PhysicsManagerData()
 			: TempAllocator(10 * 1024 * 1024)
-			, JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1)
-		{
+			, JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1) {
 		}
 	};
 
 	PhysicsManagerData* s_Data;
 
 	// Callback for traces, connect this to your own trace function if you have one
-	static void TraceImpl(const char* inFMT, ...)
-	{
+	static void TraceImpl(const char* inFMT, ...) {
 		// Format the message
 		va_list list;
 		va_start(list, inFMT);
@@ -75,14 +72,12 @@ namespace Flameberry {
 	}
 
 	// Callback for asserts, connect this to your own assert handler if you have one
-	static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine)
-	{
+	static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine) {
 		FBY_ASSERT(0, "{}:{}: ({}) {}", inFile, inLine, inExpression, (inMessage != nullptr ? inMessage : ""));
 		return true;
 	};
 
-	void PhysicsManager::Init()
-	{
+	void PhysicsManager::Init() {
 		// Register allocation hook. In this example we'll just let Jolt use malloc / free but you can override these if you want (see Memory.h).
 		// This needs to be done before any other Jolt function is called.
 		JPH::RegisterDefaultAllocator();
@@ -120,8 +115,7 @@ namespace Flameberry {
 		// physics_system.SetContactListener(&contact_listener);
 	}
 
-	void PhysicsManager::Shutdown()
-	{
+	void PhysicsManager::Shutdown() {
 		// Unregisters all types with the factory and cleans up the default material
 		JPH::UnregisterTypes();
 
@@ -132,20 +126,17 @@ namespace Flameberry {
 		delete s_Data;
 	}
 
-	JPH::BodyInterface& PhysicsManager::GetBodyInterface()
-	{
+	JPH::BodyInterface& PhysicsManager::GetBodyInterface() {
 		// The main way to interact with the bodies in the physics system is through the body interface. There is a locking and a non-locking
 		// variant of this. We're going to use the locking version (even though we're not planning to access bodies from multiple threads)
 		return s_Data->PhysicsSystem.GetBodyInterface();
 	}
 
-	void PhysicsManager::OptimizeBroadPhase()
-	{
+	void PhysicsManager::OptimizeBroadPhase() {
 		s_Data->PhysicsSystem.OptimizeBroadPhase();
 	}
 
-	void PhysicsManager::Update(float delta, int collisionSteps)
-	{
+	void PhysicsManager::Update(float delta, int collisionSteps) {
 		s_Data->PhysicsSystem.Update(delta, collisionSteps, &s_Data->TempAllocator, &s_Data->JobSystemThreadPool);
 	}
 

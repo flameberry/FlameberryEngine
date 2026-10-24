@@ -8,26 +8,21 @@
 
 namespace Flameberry {
 
-	Ref<Texture2D> TextureImporter::ImportTexture2D(AssetHandle handle, const AssetMetadata& metadata)
-	{
+	Ref<Texture2D> TextureImporter::ImportTexture2D(AssetHandle handle, const AssetMetadata& metadata) {
 		return LoadTexture2D(metadata.FilePath);
 	}
 
-	Ref<Texture2D> TextureImporter::LoadTexture2D(const std::filesystem::path& path)
-	{
+	Ref<Texture2D> TextureImporter::LoadTexture2D(const std::filesystem::path& path) {
 		int width, height, channels;
 		void* pixels = nullptr;
 		VkFormat format = VK_FORMAT_UNDEFINED;
 
 		const std::string pathStr = path.string();
 
-		if (stbi_is_hdr(pathStr.c_str()))
-		{
+		if (stbi_is_hdr(pathStr.c_str())) {
 			pixels = stbi_loadf(pathStr.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R32G32B32A32_SFLOAT;
-		}
-		else
-		{
+		} else {
 			pixels = stbi_load(pathStr.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R8G8B8A8_UNORM;
 		}
@@ -45,17 +40,12 @@ namespace Flameberry {
 	}
 
 	// TODO: Needs work quality wise
-	Ref<Texture2D> TextureImporter::LoadTexture2DResized(const std::filesystem::path& path, int newWidth, int newHeight, bool bGenerateMipmaps)
-	{
-		auto calcWidthHeight = [](const int width, const int height, int& newWidth, int& newHeight)
-		{
-			if (width >= height)
-			{
+	Ref<Texture2D> TextureImporter::LoadTexture2DResized(const std::filesystem::path& path, int newWidth, int newHeight, bool bGenerateMipmaps) {
+		auto calcWidthHeight = [](const int width, const int height, int& newWidth, int& newHeight) {
+			if (width >= height) {
 				newWidth = width > newWidth ? newWidth : width;
 				newHeight = height > newHeight ? (newWidth * height / width) : height;
-			}
-			else
-			{
+			} else {
 				newHeight = height > newHeight ? newHeight : height;
 				newWidth = width > newWidth ? (newHeight * width / height) : width;
 			}
@@ -69,8 +59,7 @@ namespace Flameberry {
 		const std::string pathStr = path.string();
 		const char* pathCStr = pathStr.c_str();
 
-		if (stbi_is_hdr(pathCStr))
-		{
+		if (stbi_is_hdr(pathCStr)) {
 			pixels = stbi_loadf(pathCStr, &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R32G32B32A32_SFLOAT;
 			channels = 4;
@@ -80,9 +69,7 @@ namespace Flameberry {
 			resizedPixels = new float[channels * newWidth * newHeight];
 
 			stbir_resize_float_linear((const float*)pixels, width, height, 0, (float*)resizedPixels, newWidth, newHeight, 0, stbir_pixel_layout::STBIR_RGBA);
-		}
-		else
-		{
+		} else {
 			pixels = stbi_load(pathCStr, &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R8G8B8A8_UNORM;
 			channels = 4;

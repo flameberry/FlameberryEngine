@@ -18,27 +18,23 @@ namespace Flameberry {
 
 	InspectorPanel::InspectorPanel()
 		: m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>())
-		, m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon.png"))
-	{
+		, m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon.png")) {
 	}
 
 	InspectorPanel::InspectorPanel(const Ref<Scene>& context)
 		: m_MaterialEditorPanel(CreateRef<MaterialEditorPanel>())
 		, m_Context(context)
-		, m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon2.png"))
-	{
+		, m_SettingsIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/SettingsIcon2.png")) {
 	}
 
-	void InspectorPanel::OnUIRender()
-	{
+	void InspectorPanel::OnUIRender() {
 		UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
 		ImGui::Begin("Inspector");
 		ImGui::PopStyleVar();
 
-		if (EditorContext::Get()->SelectedEntity != FEntity::Null)
-		{
+		if (EditorContext::Get()->SelectedEntity != FEntity::Null) {
 			auto& tag = m_Context->GetRegistry()->GetComponent<TagComponent>(EditorContext::Get()->SelectedEntity);
 			ImGuiStyle& style = ImGui::GetStyle();
 
@@ -64,8 +60,7 @@ namespace Flameberry {
 				ImGui::OpenPopup("AddComponentPopUp");
 			ImGui::EndDisabled();
 
-			if (ImGui::BeginPopup("AddComponentPopUp"))
-			{
+			if (ImGui::BeginPopup("AddComponentPopUp")) {
 				DrawAddComponentEntry<TransformComponent>(ICON_LC_SCALE_3D "\tTransform Component");
 				DrawAddComponentEntry<TextComponent>(ICON_LC_TEXT "\tText Component");
 				DrawAddComponentEntry<CameraComponent>(ICON_LC_CAMERA "\tCamera Component");
@@ -107,13 +102,11 @@ namespace Flameberry {
 #endif
 
 			DrawComponent<TransformComponent>(
-				ICON_LC_SCALE_3D " Transform", [&]()
-				{
+				ICON_LC_SCALE_3D " Transform", [&]() {
 					auto& transform = m_Context->GetRegistry()->GetComponent<TransformComponent>(EditorContext::Get()->SelectedEntity);
 					bool isTransformEdited = false;
 
-					if (UI::BeginKeyValueTable("TransformComponentAttributes"))
-					{
+					if (UI::BeginKeyValueTable("TransformComponentAttributes")) {
 						FBY_UI_TABLE_ELEMENT("Translation", isTransformEdited |= UI::Vec3Control("Translation", transform.Translation, 0.0f, 0.01f, ImGui::GetColumnWidth()));
 						FBY_UI_TABLE_ELEMENT("Rotation", isTransformEdited |= UI::Vec3Control("Rotation", transform.Rotation, 0.0f, 0.01f, ImGui::GetColumnWidth()));
 						FBY_UI_TABLE_ELEMENT("Scale", isTransformEdited |= UI::Vec3Control("Scale", transform.Scale, 1.0f, 0.01f, ImGui::GetColumnWidth()));
@@ -129,12 +122,10 @@ namespace Flameberry {
 
 			DrawComponent<TextComponent>(
 				ICON_LC_TEXT " Text",
-				[&]()
-				{
+				[&]() {
 					auto& text = m_Context->GetRegistry()->GetComponent<TextComponent>(EditorContext::Get()->SelectedEntity);
 
-					if (UI::BeginKeyValueTable("TextComponentAttributes"))
-					{
+					if (UI::BeginKeyValueTable("TextComponentAttributes")) {
 						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Text", ImGui::InputTextMultiline("##Text", &text.TextString));
 
 						Ref<Font> fontAsset = AssetManager::GetAsset<Font>(text.Font);
@@ -149,10 +140,8 @@ namespace Flameberry {
 							ImVec4(1, 1, 1, 1),
 							ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-						if (ImGui::BeginDragDropTarget())
-						{
-							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
-							{
+						if (ImGui::BeginDragDropTarget()) {
+							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM")) {
 								const char* path = (const char*)payload->Data;
 								std::filesystem::path fontPath(path);
 								const std::string& ext = fontPath.extension().string();
@@ -171,8 +160,7 @@ namespace Flameberry {
 							ImGui::EndDragDropTarget();
 						}
 
-						if (fontAsset)
-						{
+						if (fontAsset) {
 							ImGui::SameLine();
 							ImGui::TextWrapped("%s", fontAsset->GetName().c_str());
 						}
@@ -188,425 +176,381 @@ namespace Flameberry {
 				true // removable = true
 			);
 
-			DrawComponent<SkyLightComponent>(ICON_LC_SUNRISE " Sky Light", [=, this]()
-				{
-					auto& skyLightComp = m_Context->GetRegistry()->GetComponent<SkyLightComponent>(EditorContext::Get()->SelectedEntity);
+			DrawComponent<SkyLightComponent>(ICON_LC_SUNRISE " Sky Light", [=, this]() {
+				auto& skyLightComp = m_Context->GetRegistry()->GetComponent<SkyLightComponent>(EditorContext::Get()->SelectedEntity);
 
-					if (UI::BeginKeyValueTable("SkyLightComponentAttributes"))
-					{
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Color", ImGui::ColorEdit3("##Color", glm::value_ptr(skyLightComp.Color)));
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity", ImGui::DragFloat("##Intensity", &skyLightComp.Intensity, 0.01f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp));
+				if (UI::BeginKeyValueTable("SkyLightComponentAttributes")) {
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Color", ImGui::ColorEdit3("##Color", glm::value_ptr(skyLightComp.Color)));
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity", ImGui::DragFloat("##Intensity", &skyLightComp.Intensity, 0.01f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp));
 
-						FBY_UI_TABLE_ELEMENT("Enable Skymap", ImGui::Checkbox("##Enable_EnvMap", &skyLightComp.EnableSkymap));
+					FBY_UI_TABLE_ELEMENT("Enable Skymap", ImGui::Checkbox("##Enable_EnvMap", &skyLightComp.EnableSkymap));
 
-						if (skyLightComp.EnableSkymap)
-						{
-							Ref<Texture2D> thumbnail;
-							Ref<Skymap> skymap = AssetManager::AssetManager::GetAsset<Skymap>(skyLightComp.Skymap);
+					if (skyLightComp.EnableSkymap) {
+						Ref<Texture2D> thumbnail;
+						Ref<Skymap> skymap = AssetManager::AssetManager::GetAsset<Skymap>(skyLightComp.Skymap);
 
-							if (skymap)
-							{
-								// Display Thumbnail for the environment maps
-								const auto& filePath = AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skymap->Handle).FilePath;
-								thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
+						if (skymap) {
+							// Display Thumbnail for the environment maps
+							const auto& filePath = AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skymap->Handle).FilePath;
+							thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
+						}
+
+						if (!thumbnail)
+							thumbnail = Renderer::GetCheckerboardTexture();
+
+						constexpr float size = 80.0f;
+						const float aspectRatio = (float)thumbnail->GetImageSpecification().Width / (float)thumbnail->GetImageSpecification().Height;
+
+						// Show Environment Map Preview
+						UI::TableKeyElement("Skymap");
+						ImGui::Image((ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
+
+						if (ImGui::BeginDragDropTarget()) {
+							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM")) {
+								const char* path = (const char*)payload->Data;
+								std::filesystem::path envPath{ path };
+								const std::string& ext = envPath.extension().string();
+
+								FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
+
+								bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Skymap
+									&& std::filesystem::exists(envPath)
+									&& std::filesystem::is_regular_file(envPath);
+
+								if (shouldImport)
+									skyLightComp.Skymap = AssetManager::As<EditorAssetManager>()->ImportAsset(envPath);
+								else
+									FBY_WARN("Bad File given as Environment!");
+							}
+							ImGui::EndDragDropTarget();
+						}
+
+						ImGui::Spacing();
+
+						std::string skymapName = skymap ? std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath).filename().string() : "";
+						ImGui::TextWrapped("%s", skymapName.c_str());
+					}
+					UI::EndKeyValueTable();
+				}
+			});
+
+			DrawComponent<CameraComponent>(ICON_LC_CAMERA " Camera", [&]() {
+				auto& cameraComp = m_Context->GetRegistry()->GetComponent<CameraComponent>(EditorContext::Get()->SelectedEntity);
+
+				if (UI::BeginKeyValueTable("CameraComponentAttributes")) {
+					FBY_UI_TABLE_ELEMENT("Is Primary", ImGui::Checkbox("##IsPrimary", &cameraComp.IsPrimary));
+
+					UI::TableKeyElement("Projection Type");
+
+					const char* projectionTypeStrings[] = { "Orthographic", "Perspective" };
+					uint8_t currentProjectionTypeIndex = (uint8_t)cameraComp.Camera.GetSettings().ProjectionType;
+
+					ImGui::PushItemWidth(-1.0f);
+					if (ImGui::BeginCombo("##ProjectionType", projectionTypeStrings[currentProjectionTypeIndex])) {
+						for (int i = 0; i < 2; i++) {
+							bool isSelected = (i == (uint8_t)cameraComp.Camera.GetSettings().ProjectionType);
+							if (ImGui::Selectable(projectionTypeStrings[i], &isSelected)) {
+								currentProjectionTypeIndex = i;
+								cameraComp.Camera.SetProjectionType((ProjectionType)i);
 							}
 
-							if (!thumbnail)
-								thumbnail = Renderer::GetCheckerboardTexture();
+							if (isSelected)
+								ImGui::SetItemDefaultFocus();
+						}
+						ImGui::EndCombo();
+					}
 
-							constexpr float size = 80.0f;
-							const float aspectRatio = (float)thumbnail->GetImageSpecification().Width / (float)thumbnail->GetImageSpecification().Height;
+					UI::TableKeyElement(currentProjectionTypeIndex == (uint8_t)ProjectionType::Perspective ? "FOV" : "Zoom");
 
-							// Show Environment Map Preview
-							UI::TableKeyElement("Skymap");
-							ImGui::Image((ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
+					float FOV = cameraComp.Camera.GetSettings().FOV;
+					if (ImGui::DragFloat("##FOV", &FOV, 0.01f, 0.0f, 180.0f))
+						cameraComp.Camera.UpdateWithFOVorZoom(FOV);
 
-							if (ImGui::BeginDragDropTarget())
-							{
-								if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
-								{
+					UI::TableKeyElement("Near");
+
+					float near = cameraComp.Camera.GetSettings().Near;
+					if (ImGui::DragFloat("##Near", &near, 0.01f, 0.0f, 2000.0f))
+						cameraComp.Camera.UpdateWithNear(near);
+
+					UI::TableKeyElement("Far");
+
+					float far = cameraComp.Camera.GetSettings().Far;
+					if (ImGui::DragFloat("##Far", &far, 0.01f, 0.0f, 2000.0f))
+						cameraComp.Camera.UpdateWithFar(far);
+
+					ImGui::PopItemWidth();
+
+					UI::EndKeyValueTable();
+				}
+			});
+
+			DrawComponent<MeshComponent>(ICON_LC_CUBOID " Mesh", [&]() {
+				auto& mesh = m_Context->GetRegistry()->GetComponent<MeshComponent>(EditorContext::Get()->SelectedEntity);
+
+				if (UI::BeginKeyValueTable("MeshComponentAttributes")) {
+					Ref<StaticMesh> staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
+					FBY_UI_TABLE_ELEMENT("Mesh", ImGui::Button(staticMesh ? staticMesh->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f)));
+
+					if (ImGui::BeginDragDropTarget()) {
+						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM")) {
+							const char* path = static_cast<const char*>(payload->Data);
+							const std::filesystem::path modelPath{ path };
+							const std::string& ext = modelPath.extension().string();
+
+							FBY_INFO("Payload received: {}, with extension {}", path, ext);
+
+							const bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh
+								&& std::filesystem::exists(modelPath)
+								&& std::filesystem::is_regular_file(modelPath);
+
+							if (shouldImport)
+								mesh.MeshHandle = AssetManager::As<EditorAssetManager>()->ImportAsset(modelPath);
+							else
+								FBY_WARN("Bad File given as Model!");
+						}
+						ImGui::EndDragDropTarget();
+					}
+					UI::EndKeyValueTable();
+				}
+
+				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+				bool is_open = ImGui::CollapsingHeader(ICON_LC_DRIBBBLE " Materials", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+				ImGui::PopStyleVar();
+
+				if (!is_open) return;
+				if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle)) {
+					const uint32_t limit = glm::min<uint32_t>(staticMesh->GetSubMeshes().size(), 8);
+					const float textLineHeightWithSpacing = ImGui::GetTextLineHeightWithSpacing() + 2.0f;
+					const float verticalLength = textLineHeightWithSpacing + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
+					ImGui::SetNextWindowSizeConstraints(ImVec2(-1.0f, verticalLength), ImVec2(-1.0f, verticalLength * limit));
+
+					ImGuiWindowFlags windowFlags = ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY;
+
+					ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+					ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), windowFlags);
+					ImGui::PopStyleVar();
+
+					if (ImGui::BeginTable("MaterialTable", 4, s_TableFlags)) {
+						ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+						ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
+						ImGui::TableSetupColumn("Material_LoadFromAssetsButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
+						ImGui::TableSetupColumn("Material_ResetButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
+
+						uint32_t submeshIndex = 0;
+						for (const auto& submesh : staticMesh->GetSubMeshes()) {
+							ImGui::PushID(static_cast<int>(submeshIndex));
+
+							ImGui::TableNextRow();
+							ImGui::TableNextColumn();
+
+							ImGui::AlignTextToFramePadding();
+							ImGui::Text("Item %d", submeshIndex);
+							ImGui::TableNextColumn();
+
+							Ref<MaterialAsset> mat;
+							if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
+								mat = AssetManager::GetAsset<MaterialAsset>(it->second);
+							else
+								mat = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
+
+							ImGui::Button(
+								mat ? mat->GetName().c_str() : "Null",
+								ImVec2(-1.0f, 0.0f));
+
+							if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+								ImGui::SetTooltip("%s", mat ? mat->GetName().c_str() : "Null");
+
+							if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+								m_MaterialEditorPanel->DisplayMaterial(mat);
+
+							if (ImGui::BeginDragDropTarget()) {
+								if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM")) {
 									const char* path = (const char*)payload->Data;
-									std::filesystem::path envPath{ path };
-									const std::string& ext = envPath.extension().string();
+									std::filesystem::path matPath{ path };
+									const std::string& ext = matPath.extension().string();
 
 									FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
-									bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Skymap
-										&& std::filesystem::exists(envPath)
-										&& std::filesystem::is_regular_file(envPath);
+									bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Material
+										&& std::filesystem::exists(matPath)
+										&& std::filesystem::is_regular_file(matPath);
 
 									if (shouldImport)
-										skyLightComp.Skymap = AssetManager::As<EditorAssetManager>()->ImportAsset(envPath);
+										mesh.OverridenMaterialTable[submeshIndex] = AssetManager::As<EditorAssetManager>()->ImportAsset(matPath);
 									else
-										FBY_WARN("Bad File given as Environment!");
+										FBY_WARN("Bad File given as Material!");
 								}
 								ImGui::EndDragDropTarget();
 							}
 
-							ImGui::Spacing();
+							ImGui::TableNextColumn();
 
-							std::string skymapName = skymap ? std::filesystem::path(AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath).filename().string() : "";
-							ImGui::TextWrapped("%s", skymapName.c_str());
-						}
-						UI::EndKeyValueTable();
-					}
-				});
+							ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f));
+							if (ImGui::IsItemClicked())
+								UI::OpenSelectionWidget("##MaterialSelectionWidget");
 
-			DrawComponent<CameraComponent>(ICON_LC_CAMERA " Camera", [&]()
-				{
-					auto& cameraComp = m_Context->GetRegistry()->GetComponent<CameraComponent>(EditorContext::Get()->SelectedEntity);
+							if (UI::BeginSelectionWidget("##MaterialSelectionWidget", "Select Material", &m_SearchInputBuffer2)) {
+								auto displayMaterialEntry = [&, this](AssetHandle, const Ref<Asset>& asset) {
+									if (asset->GetAssetType() == AssetType::Material) {
+										Ref<MaterialAsset> m = std::static_pointer_cast<MaterialAsset>(asset);
 
-					if (UI::BeginKeyValueTable("CameraComponentAttributes"))
-					{
-						FBY_UI_TABLE_ELEMENT("Is Primary", ImGui::Checkbox("##IsPrimary", &cameraComp.IsPrimary));
-
-						UI::TableKeyElement("Projection Type");
-
-						const char* projectionTypeStrings[] = { "Orthographic", "Perspective" };
-						uint8_t currentProjectionTypeIndex = (uint8_t)cameraComp.Camera.GetSettings().ProjectionType;
-
-						ImGui::PushItemWidth(-1.0f);
-						if (ImGui::BeginCombo("##ProjectionType", projectionTypeStrings[currentProjectionTypeIndex]))
-						{
-							for (int i = 0; i < 2; i++)
-							{
-								bool isSelected = (i == (uint8_t)cameraComp.Camera.GetSettings().ProjectionType);
-								if (ImGui::Selectable(projectionTypeStrings[i], &isSelected))
-								{
-									currentProjectionTypeIndex = i;
-									cameraComp.Camera.SetProjectionType((ProjectionType)i);
-								}
-
-								if (isSelected)
-									ImGui::SetItemDefaultFocus();
-							}
-							ImGui::EndCombo();
-						}
-
-						UI::TableKeyElement(currentProjectionTypeIndex == (uint8_t)ProjectionType::Perspective ? "FOV" : "Zoom");
-
-						float FOV = cameraComp.Camera.GetSettings().FOV;
-						if (ImGui::DragFloat("##FOV", &FOV, 0.01f, 0.0f, 180.0f))
-							cameraComp.Camera.UpdateWithFOVorZoom(FOV);
-
-						UI::TableKeyElement("Near");
-
-						float near = cameraComp.Camera.GetSettings().Near;
-						if (ImGui::DragFloat("##Near", &near, 0.01f, 0.0f, 2000.0f))
-							cameraComp.Camera.UpdateWithNear(near);
-
-						UI::TableKeyElement("Far");
-
-						float far = cameraComp.Camera.GetSettings().Far;
-						if (ImGui::DragFloat("##Far", &far, 0.01f, 0.0f, 2000.0f))
-							cameraComp.Camera.UpdateWithFar(far);
-
-						ImGui::PopItemWidth();
-
-						UI::EndKeyValueTable();
-					}
-				});
-
-			DrawComponent<MeshComponent>(ICON_LC_CUBOID " Mesh", [&]()
-				{
-					auto& mesh = m_Context->GetRegistry()->GetComponent<MeshComponent>(EditorContext::Get()->SelectedEntity);
-
-					if (UI::BeginKeyValueTable("MeshComponentAttributes"))
-					{
-						Ref<StaticMesh> staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
-						FBY_UI_TABLE_ELEMENT("Mesh", ImGui::Button(staticMesh ? staticMesh->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f)));
-
-						if (ImGui::BeginDragDropTarget())
-						{
-							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
-							{
-								const char* path = static_cast<const char*>(payload->Data);
-								const std::filesystem::path modelPath{ path };
-								const std::string& ext = modelPath.extension().string();
-
-								FBY_INFO("Payload received: {}, with extension {}", path, ext);
-
-								const bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh
-									&& std::filesystem::exists(modelPath)
-									&& std::filesystem::is_regular_file(modelPath);
-
-								if (shouldImport)
-									mesh.MeshHandle = AssetManager::As<EditorAssetManager>()->ImportAsset(modelPath);
-								else
-									FBY_WARN("Bad File given as Model!");
-							}
-							ImGui::EndDragDropTarget();
-						}
-						UI::EndKeyValueTable();
-					}
-
-					ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-					bool is_open = ImGui::CollapsingHeader(ICON_LC_DRIBBBLE " Materials", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth);
-					ImGui::PopStyleVar();
-
-					if (!is_open) return;
-					if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
-					{
-						const uint32_t limit = glm::min<uint32_t>(staticMesh->GetSubMeshes().size(), 8);
-						const float textLineHeightWithSpacing = ImGui::GetTextLineHeightWithSpacing() + 2.0f;
-						const float verticalLength = textLineHeightWithSpacing + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
-						ImGui::SetNextWindowSizeConstraints(ImVec2(-1.0f, verticalLength), ImVec2(-1.0f, verticalLength * limit));
-
-						ImGuiWindowFlags windowFlags = ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY;
-
-						ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-						ImGui::BeginChild("MaterialList", ImVec2(-1.0f, 0.0f), windowFlags);
-						ImGui::PopStyleVar();
-
-						if (ImGui::BeginTable("MaterialTable", 4, s_TableFlags))
-						{
-							ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-							ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
-							ImGui::TableSetupColumn("Material_LoadFromAssetsButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
-							ImGui::TableSetupColumn("Material_ResetButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
-
-							uint32_t submeshIndex = 0;
-							for (const auto& submesh : staticMesh->GetSubMeshes())
-							{
-								ImGui::PushID(static_cast<int>(submeshIndex));
-
-								ImGui::TableNextRow();
-								ImGui::TableNextColumn();
-
-								ImGui::AlignTextToFramePadding();
-								ImGui::Text("Item %d", submeshIndex);
-								ImGui::TableNextColumn();
-
-								Ref<MaterialAsset> mat;
-								if (auto it = mesh.OverridenMaterialTable.find(submeshIndex); it != mesh.OverridenMaterialTable.end())
-									mat = AssetManager::GetAsset<MaterialAsset>(it->second);
-								else
-									mat = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
-
-								ImGui::Button(
-									mat ? mat->GetName().c_str() : "Null",
-									ImVec2(-1.0f, 0.0f));
-
-								if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-									ImGui::SetTooltip("%s", mat ? mat->GetName().c_str() : "Null");
-
-								if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-									m_MaterialEditorPanel->DisplayMaterial(mat);
-
-								if (ImGui::BeginDragDropTarget())
-								{
-									if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM"))
-									{
-										const char* path = (const char*)payload->Data;
-										std::filesystem::path matPath{ path };
-										const std::string& ext = matPath.extension().string();
-
-										FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
-
-										bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Material
-											&& std::filesystem::exists(matPath)
-											&& std::filesystem::is_regular_file(matPath);
-
-										if (shouldImport)
-											mesh.OverridenMaterialTable[submeshIndex] = AssetManager::As<EditorAssetManager>()->ImportAsset(matPath);
-										else
-											FBY_WARN("Bad File given as Material!");
-									}
-									ImGui::EndDragDropTarget();
-								}
-
-								ImGui::TableNextColumn();
-
-								ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f));
-								if (ImGui::IsItemClicked())
-									UI::OpenSelectionWidget("##MaterialSelectionWidget");
-
-								if (UI::BeginSelectionWidget("##MaterialSelectionWidget", "Select Material", &m_SearchInputBuffer2))
-								{
-									auto displayMaterialEntry = [&, this](AssetHandle, const Ref<Asset>& asset)
-									{
-										if (asset->GetAssetType() == AssetType::Material)
-										{
-											Ref<MaterialAsset> m = std::static_pointer_cast<MaterialAsset>(asset);
-
-											if (m_SearchInputBuffer2[0] != '\0')
-											{
-												const int index = Algorithm::KmpSearch(m->GetName().c_str(), m_SearchInputBuffer2.c_str(), true);
-												if (index == -1)
-													return false;
-											}
-
-											if (UI::SelectionWidgetElement(m->GetName().c_str(), m->Handle == mat->Handle))
-												mesh.OverridenMaterialTable[submeshIndex] = m->Handle;
+										if (m_SearchInputBuffer2[0] != '\0') {
+											const int index = Algorithm::KmpSearch(m->GetName().c_str(), m_SearchInputBuffer2.c_str(), true);
+											if (index == -1)
+												return false;
 										}
-										return true;
-									};
 
-									// Show Loaded Assets
-									for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetLoadedAssets())
-										if (!displayMaterialEntry(handle, asset))
-											continue;
+										if (UI::SelectionWidgetElement(m->GetName().c_str(), m->Handle == mat->Handle))
+											mesh.OverridenMaterialTable[submeshIndex] = m->Handle;
+									}
+									return true;
+								};
 
-									// Show Memory Only Assets
-									for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetMemoryOnlyAssets())
-										if (!displayMaterialEntry(handle, asset))
-											continue;
+								// Show Loaded Assets
+								for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetLoadedAssets())
+									if (!displayMaterialEntry(handle, asset))
+										continue;
 
-									UI::EndSelectionWidget();
-								}
+								// Show Memory Only Assets
+								for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetMemoryOnlyAssets())
+									if (!displayMaterialEntry(handle, asset))
+										continue;
 
-								ImGui::TableNextColumn();
-								if (ImGui::Button(ICON_LC_ROTATE_CCW))
-									mesh.OverridenMaterialTable.erase(submeshIndex);
-
-								ImGui::PopID();
-
-								submeshIndex++;
+								UI::EndSelectionWidget();
 							}
-							ImGui::EndTable();
+
+							ImGui::TableNextColumn();
+							if (ImGui::Button(ICON_LC_ROTATE_CCW))
+								mesh.OverridenMaterialTable.erase(submeshIndex);
+
+							ImGui::PopID();
+
+							submeshIndex++;
 						}
-						ImGui::EndChild();
+						ImGui::EndTable();
 					}
-				});
+					ImGui::EndChild();
+				}
+			});
 
-			DrawComponent<DirectionalLightComponent>(ICON_LC_SUN " Directional Light", [&]()
-				{
-					auto& light = m_Context->GetRegistry()->GetComponent<DirectionalLightComponent>(EditorContext::Get()->SelectedEntity);
+			DrawComponent<DirectionalLightComponent>(ICON_LC_SUN " Directional Light", [&]() {
+				auto& light = m_Context->GetRegistry()->GetComponent<DirectionalLightComponent>(EditorContext::Get()->SelectedEntity);
 
-					if (UI::BeginKeyValueTable("DirectionalLightComponentAttributes"))
-					{
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Color", ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity", ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Light Size", ImGui::DragFloat("##LightSize", &light.LightSize, 0.1f, 0.0f, 200.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp));
+				if (UI::BeginKeyValueTable("DirectionalLightComponentAttributes")) {
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Color", ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity", ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Light Size", ImGui::DragFloat("##LightSize", &light.LightSize, 0.1f, 0.0f, 200.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp));
 
-						UI::EndKeyValueTable();
-					}
-				});
+					UI::EndKeyValueTable();
+				}
+			});
 
-			DrawComponent<PointLightComponent>(ICON_LC_LIGHTBULB " Point Light", [&]()
-				{
-					auto& light = m_Context->GetRegistry()->GetComponent<PointLightComponent>(EditorContext::Get()->SelectedEntity);
+			DrawComponent<PointLightComponent>(ICON_LC_LIGHTBULB " Point Light", [&]() {
+				auto& light = m_Context->GetRegistry()->GetComponent<PointLightComponent>(EditorContext::Get()->SelectedEntity);
 
-					if (UI::BeginKeyValueTable("PointLightComponentAttributes"))
-					{
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Color", ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity", ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
-						UI::EndKeyValueTable();
-					}
-				});
+				if (UI::BeginKeyValueTable("PointLightComponentAttributes")) {
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Color", ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity", ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
+					UI::EndKeyValueTable();
+				}
+			});
 
-			DrawComponent<SpotLightComponent>(ICON_LC_CONE " Spot Light", [&]()
-				{
-					auto& light = m_Context->GetRegistry()->GetComponent<SpotLightComponent>(EditorContext::Get()->SelectedEntity);
+			DrawComponent<SpotLightComponent>(ICON_LC_CONE " Spot Light", [&]() {
+				auto& light = m_Context->GetRegistry()->GetComponent<SpotLightComponent>(EditorContext::Get()->SelectedEntity);
 
-					if (UI::BeginKeyValueTable("SpotLightComponentAttributes"))
-					{
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Color", ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity", ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("InnerConeAngle", ImGui::DragFloat("##InnerConeAngle", &light.InnerConeAngle, 0.1f, 0.0f, light.OuterConeAngle));
-						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("OuterConeAngle", ImGui::DragFloat("##OuterConeAngle", &light.OuterConeAngle, 0.1f, light.InnerConeAngle, 90.0f));
-						UI::EndKeyValueTable();
-					}
-				});
+				if (UI::BeginKeyValueTable("SpotLightComponentAttributes")) {
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Color", ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity", ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("InnerConeAngle", ImGui::DragFloat("##InnerConeAngle", &light.InnerConeAngle, 0.1f, 0.0f, light.OuterConeAngle));
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("OuterConeAngle", ImGui::DragFloat("##OuterConeAngle", &light.OuterConeAngle, 0.1f, light.InnerConeAngle, 90.0f));
+					UI::EndKeyValueTable();
+				}
+			});
 
-			DrawComponent<RigidBodyComponent>(ICON_LC_BOXES " Rigid Body", [&]()
-				{
-					auto& rigidBody = m_Context->GetRegistry()->GetComponent<RigidBodyComponent>(EditorContext::Get()->SelectedEntity);
+			DrawComponent<RigidBodyComponent>(ICON_LC_BOXES " Rigid Body", [&]() {
+				auto& rigidBody = m_Context->GetRegistry()->GetComponent<RigidBodyComponent>(EditorContext::Get()->SelectedEntity);
 
-					if (UI::BeginKeyValueTable("RigidBodyComponentAttributes"))
-					{
-						UI::TableKeyElement("Type");
+				if (UI::BeginKeyValueTable("RigidBodyComponentAttributes")) {
+					UI::TableKeyElement("Type");
 
-						const char* rigidBodyTypeStrings[] = { "Static", "Kinematic", "Dynamic" };
-						uint8_t currentRigidBodyTypeIndex = (uint8_t)rigidBody.Type;
+					const char* rigidBodyTypeStrings[] = { "Static", "Kinematic", "Dynamic" };
+					uint8_t currentRigidBodyTypeIndex = (uint8_t)rigidBody.Type;
 
-						ImGui::PushItemWidth(-1.0f);
-						if (ImGui::BeginCombo("##RigidBodyType", rigidBodyTypeStrings[currentRigidBodyTypeIndex]))
-						{
-							for (int i = 0; i < 3; i++)
-							{
-								bool isSelected = (i == (uint8_t)rigidBody.Type);
-								if (ImGui::Selectable(rigidBodyTypeStrings[i], &isSelected))
-								{
-									currentRigidBodyTypeIndex = i;
-									rigidBody.Type = (RigidBodyComponent::RigidBodyType)i;
-								}
-
-								if (isSelected)
-									ImGui::SetItemDefaultFocus();
+					ImGui::PushItemWidth(-1.0f);
+					if (ImGui::BeginCombo("##RigidBodyType", rigidBodyTypeStrings[currentRigidBodyTypeIndex])) {
+						for (int i = 0; i < 3; i++) {
+							bool isSelected = (i == (uint8_t)rigidBody.Type);
+							if (ImGui::Selectable(rigidBodyTypeStrings[i], &isSelected)) {
+								currentRigidBodyTypeIndex = i;
+								rigidBody.Type = (RigidBodyComponent::RigidBodyType)i;
 							}
-							ImGui::EndCombo();
+
+							if (isSelected)
+								ImGui::SetItemDefaultFocus();
 						}
-
-						FBY_UI_TABLE_ELEMENT("Density", ImGui::DragFloat("##Density", &rigidBody.Density, 0.01f, 0.0f, 1000.0f));
-						FBY_UI_TABLE_ELEMENT("Static Friction", ImGui::DragFloat("##Static_Friction", &rigidBody.StaticFriction, 0.005, 0.0f, 1.0f));
-						FBY_UI_TABLE_ELEMENT("Dynamic Friction", ImGui::DragFloat("##Dynamic_Friction", &rigidBody.DynamicFriction, 0.005, 0.0f, 1.0f));
-						FBY_UI_TABLE_ELEMENT("Restitution", ImGui::DragFloat("##Restitution", &rigidBody.Restitution, 0.005f, 0.0f, 1.0f));
-
-						ImGui::PopItemWidth();
-						UI::EndKeyValueTable();
+						ImGui::EndCombo();
 					}
-				});
 
-			DrawComponent<BoxColliderComponent>(ICON_LC_BOX " Box Collider", [&]()
-				{
-					auto& boxCollider = m_Context->GetRegistry()->GetComponent<BoxColliderComponent>(EditorContext::Get()->SelectedEntity);
+					FBY_UI_TABLE_ELEMENT("Density", ImGui::DragFloat("##Density", &rigidBody.Density, 0.01f, 0.0f, 1000.0f));
+					FBY_UI_TABLE_ELEMENT("Static Friction", ImGui::DragFloat("##Static_Friction", &rigidBody.StaticFriction, 0.005, 0.0f, 1.0f));
+					FBY_UI_TABLE_ELEMENT("Dynamic Friction", ImGui::DragFloat("##Dynamic_Friction", &rigidBody.DynamicFriction, 0.005, 0.0f, 1.0f));
+					FBY_UI_TABLE_ELEMENT("Restitution", ImGui::DragFloat("##Restitution", &rigidBody.Restitution, 0.005f, 0.0f, 1.0f));
 
-					if (UI::BeginKeyValueTable("BoxColliderComponentAttributes"))
-					{
-						FBY_UI_TABLE_ELEMENT("Collider Size", UI::Vec3Control("BoxColliderSize", boxCollider.Size, 1.0f, 0.01f, ImGui::GetColumnWidth()));
-						UI::EndKeyValueTable();
-					};
-				});
+					ImGui::PopItemWidth();
+					UI::EndKeyValueTable();
+				}
+			});
 
-			DrawComponent<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED " Sphere Collider", [&]()
-				{
-					auto& sphereCollider = m_Context->GetRegistry()->GetComponent<SphereColliderComponent>(EditorContext::Get()->SelectedEntity);
+			DrawComponent<BoxColliderComponent>(ICON_LC_BOX " Box Collider", [&]() {
+				auto& boxCollider = m_Context->GetRegistry()->GetComponent<BoxColliderComponent>(EditorContext::Get()->SelectedEntity);
 
-					if (UI::BeginKeyValueTable("SphereColliderComponentAttributes"))
-					{
-						FBY_UI_TABLE_ELEMENT("Radius", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Radius", &sphereCollider.Radius, 0.01f, 0.0f, 0.0f)));
-						UI::EndKeyValueTable();
-					}
-				});
+				if (UI::BeginKeyValueTable("BoxColliderComponentAttributes")) {
+					FBY_UI_TABLE_ELEMENT("Collider Size", UI::Vec3Control("BoxColliderSize", boxCollider.Size, 1.0f, 0.01f, ImGui::GetColumnWidth()));
+					UI::EndKeyValueTable();
+				};
+			});
 
-			DrawComponent<CapsuleColliderComponent>(ICON_LC_PILL " Capsule Collider", [&]()
-				{
-					auto& capsuleCollider = m_Context->GetRegistry()->GetComponent<CapsuleColliderComponent>(EditorContext::Get()->SelectedEntity);
+			DrawComponent<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED " Sphere Collider", [&]() {
+				auto& sphereCollider = m_Context->GetRegistry()->GetComponent<SphereColliderComponent>(EditorContext::Get()->SelectedEntity);
 
-					if (UI::BeginKeyValueTable("CapsuleColliderComponentAttributes"))
-					{
-						UI::TableKeyElement("Axis");
+				if (UI::BeginKeyValueTable("SphereColliderComponentAttributes")) {
+					FBY_UI_TABLE_ELEMENT("Radius", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Radius", &sphereCollider.Radius, 0.01f, 0.0f, 0.0f)));
+					UI::EndKeyValueTable();
+				}
+			});
 
-						const char* axisTypeStrings[] = { "X", "Y", "Z" };
-						uint8_t currentAxisType = (uint8_t)capsuleCollider.Axis;
+			DrawComponent<CapsuleColliderComponent>(ICON_LC_PILL " Capsule Collider", [&]() {
+				auto& capsuleCollider = m_Context->GetRegistry()->GetComponent<CapsuleColliderComponent>(EditorContext::Get()->SelectedEntity);
 
-						ImGui::PushItemWidth(-1.0f);
-						if (ImGui::BeginCombo("##AxisType", axisTypeStrings[currentAxisType]))
-						{
-							for (int i = 0; i < 3; i++)
-							{
-								bool isSelected = (i == (uint8_t)capsuleCollider.Axis);
-								if (ImGui::Selectable(axisTypeStrings[i], &isSelected))
-								{
-									currentAxisType = i;
-									capsuleCollider.Axis = (AxisType)i;
-								}
+				if (UI::BeginKeyValueTable("CapsuleColliderComponentAttributes")) {
+					UI::TableKeyElement("Axis");
 
-								if (isSelected)
-									ImGui::SetItemDefaultFocus();
+					const char* axisTypeStrings[] = { "X", "Y", "Z" };
+					uint8_t currentAxisType = (uint8_t)capsuleCollider.Axis;
+
+					ImGui::PushItemWidth(-1.0f);
+					if (ImGui::BeginCombo("##AxisType", axisTypeStrings[currentAxisType])) {
+						for (int i = 0; i < 3; i++) {
+							bool isSelected = (i == (uint8_t)capsuleCollider.Axis);
+							if (ImGui::Selectable(axisTypeStrings[i], &isSelected)) {
+								currentAxisType = i;
+								capsuleCollider.Axis = (AxisType)i;
 							}
-							ImGui::EndCombo();
+
+							if (isSelected)
+								ImGui::SetItemDefaultFocus();
 						}
-
-						FBY_UI_TABLE_ELEMENT("Radius", ImGui::DragFloat("##Radius", &capsuleCollider.Radius, 0.01f, 0.0f, 0.0f));
-						FBY_UI_TABLE_ELEMENT("Height", ImGui::DragFloat("##Height", &capsuleCollider.Height, 0.01f, 0.0f, 0.0f));
-
-						ImGui::PopItemWidth();
-
-						UI::EndKeyValueTable();
+						ImGui::EndCombo();
 					}
-				});
+
+					FBY_UI_TABLE_ELEMENT("Radius", ImGui::DragFloat("##Radius", &capsuleCollider.Radius, 0.01f, 0.0f, 0.0f));
+					FBY_UI_TABLE_ELEMENT("Height", ImGui::DragFloat("##Height", &capsuleCollider.Height, 0.01f, 0.0f, 0.0f));
+
+					ImGui::PopItemWidth();
+
+					UI::EndKeyValueTable();
+				}
+			});
 
 			ImGui::EndChild();
 		}

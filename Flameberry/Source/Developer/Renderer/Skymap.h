@@ -8,8 +8,7 @@
 
 namespace Flameberry {
 
-	class Skymap : public Asset
-	{
+	class Skymap : public Asset {
 	public:
 		Skymap(const std::filesystem::path& filepath);
 		~Skymap();

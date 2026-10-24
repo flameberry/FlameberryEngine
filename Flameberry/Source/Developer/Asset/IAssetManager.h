@@ -10,8 +10,7 @@ namespace Flameberry {
 
 	using AssetMap = std::map<AssetHandle, Ref<Asset>>;
 
-	class IAssetManager
-	{
+	class IAssetManager {
 	public:
 		IAssetManager()
 			: m_AssetThread(CreateUnique<AssetThread>()) {}

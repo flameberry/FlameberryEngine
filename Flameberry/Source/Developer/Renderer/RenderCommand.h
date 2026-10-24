@@ -9,15 +9,13 @@ namespace Flameberry {
 
 	struct QueueFamilyIndices;
 
-	struct SwapChainDetails
-	{
+	struct SwapChainDetails {
 		VkSurfaceCapabilitiesKHR SurfaceCapabilities;
 		std::vector<VkSurfaceFormatKHR> SurfaceFormats;
 		std::vector<VkPresentModeKHR> PresentationModes;
 	};
 
-	class RenderCommand
-	{
+	class RenderCommand {
 	public:
 		static bool DoesFormatSupportDepthAttachment(VkFormat format);
 		static bool DoesFormatSupportStencilAttachment(VkFormat format);

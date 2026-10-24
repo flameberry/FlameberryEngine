@@ -11,16 +11,14 @@
 
 namespace Flameberry {
 
-	struct Texture2DSpecification
-	{
+	struct Texture2DSpecification {
 		float Width, Height;
 		VkFormat Format;
 		bool GenerateMipmaps = true;
 		VkSampler Sampler = VK_NULL_HANDLE;
 	};
 
-	class Texture2D : public Asset
-	{
+	class Texture2D : public Asset {
 	public:
 		Texture2D(const std::string& texturePath, bool canGenerateMipMaps = true, VkSampler sampler = VK_NULL_HANDLE);
 		Texture2D(const void* data, const Texture2DSpecification& specification);

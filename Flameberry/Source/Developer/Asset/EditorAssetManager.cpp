@@ -12,12 +12,10 @@ namespace Flameberry {
 
 	namespace Utils {
 
-		static bool CreateDirectoriesIfNotExists(const std::filesystem::path& path)
-		{
+		static bool CreateDirectoriesIfNotExists(const std::filesystem::path& path) {
 			std::error_code errcode;
 			std::filesystem::create_directories(path, errcode);
-			if (errcode)
-			{
+			if (errcode) {
 				FBY_ERROR("Failed to create directories: {}", errcode.message());
 				return false;
 			}
@@ -26,18 +24,15 @@ namespace Flameberry {
 
 	} // namespace Utils
 
-	bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
-	{
+	bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const {
 		return m_AssetRegistry.find(handle) != m_AssetRegistry.end();
 	}
 
-	bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const
-	{
+	bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const {
 		return m_LoadedAssets.find(handle) != m_LoadedAssets.end();
 	}
 
-	Ref<Asset> EditorAssetManager::GetAsset(AssetHandle handle)
-	{
+	Ref<Asset> EditorAssetManager::GetAsset(AssetHandle handle) {
 		// 1. Check if handle is valid
 		if (!IsAssetHandleValid(handle))
 			return nullptr;
@@ -52,15 +47,11 @@ namespace Flameberry {
 			return m_MemoryOnlyAssets.at(handle);
 
 		// 3. Check if the asset is loaded
-		if (IsAssetLoaded(handle))
-		{
+		if (IsAssetLoaded(handle)) {
 			asset = m_LoadedAssets.at(handle);
-		}
-		else
-		{
+		} else {
 			// 4. Load Asset if not already loaded
-			if ((asset = AssetImporter::ImportAsset(handle, metadata)))
-			{
+			if ((asset = AssetImporter::ImportAsset(handle, metadata))) {
 				// Set the already known AssetHandle for this asset
 				asset->Handle = handle;
 
@@ -72,8 +63,7 @@ namespace Flameberry {
 		return asset;
 	}
 
-	Ref<Asset> EditorAssetManager::GetAssetAsync(AssetHandle handle)
-	{
+	Ref<Asset> EditorAssetManager::GetAssetAsync(AssetHandle handle) {
 		// 1. Check if handle is valid
 		if (!IsAssetHandleValid(handle))
 			return nullptr;
@@ -88,17 +78,13 @@ namespace Flameberry {
 			return m_MemoryOnlyAssets.at(handle);
 
 		// 3. Check if the asset is loaded
-		if (IsAssetLoaded(handle))
-		{
+		if (IsAssetLoaded(handle)) {
 			asset = m_LoadedAssets.at(handle);
-		}
-		else
-		{
+		} else {
 			// 4. Queue Loading of Asset if not already loaded
 			asset = m_AssetThread->QueueLoad(handle, metadata);
 
-			if (asset)
-			{
+			if (asset) {
 				// Set the already known AssetHandle for this asset
 				asset->Handle = handle;
 
@@ -110,8 +96,7 @@ namespace Flameberry {
 		return asset;
 	}
 
-	AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& filePath)
-	{
+	AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& filePath) {
 		// Check if the asset with filePath is already present in the AssetRegistry
 		if (const auto it = m_FilePathToAssetHandle.find(filePath); it != m_FilePathToAssetHandle.end())
 			return it->second;
@@ -129,8 +114,7 @@ namespace Flameberry {
 		// a new handle will be generated while importing asset
 		AssetHandle handle = 0;
 
-		if (const Ref<Asset> asset = AssetImporter::ImportAsset(handle, metadata))
-		{
+		if (const Ref<Asset> asset = AssetImporter::ImportAsset(handle, metadata)) {
 			m_AssetRegistry[asset->Handle] = metadata;
 			m_LoadedAssets[asset->Handle] = asset;
 
@@ -144,8 +128,7 @@ namespace Flameberry {
 		return 0;
 	}
 
-	void EditorAssetManager::AddMemoryOnlyAsset(const Ref<Asset>& asset)
-	{
+	void EditorAssetManager::AddMemoryOnlyAsset(const Ref<Asset>& asset) {
 		AssetMetadata metadata;
 		metadata.Type = asset->GetAssetType();
 		metadata.FilePath = "";
@@ -155,18 +138,15 @@ namespace Flameberry {
 		m_MemoryOnlyAssets[asset->Handle] = asset;
 	}
 
-	void EditorAssetManager::SerializeAssetRegistry()
-	{
+	void EditorAssetManager::SerializeAssetRegistry() {
 		YAML::Emitter out;
 
 		out << YAML::BeginMap; // Root
 		out << YAML::Key << "AssetRegistry" << YAML::Value;
 
 		out << YAML::BeginSeq;
-		for (const auto& [handle, metadata] : m_AssetRegistry)
-		{
-			if (!metadata.IsMemoryAsset)
-			{
+		for (const auto& [handle, metadata] : m_AssetRegistry) {
+			if (!metadata.IsMemoryAsset) {
 				out << YAML::BeginMap;
 				out << YAML::Key << "Handle" << YAML::Value << handle;
 				out << YAML::Key << "FilePath" << YAML::Value << metadata.FilePath;
@@ -185,8 +165,7 @@ namespace Flameberry {
 		fout << out.c_str();
 	}
 
-	bool EditorAssetManager::DeserializeAssetRegistry(const std::filesystem::path& path)
-	{
+	bool EditorAssetManager::DeserializeAssetRegistry(const std::filesystem::path& path) {
 		std::ifstream in(path);
 		std::stringstream ss;
 		ss << in.rdbuf();
@@ -194,14 +173,12 @@ namespace Flameberry {
 		YAML::Node data = YAML::Load(ss.str());
 		YAML::Node root = data["AssetRegistry"];
 
-		if (!root)
-		{
+		if (!root) {
 			FBY_ERROR("Failed to deserialize Asset Registry: Wrong format");
 			return false;
 		}
 
-		for (const auto& node : root)
-		{
+		for (const auto& node : root) {
 			AssetHandle handle = node["Handle"].as<AssetHandle>();
 			auto& metadata = m_AssetRegistry[handle];
 			metadata.FilePath = node["FilePath"].as<std::string>();

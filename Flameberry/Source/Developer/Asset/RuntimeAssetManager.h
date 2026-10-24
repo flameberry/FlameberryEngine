@@ -4,8 +4,7 @@
 
 namespace Flameberry {
 
-	class RuntimeAssetManager : public IAssetManager
-	{
+	class RuntimeAssetManager : public IAssetManager {
 	public:
 		Ref<Asset> GetAsset(AssetHandle handle) override;
 		Ref<Asset> GetAssetAsync(AssetHandle handle) override;

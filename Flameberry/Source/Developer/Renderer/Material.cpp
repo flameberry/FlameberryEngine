@@ -5,19 +5,16 @@
 namespace Flameberry {
 
 	Material::Material(const Ref<Shader>& shader)
-		: m_Shader(shader)
-	{
+		: m_Shader(shader) {
 		uint32_t totalSize = 0;
 		// Arranging resources for the push constants
 		// Currently the push constant blocks which are material specific (i.e. not Renderer Only) are accumulated and the combined data is stored together
 		// As of now I haven't encountered a case where multiple material specific push constant blocks are used
-		for (const auto& specification : m_Shader->GetPushConstantSpecifications())
-		{
+		for (const auto& specification : m_Shader->GetPushConstantSpecifications()) {
 			// This is to remind the developer to implement this case properly when such a shader is written
 			FBY_ASSERT(!m_PushConstantBufferSize, "Multiple push constants not handled correctly yet!");
 
-			if (!specification.RendererOnly)
-			{
+			if (!specification.RendererOnly) {
 				// This is to ensure only the first time the offset should be set
 				if (m_PushConstantBufferOffset == 0)
 					m_PushConstantBufferOffset = totalSize;
@@ -38,13 +35,10 @@ namespace Flameberry {
 		std::vector<VkDescriptorSetLayoutBinding> vulkanDescSetBindings;
 		uint32_t index = 0;
 
-		for (const auto& reflectionDescSet : reflectionDescriptorSets)
-		{
-			for (uint32_t i = 0; i < reflectionDescSet.BindingCount; i++)
-			{
+		for (const auto& reflectionDescSet : reflectionDescriptorSets) {
+			for (uint32_t i = 0; i < reflectionDescSet.BindingCount; i++) {
 				// This ensures that the Renderer Only Descriptor Sets are not handled or stored by the Material class
-				if (descriptorBindings[index].RendererOnly)
-				{
+				if (descriptorBindings[index].RendererOnly) {
 					index++;
 					continue;
 				}
@@ -61,8 +55,7 @@ namespace Flameberry {
 			}
 
 			// Create the descriptor set if the descriptor bindings are not RendererOnly
-			if (vulkanDescSetBindings.size())
-			{
+			if (vulkanDescSetBindings.size()) {
 				DescriptorSetSpecification descSetSpecification;
 				descSetSpecification.Pool = VulkanContext::GetCurrentGlobalDescriptorPool();
 
@@ -84,8 +77,7 @@ namespace Flameberry {
 		}
 	}
 
-	Material::~Material()
-	{
+	Material::~Material() {
 		if (m_PushConstantBuffer)
 			free(m_PushConstantBuffer);
 	}

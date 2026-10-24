@@ -7,15 +7,13 @@
 
 namespace Flameberry {
 
-	enum class EditorState : uint8_t
-	{
+	enum class EditorState : uint8_t {
 		Edit = 0,
 		Play = 1,
 		Simulate = 2,
 	};
 
-	class EditorLayer : public Layer
-	{
+	class EditorLayer : public Layer {
 	public:
 		EditorLayer(const Ref<Project>& project);
 		virtual ~EditorLayer() = default;
@@ -109,10 +107,8 @@ namespace Flameberry {
 	};
 
 	template <typename Fn>
-	void EditorLayer::UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func)
-	{
-		if (m_DidViewportBegin)
-		{
+	void EditorLayer::UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func) {
+		if (m_DidViewportBegin) {
 			ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
 				| ImGuiWindowFlags_AlwaysAutoResize
 				| ImGuiWindowFlags_NoSavedSettings

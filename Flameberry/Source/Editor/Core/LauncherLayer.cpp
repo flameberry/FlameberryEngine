@@ -8,12 +8,10 @@
 namespace Flameberry {
 
 	LauncherLayer::LauncherLayer(const std::function<void(const Ref<Project>&)>& callback)
-		: m_OpenProjectCallback(callback)
-	{
+		: m_OpenProjectCallback(callback) {
 	}
 
-	void LauncherLayer::OnCreate()
-	{
+	void LauncherLayer::OnCreate() {
 		auto& window = Application::Get().GetWindow();
 		constexpr int width = 1280 * 0.7f, height = 720 * 0.7f;
 
@@ -26,21 +24,18 @@ namespace Flameberry {
 		FBY_LOG("Found user projects: {}", m_ProjectRegistry.size());
 	}
 
-	void LauncherLayer::OnUpdate(float delta)
-	{
+	void LauncherLayer::OnUpdate(float delta) {
 		if (m_ShouldClose)
 			m_OpenProjectCallback(m_Project);
 	}
 
-	void LauncherLayer::OnUIRender()
-	{
+	void LauncherLayer::OnUIRender() {
 		constexpr ImVec2 buttonSize{ 200.0f, 40.0f };
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("Project Launcher");
 		ImGui::PopStyleVar();
 
-		if (ImGui::Button("Clear Deleted Projects"))
-		{
+		if (ImGui::Button("Clear Deleted Projects")) {
 			ProjectRegistryManager::ClearAllNonExistingProjectRegistryEntries();
 			m_ProjectRegistry = ProjectRegistryManager::LoadEntireProjectRegistry();
 		}
@@ -50,11 +45,9 @@ namespace Flameberry {
 
 		ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding);
 
-		for (const auto& entry : m_ProjectRegistry)
-		{
+		for (const auto& entry : m_ProjectRegistry) {
 			const std::string projectFilePathStr = entry.ProjectFilePath.string();
-			if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), projectFilePathStr.c_str(), !std::filesystem::exists(entry.ProjectFilePath)))
-			{
+			if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), projectFilePathStr.c_str(), !std::filesystem::exists(entry.ProjectFilePath))) {
 				// Open Project
 				m_Project = Project::Load(entry.ProjectFilePath);
 				m_ShouldClose = true;
@@ -72,17 +65,14 @@ namespace Flameberry {
 
 		UI_NewProjectPopup();
 
-		if (UI::AlignedButton("Open Project", buttonSize))
-		{
+		if (UI::AlignedButton("Open Project", buttonSize)) {
 			// Open a project browser window and if an existing project is selected then...
 			std::string path = Platform::OpenFile("Flameberry Project File (*.fbproj)\0.fbproj\0");
-			if (!path.empty())
-			{
+			if (!path.empty()) {
 				m_Project = Project::Load(path);
 
 				ProjectRegistryEntry entry{ m_Project->GetConfig().Name, path };
-				if (std::find(m_ProjectRegistry.begin(), m_ProjectRegistry.end(), entry) == m_ProjectRegistry.end())
-				{
+				if (std::find(m_ProjectRegistry.begin(), m_ProjectRegistry.end(), entry) == m_ProjectRegistry.end()) {
 					// The project didn't exist before in the ProjectRegistry
 					ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
 				}
@@ -94,16 +84,13 @@ namespace Flameberry {
 		ImGui::End();
 	}
 
-	void LauncherLayer::OnEvent(Event& e)
-	{
+	void LauncherLayer::OnEvent(Event& e) {
 	}
 
-	void LauncherLayer::OnDestroy()
-	{
+	void LauncherLayer::OnDestroy() {
 	}
 
-	void LauncherLayer::UI_NewProjectPopup()
-	{
+	void LauncherLayer::UI_NewProjectPopup() {
 		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(ImVec2(1280 / 3, 720 / 4));
@@ -112,8 +99,7 @@ namespace Flameberry {
 		const bool beginPopupModal = ImGui::BeginPopupModal("New Project", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::PopStyleVar();
 
-		if (beginPopupModal)
-		{
+		if (beginPopupModal) {
 			ImGuiIO& io = ImGui::GetIO();
 			auto& bigFont = io.Fonts->Fonts[0];
 
@@ -127,39 +113,30 @@ namespace Flameberry {
 			UI::InputBox("##ProjectNameInput", inputBoxWidth, &m_ProjectNameBuffer, "Project Name...");
 			UI::InputBox("##ProjectPathInput", inputBoxWidth, &m_ProjectPathBuffer, "Enter a directory...");
 			ImGui::SameLine();
-			if (ImGui::Button("..."))
-			{
+			if (ImGui::Button("...")) {
 				if (const std::string directoryPath = Platform::OpenFolder(); !directoryPath.empty())
 					m_ProjectPathBuffer = directoryPath;
 			}
 
 			ImGui::Spacing();
 
-			if (ImGui::Button("Create", ImVec2(120, 0)))
-			{
+			if (ImGui::Button("Create", ImVec2(120, 0))) {
 				std::filesystem::path projectParentPath(m_ProjectPathBuffer);
-				if (!projectParentPath.empty() && std::filesystem::exists(projectParentPath))
-				{
-					if (!m_ProjectNameBuffer.empty())
-					{
-						if ((m_Project = Project::CreateProjectOnDisk(projectParentPath, m_ProjectNameBuffer)))
-						{
+				if (!projectParentPath.empty() && std::filesystem::exists(projectParentPath)) {
+					if (!m_ProjectNameBuffer.empty()) {
+						if ((m_Project = Project::CreateProjectOnDisk(projectParentPath, m_ProjectNameBuffer))) {
 							// Finally add project entry to GlobalProjectRegistry
 							ProjectRegistryManager::AppendEntryToGlobalRegistry(m_Project.get());
 
 							// Signal callback to EditorApplication class
 							m_ShouldClose = true;
-						}
-						else
-						{
+						} else {
 							const std::string projectDirectoryStr = m_Project->GetProjectDirectory().string();
 							ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s is not empty!", projectDirectoryStr.c_str());
 						}
-					}
-					else
+					} else
 						FBY_ERROR("Failed to create project: Project name is empty!");
-				}
-				else
+				} else
 					FBY_ERROR("Failed to create project: Either project path is empty or it does not exist!");
 			}
 

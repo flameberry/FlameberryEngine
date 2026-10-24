@@ -10,40 +10,32 @@
 namespace YAML {
 
 	template <>
-	struct convert<std::filesystem::path>
-	{
-		static Node encode(const std::filesystem::path& rhs)
-		{
+	struct convert<std::filesystem::path> {
+		static Node encode(const std::filesystem::path& rhs) {
 			return Node(rhs.string());
 		}
 
-		static bool decode(const Node& node, std::filesystem::path& rhs)
-		{
+		static bool decode(const Node& node, std::filesystem::path& rhs) {
 			rhs = std::filesystem::path(node.as<std::string>());
 			return true;
 		}
 	};
 
 	template <>
-	struct convert<Flameberry::UUID>
-	{
-		static Node encode(Flameberry::UUID rhs)
-		{
+	struct convert<Flameberry::UUID> {
+		static Node encode(Flameberry::UUID rhs) {
 			return Node((Flameberry::UUID::ValueType)rhs);
 		}
 
-		static bool decode(const Node& node, Flameberry::UUID& rhs)
-		{
+		static bool decode(const Node& node, Flameberry::UUID& rhs) {
 			rhs = node.as<Flameberry::UUID::ValueType>();
 			return true;
 		}
 	};
 
 	template <>
-	struct convert<glm::vec3>
-	{
-		static Node encode(const glm::vec3& rhs)
-		{
+	struct convert<glm::vec3> {
+		static Node encode(const glm::vec3& rhs) {
 			Node node;
 			node.push_back(rhs.x);
 			node.push_back(rhs.y);
@@ -52,8 +44,7 @@ namespace YAML {
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec3& rhs)
-		{
+		static bool decode(const Node& node, glm::vec3& rhs) {
 			if (!node.IsSequence() || node.size() != 3)
 				return false;
 
@@ -65,10 +56,8 @@ namespace YAML {
 	};
 
 	template <>
-	struct convert<glm::vec4>
-	{
-		static Node encode(const glm::vec4& rhs)
-		{
+	struct convert<glm::vec4> {
+		static Node encode(const glm::vec4& rhs) {
 			Node node;
 			node.push_back(rhs.x);
 			node.push_back(rhs.y);
@@ -78,8 +67,7 @@ namespace YAML {
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec4& rhs)
-		{
+		static bool decode(const Node& node, glm::vec4& rhs) {
 			if (!node.IsSequence() || node.size() != 4)
 				return false;
 

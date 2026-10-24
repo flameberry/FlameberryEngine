@@ -9,10 +9,8 @@
 
 namespace Flameberry {
 
-	VkImageView Image::GetVulkanImageView(int idx) const
-	{
-		switch (m_Specification.ViewCreationMode)
-		{
+	VkImageView Image::GetVulkanImageView(int idx) const {
+		switch (m_Specification.ViewCreationMode) {
 			case ImageViewCreationMode::CreateUsingGivenSpecification:
 				if (idx > 0)
 					FBY_WARN("Cannot access image view at index: {} - Image was created with ImageViewCreationMode::CreateUsingGivenSpecification mode.", idx);
@@ -34,18 +32,15 @@ namespace Flameberry {
 	}
 
 	Image::Image(const ImageSpecification& specification)
-		: m_Specification(specification), m_ActiveImageLayout(VK_IMAGE_LAYOUT_UNDEFINED)
-	{
+		: m_Specification(specification), m_ActiveImageLayout(VK_IMAGE_LAYOUT_UNDEFINED) {
 		Invalidate();
 	}
 
-	Image::~Image()
-	{
+	Image::~Image() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 		// Destroy Image Views
-		switch (m_Specification.ViewCreationMode)
-		{
+		switch (m_Specification.ViewCreationMode) {
 			case ImageViewCreationMode::CreateUsingGivenSpecification:
 				vkDestroyImageView(device, m_VulkanImageView, nullptr);
 				break;
@@ -64,8 +59,7 @@ namespace Flameberry {
 		vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
 	}
 
-	void Image::Invalidate()
-	{
+	void Image::Invalidate() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
 
@@ -98,10 +92,8 @@ namespace Flameberry {
 		VK_CHECK_RESULT(vkAllocateMemory(device, &allocInfo, nullptr, &m_VkImageDeviceMemory));
 		vkBindImageMemory(device, m_VulkanImage, m_VkImageDeviceMemory, 0);
 
-		switch (m_Specification.ViewCreationMode)
-		{
-			case ImageViewCreationMode::CreateUsingGivenSpecification:
-			{
+		switch (m_Specification.ViewCreationMode) {
+			case ImageViewCreationMode::CreateUsingGivenSpecification: {
 				VkImageViewCreateInfo vulkanImageViewCreateInfo{};
 				vulkanImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 				vulkanImageViewCreateInfo.image = m_VulkanImage;
@@ -123,12 +115,10 @@ namespace Flameberry {
 				VK_CHECK_RESULT(vkCreateImageView(device, &vulkanImageViewCreateInfo, nullptr, &m_VulkanImageView));
 				break;
 			}
-			case ImageViewCreationMode::CreateOnePerMipMap:
-			{
+			case ImageViewCreationMode::CreateOnePerMipMap: {
 				m_VulkanImageViewVector.resize(m_Specification.MipLevels);
 
-				for (int i = 0; i < m_Specification.MipLevels; i++)
-				{
+				for (int i = 0; i < m_Specification.MipLevels; i++) {
 					VkImageViewCreateInfo vulkanImageViewCreateInfo{};
 
 					vulkanImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -160,13 +150,11 @@ namespace Flameberry {
 		}
 	}
 
-	void Image::OnResize(uint32_t width, uint32_t height, uint32_t mipLevels)
-	{
+	void Image::OnResize(uint32_t width, uint32_t height, uint32_t mipLevels) {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 		// Destroy Image Views
-		switch (m_Specification.ViewCreationMode)
-		{
+		switch (m_Specification.ViewCreationMode) {
 			case ImageViewCreationMode::CreateUsingGivenSpecification:
 				vkDestroyImageView(device, m_VulkanImageView, nullptr);
 				break;
@@ -194,8 +182,7 @@ namespace Flameberry {
 		Invalidate();
 	}
 
-	void Image::GenerateMipmaps(VkImageLayout oldLayout, VkImageLayout newLayout)
-	{
+	void Image::GenerateMipmaps(VkImageLayout oldLayout, VkImageLayout newLayout) {
 		const auto& device = VulkanContext::GetCurrentDevice();
 		VkCommandBuffer cmdBuffer;
 		device->BeginSingleTimeCommandBuffer(cmdBuffer);
@@ -203,8 +190,7 @@ namespace Flameberry {
 		device->EndSingleTimeCommandBuffer(cmdBuffer);
 	}
 
-	void Image::CmdGenerateMipmaps(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout)
-	{
+	void Image::CmdGenerateMipmaps(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout) {
 		VkFormatProperties formatProperties;
 		vkGetPhysicalDeviceFormatProperties(VulkanContext::GetPhysicalDevice(), m_Specification.Format, &formatProperties);
 		FBY_ASSERT(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT, "Texture Image Format does not support linear blitting!");
@@ -222,8 +208,7 @@ namespace Flameberry {
 		int32_t mipWidth = m_Specification.Width;
 		int32_t mipHeight = m_Specification.Height;
 
-		for (uint32_t i = 1; i < m_Specification.MipLevels; i++)
-		{
+		for (uint32_t i = 1; i < m_Specification.MipLevels; i++) {
 			barrier.subresourceRange.baseMipLevel = i - 1;
 			barrier.oldLayout = oldLayout;
 			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -286,8 +271,7 @@ namespace Flameberry {
 			1, &barrier);
 	}
 
-	void Image::WriteFromBuffer(VkBuffer srcBuffer)
-	{
+	void Image::WriteFromBuffer(VkBuffer srcBuffer) {
 		const auto& device = VulkanContext::GetCurrentDevice();
 
 		VkCommandBuffer commandBuffer;
@@ -310,8 +294,7 @@ namespace Flameberry {
 		device->EndSingleTimeCommandBuffer(commandBuffer);
 	}
 
-	void Image::TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask)
-	{
+	void Image::TransitionLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask) {
 		const auto& device = VulkanContext::GetCurrentDevice();
 		VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;
 
@@ -320,8 +303,7 @@ namespace Flameberry {
 		device->EndSingleTimeCommandBuffer(cmdBuffer);
 	}
 
-	void Image::CmdTransitionLayout(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask)
-	{
+	void Image::CmdTransitionLayout(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask) {
 		VkImageSubresourceRange subresourceRange = {};
 		subresourceRange.aspectMask = aspectMask;
 		subresourceRange.baseMipLevel = 0;
@@ -341,8 +323,7 @@ namespace Flameberry {
 		// Source layouts (old)
 		// Source access mask controls actions that have to be finished on the old layout
 		// before it will be transitioned to the new layout
-		switch (oldLayout)
-		{
+		switch (oldLayout) {
 			case VK_IMAGE_LAYOUT_UNDEFINED:
 				// Image layout is undefined (or does not matter)
 				// Only valid as initial layout
@@ -399,8 +380,7 @@ namespace Flameberry {
 
 		// Target layouts (new)
 		// Destination access mask controls the dependency for the new image layout
-		switch (newLayout)
-		{
+		switch (newLayout) {
 			case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 				// Image will be used as a transfer destination
 				// Make sure any writes to the image have been finished
@@ -461,8 +441,7 @@ namespace Flameberry {
 
 	namespace Utils {
 
-		VkImageView CreateImageViewUsingSpecification(const VkImage vulkanImage, const VkFormat format, const ImageViewSpecification& viewSpecification)
-		{
+		VkImageView CreateImageViewUsingSpecification(const VkImage vulkanImage, const VkFormat format, const ImageViewSpecification& viewSpecification) {
 			VkImageView vulkanImageView;
 
 			VkImageViewCreateInfo vulkanImageViewCreateInfo{};

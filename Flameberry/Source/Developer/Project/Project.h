@@ -8,8 +8,7 @@
 
 namespace Flameberry {
 
-	struct ProjectConfig
-	{
+	struct ProjectConfig {
 		std::filesystem::path AssetDirectory /* = "Content" */;
 		AssetHandle StartScene = 0;
 
@@ -18,8 +17,7 @@ namespace Flameberry {
 		std::string Name = "FlameberryProject";
 	};
 
-	class Project
-	{
+	class Project {
 	public:
 		static Ref<Project> Load(const std::filesystem::path& path);
 

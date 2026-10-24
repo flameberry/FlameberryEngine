@@ -9,8 +9,7 @@
 
 namespace Flameberry {
 
-	class Material
-	{
+	class Material {
 	public:
 		Material(const Ref<Shader>& shader);
 		~Material();
@@ -22,8 +21,7 @@ namespace Flameberry {
 
 		// This function should be used to set any raw value like floats/ints etc.
 		template <typename T>
-		void Set(const std::string& uniformName, const T& value)
-		{
+		void Set(const std::string& uniformName, const T& value) {
 			const auto& uniformVar = m_Shader->GetUniform(uniformName);
 			FBY_ASSERT(sizeof(T) == uniformVar.Size, "Size of uniform variable {} ({}) does not match the size of the value ({}) given", uniformName, uniformVar.Size, sizeof(T));
 			FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize, "Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
@@ -32,8 +30,7 @@ namespace Flameberry {
 		}
 
 		// This function can be used to set arrays or types like glm::vecx
-		void Set(const std::string& uniformName, const void* data, std::size_t size)
-		{
+		void Set(const std::string& uniformName, const void* data, std::size_t size) {
 			const auto& uniformVar = m_Shader->GetUniform(uniformName);
 			FBY_ASSERT(size == uniformVar.Size, "Size of uniform variable {} ({}) does not match the size of the value ({}) given", uniformName, uniformVar.Size, size);
 			FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize, "Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
@@ -42,8 +39,7 @@ namespace Flameberry {
 		}
 
 		template <>
-		void Set<Ref<Texture2D>>(const std::string& uniformName, const Ref<Texture2D>& texture)
-		{
+		void Set<Ref<Texture2D>>(const std::string& uniformName, const Ref<Texture2D>& texture) {
 			const auto& binding = m_Shader->GetBinding(uniformName);
 			FBY_ASSERT(binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor", uniformName);
 
@@ -58,8 +54,7 @@ namespace Flameberry {
 		}
 
 		// This one looks ugly, maybe the arguments should be abstracted away somehow...
-		void Set(const std::string& uniformName, const Ref<Image>& image, VkSampler sampler, VkImageLayout imageLayout)
-		{
+		void Set(const std::string& uniformName, const Ref<Image>& image, VkSampler sampler, VkImageLayout imageLayout) {
 			const auto& binding = m_Shader->GetBinding(uniformName);
 			FBY_ASSERT(binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor", uniformName);
 
@@ -75,8 +70,7 @@ namespace Flameberry {
 
 		// This function is a bit dodgy and the behaviour is not tested yet, be cautious
 		template <>
-		void Set<Ref<Buffer>>(const std::string& uniformName, const Ref<Buffer>& uniformBuffer)
-		{
+		void Set<Ref<Buffer>>(const std::string& uniformName, const Ref<Buffer>& uniformBuffer) {
 			const auto& binding = m_Shader->GetBinding(uniformName);
 			FBY_ASSERT(!binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not a Buffer Descriptor", uniformName);
 
@@ -94,8 +88,7 @@ namespace Flameberry {
 #if 1
 		// This is strictly a developer/debug only function to test if the data is stored appropriately in the m_PushConstantBuffer
 		template <typename T>
-		T Get(const std::string& uniformName)
-		{
+		T Get(const std::string& uniformName) {
 			const auto& uniformVar = m_Shader->GetUniform(uniformName);
 			FBY_ASSERT(sizeof(T) == uniformVar.Size, "Size of uniform variable {} does not match the size of the type given!", uniformName);
 			FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize, "Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
@@ -105,8 +98,7 @@ namespace Flameberry {
 
 		// This is strictly a developer/debug only function to test if the data is stored appropriately in the m_PushConstantBuffer
 		template <typename T>
-		const T* GetArray(const std::string& uniformName)
-		{
+		const T* GetArray(const std::string& uniformName) {
 			const auto& uniformVar = m_Shader->GetUniform(uniformName);
 			FBY_ASSERT(uniformVar.Size % sizeof(T) == 0, "Size of uniform array {} is not a multiple of the size of the type given!", uniformName);
 			FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize, "Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
@@ -117,8 +109,7 @@ namespace Flameberry {
 	protected:
 		// This function is to be used by MaterialAsset class to access the data easily every frame without having to refer uniforms by their names
 		template <typename T>
-		inline T& GetUniformDataReferenceAs()
-		{
+		inline T& GetUniformDataReferenceAs() {
 			FBY_ASSERT(sizeof(T) == m_PushConstantBufferSize, "Size of Push Constant Buffer({}) is not equal to the Type({}) provided", m_PushConstantBufferSize, sizeof(T));
 			return (T&)*reinterpret_cast<T*>(m_PushConstantBuffer);
 		}
