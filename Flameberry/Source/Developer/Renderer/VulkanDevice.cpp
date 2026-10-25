@@ -9,11 +9,12 @@ namespace Flameberry {
 	VulkanDevice::VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow)
 		: m_VulkanPhysicalDevice(physicalDevice) {
 		// Getting Queue Family Indices
-		m_QueueFamilyIndices = RenderCommand::GetQueueFamilyIndices(m_VulkanPhysicalDevice, pVulkanWindow->GetWindowSurface());
+		m_QueueFamilyIndices =
+			RenderCommand::GetQueueFamilyIndices(m_VulkanPhysicalDevice, pVulkanWindow->GetWindowSurface());
 
-		std::vector<VkDeviceQueueCreateInfo> vulkanDeviceQueueCreateInfos = CreateDeviceQueueInfos({ m_QueueFamilyIndices.GraphicsQueueFamilyIndex,
-			m_QueueFamilyIndices.ComputeQueueFamilyIndex,
-			m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex });
+		std::vector<VkDeviceQueueCreateInfo> vulkanDeviceQueueCreateInfos = CreateDeviceQueueInfos(
+			{ m_QueueFamilyIndices.GraphicsQueueFamilyIndex, m_QueueFamilyIndices.ComputeQueueFamilyIndex,
+				m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex });
 
 		VkPhysicalDeviceFeatures2 deviceFeatures2{};
 		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -38,7 +39,8 @@ namespace Flameberry {
 
 		vk_device_create_info.pEnabledFeatures = nullptr;
 
-		vk_device_create_info.enabledExtensionCount = static_cast<uint32_t>(VulkanContext::GetVulkanDeviceExtensions().size());
+		vk_device_create_info.enabledExtensionCount =
+			static_cast<uint32_t>(VulkanContext::GetVulkanDeviceExtensions().size());
 		vk_device_create_info.ppEnabledExtensionNames = VulkanContext::GetVulkanDeviceExtensions().data();
 
 		// Enable multiview
@@ -63,11 +65,14 @@ namespace Flameberry {
 
 		vkGetDeviceQueue(m_VulkanDevice, m_QueueFamilyIndices.GraphicsQueueFamilyIndex, 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_VulkanDevice, m_QueueFamilyIndices.ComputeQueueFamilyIndex, 0, &m_ComputeQueue);
-		vkGetDeviceQueue(m_VulkanDevice, m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex, 0, &m_PresentationQueue);
+		vkGetDeviceQueue(
+			m_VulkanDevice, m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex, 0, &m_PresentationQueue);
 
 		// Creating Graphics and Compute Queue Command Pools
-		m_GraphicsQueueCommandPool = CreateCommandPool(m_QueueFamilyIndices.GraphicsQueueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-		m_ComputeQueueCommandPool = CreateCommandPool(m_QueueFamilyIndices.ComputeQueueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+		m_GraphicsQueueCommandPool = CreateCommandPool(
+			m_QueueFamilyIndices.GraphicsQueueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+		m_ComputeQueueCommandPool = CreateCommandPool(
+			m_QueueFamilyIndices.ComputeQueueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 	}
 
 	VkCommandPool VulkanDevice::CreateCommandPool(uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags) const {
@@ -85,11 +90,14 @@ namespace Flameberry {
 		std::scoped_lock lock(m_SingleTimeCommandPoolsMutex);
 
 		ThreadCommandPools& threadCommandPools = m_SingleTimeCommandPools[std::this_thread::get_id()];
-		VkCommandPool& commandPool = isCompute ? threadCommandPools.ComputeCommandPool : threadCommandPools.GraphicsCommandPool;
+		VkCommandPool& commandPool =
+			isCompute ? threadCommandPools.ComputeCommandPool : threadCommandPools.GraphicsCommandPool;
 
 		// Lazily create the pool the first time this thread needs it
 		if (commandPool == VK_NULL_HANDLE)
-			commandPool = CreateCommandPool(isCompute ? m_QueueFamilyIndices.ComputeQueueFamilyIndex : m_QueueFamilyIndices.GraphicsQueueFamilyIndex, VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+			commandPool = CreateCommandPool(isCompute ? m_QueueFamilyIndices.ComputeQueueFamilyIndex
+													  : m_QueueFamilyIndices.GraphicsQueueFamilyIndex,
+				VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 		return commandPool;
 	}
 
@@ -140,7 +148,8 @@ namespace Flameberry {
 		vkDestroyDevice(m_VulkanDevice, nullptr);
 	}
 
-	std::vector<VkDeviceQueueCreateInfo> VulkanDevice::CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices) {
+	std::vector<VkDeviceQueueCreateInfo> VulkanDevice::CreateDeviceQueueInfos(
+		const std::set<uint32_t>& uniqueQueueFamilyIndices) {
 		constexpr float queuePriority = 1.0f;
 		std::vector<VkDeviceQueueCreateInfo> vulkanDeviceQueueCreateInfos;
 		for (uint32_t uniqueQueueFamilyIndex : uniqueQueueFamilyIndices) {

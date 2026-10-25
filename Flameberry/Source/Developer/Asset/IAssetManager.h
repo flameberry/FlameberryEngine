@@ -12,8 +12,7 @@ namespace Flameberry {
 
 	class IAssetManager {
 	public:
-		IAssetManager()
-			: m_AssetThread(CreateUnique<AssetThread>()) {}
+		IAssetManager() : m_AssetThread(CreateUnique<AssetThread>()) {}
 
 		virtual ~IAssetManager() = default;
 		virtual Ref<Asset> GetAsset(AssetHandle handle) = 0;

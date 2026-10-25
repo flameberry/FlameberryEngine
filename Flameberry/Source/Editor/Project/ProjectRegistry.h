@@ -9,12 +9,14 @@ namespace Flameberry {
 		std::filesystem::path ProjectFilePath;
 
 		bool operator==(const ProjectRegistryEntry& other) const {
-			// This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
+			// This assumes that ProjectName will always be derived from the project file name so no need to compare
+			// `ProjectName`
 			return ProjectFilePath == other.ProjectFilePath;
 		}
 
 		bool operator!=(const ProjectRegistryEntry& other) const {
-			// This assumes that ProjectName will always be derived from the project file name so no need to compare `ProjectName`
+			// This assumes that ProjectName will always be derived from the project file name so no need to compare
+			// `ProjectName`
 			return !(*this == other);
 		}
 
@@ -31,7 +33,8 @@ namespace Flameberry {
 		static void ClearAllNonExistingProjectRegistryEntries();
 
 	private:
-		constexpr static const char* c_GlobalProjectRegistryPath = FBY_PROJECT_DIR "Flameberry/Config/ProjectRegistry.yaml";
+		constexpr static const char* c_GlobalProjectRegistryPath =
+			FBY_PROJECT_DIR "Flameberry/Config/ProjectRegistry.yaml";
 	};
 
 } // namespace Flameberry

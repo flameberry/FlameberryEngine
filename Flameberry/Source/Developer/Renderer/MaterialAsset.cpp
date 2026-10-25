@@ -10,17 +10,27 @@
 namespace Flameberry {
 
 	MaterialAsset::MaterialAsset(const std::string& name)
-		: m_Name(name), m_MaterialRef(CreateRef<Material>(ShaderLibrary::Get("PBR"))) // TODO: This should be changed immediately
+		: m_Name(name)
+		, m_MaterialRef(CreateRef<Material>(ShaderLibrary::Get("PBR"))) // TODO: This should be changed immediately
 	{
-		// This is here to remind the developer to update the GPU representation of the Material Struct when it is updated in the shader
-		FBY_ASSERT(sizeof(MaterialStructGPURepresentation) == m_MaterialRef->GetUniformDataSize(), "The GPU Representation of Material has a size ({}) which is not the same as actual Uniform size ({})", sizeof(MaterialStructGPURepresentation), m_MaterialRef->GetUniformDataSize());
+		// This is here to remind the developer to update the GPU representation of the Material Struct when it is
+		// updated in the shader
+		FBY_ASSERT(sizeof(MaterialStructGPURepresentation) == m_MaterialRef->GetUniformDataSize(),
+			"The GPU Representation of Material has a size ({}) which is not the same as actual Uniform size ({})",
+			sizeof(MaterialStructGPURepresentation), m_MaterialRef->GetUniformDataSize());
 
-		// This is very frustrating to do, otherwise Vulkan complains about no vkUpdateDescriptorSet called on certain bindings
-		m_MaterialRef->Set("u_AlbedoMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_MaterialRef->Set("u_NormalMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_MaterialRef->Set("u_RoughnessMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_MaterialRef->Set("u_AmbientMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_MaterialRef->Set("u_MetallicMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		// This is very frustrating to do, otherwise Vulkan complains about no vkUpdateDescriptorSet called on certain
+		// bindings
+		m_MaterialRef->Set("u_AlbedoMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_MaterialRef->Set("u_NormalMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_MaterialRef->Set("u_RoughnessMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_MaterialRef->Set("u_AmbientMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_MaterialRef->Set("u_MetallicMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void MaterialAsset::SetAlbedoMap(AssetHandle handle) {
@@ -53,7 +63,8 @@ namespace Flameberry {
 		m_MaterialRef->Set("u_MetallicMapSampler", map);
 	}
 
-	void MaterialAssetSerializer::Serialize(const Ref<MaterialAsset>& materialAsset, const std::filesystem::path& path) {
+	void MaterialAssetSerializer::Serialize(
+		const Ref<MaterialAsset>& materialAsset, const std::filesystem::path& path) {
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Material" << YAML::Value << YAML::BeginMap;
@@ -64,16 +75,22 @@ namespace Flameberry {
 
 		out << YAML::Key << "Roughness" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Roughness");
 		out << YAML::Key << "Metallic" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Metallic");
-		out << YAML::Key << "EmissiveFactor" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_EmissiveFactor");
-		out << YAML::Key << "UseAlbedoMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAlbedoMap");
+		out << YAML::Key << "EmissiveFactor" << YAML::Value
+			<< materialAsset->m_MaterialRef->Get<float>("u_EmissiveFactor");
+		out << YAML::Key << "UseAlbedoMap" << YAML::Value
+			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAlbedoMap");
 		out << YAML::Key << "AlbedoMap" << YAML::Value << materialAsset->m_AlbedoMap;
-		out << YAML::Key << "UseNormalMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseNormalMap");
+		out << YAML::Key << "UseNormalMap" << YAML::Value
+			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseNormalMap");
 		out << YAML::Key << "NormalMap" << YAML::Value << materialAsset->m_NormalMap;
-		out << YAML::Key << "UseRoughnessMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseRoughnessMap");
+		out << YAML::Key << "UseRoughnessMap" << YAML::Value
+			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseRoughnessMap");
 		out << YAML::Key << "RoughnessMap" << YAML::Value << materialAsset->m_RoughnessMap;
-		out << YAML::Key << "UseAmbientMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAmbientMap");
+		out << YAML::Key << "UseAmbientMap" << YAML::Value
+			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAmbientMap");
 		out << YAML::Key << "AmbientMap" << YAML::Value << materialAsset->m_AmbientMap;
-		out << YAML::Key << "UseMetallicMap" << YAML::Value << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseMetallicMap");
+		out << YAML::Key << "UseMetallicMap" << YAML::Value
+			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseMetallicMap");
 		out << YAML::Key << "MetallicMap" << YAML::Value << materialAsset->m_MetallicMap;
 		out << YAML::EndMap;
 

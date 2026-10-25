@@ -6,8 +6,9 @@ set -e
 compileCommandsFlag=OFF 
 buildConfig="Release"
 runExecutable=OFF
+openSandboxProject=OFF
 
-while getopts "cdo" opt; do
+while getopts "cdos" opt; do
 	case $opt in
 		c)
 			compileCommandsFlag=ON
@@ -17,6 +18,11 @@ while getopts "cdo" opt; do
 			;;
 		o)
 			runExecutable=ON
+			;;
+		s)
+			# Opening the SandboxProject only makes sense when running the editor, so this implies -o
+			runExecutable=ON
+			openSandboxProject=ON
 			;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -48,7 +54,12 @@ cp Flameberry/Intermediate/Build/Auto/compile_commands.json .
 
 # NOTE: This should be tested on different unix archs and shouldn't be hardcoded like this
 if [ "$runExecutable" = "ON" ]; then
-	./Flameberry/Intermediate/Bin/$buildConfig/FlameberryEditor-Darwin-arm64/FlameberryEditor_$buildConfig
+	# The editor opens the project file given as its first argument, skipping the launcher
+	editorArgs=()
+	if [ "$openSandboxProject" = "ON" ]; then
+		editorArgs+=("$PWD/SandboxProject/SandboxProject.fbproj")
+	fi
+	./Flameberry/Intermediate/Bin/$buildConfig/FlameberryEditor-Darwin-arm64/FlameberryEditor_$buildConfig "${editorArgs[@]}"
 fi
 
 popd

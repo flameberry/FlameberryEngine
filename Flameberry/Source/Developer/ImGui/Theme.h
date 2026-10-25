@@ -16,9 +16,12 @@ namespace Flameberry {
 		static constexpr ImVec4 FrameBorder = ImVec4(0.24f, 0.24f, 0.24f, 1.0f);
 		static constexpr ImVec4 DarkThemeColor = ImVec4(41.0f / 255.0f, 41.0f / 255.0f, 41.0f / 255.0f, 1.0f);
 		static constexpr ImVec4 DarkThemeColorDark = ImVec4(28.0f / 255.0f, 28.0f / 255.0f, 28.0f / 255.0f, 1.0f);
-		static constexpr ImVec4 TitlebarGreenColor = ImVec4(18.0f / 255.0f, 185.0f / 255.0f, 30.0f / 255.0f, 100.0f / 255.0f);
-		static constexpr ImVec4 TitlebarRedColor = ImVec4(185.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f, 100.0f / 255.0f);
-		static constexpr ImVec4 TitlebarOrangeColor = ImVec4(185.0f / 255.0f, 88.0f / 255.0f, 30.0f / 255.0f, 100.0f / 255.0f);
+		static constexpr ImVec4 TitlebarGreenColor =
+			ImVec4(18.0f / 255.0f, 185.0f / 255.0f, 30.0f / 255.0f, 100.0f / 255.0f);
+		static constexpr ImVec4 TitlebarRedColor =
+			ImVec4(185.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f, 100.0f / 255.0f);
+		static constexpr ImVec4 TitlebarOrangeColor =
+			ImVec4(185.0f / 255.0f, 88.0f / 255.0f, 30.0f / 255.0f, 100.0f / 255.0f);
 		static constexpr ImVec4 TitlebarColor = ImVec4(21.0f / 255, 21.0f / 255, 21.0f / 255, 1.0f);
 		static constexpr ImVec4 ImGuiTitleBg = ImVec4(21.0f / 255.0f, 21.0f / 255.0f, 21.0f / 255.0f, 1.0f);
 		static constexpr ImVec4 InfoColor = ImVec4(73.0f / 255, 148.0f / 255, 236.0f / 255, 1.0f);

@@ -7,9 +7,7 @@
 
 namespace Flameberry {
 
-	GenericCamera::GenericCamera()
-		: m_ProjectionMatrix(1.0f), m_ViewMatrix(1.0f) {
-	}
+	GenericCamera::GenericCamera() : m_ProjectionMatrix(1.0f), m_ViewMatrix(1.0f) {}
 
 	void GenericCamera::SetOrthographic(float aspectRatio, float zoom, float near, float far) {
 		m_CameraSettings.ProjectionType = ProjectionType::Orthographic;
@@ -67,11 +65,14 @@ namespace Flameberry {
 	void GenericCamera::RecalculateProjectionMatrix() {
 		switch (m_CameraSettings.ProjectionType) {
 			case ProjectionType::Orthographic:
-				m_ProjectionMatrix = glm::ortho(-m_CameraSettings.AspectRatio * m_CameraSettings.Zoom, m_CameraSettings.AspectRatio * m_CameraSettings.Zoom, -m_CameraSettings.Zoom, m_CameraSettings.Zoom, m_CameraSettings.Near, m_CameraSettings.Far);
+				m_ProjectionMatrix = glm::ortho(-m_CameraSettings.AspectRatio * m_CameraSettings.Zoom,
+					m_CameraSettings.AspectRatio * m_CameraSettings.Zoom, -m_CameraSettings.Zoom, m_CameraSettings.Zoom,
+					m_CameraSettings.Near, m_CameraSettings.Far);
 				m_ProjectionMatrix[1][1] *= -1; // For Vulkan
 				break;
 			case ProjectionType::Perspective:
-				m_ProjectionMatrix = glm::perspective(glm::radians(m_CameraSettings.FOV), m_CameraSettings.AspectRatio, m_CameraSettings.Near, m_CameraSettings.Far);
+				m_ProjectionMatrix = glm::perspective(glm::radians(m_CameraSettings.FOV), m_CameraSettings.AspectRatio,
+					m_CameraSettings.Near, m_CameraSettings.Far);
 				m_ProjectionMatrix[1][1] *= -1; // For Vulkan
 				break;
 		}

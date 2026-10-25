@@ -42,15 +42,20 @@ namespace Flameberry {
 		static uint32_t GetCurrentFrameIndex() { return s_FrameIndex; }
 		// Get the current frame index in the render thread
 		static uint32_t RT_GetCurrentFrameIndex() { return s_RT_FrameIndex; }
-		// The render function to be called in the Render Thread which does the actual rendering by execution of the submitted commands
+		// The render function to be called in the Render Thread which does the actual rendering by execution of the
+		// submitted commands
 		static void RT_RenderFrame();
 		// Get the Vulkan Command Buffer that is being actively recorded
-		static VkCommandBuffer GetActiveVulkanCommandBuffer() { return s_CommandBuffers[s_RT_FrameIndex]->GetVulkanCommandBuffer(); }
+		static VkCommandBuffer GetActiveVulkanCommandBuffer() {
+			return s_CommandBuffers[s_RT_FrameIndex]->GetVulkanCommandBuffer();
+		}
 
 		// Rendering Utilities
 		static void RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline);
-		static void RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material);
-		static void RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer);
+		static void RT_BindMaterial(
+			VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material);
+		static void RT_BindVertexAndIndexBuffers(
+			VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer);
 
 		/** @brief Obsolete: This function is used to render a single mesh by individually binding it's resources.
 		 * It shouldn't be preferred anymore, as redundant bindings are a problem using this.
@@ -59,7 +64,8 @@ namespace Flameberry {
 		 * @param materialTable - The corresponding material table
 		 * @param transform - The transform matrix
 		 */
-		static void SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform);
+		static void SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline,
+			const MaterialTable& materialTable, const glm::mat4& transform);
 
 		// Retrieve Generic Resources
 		static Ref<Texture2D> GetCheckerboardTexture() { return s_CheckerboardTexture; }

@@ -8,8 +8,7 @@
 namespace Flameberry {
 
 	LauncherLayer::LauncherLayer(const std::function<void(const Ref<Project>&)>& callback)
-		: m_OpenProjectCallback(callback) {
-	}
+		: m_OpenProjectCallback(callback) {}
 
 	void LauncherLayer::OnCreate() {
 		auto& window = Application::Get().GetWindow();
@@ -25,8 +24,7 @@ namespace Flameberry {
 	}
 
 	void LauncherLayer::OnUpdate(float delta) {
-		if (m_ShouldClose)
-			m_OpenProjectCallback(m_Project);
+		if (m_ShouldClose) m_OpenProjectCallback(m_Project);
 	}
 
 	void LauncherLayer::OnUIRender() {
@@ -43,11 +41,14 @@ namespace Flameberry {
 		static float firstChildSize = 100.0f, secondChildSize = 220.0f;
 		firstChildSize = ImGui::GetContentRegionAvail().x - secondChildSize - 8.0f;
 
-		ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding);
+		ImGui::BeginChild("##ProjectList", ImVec2(firstChildSize, 0),
+			ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY
+				| ImGuiChildFlags_AlwaysUseWindowPadding);
 
 		for (const auto& entry : m_ProjectRegistry) {
 			const std::string projectFilePathStr = entry.ProjectFilePath.string();
-			if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), projectFilePathStr.c_str(), !std::filesystem::exists(entry.ProjectFilePath))) {
+			if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), projectFilePathStr.c_str(),
+					!std::filesystem::exists(entry.ProjectFilePath))) {
 				// Open Project
 				m_Project = Project::Load(entry.ProjectFilePath);
 				m_ShouldClose = true;
@@ -58,10 +59,11 @@ namespace Flameberry {
 
 		ImGui::SameLine();
 
-		ImGui::BeginChild("##ProjectControls", ImVec2(secondChildSize, 0), ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
+		ImGui::BeginChild("##ProjectControls", ImVec2(secondChildSize, 0),
+			ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY
+				| ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
 
-		if (UI::AlignedButton("New Project", buttonSize))
-			ImGui::OpenPopup("New Project");
+		if (UI::AlignedButton("New Project", buttonSize)) ImGui::OpenPopup("New Project");
 
 		UI_NewProjectPopup();
 
@@ -84,11 +86,9 @@ namespace Flameberry {
 		ImGui::End();
 	}
 
-	void LauncherLayer::OnEvent(Event& e) {
-	}
+	void LauncherLayer::OnEvent(Event& e) {}
 
-	void LauncherLayer::OnDestroy() {
-	}
+	void LauncherLayer::OnDestroy() {}
 
 	void LauncherLayer::UI_NewProjectPopup() {
 		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -96,7 +96,8 @@ namespace Flameberry {
 		ImGui::SetNextWindowSize(ImVec2(1280 / 3, 720 / 4));
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
-		const bool beginPopupModal = ImGui::BeginPopupModal("New Project", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
+		const bool beginPopupModal =
+			ImGui::BeginPopupModal("New Project", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::PopStyleVar();
 
 		if (beginPopupModal) {
@@ -132,7 +133,8 @@ namespace Flameberry {
 							m_ShouldClose = true;
 						} else {
 							const std::string projectDirectoryStr = m_Project->GetProjectDirectory().string();
-							ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s is not empty!", projectDirectoryStr.c_str());
+							ImGui::TextColored(
+								ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s is not empty!", projectDirectoryStr.c_str());
 						}
 					} else
 						FBY_ERROR("Failed to create project: Project name is empty!");
@@ -142,8 +144,7 @@ namespace Flameberry {
 
 			ImGui::SameLine();
 
-			if (ImGui::Button("Cancel", ImVec2(120, 0)))
-				ImGui::CloseCurrentPopup();
+			if (ImGui::Button("Cancel", ImVec2(120, 0))) ImGui::CloseCurrentPopup();
 
 			ImGui::EndPopup();
 		}

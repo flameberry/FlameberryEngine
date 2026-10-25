@@ -4,9 +4,7 @@
 
 namespace Flameberry {
 
-	AssetThread::AssetThread()
-		: m_Running(true), m_AssetThread(&AssetThread::Main, this) {
-	}
+	AssetThread::AssetThread() : m_Running(true), m_AssetThread(&AssetThread::Main, this) {}
 
 	AssetThread::~AssetThread() {
 		m_Running = false;

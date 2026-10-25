@@ -23,8 +23,7 @@ namespace Flameberry {
 		fout << out.c_str() << '\n';
 	}
 
-	void ProjectRegistryManager::RemoveEntryFromGlobalRegistry(const std::filesystem::path& pathOfProjectEntry) {
-	}
+	void ProjectRegistryManager::RemoveEntryFromGlobalRegistry(const std::filesystem::path& pathOfProjectEntry) {}
 
 	ProjectRegistry ProjectRegistryManager::LoadEntireProjectRegistry() {
 		std::ifstream in(c_GlobalProjectRegistryPath);
@@ -54,8 +53,7 @@ namespace Flameberry {
 
 		for (const auto& entry : data) {
 			const auto& path = entry.first.as<std::string>();
-			if (!std::filesystem::exists(path))
-				data.remove(entry.first.as<std::string>());
+			if (!std::filesystem::exists(path)) data.remove(entry.first.as<std::string>());
 		}
 
 		std::ofstream fout(c_GlobalProjectRegistryPath, std::ios_base::out | std::ios::trunc);

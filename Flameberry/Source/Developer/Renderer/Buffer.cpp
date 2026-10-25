@@ -7,13 +7,11 @@
 namespace Flameberry {
 
 	VkDeviceSize Buffer::GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment) {
-		if (minOffsetAlignment > 0)
-			return (instanceSize + minOffsetAlignment - 1) & ~(minOffsetAlignment - 1);
+		if (minOffsetAlignment > 0) return (instanceSize + minOffsetAlignment - 1) & ~(minOffsetAlignment - 1);
 		return instanceSize;
 	}
 
-	Buffer::Buffer(const BufferSpecification& specification)
-		: m_BufferSpec(specification) {
+	Buffer::Buffer(const BufferSpecification& specification) : m_BufferSpec(specification) {
 		m_AlignmentSize = GetAlignment(m_BufferSpec.InstanceSize, m_BufferSpec.MinOffsetAlignment);
 		VkDeviceSize bufferSize = m_AlignmentSize * m_BufferSpec.InstanceCount;
 
@@ -34,7 +32,8 @@ namespace Flameberry {
 		VkMemoryAllocateInfo vk_memory_allocate_info{};
 		vk_memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		vk_memory_allocate_info.allocationSize = vk_memory_requirements.size;
-		vk_memory_allocate_info.memoryTypeIndex = RenderCommand::GetValidMemoryTypeIndex(physicalDevice, vk_memory_requirements.memoryTypeBits, m_BufferSpec.MemoryProperties);
+		vk_memory_allocate_info.memoryTypeIndex = RenderCommand::GetValidMemoryTypeIndex(
+			physicalDevice, vk_memory_requirements.memoryTypeBits, m_BufferSpec.MemoryProperties);
 
 		VK_CHECK_RESULT(vkAllocateMemory(device, &vk_memory_allocate_info, nullptr, &m_VkBufferDeviceMemory));
 		vkBindBufferMemory(device, m_VkBuffer, m_VkBufferDeviceMemory, 0);
@@ -66,8 +65,7 @@ namespace Flameberry {
 	}
 
 	void Buffer::WriteToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset) {
-		if (size == VK_WHOLE_SIZE)
-			memcpy(m_VkBufferMappedMemory, data, size);
+		if (size == VK_WHOLE_SIZE) memcpy(m_VkBufferMappedMemory, data, size);
 		else {
 			char* memoryOffset = (char*)m_VkBufferMappedMemory;
 			memoryOffset += offset;
@@ -76,7 +74,8 @@ namespace Flameberry {
 	}
 
 	void Buffer::WriteToIndex(const void* data, uint32_t index) {
-		FBY_ASSERT(m_BufferSpec.InstanceSize, "Failed to write to index: Instance size not specified during buffer creation!");
+		FBY_ASSERT(
+			m_BufferSpec.InstanceSize, "Failed to write to index: Instance size not specified during buffer creation!");
 		WriteToBuffer(data, m_BufferSpec.InstanceSize, index * m_AlignmentSize);
 	}
 

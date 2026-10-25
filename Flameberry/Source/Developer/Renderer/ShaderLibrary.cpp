@@ -3,7 +3,8 @@
 namespace Flameberry {
 
 	std::unordered_map<std::string, Ref<Shader>> ShaderLibrary::s_ShaderStorage;
-	const std::filesystem::path ShaderLibrary::s_ShaderBaseDirectory = FBY_PROJECT_DIR "Flameberry/Shaders/Vulkan/Compiled";
+	const std::filesystem::path ShaderLibrary::s_ShaderBaseDirectory =
+		FBY_PROJECT_DIR "Flameberry/Shaders/Vulkan/Compiled";
 
 	void ShaderLibrary::Init() {
 		// Currently this is hardcoded as no new shaders are loaded dynamically at runtime
@@ -42,7 +43,8 @@ namespace Flameberry {
 
 	Ref<Shader> ShaderLibrary::Get(const std::string& shaderName) {
 		auto it = s_ShaderStorage.find(shaderName);
-		FBY_ASSERT(it != s_ShaderStorage.end(), "Shader with name: {} is not loaded into ShaderLibrary yet", shaderName);
+		FBY_ASSERT(
+			it != s_ShaderStorage.end(), "Shader with name: {} is not loaded into ShaderLibrary yet", shaderName);
 		return it->second;
 	}
 

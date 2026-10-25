@@ -17,7 +17,8 @@ namespace Flameberry {
 		static void SerializeSceneToFile(const std::filesystem::path& path, const Ref<Scene>& srcScene);
 
 	private:
-		static void SerializeEntity(YAML::Emitter& out, const FEntity& entity, const Ref<Scene>& scene, std::set<UUID>& assetUUIDs);
+		static void SerializeEntity(
+			YAML::Emitter& out, const FEntity& entity, const Ref<Scene>& scene, std::set<UUID>& assetUUIDs);
 	};
 
 } // namespace Flameberry

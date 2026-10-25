@@ -16,7 +16,8 @@ namespace Flameberry {
 	Application::Application(const ApplicationSpecification& specification) : m_Specification(specification) {
 		s_Instance = this;
 
-		FBY_ASSERT(m_Specification.Type != ApplicationType::None, "ApplicationSpecification: Application Type not specified");
+		FBY_ASSERT(
+			m_Specification.Type != ApplicationType::None, "ApplicationSpecification: Application Type not specified");
 
 		// Set the working directory
 		if (std::filesystem::exists(m_Specification.WorkingDirectory))
@@ -46,14 +47,13 @@ namespace Flameberry {
 
 			// This is where all the layers get updated and
 			// The layers submit render commands to a command queue present in `Renderer`
-			for (auto& layer : m_LayerStack)
-				layer->OnUpdate(delta);
+			for (auto& layer : m_LayerStack) layer->OnUpdate(delta);
 
-			// ImGui Rendering is submitted as a render command because otherwise it behaves oddly and gives validation errors
+			// ImGui Rendering is submitted as a render command because otherwise it behaves oddly and gives validation
+			// errors
 			Renderer::Submit([app = this](VkCommandBuffer, uint32_t) {
 				app->m_ImGuiLayer->Begin();
-				for (auto& layer : app->m_LayerStack)
-					layer->OnUIRender();
+				for (auto& layer : app->m_LayerStack) layer->OnUIRender();
 				app->m_ImGuiLayer->End();
 			});
 
@@ -76,15 +76,13 @@ namespace Flameberry {
 
 		if (!m_BlockAllLayerEvents) {
 			for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); it++) {
-				if (e.Handled)
-					break;
+				if (e.Handled) break;
 				(*it)->OnEvent(e);
 			}
 		}
 	}
 
-	void Application::OnKeyPressedEvent(KeyPressedEvent& e) {
-	}
+	void Application::OnKeyPressedEvent(KeyPressedEvent& e) {}
 
 	void Application::OnWindowResizedEvent(WindowResizedEvent& e) {
 		// TODO: Wait for Render Thread to finish Rendering

@@ -13,13 +13,10 @@ namespace Flameberry {
 
 	static std::unordered_map<uint64_t, uint32_t> s_DescriptorSetAndBindingIntegerToArrayIndex;
 
-	bool operator==(const ReflectionDescriptorBindingSpecification& s1, const ReflectionDescriptorBindingSpecification& s2) {
-		return s1.Set == s2.Set
-			&& s1.Binding == s2.Binding
-			&& s1.Type == s2.Type
-			&& s1.Count == s2.Count
-			&& s1.IsDescriptorTypeImage == s2.IsDescriptorTypeImage
-			&& s1.RendererOnly == s2.RendererOnly;
+	bool operator==(
+		const ReflectionDescriptorBindingSpecification& s1, const ReflectionDescriptorBindingSpecification& s2) {
+		return s1.Set == s2.Set && s1.Binding == s2.Binding && s1.Type == s2.Type && s1.Count == s2.Count
+			&& s1.IsDescriptorTypeImage == s2.IsDescriptorTypeImage && s1.RendererOnly == s2.RendererOnly;
 	}
 
 	namespace Utils {
@@ -30,8 +27,7 @@ namespace Flameberry {
 
 		bool HasPrefix(const char* str1, const char* prefix) {
 			while (*str1 != '\0' && *prefix != '\0') {
-				if (*str1 != *prefix)
-					return false;
+				if (*str1 != *prefix) return false;
 				++str1;
 				++prefix;
 			}
@@ -62,7 +58,8 @@ namespace Flameberry {
 
 	} // namespace Utils
 
-	Shader::Shader(const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath) {
+	Shader::Shader(
+		const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath) {
 		// TODO: This is probably some odd behaviour to name the shader with just the vertex shader's name
 		const auto& stem = vertexShaderSpvPath.stem().string();
 		m_Name = stem.substr(0, stem.find('.'));
@@ -101,14 +98,14 @@ namespace Flameberry {
 
 	const ReflectionDescriptorBindingSpecification& Shader::GetBinding(const std::string& name) const {
 		auto it = m_DescriptorBindingVariableFullNameToSpecificationIndex.find(name);
-		FBY_ASSERT(it != m_DescriptorBindingVariableFullNameToSpecificationIndex.end(), "Descriptor Binding does not exist in shader: {}", name);
+		FBY_ASSERT(it != m_DescriptorBindingVariableFullNameToSpecificationIndex.end(),
+			"Descriptor Binding does not exist in shader: {}", name);
 		return m_DescriptorBindingSpecifications[it->second];
 	}
 
 	std::vector<char> Shader::LoadShaderSpvCode(const std::filesystem::path& path) {
 		std::ifstream spv_ifstream(path, std::ios::binary);
-		if (!spv_ifstream.is_open())
-			FBY_ERROR("Failed to open SPIRV binary: {}", path);
+		if (!spv_ifstream.is_open()) FBY_ERROR("Failed to open SPIRV binary: {}", path);
 
 		spv_ifstream.seekg(0, std::ios::end);
 		size_t size = static_cast<size_t>(spv_ifstream.tellg());
@@ -184,17 +181,20 @@ namespace Flameberry {
 		{
 			uint32_t count = 0;
 			auto result = reflectionShaderModule.EnumerateSpecializationConstants(&count, nullptr);
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
+			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
 			std::vector<SpvReflectSpecializationConstant*> specializationConstants(count);
 			result = reflectionShaderModule.EnumerateSpecializationConstants(&count, specializationConstants.data());
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
+			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
 
-			if (count)
-				FBY_LOG("Shader `{}` - Specialization Constants:", m_Name);
+			if (count) FBY_LOG("Shader `{}` - Specialization Constants:", m_Name);
 
 			for (uint32_t i = 0; i < count; i++) {
 				FBY_LOG("\t{}", specializationConstants[i]->name);
-				FBY_ASSERT(m_SpecializationConstantIDSet.find(specializationConstants[i]->constant_id) == m_SpecializationConstantIDSet.end(), "Specialization Constant IDs must be unique");
+				FBY_ASSERT(m_SpecializationConstantIDSet.find(specializationConstants[i]->constant_id)
+						== m_SpecializationConstantIDSet.end(),
+					"Specialization Constant IDs must be unique");
 
 				m_SpecializationConstantIDSet.insert(specializationConstants[i]->constant_id);
 			}
@@ -204,10 +204,12 @@ namespace Flameberry {
 			// The information about push constants is collected here
 			uint32_t count = 0;
 			auto result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, nullptr);
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 			std::vector<SpvReflectBlockVariable*> pcblocks(count);
 			result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 
 			m_PushConstantSpecifications.reserve(m_PushConstantSpecifications.size() + count);
 			for (uint32_t i = 0; i < count; i++) {
@@ -220,11 +222,11 @@ namespace Flameberry {
 					FBY_LOG("\tMember Name: {}", member.name);
 
 					std::string fullName(pcblocks[i]->name);
-					if (!fullName.empty())
-						fullName += ".";
+					if (!fullName.empty()) fullName += ".";
 					fullName += member.name;
 
-					// Full name is used to ensure uniqueness of the uniform variable (even though it is rare to overlap)
+					// Full name is used to ensure uniqueness of the uniform variable (even though it is rare to
+					// overlap)
 					m_UniformFullNameToSpecification[fullName] = ReflectionUniformVariableSpecification{
 						fullName.c_str(),					 // Name // Wondering if the full name should be used
 						member.offset - pcblocks[i]->offset, // LocalOffset
@@ -234,11 +236,12 @@ namespace Flameberry {
 				}
 
 				m_PushConstantSpecifications.emplace_back(ReflectionPushConstantSpecification{
-					pcblocks[i]->type_description->type_name,													// Name
-					(VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage(),								// VulkanShaderStage
-					absoluteSize,																				// Size
-					pcblocks[i]->offset,																		// Offset
-					Utils::HasPrefix(pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX) // IsRendererOnly
+					pcblocks[i]->type_description->type_name,						// Name
+					(VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage(), // VulkanShaderStage
+					absoluteSize,													// Size
+					pcblocks[i]->offset,											// Offset
+					Utils::HasPrefix(
+						pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX) // IsRendererOnly
 				});
 			}
 		}
@@ -247,15 +250,19 @@ namespace Flameberry {
 			// The information about descriptor sets is collected here
 			uint32_t count = 0;
 			auto result = reflectionShaderModule.EnumerateDescriptorSets(&count, nullptr);
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 			std::vector<SpvReflectDescriptorSet*> descSets(count);
 			result = reflectionShaderModule.EnumerateDescriptorSets(&count, descSets.data());
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
 
 			m_DescriptorSetSpecifications.reserve(m_DescriptorSetSpecifications.size() + count);
-			// Iterating through the reflection descriptor sets to store the binding information needed to create a descriptor set
+			// Iterating through the reflection descriptor sets to store the binding information needed to create a
+			// descriptor set
 			for (uint32_t i = 0; i < count; i++) {
-				m_DescriptorBindingSpecifications.reserve(m_DescriptorBindingSpecifications.size() + descSets[i]->binding_count);
+				m_DescriptorBindingSpecifications.reserve(
+					m_DescriptorBindingSpecifications.size() + descSets[i]->binding_count);
 				for (uint32_t j = 0; j < descSets[i]->binding_count; j++) {
 					auto& binding = descSets[i]->bindings[j];
 
@@ -272,12 +279,13 @@ namespace Flameberry {
 						rendererOnly = Utils::HasPrefix(binding->name, FBY_SHADER_RENDERER_ONLY_PREFIX);
 					} else {
 						isDescriptorTypeImage = false;
-						// A buffer descriptor will be considered renderer only when it's TYPE name (not the alias name) has the following prefix
-						rendererOnly = Utils::HasPrefix(binding->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX);
-						// Is this the right way to deal with this? Being able to refer an Uniform Buffer with it's alias
-						// If alias is not present then with the Uniform Type name
-						if (fullName.empty())
-							fullName = binding->type_description->type_name;
+						// A buffer descriptor will be considered renderer only when it's TYPE name (not the alias name)
+						// has the following prefix
+						rendererOnly =
+							Utils::HasPrefix(binding->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX);
+						// Is this the right way to deal with this? Being able to refer an Uniform Buffer with it's
+						// alias If alias is not present then with the Uniform Type name
+						if (fullName.empty()) fullName = binding->type_description->type_name;
 					}
 
 					ReflectionDescriptorBindingSpecification reflectionDescriptorBindingSpecification{
@@ -293,23 +301,32 @@ namespace Flameberry {
 
 					uint64_t combinedValue = Utils::CantorPairingFunction(binding->set, binding->binding);
 
-					if (auto it = s_DescriptorSetAndBindingIntegerToArrayIndex.find(combinedValue); it != s_DescriptorSetAndBindingIntegerToArrayIndex.end()) {
-						FBY_ASSERT(reflectionDescriptorBindingSpecification == m_DescriptorBindingSpecifications[it->second], "Descriptor Sets with the same set number and binding must be the exact same");
-						m_DescriptorBindingSpecifications[it->second].VulkanShaderStage |= reflectionDescriptorBindingSpecification.VulkanShaderStage;
+					if (auto it = s_DescriptorSetAndBindingIntegerToArrayIndex.find(combinedValue);
+						it != s_DescriptorSetAndBindingIntegerToArrayIndex.end()) {
+						FBY_ASSERT(
+							reflectionDescriptorBindingSpecification == m_DescriptorBindingSpecifications[it->second],
+							"Descriptor Sets with the same set number and binding must be the exact same");
+						m_DescriptorBindingSpecifications[it->second].VulkanShaderStage |=
+							reflectionDescriptorBindingSpecification.VulkanShaderStage;
 					} else {
 						// Here all the reflection binding specifications are pushed back
-						// Assumption here is that all the bindings are in order (Yet to find out how would it affect the functioning)
+						// Assumption here is that all the bindings are in order (Yet to find out how would it affect
+						// the functioning)
 						m_DescriptorBindingSpecifications.emplace_back(reflectionDescriptorBindingSpecification);
 
-						// This unordered_map is stored only for convenience of setting the Uniform Buffers/Images using their names in the shader
-						// It shouldn't be accessed every frame
-						m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] = static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
+						// This unordered_map is stored only for convenience of setting the Uniform Buffers/Images using
+						// their names in the shader It shouldn't be accessed every frame
+						m_DescriptorBindingVariableFullNameToSpecificationIndex[fullName] =
+							static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
 
-						// The index of the descriptor set is maintained to consider the case of same descriptor sets defined in different stages of the pipeline
-						s_DescriptorSetAndBindingIntegerToArrayIndex[combinedValue] = static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
+						// The index of the descriptor set is maintained to consider the case of same descriptor sets
+						// defined in different stages of the pipeline
+						s_DescriptorSetAndBindingIntegerToArrayIndex[combinedValue] =
+							static_cast<uint32_t>(m_DescriptorBindingSpecifications.size()) - 1;
 					}
 				}
-				m_DescriptorSetSpecifications.emplace_back(ReflectionDescriptorSetSpecification{ descSets[i]->set, descSets[i]->binding_count });
+				m_DescriptorSetSpecifications.emplace_back(
+					ReflectionDescriptorSetSpecification{ descSets[i]->set, descSets[i]->binding_count });
 			}
 		}
 	}
@@ -336,14 +353,17 @@ namespace Flameberry {
 		}
 	}
 
-	void Shader::GetVertexAndFragmentShaderModules(VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const {
-		FBY_ASSERT(m_VulkanShaderStageFlags & (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT), "GetVertexAndFragmentShaderModules() should only be called for Shader made using Vertex and Fragment components both!");
+	void Shader::GetVertexAndFragmentShaderModules(
+		VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const {
+		FBY_ASSERT(m_VulkanShaderStageFlags & (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT),
+			"GetVertexAndFragmentShaderModules() should only be called for Shader made using Vertex and Fragment components both!");
 		*outVertexShaderModule = m_VertexShaderModule;
 		*outFragmentShaderModule = m_FragmentShaderModule;
 	}
 
 	VkShaderModule Shader::GetVulkanShaderModule() const {
-		FBY_ASSERT((m_VulkanShaderStageFlags > 0) && ((m_VulkanShaderStageFlags & (m_VulkanShaderStageFlags - 1)) == 0), "GetVulkanShaderModule() should only be called for Shader made using single component like Compute or Vertex or Fragment but not a combination of them!");
+		FBY_ASSERT((m_VulkanShaderStageFlags > 0) && ((m_VulkanShaderStageFlags & (m_VulkanShaderStageFlags - 1)) == 0),
+			"GetVulkanShaderModule() should only be called for Shader made using single component like Compute or Vertex or Fragment but not a combination of them!");
 		return m_ShaderModule;
 	}
 

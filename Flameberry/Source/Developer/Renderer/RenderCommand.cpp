@@ -14,21 +14,17 @@
 namespace Flameberry {
 
 	bool RenderCommand::DoesFormatSupportDepthAttachment(VkFormat format) {
-		return format == VK_FORMAT_D32_SFLOAT
-			|| format == VK_FORMAT_D16_UNORM
-			|| format == VK_FORMAT_D16_UNORM_S8_UINT
-			|| format == VK_FORMAT_D24_UNORM_S8_UINT
-			|| format == VK_FORMAT_D32_SFLOAT_S8_UINT;
+		return format == VK_FORMAT_D32_SFLOAT || format == VK_FORMAT_D16_UNORM || format == VK_FORMAT_D16_UNORM_S8_UINT
+			|| format == VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
 	}
 
 	bool RenderCommand::DoesFormatSupportStencilAttachment(VkFormat format) {
-		return format == VK_FORMAT_S8_UINT
-			|| format == VK_FORMAT_D16_UNORM_S8_UINT
-			|| format == VK_FORMAT_D24_UNORM_S8_UINT
-			|| format == VK_FORMAT_D32_SFLOAT_S8_UINT;
+		return format == VK_FORMAT_S8_UINT || format == VK_FORMAT_D16_UNORM_S8_UINT
+			|| format == VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
 	}
 
-	void RenderCommand::WritePixelFromImageToBuffer(VkBuffer buffer, VkImage image, VkImageLayout currentImageLayout, const glm::vec2& pixelOffset) {
+	void RenderCommand::WritePixelFromImageToBuffer(
+		VkBuffer buffer, VkImage image, VkImageLayout currentImageLayout, const glm::vec2& pixelOffset) {
 		const auto& device = VulkanContext::GetCurrentDevice();
 
 		VkCommandBuffer commandBuffer;
@@ -57,7 +53,8 @@ namespace Flameberry {
 			vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
 			vk_image_memory_barrier.subresourceRange.layerCount = 1;
 
-			vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1, &vk_image_memory_barrier);
+			vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1,
+				&vk_image_memory_barrier);
 		}
 
 		VkBufferImageCopy region{};
@@ -95,7 +92,8 @@ namespace Flameberry {
 			vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
 			vk_image_memory_barrier.subresourceRange.layerCount = 1;
 
-			vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1, &vk_image_memory_barrier);
+			vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1,
+				&vk_image_memory_barrier);
 		}
 		device->EndSingleTimeCommandBuffer(commandBuffer);
 	}
@@ -155,7 +153,8 @@ namespace Flameberry {
 		VkPhysicalDeviceProperties physicalDeviceProperties;
 		vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
 
-		VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+		VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts
+			& physicalDeviceProperties.limits.framebufferDepthSampleCounts;
 		if (counts & VK_SAMPLE_COUNT_64_BIT) {
 			return VK_SAMPLE_COUNT_64_BIT;
 		}
@@ -177,25 +176,30 @@ namespace Flameberry {
 		return VK_SAMPLE_COUNT_1_BIT;
 	}
 
-	uint32_t RenderCommand::GetValidMemoryTypeIndex(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags vk_memory_property_flags) {
+	uint32_t RenderCommand::GetValidMemoryTypeIndex(
+		VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags vk_memory_property_flags) {
 		VkPhysicalDeviceMemoryProperties vk_physical_device_mem_properties;
 		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &vk_physical_device_mem_properties);
 
 		for (uint32_t i = 0; i < vk_physical_device_mem_properties.memoryTypeCount; i++) {
-			if ((typeFilter & (1 << i)) && (vk_physical_device_mem_properties.memoryTypes[i].propertyFlags & vk_memory_property_flags) == vk_memory_property_flags)
+			if ((typeFilter & (1 << i))
+				&& (vk_physical_device_mem_properties.memoryTypes[i].propertyFlags & vk_memory_property_flags)
+					== vk_memory_property_flags)
 				return i;
 		}
 		FBY_ERROR("Failed to find valid memory type!");
 		return -1;
 	}
 
-	VkFormat RenderCommand::GetSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidateFormats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags) {
+	VkFormat RenderCommand::GetSupportedFormat(VkPhysicalDevice physicalDevice,
+		const std::vector<VkFormat>& candidateFormats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags) {
 		for (const auto& format : candidateFormats) {
 			VkFormatProperties properties;
 			vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &properties);
 
 			if ((tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & featureFlags) == featureFlags)
-				|| (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & featureFlags) == featureFlags))
+				|| (tiling == VK_IMAGE_TILING_OPTIMAL
+					&& (properties.optimalTilingFeatures & featureFlags) == featureFlags))
 				return format;
 		}
 		FBY_ERROR("Couldn't find supported format!");
@@ -227,8 +231,7 @@ namespace Flameberry {
 		std::string layer_list;
 		for (uint16_t i = 0; i < layerCount; i++) {
 			layer_list += available_layers[i].layerName;
-			if (i != layerCount - 1)
-				layer_list += ", ";
+			if (i != layerCount - 1) layer_list += ", ";
 		}
 		FBY_TRACE("Found the following Vulkan Validation Layers: {}", layer_list);
 		return true;
@@ -259,10 +262,10 @@ namespace Flameberry {
 			VkBool32 isPresentationSupported = false;
 			vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, index, surface, &isPresentationSupported);
 
-			if (isPresentationSupported)
-				indices.PresentationSupportedQueueFamilyIndex = index;
+			if (isPresentationSupported) indices.PresentationSupportedQueueFamilyIndex = index;
 
-			if (indices.GraphicsQueueFamilyIndex != -1 && indices.ComputeQueueFamilyIndex != -1 && indices.PresentationSupportedQueueFamilyIndex != -1)
+			if (indices.GraphicsQueueFamilyIndex != -1 && indices.ComputeQueueFamilyIndex != -1
+				&& indices.PresentationSupportedQueueFamilyIndex != -1)
 				break;
 
 			index++;
@@ -279,7 +282,8 @@ namespace Flameberry {
 
 		if (formatCount) {
 			vk_swap_chain_details.SurfaceFormats.resize(formatCount);
-			vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, vk_swap_chain_details.SurfaceFormats.data());
+			vkGetPhysicalDeviceSurfaceFormatsKHR(
+				physicalDevice, surface, &formatCount, vk_swap_chain_details.SurfaceFormats.data());
 		}
 
 		uint32_t presentationModeCount = 0;
@@ -287,7 +291,8 @@ namespace Flameberry {
 
 		if (presentationModeCount) {
 			vk_swap_chain_details.PresentationModes.resize(presentationModeCount);
-			vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentationModeCount, vk_swap_chain_details.PresentationModes.data());
+			vkGetPhysicalDeviceSurfacePresentModesKHR(
+				physicalDevice, surface, &presentationModeCount, vk_swap_chain_details.PresentationModes.data());
 		}
 
 		return vk_swap_chain_details;

@@ -47,7 +47,8 @@ namespace Flameberry {
 		static Ref<Texture2D> LoadFromFile(const char* path) { return CreateRef<Texture2D>(path); }
 
 	private:
-		void SetupTexture(const void* data, const float width, const float height, const float imageSize, const uint16_t mipLevels, const VkFormat format, const VkSampler sampler);
+		void SetupTexture(const void* data, const float width, const float height, const float imageSize,
+			const uint16_t mipLevels, const VkFormat format, const VkSampler sampler);
 
 	private:
 		ImageSpecification m_TextureImageSpecification;

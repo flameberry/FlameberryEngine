@@ -19,7 +19,8 @@ namespace Flameberry {
 	/// the vertex data can't be modified, but allows for efficient caching of Meshes
 	class StaticMesh : public Asset {
 	public:
-		StaticMesh(const Ref<Buffer>& vertexBuffer, const Ref<Buffer>& indexBuffer, const std::vector<SubMesh>& submeshes, const AABB& aabb);
+		StaticMesh(const Ref<Buffer>& vertexBuffer, const Ref<Buffer>& indexBuffer,
+			const std::vector<SubMesh>& submeshes, const AABB& aabb);
 		~StaticMesh();
 
 		inline void SetName(const std::string& name) { m_Name = name; }

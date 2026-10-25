@@ -21,12 +21,15 @@ namespace Flameberry {
 	public:
 		static Ref<Project> Load(const std::filesystem::path& path);
 
-		static inline const std::filesystem::path& GetActiveProjectDirectory() { return s_ActiveProject->GetProjectDirectory(); }
+		static inline const std::filesystem::path& GetActiveProjectDirectory() {
+			return s_ActiveProject->GetProjectDirectory();
+		}
 		static Ref<Project> GetActiveProject() { return s_ActiveProject; }
 		static void SetActive(const Ref<Project>& project) { s_ActiveProject = project; }
 
 		// Standard procedure for creating a project on disk
-		static Ref<Project> CreateProjectOnDisk(const std::filesystem::path& targetFolder, const std::string& projectName);
+		static Ref<Project> CreateProjectOnDisk(
+			const std::filesystem::path& targetFolder, const std::string& projectName);
 
 		// Instance specific methods
 		Project(const std::filesystem::path& projectDirectory, const ProjectConfig& config);
@@ -41,7 +44,9 @@ namespace Flameberry {
 		const std::filesystem::path& GetProjectDirectory() const { return m_ProjectDirectory; }
 		std::filesystem::path GetAssetDirectory() const { return m_ProjectDirectory / m_Config.AssetDirectory; }
 		std::filesystem::path GetAssetRegistryPath() const { return m_ProjectDirectory / m_Config.AssetRegistryPath; }
-		std::filesystem::path GetThumbnailCacheDirectory() const { return m_ProjectDirectory / m_Config.ThumbnailCacheDirectory; }
+		std::filesystem::path GetThumbnailCacheDirectory() const {
+			return m_ProjectDirectory / m_Config.ThumbnailCacheDirectory;
+		}
 
 		ProjectConfig& GetConfig() { return m_Config; }
 

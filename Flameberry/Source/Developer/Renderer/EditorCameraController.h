@@ -14,7 +14,8 @@ namespace Flameberry {
 
 	class EditorCameraController {
 	public:
-		EditorCameraController(const glm::vec3& position, const glm::vec3& direction, const GenericCameraSettings& settings);
+		EditorCameraController(
+			const glm::vec3& position, const glm::vec3& direction, const GenericCameraSettings& settings);
 		~EditorCameraController();
 
 		bool OnUpdate(float delta);

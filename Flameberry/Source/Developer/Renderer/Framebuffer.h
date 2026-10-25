@@ -13,8 +13,7 @@ namespace Flameberry {
 		VkFormat Format;
 		uint32_t LayerCount;
 
-		FramebufferAttachmentSpecification(VkFormat format)
-			: Format(format), LayerCount(1) {}
+		FramebufferAttachmentSpecification(VkFormat format) : Format(format), LayerCount(1) {}
 		FramebufferAttachmentSpecification(VkFormat format, uint32_t layerCount)
 			: Format(format), LayerCount(layerCount) {}
 
@@ -22,9 +21,7 @@ namespace Flameberry {
 			return this->Format == other.Format && this->LayerCount == other.LayerCount;
 		}
 
-		bool operator!=(const FramebufferAttachmentSpecification& other) const {
-			return !(*this == other);
-		}
+		bool operator!=(const FramebufferAttachmentSpecification& other) const { return !(*this == other); }
 	};
 
 	struct FramebufferSpecification {
@@ -33,8 +30,11 @@ namespace Flameberry {
 		uint32_t Samples;
 		VkClearColorValue ClearColorValue;
 		VkClearDepthStencilValue DepthStencilClearValue;
-		VkAttachmentLoadOp ColorLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, DepthLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		VkAttachmentStoreOp ColorStoreOp = VK_ATTACHMENT_STORE_OP_STORE, DepthStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE, StencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		VkAttachmentLoadOp ColorLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, DepthLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+						   StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		VkAttachmentStoreOp ColorStoreOp = VK_ATTACHMENT_STORE_OP_STORE,
+							DepthStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+							StencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	};
 
 	class Framebuffer {
@@ -49,7 +49,9 @@ namespace Flameberry {
 		VkFramebuffer GetVulkanFramebuffer() const { return m_VulkanFramebuffer; }
 
 		Ref<Image> GetColorAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[attachmentIndex]; }
-		Ref<Image> GetColorResolveAttachment(uint32_t attachmentIndex) const { return m_FramebufferImages[m_DepthAttachmentIndex + 1 + attachmentIndex]; }
+		Ref<Image> GetColorResolveAttachment(uint32_t attachmentIndex) const {
+			return m_FramebufferImages[m_DepthAttachmentIndex + 1 + attachmentIndex];
+		}
 		Ref<Image> GetDepthAndOrStencilAttachment() const { return m_FramebufferImages[m_DepthAttachmentIndex]; }
 		VkImageView GetStencilAttachmentImageView() const { return m_StencilAttachmentImageView; }
 

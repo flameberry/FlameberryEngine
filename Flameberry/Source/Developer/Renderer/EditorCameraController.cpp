@@ -13,7 +13,8 @@
 
 namespace Flameberry {
 
-	EditorCameraController::EditorCameraController(const glm::vec3& position, const glm::vec3& direction, const GenericCameraSettings& settings)
+	EditorCameraController::EditorCameraController(
+		const glm::vec3& position, const glm::vec3& direction, const GenericCameraSettings& settings)
 		: m_Position(position), m_Direction(direction), m_Velocity(0.0f) {
 		switch (settings.ProjectionType) {
 			case ProjectionType::Orthographic:
@@ -26,8 +27,7 @@ namespace Flameberry {
 		m_Camera.SetView_Direction(m_Position, m_Direction);
 	}
 
-	EditorCameraController::~EditorCameraController() {
-	}
+	EditorCameraController::~EditorCameraController() {}
 
 	bool EditorCameraController::OnUpdate(float delta) {
 		switch (m_Camera.GetSettings().ProjectionType) {
@@ -61,8 +61,7 @@ namespace Flameberry {
 			m_Direction = glm::normalize(m_TargetFocusPoint - m_Position);
 			m_Camera.SetView_Direction(m_Position, m_Direction);
 
-			if (distance < 0.2f || glm::length(m_TargetPosition - m_Position) * delta < 0.01f)
-				m_ShouldFrame = false;
+			if (distance < 0.2f || glm::length(m_TargetPosition - m_Position) * delta < 0.01f) m_ShouldFrame = false;
 
 			return true;
 		}
@@ -89,18 +88,12 @@ namespace Flameberry {
 
 		// Movement Input
 		glm::vec3 moveInput(0.0f);
-		if (Input::IsKeyPressed(KeyCode::W))
-			moveInput += m_Direction;
-		if (Input::IsKeyPressed(KeyCode::S))
-			moveInput -= m_Direction;
-		if (Input::IsKeyPressed(KeyCode::D))
-			moveInput += m_RightDirection;
-		if (Input::IsKeyPressed(KeyCode::A))
-			moveInput -= m_RightDirection;
-		if (Input::IsKeyPressed(KeyCode::E))
-			moveInput += m_UpDirection;
-		if (Input::IsKeyPressed(KeyCode::Q))
-			moveInput -= m_UpDirection;
+		if (Input::IsKeyPressed(KeyCode::W)) moveInput += m_Direction;
+		if (Input::IsKeyPressed(KeyCode::S)) moveInput -= m_Direction;
+		if (Input::IsKeyPressed(KeyCode::D)) moveInput += m_RightDirection;
+		if (Input::IsKeyPressed(KeyCode::A)) moveInput -= m_RightDirection;
+		if (Input::IsKeyPressed(KeyCode::E)) moveInput += m_UpDirection;
+		if (Input::IsKeyPressed(KeyCode::Q)) moveInput -= m_UpDirection;
 
 		bool moved = false;
 		if (glm::length(moveInput) > 0.0f) {
@@ -120,8 +113,8 @@ namespace Flameberry {
 			const float pitchDelta = -mouseDelta.y * rotationSpeed;
 			const float yawDelta = -mouseDelta.x * rotationSpeed;
 
-			glm::quat q = glm::normalize(glm::cross(glm::angleAxis(pitchDelta, m_RightDirection),
-				glm::angleAxis(yawDelta, m_UpDirection)));
+			glm::quat q = glm::normalize(
+				glm::cross(glm::angleAxis(pitchDelta, m_RightDirection), glm::angleAxis(yawDelta, m_UpDirection)));
 			m_Direction = glm::rotate(q, m_Direction);
 			moved = true;
 		}
@@ -208,10 +201,8 @@ namespace Flameberry {
 		m_Zoom = glm::max(m_Zoom, 0.1f);
 		m_CameraSpeed = m_Zoom * 2.5f;
 
-		if (zoomed)
-			m_Camera.UpdateWithFOVorZoom(m_Zoom);
-		if (moved)
-			m_Camera.SetView_Direction(m_Position, m_Direction);
+		if (zoomed) m_Camera.UpdateWithFOVorZoom(m_Zoom);
+		if (moved) m_Camera.SetView_Direction(m_Position, m_Direction);
 
 		return moved;
 	}

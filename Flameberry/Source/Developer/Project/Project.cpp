@@ -13,7 +13,8 @@ namespace Flameberry {
 
 	Ref<Project> Project::s_ActiveProject;
 
-	Ref<Project> Project::CreateProjectOnDisk(const std::filesystem::path& targetFolder, const std::string& projectName) {
+	Ref<Project> Project::CreateProjectOnDisk(
+		const std::filesystem::path& targetFolder, const std::string& projectName) {
 		ProjectConfig projectConfig;
 		projectConfig.Name = projectName;
 		projectConfig.AssetDirectory = "Content";
@@ -75,7 +76,8 @@ namespace Flameberry {
 
 	Ref<Project> Project::Load(const std::filesystem::path& path) {
 		if (Ref<Project> project = ProjectSerializer::DeserializeIntoNewProject(path)) {
-			Ref<EditorAssetManager> editorAssetManager = std::static_pointer_cast<EditorAssetManager>(project->m_AssetManager);
+			Ref<EditorAssetManager> editorAssetManager =
+				std::static_pointer_cast<EditorAssetManager>(project->m_AssetManager);
 			editorAssetManager->DeserializeAssetRegistry(project->GetAssetRegistryPath());
 			return project;
 		}

@@ -21,7 +21,8 @@ namespace Flameberry {
 
 	private:
 		/**
-		 * This function is present in `SceneHierarchyPanel` and not in `Scene` as the usage of CollectionComponent is meant for Editor Only
+		 * This function is present in `SceneHierarchyPanel` and not in `Scene` as the usage of CollectionComponent is
+		 * meant for Editor Only
 		 */
 		FEntity CreateCollectionEntity(const std::string& name, FEntity parent);
 
@@ -31,7 +32,8 @@ namespace Flameberry {
 		Ref<Scene> m_Context;
 		Ref<InspectorPanel> m_InspectorPanel;
 
-		static constexpr ImGuiPopupFlags m_PopupFlags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
+		static constexpr ImGuiPopupFlags m_PopupFlags = ImGuiPopupFlags_NoOpenOverItems
+			| ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
 		std::string m_RenameBuffer, m_SearchInputBuffer;
 
 		bool m_IsSelectedNodeDisplayed = false;

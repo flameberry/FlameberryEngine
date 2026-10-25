@@ -34,8 +34,7 @@ namespace Flameberry {
 
 	Ref<Asset> EditorAssetManager::GetAsset(AssetHandle handle) {
 		// 1. Check if handle is valid
-		if (!IsAssetHandleValid(handle))
-			return nullptr;
+		if (!IsAssetHandleValid(handle)) return nullptr;
 
 		// Get the metadata
 		const AssetMetadata& metadata = m_AssetRegistry.at(handle);
@@ -43,8 +42,7 @@ namespace Flameberry {
 		Ref<Asset> asset;
 
 		// 2. Check if the asset is MemoryOnly
-		if (metadata.IsMemoryAsset && IsMemoryAsset(handle))
-			return m_MemoryOnlyAssets.at(handle);
+		if (metadata.IsMemoryAsset && IsMemoryAsset(handle)) return m_MemoryOnlyAssets.at(handle);
 
 		// 3. Check if the asset is loaded
 		if (IsAssetLoaded(handle)) {
@@ -65,8 +63,7 @@ namespace Flameberry {
 
 	Ref<Asset> EditorAssetManager::GetAssetAsync(AssetHandle handle) {
 		// 1. Check if handle is valid
-		if (!IsAssetHandleValid(handle))
-			return nullptr;
+		if (!IsAssetHandleValid(handle)) return nullptr;
 
 		// Get the metadata
 		const AssetMetadata& metadata = m_AssetRegistry.at(handle);
@@ -74,8 +71,7 @@ namespace Flameberry {
 		Ref<Asset> asset;
 
 		// 2. Check if the asset is MemoryOnly
-		if (metadata.IsMemoryAsset && IsMemoryAsset(handle))
-			return m_MemoryOnlyAssets.at(handle);
+		if (metadata.IsMemoryAsset && IsMemoryAsset(handle)) return m_MemoryOnlyAssets.at(handle);
 
 		// 3. Check if the asset is loaded
 		if (IsAssetLoaded(handle)) {

@@ -1,5 +1,3 @@
 #include "AssetManager.h"
 
-namespace Flameberry {
-
-}
+namespace Flameberry {}

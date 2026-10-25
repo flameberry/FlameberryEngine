@@ -11,20 +11,18 @@ namespace Flameberry {
 	 */
 	class AssetManager {
 	public:
-		template <typename TAssetManager>
-		static Ref<TAssetManager> As() {
-			static_assert(std::is_base_of_v<IAssetManager, TAssetManager>, "The class given must be derived from `IAssetManager`");
+		template <typename TAssetManager> static Ref<TAssetManager> As() {
+			static_assert(std::is_base_of_v<IAssetManager, TAssetManager>,
+				"The class given must be derived from `IAssetManager`");
 			return std::static_pointer_cast<TAssetManager>(Project::GetActiveProject()->GetAssetManager());
 		}
 
-		template <typename T>
-		static Ref<T> GetAsset(AssetHandle handle) {
+		template <typename T> static Ref<T> GetAsset(AssetHandle handle) {
 			static_assert(std::is_base_of_v<Asset, T>, "The class given must be derived from `Asset`");
 			return std::static_pointer_cast<T>(Project::GetActiveProject()->GetAssetManager()->GetAsset(handle));
 		}
 
-		template <typename T>
-		static Ref<T> GetAssetAsync(AssetHandle handle) {
+		template <typename T> static Ref<T> GetAssetAsync(AssetHandle handle) {
 			static_assert(std::is_base_of_v<Asset, T>, "The class given must be derived from `Asset`");
 			return std::static_pointer_cast<T>(Project::GetActiveProject()->GetAssetManager()->GetAssetAsync(handle));
 		}

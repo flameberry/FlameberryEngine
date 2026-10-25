@@ -8,8 +8,7 @@
 
 namespace Flameberry {
 
-	MaterialEditorPanel::MaterialEditorPanel() {
-	}
+	MaterialEditorPanel::MaterialEditorPanel() {}
 
 	void MaterialEditorPanel::OnUIRender() {
 		if (m_Open) {
@@ -30,7 +29,8 @@ namespace Flameberry {
 					UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 
 					ImGui::PushItemWidth(-1.0f);
-					if (ImGui::InputText("###RenameMaterial", m_RenameBuffer, 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+					if (ImGui::InputText("###RenameMaterial", m_RenameBuffer, 256,
+							ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
 						m_EditingContext->SetName(std::string(m_RenameBuffer).c_str());
 						m_ShouldRename = false;
 						m_IsMaterialEdited = true;
@@ -38,7 +38,8 @@ namespace Flameberry {
 					ImGui::PopItemWidth();
 				} else {
 					ImGui::Button(m_EditingContext ? m_EditingContext->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f));
-					if (m_EditingContext && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+					if (m_EditingContext && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)
+						&& ImGui::IsItemHovered())
 						m_ShouldRename = true;
 				}
 
@@ -51,8 +52,7 @@ namespace Flameberry {
 						FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
 						bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Material
-							&& std::filesystem::exists(fpath)
-							&& std::filesystem::is_regular_file(fpath);
+							&& std::filesystem::exists(fpath) && std::filesystem::is_regular_file(fpath);
 
 						if (shouldImport) {
 							AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(fpath);
@@ -64,7 +64,8 @@ namespace Flameberry {
 				}
 
 				if (m_EditingContext) {
-					const auto& metadata = AssetManager::As<EditorAssetManager>()->GetAssetMetadata(m_EditingContext->Handle);
+					const auto& metadata =
+						AssetManager::As<EditorAssetManager>()->GetAssetMetadata(m_EditingContext->Handle);
 
 					if (!metadata.IsMemoryAsset)
 						FBY_UI_TABLE_ELEMENT("FilePath", ImGui::TextWrapped("%s", metadata.FilePath.c_str()));
@@ -73,7 +74,8 @@ namespace Flameberry {
 
 					// This part of the UI causes vulkan validation errors whenever any map is updated
 					// Because this leads to updating the DescriptorSet which is to be used by the current frame
-					// This didn't happen before with the old `Material` class, which used to update the same descriptor in this part of the code only
+					// This didn't happen before with the old `Material` class, which used to update the same descriptor
+					// in this part of the code only
 					AssetHandle mapHandle;
 					mapHandle = m_EditingContext->m_AlbedoMap;
 					if (DrawMapControls("Texture Map", (bool&)uniformDataRef.UseAlbedoMap, mapHandle))
@@ -97,16 +99,20 @@ namespace Flameberry {
 
 					ImGui::PushItemWidth(-1.0f);
 
-					FBY_UI_TABLE_ELEMENT("Albedo", ImGui::ColorEdit3("##Albedo", glm::value_ptr(uniformDataRef.Albedo)));
+					FBY_UI_TABLE_ELEMENT(
+						"Albedo", ImGui::ColorEdit3("##Albedo", glm::value_ptr(uniformDataRef.Albedo)));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
-					FBY_UI_TABLE_ELEMENT("Roughness", ImGui::DragFloat("##Roughness", &uniformDataRef.Roughness, 0.01f, 0.0f, 1.0f));
+					FBY_UI_TABLE_ELEMENT(
+						"Roughness", ImGui::DragFloat("##Roughness", &uniformDataRef.Roughness, 0.01f, 0.0f, 1.0f));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
-					FBY_UI_TABLE_ELEMENT("Metallic", ImGui::DragFloat("##Metallic", &uniformDataRef.Metallic, 0.005f, 0.0f, 1.0f));
+					FBY_UI_TABLE_ELEMENT(
+						"Metallic", ImGui::DragFloat("##Metallic", &uniformDataRef.Metallic, 0.005f, 0.0f, 1.0f));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
-					FBY_UI_TABLE_ELEMENT("Emissive", ImGui::DragFloat("##Emissive", &uniformDataRef.EmissiveFactor, 0.025f, 0.0f));
+					FBY_UI_TABLE_ELEMENT(
+						"Emissive", ImGui::DragFloat("##Emissive", &uniformDataRef.EmissiveFactor, 0.025f, 0.0f));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
 					ImGui::PopItemWidth();
@@ -145,8 +151,7 @@ namespace Flameberry {
 					FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
 					bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Texture2D
-						&& std::filesystem::exists(path)
-						&& std::filesystem::is_regular_file(path);
+						&& std::filesystem::exists(path) && std::filesystem::is_regular_file(path);
 
 					if (shouldImport) {
 						mapHandle = AssetManager::As<EditorAssetManager>()->ImportAsset(path);

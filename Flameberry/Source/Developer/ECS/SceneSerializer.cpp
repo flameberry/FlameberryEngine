@@ -20,8 +20,7 @@ namespace Flameberry {
 	}
 
 	static ProjectionType ProjectionTypeStringToEnum(const std::string& type) {
-		if (type == "Orthographic")
-			return ProjectionType::Orthographic;
+		if (type == "Orthographic") return ProjectionType::Orthographic;
 		else if (type == "Perspective")
 			return ProjectionType::Perspective;
 	}
@@ -36,8 +35,7 @@ namespace Flameberry {
 	}
 
 	static RigidBodyComponent::RigidBodyType RigidBodyTypeStringToEnum(const std::string& type) {
-		if (type == "Static")
-			return RigidBodyComponent::RigidBodyType::Static;
+		if (type == "Static") return RigidBodyComponent::RigidBodyType::Static;
 		else if (type == "Dynamic")
 			return RigidBodyComponent::RigidBodyType::Dynamic;
 	}
@@ -54,8 +52,7 @@ namespace Flameberry {
 	}
 
 	static AxisType AxisTypeStringToEnum(const std::string& type) {
-		if (type == "X")
-			return AxisType::X;
+		if (type == "X") return AxisType::X;
 		else if (type == "Y")
 			return AxisType::Y;
 		else if (type == "Z")
@@ -64,8 +61,7 @@ namespace Flameberry {
 
 	Ref<Scene> SceneSerializer::DeserializeIntoNewScene(const std::filesystem::path& path) {
 		Ref<Scene> newScene = CreateRef<Scene>();
-		if (DeserializeIntoExistingScene(path, newScene))
-			return newScene;
+		if (DeserializeIntoExistingScene(path, newScene)) return newScene;
 		return nullptr;
 	}
 
@@ -118,14 +114,16 @@ namespace Flameberry {
 					auto& tagComp = destScene->m_Registry->EmplaceComponent<CollectionComponent>(deserializedEntity);
 
 				if (auto transform = entity["TransformComponent"]) {
-					auto& transformComp = destScene->m_Registry->EmplaceComponent<TransformComponent>(deserializedEntity);
+					auto& transformComp =
+						destScene->m_Registry->EmplaceComponent<TransformComponent>(deserializedEntity);
 					transformComp.Translation = transform["Translation"].as<glm::vec3>();
 					transformComp.Rotation = transform["Rotation"].as<glm::vec3>();
 					transformComp.Scale = transform["Scale"].as<glm::vec3>();
 				}
 
 				if (auto relation = entity["RelationshipComponent"]) {
-					auto& relationComp = destScene->m_Registry->EmplaceComponent<RelationshipComponent>(deserializedEntity);
+					auto& relationComp =
+						destScene->m_Registry->EmplaceComponent<RelationshipComponent>(deserializedEntity);
 					relationComp.Parent = UUIDToEntityMap[relation["Parent"].as<UUID>()];
 					relationComp.PrevSibling = UUIDToEntityMap[relation["PrevSibling"].as<UUID>()];
 					relationComp.NextSibling = UUIDToEntityMap[relation["NextSibling"].as<UUID>()];
@@ -167,7 +165,8 @@ namespace Flameberry {
 					meshComp.MeshHandle = mesh["MeshHandle"].as<AssetHandle>();
 
 					for (auto entry : mesh["OverridenMaterialTable"])
-						meshComp.OverridenMaterialTable[entry["SubmeshIndex"].as<uint32_t>()] = entry["Material"].as<AssetHandle>();
+						meshComp.OverridenMaterialTable[entry["SubmeshIndex"].as<uint32_t>()] =
+							entry["Material"].as<AssetHandle>();
 				}
 
 				if (auto skyLight = entity["SkyLightComponent"]) {
@@ -179,7 +178,8 @@ namespace Flameberry {
 				}
 
 				if (auto light = entity["DirectionalLightComponent"]) {
-					auto& lightComp = destScene->m_Registry->EmplaceComponent<DirectionalLightComponent>(deserializedEntity);
+					auto& lightComp =
+						destScene->m_Registry->EmplaceComponent<DirectionalLightComponent>(deserializedEntity);
 					lightComp.Color = light["Color"].as<glm::vec3>();
 					lightComp.Intensity = light["Intensity"].as<float>();
 					lightComp.LightSize = light["LightSize"].as<float>();
@@ -219,7 +219,8 @@ namespace Flameberry {
 				}
 
 				if (auto capsuleCollider = entity["CapsuleColliderComponent"]) {
-					auto& ccComp = destScene->m_Registry->EmplaceComponent<CapsuleColliderComponent>(deserializedEntity);
+					auto& ccComp =
+						destScene->m_Registry->EmplaceComponent<CapsuleColliderComponent>(deserializedEntity);
 					ccComp.Axis = AxisTypeStringToEnum(capsuleCollider["Axis"].as<std::string>());
 					ccComp.Radius = capsuleCollider["Radius"].as<float>();
 					ccComp.Height = capsuleCollider["Height"].as<float>();
@@ -241,7 +242,8 @@ namespace Flameberry {
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << YAML::BeginMap;
 		out << YAML::Key << "Name" << YAML::Value << srcScene->m_Name;
-		out << YAML::Key << "WorldEntity" << YAML::Value << srcScene->m_Registry->GetComponent<IDComponent>(srcScene->m_WorldEntity).ID;
+		out << YAML::Key << "WorldEntity" << YAML::Value
+			<< srcScene->m_Registry->GetComponent<IDComponent>(srcScene->m_WorldEntity).ID;
 
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 
@@ -258,7 +260,8 @@ namespace Flameberry {
 		fout << out.c_str();
 	}
 
-	void SceneSerializer::SerializeEntity(YAML::Emitter& out, const FEntity& entity, const Ref<Scene>& scene, std::set<UUID>& meshUUIDs) {
+	void SceneSerializer::SerializeEntity(
+		YAML::Emitter& out, const FEntity& entity, const Ref<Scene>& scene, std::set<UUID>& meshUUIDs) {
 		out << YAML::BeginMap;
 		out << YAML::Key << "Entity" << YAML::Value << scene->m_Registry->GetComponent<IDComponent>(entity).ID;
 
@@ -283,10 +286,18 @@ namespace Flameberry {
 			auto& relation = scene->m_Registry->GetComponent<RelationshipComponent>(entity);
 			out << YAML::Key << "RelationshipComponent" << YAML::BeginMap;
 
-			const UUID parentID = relation.Parent != FEntity::Null ? scene->m_Registry->GetComponent<IDComponent>(relation.Parent).ID : UUID(0);
-			const UUID prevSiblingID = relation.PrevSibling != FEntity::Null ? scene->m_Registry->GetComponent<IDComponent>(relation.PrevSibling).ID : UUID(0);
-			const UUID nextSiblingID = relation.NextSibling != FEntity::Null ? scene->m_Registry->GetComponent<IDComponent>(relation.NextSibling).ID : UUID(0);
-			const UUID firstChildID = relation.FirstChild != FEntity::Null ? scene->m_Registry->GetComponent<IDComponent>(relation.FirstChild).ID : UUID(0);
+			const UUID parentID = relation.Parent != FEntity::Null
+				? scene->m_Registry->GetComponent<IDComponent>(relation.Parent).ID
+				: UUID(0);
+			const UUID prevSiblingID = relation.PrevSibling != FEntity::Null
+				? scene->m_Registry->GetComponent<IDComponent>(relation.PrevSibling).ID
+				: UUID(0);
+			const UUID nextSiblingID = relation.NextSibling != FEntity::Null
+				? scene->m_Registry->GetComponent<IDComponent>(relation.NextSibling).ID
+				: UUID(0);
+			const UUID firstChildID = relation.FirstChild != FEntity::Null
+				? scene->m_Registry->GetComponent<IDComponent>(relation.FirstChild).ID
+				: UUID(0);
 
 			out << YAML::Key << "Parent" << YAML::Value << parentID;
 			out << YAML::Key << "PrevSibling" << YAML::Value << prevSiblingID;

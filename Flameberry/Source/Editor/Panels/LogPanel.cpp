@@ -40,8 +40,7 @@ namespace Flameberry {
 	LogPanel::LogPanel()
 		: m_InfoIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/info.png"))
 		, m_WarningIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/warning.png"))
-		, m_ErrorIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/error.png")) {
-	}
+		, m_ErrorIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/error.png")) {}
 
 	void LogPanel::OnUIRender() {
 		ImGui::Begin("Logs");
@@ -49,11 +48,8 @@ namespace Flameberry {
 		DisplayToolbar();
 
 		if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -1), ImGuiChildFlags_NavFlattened)) {
-			constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersInnerV
-				| ImGuiTableFlags_NoKeepColumnsVisible
-				| ImGuiTableFlags_RowBg
-				| ImGuiTableFlags_PadOuterX
-				| ImGuiTableFlags_HighlightHoveredColumn
+			constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible
+				| ImGuiTableFlags_RowBg | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_HighlightHoveredColumn
 				| ImGuiTableFlags_ScrollY;
 
 			if (ImGui::BeginTable("##LogTable", 3, tableFlags)) {
@@ -64,27 +60,25 @@ namespace Flameberry {
 				ImGui::TableHeadersRow();
 
 				{
-					UI::ScopedStyleVariable padding(ImGuiStyleVar_CellPadding, ImVec2(0, ImGui::GetStyle().CellPadding.y * 0.75f));
+					UI::ScopedStyleVariable padding(
+						ImGuiStyleVar_CellPadding, ImVec2(0, ImGui::GetStyle().CellPadding.y * 0.75f));
 					for (const auto& log : m_Logs) {
-						if (!m_FilterInfo && log.LogLevel == EditorLogLevel::Info)
-							continue;
-						if (!m_FilterWarning && log.LogLevel == EditorLogLevel::Warn)
-							continue;
-						if (!m_FilterError && log.LogLevel == EditorLogLevel::Error)
-							continue;
+						if (!m_FilterInfo && log.LogLevel == EditorLogLevel::Info) continue;
+						if (!m_FilterWarning && log.LogLevel == EditorLogLevel::Warn) continue;
+						if (!m_FilterError && log.LogLevel == EditorLogLevel::Error) continue;
 
 						if (m_SearchInputBuffer[0] != '\0') {
-							const int index = Algorithm::KmpSearch(log.Message.c_str(), m_SearchInputBuffer.c_str(), true);
-							if (index == -1)
-								continue;
+							const int index =
+								Algorithm::KmpSearch(log.Message.c_str(), m_SearchInputBuffer.c_str(), true);
+							if (index == -1) continue;
 						}
 
 						DisplayLogEntry(log);
 					}
 				}
 
-				// Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the frame.
-				// Using a scrollbar or mouse-wheel will take away from the bottom edge.
+				// Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the
+				// frame. Using a scrollbar or mouse-wheel will take away from the bottom edge.
 				if (m_ScrollToBottom || (m_AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
 					ImGui::SetScrollHereY(1.0f);
 				m_ScrollToBottom = false;
@@ -96,75 +90,58 @@ namespace Flameberry {
 	}
 
 	void LogPanel::DisplayToolbar() {
-		if (ImGui::Button("Clear"))
-			ClearLog();
+		if (ImGui::Button("Clear")) ClearLog();
 
 		ImGui::SameLine();
 
-		if (ImGui::Button(ICON_LC_SETTINGS))
-			ImGui::OpenPopup("Options");
+		if (ImGui::Button(ICON_LC_SETTINGS)) ImGui::OpenPopup("Options");
 
 		ImGui::SameLine();
 
-		m_IsSearchBoxFocused = UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
+		m_IsSearchBoxFocused = UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer,
+			ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
 
 		ImGui::SameLine();
 
 		// Calculate total width of buttons
 		float buttonSize = ImGui::CalcTextSize(ICON_LC_TRIANGLE_ALERT).x * 1.5f;
 		float spacing = ImGui::GetStyle().ItemSpacing.x;
-		float buttonWidth = buttonSize * 3
-			+ ImGui::GetStyle().FramePadding.x * 2 * 3
-			+ spacing * 2; // 3 buttons = 2 spacings
+		float buttonWidth =
+			buttonSize * 3 + ImGui::GetStyle().FramePadding.x * 2 * 3 + spacing * 2; // 3 buttons = 2 spacings
 
 		// Move to right
 		float rightAlignX = ImGui::GetContentRegionAvail().x - buttonWidth;
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + rightAlignX);
 
-		if (ImGui::ImageButton("##Info",
-				(ImTextureID)m_InfoIcon->CreateOrGetImGuiDescriptorSet(),
-				ImVec2(buttonSize, buttonSize),
-				ImVec2(0, 0),
-				ImVec2(1, 1),
-				ImVec4(0, 0, 0, 0),
+		if (ImGui::ImageButton("##Info", (ImTextureID)m_InfoIcon->CreateOrGetImGuiDescriptorSet(),
+				ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
 				m_FilterInfo ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f))) {
 			m_FilterInfo = !m_FilterInfo;
 		}
 
 		ImGui::SameLine();
 
-		if (ImGui::ImageButton("##Warning",
-				(ImTextureID)m_WarningIcon->CreateOrGetImGuiDescriptorSet(),
-				ImVec2(buttonSize, buttonSize),
-				ImVec2(0, 0),
-				ImVec2(1, 1),
-				ImVec4(0, 0, 0, 0),
+		if (ImGui::ImageButton("##Warning", (ImTextureID)m_WarningIcon->CreateOrGetImGuiDescriptorSet(),
+				ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
 				m_FilterWarning ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f))) {
 			m_FilterWarning = !m_FilterWarning;
 		}
 
 		ImGui::SameLine();
-		if (ImGui::ImageButton("##Error",
-				(ImTextureID)m_ErrorIcon->CreateOrGetImGuiDescriptorSet(),
-				ImVec2(buttonSize, buttonSize),
-				ImVec2(0, 0),
-				ImVec2(1, 1),
-				ImVec4(0, 0, 0, 0),
+		if (ImGui::ImageButton("##Error", (ImTextureID)m_ErrorIcon->CreateOrGetImGuiDescriptorSet(),
+				ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
 				m_FilterError ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f))) {
 			m_FilterError = !m_FilterError;
 		}
 
 		if (ImGui::Button("Add 10 Info logs"))
-			for (int i = 10; i >= 0; i--)
-				AddInfo("Info Number: {}", i);
+			for (int i = 10; i >= 0; i--) AddInfo("Info Number: {}", i);
 		ImGui::SameLine();
 		if (ImGui::Button("Add 10 Warning logs"))
-			for (int i = 10; i >= 0; i--)
-				AddWarning("Warning Number: {}", i);
+			for (int i = 10; i >= 0; i--) AddWarning("Warning Number: {}", i);
 		ImGui::SameLine();
 		if (ImGui::Button("Add 10 Error logs"))
-			for (int i = 10; i >= 0; i--)
-				AddError("Error Number: {}", i);
+			for (int i = 10; i >= 0; i--) AddError("Error Number: {}", i);
 
 		ImGui::Separator();
 

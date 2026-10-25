@@ -64,12 +64,17 @@ namespace Flameberry {
 
 	Texture2D::Texture2D(const void* data, const Texture2DSpecification& specification) {
 		FBY_ASSERT(data, "Texture pixels are empty!");
-		const uint32_t mipLevels = specification.GenerateMipmaps ? static_cast<uint32_t>(std::floor(std::log2(std::max(specification.Width, specification.Height)))) + 1 : 1;
-		const VkDeviceSize imageSize = specification.Width * specification.Height * Utils::GetPixelSizeInBytesFromTextureFormat(specification.Format);
-		SetupTexture(data, specification.Width, specification.Height, imageSize, mipLevels, specification.Format, specification.Sampler);
+		const uint32_t mipLevels = specification.GenerateMipmaps
+			? static_cast<uint32_t>(std::floor(std::log2(std::max(specification.Width, specification.Height)))) + 1
+			: 1;
+		const VkDeviceSize imageSize = specification.Width * specification.Height
+			* Utils::GetPixelSizeInBytesFromTextureFormat(specification.Format);
+		SetupTexture(data, specification.Width, specification.Height, imageSize, mipLevels, specification.Format,
+			specification.Sampler);
 	}
 
-	void Texture2D::SetupTexture(const void* data, const float width, const float height, const float imageSize, const uint16_t mipLevels, const VkFormat format, const VkSampler sampler) {
+	void Texture2D::SetupTexture(const void* data, const float width, const float height, const float imageSize,
+		const uint16_t mipLevels, const VkFormat format, const VkSampler sampler) {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 		m_TextureImageSpecification.Width = width;
@@ -78,7 +83,8 @@ namespace Flameberry {
 		m_TextureImageSpecification.Samples = 1;
 		m_TextureImageSpecification.Format = format;
 		m_TextureImageSpecification.Tiling = VK_IMAGE_TILING_OPTIMAL;
-		m_TextureImageSpecification.Usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		m_TextureImageSpecification.Usage =
+			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		m_TextureImageSpecification.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		m_TextureImageSpecification.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 		m_TextureImageSpecification.ViewSpecification.LevelCount = mipLevels;
@@ -101,9 +107,11 @@ namespace Flameberry {
 		m_TextureImage->WriteFromBuffer(stagingBuffer.GetVulkanBuffer());
 
 		if (m_TextureImageSpecification.MipLevels > 1)
-			m_TextureImage->GenerateMipmaps(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_TextureImage->GenerateMipmaps(
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		else
-			m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_TextureImage->TransitionLayout(
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		if (sampler == VK_NULL_HANDLE) {
 			m_DidCreateSampler = true;
@@ -138,18 +146,21 @@ namespace Flameberry {
 	Texture2D::~Texture2D() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		if (m_DescriptorSet != VK_NULL_HANDLE)
-			vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
-		// ImGui allocates its texture descriptor sets from the global pool, so this is equivalent to ImGui_ImplVulkan_RemoveTexture(),
-		// but doesn't depend on the ImGui backend still being alive when textures are destroyed during shutdown
+			vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1,
+				&m_DescriptorSet);
+		// ImGui allocates its texture descriptor sets from the global pool, so this is equivalent to
+		// ImGui_ImplVulkan_RemoveTexture(), but doesn't depend on the ImGui backend still being alive when textures are
+		// destroyed during shutdown
 		if (m_ImGuiDescriptorSet != VK_NULL_HANDLE)
-			vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_ImGuiDescriptorSet);
-		if (m_DidCreateSampler)
-			vkDestroySampler(device, m_Sampler, nullptr);
+			vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1,
+				&m_ImGuiDescriptorSet);
+		if (m_DidCreateSampler) vkDestroySampler(device, m_Sampler, nullptr);
 	}
 
 	VkDescriptorSet Texture2D::CreateOrGetDescriptorSet() {
 		if (m_DescriptorSet == VK_NULL_HANDLE) {
-			VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(&m_DescriptorSet, s_DescriptorLayout->GetLayout());
+			VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(
+				&m_DescriptorSet, s_DescriptorLayout->GetLayout());
 
 			// Update the Descriptor Set:
 			VkDescriptorImageInfo desc_image[1] = {};
@@ -171,10 +182,11 @@ namespace Flameberry {
 	}
 
 	VkDescriptorSet Texture2D::CreateOrGetImGuiDescriptorSet() {
-		// ImGui's Vulkan backend uses a different layout (a sampled image without a sampler, as ImGui binds its own sampler)
-		// so this can't be shared with the descriptor set used by the renderer
+		// ImGui's Vulkan backend uses a different layout (a sampled image without a sampler, as ImGui binds its own
+		// sampler) so this can't be shared with the descriptor set used by the renderer
 		if (m_ImGuiDescriptorSet == VK_NULL_HANDLE)
-			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_TextureImage->GetVulkanImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(
+				m_TextureImage->GetVulkanImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		return m_ImGuiDescriptorSet;
 	}
 
@@ -233,7 +245,8 @@ namespace Flameberry {
 			vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
 			vk_image_memory_barrier.subresourceRange.layerCount = 1;
 
-			vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1, &vk_image_memory_barrier);
+			vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1,
+				&vk_image_memory_barrier);
 
 			device->EndSingleTimeCommandBuffer(commandBuffer);
 		}

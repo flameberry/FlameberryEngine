@@ -57,9 +57,14 @@ namespace Flameberry {
 
 		Ref<MaterialAsset> MaterialAsset;
 
-		RenderObject(VkBuffer vertexBuffer, VkBuffer indexBuffer, uint32_t indexOffset, uint32_t indexCount, TransformComponent* transform, Ref<Flameberry::MaterialAsset> materialAsset)
-			: VertexBuffer(vertexBuffer), IndexBuffer(indexBuffer), IndexOffset(indexOffset), IndexCount(indexCount), Transform(transform), MaterialAsset(materialAsset) {
-		}
+		RenderObject(VkBuffer vertexBuffer, VkBuffer indexBuffer, uint32_t indexOffset, uint32_t indexCount,
+			TransformComponent* transform, Ref<Flameberry::MaterialAsset> materialAsset)
+			: VertexBuffer(vertexBuffer)
+			, IndexBuffer(indexBuffer)
+			, IndexOffset(indexOffset)
+			, IndexCount(indexCount)
+			, Transform(transform)
+			, MaterialAsset(materialAsset) {}
 	};
 
 	struct RendererData {
@@ -73,28 +78,48 @@ namespace Flameberry {
 		SceneRenderer(const glm::vec2& viewportSize);
 		~SceneRenderer();
 
-		void RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera, const glm::vec3& cameraPosition, FEntity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true, bool renderOutline = true, bool renderPhysicsCollider = true);
-		void RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar, FEntity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true, bool renderOutline = true, bool renderPhysicsCollider = true);
+		void RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera,
+			const glm::vec3& cameraPosition, FEntity selectedEntity, bool renderGrid = true,
+			bool renderDebugIcons = true, bool renderOutline = true, bool renderPhysicsCollider = true);
+		void RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix,
+			const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar,
+			FEntity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true, bool renderOutline = true,
+			bool renderPhysicsCollider = true);
 
-		VkImageView GetGeometryPassOutputImageView(uint32_t index) const { return m_GeometryPass->GetSpecification().TargetFramebuffers[index]->GetColorResolveAttachment(0)->GetVulkanImageView(); }
-		VkImageView GetCompositePassOutputImageView(uint32_t index) const { return m_CompositingPass->GetSpecification().TargetFramebuffers[index]->GetColorAttachment(0)->GetVulkanImageView(); }
+		VkImageView GetGeometryPassOutputImageView(uint32_t index) const {
+			return m_GeometryPass->GetSpecification()
+				.TargetFramebuffers[index]
+				->GetColorResolveAttachment(0)
+				->GetVulkanImageView();
+		}
+		VkImageView GetCompositePassOutputImageView(uint32_t index) const {
+			return m_CompositingPass->GetSpecification()
+				.TargetFramebuffers[index]
+				->GetColorAttachment(0)
+				->GetVulkanImageView();
+		}
 
 		SceneRendererSettings& GetRendererSettingsRef() { return m_RendererSettings; }
-		void RenderSceneForMousePicking(const Ref<Scene>& scene, const Ref<RenderPass>& renderPass, const Ref<Pipeline>& pipeline, const Ref<Pipeline>& pipeline2D, const glm::vec2& mousePos);
+		void RenderSceneForMousePicking(const Ref<Scene>& scene, const Ref<RenderPass>& renderPass,
+			const Ref<Pipeline>& pipeline, const Ref<Pipeline>& pipeline2D, const glm::vec2& mousePos);
 
 	private:
 		void Init();
 
 		void SubmitRenderObjects(std::vector<RenderObject>& renderObjects);
 
-		void CalculateShadowMapCascades(const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection);
+		void CalculateShadowMapCascades(
+			const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection);
 
 		// Debug Utilities
 		void SubmitPhysicsColliderGeometry(const Ref<Scene>& scene, FEntity entity, TransformComponent& transform);
 		void SubmitCameraViewGeometry(const Ref<Scene>& scene, FEntity entity, TransformComponent& transform);
-		void SubmitBoxColliderGeometry(const BoxColliderComponent& boxCollider, const TransformComponent& transform, const glm::mat3& rotation, const glm::vec3& color, const float bias);
-		void SubmitSphereColliderGeometry(const SphereColliderComponent& sphereCollider, const TransformComponent& transform, const glm::vec3& color, const float bias);
-		void SubmitCapsuleColliderGeometry(const CapsuleColliderComponent& capsuleCollider, const TransformComponent& transform, const glm::mat3& rotation, const glm::vec3& color, const float bias);
+		void SubmitBoxColliderGeometry(const BoxColliderComponent& boxCollider, const TransformComponent& transform,
+			const glm::mat3& rotation, const glm::vec3& color, const float bias);
+		void SubmitSphereColliderGeometry(const SphereColliderComponent& sphereCollider,
+			const TransformComponent& transform, const glm::vec3& color, const float bias);
+		void SubmitCapsuleColliderGeometry(const CapsuleColliderComponent& capsuleCollider,
+			const TransformComponent& transform, const glm::mat3& rotation, const glm::vec3& color, const float bias);
 
 		// Render Passes
 		void PrepareShadowMappingRenderPass();
@@ -129,7 +154,8 @@ namespace Flameberry {
 
 		// Geometry
 		Ref<RenderPass> m_GeometryPass;
-		Ref<DescriptorSetLayout> m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
+		Ref<DescriptorSetLayout> m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout,
+			m_ShadowMapRefDescriptorSetLayout;
 		std::vector<Ref<DescriptorSet>> m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
 		std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
 		Ref<Pipeline> m_MeshPipeline, m_SkymapPipeline, m_GridPipeline;
@@ -149,7 +175,8 @@ namespace Flameberry {
 		SceneRendererSettings m_RendererSettings;
 
 		// Jump Flood Algorithm
-		Ref<Image> m_JumpFloodImage1[SwapChain::MAX_FRAMES_IN_FLIGHT], m_JumpFloodImage2[SwapChain::MAX_FRAMES_IN_FLIGHT];
+		Ref<Image> m_JumpFloodImage1[SwapChain::MAX_FRAMES_IN_FLIGHT],
+			m_JumpFloodImage2[SwapChain::MAX_FRAMES_IN_FLIGHT];
 		Ref<ComputePipeline> m_JumpFloodPipeline;
 		Ref<DescriptorSet> m_JumpFloodDescSets[SwapChain::MAX_FRAMES_IN_FLIGHT];
 

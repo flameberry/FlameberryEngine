@@ -46,7 +46,9 @@ namespace Flameberry {
 		void OnScenePlay();
 		void OnSceneSimulate();
 
+		void UI_Titlebar();
 		void UI_Menubar();
+		void UI_MenubarMenus();
 		void UI_Toolbar();
 		void UI_RendererSettings();
 		void UI_AssetRegistry();
@@ -57,8 +59,7 @@ namespace Flameberry {
 		void UI_BottomPanel();
 
 		// static_assert(std::is_invocable_v<Fn>);
-		template <typename Fn>
-		void UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func);
+		template <typename Fn> void UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func);
 
 	private:
 		EditorCameraController m_ActiveCameraController;
@@ -72,15 +73,17 @@ namespace Flameberry {
 		bool m_IsMousePickingBufferReady = false, m_DidViewportBegin = true, m_IsAnyOverlayHovered = false;
 		bool m_EnableGrid = true;
 
+		// This is to store the viewport size to be rendered to for high dpi/retina displays
+		glm::vec2 m_RenderViewportSize{ 1280, 720 };
 		glm::vec2 m_ViewportSize{ 1280, 720 };
-		glm::vec2 m_RenderViewportSize{ 1280, 720 }; // This is to store the viewport size to be rendered to for high dpi/retina displays
 		glm::vec2 m_ViewportBounds[2];
 
 		std::string m_EditorScenePath = "", m_ScenePathToBeOpened = "";
 		bool m_ShouldOpenAnotherScene = false;
 
 		// Texture Icons
-		Ref<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon, m_PauseIcon, m_StepIcon, m_SimulateAndPauseIcon;
+		Ref<Texture2D> m_CursorIcon, m_TranslateIcon, m_RotateIcon, m_ScaleIcon, m_PlayAndStopIcon, m_SettingsIcon,
+			m_PauseIcon, m_StepIcon, m_SimulateAndPauseIcon, m_FlameberryIcon;
 		static constexpr ImVec2 s_OverlayButtonSize = ImVec2(16, 16);
 		static constexpr float s_OverlayPadding = 6.0f;
 
@@ -106,14 +109,10 @@ namespace Flameberry {
 		Ref<Project> m_Project;
 	};
 
-	template <typename Fn>
-	void EditorLayer::UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func) {
+	template <typename Fn> void EditorLayer::UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func) {
 		if (m_DidViewportBegin) {
-			ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
-				| ImGuiWindowFlags_AlwaysAutoResize
-				| ImGuiWindowFlags_NoSavedSettings
-				| ImGuiWindowFlags_NoFocusOnAppearing
-				| ImGuiWindowFlags_NoNav;
+			ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize
+				| ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
 			ImGui::SetNextWindowPos(position, ImGuiCond_Always);
 			window_flags |= ImGuiWindowFlags_NoMove;

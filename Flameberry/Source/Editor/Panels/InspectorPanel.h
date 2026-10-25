@@ -19,7 +19,8 @@ namespace Flameberry {
 		void OnUIRender();
 
 	private:
-		static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
+		static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH
+			| ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
 		static constexpr float s_LabelWidth = 100.0f;
 
 		Ref<MaterialEditorPanel> m_MaterialEditorPanel;
@@ -31,15 +32,13 @@ namespace Flameberry {
 		std::string m_SearchInpuBuffer1, m_SearchInputBuffer2;
 
 	private:
-		template <typename ComponentType>
-		void DrawAddComponentEntry(const char* name);
+		template <typename ComponentType> void DrawAddComponentEntry(const char* name);
 
 		template <typename ComponentType, typename Fn>
 		void DrawComponent(const char* name, Fn&& fn, bool removable = true);
 	};
 
-	template <typename ComponentType>
-	void InspectorPanel::DrawAddComponentEntry(const char* name) {
+	template <typename ComponentType> void InspectorPanel::DrawAddComponentEntry(const char* name) {
 		if (!m_Context->GetRegistry()->HasComponent<ComponentType>(EditorContext::Get()->SelectedEntity)) {
 			if (ImGui::MenuItem(name))
 				m_Context->GetRegistry()->EmplaceComponent<ComponentType>(EditorContext::Get()->SelectedEntity);
@@ -62,9 +61,7 @@ namespace Flameberry {
 			const float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
 
 			constexpr ImGuiTreeNodeFlags headerFlags = ImGuiTreeNodeFlags_DefaultOpen
-				| ImGuiTreeNodeFlags_SpanAvailWidth
-				| ImGuiTreeNodeFlags_FramePadding
-				| ImGuiTreeNodeFlags_AllowOverlap;
+				| ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap;
 
 			const bool open = ImGui::CollapsingHeader(name, headerFlags);
 			ImGui::PopStyleVar();
@@ -74,17 +71,16 @@ namespace Flameberry {
 			ImGui::PopStyleVar();
 
 			bool shouldRemoveComp = false;
-			if (ImGui::BeginPopupContextItem("ComponentSettings", ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonLeft)) {
+			if (ImGui::BeginPopupContextItem(
+					"ComponentSettings", ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonLeft)) {
 				ImGui::BeginDisabled(!removable);
-				if (ImGui::MenuItem(ICON_LC_DELETE "\tRemove Component"))
-					shouldRemoveComp = true;
+				if (ImGui::MenuItem(ICON_LC_DELETE "\tRemove Component")) shouldRemoveComp = true;
 				ImGui::EndDisabled();
 
 				ImGui::EndPopup();
 			}
 
-			if (open)
-				fn();
+			if (open) fn();
 
 			ImGui::PopID();
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y);

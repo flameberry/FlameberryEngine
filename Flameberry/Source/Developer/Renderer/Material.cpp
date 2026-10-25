@@ -4,20 +4,19 @@
 
 namespace Flameberry {
 
-	Material::Material(const Ref<Shader>& shader)
-		: m_Shader(shader) {
+	Material::Material(const Ref<Shader>& shader) : m_Shader(shader) {
 		uint32_t totalSize = 0;
 		// Arranging resources for the push constants
-		// Currently the push constant blocks which are material specific (i.e. not Renderer Only) are accumulated and the combined data is stored together
-		// As of now I haven't encountered a case where multiple material specific push constant blocks are used
+		// Currently the push constant blocks which are material specific (i.e. not Renderer Only) are accumulated and
+		// the combined data is stored together As of now I haven't encountered a case where multiple material specific
+		// push constant blocks are used
 		for (const auto& specification : m_Shader->GetPushConstantSpecifications()) {
 			// This is to remind the developer to implement this case properly when such a shader is written
 			FBY_ASSERT(!m_PushConstantBufferSize, "Multiple push constants not handled correctly yet!");
 
 			if (!specification.RendererOnly) {
 				// This is to ensure only the first time the offset should be set
-				if (m_PushConstantBufferOffset == 0)
-					m_PushConstantBufferOffset = totalSize;
+				if (m_PushConstantBufferOffset == 0) m_PushConstantBufferOffset = totalSize;
 				// This will be later used to allocate the push constant/uniform memory
 				m_PushConstantBufferSize += specification.Size;
 			}
@@ -25,8 +24,7 @@ namespace Flameberry {
 			totalSize += specification.Size;
 		}
 
-		if (m_PushConstantBufferSize)
-			m_PushConstantBuffer = (uint8_t*)malloc(m_PushConstantBufferSize);
+		if (m_PushConstantBufferSize) m_PushConstantBuffer = (uint8_t*)malloc(m_PushConstantBufferSize);
 
 		// Arranging resources for the other Uniforms like Images and Uniform Buffers
 		const auto& reflectionDescriptorSets = m_Shader->GetDescriptorSetSpecifications();
@@ -68,18 +66,18 @@ namespace Flameberry {
 				vulkanDescSetBindings.clear();
 
 				// Only set this the first time any set is created which will inherently store the start set index
-				if (m_StartSetIndex == -1)
-					m_StartSetIndex = reflectionDescSet.Set;
+				if (m_StartSetIndex == -1) m_StartSetIndex = reflectionDescSet.Set;
 
-				// This will assert the assumption that all the material specific descriptor sets will have sequential set indices
-				FBY_ASSERT(reflectionDescSet.Set - m_StartSetIndex == m_DescriptorSets.size() - 1, "Material specific descriptor sets do not have sequentialy set indices!");
+				// This will assert the assumption that all the material specific descriptor sets will have sequential
+				// set indices
+				FBY_ASSERT(reflectionDescSet.Set - m_StartSetIndex == m_DescriptorSets.size() - 1,
+					"Material specific descriptor sets do not have sequentialy set indices!");
 			}
 		}
 	}
 
 	Material::~Material() {
-		if (m_PushConstantBuffer)
-			free(m_PushConstantBuffer);
+		if (m_PushConstantBuffer) free(m_PushConstantBuffer);
 	}
 
 } // namespace Flameberry

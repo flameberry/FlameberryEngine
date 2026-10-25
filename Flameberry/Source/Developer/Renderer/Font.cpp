@@ -7,13 +7,15 @@
 namespace Flameberry {
 
 	template <typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
-	static Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName, float fontSize, const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
-		const msdf_atlas::FontGeometry& fontGeometry, uint32_t width, uint32_t height) {
+	static Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName, float fontSize,
+		const std::vector<msdf_atlas::GlyphGeometry>& glyphs, const msdf_atlas::FontGeometry& fontGeometry,
+		uint32_t width, uint32_t height) {
 		msdf_atlas::GeneratorAttributes attributes;
 		attributes.config.overlapSupport = true;
 		attributes.scanlinePass = true;
 
-		msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(width, height);
+		msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(
+			width, height);
 		generator.setAttributes(attributes);
 		generator.setThreadCount(8);
 		generator.generate(glyphs.data(), (int)glyphs.size());
@@ -43,8 +45,7 @@ namespace Flameberry {
 		s_DefaultFont = nullptr;
 	}
 
-	Font::Font(const std::filesystem::path& path)
-		: m_Data(new MSDFFontData()) {
+	Font::Font(const std::filesystem::path& path) : m_Data(new MSDFFontData()) {
 		msdfgen::FreetypeHandle* ft = msdfgen::initializeFreetype();
 		FBY_ASSERT(ft, "Failed to initialize freetype!");
 
@@ -63,15 +64,12 @@ namespace Flameberry {
 			uint32_t Start, End;
 		};
 
-		constexpr CharsetRange charsetRanges[] = {
-			{ 0x20, 0xFF }
-		};
+		constexpr CharsetRange charsetRanges[] = { { 0x20, 0xFF } };
 
 		msdf_atlas::Charset charset;
 
 		for (CharsetRange range : charsetRanges)
-			for (uint32_t c = range.Start; c < range.End; c++)
-				charset.add(c);
+			for (uint32_t c = range.Start; c < range.End; c++) charset.add(c);
 
 		double fontScale = 1.0;
 
@@ -118,7 +116,8 @@ namespace Flameberry {
 		}
 #endif
 
-		m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 4, msdf_atlas::mtsdfGenerator>("Test", (float)emSize, m_Data->Glyphs, m_Data->FontGeometry, width, height);
+		m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 4, msdf_atlas::mtsdfGenerator>(
+			"Test", (float)emSize, m_Data->Glyphs, m_Data->FontGeometry, width, height);
 
 		msdfgen::destroyFont(font);
 		msdfgen::deinitializeFreetype(ft);

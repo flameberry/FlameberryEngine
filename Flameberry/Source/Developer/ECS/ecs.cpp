@@ -1,5 +1,3 @@
 #include "ecs.hpp"
 
-namespace Flameberry {
-
-} // namespace Flameberry
+namespace Flameberry {} // namespace Flameberry

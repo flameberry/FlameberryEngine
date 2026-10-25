@@ -8,8 +8,7 @@ namespace Flameberry {
 
 	class EditorApplication : public Application {
 	public:
-		EditorApplication(const ApplicationSpecification& specification)
-			: Application(specification) {
+		EditorApplication(const ApplicationSpecification& specification) : Application(specification) {
 			// Check for startup project
 			if (specification.CommandLineArgs.Count > 1) {
 				std::filesystem::path projectPath = specification.CommandLineArgs[1];
@@ -38,8 +37,7 @@ namespace Flameberry {
 			}
 		}
 
-		~EditorApplication() {
-		}
+		~EditorApplication() {}
 
 		void OpenProjectWithEditor(const Ref<Project>& project) {
 			auto projectRef = project; // This is to prevent `project` being deleted when Layer is poped

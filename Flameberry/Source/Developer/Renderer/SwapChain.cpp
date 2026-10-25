@@ -10,8 +10,7 @@
 
 namespace Flameberry {
 
-	SwapChain::SwapChain(VkSurfaceKHR surface, const Ref<SwapChain>& oldSwapChain)
-		: m_VkSurface(surface) {
+	SwapChain::SwapChain(VkSurfaceKHR surface, const Ref<SwapChain>& oldSwapChain) : m_VkSurface(surface) {
 		CreateSwapChain(oldSwapChain);
 		CreateSyncObjects();
 	}
@@ -33,10 +32,13 @@ namespace Flameberry {
 		const uint32_t maxImageCount = vk_swap_chain_details.SurfaceCapabilities.maxImageCount;
 
 		// Check if the MAX_FRAMES_IN_FLIGHT value is within bounds
-		FBY_ASSERT(MAX_FRAMES_IN_FLIGHT >= minImageCount && MAX_FRAMES_IN_FLIGHT <= maxImageCount, "Frames-in-flight requested ({}) must be within the range: [{} , {}]", MAX_FRAMES_IN_FLIGHT, minImageCount, maxImageCount);
+		FBY_ASSERT(MAX_FRAMES_IN_FLIGHT >= minImageCount && MAX_FRAMES_IN_FLIGHT <= maxImageCount,
+			"Frames-in-flight requested ({}) must be within the range: [{} , {}]", MAX_FRAMES_IN_FLIGHT, minImageCount,
+			maxImageCount);
 
 		// Upper limit is set by keeping in mind, that when maxImageCount is 0 => there is no upper bound
-		const uint32_t imageCount = std::clamp(MAX_FRAMES_IN_FLIGHT, minImageCount, maxImageCount > 0 ? maxImageCount : MAX_FRAMES_IN_FLIGHT);
+		const uint32_t imageCount =
+			std::clamp(MAX_FRAMES_IN_FLIGHT, minImageCount, maxImageCount > 0 ? maxImageCount : MAX_FRAMES_IN_FLIGHT);
 
 		VkSwapchainCreateInfoKHR vulkanSwapchainCreateInfo{};
 		vulkanSwapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -48,10 +50,8 @@ namespace Flameberry {
 		vulkanSwapchainCreateInfo.imageArrayLayers = 1;
 		vulkanSwapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-		uint32_t vk_queue_indices[] = {
-			queueFamilyIndices.GraphicsQueueFamilyIndex,
-			queueFamilyIndices.PresentationSupportedQueueFamilyIndex
-		};
+		uint32_t vk_queue_indices[] = { queueFamilyIndices.GraphicsQueueFamilyIndex,
+			queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
 		if (queueFamilyIndices.GraphicsQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex) {
 			vulkanSwapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -81,7 +81,8 @@ namespace Flameberry {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkWaitForFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex], VK_TRUE, UINT64_MAX);
 
-		VkResult imageAcquireStatus = vkAcquireNextImageKHR(device, m_VkSwapChain, UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrameIndex], VK_NULL_HANDLE, &m_ImageIndex);
+		VkResult imageAcquireStatus = vkAcquireNextImageKHR(device, m_VkSwapChain, UINT64_MAX,
+			m_ImageAvailableSemaphores[m_CurrentFrameIndex], VK_NULL_HANDLE, &m_ImageIndex);
 		return imageAcquireStatus;
 	}
 
@@ -90,9 +91,11 @@ namespace Flameberry {
 		const auto graphicsQueue = VulkanContext::GetCurrentDevice()->GetGraphicsQueue();
 		const auto presentationQueue = VulkanContext::GetCurrentDevice()->GetPresentationQueue();
 
-		if (m_ImagesInFlight[m_ImageIndex] != VK_NULL_HANDLE) // Check if a previous frame is using this image (i.e. there is its fence to wait on)
+		if (m_ImagesInFlight[m_ImageIndex]
+			!= VK_NULL_HANDLE) // Check if a previous frame is using this image (i.e. there is its fence to wait on)
 			vkWaitForFences(device, 1, &m_ImagesInFlight[m_ImageIndex], VK_TRUE, UINT64_MAX);
-		m_ImagesInFlight[m_ImageIndex] = m_InFlightFences[m_CurrentFrameIndex]; // Mark the image as now being in use by this frame
+		m_ImagesInFlight[m_ImageIndex] =
+			m_InFlightFences[m_CurrentFrameIndex]; // Mark the image as now being in use by this frame
 
 		VkSemaphore waitSemaphores[] = { m_ImageAvailableSemaphores[m_CurrentFrameIndex] };
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -112,9 +115,10 @@ namespace Flameberry {
 
 		vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex]);
 
-		VulkanContext::GetCurrentDevice()->AccessQueueSafely([fence = m_InFlightFences[m_CurrentFrameIndex], graphicsQueue, submitInfo]() {
-			VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence));
-		});
+		VulkanContext::GetCurrentDevice()->AccessQueueSafely(
+			[fence = m_InFlightFences[m_CurrentFrameIndex], graphicsQueue, submitInfo]() {
+				VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence));
+			});
 
 		VkSwapchainKHR swapchains[] = { m_VkSwapChain };
 
@@ -138,10 +142,8 @@ namespace Flameberry {
 
 	VkFormat SwapChain::GetDepthFormat() {
 		const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
-		return RenderCommand::GetSupportedFormat(
-			physicalDevice,
-			{ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT },
-			VK_IMAGE_TILING_OPTIMAL,
+		return RenderCommand::GetSupportedFormat(physicalDevice,
+			{ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT }, VK_IMAGE_TILING_OPTIMAL,
 			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 	}
 
@@ -161,11 +163,14 @@ namespace Flameberry {
 		vk_fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-			VK_CHECK_RESULT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_ImageAvailableSemaphores[i]));
-			VK_CHECK_RESULT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]));
+			VK_CHECK_RESULT(
+				vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_ImageAvailableSemaphores[i]));
+			VK_CHECK_RESULT(
+				vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]));
 			VK_CHECK_RESULT(vkCreateFence(device, &vk_fence_create_info, nullptr, &m_InFlightFences[i]));
 		}
-		FBY_INFO("Created {} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
+		FBY_INFO("Created {} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!",
+			MAX_FRAMES_IN_FLIGHT);
 	}
 
 	SwapChain::~SwapChain() {
@@ -177,7 +182,8 @@ namespace Flameberry {
 			vkDestroySemaphore(device, m_RenderFinishedSemaphores[i], nullptr);
 			vkDestroyFence(device, m_InFlightFences[i], nullptr);
 		}
-		FBY_INFO("Destroyed {} Image Available Semaphores, Render Finished Semaphores and 'in flight fences'!", MAX_FRAMES_IN_FLIGHT);
+		FBY_INFO("Destroyed {} Image Available Semaphores, Render Finished Semaphores and 'in flight fences'!",
+			MAX_FRAMES_IN_FLIGHT);
 
 		vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
 	}
@@ -198,35 +204,35 @@ namespace Flameberry {
 	VkSurfaceFormatKHR SwapChain::SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats) {
 		// VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_B8G8R8A8_UNORM
 		for (const auto& format : available_formats) {
-			if (format.format == VK_FORMAT_R16G16B16A16_SFLOAT && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+			if (format.format == VK_FORMAT_R16G16B16A16_SFLOAT
+				&& format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 				return format;
 		}
 		// Implement choosing of the next best format after UNORM R8B8G8A8 format
 		return available_formats[0];
 	}
 
-	VkPresentModeKHR SwapChain::SelectSwapPresentationMode(const std::vector<VkPresentModeKHR>& available_presentation_modes) {
+	VkPresentModeKHR SwapChain::SelectSwapPresentationMode(
+		const std::vector<VkPresentModeKHR>& available_presentation_modes) {
 		for (const auto& mode : available_presentation_modes) {
-			if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
-				return mode;
+			if (mode == VK_PRESENT_MODE_MAILBOX_KHR) return mode;
 		}
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 
 	VkExtent2D SwapChain::SelectSwapExtent(const VkSurfaceCapabilitiesKHR& surface_capabilities) {
-		if (surface_capabilities.currentExtent.width != UINT32_MAX)
-			return surface_capabilities.currentExtent;
+		if (surface_capabilities.currentExtent.width != UINT32_MAX) return surface_capabilities.currentExtent;
 		else {
 			VulkanWindow* pWindow = VulkanContext::GetCurrentWindow();
 			int width, height;
 			glfwGetFramebufferSize(pWindow->GetGLFWwindow(), &width, &height);
 
-			VkExtent2D actual_extent = {
-				static_cast<uint32_t>(width), static_cast<uint32_t>(height)
-			};
+			VkExtent2D actual_extent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 
-			actual_extent.width = std::clamp(actual_extent.width, surface_capabilities.minImageExtent.width, surface_capabilities.maxImageExtent.width);
-			actual_extent.height = std::clamp(actual_extent.height, surface_capabilities.minImageExtent.height, surface_capabilities.maxImageExtent.height);
+			actual_extent.width = std::clamp(actual_extent.width, surface_capabilities.minImageExtent.width,
+				surface_capabilities.maxImageExtent.width);
+			actual_extent.height = std::clamp(actual_extent.height, surface_capabilities.minImageExtent.height,
+				surface_capabilities.maxImageExtent.height);
 			return actual_extent;
 		}
 	}

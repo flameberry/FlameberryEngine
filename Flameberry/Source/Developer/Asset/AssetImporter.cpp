@@ -25,7 +25,8 @@ namespace Flameberry {
 	};
 
 	Ref<Asset> AssetImporter::ImportAsset(AssetHandle handle, const AssetMetadata& metadata) {
-		if (metadata.Type == AssetType::None || (uint16_t)metadata.Type >= sizeof(g_AssetImporterFunctionMap) / sizeof(AssetImporterFunctionMapEntry)) {
+		if (metadata.Type == AssetType::None
+			|| (uint16_t)metadata.Type >= sizeof(g_AssetImporterFunctionMap) / sizeof(AssetImporterFunctionMapEntry)) {
 			FBY_ERROR("Importer for the requested asset not present!");
 			return nullptr;
 		}

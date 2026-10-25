@@ -29,14 +29,12 @@ namespace Flameberry {
 	bool VulkanContext::s_EnableValidationLayers = true;
 #endif
 
-	VulkanContext::VulkanContext(VulkanWindow* pWindow)
-		: m_Window(pWindow) {
+	VulkanContext::VulkanContext(VulkanWindow* pWindow) : m_Window(pWindow) {
 		FBY_ASSERT(pWindow->GetGLFWwindow(), "Null Window given to Vulkan Context!");
 
 		if (s_EnableValidationLayers) {
 			bool isSupported = RenderCommand::CheckValidationLayerSupport(s_ValidationLayers);
-			if (!isSupported)
-				FBY_ERROR("Validation Layers are not supported!");
+			if (!isSupported) FBY_ERROR("Validation Layers are not supported!");
 		}
 
 		m_VulkanInstance = CreateRef<VulkanInstance>();
@@ -57,8 +55,7 @@ namespace Flameberry {
 			VkPhysicalDeviceProperties vk_physical_device_props;
 			vkGetPhysicalDeviceProperties(vk_physical_devices[i], &vk_physical_device_props);
 			physical_device_list += vk_physical_device_props.deviceName;
-			if (i < deviceCount - 1)
-				physical_device_list += ", ";
+			if (i < deviceCount - 1) physical_device_list += ", ";
 		}
 
 		FBY_TRACE("{} Physical devices found: {}", deviceCount, physical_device_list);
@@ -75,19 +72,18 @@ namespace Flameberry {
 
 		constexpr uint32_t maxDescSets = 500;
 
-		std::vector<VkDescriptorPoolSize> poolSizes = {
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 * 8 },
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 50 },
-			// ImGui's Vulkan backend allocates from this pool, using separate sampled images (one per ImGui texture) and samplers
-			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxDescSets },
-			{ VK_DESCRIPTOR_TYPE_SAMPLER, 8 }
-		};
+		std::vector<VkDescriptorPoolSize> poolSizes = { { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 * 8 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets }, { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 50 },
+			// ImGui's Vulkan backend allocates from this pool, using separate sampled images (one per ImGui texture)
+			// and samplers
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxDescSets }, { VK_DESCRIPTOR_TYPE_SAMPLER, 8 } };
 		m_GlobalDescriptorPool = CreateRef<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, maxDescSets);
 
 #if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
-		// SRS - on macOS set environment variable to configure MoltenVK for using Metal argument buffers (needed for descriptor indexing)
-		//     - MoltenVK supports Metal argument buffers on macOS, iOS possible in future (see https://github.com/KhronosGroup/MoltenVK/issues/1651)
+		// SRS - on macOS set environment variable to configure MoltenVK for using Metal argument buffers (needed for
+		// descriptor indexing)
+		//     - MoltenVK supports Metal argument buffers on macOS, iOS possible in future (see
+		//     https://github.com/KhronosGroup/MoltenVK/issues/1651)
 		setenv("MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS", "1", 1);
 #endif
 	}
@@ -96,7 +92,8 @@ namespace Flameberry {
 		m_Window->DestroyVulkanWindowSurface(m_VulkanInstance->GetVulkanInstance());
 	}
 
-	VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& physicalDeviceList, VkSurfaceKHR surface) {
+	VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(
+		const std::vector<VkPhysicalDevice>& physicalDeviceList, VkSurfaceKHR surface) {
 		std::map<int, VkPhysicalDevice> physicalDeviceMap;
 
 		for (auto physicalDevice : physicalDeviceList) {
@@ -120,11 +117,11 @@ namespace Flameberry {
 
 			if (foundRequiredExtensions) {
 				SwapChainDetails vulkanSwapchainDetails = RenderCommand::GetSwapChainDetails(physicalDevice, surface);
-				isSwapchainAdequate = (!vulkanSwapchainDetails.SurfaceFormats.empty()) && (!vulkanSwapchainDetails.PresentationModes.empty());
+				isSwapchainAdequate = (!vulkanSwapchainDetails.SurfaceFormats.empty())
+					&& (!vulkanSwapchainDetails.PresentationModes.empty());
 			} else {
 				FBY_ERROR("Failed to find the following extension(s):");
-				for (const auto& name : requiredExtensions)
-					FBY_ERROR("\t{}", name);
+				for (const auto& name : requiredExtensions) FBY_ERROR("\t{}", name);
 			}
 
 			VkPhysicalDeviceFeatures supportedFeatures;
@@ -139,17 +136,11 @@ namespace Flameberry {
 			deviceFeatures2.pNext = &vulkan12Features;
 			vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures2);
 
-			bool isPhysicalDeviceValid = indices.GraphicsQueueFamilyIndex != -1
-				&& indices.ComputeQueueFamilyIndex != -1
-				&& indices.PresentationSupportedQueueFamilyIndex != -1
-				&& foundRequiredExtensions
-				&& isSwapchainAdequate
-				&& supportedFeatures.samplerAnisotropy
-				&& supportedFeatures.sampleRateShading
-				&& supportedFeatures.fillModeNonSolid
-				&& supportedFeatures.tessellationShader
-				&& supportedFeatures.depthClamp
-				&& supportedFeatures.shaderStorageImageArrayDynamicIndexing
+			bool isPhysicalDeviceValid = indices.GraphicsQueueFamilyIndex != -1 && indices.ComputeQueueFamilyIndex != -1
+				&& indices.PresentationSupportedQueueFamilyIndex != -1 && foundRequiredExtensions && isSwapchainAdequate
+				&& supportedFeatures.samplerAnisotropy && supportedFeatures.sampleRateShading
+				&& supportedFeatures.fillModeNonSolid && supportedFeatures.tessellationShader
+				&& supportedFeatures.depthClamp && supportedFeatures.shaderStorageImageArrayDynamicIndexing
 				&& vulkan12Features.descriptorIndexing;
 
 			VkPhysicalDeviceProperties deviceProperties;
@@ -157,11 +148,9 @@ namespace Flameberry {
 
 			int score = 0;
 
-			if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-				score -= 1000;
+			if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) score -= 1000;
 
-			if (isPhysicalDeviceValid)
-				physicalDeviceMap[score] = physicalDevice;
+			if (isPhysicalDeviceValid) physicalDeviceMap[score] = physicalDevice;
 		}
 		FBY_ASSERT(physicalDeviceMap.size(), "Failed to find valid physical device!");
 		return physicalDeviceMap.rbegin()->second;

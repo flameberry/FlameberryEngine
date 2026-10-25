@@ -11,11 +11,9 @@
 namespace Flameberry {
 
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
-		: m_Context(context), m_InspectorPanel(CreateRef<InspectorPanel>(m_Context)) {
-	}
+		: m_Context(context), m_InspectorPanel(CreateRef<InspectorPanel>(m_Context)) {}
 
-	SceneHierarchyPanel::~SceneHierarchyPanel() {
-	}
+	SceneHierarchyPanel::~SceneHierarchyPanel() {}
 
 	void SceneHierarchyPanel::OnUIRender() {
 		{
@@ -34,10 +32,12 @@ namespace Flameberry {
 		{
 			UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1.0f, m_IsSearchBarFocused);
 			UI::ScopedStyleVariable frameRounding(ImGuiStyleVar_FrameRounding, 8);
-			UI::ScopedStyleColor borderColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, m_IsSearchBarFocused);
+			UI::ScopedStyleColor borderColor(ImGuiCol_Border,
+				ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, m_IsSearchBarFocused);
 			UI::ScopedStyleColor frameBg(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
 
-			m_IsSearchBarFocused = UI::InputBox("##SceneHierarchySearchBar", width, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
+			m_IsSearchBarFocused =
+				UI::InputBox("##SceneHierarchySearchBar", width, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
 		}
 
 		{
@@ -52,20 +52,21 @@ namespace Flameberry {
 			UI::ScopedStyleColor tableBorderStrong(ImGuiCol_TableBorderStrong, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
 			UI::ScopedStyleColor tableBorderLight(ImGuiCol_TableBorderLight, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
 
-			ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingStretchProp
-				| ImGuiTableFlags_Resizable
-				| ImGuiTableFlags_PadOuterX
-				| ImGuiTableFlags_BordersInnerV
-				| ImGuiTableFlags_NoBordersInBody
+			ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable
+				| ImGuiTableFlags_PadOuterX | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoBordersInBody
 				| ImGuiTableFlags_ScrollY;
 
 			if (ImGui::BeginTable("SceneHierarchyTable", 3, tableFlags)) {
 				const std::string label = fmt::format("Label ({} Entities)", m_Context->GetRegistry()->Size());
 
 				ImGui::TableSetupScrollFreeze(3, 1);
-				ImGui::TableSetupColumn(ICON_LC_EYE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::CalcTextSize(ICON_LC_EYE).x);
-				ImGui::TableSetupColumn(label.c_str(), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
-				ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::GetWindowWidth() / 4.5f);
+				ImGui::TableSetupColumn(ICON_LC_EYE,
+					ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable,
+					ImGui::CalcTextSize(ICON_LC_EYE).x);
+				ImGui::TableSetupColumn(
+					label.c_str(), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
+				ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable,
+					ImGui::GetWindowWidth() / 4.5f);
 
 				ImGui::TableHeadersRow();
 				{
@@ -124,15 +125,15 @@ namespace Flameberry {
 		UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 
 		ImGui::PushItemWidth(-1.0f);
-		if (ImGui::InputText("###Rename", &m_RenameBuffer, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+		if (ImGui::InputText("###Rename", &m_RenameBuffer,
+				ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
 			tag = m_RenameBuffer;
 			m_RenamedEntity = FEntity::Null;
 		}
 		ImGui::PopItemWidth();
 
 		// Remove the input box when it is defocused/deactivated
-		if (ImGui::IsItemDeactivated())
-			m_RenamedEntity = FEntity::Null;
+		if (ImGui::IsItemDeactivated()) m_RenamedEntity = FEntity::Null;
 	}
 
 	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context) {
@@ -150,8 +151,7 @@ namespace Flameberry {
 		// Search function
 		if (!m_SearchInputBuffer.empty()) {
 			// TODO: Maybe some optimisation to not search again if the input string is same
-			if (Algorithm::KmpSearch(tag.c_str(), m_SearchInputBuffer.c_str(), true) != -1)
-				highlight = true;
+			if (Algorithm::KmpSearch(tag.c_str(), m_SearchInputBuffer.c_str(), true) != -1) highlight = true;
 		}
 
 		// Entity state
@@ -168,14 +168,10 @@ namespace Flameberry {
 		if (auto* relation = m_Context->GetRegistry()->TryGetComponent<RelationshipComponent>(entity))
 			hasChild = relation->FirstChild != FEntity::Null;
 
-		const int treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow
-			| ImGuiTreeNodeFlags_FramePadding
-			| ImGuiTreeNodeFlags_AllowOverlap
-			| (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
-			| (hasChild ? 0 : ImGuiTreeNodeFlags_Leaf)
-			| ImGuiTreeNodeFlags_SpanFullWidth
-			| ImGuiTreeNodeFlags_SpanAllColumns
-			| ImGuiTreeNodeFlags_LabelSpanAllColumns;
+		const int treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding
+			| ImGuiTreeNodeFlags_AllowOverlap | (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
+			| (hasChild ? 0 : ImGuiTreeNodeFlags_Leaf) | ImGuiTreeNodeFlags_SpanFullWidth
+			| ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_LabelSpanAllColumns;
 
 		bool shouldDeleteEntity = false, shouldDuplicateEntity = false;
 		bool isEntityTreeNodeOpen = false;
@@ -195,15 +191,16 @@ namespace Flameberry {
 
 				// Only display icon when entity node is hovered
 				const bool isEntityNodeHovered = ImGui::GetHoveredID() == ImGui::GetID((const void*)(uint64_t)entity);
-				ImGui::TextColored(isEntityNodeHovered ? ImVec4(textColor, textColor, textColor, 1.0f) : ImVec4(0, 0, 0, 0), visibility ? ICON_LC_EYE : ICON_LC_EYE_OFF);
+				ImGui::TextColored(
+					isEntityNodeHovered ? ImVec4(textColor, textColor, textColor, 1.0f) : ImVec4(0, 0, 0, 0),
+					visibility ? ICON_LC_EYE : ICON_LC_EYE_OFF);
 
 				// if (ImGui::IsItemClicked())
 				// 	visibility = !visibility;
 			}
 
 			// Set the current entity tree node expanded until the selected node is visible
-			if (!m_IsSelectedNodeDisplayed)
-				ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+			if (!m_IsSelectedNodeDisplayed) ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
 			ImGui::TableNextColumn();
 
@@ -211,29 +208,32 @@ namespace Flameberry {
 				// Styling of the Entity TreeNode
 				UI::ScopedStyleColor headerColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
 				UI::ScopedStyleColor headerActiveColor(ImGuiCol_HeaderActive, Theme::AccentColorLight, isSelected);
-				UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
+				UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered,
+					ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
 				UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 				UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 				UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
 				UI::ScopedStyleColor textC2(ImGuiCol_Text, Theme::ErrorColor, highlight);
 
 				// Figure out the entity icon to be displayed
-				const char* iconCStr = isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : (isCollectionEntity ? ICON_LC_FOLDER_OPEN : ICON_LC_BOX);
+				const char* iconCStr =
+					isWorldEntity ? ICON_LC_MOUNTAIN_SNOW : (isCollectionEntity ? ICON_LC_FOLDER_OPEN : ICON_LC_BOX);
 
 				// Display the actual entity node with it's tag
-				isEntityTreeNodeOpen = ImGui::TreeNodeEx((const void*)(uint64_t)entity, treeNodeFlags, "%s %s", iconCStr, isRenamed ? "" : tag.c_str());
+				isEntityTreeNodeOpen = ImGui::TreeNodeEx(
+					(const void*)(uint64_t)entity, treeNodeFlags, "%s %s", iconCStr, isRenamed ? "" : tag.c_str());
 			}
 
 			// Select entity if clicked
 			// Only select the object if it is clicked and not being dragged and not toggled open
-			if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-				EditorContext::Get()->SelectedEntity = entity;
+			if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) EditorContext::Get()->SelectedEntity = entity;
 
 			// World Entity should not be renamed
 			// Check for rename shortcuts being used
 			if (!isWorldEntity && isSelected && ImGui::IsWindowFocused()) {
 				ImGuiIO& io = ImGui::GetIO();
-				if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
+				if (!io.KeyMods
+					&& ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
 					m_RenamedEntity = entity;
 			}
 
@@ -244,14 +244,11 @@ namespace Flameberry {
 				// World Entity should not be renamed, duplicated, deleted
 				ImGui::BeginDisabled(isWorldEntity);
 				{
-					if (ImGui::MenuItem(ICON_LC_TEXT_CURSOR_INPUT "\tRename"))
-						m_RenamedEntity = entity;
+					if (ImGui::MenuItem(ICON_LC_TEXT_CURSOR_INPUT "\tRename")) m_RenamedEntity = entity;
 
-					if (ImGui::MenuItem(ICON_LC_COPY "\tDuplicate Entity"))
-						shouldDuplicateEntity = true;
+					if (ImGui::MenuItem(ICON_LC_COPY "\tDuplicate Entity")) shouldDuplicateEntity = true;
 
-					if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete Entity"))
-						shouldDeleteEntity = true;
+					if (ImGui::MenuItem(ICON_LC_DELETE "\tDelete Entity")) shouldDeleteEntity = true;
 				}
 				ImGui::EndDisabled();
 
@@ -310,8 +307,7 @@ namespace Flameberry {
 
 		if (shouldDeleteEntity) {
 			m_Context->DestroyEntityTree(entity);
-			if (EditorContext::Get()->SelectedEntity == entity)
-				EditorContext::Get()->SelectedEntity = FEntity::Null;
+			if (EditorContext::Get()->SelectedEntity == entity) EditorContext::Get()->SelectedEntity = FEntity::Null;
 		}
 	}
 

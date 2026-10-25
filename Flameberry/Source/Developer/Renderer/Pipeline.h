@@ -33,7 +33,8 @@ namespace Flameberry {
 		uint32_t Samples = 1;
 		VkViewport Viewport = { 0, 0, 0, 0, 0.0f, 1.0f };
 		VkRect2D Scissor;
-		bool BlendingEnable = false, DepthTestEnable = true, DepthWriteEnable = true, DepthClampEnable = false, StencilTestEnable = false;
+		bool BlendingEnable = false, DepthTestEnable = true, DepthWriteEnable = true, DepthClampEnable = false,
+			 StencilTestEnable = false;
 		VkCompareOp DepthCompareOp = VK_COMPARE_OP_LESS;
 		bool DynamicStencilEnable = false, DynamicStencilOp = false;
 		VkStencilOpState StencilOpState = {};

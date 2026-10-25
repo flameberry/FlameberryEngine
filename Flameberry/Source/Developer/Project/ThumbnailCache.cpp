@@ -5,26 +5,29 @@
 
 namespace Flameberry {
 
-	ThumbnailCache::ThumbnailCache(const std::filesystem::path& thumbnailCacheDirectory, const ThumbnailCacheConfig& config)
+	ThumbnailCache::ThumbnailCache(
+		const std::filesystem::path& thumbnailCacheDirectory, const ThumbnailCacheConfig& config)
 		: m_ThumbnailCacheDirectory(thumbnailCacheDirectory), m_Config(config) {}
 
 	Ref<Texture2D> ThumbnailCache::GetOrCreateThumbnail(const std::filesystem::path& assetPath) {
 		const std::filesystem::file_time_type lastWriteTime = std::filesystem::last_write_time(assetPath);
-		const uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(lastWriteTime.time_since_epoch()).count();
+		const uint64_t timestamp =
+			std::chrono::duration_cast<std::chrono::seconds>(lastWriteTime.time_since_epoch()).count();
 
 		if (m_CachedThumbnails.find(assetPath) != m_CachedThumbnails.end()) {
 			const auto& cachedThumbnail = m_CachedThumbnails.at(assetPath);
-			if (cachedThumbnail.Timestamp == timestamp)
-				return cachedThumbnail.Image;
+			if (cachedThumbnail.Timestamp == timestamp) return cachedThumbnail.Image;
 		}
 
 		AssetType type;
 
 		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame
-			|| (type = Utils::GetAssetTypeFromFileExtension(assetPath.extension()), type != AssetType::Texture2D && type != AssetType::Skymap))
+			|| (type = Utils::GetAssetTypeFromFileExtension(assetPath.extension()),
+				type != AssetType::Texture2D && type != AssetType::Skymap))
 			return nullptr;
 
-		const auto thumbnail = std::static_pointer_cast<Texture2D>(TextureImporter::LoadTexture2DResized(assetPath, 128, 128, false));
+		const auto thumbnail =
+			std::static_pointer_cast<Texture2D>(TextureImporter::LoadTexture2DResized(assetPath, 128, 128, false));
 		auto& cachedThumbnail = m_CachedThumbnails[assetPath];
 		cachedThumbnail.Timestamp = timestamp;
 		cachedThumbnail.Image = thumbnail;

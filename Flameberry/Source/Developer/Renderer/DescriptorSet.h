@@ -39,7 +39,8 @@ namespace Flameberry {
 		DescriptorSetLayoutSpecification m_DescSetLayoutSpec;
 		VkDescriptorSetLayout m_Layout;
 
-		static std::unordered_map<DescriptorSetLayoutSpecification, Ref<DescriptorSetLayout>> s_CachedDescriptorSetLayouts;
+		static std::unordered_map<DescriptorSetLayoutSpecification, Ref<DescriptorSetLayout>>
+			s_CachedDescriptorSetLayouts;
 	};
 
 	struct DescriptorSetSpecification {

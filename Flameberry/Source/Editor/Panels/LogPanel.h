@@ -21,27 +21,28 @@ namespace Flameberry {
 		EditorLogLevel LogLevel;
 		std::chrono::system_clock::time_point Timestamp;
 
-		EditorLogEntry(const std::string& message, EditorLogLevel logLevel, const std::chrono::system_clock::time_point& timestamp)
+		EditorLogEntry(
+			const std::string& message, EditorLogLevel logLevel, const std::chrono::system_clock::time_point& timestamp)
 			: Message(message), LogLevel(logLevel), Timestamp(timestamp) {}
 	};
 
 	class LogPanel {
 	public:
-		template <typename... Args>
-		inline void AddInfo(const fmt::format_string<Args...>& message, Args&&... args) {
-			m_Logs.emplace_back(fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Info, std::chrono::system_clock::now());
+		template <typename... Args> inline void AddInfo(const fmt::format_string<Args...>& message, Args&&... args) {
+			m_Logs.emplace_back(fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Info,
+				std::chrono::system_clock::now());
 			m_ScrollToBottom = true;
 		}
 
-		template <typename... Args>
-		inline void AddWarning(const fmt::format_string<Args...>& message, Args&&... args) {
-			m_Logs.emplace_back(fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Warn, std::chrono::system_clock::now());
+		template <typename... Args> inline void AddWarning(const fmt::format_string<Args...>& message, Args&&... args) {
+			m_Logs.emplace_back(fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Warn,
+				std::chrono::system_clock::now());
 			m_ScrollToBottom = true;
 		}
 
-		template <typename... Args>
-		inline void AddError(const fmt::format_string<Args...>& message, Args&&... args) {
-			m_Logs.emplace_back(fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Error, std::chrono::system_clock::now());
+		template <typename... Args> inline void AddError(const fmt::format_string<Args...>& message, Args&&... args) {
+			m_Logs.emplace_back(fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Error,
+				std::chrono::system_clock::now());
 			m_ScrollToBottom = true;
 		}
 
@@ -56,12 +57,8 @@ namespace Flameberry {
 
 	private:
 		std::vector<EditorLogEntry> m_Logs;
-		bool m_AutoScroll = true,
-			 m_ScrollToBottom = false,
-			 m_IsSearchBoxFocused = false,
-			 m_FilterInfo = true,
-			 m_FilterWarning = true,
-			 m_FilterError = true;
+		bool m_AutoScroll = true, m_ScrollToBottom = false, m_IsSearchBoxFocused = false, m_FilterInfo = true,
+			 m_FilterWarning = true, m_FilterError = true;
 
 		std::string m_SearchInputBuffer;
 

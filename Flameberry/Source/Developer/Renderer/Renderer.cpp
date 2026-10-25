@@ -48,14 +48,14 @@ namespace Flameberry {
 			cmdBufferSpec.SingleTimeUsage = false;
 
 			// Create command buffers
-			for (auto& commandBuffer : s_CommandBuffers)
-				commandBuffer = CreateRef<CommandBuffer>(cmdBufferSpec);
+			for (auto& commandBuffer : s_CommandBuffers) commandBuffer = CreateRef<CommandBuffer>(cmdBufferSpec);
 		}
 
 		s_CommandQueue.reserve(5 * 1024 * 1024 / sizeof(Renderer::Command)); // 5 MB
 
 		// Load Generic Resources
-		s_CheckerboardTexture = TextureImporter::LoadTexture2D(FBY_PROJECT_DIR "Flameberry/Assets/Icons/Checkerboard.png");
+		s_CheckerboardTexture =
+			TextureImporter::LoadTexture2D(FBY_PROJECT_DIR "Flameberry/Assets/Icons/Checkerboard.png");
 
 #ifdef FBY_ENABLE_QUERY_TIMESTAMP
 
@@ -65,7 +65,8 @@ namespace Flameberry {
 		queryPoolCreateInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
 		queryPoolCreateInfo.queryCount = s_Timestamps.size();
 
-		VK_CHECK_RESULT(vkCreateQueryPool(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &queryPoolCreateInfo, nullptr, &s_QueryPool));
+		VK_CHECK_RESULT(vkCreateQueryPool(
+			VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &queryPoolCreateInfo, nullptr, &s_QueryPool));
 
 #endif
 	}
@@ -118,7 +119,8 @@ namespace Flameberry {
 
 #ifdef FBY_ENABLE_QUERY_TIMESTAMP
 
-			vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, s_QueryPool, s_RT_FrameIndex * 2 + 1);
+			vkCmdWriteTimestamp(
+				commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, s_QueryPool, s_RT_FrameIndex * 2 + 1);
 
 #endif
 
@@ -146,10 +148,14 @@ namespace Flameberry {
 	 * @param materialTable - The corresponding material table
 	 * @param transform - The transform matrix
 	 */
-	void Renderer::SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline, const MaterialTable& materialTable, const glm::mat4& transform) {
-		Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(), transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-			Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, mesh->GetVertexBuffer()->GetVulkanBuffer(), mesh->GetIndexBuffer()->GetVulkanBuffer());
-			vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
+	void Renderer::SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline,
+		const MaterialTable& materialTable, const glm::mat4& transform) {
+		Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(), transform](
+							 VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			Renderer::RT_BindVertexAndIndexBuffers(
+				cmdBuffer, mesh->GetVertexBuffer()->GetVulkanBuffer(), mesh->GetIndexBuffer()->GetVulkanBuffer());
+			vkCmdPushConstants(
+				cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
 		});
 
 		uint32_t submeshIndex = 0;
@@ -161,7 +167,8 @@ namespace Flameberry {
 			else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
 				materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
 
-			Renderer::Submit([pipelineLayout = pipeline->GetVulkanPipelineLayout(), materialAsset, submesh = mesh->GetSubMeshes()[submeshIndex]](VkCommandBuffer cmdBuffer, uint32_t) {
+			Renderer::Submit([pipelineLayout = pipeline->GetVulkanPipelineLayout(), materialAsset,
+								 submesh = mesh->GetSubMeshes()[submeshIndex]](VkCommandBuffer cmdBuffer, uint32_t) {
 				RT_BindMaterial(cmdBuffer, pipelineLayout, materialAsset->GetUnderlyingMaterial());
 				vkCmdDrawIndexed(cmdBuffer, submesh.IndexCount, 1, submesh.IndexOffset, 0, 0);
 			});
@@ -175,8 +182,10 @@ namespace Flameberry {
 		s_RendererFrameStats.MeshCount++;
 	}
 
-	void Renderer::RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material) {
-		vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, material->GetPushConstantOffset(), material->GetUniformDataSize(), material->GetUniformDataPtr());
+	void Renderer::RT_BindMaterial(
+		VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material) {
+		vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, material->GetPushConstantOffset(),
+			material->GetUniformDataSize(), material->GetUniformDataPtr());
 
 		if (material->m_DescriptorSets.size()) {
 			int idx = 0;
@@ -190,14 +199,16 @@ namespace Flameberry {
 			const uint32_t setNumber = material->m_StartSetIndex;
 			const uint32_t count = idx;
 
-			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, setNumber, count, &descSetArray[0], 0, nullptr);
+			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, setNumber, count,
+				&descSetArray[0], 0, nullptr);
 		}
 
 		// Record Statistics
 		s_RendererFrameStats.BoundMaterials++;
 	}
 
-	void Renderer::RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer) {
+	void Renderer::RT_BindVertexAndIndexBuffers(
+		VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer) {
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
 		vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
@@ -219,14 +230,8 @@ namespace Flameberry {
 	}
 
 	void Renderer::QueryTimestampResults() {
-		vkGetQueryPoolResults(
-			VulkanContext::GetCurrentDevice()->GetVulkanDevice(),
-			s_QueryPool,
-			s_RT_FrameIndex * 2,
-			2,
-			2 * sizeof(uint64_t),
-			&s_Timestamps[s_RT_FrameIndex * 2],
-			sizeof(uint64_t),
+		vkGetQueryPoolResults(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), s_QueryPool, s_RT_FrameIndex * 2, 2,
+			2 * sizeof(uint64_t), &s_Timestamps[s_RT_FrameIndex * 2], sizeof(uint64_t),
 			VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
 
 		uint64_t startTime = s_Timestamps[s_RT_FrameIndex * 2];

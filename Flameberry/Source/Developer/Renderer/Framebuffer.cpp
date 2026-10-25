@@ -7,8 +7,7 @@
 
 namespace Flameberry {
 
-	Framebuffer::Framebuffer(const FramebufferSpecification& specification)
-		: m_FramebufferSpec(specification) {
+	Framebuffer::Framebuffer(const FramebufferSpecification& specification) : m_FramebufferSpec(specification) {
 		Invalidate();
 	}
 
@@ -59,7 +58,9 @@ namespace Flameberry {
 			imageSpec.Format = attachment.Format;
 			imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
 			imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-			imageSpec.Usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT; // TODO: Remove setting usage as VK_IMAGE_USAGE_TRANSFER_SRC_BIT for all
+			imageSpec.Usage =
+				VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT; // TODO: Remove setting usage as
+																			  // VK_IMAGE_USAGE_TRANSFER_SRC_BIT for all
 
 			imageSpec.ViewSpecification.LayerCount = attachment.LayerCount;
 
@@ -89,7 +90,8 @@ namespace Flameberry {
 				ImageViewSpecification stencilViewSpec = imageSpec.ViewSpecification;
 				stencilViewSpec.AspectFlags = VK_IMAGE_ASPECT_STENCIL_BIT;
 
-				m_StencilAttachmentImageView = Utils::CreateImageViewUsingSpecification(attachmentImage->GetVulkanImage(), attachmentImage->GetSpecification().Format, stencilViewSpec);
+				m_StencilAttachmentImageView = Utils::CreateImageViewUsingSpecification(
+					attachmentImage->GetVulkanImage(), attachmentImage->GetSpecification().Format, stencilViewSpec);
 			}
 		}
 
@@ -103,7 +105,8 @@ namespace Flameberry {
 				imageSpec.Samples = 1;
 				imageSpec.Format = attachment.Format;
 				imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
-				imageSpec.Usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+				imageSpec.Usage =
+					VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 				imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 				imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;

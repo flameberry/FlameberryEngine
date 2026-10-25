@@ -16,8 +16,8 @@
 
 // Layer that objects can be in, determines which other objects it can collide with
 // Typically you at least want to have 1 layer for moving bodies and 1 layer for static bodies, but you can have more
-// layers if you want. E.g. you could have a layer for high detail collision (which is not used by the physics simulation
-// but only if you do collision testing).
+// layers if you want. E.g. you could have a layer for high detail collision (which is not used by the physics
+// simulation but only if you do collision testing).
 namespace Layers {
 
 	static constexpr JPH::ObjectLayer NON_MOVING = 0;
@@ -65,9 +65,7 @@ public:
 		mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
 	}
 
-	virtual JPH::uint GetNumBroadPhaseLayers() const override {
-		return BroadPhaseLayers::NUM_LAYERS;
-	}
+	virtual JPH::uint GetNumBroadPhaseLayers() const override { return BroadPhaseLayers::NUM_LAYERS; }
 
 	virtual JPH::BroadPhaseLayer GetBroadPhaseLayer(JPH::ObjectLayer inLayer) const override {
 		JPH_ASSERT(inLayer < Layers::NUM_LAYERS);

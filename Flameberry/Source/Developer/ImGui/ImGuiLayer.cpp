@@ -18,8 +18,7 @@ namespace Flameberry {
 
 	constexpr static const char* s_ImGuiLayoutPath = FBY_PROJECT_DIR "Flameberry/Config/Layouts/BaseEditorLayout.ini";
 
-	ImGuiLayer::ImGuiLayer() {
-	}
+	ImGuiLayer::ImGuiLayer() {}
 
 	void ImGuiLayer::OnCreate() {
 		// Setup Dear ImGui context
@@ -36,35 +35,39 @@ namespace Flameberry {
 		// io.ConfigViewportsNoTaskBarIcon = true;
 		io.ConfigDebugHighlightIdConflicts = false;
 
-		ImFontConfig config{};
-
-#ifdef FBY_PLATFORM_MACOS
-		constexpr float DPI_SCALE = 1.0f;
-		config.GlyphExtraAdvanceX = 0.5f;
-#else
-		constexpr float DPI_SCALE = 1.0f;
-		config.GlyphExtraSpacing = ImVec2(0.65f, 0.62f);
-#endif
-
-		constexpr float fontSize = 14.0f;
-		io.FontDefault = io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/arial/Arial.ttf", fontSize, &config);
-
-		// Merging Lucide fonts into the default font
-		ImFontConfig iconFontConfig;
-		iconFontConfig.MergeMode = true;
-		iconFontConfig.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
-		iconFontConfig.GlyphOffset = ImVec2(0, 2.5f * DPI_SCALE);
+		constexpr float fontSize = 15.0f;
 		static constexpr ImWchar iconRanges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
 
-		io.Fonts->AddFontFromFileTTF(FBY_PROJECT_DIR "Flameberry/Assets/Fonts/lucide/lucide.ttf", fontSize, &iconFontConfig, iconRanges);
+		ImFontConfig config{};
+#ifdef FBY_PLATFORM_MACOS
+		config.GlyphExtraAdvanceX = 0.5f;
+#else
+		config.GlyphExtraAdvanceX = 0.65f;
+#endif
+		// Inter has its own glyphs (alternate characters) in the private use area that Lucide uses for its icons, and
+		// since ImGui looks glyphs up in the order the fonts were added, they would be shown instead of the merged
+		// Lucide icons
+		config.GlyphExcludeRanges = iconRanges;
 
-		// Setup scaling
-		float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
+		io.FontDefault = io.Fonts->AddFontFromFileTTF(
+			FBY_PROJECT_DIR "Flameberry/Assets/Fonts/inter/Inter-VariableFont_opsz,wght.ttf", fontSize, &config);
+
+		// Merging Lucide icons into the default font
+		ImFontConfig iconFontConfig;
+		iconFontConfig.MergeMode = true;
+		iconFontConfig.GlyphMinAdvanceX = 13.0f; // Makes the icons monospaced
+		iconFontConfig.GlyphOffset = ImVec2(0, 2.5f);
+
+		io.Fonts->AddFontFromFileTTF(
+			FBY_PROJECT_DIR "Flameberry/Assets/Fonts/lucide/lucide.ttf", fontSize, &iconFontConfig, iconRanges);
+
+		// Scaling for high DPI monitors (the content scale is always 1 on macOS, which uses the framebuffer scale
+		// instead) Fonts and viewports follow DPI changes automatically, but style sizes are baked here once
+		const float mainScale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
 		ImGuiStyle& style = ImGui::GetStyle();
-		style.ScaleAllSizes(main_scale);   // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-		style.FontScaleDpi = main_scale;   // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
-		io.ConfigDpiScaleFonts = true;	   // [Experimental] Automatically overwrite style.FontScaleDpi in Begin() when Monitor DPI changes. This will scale fonts but _NOT_ scale sizes/padding for now.
-		io.ConfigDpiScaleViewports = true; // [Experimental] Scale Dear ImGui and Platform Windows when Monitor DPI changes.
+		style.ScaleAllSizes(mainScale);
+		io.ConfigDpiScaleFonts = true;
+		io.ConfigDpiScaleViewports = true;
 
 		// ImGui layout save location
 		io.IniFilename = nullptr;
@@ -73,14 +76,16 @@ namespace Flameberry {
 		// Setup Dear ImGui style
 		SetupImGuiStyle();
 
-		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular
+		// ones.
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			// style.WindowRounding = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
 		const auto& device = VulkanContext::GetCurrentDevice();
-		SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(VulkanContext::GetPhysicalDevice(), VulkanContext::GetCurrentWindow()->GetWindowSurface());
+		SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(
+			VulkanContext::GetPhysicalDevice(), VulkanContext::GetCurrentWindow()->GetWindowSurface());
 
 		// Creating ImGui RenderPass
 		VkAttachmentDescription attachment{};
@@ -156,8 +161,7 @@ namespace Flameberry {
 
 		vkDestroyRenderPass(device, m_ImGuiLayerRenderPass, nullptr);
 
-		for (auto& imageView : m_ImGuiImageViews)
-			vkDestroyImageView(device, imageView, nullptr);
+		for (auto& imageView : m_ImGuiImageViews) vkDestroyImageView(device, imageView, nullptr);
 	}
 
 	void ImGuiLayer::Begin() {
@@ -170,7 +174,8 @@ namespace Flameberry {
 
 	void ImGuiLayer::End() {
 		ImGuiIO& io = ImGui::GetIO();
-		io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetSpecification().Width, (float)VulkanContext::GetCurrentWindow()->GetSpecification().Height);
+		io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetSpecification().Width,
+			(float)VulkanContext::GetCurrentWindow()->GetSpecification().Height);
 
 		ImGui::Render();
 		ImDrawData* main_draw_data = ImGui::GetDrawData();
@@ -221,8 +226,7 @@ namespace Flameberry {
 		for (uint32_t i = 0; i < m_ImGuiFramebuffers.size(); i++)
 			vkDestroyFramebuffer(device, m_ImGuiFramebuffers[i], nullptr);
 
-		for (auto& imageView : m_ImGuiImageViews)
-			vkDestroyImageView(device, imageView, nullptr);
+		for (auto& imageView : m_ImGuiImageViews) vkDestroyImageView(device, imageView, nullptr);
 
 		CreateResources();
 	}
@@ -252,7 +256,8 @@ namespace Flameberry {
 			vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
 			vk_image_view_create_info.subresourceRange.layerCount = 1;
 
-			VK_CHECK_RESULT(vkCreateImageView(device->GetVulkanDevice(), &vk_image_view_create_info, nullptr, &m_ImGuiImageViews[i]));
+			VK_CHECK_RESULT(vkCreateImageView(
+				device->GetVulkanDevice(), &vk_image_view_create_info, nullptr, &m_ImGuiImageViews[i]));
 		}
 
 		// Creating Framebuffers

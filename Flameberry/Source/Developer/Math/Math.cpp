@@ -27,12 +27,12 @@ namespace Flameberry::Math {
 		mat4 LocalMatrix(transform);
 
 		// Normalize the matrix.
-		if (epsilonEqual(LocalMatrix[3][3], static_cast<float>(0), epsilon<T>()))
-			return false;
+		if (epsilonEqual(LocalMatrix[3][3], static_cast<float>(0), epsilon<T>())) return false;
 
 		// First, isolate perspective.  This is the messiest.
-		if (
-			epsilonNotEqual(LocalMatrix[0][3], static_cast<T>(0), epsilon<T>()) || epsilonNotEqual(LocalMatrix[1][3], static_cast<T>(0), epsilon<T>()) || epsilonNotEqual(LocalMatrix[2][3], static_cast<T>(0), epsilon<T>())) {
+		if (epsilonNotEqual(LocalMatrix[0][3], static_cast<T>(0), epsilon<T>())
+			|| epsilonNotEqual(LocalMatrix[1][3], static_cast<T>(0), epsilon<T>())
+			|| epsilonNotEqual(LocalMatrix[2][3], static_cast<T>(0), epsilon<T>())) {
 			// Clear the perspective partition
 			LocalMatrix[0][3] = LocalMatrix[1][3] = LocalMatrix[2][3] = static_cast<T>(0);
 			LocalMatrix[3][3] = static_cast<T>(1);
@@ -46,8 +46,7 @@ namespace Flameberry::Math {
 
 		// Now get scale and shear.
 		for (length_t i = 0; i < 3; ++i)
-			for (length_t j = 0; j < 3; ++j)
-				Row[i][j] = LocalMatrix[i][j];
+			for (length_t j = 0; j < 3; ++j) Row[i][j] = LocalMatrix[i][j];
 
 		// Compute X scale factor and normalize first row.
 		scale.x = length(Row[0]);

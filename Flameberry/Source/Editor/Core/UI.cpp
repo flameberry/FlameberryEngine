@@ -6,35 +6,75 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 #include <fmt/format.h>
 
-#include "Core/Log.h"
 #include "ImGui/Theme.h"
 
 namespace Flameberry::UI {
 
 	struct UIState {
 		// Fixed Layout/Style Properties
-		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV
-			| ImGuiTableFlags_BordersInnerH
-			| ImGuiTableFlags_NoKeepColumnsVisible
-			| ImGuiTableFlags_PadOuterX;
+		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH
+			| ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
 
 		static constexpr float LabelWidth = 100.0f;
 
 		// Selection Widget
-		bool IsSelectionWidgetJustOpened = false, IsSelectionWidgetSearchBoxFocused = false, HasSelectionWidgetListBoxBegun = false;
+		bool IsSelectionWidgetJustOpened = false, IsSelectionWidgetSearchBoxFocused = false,
+			 HasSelectionWidgetListBoxBegun = false;
+
+		// Titlebar
+		bool IsTitlebarMenuBarOpen = false;
 	};
 
 	static UIState g_UIState;
 
-	bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size) {
+	bool BeginTitlebar(float height, ImVec4 color) {
+		ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, { 0, 0 });
+		ScopedStyleColor windowBg(ImGuiCol_WindowBg, Theme::TitlebarColor);
+		ScopedStyleColor menuBarBg(ImGuiCol_MenuBarBg, Theme::TitlebarColor);
+
+		// The titlebar widgets are hosted in a menu bar, so that menus open downwards like in a regular menu bar.
+		// This frame padding makes the menu bar span the full titlebar height and vertically centers the widgets in it,
+		// and is only kept while the menu bar begins, so that it doesn't affect the widgets and menus themselves
+		ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, { 0, (height - ImGui::GetFontSize()) * 0.5f });
+
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollWithMouse
+			| ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar;
+		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+		bool isOpen = ImGui::BeginViewportSideBar("##Titlebar", mainViewport, ImGuiDir_Up, height, windowFlags);
+
+		g_UIState.IsTitlebarMenuBarOpen = isOpen && ImGui::BeginMenuBar();
+		if (g_UIState.IsTitlebarMenuBarOpen) {
+			// gradient background for titlebar
+			// This is drawn after the menu bar begins, as the window's own clip rect excludes the menu bar
+			const ImU32 colu32 = ImGui::ColorConvertFloat4ToU32(color);
+			ImVec2 pmin = ImGui::GetWindowPos(), pmax = pmin + ImVec2(ImGui::GetWindowSize().x / 2.5f, height);
+			ImGui::GetWindowDrawList()->AddRectFilledMultiColor(pmin, pmax, colu32, 0x0, 0x0, colu32);
+
+			// Avoid traffic lights on MacOS
+			ImGui::Dummy({ 75.0f - ImGui::GetCursorPosX(), 0.0f });
+		}
+		return g_UIState.IsTitlebarMenuBarOpen;
+	}
+
+	void EndTitlebar() {
+		if (g_UIState.IsTitlebarMenuBarOpen) ImGui::EndMenuBar();
+		ImGui::End();
+	}
+
+	bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2,
+		float splitter_long_axis_size) {
 		using namespace ImGui;
 		ImGuiContext& g = *GImGui;
 		ImGuiWindow* window = g.CurrentWindow;
 		ImGuiID id = window->GetID("##Splitter");
 		ImRect bb;
 		bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
-		bb.Max = bb.Min + CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness), 0.0f, 0.0f);
-		return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f, 0.0f, 0xFF000000);
+		bb.Max = bb.Min
+			+ CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size)
+											: ImVec2(splitter_long_axis_size, thickness),
+				0.0f, 0.0f);
+		return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1,
+			min_size2, 0.0f, 0.0f, 0xFF000000);
 	}
 
 	bool AlignedButton(const char* label, const ImVec2& size, float alignment) {
@@ -44,8 +84,7 @@ namespace Flameberry::UI {
 		const float avail = ImGui::GetContentRegionAvail().x;
 
 		const float off = (avail - width) * alignment;
-		if (off > 0.0f)
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+		if (off > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
 
 		return ImGui::Button(label, size);
 	}
@@ -58,8 +97,7 @@ namespace Flameberry::UI {
 		const float avail = ImGui::GetContentRegionAvail().x;
 
 		const float off = (avail - width) * alignment;
-		if (off > 0.0f)
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+		if (off > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
 
 		ImGui::Text("%s", text);
 	}
@@ -121,11 +159,15 @@ namespace Flameberry::UI {
 
 			UI::AlignedText(title, 0.5f);
 			{
-				ScopedStyleColor borderColor(ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, g_UIState.IsSelectionWidgetSearchBoxFocused);
-				ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1.0f, g_UIState.IsSelectionWidgetSearchBoxFocused);
+				ScopedStyleColor borderColor(ImGuiCol_Border,
+					ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f },
+					g_UIState.IsSelectionWidgetSearchBoxFocused);
+				ScopedStyleVariable frameBorderSize(
+					ImGuiStyleVar_FrameBorderSize, 1.0f, g_UIState.IsSelectionWidgetSearchBoxFocused);
 
 				const std::string inputBoxLabel = fmt::format("{}SearchBar", label);
-				g_UIState.IsSelectionWidgetSearchBoxFocused = InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, ICON_LC_SEARCH " Search...");
+				g_UIState.IsSelectionWidgetSearchBoxFocused =
+					InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, ICON_LC_SEARCH " Search...");
 			}
 			g_UIState.HasSelectionWidgetListBoxBegun = ImGui::BeginListBox(labelFmt.c_str());
 
@@ -140,21 +182,20 @@ namespace Flameberry::UI {
 			return true;
 		}
 
-		if (isSelected)
-			ImGui::SetItemDefaultFocus();
+		if (isSelected) ImGui::SetItemDefaultFocus();
 		return false;
 	}
 
 	void EndSelectionWidget() {
-		if (g_UIState.HasSelectionWidgetListBoxBegun)
-			ImGui::EndListBox();
+		if (g_UIState.HasSelectionWidgetListBoxBegun) ImGui::EndListBox();
 
 		ImGui::EndPopup();
 	}
 
 	bool BeginKeyValueTable(const char* label, ImGuiTableFlags tableFlags, float labelWidth) {
 		if (ImGui::BeginTable(label, 2, tableFlags ? tableFlags : g_UIState.TableFlags)) {
-			ImGui::TableSetupColumn("Attribute_Key", ImGuiTableColumnFlags_WidthFixed, labelWidth != 0.0f ? labelWidth : g_UIState.LabelWidth);
+			ImGui::TableSetupColumn("Attribute_Key", ImGuiTableColumnFlags_WidthFixed,
+				labelWidth != 0.0f ? labelWidth : g_UIState.LabelWidth);
 			ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 			return true;
 		}
@@ -179,8 +220,7 @@ namespace Flameberry::UI {
 		constexpr float paddingX = 15.0f, paddingY = 5.0f, spacing = 10.0f;
 		const float itemWidth = ImGui::GetContentRegionAvail().x;
 
-		if (disabled)
-			ImGui::BeginDisabled();
+		if (disabled) ImGui::BeginDisabled();
 
 		// Anchor
 		ImVec2 startPos = ImGui::GetCursorScreenPos();
@@ -205,32 +245,23 @@ namespace Flameberry::UI {
 		ImGui::SetCursorScreenPos(startPos);
 
 		// Claim the space BEFORE EndDisabled()
-		bool pressed = ImGui::InvisibleButton(
-			name,
-			ImVec2(itemWidth, height),
-			ImGuiButtonFlags_PressedOnDoubleClick);
+		bool pressed = ImGui::InvisibleButton(name, ImVec2(itemWidth, height), ImGuiButtonFlags_PressedOnDoubleClick);
 
 		bool hovered = ImGui::IsItemHovered();
 
 		if (hovered) {
-			ImU32 color = ImGui::IsMouseDown(0)
-				? IM_COL32(255, 255, 255, 60)
-				: IM_COL32(255, 255, 255, 30);
+			ImU32 color = ImGui::IsMouseDown(0) ? IM_COL32(255, 255, 255, 60) : IM_COL32(255, 255, 255, 30);
 
-			ImGui::GetWindowDrawList()->AddRectFilled(
-				startPos,
-				startPos + ImVec2(itemWidth, height),
-				color,
-				5.0f);
+			ImGui::GetWindowDrawList()->AddRectFilled(startPos, startPos + ImVec2(itemWidth, height), color, 5.0f);
 		}
 
-		if (disabled)
-			ImGui::EndDisabled();
+		if (disabled) ImGui::EndDisabled();
 
 		return pressed;
 	}
 
-	bool Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth) {
+	bool Vec3Control(
+		const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth) {
 		bool isEdited = false;
 		ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0);
 
@@ -299,38 +330,28 @@ namespace Flameberry::UI {
 
 	//////////////////////////////////////////// Scoped UI Utilities ////////////////////////////////////////////
 
-	ScopedStyleColor::ScopedStyleColor(ImGuiCol idx, ImVec4 col, bool condition)
-		: m_Condition(condition) {
-		if (m_Condition)
-			ImGui::PushStyleColor(idx, col);
+	ScopedStyleColor::ScopedStyleColor(ImGuiCol idx, ImVec4 col, bool condition) : m_Condition(condition) {
+		if (m_Condition) ImGui::PushStyleColor(idx, col);
 	}
 
-	ScopedStyleColor::ScopedStyleColor(ImGuiCol idx, ImU32 col, bool condition)
-		: m_Condition(condition) {
-		if (m_Condition)
-			ImGui::PushStyleColor(idx, col);
+	ScopedStyleColor::ScopedStyleColor(ImGuiCol idx, ImU32 col, bool condition) : m_Condition(condition) {
+		if (m_Condition) ImGui::PushStyleColor(idx, col);
 	}
 
 	ScopedStyleColor::~ScopedStyleColor() {
-		if (m_Condition)
-			ImGui::PopStyleColor();
+		if (m_Condition) ImGui::PopStyleColor();
 	}
 
-	ScopedStyleVariable::ScopedStyleVariable(ImGuiStyleVar idx, ImVec2 value, bool condition)
-		: m_Condition(condition) {
-		if (m_Condition)
-			ImGui::PushStyleVar(idx, value);
+	ScopedStyleVariable::ScopedStyleVariable(ImGuiStyleVar idx, ImVec2 value, bool condition) : m_Condition(condition) {
+		if (m_Condition) ImGui::PushStyleVar(idx, value);
 	}
 
-	ScopedStyleVariable::ScopedStyleVariable(ImGuiCol idx, float value, bool condition)
-		: m_Condition(condition) {
-		if (m_Condition)
-			ImGui::PushStyleVar(idx, value);
+	ScopedStyleVariable::ScopedStyleVariable(ImGuiCol idx, float value, bool condition) : m_Condition(condition) {
+		if (m_Condition) ImGui::PushStyleVar(idx, value);
 	}
 
 	ScopedStyleVariable::~ScopedStyleVariable() {
-		if (m_Condition)
-			ImGui::PopStyleVar();
+		if (m_Condition) ImGui::PopStyleVar();
 	}
 
 } // namespace Flameberry::UI

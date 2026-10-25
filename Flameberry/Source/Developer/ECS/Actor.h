@@ -10,10 +10,8 @@ namespace Flameberry {
 	public:
 		virtual ~Actor() = default;
 
-		template <typename... T>
-		decltype(auto) GetComponent() const {
-			if (m_SceneRef)
-				return m_SceneRef->GetRegistry()->GetComponent<T...>(m_Entity);
+		template <typename... T> decltype(auto) GetComponent() const {
+			if (m_SceneRef) return m_SceneRef->GetRegistry()->GetComponent<T...>(m_Entity);
 		}
 
 		virtual void OnInstanceCreated() = 0;

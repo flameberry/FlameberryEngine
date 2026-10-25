@@ -6,13 +6,14 @@ namespace Flameberry {
 
 	std::unordered_map<std::string, double> Profiler::s_ScopeExecutionTimes;
 
-	Profiler::Profiler(const std::string& scopeName)
-		: m_ScopeName(scopeName) {
+	Profiler::Profiler(const std::string& scopeName) : m_ScopeName(scopeName) {
 		m_Start = std::chrono::high_resolution_clock::now();
 	}
 
 	Profiler::~Profiler() {
-		double executionTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_Start).count();
+		double executionTime =
+			std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_Start)
+				.count();
 		s_ScopeExecutionTimes[m_ScopeName] = executionTime;
 	}
 

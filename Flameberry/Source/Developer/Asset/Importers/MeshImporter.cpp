@@ -61,8 +61,7 @@ namespace Flameberry {
 		material->Get(AI_MATKEY_NAME, name);
 
 		std::string matName(name.C_Str());
-		if (matName.empty())
-			matName = "<unnamed>";
+		if (matName.empty()) matName = "<unnamed>";
 
 		Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>(matName);
 
@@ -84,8 +83,7 @@ namespace Flameberry {
 		result = material->Get(AI_MATKEY_TEXTURE_DIFFUSE(0), albedoMap);
 		materialAsset->SetUseAlbedoMap(result == AI_SUCCESS);
 
-		if (path.extension().string() == ".obj")
-			result = material->Get(AI_MATKEY_TEXTURE_DISPLACEMENT(0), normalMap);
+		if (path.extension().string() == ".obj") result = material->Get(AI_MATKEY_TEXTURE_DISPLACEMENT(0), normalMap);
 		else
 			result = material->Get(AI_MATKEY_TEXTURE_NORMALS(0), normalMap);
 		materialAsset->SetUseNormalMap(result == AI_SUCCESS);
@@ -99,7 +97,8 @@ namespace Flameberry {
 		result = material->GetTexture(AI_MATKEY_METALLIC_TEXTURE, &metallicMap);
 		materialAsset->SetUseMetallicMap(result == AI_SUCCESS);
 
-		std::string albedoStr(albedoMap.C_Str()), normalStr(normalMap.C_Str()), roughnessStr(roughnessMap.C_Str()), ambientStr(ambientMap.C_Str()), metallicStr(metallicMap.C_Str());
+		std::string albedoStr(albedoMap.C_Str()), normalStr(normalMap.C_Str()), roughnessStr(roughnessMap.C_Str()),
+			ambientStr(ambientMap.C_Str()), metallicStr(metallicMap.C_Str());
 
 		if (materialAsset->IsUsingAlbedoMap()) {
 			std::replace(albedoStr.begin(), albedoStr.end(), '\\', '/');
@@ -145,13 +144,21 @@ namespace Flameberry {
 		return materialAsset->Handle;
 	}
 
-	static void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles, AABB& meshAABB) {
+	static void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<MeshVertex>& refVertices,
+		std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles,
+		AABB& meshAABB) {
 		uint32_t indexBase = refVertices.size();
 
 		for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
-			glm::vec2 textureCoords = mesh->HasTextureCoords(0) ? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y) : glm::vec2(0.0f);
-			glm::vec3 tangent = mesh->HasTangentsAndBitangents() ? glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z) : glm::vec3(0.0f);
-			glm::vec3 bitangent = mesh->HasTangentsAndBitangents() ? glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z) : glm::vec3(0.0f);
+			glm::vec2 textureCoords = mesh->HasTextureCoords(0)
+				? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y)
+				: glm::vec2(0.0f);
+			glm::vec3 tangent = mesh->HasTangentsAndBitangents()
+				? glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z)
+				: glm::vec3(0.0f);
+			glm::vec3 bitangent = mesh->HasTangentsAndBitangents()
+				? glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z)
+				: glm::vec3(0.0f);
 			refVertices.emplace_back(
 				glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z), // Position
 				glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z),	 // Normals
@@ -169,22 +176,24 @@ namespace Flameberry {
 		}
 
 		// Add submesh
-		refSubMeshes.emplace_back(SubMesh{
-			refMatHandles[mesh->mMaterialIndex],
-			indexOffset,
-			(uint32_t)refIndices.size() - indexOffset,
-			AABB(glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z),
-				glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)) });
+		refSubMeshes.emplace_back(
+			SubMesh{ refMatHandles[mesh->mMaterialIndex], indexOffset, (uint32_t)refIndices.size() - indexOffset,
+				AABB(glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z),
+					glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)) });
 
 		// Check and update mesh's AABB
-		if (meshAABB.Min.x > mesh->mAABB.mMin.x || meshAABB.Min.y > mesh->mAABB.mMin.y || meshAABB.Min.z > mesh->mAABB.mMin.z)
+		if (meshAABB.Min.x > mesh->mAABB.mMin.x || meshAABB.Min.y > mesh->mAABB.mMin.y
+			|| meshAABB.Min.z > mesh->mAABB.mMin.z)
 			meshAABB.Min = { mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z };
 
-		if (meshAABB.Max.x < mesh->mAABB.mMax.x || meshAABB.Max.y < mesh->mAABB.mMax.y || meshAABB.Max.z < mesh->mAABB.mMax.z)
+		if (meshAABB.Max.x < mesh->mAABB.mMax.x || meshAABB.Max.y < mesh->mAABB.mMax.y
+			|| meshAABB.Max.z < mesh->mAABB.mMax.z)
 			meshAABB.Max = { mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z };
 	}
 
-	static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices, std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles, AABB& meshAABB) {
+	static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices,
+		std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles,
+		AABB& meshAABB) {
 		// Process all the node's meshes (if any)
 		for (uint32_t i = 0; i < node->mNumMeshes; i++) {
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
@@ -207,9 +216,7 @@ namespace Flameberry {
 		// probably to request more postprocessing than we do in this example.
 		const aiScene* scene = importer.ReadFile(path.string(),
 			// aiProcessPreset_TargetRealtime_Fast
-			aiProcessPreset_TargetRealtime_Quality
-				| aiProcess_FlipUVs
-				| aiProcess_GenBoundingBoxes);
+			aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipUVs | aiProcess_GenBoundingBoxes);
 
 		// If the import failed, report it
 		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)) {
@@ -245,7 +252,8 @@ namespace Flameberry {
 			stagingBufferSpec.InstanceCount = 1;
 			stagingBufferSpec.InstanceSize = bufferSize;
 			stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			stagingBufferSpec.MemoryProperties =
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 			Buffer stagingBuffer(stagingBufferSpec);
 
@@ -272,7 +280,8 @@ namespace Flameberry {
 			stagingBufferSpec.InstanceCount = 1;
 			stagingBufferSpec.InstanceSize = bufferSize;
 			stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			stagingBufferSpec.MemoryProperties =
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 			Buffer stagingBuffer(stagingBufferSpec);
 

@@ -16,23 +16,17 @@ namespace Flameberry {
 
 		void CreateMenuBar() {}
 
-		void OpenInExplorerOrFinder(const char* path) {
-		}
+		void OpenInExplorerOrFinder(const char* path) {}
 
-		void TitlebarNative::CreateForGLFWwindow(GLFWwindow* window, float titleBarHeight) {
-		}
+		void TitlebarNative::CreateForGLFWwindow(GLFWwindow* window, float titleBarHeight) {}
 
-		void TitlebarNative::InvalidateFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight) {
-		}
+		void TitlebarNative::InvalidateFrameAndContentFrameRect(GLFWwindow* window, float titleBarHeight) {}
 
-		void TitlebarNative::SetPrimaryTitle(const std::string& title) {
-		}
+		void TitlebarNative::SetPrimaryTitle(const std::string& title) {}
 
-		void TitlebarNative::SetSecondaryTitle(const std::string& secondaryTitle) {
-		}
+		void TitlebarNative::SetSecondaryTitle(const std::string& secondaryTitle) {}
 
-		void TitlebarNative::SetGradient(const glm::vec4& color) {
-		}
+		void TitlebarNative::SetGradient(const glm::vec4& color) {}
 
 		std::string OpenFile(const char* filter) {
 			OPENFILENAMEA ofn;
@@ -43,14 +37,12 @@ namespace Flameberry {
 			ofn.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow());
 			ofn.lpstrFile = szFile;
 			ofn.nMaxFile = sizeof(szFile);
-			if (GetCurrentDirectoryA(256, currentDir))
-				ofn.lpstrInitialDir = currentDir;
+			if (GetCurrentDirectoryA(256, currentDir)) ofn.lpstrInitialDir = currentDir;
 			ofn.lpstrFilter = filter;
 			ofn.nFilterIndex = 1;
 			ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
-			if (GetOpenFileNameA(&ofn) == TRUE)
-				return ofn.lpstrFile;
+			if (GetOpenFileNameA(&ofn) == TRUE) return ofn.lpstrFile;
 
 			return std::string();
 		}
@@ -66,8 +58,9 @@ namespace Flameberry {
 			if (GetCurrentDirectoryA(MAX_PATH, currentDir))
 				bi.lpszTitle = "Select a Folder"; // Text displayed in the dialog box
 
-			bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;							   // Flags for only directories and the new dialog style
-			bi.lpfn = NULL;																	   // Callback function, unused here
+			bi.ulFlags =
+				BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE; // Flags for only directories and the new dialog style
+			bi.lpfn = NULL;								   // Callback function, unused here
 			bi.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow()); // Owner window
 			bi.lpszTitle = "Select Folder";
 
@@ -93,8 +86,7 @@ namespace Flameberry {
 			ofn.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow());
 			ofn.lpstrFile = szFile;
 			ofn.nMaxFile = sizeof(szFile);
-			if (GetCurrentDirectoryA(256, currentDir))
-				ofn.lpstrInitialDir = currentDir;
+			if (GetCurrentDirectoryA(256, currentDir)) ofn.lpstrInitialDir = currentDir;
 			ofn.lpstrFilter = filter;
 			ofn.nFilterIndex = 1;
 			ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
@@ -102,8 +94,7 @@ namespace Flameberry {
 			// Sets the default extension by extracting it from the filter
 			ofn.lpstrDefExt = strchr(filter, '\0') + 1;
 
-			if (GetSaveFileNameA(&ofn) == TRUE)
-				return ofn.lpstrFile;
+			if (GetSaveFileNameA(&ofn) == TRUE) return ofn.lpstrFile;
 
 			return std::string();
 		}

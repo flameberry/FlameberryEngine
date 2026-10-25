@@ -25,15 +25,15 @@ namespace Flameberry {
 
 		bool NativeTitlebar;
 		glm::vec4 TitlebarGradientColor;
-		static constexpr int TitlebarHeight = 34;
+		static constexpr int TitlebarHeight = 36;
 
 		WindowSpecification(int width = 1280, int height = 720, const std::string& title = FBY_WINDOW_TITLE)
 			: Width(width)
 			, Height(height)
 			, Title(title)
 			, NativeTitlebar(false)
-			, TitlebarGradientColor(Theme::TitlebarGreenColor.x, Theme::TitlebarGreenColor.y, Theme::TitlebarGreenColor.z, Theme::TitlebarGreenColor.w) {
-		}
+			, TitlebarGradientColor(Theme::TitlebarGreenColor.x, Theme::TitlebarGreenColor.y,
+				  Theme::TitlebarGreenColor.z, Theme::TitlebarGreenColor.w) {}
 	};
 
 	class Window {

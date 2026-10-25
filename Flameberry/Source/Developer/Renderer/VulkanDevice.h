@@ -24,8 +24,7 @@ namespace Flameberry {
 		VulkanDevice(VkPhysicalDevice& physicalDevice, VulkanWindow* pVulkanWindow);
 		~VulkanDevice();
 
-		template <typename Fn>
-		void AccessQueueSafely(Fn&& function);
+		template <typename Fn> void AccessQueueSafely(Fn&& function);
 
 		inline VkDevice GetVulkanDevice() const { return m_VulkanDevice; }
 		inline VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
@@ -70,8 +69,7 @@ namespace Flameberry {
 		VkPhysicalDevice& m_VulkanPhysicalDevice;
 	};
 
-	template <typename Fn>
-	inline void VulkanDevice::AccessQueueSafely(Fn&& function) {
+	template <typename Fn> inline void VulkanDevice::AccessQueueSafely(Fn&& function) {
 		static_assert(std::is_invocable_v<Fn>);
 
 		std::scoped_lock lock(m_QueueMutex);

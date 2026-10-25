@@ -71,12 +71,16 @@ namespace Flameberry {
 		static void Shutdown();
 
 		static void AddLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color);
-		static void AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments = 32);
-		static void AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments = 32);
-		static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color, const glm::mat4& viewMatrix, int entityIndex = -1);
+		static void AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation,
+			const glm::vec3& color, int segments = 32);
+		static void AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation,
+			const glm::vec3& color, int segments = 32);
+		static void AddBillboard(const glm::vec3& position, float size, const glm::vec3& color,
+			const glm::mat4& viewMatrix, int entityIndex = -1);
 		static void AddGrid(int gridSize);
 		static void AddAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color);
-		static void AddText(const std::string& text, const Ref<Font>& fontAsset, const glm::mat4& transform, const TextParams& textParams, int entityIndex = -1);
+		static void AddText(const std::string& text, const Ref<Font>& fontAsset, const glm::mat4& transform,
+			const TextParams& textParams, int entityIndex = -1);
 
 		static void BeginScene(VkDescriptorSet globalDescriptorSet);
 		static void EndScene();

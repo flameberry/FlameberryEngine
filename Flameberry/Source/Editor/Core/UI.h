@@ -3,7 +3,6 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <imgui/imgui.h>
-#include <filesystem>
 
 #define FBY_PUSH_WIDTH_MAX(imgui_widget) \
 	{                                    \
@@ -28,16 +27,16 @@
 
 namespace Flameberry {
 
-	/**
-	 * Contains all the UI widgets used by Flameberry
-	 */
 	namespace UI {
 
-		bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size = -1.0f);
-		bool Vec3Control(const std::string& label, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth);
+		bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1,
+			float min_size2, float splitter_long_axis_size = -1.0f);
+		bool Vec3Control(
+			const std::string& label, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth);
 		bool AlignedButton(const char* label, const ImVec2& size = ImVec2(0.0f, 0.0f), float alignment = 0.5f);
 		void AlignedText(const char* label, float alignment);
-		bool InputBox(const char* label, float width, std::string* inputBuffer, const char* inputHint = (const char*)nullptr, bool focused = false);
+		bool InputBox(const char* label, float width, std::string* inputBuffer,
+			const char* inputHint = (const char*)nullptr, bool focused = false);
 
 		void OpenSelectionWidget(const char* label);
 		bool BeginSelectionWidget(const char* label, const char* title, std::string* inputBuffer);
@@ -50,9 +49,10 @@ namespace Flameberry {
 
 		bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled = false);
 
-		/**
-		 *  Wrapper around ImGui::Push/PopStyleColor()
-		 */
+		bool BeginTitlebar(float height, ImVec4 color);
+		void EndTitlebar();
+
+		// Wrapper around ImGui::Push/PopStyleColor()
 		class ScopedStyleColor {
 		public:
 			ScopedStyleColor(ImGuiCol idx, ImVec4 col, bool condition = true);
@@ -63,9 +63,7 @@ namespace Flameberry {
 			bool m_Condition;
 		};
 
-		/**
-		 *  Wrapper around ImGui::Push/PopStyleVar()
-		 */
+		// Wrapper around ImGui::Push/PopStyleVar()
 		class ScopedStyleVariable {
 		public:
 			ScopedStyleVariable(ImGuiStyleVar idx, ImVec2 value, bool condition = true);

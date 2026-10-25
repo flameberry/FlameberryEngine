@@ -40,18 +40,12 @@ namespace Flameberry {
 		}
 
 		AssetType AssetTypeStringToEnum(const std::string& typeStr) {
-			if (typeStr == "Scene")
-				return AssetType::Scene;
-			if (typeStr == "Texture2D")
-				return AssetType::Texture2D;
-			if (typeStr == "StaticMesh")
-				return AssetType::StaticMesh;
-			if (typeStr == "Material")
-				return AssetType::Material;
-			if (typeStr == "Skymap")
-				return AssetType::Skymap;
-			if (typeStr == "Font")
-				return AssetType::Font;
+			if (typeStr == "Scene") return AssetType::Scene;
+			if (typeStr == "Texture2D") return AssetType::Texture2D;
+			if (typeStr == "StaticMesh") return AssetType::StaticMesh;
+			if (typeStr == "Material") return AssetType::Material;
+			if (typeStr == "Skymap") return AssetType::Skymap;
+			if (typeStr == "Font") return AssetType::Font;
 			return AssetType::None;
 		}
 

@@ -15,8 +15,7 @@ namespace Flameberry {
 
 	struct IDComponent {
 		UUID ID;
-		IDComponent(UUID id)
-			: ID(id) {}
+		IDComponent(UUID id) : ID(id) {}
 		IDComponent() = default;
 	};
 
@@ -25,19 +24,16 @@ namespace Flameberry {
 		glm::mat4 GlobalTransform;
 		bool DirtyFlag = true;
 
-		TransformComponent()
-			: Translation(0.0f), Rotation(0.0f), Scale(1.0f) {}
+		TransformComponent() : Translation(0.0f), Rotation(0.0f), Scale(1.0f) {}
 
 		glm::mat4 CalculateLocalTransform() const {
-			return glm::translate(glm::mat4(1.0f), Translation)
-				* glm::toMat4(glm::quat(Rotation))
+			return glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(glm::quat(Rotation))
 				* glm::scale(glm::mat4(1.0f), Scale);
 		}
 
 		void CalcAndCacheGlobalTransform(const glm::mat4& globalTransform) {
 			const glm::mat4& localTransform = glm::translate(glm::mat4(1.0f), Translation)
-				* glm::toMat4(glm::quat(Rotation))
-				* glm::scale(glm::mat4(1.0f), Scale);
+				* glm::toMat4(glm::quat(Rotation)) * glm::scale(glm::mat4(1.0f), Scale);
 
 			GlobalTransform = globalTransform * localTransform;
 			DirtyFlag = false;
@@ -46,14 +42,12 @@ namespace Flameberry {
 
 	struct TagComponent {
 		std::string Tag;
-		TagComponent(const std::string& tag = "Default_Entity")
-			: Tag(tag) {}
+		TagComponent(const std::string& tag = "Default_Entity") : Tag(tag) {}
 	};
 
 	// Editor Only
 	// For scene structure tidying purposes only
-	struct CollectionComponent {
-	};
+	struct CollectionComponent {};
 
 	struct CameraComponent {
 		GenericCamera Camera;
@@ -72,35 +66,32 @@ namespace Flameberry {
 	struct MeshComponent {
 		AssetHandle MeshHandle = 0;
 
-		// This stores the materials that are used for rendering instead of the default ones which are loaded from the mesh source file
+		// This stores the materials that are used for rendering instead of the default ones which are loaded from the
+		// mesh source file
 		MaterialTable OverridenMaterialTable;
 
-		MeshComponent(AssetHandle meshHandle = 0)
-			: MeshHandle(meshHandle) {}
+		MeshComponent(AssetHandle meshHandle = 0) : MeshHandle(meshHandle) {}
 	};
 
 	struct DirectionalLightComponent {
 		glm::vec3 Color;
 		float Intensity, LightSize;
 
-		DirectionalLightComponent()
-			: Color(1.0f), Intensity(10.0f), LightSize(20.0f) {}
+		DirectionalLightComponent() : Color(1.0f), Intensity(10.0f), LightSize(20.0f) {}
 	};
 
 	struct PointLightComponent {
 		glm::vec3 Color;
 		float Intensity;
 
-		PointLightComponent()
-			: Color(1.0f), Intensity(10.0f) {}
+		PointLightComponent() : Color(1.0f), Intensity(10.0f) {}
 	};
 
 	struct SpotLightComponent {
 		glm::vec3 Color;
 		float Intensity, InnerConeAngle, OuterConeAngle;
 
-		SpotLightComponent()
-			: Color(1.0f), Intensity(10.0f), InnerConeAngle(30.0f), OuterConeAngle(45.0f) {}
+		SpotLightComponent() : Color(1.0f), Intensity(10.0f), InnerConeAngle(30.0f), OuterConeAngle(45.0f) {}
 	};
 
 	struct RelationshipComponent {
@@ -110,12 +101,16 @@ namespace Flameberry {
 		FEntity NextSibling{};
 
 		RelationshipComponent()
-			: Parent(FEntity::Null), FirstChild(FEntity::Null), PrevSibling(FEntity::Null), NextSibling(FEntity::Null) {
-		}
+			: Parent(FEntity::Null)
+			, FirstChild(FEntity::Null)
+			, PrevSibling(FEntity::Null)
+			, NextSibling(FEntity::Null) {}
 
 		RelationshipComponent(const RelationshipComponent& dest)
-			: Parent(dest.Parent), FirstChild(dest.FirstChild), PrevSibling(dest.PrevSibling), NextSibling(dest.NextSibling) {
-		}
+			: Parent(dest.Parent)
+			, FirstChild(dest.FirstChild)
+			, PrevSibling(dest.PrevSibling)
+			, NextSibling(dest.NextSibling) {}
 	};
 
 	struct NativeScriptComponent {
@@ -124,8 +119,7 @@ namespace Flameberry {
 		Flameberry::Actor* (*InitScript)();
 		void (*DestroyScript)(NativeScriptComponent*);
 
-		template <typename T>
-		void Bind() {
+		template <typename T> void Bind() {
 			InitScript = []() {
 				return static_cast<Flameberry::Actor*>(new T());
 			};
@@ -188,13 +182,10 @@ namespace Flameberry {
 		float Kerning, LineSpacing;
 	};
 
-	template <typename... Component>
-	struct ComponentList {
-	};
+	template <typename... Component> struct ComponentList {};
 
 	using AllComponents = ComponentList<TransformComponent, CollectionComponent, CameraComponent, MeshComponent,
-		SkyLightComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent,
-		RigidBodyComponent, BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent,
-		TextComponent>;
+		SkyLightComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent,
+		BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent, TextComponent>;
 
 } // namespace Flameberry

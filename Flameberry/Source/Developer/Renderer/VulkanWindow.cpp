@@ -31,9 +31,11 @@ namespace Flameberry {
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		m_Window = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Title.c_str(), nullptr, nullptr);
+		m_Window = glfwCreateWindow(
+			m_Specification.Width, m_Specification.Height, m_Specification.Title.c_str(), nullptr, nullptr);
 		FBY_ASSERT(m_Window, "GLFW window is null!");
-		FBY_INFO("Created GLFW window of title '{}' and dimensions ({}, {})", m_Specification.Title, m_Specification.Width, m_Specification.Height);
+		FBY_INFO("Created GLFW window of title '{}' and dimensions ({}, {})", m_Specification.Title,
+			m_Specification.Width, m_Specification.Height);
 	}
 
 	void VulkanWindow::Init() {
@@ -90,14 +92,12 @@ namespace Flameberry {
 		vkDestroySurfaceKHR(instance, m_WindowSurface, nullptr);
 	}
 
-	VulkanWindow::~VulkanWindow() {
-	}
+	VulkanWindow::~VulkanWindow() {}
 
 	bool VulkanWindow::BeginFrame() {
 		VkResult result = m_SwapChain->AcquireNextImage();
 		if (result != VK_SUCCESS) {
-			if (result == VK_ERROR_OUT_OF_DATE_KHR)
-				m_SwapChain->Invalidate();
+			if (result == VK_ERROR_OUT_OF_DATE_KHR) m_SwapChain->Invalidate();
 			return false;
 		}
 		m_ImageIndex = m_SwapChain->GetAcquiredImageIndex();
@@ -108,8 +108,8 @@ namespace Flameberry {
 		const auto& device = VulkanContext::GetCurrentDevice();
 		VkResult queuePresentStatus = m_SwapChain->SubmitCommandBuffer(Renderer::GetActiveVulkanCommandBuffer());
 
-		// TODO: This code should be enabled when ensured that all the resources that depend upon the swapchain are also updated
-		// if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR)
+		// TODO: This code should be enabled when ensured that all the resources that depend upon the swapchain are also
+		// updated if (queuePresentStatus == VK_ERROR_OUT_OF_DATE_KHR || queuePresentStatus == VK_SUBOPTIMAL_KHR)
 		//     m_SwapChain->Invalidate();
 	}
 
@@ -132,16 +132,14 @@ namespace Flameberry {
 
 	void VulkanWindow::SetTitle(const std::string& title) {
 		m_Specification.Title = title;
-		if (m_Specification.NativeTitlebar)
-			glfwSetWindowTitle(m_Window, m_Specification.Title.c_str());
+		if (m_Specification.NativeTitlebar) glfwSetWindowTitle(m_Window, m_Specification.Title.c_str());
 		else
 			Platform::TitlebarNative::SetPrimaryTitle(m_Specification.Title);
 	}
 
 	void VulkanWindow::SetSecondaryTitle(const char* title) {
-		m_Specification.Title = title;
-		if (!m_Specification.NativeTitlebar)
-			Platform::TitlebarNative::SetSecondaryTitle(m_Specification.Title);
+		m_Specification.SecondaryTitle = title;
+		if (!m_Specification.NativeTitlebar) Platform::TitlebarNative::SetSecondaryTitle(m_Specification.SecondaryTitle);
 	}
 
 	void VulkanWindow::SetTitlebarGradient(const glm::vec4& color) {

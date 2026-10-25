@@ -6,7 +6,8 @@
 
 #include <vulkan/vulkan.h>
 
-// TODO: Should this include be in the cpp file only with forward declaration and heap allocation of spv_reflect::ShaderModule?
+// TODO: Should this include be in the cpp file only with forward declaration and heap allocation of
+// spv_reflect::ShaderModule?
 #include <SPIRV-Reflect/spirv_reflect.h>
 
 namespace Flameberry {
@@ -75,15 +76,22 @@ namespace Flameberry {
 		Shader(const std::filesystem::path& spvBinaryPath);
 		~Shader();
 
-		void GetVertexAndFragmentShaderModules(VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const;
+		void GetVertexAndFragmentShaderModules(
+			VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const;
 
 		const std::string& GetName() const { return m_Name; }
 		VkShaderModule GetVulkanShaderModule() const;
 		const std::vector<ShaderDataType>& GetInputVariableDataTypes() const { return m_InputDataTypes; }
 		const std::set<uint32_t>& GetSpecializationConstantIDSet() const { return m_SpecializationConstantIDSet; }
-		const std::vector<ReflectionPushConstantSpecification>& GetPushConstantSpecifications() const { return m_PushConstantSpecifications; }
-		const std::vector<ReflectionDescriptorBindingSpecification>& GetDescriptorBindingSpecifications() const { return m_DescriptorBindingSpecifications; }
-		const std::vector<ReflectionDescriptorSetSpecification>& GetDescriptorSetSpecifications() const { return m_DescriptorSetSpecifications; }
+		const std::vector<ReflectionPushConstantSpecification>& GetPushConstantSpecifications() const {
+			return m_PushConstantSpecifications;
+		}
+		const std::vector<ReflectionDescriptorBindingSpecification>& GetDescriptorBindingSpecifications() const {
+			return m_DescriptorBindingSpecifications;
+		}
+		const std::vector<ReflectionDescriptorSetSpecification>& GetDescriptorSetSpecifications() const {
+			return m_DescriptorSetSpecifications;
+		}
 
 		// Costly functions
 		const ReflectionUniformVariableSpecification& GetUniform(const std::string& name) const;
@@ -99,8 +107,7 @@ namespace Flameberry {
 
 		union {
 			VkShaderModule m_ShaderModule;
-			struct
-			{
+			struct {
 				VkShaderModule m_VertexShaderModule;
 				VkShaderModule m_FragmentShaderModule;
 			};
@@ -117,12 +124,14 @@ namespace Flameberry {
 
 		// This should only be accessed while initialisation of material or while editing it.
 		// Don't access this during rendering every frame. As std::string hashing causes overhead
-		// Note: The full names of the uniforms are used to access it, for e.g.: `u_Material.Roughness` instead of just `Roughness`
-		// If no alias is given to the push constant block, then only the variable name is considered as full name, e.g.: `u_Roughness`
+		// Note: The full names of the uniforms are used to access it, for e.g.: `u_Material.Roughness` instead of just
+		// `Roughness` If no alias is given to the push constant block, then only the variable name is considered as
+		// full name, e.g.: `u_Roughness`
 		std::unordered_map<std::string, ReflectionUniformVariableSpecification> m_UniformFullNameToSpecification;
 
 		// TODO: Should we just use unions to store both Uniform Variables and Descriptor Sets in a generic struct
-		// And then have just a single unordered_map to point from the name to the UniformVariable/DescriptorBinding Specification?
+		// And then have just a single unordered_map to point from the name to the UniformVariable/DescriptorBinding
+		// Specification?
 		std::unordered_map<std::string, uint32_t> m_DescriptorBindingVariableFullNameToSpecificationIndex;
 	};
 
