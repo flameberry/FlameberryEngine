@@ -12,7 +12,13 @@ namespace Flameberry {
 
 	std::string Logger::GetCurrentTimeString() {
 		std::time_t t = std::time(nullptr);
-		return fmt::format("[{:%H:%M:%S}]", fmt::localtime(t));
+		std::tm localTime;
+#ifdef FBY_PLATFORM_WINDOWS
+		localtime_s(&localTime, &t);
+#else
+		localtime_r(&t, &localTime);
+#endif
+		return fmt::format("[{:%H:%M:%S}]", localTime);
 	}
 
 	std::string Logger::GetPrefix(const LogLevel& level) {

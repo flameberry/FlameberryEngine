@@ -70,7 +70,7 @@ list(APPEND FBY_LIBRARY_DEPENDENCIES ${Vulkan_LIBRARY})
 list(APPEND FBY_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 
 # Setting All the required compile definitions
-set(FBY_COMPILE_DEFINITIONS FBY_PROJECT_DIR="${FBY_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE IMGUI_DEFINE_MATH_OPERATORS)
+set(FBY_COMPILE_DEFINITIONS FBY_PROJECT_DIR="${FBY_SOURCE_DIR}/" GLFW_INCLUDE_VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_ENABLE_EXPERIMENTAL IMGUI_DEFINE_MATH_OPERATORS)
 
 # Setting the paths we require irrespective of the Graphics API
 list(APPEND FBY_LIBRARY_DEPENDENCIES glfw yaml-cpp fmt spirv-reflect-static assimp msdf-atlas-gen Jolt)
@@ -107,17 +107,17 @@ set(FBY_DEPENDENCY_SOURCE
     ${CMAKE_SOURCE_DIR}/Flameberry/Source/ThirdParty/imgui/misc/cpp/imgui_stdlib.h
 
     # ImGuizmo
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/GraphEditor.cpp
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/GraphEditor.h
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImCurveEdit.cpp
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImCurveEdit.h
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImGradient.cpp
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImGradient.h
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImGuizmo.cpp
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImGuizmo.h
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImSequencer.cpp
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImSequencer.h
-    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/ImZoomSlider.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/GraphEditor.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/GraphEditor.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/ImCurveEdit.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/ImCurveEdit.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/ImGradient.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/ImGradient.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/ImGuizmo.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/ImGuizmo.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/ImSequencer.cpp
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/ImSequencer.h
+    ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/ImGuizmo/src/ImZoomSlider.h
 
     # Murmur Hash
     ${FBY_SOURCE_DIR}/Flameberry/Source/ThirdParty/MurmurHash/MurmurHash3.h

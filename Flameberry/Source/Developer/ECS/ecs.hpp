@@ -1,9 +1,10 @@
 #pragma once
 
-#include <iostream>
 #include <cstdint>
+#include <cstdlib>
 #include <vector>
 
+#include "Core/Assert.h"
 #include "Core/Core.h"
 
 /**

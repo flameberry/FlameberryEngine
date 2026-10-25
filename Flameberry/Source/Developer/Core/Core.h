@@ -21,7 +21,7 @@
 	#define FBY_CONFIG_STR "Debug"
 #elif defined(FBY_RELEASE)
 	#define FBY_CONFIG_STR "Release"
-	#define FBY_DEBUGBREAK()
+	#define FBY_DEBUGBREAK() std::abort()
 #else
 	#define FBY_DEBUGBREAK()
 #endif

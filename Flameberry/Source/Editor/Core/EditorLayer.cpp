@@ -10,7 +10,7 @@
 #include "Core/Assert.h"
 #include "Core/EditorContext.h"
 #include "ECS/ecs.hpp"
-#include "ImGuizmo/ImGuizmo.h"
+#include "ImGuizmo/src/ImGuizmo.h"
 #include "Renderer/Framebuffer.h"
 #include "Core/UI.h"
 
