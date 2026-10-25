@@ -3,6 +3,7 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/EditorContext.h"
+#include "Core/UI.h"
 #include "Flameberry.h"
 #include "MaterialEditorPanel.h"
 #include "imgui.h"
@@ -29,17 +30,17 @@ namespace Flameberry {
 
 		Ref<Texture2D> m_SettingsIcon;
 
-		std::string m_SearchInpuBuffer1, m_SearchInputBuffer2;
+		std::string m_AddComponentSearchBuffer, m_SearchInputBuffer2;
 
 	private:
-		template <typename ComponentType> void DrawAddComponentEntry(const char* name);
+		template <typename ComponentType> void DrawAddComponentEntry(const char* icon, const char* name);
 
 		template <typename ComponentType, typename Fn> void DrawComponent(const char* name, Fn&& fn, bool removable = true);
 	};
 
-	template <typename ComponentType> void InspectorPanel::DrawAddComponentEntry(const char* name) {
+	template <typename ComponentType> void InspectorPanel::DrawAddComponentEntry(const char* icon, const char* name) {
 		if (!m_Context->GetRegistry()->HasComponent<ComponentType>(EditorContext::Get()->SelectedEntity)) {
-			if (ImGui::MenuItem(name))
+			if (UI::SelectionWidgetElement(name, false, icon))
 				m_Context->GetRegistry()->EmplaceComponent<ComponentType>(EditorContext::Get()->SelectedEntity);
 		}
 	}

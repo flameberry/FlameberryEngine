@@ -932,7 +932,9 @@ namespace Flameberry {
 		ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
 		if (ImGui::BeginTabBar("Scene Renderer", tabBarFlags)) {
 			UI::ScopedStyleVariable tabBorder(ImGuiStyleVar_TabBarBorderSize, 1);
-			UI::ScopedStyleColor tabBg(ImGuiCol_Tab, Theme::ImGuiTitleBg);
+			UI::ScopedStyleColor tabBg(ImGuiCol_Tab, ImVec4(0, 0, 0, 0));
+			UI::ScopedStyleColor tabSelected(ImGuiCol_TabSelected, Theme::HeaderBg);
+			UI::ScopedStyleColor tabDimmedSelected(ImGuiCol_TabDimmedSelected, Theme::HeaderBg);
 
 			if (ImGui::BeginTabItem("Settings")) {
 				constexpr ImGuiTreeNodeFlags collapsingHeaderFlags =

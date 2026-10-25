@@ -39,7 +39,7 @@ namespace Flameberry {
 
 		void OpenSelectionWidget(const char* label);
 		bool BeginSelectionWidget(const char* label, const char* title, std::string* inputBuffer);
-		bool SelectionWidgetElement(const char* label, bool isSelected);
+		bool SelectionWidgetElement(const char* label, bool isSelected, const char* icon = nullptr);
 		void EndSelectionWidget();
 
 		bool BeginKeyValueTable(const char* label, ImGuiTableFlags tableFlags = 0, float labelWidth = 0.0f);

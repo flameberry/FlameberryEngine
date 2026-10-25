@@ -57,24 +57,24 @@ namespace Flameberry {
 
 			// Some special entities are not supposed to have all the components
 			ImGui::BeginDisabled(disableAddComponentButton);
-			if (ImGui::Button(addComponentText)) ImGui::OpenPopup("AddComponentPopUp");
+			if (ImGui::Button(addComponentText)) UI::OpenSelectionWidget("##AddComponentSelectionWidget");
 			ImGui::EndDisabled();
 
-			if (ImGui::BeginPopup("AddComponentPopUp")) {
-				DrawAddComponentEntry<TransformComponent>(ICON_LC_SCALE_3D "\tTransform Component");
-				DrawAddComponentEntry<TextComponent>(ICON_LC_TEXT "\tText Component");
-				DrawAddComponentEntry<CameraComponent>(ICON_LC_CAMERA "\tCamera Component");
-				DrawAddComponentEntry<MeshComponent>(ICON_LC_CUBOID "\tMesh Component");
-				DrawAddComponentEntry<SkyLightComponent>(ICON_LC_SUNRISE "\tSky Light Component");
-				DrawAddComponentEntry<DirectionalLightComponent>(ICON_LC_SUN "\tDirectional Light Component");
-				DrawAddComponentEntry<PointLightComponent>(ICON_LC_LIGHTBULB "\tPoint Light Component");
-				DrawAddComponentEntry<SpotLightComponent>(ICON_LC_CONE "\tSpot Light Component");
-				DrawAddComponentEntry<RigidBodyComponent>(ICON_LC_BOXES "\tRigid Body Component");
-				DrawAddComponentEntry<BoxColliderComponent>(ICON_LC_BOX "\tBox Collider Component");
-				DrawAddComponentEntry<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED "\tSphere Collider Component");
-				DrawAddComponentEntry<CapsuleColliderComponent>(ICON_LC_PILL "\tCapsule Collider Component");
+			if (UI::BeginSelectionWidget("##AddComponentSelectionWidget", "Add Component", &m_AddComponentSearchBuffer)) {
+				DrawAddComponentEntry<TransformComponent>(ICON_LC_SCALE_3D, "Transform");
+				DrawAddComponentEntry<TextComponent>(ICON_LC_TEXT, "Text");
+				DrawAddComponentEntry<CameraComponent>(ICON_LC_CAMERA, "Camera");
+				DrawAddComponentEntry<MeshComponent>(ICON_LC_CUBOID, "Mesh");
+				DrawAddComponentEntry<SkyLightComponent>(ICON_LC_SUNRISE, "Sky Light");
+				DrawAddComponentEntry<DirectionalLightComponent>(ICON_LC_SUN, "Directional Light");
+				DrawAddComponentEntry<PointLightComponent>(ICON_LC_LIGHTBULB, "Point Light");
+				DrawAddComponentEntry<SpotLightComponent>(ICON_LC_CONE, "Spot Light");
+				DrawAddComponentEntry<RigidBodyComponent>(ICON_LC_BOXES, "Rigid Body");
+				DrawAddComponentEntry<BoxColliderComponent>(ICON_LC_BOX, "Box Collider");
+				DrawAddComponentEntry<SphereColliderComponent>(ICON_LC_CIRCLE_DASHED, "Sphere Collider");
+				DrawAddComponentEntry<CapsuleColliderComponent>(ICON_LC_PILL, "Capsule Collider");
 
-				ImGui::EndPopup();
+				UI::EndSelectionWidget();
 			}
 
 			ImGui::Spacing();
@@ -326,13 +326,14 @@ namespace Flameberry {
 					UI::EndKeyValueTable();
 				}
 
-				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-				bool is_open = ImGui::CollapsingHeader(
-					ICON_LC_DRIBBBLE " Materials", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth);
-				ImGui::PopStyleVar();
+				// The materials only exist once a mesh is assigned
+				auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
+				if (!staticMesh) return;
 
-				if (!is_open) return;
-				if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle)) {
+				bool is_open = ImGui::CollapsingHeader(ICON_LC_DRIBBBLE " Materials",
+					ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding);
+
+				if (is_open) {
 					const uint32_t limit = glm::min<uint32_t>(staticMesh->GetSubMeshes().size(), 8);
 					const float textLineHeightWithSpacing = ImGui::GetTextLineHeightWithSpacing() + 2.0f;
 					const float verticalLength = textLineHeightWithSpacing + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
@@ -402,35 +403,28 @@ namespace Flameberry {
 
 							ImGui::TableNextColumn();
 
-							ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f));
-							if (ImGui::IsItemClicked()) UI::OpenSelectionWidget("##MaterialSelectionWidget");
+							if (ImGui::Button(ICON_LC_FOLDER_SEARCH, ImVec2(0.0f, 0.0f)))
+								UI::OpenSelectionWidget("##MaterialSelectionWidget");
 
 							if (UI::BeginSelectionWidget(
 									"##MaterialSelectionWidget", "Select Material", &m_SearchInputBuffer2)) {
-								auto displayMaterialEntry = [&, this](AssetHandle, const Ref<Asset>& asset) {
-									if (asset->GetAssetType() == AssetType::Material) {
-										Ref<MaterialAsset> m = std::static_pointer_cast<MaterialAsset>(asset);
+								auto displayMaterialEntry = [&](const Ref<Asset>& asset) {
+									if (asset->GetAssetType() != AssetType::Material) return;
 
-										if (m_SearchInputBuffer2[0] != '\0') {
-											const int index = Algorithm::KmpSearch(
-												m->GetName().c_str(), m_SearchInputBuffer2.c_str(), true);
-											if (index == -1) return false;
-										}
-
-										if (UI::SelectionWidgetElement(m->GetName().c_str(), m->Handle == mat->Handle))
-											mesh.OverridenMaterialTable[submeshIndex] = m->Handle;
-									}
-									return true;
+									Ref<MaterialAsset> m = std::static_pointer_cast<MaterialAsset>(asset);
+									if (UI::SelectionWidgetElement(
+											m->GetName().c_str(), m->Handle == mat->Handle, ICON_LC_PALETTE))
+										mesh.OverridenMaterialTable[submeshIndex] = m->Handle;
 								};
 
 								// Show Loaded Assets
 								for (const auto& [handle, asset] : AssetManager::As<EditorAssetManager>()->GetLoadedAssets())
-									if (!displayMaterialEntry(handle, asset)) continue;
+									displayMaterialEntry(asset);
 
 								// Show Memory Only Assets
 								for (const auto& [handle, asset] :
 									AssetManager::As<EditorAssetManager>()->GetMemoryOnlyAssets())
-									if (!displayMaterialEntry(handle, asset)) continue;
+									displayMaterialEntry(asset);
 
 								UI::EndSelectionWidget();
 							}

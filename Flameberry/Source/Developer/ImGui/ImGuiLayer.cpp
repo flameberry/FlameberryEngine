@@ -39,14 +39,9 @@ namespace Flameberry {
 		static constexpr ImWchar iconRanges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
 
 		ImFontConfig config{};
-#ifdef FBY_PLATFORM_MACOS
-		config.GlyphExtraAdvanceX = 0.5f;
-#else
-		config.GlyphExtraAdvanceX = 0.65f;
-#endif
+		config.GlyphExtraAdvanceX = 0.3f;
 		// Inter has its own glyphs (alternate characters) in the private use area that Lucide uses for its icons, and
 		// since ImGui looks glyphs up in the order the fonts were added, they would be shown instead of the merged
-		// Lucide icons
 		config.GlyphExcludeRanges = iconRanges;
 
 		io.FontDefault = io.Fonts->AddFontFromFileTTF(
@@ -63,6 +58,8 @@ namespace Flameberry {
 
 		// Scaling for high DPI monitors (the content scale is always 1 on macOS, which uses the framebuffer scale
 		// instead) Fonts and viewports follow DPI changes automatically, but style sizes are baked here once
+		// The style is set up first, so that its sizes get scaled too
+		SetupImGuiStyle();
 		const float mainScale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.ScaleAllSizes(mainScale);
@@ -72,16 +69,6 @@ namespace Flameberry {
 		// ImGui layout save location
 		io.IniFilename = nullptr;
 		ImGui::LoadIniSettingsFromDisk(s_ImGuiLayoutPath);
-
-		// Setup Dear ImGui style
-		SetupImGuiStyle();
-
-		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular
-		// ones.
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			// style.WindowRounding = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-		}
 
 		const auto& device = VulkanContext::GetCurrentDevice();
 		SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(
@@ -288,70 +275,129 @@ namespace Flameberry {
 
 	void ImGuiLayer::SetupImGuiStyle() {
 		auto& style = ImGui::GetStyle();
-		style.ColorButtonPosition = ImGuiDir_Left;
-		style.WindowRounding = 5;
-		style.FrameRounding = 2;
-		style.PopupRounding = 3;
-		style.CellPadding = ImVec2(8, 7);
-		style.ScrollbarSize = 12;
-		style.DockingSeparatorSize = 2;
-		style.WindowMenuButtonPosition = ImGuiDir_Left;
+
+		// Sizes
+		style.WindowPadding = ImVec2(8, 8);
+		style.FramePadding = ImVec2(6, 4);
+		style.CellPadding = ImVec2(8, 3);
+		style.ItemSpacing = ImVec2(8, 5);
+		style.ItemInnerSpacing = ImVec2(6, 4);
+		style.IndentSpacing = 16;
+		style.ScrollbarSize = 10;
+		style.GrabMinSize = 10;
+
+		style.WindowBorderSize = 1;
+		style.ChildBorderSize = 1;
+		style.PopupBorderSize = 1;
+		style.FrameBorderSize = 0;
+		style.TabBorderSize = 0;
 		style.TabBarBorderSize = 0;
-		style.TabBarOverlineSize = 0;
+		style.TabBarOverlineSize = 2;
+		style.DockingSeparatorSize = 2;
+
+		style.WindowRounding = 6;
+		style.ChildRounding = 4;
+		style.FrameRounding = 3;
+		style.PopupRounding = 5;
+		style.ScrollbarRounding = 8;
+		style.GrabRounding = 3;
+		style.TabRounding = 4;
+
+		style.WindowTitleAlign = ImVec2(0.0f, 0.5f);
+		style.WindowMenuButtonPosition = ImGuiDir_None;
+		style.ColorButtonPosition = ImGuiDir_Left;
+		style.TreeLinesFlags = ImGuiTreeNodeFlags_DrawLinesToNodes;
+		style.TreeLinesSize = 1;
 
 		auto& colors = style.Colors;
 
-		// Headers
-		colors[ImGuiCol_Header] = ImVec4{ 0.225f, 0.225f, 0.225f, 1.0f };
-		colors[ImGuiCol_HeaderHovered] = ImVec4{ 0.3f, 0.305f, 0.31f, 1.0f };
-		colors[ImGuiCol_HeaderActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+		auto withAlpha = [](ImVec4 color, float alpha) {
+			return ImVec4(color.x, color.y, color.z, alpha);
+		};
+		auto gray = [](float value) {
+			return ImVec4(value / 255.0f, value / 255.0f, value / 255.0f, 1.0f);
+		};
 
-		// Tabs
-		colors[ImGuiCol_Tab] = Theme::WindowBg;
-		colors[ImGuiCol_TabUnfocused] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
-		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
-		colors[ImGuiCol_TabHovered] = ImVec4(0.49f, 0.43f, 0.24f, 1.00f);
-		colors[ImGuiCol_TabActive] = ImVec4(95.0f / 255, 93.0f / 255, 79.0f / 255, 1.0f);
+		// Text
+		colors[ImGuiCol_Text] = Theme::TextColor;
+		colors[ImGuiCol_TextDisabled] = Theme::TextDisabled;
+		colors[ImGuiCol_TextSelectedBg] = withAlpha(Theme::AccentColor, 0.30f);
+		colors[ImGuiCol_TextLink] = Theme::AccentColor;
+		colors[ImGuiCol_InputTextCursor] = Theme::TextColor;
 
+		// Windows
 		colors[ImGuiCol_WindowBg] = Theme::WindowBg;
-		colors[ImGuiCol_Border] = Theme::WindowBgDark;
-
-		// Frame
-		colors[ImGuiCol_FrameBg] = ImVec4(0.015f, 0.015f, 0.015f, 1.0f);
-		colors[ImGuiCol_FrameBgHovered] = ImVec4{ 0.11f, 0.11f, 0.11f, 1.0f };
-		colors[ImGuiCol_FrameBgActive] = ImVec4{ 0.08f, 0.08f, 0.08f, 1.0f };
+		colors[ImGuiCol_ChildBg] = ImVec4(0, 0, 0, 0);
+		colors[ImGuiCol_PopupBg] = Theme::PopupBg;
+		colors[ImGuiCol_Border] = Theme::WindowBorder;
+		colors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
+		colors[ImGuiCol_MenuBarBg] = Theme::ImGuiTitleBg;
+		colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0, 0, 0, 0.55f);
 
 		colors[ImGuiCol_TitleBg] = Theme::ImGuiTitleBg;
-		colors[ImGuiCol_TitleBgActive] = colors[ImGuiCol_TitleBg];
-		colors[ImGuiCol_TitleBgCollapsed] = colors[ImGuiCol_TitleBg];
+		colors[ImGuiCol_TitleBgActive] = Theme::ImGuiTitleBg;
+		colors[ImGuiCol_TitleBgCollapsed] = Theme::ImGuiTitleBg;
 
-		colors[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
-		colors[ImGuiCol_TableRowBg] = ImVec4(39.0f / 255, 39.0f / 255.0f, 39.0f / 255, 1.0f);
-		colors[ImGuiCol_TableRowBgAlt] = ImVec4(47.0f / 255, 47.0f / 255.0f, 47.0f / 255, 1.0f);
-		colors[ImGuiCol_TableHeaderBg] = ImVec4(53.0f / 255, 53.0f / 255.0f, 53.0f / 255, 1.0f);
-
-		colors[ImGuiCol_TableBorderLight] = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
-		colors[ImGuiCol_TableBorderStrong] = ImVec4(0.01f, 0.01f, 0.01f, 1.0f);
-
-		// Button
-		colors[ImGuiCol_Button] = Theme::FrameBg;
-		colors[ImGuiCol_ButtonHovered] = ImVec4{ 0.3f, 0.3f, 0.3f, 1.0f };
-		colors[ImGuiCol_ButtonActive] = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-
+		// Frames (input fields, checkboxes, sliders)
+		colors[ImGuiCol_FrameBg] = Theme::FrameBg;
+		colors[ImGuiCol_FrameBgHovered] = Theme::FrameBgHovered;
+		colors[ImGuiCol_FrameBgActive] = Theme::FrameBgActive;
 		colors[ImGuiCol_CheckMark] = Theme::AccentColor;
-		colors[ImGuiCol_ResizeGrip] = Theme::AccentColor;
-		colors[ImGuiCol_ResizeGripHovered] = Theme::AccentColor;
+		colors[ImGuiCol_CheckboxSelectedBg] = Theme::FrameBg;
+		colors[ImGuiCol_SliderGrab] = withAlpha(Theme::AccentColor, 0.80f);
+		colors[ImGuiCol_SliderGrabActive] = Theme::AccentColor;
+
+		// Buttons
+		colors[ImGuiCol_Button] = Theme::ButtonBg;
+		colors[ImGuiCol_ButtonHovered] = Theme::ButtonBgHovered;
+		colors[ImGuiCol_ButtonActive] = Theme::ButtonBgActive;
+
+		// Headers (collapsing headers, tree nodes, selectables, menu items)
+		colors[ImGuiCol_Header] = Theme::HeaderBg;
+		colors[ImGuiCol_HeaderHovered] = Theme::HeaderBgHovered;
+		colors[ImGuiCol_HeaderActive] = Theme::HeaderBgActive;
+		colors[ImGuiCol_TreeLines] = gray(70);
+
+		// Tabs: the selected tab shares the window's color so that it reads as part of the panel below it
+		colors[ImGuiCol_Tab] = Theme::ImGuiTitleBg;
+		colors[ImGuiCol_TabHovered] = Theme::HeaderBgHovered;
+		colors[ImGuiCol_TabSelected] = Theme::WindowBg;
+		colors[ImGuiCol_TabSelectedOverline] = Theme::AccentColor;
+		colors[ImGuiCol_TabDimmed] = Theme::ImGuiTitleBg;
+		colors[ImGuiCol_TabDimmedSelected] = Theme::WindowBg;
+		colors[ImGuiCol_TabDimmedSelectedOverline] = ImVec4(0, 0, 0, 0);
+
+		// Docking
+		colors[ImGuiCol_DockingPreview] = withAlpha(Theme::AccentColor, 0.35f);
+		colors[ImGuiCol_DockingEmptyBg] = Theme::TitlebarColor;
+
+		// Separators and resize handles stay quiet until hovered
+		colors[ImGuiCol_Separator] = Theme::WindowBorder;
+		colors[ImGuiCol_SeparatorHovered] = withAlpha(Theme::AccentColor, 0.70f);
+		colors[ImGuiCol_SeparatorActive] = Theme::AccentColor;
+		colors[ImGuiCol_ResizeGrip] = ImVec4(0, 0, 0, 0);
+		colors[ImGuiCol_ResizeGripHovered] = withAlpha(Theme::AccentColor, 0.70f);
 		colors[ImGuiCol_ResizeGripActive] = Theme::AccentColor;
 
-		colors[ImGuiCol_Separator] = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
-		colors[ImGuiCol_SeparatorHovered] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-		colors[ImGuiCol_SeparatorActive] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
+		// Scrollbars
+		colors[ImGuiCol_ScrollbarBg] = ImVec4(0, 0, 0, 0);
+		colors[ImGuiCol_ScrollbarGrab] = gray(66);
+		colors[ImGuiCol_ScrollbarGrabHovered] = gray(86);
+		colors[ImGuiCol_ScrollbarGrabActive] = gray(104);
 
-		colors[ImGuiCol_NavHighlight] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
-		// colors[ImGuiCol_PopupBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
-		colors[ImGuiCol_PopupBg] = Theme::FrameBg;
+		// Tables
+		colors[ImGuiCol_TableHeaderBg] = Theme::HeaderBg;
+		colors[ImGuiCol_TableBorderStrong] = Theme::TableBorder;
+		colors[ImGuiCol_TableBorderLight] = Theme::TableBorderLight;
+		colors[ImGuiCol_TableRowBg] = ImVec4(0, 0, 0, 0);
+		colors[ImGuiCol_TableRowBgAlt] = ImVec4(1, 1, 1, 0.025f);
 
-		colors[ImGuiCol_DragDropTarget] = ImVec4(0.961f, 0.796f, 0.486f, 1.0f);
+		// Navigation and drag-drop
+		colors[ImGuiCol_NavCursor] = Theme::AccentColor;
+		colors[ImGuiCol_NavWindowingHighlight] = withAlpha(Theme::AccentColor, 0.70f);
+		colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0, 0, 0, 0.35f);
+		colors[ImGuiCol_DragDropTarget] = Theme::AccentColor;
+		colors[ImGuiCol_DragDropTargetBg] = withAlpha(Theme::AccentColor, 0.10f);
 	}
 
 } // namespace Flameberry

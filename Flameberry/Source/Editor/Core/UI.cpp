@@ -6,6 +6,7 @@
 #include <IconFontCppHeaders/IconsLucide.h>
 #include <fmt/format.h>
 
+#include "Core/Algorithm.h"
 #include "ImGui/Theme.h"
 
 namespace Flameberry::UI {
@@ -18,8 +19,16 @@ namespace Flameberry::UI {
 		static constexpr float LabelWidth = 100.0f;
 
 		// Selection Widget
-		bool IsSelectionWidgetJustOpened = false, IsSelectionWidgetSearchBoxFocused = false,
-			 HasSelectionWidgetListBoxBegun = false;
+		static constexpr float SelectionWidgetWidth = 280.0f;
+		static constexpr int SelectionWidgetMaxVisibleRows = 10;
+
+		ImRect SelectionWidgetAnchor;
+		ImGuiDir SelectionWidgetLastDir = ImGuiDir_None;
+		float SelectionWidgetHeight = 300.0f;
+		const std::string* SelectionWidgetSearchBuffer = nullptr;
+		int SelectionWidgetVisibleElementCount = 0;
+		bool IsSelectionWidgetJustOpened = false, IsSelectionWidgetFirstFrame = false,
+			 IsSelectionWidgetSearchBoxFocused = false, IsSelectionWidgetEnterPressed = false;
 
 		// Titlebar
 		bool IsTitlebarMenuBarOpen = false;
@@ -113,9 +122,12 @@ namespace Flameberry::UI {
 		width = width == -1.0f ? ImGui::GetContentRegionAvail().x : width;
 		// Get current cursor position and input box size
 		bool isActive = false;
+		ImGuiID inputId = 0;
 		ImVec2 inputPos = ImGui::GetCursorScreenPos();
 		ImVec2 inputSize = ImVec2(width, ImGui::GetFrameHeight());
 		{
+			// The input box draws its own focus border, so ImGui's navigation cursor would draw a second one around it
+			ScopedStyleColor navCursor(ImGuiCol_NavCursor, ImVec4(0, 0, 0, 0));
 			ScopedStyleColor borderColor(ImGuiCol_Border, ImGui::ColorConvertFloat4ToU32(Theme::AccentColor), focused);
 			ScopedStyleVariable frameRounding(ImGuiStyleVar_FrameRounding, 4);
 			ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0.5f);
@@ -123,6 +135,7 @@ namespace Flameberry::UI {
 			// Allow overlap for the upcoming button
 			ImGui::SetNextItemAllowOverlap();
 			ImGui::InputTextWithHint(label, inputHint, inputBuffer, flags);
+			inputId = ImGui::GetItemID();
 			isActive = ImGui::IsItemActive() || ImGui::IsItemFocused();
 		}
 		ImGui::PopItemWidth();
@@ -132,10 +145,12 @@ namespace Flameberry::UI {
 			ImGui::SameLine(0.0f, 0.0f);
 			ImGui::SetCursorScreenPos(ImVec2(inputPos.x + width - inputSize.y, inputPos.y));
 
-			ImGui::Button(ICON_LC_X, ImVec2(inputSize.y, inputSize.y));
-			if (ImGui::IsItemClicked()) {
+			// Without a border, so that it doesn't cover the input box's own border
+			ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0.0f);
+			if (ImGui::Button(ICON_LC_X, ImVec2(inputSize.y, inputSize.y))) {
 				inputBuffer->clear();
-				ImGui::SetKeyboardFocusHere(-1);
+				// Typing can carry on right after clearing
+				ImGui::ActivateItemByID(inputId);
 			}
 		}
 		return isActive;
@@ -145,50 +160,120 @@ namespace Flameberry::UI {
 		const std::string labelFmt = fmt::format("{}Popup", label);
 		ImGui::OpenPopup(labelFmt.c_str());
 
+		// The widget is anchored to the item that opened it, which is usually the button that was just clicked
+		g_UIState.SelectionWidgetAnchor = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+		g_UIState.SelectionWidgetLastDir = ImGuiDir_None;
 		g_UIState.IsSelectionWidgetJustOpened = true;
 	}
 
 	bool BeginSelectionWidget(const char* label, const char* title, std::string* inputBuffer) {
 		const std::string labelFmt = fmt::format("{}Popup", label);
+		if (!ImGui::IsPopupOpen(labelFmt.c_str())) return false;
 
-		if (ImGui::BeginPopup(labelFmt.c_str())) {
-			if (g_UIState.IsSelectionWidgetJustOpened) {
-				ImGui::SetKeyboardFocusHere();
-				g_UIState.IsSelectionWidgetJustOpened = false;
-			}
+		// Place the widget below the anchor, or above it when there isn't enough room, aligned to whichever of its
+		// sides keeps the widget on screen. The height is the widget's height from the previous frame
+		const ImGuiViewport* viewport = ImGui::GetWindowViewport();
+		const ImRect outerRect(viewport->WorkPos, viewport->WorkPos + viewport->WorkSize);
+		ImRect anchorRect = g_UIState.SelectionWidgetAnchor;
+		anchorRect.Expand(ImVec2(0.0f, 4.0f));
 
-			UI::AlignedText(title, 0.5f);
-			{
-				ScopedStyleColor borderColor(ImGuiCol_Border,
-					ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f },
-					g_UIState.IsSelectionWidgetSearchBoxFocused);
-				ScopedStyleVariable frameBorderSize(
-					ImGuiStyleVar_FrameBorderSize, 1.0f, g_UIState.IsSelectionWidgetSearchBoxFocused);
+		const ImVec2 size(g_UIState.SelectionWidgetWidth, g_UIState.SelectionWidgetHeight);
+		ImGui::SetNextWindowPos(ImGui::FindBestWindowPosForPopupEx(anchorRect.GetBL(), size,
+			&g_UIState.SelectionWidgetLastDir, outerRect, anchorRect, ImGuiPopupPositionPolicy_ComboBox));
+		ImGui::SetNextWindowSize(ImVec2(g_UIState.SelectionWidgetWidth, 0.0f));
 
-				const std::string inputBoxLabel = fmt::format("{}SearchBar", label);
-				g_UIState.IsSelectionWidgetSearchBoxFocused =
-					InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer, ICON_LC_SEARCH " Search...");
-			}
-			g_UIState.HasSelectionWidgetListBoxBegun = ImGui::BeginListBox(labelFmt.c_str());
-
-			return true;
+		{
+			ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 8.0f));
+			if (!ImGui::BeginPopup(labelFmt.c_str(), ImGuiWindowFlags_NoMove)) return false;
 		}
-		return false;
+
+		g_UIState.SelectionWidgetHeight = ImGui::GetWindowHeight();
+		g_UIState.SelectionWidgetSearchBuffer = inputBuffer;
+		g_UIState.SelectionWidgetVisibleElementCount = 0;
+		g_UIState.IsSelectionWidgetFirstFrame = g_UIState.IsSelectionWidgetJustOpened;
+
+		{
+			ScopedStyleColor textColor(ImGuiCol_Text, Theme::TextMuted);
+			ImGui::TextUnformatted(title);
+		}
+
+		if (g_UIState.IsSelectionWidgetJustOpened) {
+			inputBuffer->clear();
+			ImGui::SetKeyboardFocusHere();
+			g_UIState.IsSelectionWidgetJustOpened = false;
+		}
+
+		const std::string inputBoxLabel = fmt::format("{}SearchBar", label);
+		g_UIState.IsSelectionWidgetSearchBoxFocused = InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer,
+			ICON_LC_SEARCH " Search...", g_UIState.IsSelectionWidgetSearchBoxFocused);
+
+		// Pressing enter in the search box picks the first element that matches the search
+		g_UIState.IsSelectionWidgetEnterPressed = g_UIState.IsSelectionWidgetSearchBoxFocused
+			&& (ImGui::IsKeyPressed(ImGuiKey_Enter, false) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false));
+
+		ImGui::Separator();
+
+		// Rows are packed tighter than regular items, and the list scrolls once it is taller than the max visible rows
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, 2.0f));
+		const float maxListHeight =
+			g_UIState.SelectionWidgetMaxVisibleRows * (ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y);
+		ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, maxListHeight));
+		ImGui::BeginChild("##SelectionWidgetList", ImVec2(0.0f, 0.0f), ImGuiChildFlags_AutoResizeY);
+
+		return true;
 	}
 
-	bool SelectionWidgetElement(const char* label, bool isSelected) {
-		if (ImGui::Selectable(label, &isSelected)) {
-			ImGui::CloseCurrentPopup();
-			return true;
+	bool SelectionWidgetElement(const char* label, bool isSelected, const char* icon) {
+		// Elements that don't match the search aren't displayed
+		const std::string& search = *g_UIState.SelectionWidgetSearchBuffer;
+		if (!search.empty() && Algorithm::KmpSearch(label, search.c_str(), true) == -1) return false;
+
+		const bool isFirstElement = g_UIState.SelectionWidgetVisibleElementCount++ == 0;
+
+		const ImGuiStyle& style = ImGui::GetStyle();
+		const float rowHeight = ImGui::GetFrameHeight();
+		const ImVec2 rowPos = ImGui::GetCursorScreenPos();
+
+		bool pressed;
+		{
+			ScopedStyleColor header(ImGuiCol_Header, Theme::SelectionColor, isSelected);
+			ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered, Theme::SelectionColorHovered, isSelected);
+			ScopedStyleColor headerActive(ImGuiCol_HeaderActive, Theme::SelectionColorActive, isSelected);
+
+			ImGui::PushID(label);
+			pressed = ImGui::Selectable("##SelectionWidgetElement", isSelected, 0, ImVec2(0.0f, rowHeight));
+			ImGui::PopID();
+		}
+		pressed |= isFirstElement && g_UIState.IsSelectionWidgetEnterPressed;
+
+		// The label is drawn separately from the selectable, so that it can be inset and follow the icon
+		ImDrawList* drawList = ImGui::GetWindowDrawList();
+		ImVec2 textPos = rowPos + ImVec2(style.FramePadding.x, 0.5f * (rowHeight - ImGui::GetFontSize()));
+		if (icon) {
+			const ImVec4 iconColor = isSelected ? Theme::SelectionTextColor : Theme::TextMuted;
+			drawList->AddText(textPos, ImGui::ColorConvertFloat4ToU32(iconColor), icon);
+			textPos.x += ImGui::CalcTextSize(icon).x + style.ItemInnerSpacing.x;
+		}
+		const ImVec4 textColor = isSelected ? Theme::SelectionTextColor : Theme::TextColor;
+		drawList->AddText(textPos, ImGui::ColorConvertFloat4ToU32(textColor), label);
+
+		if (isSelected && g_UIState.IsSelectionWidgetFirstFrame) {
+			ImGui::SetItemDefaultFocus();
+			ImGui::SetScrollHereY();
 		}
 
-		if (isSelected) ImGui::SetItemDefaultFocus();
-		return false;
+		if (pressed) ImGui::CloseCurrentPopup();
+		return pressed;
 	}
 
 	void EndSelectionWidget() {
-		if (g_UIState.HasSelectionWidgetListBoxBegun) ImGui::EndListBox();
+		if (g_UIState.SelectionWidgetVisibleElementCount == 0) {
+			ImGui::Spacing();
+			ImGui::TextDisabled("No matches");
+		}
 
+		ImGui::EndChild();
+		ImGui::PopStyleVar();
 		ImGui::EndPopup();
 	}
 
@@ -273,9 +358,9 @@ namespace Flameberry::UI {
 		ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 
 		{
-			ScopedStyleColor button(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
-			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
-			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
+			ScopedStyleColor button(ImGuiCol_Button, Theme::AxisXColor);
+			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, Theme::AxisXColor);
+			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, Theme::AxisXColor);
 
 			if (ImGui::Button("##X_Button", buttonSize)) {
 				value.x = defaultValue;
@@ -290,9 +375,9 @@ namespace Flameberry::UI {
 		ImGui::SameLine();
 
 		{
-			ScopedStyleColor button(ImGuiCol_Button, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
-			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
-			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
+			ScopedStyleColor button(ImGuiCol_Button, Theme::AxisYColor);
+			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, Theme::AxisYColor);
+			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, Theme::AxisYColor);
 
 			if (ImGui::Button("##Y_Button", buttonSize)) {
 				value.y = defaultValue;
@@ -307,9 +392,9 @@ namespace Flameberry::UI {
 		ImGui::SameLine();
 
 		{
-			ScopedStyleColor button(ImGuiCol_Button, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
-			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
-			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
+			ScopedStyleColor button(ImGuiCol_Button, Theme::AxisZColor);
+			ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, Theme::AxisZColor);
+			ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, Theme::AxisZColor);
 
 			if (ImGui::Button("##Z_Button", buttonSize)) {
 				value.z = defaultValue;

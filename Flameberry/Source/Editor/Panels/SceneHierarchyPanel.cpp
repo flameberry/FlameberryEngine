@@ -32,9 +32,7 @@ namespace Flameberry {
 		{
 			UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1.0f, m_IsSearchBarFocused);
 			UI::ScopedStyleVariable frameRounding(ImGuiStyleVar_FrameRounding, 8);
-			UI::ScopedStyleColor borderColor(
-				ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, m_IsSearchBarFocused);
-			UI::ScopedStyleColor frameBg(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
+			UI::ScopedStyleColor borderColor(ImGuiCol_Border, Theme::AccentColor, m_IsSearchBarFocused);
 
 			m_IsSearchBarFocused =
 				UI::InputBox("##SceneHierarchySearchBar", width, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...");
@@ -49,9 +47,6 @@ namespace Flameberry {
 
 		// Entity Hierarchy Table
 		{
-			UI::ScopedStyleColor tableBorderStrong(ImGuiCol_TableBorderStrong, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
-			UI::ScopedStyleColor tableBorderLight(ImGuiCol_TableBorderLight, ImVec4(0.01f, 0.01f, 0.01f, 1.0f));
-
 			ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable
 				| ImGuiTableFlags_PadOuterX | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoBordersInBody
 				| ImGuiTableFlags_ScrollY;
@@ -177,9 +172,8 @@ namespace Flameberry {
 
 		ImGui::PushID((const void*)(uint64_t)entity);
 		{
-			const float greyShade = isSelected ? 75.0f / 255.0f : 126.0f / 255.0f;
-			const ImVec4 greyColor(greyShade, greyShade, greyShade, 1.0f);
-			const float textColor = isSelected ? 0.0f : 1.0f;
+			const ImVec4 greyColor = isSelected ? Theme::SelectionTextMuted : Theme::TextMuted;
+			const ImVec4 textColor = isSelected ? Theme::SelectionTextColor : Theme::TextColor;
 
 			{
 				ImGui::TableNextColumn();
@@ -190,8 +184,8 @@ namespace Flameberry {
 
 				// Only display icon when entity node is hovered
 				const bool isEntityNodeHovered = ImGui::GetHoveredID() == ImGui::GetID((const void*)(uint64_t)entity);
-				ImGui::TextColored(isEntityNodeHovered ? ImVec4(textColor, textColor, textColor, 1.0f) : ImVec4(0, 0, 0, 0),
-					visibility ? ICON_LC_EYE : ICON_LC_EYE_OFF);
+				ImGui::TextColored(
+					isEntityNodeHovered ? textColor : ImVec4(0, 0, 0, 0), visibility ? ICON_LC_EYE : ICON_LC_EYE_OFF);
 
 				// if (ImGui::IsItemClicked())
 				// 	visibility = !visibility;
@@ -204,13 +198,12 @@ namespace Flameberry {
 
 			{
 				// Styling of the Entity TreeNode
-				UI::ScopedStyleColor headerColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
-				UI::ScopedStyleColor headerActiveColor(ImGuiCol_HeaderActive, Theme::AccentColorLight, isSelected);
-				UI::ScopedStyleColor headerHovered(
-					ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
+				UI::ScopedStyleColor headerColor(ImGuiCol_Header, Theme::SelectionColor);
+				UI::ScopedStyleColor headerActiveColor(ImGuiCol_HeaderActive, Theme::SelectionColorActive, isSelected);
+				UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered, Theme::SelectionColorHovered, isSelected);
 				UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 				UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
-				UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
+				UI::ScopedStyleColor textC(ImGuiCol_Text, textColor);
 				UI::ScopedStyleColor textC2(ImGuiCol_Text, Theme::ErrorColor, highlight);
 
 				// Figure out the entity icon to be displayed

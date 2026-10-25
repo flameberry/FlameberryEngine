@@ -48,6 +48,23 @@ namespace Flameberry {
 			return fmt::format("{:.2f} {}", size, sizes[order]);
 		}
 
+		// Returns the end of the longest prefix of the text that fits within the given width
+		static const char* FitTextToWidth(const char* begin, const char* end, float width) {
+			const char* remaining = end;
+			ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), width, 0.0f, begin, end, &remaining);
+			return remaining;
+		}
+
+		// Displays the text on one line, cutting it off with an ellipsis if it is wider than the given width
+		static void TextEllipsized(const char* begin, const char* end, float width) {
+			if (FitTextToWidth(begin, end, width) == end) {
+				ImGui::TextUnformatted(begin, end);
+				return;
+			}
+			const char* fitEnd = FitTextToWidth(begin, end, width - ImGui::CalcTextSize("...").x);
+			ImGui::Text("%.*s...", (int)(fitEnd - begin), begin);
+		}
+
 	} // namespace Utils
 
 	ContentBrowserPanel::ContentBrowserPanel()
@@ -84,13 +101,10 @@ namespace Flameberry {
 			UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, framePaddingY });
 			UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 1, 0 });
 
-			UI::ScopedStyleColor header(ImGuiCol_Header, Theme::AccentColor);
-			UI::ScopedStyleColor headerActive(ImGuiCol_HeaderActive, Theme::AccentColorLight);
-			UI::ScopedStyleColor headerHovered(
-				ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
-
-			const ImVec4 textColor = isSelected ? ImVec4(0, 0, 0, 1) : ImGui::GetStyle().Colors[ImGuiCol_Text];
-			UI::ScopedStyleColor _(ImGuiCol_Text, textColor);
+			UI::ScopedStyleColor header(ImGuiCol_Header, Theme::SelectionColor);
+			UI::ScopedStyleColor headerActive(ImGuiCol_HeaderActive, Theme::SelectionColorActive);
+			UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered, Theme::SelectionColorHovered, isSelected);
+			UI::ScopedStyleColor text(ImGuiCol_Text, Theme::SelectionTextColor, isSelected);
 
 			isOpened = ImGui::TreeNodeEx("##node", treeNodeFlags);
 		}
@@ -103,8 +117,7 @@ namespace Flameberry {
 		ImGui::SameLine();
 
 		{
-			const ImVec4 textColor = isSelected ? ImVec4(0, 0, 0, 1) : ImGui::GetStyle().Colors[ImGuiCol_Text];
-			UI::ScopedStyleColor _(ImGuiCol_Text, textColor);
+			UI::ScopedStyleColor text(ImGuiCol_Text, Theme::SelectionTextColor, isSelected);
 
 			std::string filename = parent.path().filename().string();
 			ImGui::Text("%s", filename.c_str());
@@ -146,7 +159,7 @@ namespace Flameberry {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 7 });
 		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
 
-		ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBg);
+		ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::WindowBgDark);
 		ImGui::BeginChild("##FileStructurePanel", ImVec2(m_FirstChildSize, -1.0f),
 			ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY
 				| ImGuiChildFlags_AlwaysUseWindowPadding);
@@ -166,7 +179,7 @@ namespace Flameberry {
 		ImVec2 pMax(shadowXMax, shadowYMax);
 
 		ImGui::GetWindowDrawList()->AddRectFilledMultiColor(
-			pMin, pMax, IM_COL32(5, 5, 5, 0), IM_COL32(5, 5, 5, 140), IM_COL32(5, 5, 5, 140), IM_COL32(5, 5, 5, 0));
+			pMin, pMax, IM_COL32(5, 5, 5, 0), IM_COL32(5, 5, 5, 60), IM_COL32(5, 5, 5, 60), IM_COL32(5, 5, 5, 0));
 
 		ImGui::EndChild();
 		ImGui::PopStyleVar();
@@ -192,8 +205,10 @@ namespace Flameberry {
 			m_CurrentDirectory = m_CurrentDirectory.parent_path();
 		ImGui::SameLine();
 
-		m_IsSearchBoxFocused = UI::InputBox(
-			"##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
+		// The search box gives up width to the current path bar when the panel is narrow
+		const float searchBoxWidth = std::min(150.0f, 0.4f * ImGui::GetContentRegionAvail().x);
+		m_IsSearchBoxFocused = UI::InputBox("##ContentBrowserSearchBar", searchBoxWidth, &m_SearchInputBuffer,
+			ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
 
 		ImGui::SameLine();
 
@@ -346,20 +361,22 @@ namespace Flameberry {
 		ImGui::ItemAdd(bb, id);
 
 		if (!isDirectory) {
-			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, height), 0xff151515, 3,
+			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, height),
+				ImGui::ColorConvertFloat4ToU32(Theme::FrameBg), 4,
 				ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
 			ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursorPos.x, cursorPos.y + height),
-				cursorPos + ImVec2(fullWidth, fullHeight), 0xff353535, 3,
+				cursorPos + ImVec2(fullWidth, fullHeight),
+				ImGui::ColorConvertFloat4ToU32(hovered ? Theme::HeaderBgHovered : Theme::HeaderBg), 4,
 				ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
 			ImGui::GetWindowDrawList()->AddRect(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight),
-				hovered ? ImGui::ColorConvertFloat4ToU32(Theme::AccentColor) : 0xff000000, 3, 0, borderThickness);
+				ImGui::ColorConvertFloat4ToU32(hovered ? Theme::AccentColor : Theme::WindowBorder), 4, 0, borderThickness);
 		} else if (hovered) {
 			constexpr float shadowThickness = 2.0f;
 			constexpr ImVec2 offset(shadowThickness, shadowThickness);
 			ImGui::GetWindowDrawList()->AddRect(cursorPos + offset, cursorPos + ImVec2(fullWidth, fullHeight) + offset,
-				IM_COL32(25, 25, 25, 255), 3, 0, shadowThickness);
-			ImGui::GetWindowDrawList()->AddRectFilled(
-				cursorPos, cursorPos + ImVec2(fullWidth, fullHeight), IM_COL32(60, 60, 60, 255), 3);
+				ImGui::ColorConvertFloat4ToU32(Theme::WindowBorder), 4, 0, shadowThickness);
+			ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, cursorPos + ImVec2(fullWidth, fullHeight),
+				ImGui::ColorConvertFloat4ToU32(Theme::HeaderBgHovered), 4);
 		}
 
 		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
@@ -418,21 +435,30 @@ namespace Flameberry {
 		ImGui::SetCursorPosX(cursorPosX + framePadding.x);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - style.ItemSpacing.y + centerTranslationHeight);
 
-		const auto textWidth = ImGui::CalcTextSize(filename.c_str()).x;
-		const auto aWidth = ImGui::CalcTextSize("A").x;
-		const uint32_t characters = fullWidth / aWidth;
+		const char* textBegin = filename.c_str();
+		const char* textEnd = textBegin + filename.size();
+		const float textWidth = ImGui::CalcTextSize(textBegin, textEnd).x;
+		const float maxTextWidth = fullWidth - 2.0f * framePadding.x;
 
-		// Format and align text based on whether the item is a directory or a file
+		// Directory names are centered on a single line, file names get two lines
 		if (isDirectory) {
-			if (textWidth > fullWidth) ImGui::Text("%.*s%s", characters, filename.c_str(), "...");
-			else {
-				ImGui::SetCursorPosX(glm::max(cursorPosX + framePadding.x, cursorPosX + (fullWidth - textWidth) * 0.5f));
-				ImGui::Text("%s", filename.c_str());
-			}
+			ImGui::SetCursorPosX(cursorPosX + framePadding.x + glm::max(0.0f, (maxTextWidth - textWidth) * 0.5f));
+			Utils::TextEllipsized(textBegin, textEnd, maxTextWidth);
 		} else {
-			if (textWidth > 2.0f * fullWidth) ImGui::TextWrapped("%.*s%s", 2 * characters, filename.c_str(), "...");
-			else
-				ImGui::TextWrapped("%s", filename.c_str());
+			const char* lineEnd = Utils::FitTextToWidth(textBegin, textEnd, maxTextWidth);
+
+			// Prefer breaking the line after a separator, as file names often have no spaces to wrap at
+			if (lineEnd != textEnd) {
+				const char* breakPos = lineEnd;
+				while (breakPos > textBegin && !strchr(" _-.", breakPos[-1])) breakPos--;
+				if (breakPos - textBegin > (lineEnd - textBegin) / 2) lineEnd = breakPos;
+			}
+
+			ImGui::TextUnformatted(textBegin, lineEnd);
+			if (lineEnd != textEnd) {
+				ImGui::SetCursorPosX(cursorPosX + framePadding.x);
+				Utils::TextEllipsized(lineEnd, textEnd, maxTextWidth);
+			}
 		}
 
 		ImGui::EndGroup();
@@ -456,9 +482,7 @@ namespace Flameberry {
 		std::string_view currentPath(currentDirectory.c_str());
 
 		ImGui::GetWindowDrawList()->AddRectFilled(
-			clipRect.Min, clipRect.Max, ImGui::ColorConvertFloat4ToU32(Theme::ImGuiTitleBg), style.FrameRounding);
-		ImGui::GetWindowDrawList()->AddRect(
-			clipRect.Min, clipRect.Max, IM_COL32(70, 70, 70, 255), style.FrameRounding, 0, 0.5f);
+			clipRect.Min, clipRect.Max, ImGui::ColorConvertFloat4ToU32(Theme::FrameBg), style.FrameRounding);
 
 		ImGui::SetCursorScreenPos(cursorPositionRelativeStart + ImVec2(2.0f * style.FramePadding.x, 0.0f));
 
