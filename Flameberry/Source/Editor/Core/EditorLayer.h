@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/UI.h"
+#include "Panels/AssetRegistryPanel.h"
 #include "Panels/LogPanel.h"
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
@@ -51,7 +52,6 @@ namespace Flameberry {
 		void UI_MenubarMenus();
 		void UI_Toolbar();
 		void UI_RendererSettings();
-		void UI_AssetRegistry();
 		void UI_GizmoControls();
 		void UI_GizmoModeOverlay(const ImVec2& workPos);
 		void UI_ToolbarOverlay(const ImVec2& workPos, const ImVec2& workSize);
@@ -99,6 +99,7 @@ namespace Flameberry {
 		Ref<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Ref<ContentBrowserPanel> m_ContentBrowserPanel;
 		Ref<LogPanel> m_LogPanel;
+		Ref<AssetRegistryPanel> m_AssetRegistryPanel;
 
 		// Mouse Picking
 		Unique<Buffer> m_MousePickingBuffer;

@@ -12,7 +12,6 @@
 namespace Flameberry::UI {
 
 	struct UIState {
-		// Fixed Layout/Style Properties
 		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH
 			| ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
 
@@ -38,13 +37,9 @@ namespace Flameberry::UI {
 
 	bool BeginTitlebar(float height, ImVec4 color) {
 		ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, { 0, 0 });
+		ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, { 0, (height - ImGui::GetFontSize()) * 0.5f });
 		ScopedStyleColor windowBg(ImGuiCol_WindowBg, Theme::TitlebarColor);
 		ScopedStyleColor menuBarBg(ImGuiCol_MenuBarBg, Theme::TitlebarColor);
-
-		// The titlebar widgets are hosted in a menu bar, so that menus open downwards like in a regular menu bar.
-		// This frame padding makes the menu bar span the full titlebar height and vertically centers the widgets in it,
-		// and is only kept while the menu bar begins, so that it doesn't affect the widgets and menus themselves
-		ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, { 0, (height - ImGui::GetFontSize()) * 0.5f });
 
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollWithMouse
 			| ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar;
@@ -54,7 +49,6 @@ namespace Flameberry::UI {
 		g_UIState.IsTitlebarMenuBarOpen = isOpen && ImGui::BeginMenuBar();
 		if (g_UIState.IsTitlebarMenuBarOpen) {
 			// gradient background for titlebar
-			// This is drawn after the menu bar begins, as the window's own clip rect excludes the menu bar
 			const ImU32 colu32 = ImGui::ColorConvertFloat4ToU32(color);
 			ImVec2 pmin = ImGui::GetWindowPos(), pmax = pmin + ImVec2(ImGui::GetWindowSize().x / 2.5f, height);
 			ImGui::GetWindowDrawList()->AddRectFilledMultiColor(pmin, pmax, colu32, 0x0, 0x0, colu32);
@@ -136,7 +130,9 @@ namespace Flameberry::UI {
 			ImGui::SetNextItemAllowOverlap();
 			ImGui::InputTextWithHint(label, inputHint, inputBuffer, flags);
 			inputId = ImGui::GetItemID();
-			isActive = ImGui::IsItemActive() || ImGui::IsItemFocused();
+			// Only counts while being typed in, including the frame enter is pressed (which deactivates the input), as
+			// navigation focus alone lands on the input box whenever its window gets focused
+			isActive = ImGui::IsItemActive() || ImGui::IsItemDeactivated();
 		}
 		ImGui::PopItemWidth();
 
@@ -300,49 +296,76 @@ namespace Flameberry::UI {
 		ImGui::EndTable();
 	}
 
-	// TODO: Add display information on Hover
-	bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled) {
-		constexpr float paddingX = 15.0f, paddingY = 5.0f, spacing = 10.0f;
-		const float itemWidth = ImGui::GetContentRegionAvail().x;
+	bool PrimaryButton(const char* label, const ImVec2& size) {
+		ScopedStyleColor button(ImGuiCol_Button, Theme::AccentColor);
+		ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, Theme::AccentColorLight);
+		ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, Theme::SelectionColorHovered);
+		ScopedStyleColor text(ImGuiCol_Text, Theme::SelectionTextColor);
+		return ImGui::Button(label, size);
+	}
 
-		if (disabled) ImGui::BeginDisabled();
+	bool ProjectRegistryEntryItem(const char* name, const char* path, bool missing) {
+		constexpr float padding = 10.0f, badgeSize = 36.0f, rounding = 6.0f;
+		const float width = ImGui::GetContentRegionAvail().x, height = badgeSize + 2.0f * padding;
+		const ImVec2 pos = ImGui::GetCursorScreenPos();
 
-		// Anchor
-		ImVec2 startPos = ImGui::GetCursorScreenPos();
+		ImGui::PushID(path);
+		const bool pressed =
+			ImGui::InvisibleButton("##ProjectEntry", ImVec2(width, height), ImGuiButtonFlags_PressedOnDoubleClick);
+		const bool hovered = ImGui::IsItemHovered(), held = ImGui::IsItemActive();
+		ImGui::PopID();
 
-		// --- Visual content ---
-		ImGui::BeginGroup();
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+			ImGui::SetTooltip(missing ? "This project no longer exists at its path" : "Double-click to open");
 
-		ImGui::Indent(paddingX);
-		ImGui::Dummy(ImVec2(0.0f, 2.0f * paddingY));
-		ImGui::TextUnformatted(name);
-		ImGui::Dummy(ImVec2(0.0f, spacing));
-		ImGui::TextWrapped("%s", path);
-		ImGui::Dummy(ImVec2(0.0f, paddingY));
-		ImGui::Unindent(paddingX);
+		auto toU32 = [](const ImVec4& color) {
+			return ImGui::ColorConvertFloat4ToU32(color);
+		};
+		ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-		ImGui::EndGroup();
+		if (hovered || held)
+			drawList->AddRectFilled(
+				pos, pos + ImVec2(width, height), toU32(held ? Theme::HeaderBgActive : Theme::HeaderBgHovered), rounding);
 
-		// Height is now known
-		float height = ImGui::GetItemRectMax().y - startPos.y;
-
-		// Rewind cursor INSIDE disabled/group scope
-		ImGui::SetCursorScreenPos(startPos);
-
-		// Claim the space BEFORE EndDisabled()
-		bool pressed = ImGui::InvisibleButton(name, ImVec2(itemWidth, height), ImGuiButtonFlags_PressedOnDoubleClick);
-
-		bool hovered = ImGui::IsItemHovered();
-
-		if (hovered) {
-			ImU32 color = ImGui::IsMouseDown(0) ? IM_COL32(255, 255, 255, 60) : IM_COL32(255, 255, 255, 30);
-
-			ImGui::GetWindowDrawList()->AddRectFilled(startPos, startPos + ImVec2(itemWidth, height), color, 5.0f);
+		// Badge with the project's initial
+		const ImVec2 badgeMin = pos + ImVec2(padding, padding);
+		drawList->AddRectFilled(badgeMin, badgeMin + ImVec2(badgeSize, badgeSize),
+			toU32(missing ? Theme::HeaderBg : Theme::AccentColor), rounding);
+		{
+			const char initial[2] = { name[0] ? (char)toupper(name[0]) : '?', '\0' };
+			ImGui::PushFont(nullptr, 18.0f);
+			const ImVec2 initialSize = ImGui::CalcTextSize(initial);
+			drawList->AddText(badgeMin + (ImVec2(badgeSize, badgeSize) - initialSize) * 0.5f,
+				toU32(missing ? Theme::TextDisabled : Theme::SelectionTextColor), initial);
+			ImGui::PopFont();
 		}
 
-		if (disabled) ImGui::EndDisabled();
+		// Name and path, stacked and centered vertically next to the badge
+		const float fontSize = ImGui::GetFontSize(), lineGap = 4.0f;
+		const float textX = badgeMin.x + badgeSize + padding, textMaxX = pos.x + width - padding;
+		const float nameY = pos.y + 0.5f * (height - 2.0f * fontSize - lineGap), pathY = nameY + fontSize + lineGap;
 
-		return pressed;
+		drawList->AddText(ImVec2(textX, nameY), toU32(missing ? Theme::TextDisabled : Theme::TextColor), name);
+
+		if (missing) {
+			constexpr const char* tag = "Missing";
+			const ImVec2 tagPadding(6.0f, 1.0f);
+			const ImVec2 tagMin(textX + ImGui::CalcTextSize(name).x + 8.0f, nameY - tagPadding.y);
+			const ImVec2 tagMax = tagMin + ImGui::CalcTextSize(tag) + 2.0f * tagPadding;
+			const ImVec4 errorColor = Theme::ErrorColor;
+			drawList->AddRectFilled(tagMin, tagMax, toU32(ImVec4(errorColor.x, errorColor.y, errorColor.z, 0.18f)),
+				0.5f * (tagMax.y - tagMin.y));
+			drawList->AddText(tagMin + tagPadding, toU32(errorColor), tag);
+		}
+
+		{
+			// Long paths are cut off with an ellipsis instead of running past the item
+			ScopedStyleColor textColor(ImGuiCol_Text, missing ? Theme::TextDisabled : Theme::TextMuted);
+			ImGui::RenderTextEllipsis(
+				drawList, ImVec2(textX, pathY), ImVec2(textMaxX, pathY + fontSize), textMaxX, path, nullptr, nullptr);
+		}
+
+		return pressed && !missing;
 	}
 
 	bool Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth) {

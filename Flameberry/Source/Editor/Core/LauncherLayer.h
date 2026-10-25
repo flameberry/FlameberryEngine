@@ -17,7 +17,14 @@ namespace Flameberry {
 		void OnEvent(Event& e) override;
 		void OnDestroy() override;
 
+	private:
+		void UI_Titlebar();
+		void UI_Sidebar();
+		void UI_RecentProjects();
 		void UI_NewProjectPopup();
+
+		void OpenProjectFromFileDialog();
+		void CreateNewProject();
 
 	private:
 		ProjectRegistry m_ProjectRegistry;
@@ -26,7 +33,12 @@ namespace Flameberry {
 		std::function<void(const Ref<Project>&)> m_OpenProjectCallback;
 		bool m_ShouldClose = false;
 
-		std::string m_ProjectNameBuffer, m_ProjectPathBuffer;
+		Ref<Texture2D> m_FlameberryIcon;
+
+		// New Project Popup
+		bool m_ShouldOpenNewProjectPopup = false;
+		bool m_IsProjectNameInputFocused = false, m_IsProjectPathInputFocused = false;
+		std::string m_ProjectNameBuffer, m_ProjectPathBuffer, m_NewProjectError;
 	};
 
 } // namespace Flameberry

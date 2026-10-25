@@ -46,7 +46,10 @@ namespace Flameberry {
 		void TableKeyElement(const char* label);
 		void EndKeyValueTable();
 
-		bool ProjectRegistryEntryItem(const char* name, const char* path, bool disabled = false);
+		// Button filled with the accent color, for the main action of a panel or dialog
+		bool PrimaryButton(const char* label, const ImVec2& size = ImVec2(0.0f, 0.0f));
+
+		bool ProjectRegistryEntryItem(const char* name, const char* path, bool missing = false);
 
 		bool BeginTitlebar(float height, ImVec4 color);
 		void EndTitlebar();

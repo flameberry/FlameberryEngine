@@ -61,6 +61,7 @@ namespace Flameberry {
 		m_SceneHierarchyPanel = CreateRef<SceneHierarchyPanel>(m_ActiveScene);
 		m_ContentBrowserPanel = CreateRef<ContentBrowserPanel>();
 		m_LogPanel = CreateRef<LogPanel>();
+		m_AssetRegistryPanel = CreateRef<AssetRegistryPanel>();
 
 		EditorContext::Create();
 
@@ -313,7 +314,7 @@ namespace Flameberry {
 #else
 		m_ContentBrowserPanel->OnUIRender();
 		UI_RendererSettings();
-		UI_AssetRegistry();
+		m_AssetRegistryPanel->OnUIRender();
 		m_LogPanel->OnUIRender();
 #endif
 	}
@@ -920,7 +921,7 @@ namespace Flameberry {
 
 		if (toggleContentBrowser) m_ContentBrowserPanel->OnUIRender();
 		if (toggleRendererSettings) UI_RendererSettings();
-		if (toggleAssetRegistry) UI_AssetRegistry();
+		if (toggleAssetRegistry) m_AssetRegistryPanel->OnUIRender();
 
 		m_LogPanel->OnUIRender();
 	}
@@ -1000,25 +1001,6 @@ namespace Flameberry {
 			ImGui::EndTabBar();
 		}
 		ImGui::PopStyleVar();
-		ImGui::End();
-	}
-
-	void EditorLayer::UI_AssetRegistry() {
-		ImGui::Begin("Asset Registry");
-
-		if (UI::BeginKeyValueTable("##AssetRegistryTable")) {
-			for (const auto& [handle, metadata] : AssetManager::As<EditorAssetManager>()->GetAssetRegistry()) {
-				const std::string typeStr = Utils::AssetTypeEnumToString(metadata.Type);
-
-				FBY_UI_TABLE_ELEMENT("Handle", ImGui::Text("%llu", (UUID::ValueType)handle));
-				FBY_UI_TABLE_ELEMENT("FilePath", ImGui::Text("%s", metadata.FilePath.c_str()));
-				FBY_UI_TABLE_ELEMENT("Type", ImGui::Text("%s", typeStr.c_str()));
-				FBY_UI_TABLE_ELEMENT("IsMemoryAsset", ImGui::Text("%s", metadata.IsMemoryAsset ? "True" : "False"));
-			}
-
-			UI::EndKeyValueTable();
-		}
-
 		ImGui::End();
 	}
 
