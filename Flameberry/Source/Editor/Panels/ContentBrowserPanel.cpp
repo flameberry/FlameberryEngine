@@ -101,7 +101,7 @@ namespace Flameberry {
 			m_CurrentDirectory = parent.path();
 
 		ImGui::SameLine();
-		ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FileTypeIndex::FOLDER]->CreateOrGetDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight() + framePaddingY, ImGui::GetTextLineHeight() + framePaddingY });
+		ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FileTypeIndex::FOLDER]->CreateOrGetImGuiDescriptorSet()), ImVec2{ ImGui::GetTextLineHeight() + framePaddingY, ImGui::GetTextLineHeight() + framePaddingY });
 		ImGui::SameLine();
 
 		{
@@ -365,7 +365,7 @@ namespace Flameberry {
 			constexpr float size = 80.0f;
 
 			// Show Asset Preview
-			ImGui::Image((ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
+			ImGui::Image((ImTextureID)thumbnail->CreateOrGetImGuiDescriptorSet(), ImVec2(size * aspectRatio, size));
 			ImGui::SameLine();
 			ImGui::Text("%s", filepath.stem().string().c_str());
 
@@ -403,7 +403,7 @@ namespace Flameberry {
 			UI::ScopedStyleColor buttonActive(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
 			UI::ScopedStyleColor buttonHovered(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 
-			ImGui::ImageButton(filePathCStrID, (ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(thumbnailWidth, thumbnailHeight));
+			ImGui::ImageButton(filePathCStrID, (ImTextureID)thumbnail->CreateOrGetImGuiDescriptorSet(), ImVec2(thumbnailWidth, thumbnailHeight));
 		}
 
 		const auto& filename = keepExtension ? filepath.filename().string() : filepath.stem().string();

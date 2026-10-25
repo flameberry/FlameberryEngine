@@ -9,6 +9,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
+#include <imgui/backends/imgui_impl_vulkan.h>
+
 namespace Flameberry {
 
 	namespace Utils {
@@ -137,6 +139,10 @@ namespace Flameberry {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		if (m_DescriptorSet != VK_NULL_HANDLE)
 			vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
+		// ImGui allocates its texture descriptor sets from the global pool, so this is equivalent to ImGui_ImplVulkan_RemoveTexture(),
+		// but doesn't depend on the ImGui backend still being alive when textures are destroyed during shutdown
+		if (m_ImGuiDescriptorSet != VK_NULL_HANDLE)
+			vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_ImGuiDescriptorSet);
 		if (m_DidCreateSampler)
 			vkDestroySampler(device, m_Sampler, nullptr);
 	}
@@ -162,6 +168,14 @@ namespace Flameberry {
 			vkUpdateDescriptorSets(device, 1, write_desc, 0, nullptr);
 		}
 		return m_DescriptorSet;
+	}
+
+	VkDescriptorSet Texture2D::CreateOrGetImGuiDescriptorSet() {
+		// ImGui's Vulkan backend uses a different layout (a sampled image without a sampler, as ImGui binds its own sampler)
+		// so this can't be shared with the descriptor set used by the renderer
+		if (m_ImGuiDescriptorSet == VK_NULL_HANDLE)
+			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_TextureImage->GetVulkanImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		return m_ImGuiDescriptorSet;
 	}
 
 	Ref<Texture2D> Texture2D::TryGetOrLoadTexture(const std::string& texturePath) {

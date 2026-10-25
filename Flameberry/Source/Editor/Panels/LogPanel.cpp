@@ -122,7 +122,7 @@ namespace Flameberry {
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + rightAlignX);
 
 		if (ImGui::ImageButton("##Info",
-				(ImTextureID)m_InfoIcon->CreateOrGetDescriptorSet(),
+				(ImTextureID)m_InfoIcon->CreateOrGetImGuiDescriptorSet(),
 				ImVec2(buttonSize, buttonSize),
 				ImVec2(0, 0),
 				ImVec2(1, 1),
@@ -134,7 +134,7 @@ namespace Flameberry {
 		ImGui::SameLine();
 
 		if (ImGui::ImageButton("##Warning",
-				(ImTextureID)m_WarningIcon->CreateOrGetDescriptorSet(),
+				(ImTextureID)m_WarningIcon->CreateOrGetImGuiDescriptorSet(),
 				ImVec2(buttonSize, buttonSize),
 				ImVec2(0, 0),
 				ImVec2(1, 1),
@@ -145,7 +145,7 @@ namespace Flameberry {
 
 		ImGui::SameLine();
 		if (ImGui::ImageButton("##Error",
-				(ImTextureID)m_ErrorIcon->CreateOrGetDescriptorSet(),
+				(ImTextureID)m_ErrorIcon->CreateOrGetImGuiDescriptorSet(),
 				ImVec2(buttonSize, buttonSize),
 				ImVec2(0, 0),
 				ImVec2(1, 1),

@@ -78,7 +78,10 @@ namespace Flameberry {
 		std::vector<VkDescriptorPoolSize> poolSizes = {
 			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 * 8 },
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 50 }
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 50 },
+			// ImGui's Vulkan backend allocates from this pool, using separate sampled images (one per ImGui texture) and samplers
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxDescSets },
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, 8 }
 		};
 		m_GlobalDescriptorPool = CreateRef<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, maxDescSets);
 

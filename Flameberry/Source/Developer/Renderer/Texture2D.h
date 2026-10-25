@@ -25,6 +25,7 @@ namespace Flameberry {
 		~Texture2D();
 
 		VkDescriptorSet CreateOrGetDescriptorSet();
+		VkDescriptorSet CreateOrGetImGuiDescriptorSet();
 		VkImageView GetImageView() const { return m_TextureImage->GetVulkanImageView(); }
 		VkSampler GetSampler() const { return m_Sampler; }
 		ImageSpecification GetImageSpecification() const { return m_TextureImageSpecification; }
@@ -54,6 +55,7 @@ namespace Flameberry {
 		Ref<Image> m_TextureImage;
 		VkSampler m_Sampler{};
 		VkDescriptorSet m_DescriptorSet = VK_NULL_HANDLE;
+		VkDescriptorSet m_ImGuiDescriptorSet = VK_NULL_HANDLE;
 
 		bool m_DidCreateSampler = false;
 

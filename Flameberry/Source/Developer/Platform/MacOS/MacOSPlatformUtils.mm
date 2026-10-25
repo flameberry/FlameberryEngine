@@ -82,6 +82,7 @@ namespace Flameberry {
         struct TitlebarData
         {
             NSView* TitlebarView;
+            CAGradientLayer* GradientLayer;
             NSTextView* PrimaryTitleTextView;
             NSTextView* SecondaryTitleTextView;
         };
@@ -115,25 +116,34 @@ namespace Flameberry {
             
             // Create a title bar view
             s_TitlebarData.TitlebarView = [[NSView alloc] init];
-            
+
             // Customize the appearance of the title bar
-            [s_TitlebarData.TitlebarView setBackgroundColor:[NSColor colorWithRed:Theme::TitlebarColor.x green:Theme::TitlebarColor.y blue:Theme::TitlebarColor.z alpha:Theme::TitlebarColor.w]]; // Set the background color
+            // NSView has no background color of its own, so it's set on the backing layer instead
+            [s_TitlebarData.TitlebarView setWantsLayer:YES];
+            s_TitlebarData.TitlebarView.layer.backgroundColor = [NSColor colorWithRed:Theme::TitlebarColor.x green:Theme::TitlebarColor.y blue:Theme::TitlebarColor.z alpha:Theme::TitlebarColor.w].CGColor;
+
+            // The gradient is kept as a direct reference because once the view is layer-backed,
+            // the subviews' layers are sublayers too, so it can't be looked up by index reliably
+            s_TitlebarData.GradientLayer = [CAGradientLayer layer];
+            s_TitlebarData.GradientLayer.startPoint = CGPointMake(0.0, 1.0); // Top left
+            s_TitlebarData.GradientLayer.endPoint = CGPointMake(0.35, 1.0);  // Bottom right
+            [s_TitlebarData.TitlebarView.layer insertSublayer:s_TitlebarData.GradientLayer atIndex:0];
 
             // Icon
-            const char* flameberryIcon = FBY_PROJECT_DIR"Flameberry/Assets/Icons/FlameberryIcon.png";
-            // NSString* flameberryIconPath = [[NSString alloc] initWithCString:flameberryIcon encoding:NSASCIIStringEncoding];
-			// NSImage* iconImage = [[NSImage alloc] initWithContentsOfFile:flameberryIconPathNSURL.path];
-            
-//            if (iconImage)
-//            {
-//                // Resize the image if needed
-//                [iconImage setSize:NSMakeSize(30, 30)]; // Adjust the size as per your requirement
-//            }
-            
+            constexpr CGFloat iconSize = 30.0f;
+            NSString* flameberryIconPath = [NSString stringWithUTF8String:FBY_PROJECT_DIR "Flameberry/Assets/Icons/FlameberryIcon.png"];
+            NSImage* iconImage = [[NSImage alloc] initWithContentsOfFile:flameberryIconPath];
+
+            if (iconImage)
+                [iconImage setSize:NSMakeSize(iconSize, iconSize)];
+            else
+                FBY_WARN("CustomTitlebar: Failed to load titlebar icon: {}", [flameberryIconPath UTF8String]);
+
             // Icon Button
-            NSButton* iconButton = [[NSButton alloc] initWithFrame:NSMakeRect(75, 2, 30, 30)]; // Adjust the frame as needed
-            // [iconButton setImage:[[NSImage alloc] initWithContentsOfFile:@"/Users/flameberry/Developer/Flameberry/FlameberryEngine/Flameberry/Assets/Icons/FlameberryIcon.png"]];
-			[iconButton setTitle:@""];
+            NSButton* iconButton = [[NSButton alloc] initWithFrame:NSMakeRect(75, (titleBarHeight - iconSize) / 2.0f, iconSize, iconSize)];
+            [iconButton setImage:iconImage];
+            [iconButton setImageScaling:NSImageScaleProportionallyUpOrDown];
+            [iconButton setTitle:@""];
             [iconButton setButtonType:NSButtonTypeMomentaryPushIn];
             [iconButton setBordered:NO];
             
@@ -193,8 +203,7 @@ namespace Flameberry {
             // Create a custom NSView for the title bar
             NSRect titleBarRect = NSMakeRect(0, contentHeight, windowWidth, titleBarHeight);
             [s_TitlebarData.TitlebarView setFrame:titleBarRect];
-            [s_TitlebarData.TitlebarView setWantsLayer:YES]; // Enable layer-backed views for better performance or custom drawing
-            
+
             // Reevaluate position of Secondary Title, because of it being on the rightmost end of the title bar
             CGFloat spacing = -15.0f, secondaryTitleWidth = NSWidth(s_TitlebarData.SecondaryTitleTextView.frame), secondaryTitleHeight = NSHeight(s_TitlebarData.SecondaryTitleTextView.frame);
             NSRect secondaryTitleRect = NSMakeRect(windowWidth - spacing - secondaryTitleWidth,
@@ -204,23 +213,14 @@ namespace Flameberry {
             [s_TitlebarData.SecondaryTitleTextView setFrame:secondaryTitleRect];
             
             // Update gradient frame to match title bar view's bounds
-            CAGradientLayer* gradient = (CAGradientLayer*)s_TitlebarData.TitlebarView.layer.sublayers[0];
-            if (!gradient)
-            {
-                gradient = [CAGradientLayer layer];
-                [s_TitlebarData.TitlebarView.layer insertSublayer:gradient atIndex:0];
-            }
-            gradient.frame = s_TitlebarData.TitlebarView.bounds;
-            gradient.startPoint = CGPointMake(0.0, 1.0); // Top left
-            gradient.endPoint = CGPointMake(0.35, 1.0);   // Bottom right
+            s_TitlebarData.GradientLayer.frame = s_TitlebarData.TitlebarView.bounds;
         }
         
         void TitlebarNative::SetGradient(const glm::vec4& color)
         {
-            // Update gradient frame to match title bar view's bounds
-            CAGradientLayer* gradient = (CAGradientLayer*)s_TitlebarData.TitlebarView.layer.sublayers[0];
+            CAGradientLayer* gradient = s_TitlebarData.GradientLayer;
             FBY_ASSERT(gradient, "CustomTitlebar: Gradient layer is null");
-            
+
             gradient.colors = @[
                 (__bridge id)[NSColor colorWithRed:color.r green:color.g blue:color.b alpha:color.a].CGColor,
                 (__bridge id)[NSColor colorWithRed:Theme::TitlebarColor.x green:Theme::TitlebarColor.y blue:Theme::TitlebarColor.z alpha:Theme::TitlebarColor.w].CGColor // Black

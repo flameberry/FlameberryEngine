@@ -136,7 +136,7 @@ namespace Flameberry {
 				: Renderer::GetCheckerboardTexture();
 
 			ImGui::SameLine();
-			ImGui::Image(reinterpret_cast<ImTextureID>(previewMap->CreateOrGetDescriptorSet()), ImVec2{ 70, 70 });
+			ImGui::Image(reinterpret_cast<ImTextureID>(previewMap->CreateOrGetImGuiDescriptorSet()), ImVec2{ 70, 70 });
 
 			if (ImGui::BeginDragDropTarget()) {
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM")) {

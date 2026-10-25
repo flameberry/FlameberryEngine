@@ -133,7 +133,7 @@ namespace Flameberry {
 
 						// Display font preview
 						UI::TableKeyElement("Font");
-						ImGui::Image((ImTextureID)fontPreview->CreateOrGetDescriptorSet(),
+						ImGui::Image((ImTextureID)fontPreview->CreateOrGetImGuiDescriptorSet(),
 							ImVec2(80, 80),
 							ImVec2(0, 1),
 							ImVec2(1, 0),
@@ -203,7 +203,7 @@ namespace Flameberry {
 
 						// Show Environment Map Preview
 						UI::TableKeyElement("Skymap");
-						ImGui::Image((ImTextureID)thumbnail->CreateOrGetDescriptorSet(), ImVec2(size * aspectRatio, size));
+						ImGui::Image((ImTextureID)thumbnail->CreateOrGetImGuiDescriptorSet(), ImVec2(size * aspectRatio, size));
 
 						if (ImGui::BeginDragDropTarget()) {
 							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM")) {
