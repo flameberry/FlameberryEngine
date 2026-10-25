@@ -29,7 +29,6 @@ namespace Flameberry {
 			}
 
 			{
-				// Acquire mutex
 				std::scoped_lock loadQueueLock(m_AssetLoadQueueMutex);
 
 				// Append asset load to queue

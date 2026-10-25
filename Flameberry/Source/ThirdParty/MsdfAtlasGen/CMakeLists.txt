@@ -7,6 +7,12 @@ add_library(PNG::PNG ALIAS png_static) # Needed for msdfgen find_package(PNG REQ
 get_target_property(PNG_BINARY_DIR png_static BINARY_DIR)
 
 # Freetype
+# Disable optional system dependencies so that Freetype doesn't pick up whatever the package manager has installed
+# (e.g. Homebrew's brotli/harfbuzz), which breaks the build whenever those get upgraded and the cached paths go stale
+set(FT_DISABLE_BROTLI ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_HARFBUZZ ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_BZIP2 ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_PNG ON CACHE BOOL "" FORCE)
 add_subdirectory(Freetype)
 add_library(Freetype::Freetype ALIAS freetype) # Needed for msdfgen find_package(Freetype REQUIRED)
 

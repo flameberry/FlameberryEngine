@@ -80,6 +80,7 @@ namespace Flameberry {
 			return project;
 		}
 		FBY_ERROR("Failed to load project: {}", path);
+		return nullptr;
 	}
 
 } // namespace Flameberry

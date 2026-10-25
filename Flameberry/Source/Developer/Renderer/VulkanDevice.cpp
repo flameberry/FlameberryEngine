@@ -65,32 +65,39 @@ namespace Flameberry {
 		vkGetDeviceQueue(m_VulkanDevice, m_QueueFamilyIndices.ComputeQueueFamilyIndex, 0, &m_ComputeQueue);
 		vkGetDeviceQueue(m_VulkanDevice, m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex, 0, &m_PresentationQueue);
 
-		{
-			// Creating Graphics Queue Command Pool
-			VkCommandPoolCreateInfo commandPoolCreateInfo{};
-			commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			commandPoolCreateInfo.queueFamilyIndex = m_QueueFamilyIndices.GraphicsQueueFamilyIndex;
-			commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		// Creating Graphics and Compute Queue Command Pools
+		m_GraphicsQueueCommandPool = CreateCommandPool(m_QueueFamilyIndices.GraphicsQueueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+		m_ComputeQueueCommandPool = CreateCommandPool(m_QueueFamilyIndices.ComputeQueueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+	}
 
-			VK_CHECK_RESULT(vkCreateCommandPool(m_VulkanDevice, &commandPoolCreateInfo, nullptr, &m_GraphicsQueueCommandPool));
-		}
+	VkCommandPool VulkanDevice::CreateCommandPool(uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags) const {
+		VkCommandPoolCreateInfo commandPoolCreateInfo{};
+		commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndex;
+		commandPoolCreateInfo.flags = flags;
 
-		{
-			// Creating Compute Queue Command Pool
-			VkCommandPoolCreateInfo commandPoolCreateInfo{};
-			commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			commandPoolCreateInfo.queueFamilyIndex = m_QueueFamilyIndices.ComputeQueueFamilyIndex;
-			commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		VkCommandPool commandPool;
+		VK_CHECK_RESULT(vkCreateCommandPool(m_VulkanDevice, &commandPoolCreateInfo, nullptr, &commandPool));
+		return commandPool;
+	}
 
-			VK_CHECK_RESULT(vkCreateCommandPool(m_VulkanDevice, &commandPoolCreateInfo, nullptr, &m_ComputeQueueCommandPool));
-		}
+	VkCommandPool VulkanDevice::GetSingleTimeCommandPool(bool isCompute) const {
+		std::scoped_lock lock(m_SingleTimeCommandPoolsMutex);
+
+		ThreadCommandPools& threadCommandPools = m_SingleTimeCommandPools[std::this_thread::get_id()];
+		VkCommandPool& commandPool = isCompute ? threadCommandPools.ComputeCommandPool : threadCommandPools.GraphicsCommandPool;
+
+		// Lazily create the pool the first time this thread needs it
+		if (commandPool == VK_NULL_HANDLE)
+			commandPool = CreateCommandPool(isCompute ? m_QueueFamilyIndices.ComputeQueueFamilyIndex : m_QueueFamilyIndices.GraphicsQueueFamilyIndex, VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+		return commandPool;
 	}
 
 	void VulkanDevice::BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute) const {
 		VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{};
 		vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		vk_command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		vk_command_buffer_allocate_info.commandPool = isCompute ? m_ComputeQueueCommandPool : m_GraphicsQueueCommandPool;
+		vk_command_buffer_allocate_info.commandPool = GetSingleTimeCommandPool(isCompute);
 		vk_command_buffer_allocate_info.commandBufferCount = 1;
 
 		vkAllocateCommandBuffers(m_VulkanDevice, &vk_command_buffer_allocate_info, &commandBuffer);
@@ -117,10 +124,17 @@ namespace Flameberry {
 			vkQueueWaitIdle(vulkanQueue);
 		});
 
-		vkFreeCommandBuffers(m_VulkanDevice, isCompute ? m_ComputeQueueCommandPool : m_GraphicsQueueCommandPool, 1, &commandBuffer);
+		vkFreeCommandBuffers(m_VulkanDevice, GetSingleTimeCommandPool(isCompute), 1, &commandBuffer);
 	}
 
 	VulkanDevice::~VulkanDevice() {
+		for (auto& [threadId, threadCommandPools] : m_SingleTimeCommandPools) {
+			if (threadCommandPools.GraphicsCommandPool != VK_NULL_HANDLE)
+				vkDestroyCommandPool(m_VulkanDevice, threadCommandPools.GraphicsCommandPool, nullptr);
+			if (threadCommandPools.ComputeCommandPool != VK_NULL_HANDLE)
+				vkDestroyCommandPool(m_VulkanDevice, threadCommandPools.ComputeCommandPool, nullptr);
+		}
+
 		vkDestroyCommandPool(m_VulkanDevice, m_GraphicsQueueCommandPool, nullptr);
 		vkDestroyCommandPool(m_VulkanDevice, m_ComputeQueueCommandPool, nullptr);
 		vkDestroyDevice(m_VulkanDevice, nullptr);

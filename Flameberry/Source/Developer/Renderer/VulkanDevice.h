@@ -3,6 +3,8 @@
 #include <vector>
 #include <set>
 #include <mutex>
+#include <thread>
+#include <unordered_map>
 
 #include <vulkan/vulkan.h>
 
@@ -33,6 +35,9 @@ namespace Flameberry {
 		VkCommandPool GetGraphicsCommandPool() const { return m_GraphicsQueueCommandPool; }
 		VkCommandPool GetComputeCommandPool() const { return m_ComputeQueueCommandPool; }
 
+		// Returns a command pool owned by the calling thread, to be used for single time command buffers
+		VkCommandPool GetSingleTimeCommandPool(bool isCompute = false) const;
+
 		void BeginSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute = false) const;
 		void EndSingleTimeCommandBuffer(VkCommandBuffer& commandBuffer, bool isCompute = false) const;
 
@@ -43,12 +48,24 @@ namespace Flameberry {
 		std::vector<VkDeviceQueueCreateInfo> CreateDeviceQueueInfos(const std::set<uint32_t>& uniqueQueueFamilyIndices);
 
 	private:
+		VkCommandPool CreateCommandPool(uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags) const;
+
+	private:
+		struct ThreadCommandPools {
+			VkCommandPool GraphicsCommandPool = VK_NULL_HANDLE, ComputeCommandPool = VK_NULL_HANDLE;
+		};
+
 		VkDevice m_VulkanDevice;
 		VkQueue m_GraphicsQueue, m_ComputeQueue, m_PresentationQueue;
 		QueueFamilyIndices m_QueueFamilyIndices;
 		mutable std::mutex m_QueueMutex;
 
 		VkCommandPool m_GraphicsQueueCommandPool, m_ComputeQueueCommandPool;
+
+		// Command pools must be externally synchronized, so each thread (e.g. the asset thread)
+		// gets its own pools for single time command buffers instead of sharing the per-frame ones
+		mutable std::unordered_map<std::thread::id, ThreadCommandPools> m_SingleTimeCommandPools;
+		mutable std::mutex m_SingleTimeCommandPoolsMutex;
 
 		VkPhysicalDevice& m_VulkanPhysicalDevice;
 	};
