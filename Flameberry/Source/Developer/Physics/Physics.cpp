@@ -60,8 +60,7 @@ namespace Flameberry {
 
 		PhysicsManagerData()
 			: TempAllocator(10 * 1024 * 1024)
-			, JobSystemThreadPool(
-				  JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1) {}
+			, JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1) {}
 	};
 
 	PhysicsManagerData* s_Data;
@@ -79,8 +78,7 @@ namespace Flameberry {
 	}
 
 	// Callback for asserts, connect this to your own assert handler if you have one
-	static bool AssertFailedImpl(
-		const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine) {
+	static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine) {
 		FBY_ASSERT(0, "{}:{}: ({}) {}", inFile, inLine, inExpression, (inMessage != nullptr ? inMessage : ""));
 		return true;
 	};

@@ -153,8 +153,8 @@ namespace Flameberry {
 
 		for (const auto& specializationConstant : specializationConstantLayout) {
 			if (specializationConstant.Type < ShaderDataType::Dummy1) {
-				FBY_ASSERT(specializationConstantIDSet.find(specializationConstant.ConstantID)
-						!= specializationConstantIDSet.end(),
+				FBY_ASSERT(
+					specializationConstantIDSet.find(specializationConstant.ConstantID) != specializationConstantIDSet.end(),
 					"Specialization Constant ID specified during Pipeline Creation doesn't match any ID present in the shader!");
 
 				outVulkanSpecializationMapEntries.emplace_back(VkSpecializationMapEntry{
@@ -207,14 +207,13 @@ namespace Flameberry {
 		vk_pipeline_fragment_shader_stage_create_info.module = fragmentModule;
 		vk_pipeline_fragment_shader_stage_create_info.pName = "main";
 
-		VkPipelineShaderStageCreateInfo vk_shader_stages_create_infos[2] = {
-			vk_pipeline_vertex_shader_stage_create_info, vk_pipeline_fragment_shader_stage_create_info
-		};
+		VkPipelineShaderStageCreateInfo vk_shader_stages_create_infos[2] = { vk_pipeline_vertex_shader_stage_create_info,
+			vk_pipeline_fragment_shader_stage_create_info };
 
 		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState{};
 		if (m_Specification.BlendingEnable) {
-			pipelineColorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-				| VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			pipelineColorBlendAttachmentState.colorWriteMask =
+				VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 			pipelineColorBlendAttachmentState.blendEnable = VK_TRUE;
 			pipelineColorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 			pipelineColorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
@@ -223,8 +222,8 @@ namespace Flameberry {
 			pipelineColorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 			pipelineColorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
 		} else {
-			pipelineColorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-				| VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			pipelineColorBlendAttachmentState.colorWriteMask =
+				VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 			pipelineColorBlendAttachmentState.blendEnable = VK_FALSE;
 			pipelineColorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
 			pipelineColorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
@@ -423,8 +422,8 @@ namespace Flameberry {
 		computePipelineCreateInfo.layout = m_PipelineLayout;
 		computePipelineCreateInfo.stage = pipelineComputeShaderStageCreateInfo;
 
-		VK_CHECK_RESULT(vkCreateComputePipelines(
-			device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_ComputePipeline));
+		VK_CHECK_RESULT(
+			vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_ComputePipeline));
 	}
 
 	ComputePipeline::~ComputePipeline() {

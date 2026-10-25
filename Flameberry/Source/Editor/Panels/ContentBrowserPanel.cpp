@@ -67,14 +67,12 @@ namespace Flameberry {
 
 		bool isLeaf = true;
 
-		for (auto& directory : std::filesystem::directory_iterator{ parent })
-			isLeaf = isLeaf && !directory.is_directory();
+		for (auto& directory : std::filesystem::directory_iterator{ parent }) isLeaf = isLeaf && !directory.is_directory();
 
 		const bool isSelected = m_CurrentDirectory == parent;
 
 		const int treeNodeFlags = (isSelected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow
-			| ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding
-			| (isLeaf ? ImGuiTreeNodeFlags_Leaf : 0);
+			| ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding | (isLeaf ? ImGuiTreeNodeFlags_Leaf : 0);
 
 		ImGui::PushID(parent.path().filename().c_str());
 
@@ -100,8 +98,7 @@ namespace Flameberry {
 		if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) m_CurrentDirectory = parent.path();
 
 		ImGui::SameLine();
-		ImGui::Image(
-			reinterpret_cast<ImTextureID>(m_IconTextures[FileTypeIndex::FOLDER]->CreateOrGetImGuiDescriptorSet()),
+		ImGui::Image(reinterpret_cast<ImTextureID>(m_IconTextures[FileTypeIndex::FOLDER]->CreateOrGetImGuiDescriptorSet()),
 			ImVec2{ ImGui::GetTextLineHeight() + framePaddingY, ImGui::GetTextLineHeight() + framePaddingY });
 		ImGui::SameLine();
 
@@ -195,8 +192,8 @@ namespace Flameberry {
 			m_CurrentDirectory = m_CurrentDirectory.parent_path();
 		ImGui::SameLine();
 
-		m_IsSearchBoxFocused = UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer,
-			ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
+		m_IsSearchBoxFocused = UI::InputBox(
+			"##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
 
 		ImGui::SameLine();
 
@@ -249,8 +246,7 @@ namespace Flameberry {
 			if (m_SearchInputBuffer[0] != '\0') {
 				// TODO: Maybe some optimisation to not search again if the input string is same
 				const std::string filePathWithoutExtension = filePath.filename().replace_extension().string();
-				const int index =
-					Algorithm::KmpSearch(filePathWithoutExtension.c_str(), m_SearchInputBuffer.c_str(), true);
+				const int index = Algorithm::KmpSearch(filePathWithoutExtension.c_str(), m_SearchInputBuffer.c_str(), true);
 				if (index == -1) continue;
 			}
 
@@ -259,8 +255,7 @@ namespace Flameberry {
 			bool isFileSupported = true, isDirectory = directory.is_directory();
 
 			Ref<Texture2D> thumbnail;
-			if (!isDirectory)
-				thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
+			if (!isDirectory) thumbnail = Project::GetActiveProject()->GetThumbnailCache()->GetOrCreateThumbnail(filePath);
 			if (!thumbnail) {
 				int currentIconIndex;
 				if (isDirectory) currentIconIndex = FileTypeIndex::FOLDER;
@@ -281,8 +276,7 @@ namespace Flameberry {
 				thumbnail = m_IconTextures[currentIconIndex];
 			}
 
-			if (DisplayContentBrowserItem(filePath, m_ThumbnailSize, thumbnail, itemSize, !isFileSupported)
-				&& isDirectory)
+			if (DisplayContentBrowserItem(filePath, m_ThumbnailSize, thumbnail, itemSize, !isFileSupported) && isDirectory)
 				m_CurrentDirectory = directory.path();
 
 			if (ImGui::GetColumnIndex() == columns - 1) {
@@ -432,8 +426,7 @@ namespace Flameberry {
 		if (isDirectory) {
 			if (textWidth > fullWidth) ImGui::Text("%.*s%s", characters, filename.c_str(), "...");
 			else {
-				ImGui::SetCursorPosX(
-					glm::max(cursorPosX + framePadding.x, cursorPosX + (fullWidth - textWidth) * 0.5f));
+				ImGui::SetCursorPosX(glm::max(cursorPosX + framePadding.x, cursorPosX + (fullWidth - textWidth) * 0.5f));
 				ImGui::Text("%s", filename.c_str());
 			}
 		} else {
@@ -455,8 +448,7 @@ namespace Flameberry {
 
 		const ImVec2 cursorPositionRelativeStart = ImGui::GetCursorScreenPos();
 		const ImRect clipRect(cursorPositionRelativeStart,
-			cursorPositionRelativeStart
-				+ ImVec2(currentPathItemWidth, ImGui::GetFontSize() + 2.0f * style.FramePadding.y));
+			cursorPositionRelativeStart + ImVec2(currentPathItemWidth, ImGui::GetFontSize() + 2.0f * style.FramePadding.y));
 
 		ImGui::PushClipRect(clipRect.Min, clipRect.Max, true);
 
@@ -501,8 +493,8 @@ namespace Flameberry {
 			}
 
 			if (hovered) {
-				ImGui::GetWindowDrawList()->AddRect(buttonRect.Min, buttonRect.Max,
-					ImGui::ColorConvertFloat4ToU32(Theme::AccentColor), style.FrameRounding);
+				ImGui::GetWindowDrawList()->AddRect(
+					buttonRect.Min, buttonRect.Max, ImGui::ColorConvertFloat4ToU32(Theme::AccentColor), style.FrameRounding);
 			}
 
 			currentPath.remove_prefix(position);

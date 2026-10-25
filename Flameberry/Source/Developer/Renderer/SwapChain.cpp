@@ -163,10 +163,8 @@ namespace Flameberry {
 		vk_fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-			VK_CHECK_RESULT(
-				vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_ImageAvailableSemaphores[i]));
-			VK_CHECK_RESULT(
-				vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]));
+			VK_CHECK_RESULT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_ImageAvailableSemaphores[i]));
+			VK_CHECK_RESULT(vkCreateSemaphore(device, &vk_semaphore_create_info, nullptr, &m_RenderFinishedSemaphores[i]));
 			VK_CHECK_RESULT(vkCreateFence(device, &vk_fence_create_info, nullptr, &m_InFlightFences[i]));
 		}
 		FBY_INFO("Created {} Image Available Semaphores, Render Finished Semaphores, and 'in flight fences'!",
@@ -204,8 +202,7 @@ namespace Flameberry {
 	VkSurfaceFormatKHR SwapChain::SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats) {
 		// VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_B8G8R8A8_UNORM
 		for (const auto& format : available_formats) {
-			if (format.format == VK_FORMAT_R16G16B16A16_SFLOAT
-				&& format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+			if (format.format == VK_FORMAT_R16G16B16A16_SFLOAT && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 				return format;
 		}
 		// Implement choosing of the next best format after UNORM R8B8G8A8 format
@@ -229,8 +226,8 @@ namespace Flameberry {
 
 			VkExtent2D actual_extent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 
-			actual_extent.width = std::clamp(actual_extent.width, surface_capabilities.minImageExtent.width,
-				surface_capabilities.maxImageExtent.width);
+			actual_extent.width = std::clamp(
+				actual_extent.width, surface_capabilities.minImageExtent.width, surface_capabilities.maxImageExtent.width);
 			actual_extent.height = std::clamp(actual_extent.height, surface_capabilities.minImageExtent.height,
 				surface_capabilities.maxImageExtent.height);
 			return actual_extent;

@@ -68,8 +68,7 @@ namespace Flameberry {
 			stagingBufferSpec.InstanceCount = 1;
 			stagingBufferSpec.InstanceSize = imageSize; // Use the calculated imageSize here
 			stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			stagingBufferSpec.MemoryProperties =
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 			// Creation of the actual staging buffer
 			Buffer stagingBuffer(stagingBufferSpec);
@@ -191,8 +190,7 @@ namespace Flameberry {
 				imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
 				const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				VK_CHECK_RESULT(
-					vkCreateImageView(device, &imageViewCreateInfo, nullptr, &prefilteredMipMapImageViews[i]));
+				VK_CHECK_RESULT(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &prefilteredMipMapImageViews[i]));
 			}
 
 			// Create Sampler that enables sampling multiple LODs
@@ -451,8 +449,8 @@ namespace Flameberry {
 
 			// Bind the descriptor sets and dispatch the compute shader for the third step
 			vulkanDescSet = prefilteredMapGenerationDescriptorSets[i]->GetVulkanDescriptorSet();
-			vkCmdBindDescriptorSets(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1,
-				&vulkanDescSet, 0, 0);
+			vkCmdBindDescriptorSets(
+				vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0);
 			vkCmdDispatch(vulkanCmdBuffer, workGroupSize / 8, workGroupSize / 8, 6);
 
 			workGroupSize = glm::max<uint32_t>(workGroupSize / 2, 8);
@@ -472,8 +470,8 @@ namespace Flameberry {
 
 			// Bind the pipeline and dispatch the compute shader for the fourth step
 			vkCmdBindPipeline(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipeline);
-			vkCmdBindDescriptorSets(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1,
-				&vulkanDescSet, 0, 0);
+			vkCmdBindDescriptorSets(
+				vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0);
 			vkCmdDispatch(vulkanCmdBuffer, (width / 4) / 8, (width / 4) / 8, 1);
 
 			m_BRDFLUTMap->CmdTransitionLayout(
@@ -510,8 +508,7 @@ namespace Flameberry {
 		};
 
 		DescriptorSetSpecification skymapDescSetSpec;
-		skymapDescSetSpec.Layout =
-			DescriptorSetLayout::CreateOrGetCached(DescriptorSetLayoutSpecification{ descBindings });
+		skymapDescSetSpec.Layout = DescriptorSetLayout::CreateOrGetCached(DescriptorSetLayoutSpecification{ descBindings });
 		m_SkymapDescriptorSet = CreateRef<DescriptorSet>(skymapDescSetSpec);
 
 		VkDescriptorImageInfo skymapImageInfo{};

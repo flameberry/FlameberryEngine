@@ -34,8 +34,7 @@ namespace Flameberry {
 	private:
 		template <typename ComponentType> void DrawAddComponentEntry(const char* name);
 
-		template <typename ComponentType, typename Fn>
-		void DrawComponent(const char* name, Fn&& fn, bool removable = true);
+		template <typename ComponentType, typename Fn> void DrawComponent(const char* name, Fn&& fn, bool removable = true);
 	};
 
 	template <typename ComponentType> void InspectorPanel::DrawAddComponentEntry(const char* name) {
@@ -60,8 +59,8 @@ namespace Flameberry {
 			auto& style = ImGui::GetStyle();
 			const float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
 
-			constexpr ImGuiTreeNodeFlags headerFlags = ImGuiTreeNodeFlags_DefaultOpen
-				| ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap;
+			constexpr ImGuiTreeNodeFlags headerFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth
+				| ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap;
 
 			const bool open = ImGui::CollapsingHeader(name, headerFlags);
 			ImGui::PopStyleVar();

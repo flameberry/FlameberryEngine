@@ -117,8 +117,8 @@ namespace Flameberry {
 
 			if (foundRequiredExtensions) {
 				SwapChainDetails vulkanSwapchainDetails = RenderCommand::GetSwapChainDetails(physicalDevice, surface);
-				isSwapchainAdequate = (!vulkanSwapchainDetails.SurfaceFormats.empty())
-					&& (!vulkanSwapchainDetails.PresentationModes.empty());
+				isSwapchainAdequate =
+					(!vulkanSwapchainDetails.SurfaceFormats.empty()) && (!vulkanSwapchainDetails.PresentationModes.empty());
 			} else {
 				FBY_ERROR("Failed to find the following extension(s):");
 				for (const auto& name : requiredExtensions) FBY_ERROR("\t{}", name);
@@ -139,9 +139,8 @@ namespace Flameberry {
 			bool isPhysicalDeviceValid = indices.GraphicsQueueFamilyIndex != -1 && indices.ComputeQueueFamilyIndex != -1
 				&& indices.PresentationSupportedQueueFamilyIndex != -1 && foundRequiredExtensions && isSwapchainAdequate
 				&& supportedFeatures.samplerAnisotropy && supportedFeatures.sampleRateShading
-				&& supportedFeatures.fillModeNonSolid && supportedFeatures.tessellationShader
-				&& supportedFeatures.depthClamp && supportedFeatures.shaderStorageImageArrayDynamicIndexing
-				&& vulkan12Features.descriptorIndexing;
+				&& supportedFeatures.fillModeNonSolid && supportedFeatures.tessellationShader && supportedFeatures.depthClamp
+				&& supportedFeatures.shaderStorageImageArrayDynamicIndexing && vulkan12Features.descriptorIndexing;
 
 			VkPhysicalDeviceProperties deviceProperties;
 			vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);

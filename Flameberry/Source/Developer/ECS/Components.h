@@ -32,8 +32,8 @@ namespace Flameberry {
 		}
 
 		void CalcAndCacheGlobalTransform(const glm::mat4& globalTransform) {
-			const glm::mat4& localTransform = glm::translate(glm::mat4(1.0f), Translation)
-				* glm::toMat4(glm::quat(Rotation)) * glm::scale(glm::mat4(1.0f), Scale);
+			const glm::mat4& localTransform = glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(glm::quat(Rotation))
+				* glm::scale(glm::mat4(1.0f), Scale);
 
 			GlobalTransform = globalTransform * localTransform;
 			DirtyFlag = false;
@@ -101,10 +101,7 @@ namespace Flameberry {
 		FEntity NextSibling{};
 
 		RelationshipComponent()
-			: Parent(FEntity::Null)
-			, FirstChild(FEntity::Null)
-			, PrevSibling(FEntity::Null)
-			, NextSibling(FEntity::Null) {}
+			: Parent(FEntity::Null), FirstChild(FEntity::Null), PrevSibling(FEntity::Null), NextSibling(FEntity::Null) {}
 
 		RelationshipComponent(const RelationshipComponent& dest)
 			: Parent(dest.Parent)

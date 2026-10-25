@@ -126,8 +126,7 @@ namespace Flameberry {
 			vk_debug_messenger_create_info.pfnUserCallback = vk_debug_callback;
 			vk_debug_messenger_create_info.pUserData = nullptr;
 
-			VK_CHECK_RESULT(
-				CreateDebugUtilsMessengerEXT(&vk_debug_messenger_create_info, nullptr, &m_VkDebugMessenger));
+			VK_CHECK_RESULT(CreateDebugUtilsMessengerEXT(&vk_debug_messenger_create_info, nullptr, &m_VkDebugMessenger));
 			FBY_INFO("Created Vulkan Debug Messenger!");
 		}
 	}

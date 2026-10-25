@@ -79,8 +79,8 @@ namespace Flameberry {
 		~SceneRenderer();
 
 		void RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera,
-			const glm::vec3& cameraPosition, FEntity selectedEntity, bool renderGrid = true,
-			bool renderDebugIcons = true, bool renderOutline = true, bool renderPhysicsCollider = true);
+			const glm::vec3& cameraPosition, FEntity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true,
+			bool renderOutline = true, bool renderPhysicsCollider = true);
 		void RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix,
 			const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar,
 			FEntity selectedEntity, bool renderGrid = true, bool renderDebugIcons = true, bool renderOutline = true,
@@ -116,8 +116,8 @@ namespace Flameberry {
 		void SubmitCameraViewGeometry(const Ref<Scene>& scene, FEntity entity, TransformComponent& transform);
 		void SubmitBoxColliderGeometry(const BoxColliderComponent& boxCollider, const TransformComponent& transform,
 			const glm::mat3& rotation, const glm::vec3& color, const float bias);
-		void SubmitSphereColliderGeometry(const SphereColliderComponent& sphereCollider,
-			const TransformComponent& transform, const glm::vec3& color, const float bias);
+		void SubmitSphereColliderGeometry(const SphereColliderComponent& sphereCollider, const TransformComponent& transform,
+			const glm::vec3& color, const float bias);
 		void SubmitCapsuleColliderGeometry(const CapsuleColliderComponent& capsuleCollider,
 			const TransformComponent& transform, const glm::mat3& rotation, const glm::vec3& color, const float bias);
 
@@ -154,8 +154,7 @@ namespace Flameberry {
 
 		// Geometry
 		Ref<RenderPass> m_GeometryPass;
-		Ref<DescriptorSetLayout> m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout,
-			m_ShadowMapRefDescriptorSetLayout;
+		Ref<DescriptorSetLayout> m_CameraBufferDescSetLayout, m_SceneDescriptorSetLayout, m_ShadowMapRefDescriptorSetLayout;
 		std::vector<Ref<DescriptorSet>> m_CameraBufferDescriptorSets, m_SceneDataDescriptorSets, m_ShadowMapRefDescSets;
 		std::vector<std::unique_ptr<Buffer>> m_CameraUniformBuffers, m_SceneUniformBuffers;
 		Ref<Pipeline> m_MeshPipeline, m_SkymapPipeline, m_GridPipeline;
@@ -175,8 +174,7 @@ namespace Flameberry {
 		SceneRendererSettings m_RendererSettings;
 
 		// Jump Flood Algorithm
-		Ref<Image> m_JumpFloodImage1[SwapChain::MAX_FRAMES_IN_FLIGHT],
-			m_JumpFloodImage2[SwapChain::MAX_FRAMES_IN_FLIGHT];
+		Ref<Image> m_JumpFloodImage1[SwapChain::MAX_FRAMES_IN_FLIGHT], m_JumpFloodImage2[SwapChain::MAX_FRAMES_IN_FLIGHT];
 		Ref<ComputePipeline> m_JumpFloodPipeline;
 		Ref<DescriptorSet> m_JumpFloodDescSets[SwapChain::MAX_FRAMES_IN_FLIGHT];
 

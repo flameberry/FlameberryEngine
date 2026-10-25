@@ -70,15 +70,13 @@ namespace Flameberry {
 			m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseNormalMap = (FBoolean)value;
 		}
 		void SetUseRoughnessMap(bool value) {
-			m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseRoughnessMap =
-				(FBoolean)value;
+			m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseRoughnessMap = (FBoolean)value;
 		}
 		void SetUseAmbientMap(bool value) {
 			m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseAmbientMap = (FBoolean)value;
 		}
 		void SetUseMetallicMap(bool value) {
-			m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseMetallicMap =
-				(FBoolean)value;
+			m_MaterialRef->GetUniformDataReferenceAs<MaterialStructGPURepresentation>().UseMetallicMap = (FBoolean)value;
 		}
 
 		void SetAlbedoMap(AssetHandle handle);

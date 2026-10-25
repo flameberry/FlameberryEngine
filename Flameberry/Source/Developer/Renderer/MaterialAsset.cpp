@@ -63,8 +63,7 @@ namespace Flameberry {
 		m_MaterialRef->Set("u_MetallicMapSampler", map);
 	}
 
-	void MaterialAssetSerializer::Serialize(
-		const Ref<MaterialAsset>& materialAsset, const std::filesystem::path& path) {
+	void MaterialAssetSerializer::Serialize(const Ref<MaterialAsset>& materialAsset, const std::filesystem::path& path) {
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Material" << YAML::Value << YAML::BeginMap;
@@ -75,8 +74,7 @@ namespace Flameberry {
 
 		out << YAML::Key << "Roughness" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Roughness");
 		out << YAML::Key << "Metallic" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Metallic");
-		out << YAML::Key << "EmissiveFactor" << YAML::Value
-			<< materialAsset->m_MaterialRef->Get<float>("u_EmissiveFactor");
+		out << YAML::Key << "EmissiveFactor" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_EmissiveFactor");
 		out << YAML::Key << "UseAlbedoMap" << YAML::Value
 			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAlbedoMap");
 		out << YAML::Key << "AlbedoMap" << YAML::Value << materialAsset->m_AlbedoMap;

@@ -25,9 +25,7 @@ namespace Flameberry {
 			return properties;
 		}
 		static VulkanWindow* GetCurrentWindow() { return GetCurrentContext()->m_Window; }
-		static Ref<DescriptorPool> GetCurrentGlobalDescriptorPool() {
-			return GetCurrentContext()->m_GlobalDescriptorPool;
-		}
+		static Ref<DescriptorPool> GetCurrentGlobalDescriptorPool() { return GetCurrentContext()->m_GlobalDescriptorPool; }
 		static bool EnableValidationLayers() { return s_EnableValidationLayers; }
 
 		static VkPhysicalDevice GetValidPhysicalDevice(

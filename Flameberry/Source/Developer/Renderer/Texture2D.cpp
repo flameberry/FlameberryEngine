@@ -67,8 +67,8 @@ namespace Flameberry {
 		const uint32_t mipLevels = specification.GenerateMipmaps
 			? static_cast<uint32_t>(std::floor(std::log2(std::max(specification.Width, specification.Height)))) + 1
 			: 1;
-		const VkDeviceSize imageSize = specification.Width * specification.Height
-			* Utils::GetPixelSizeInBytesFromTextureFormat(specification.Format);
+		const VkDeviceSize imageSize =
+			specification.Width * specification.Height * Utils::GetPixelSizeInBytesFromTextureFormat(specification.Format);
 		SetupTexture(data, specification.Width, specification.Height, imageSize, mipLevels, specification.Format,
 			specification.Sampler);
 	}
@@ -107,11 +107,9 @@ namespace Flameberry {
 		m_TextureImage->WriteFromBuffer(stagingBuffer.GetVulkanBuffer());
 
 		if (m_TextureImageSpecification.MipLevels > 1)
-			m_TextureImage->GenerateMipmaps(
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_TextureImage->GenerateMipmaps(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		else
-			m_TextureImage->TransitionLayout(
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_TextureImage->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		if (sampler == VK_NULL_HANDLE) {
 			m_DidCreateSampler = true;
@@ -146,8 +144,8 @@ namespace Flameberry {
 	Texture2D::~Texture2D() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		if (m_DescriptorSet != VK_NULL_HANDLE)
-			vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1,
-				&m_DescriptorSet);
+			vkFreeDescriptorSets(
+				device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
 		// ImGui allocates its texture descriptor sets from the global pool, so this is equivalent to
 		// ImGui_ImplVulkan_RemoveTexture(), but doesn't depend on the ImGui backend still being alive when textures are
 		// destroyed during shutdown
@@ -185,8 +183,8 @@ namespace Flameberry {
 		// ImGui's Vulkan backend uses a different layout (a sampled image without a sampler, as ImGui binds its own
 		// sampler) so this can't be shared with the descriptor set used by the renderer
 		if (m_ImGuiDescriptorSet == VK_NULL_HANDLE)
-			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(
-				m_TextureImage->GetVulkanImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_ImGuiDescriptorSet =
+				ImGui_ImplVulkan_AddTexture(m_TextureImage->GetVulkanImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		return m_ImGuiDescriptorSet;
 	}
 

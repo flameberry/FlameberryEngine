@@ -32,8 +32,8 @@ namespace Flameberry {
 		{
 			UI::ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 1.0f, m_IsSearchBarFocused);
 			UI::ScopedStyleVariable frameRounding(ImGuiStyleVar_FrameRounding, 8);
-			UI::ScopedStyleColor borderColor(ImGuiCol_Border,
-				ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, m_IsSearchBarFocused);
+			UI::ScopedStyleColor borderColor(
+				ImGuiCol_Border, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, m_IsSearchBarFocused);
 			UI::ScopedStyleColor frameBg(ImGuiCol_FrameBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
 
 			m_IsSearchBarFocused =
@@ -60,8 +60,7 @@ namespace Flameberry {
 				const std::string label = fmt::format("Label ({} Entities)", m_Context->GetRegistry()->Size());
 
 				ImGui::TableSetupScrollFreeze(3, 1);
-				ImGui::TableSetupColumn(ICON_LC_EYE,
-					ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable,
+				ImGui::TableSetupColumn(ICON_LC_EYE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable,
 					ImGui::CalcTextSize(ICON_LC_EYE).x);
 				ImGui::TableSetupColumn(
 					label.c_str(), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
@@ -125,8 +124,8 @@ namespace Flameberry {
 		UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 
 		ImGui::PushItemWidth(-1.0f);
-		if (ImGui::InputText("###Rename", &m_RenameBuffer,
-				ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+		if (ImGui::InputText(
+				"###Rename", &m_RenameBuffer, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
 			tag = m_RenameBuffer;
 			m_RenamedEntity = FEntity::Null;
 		}
@@ -170,8 +169,8 @@ namespace Flameberry {
 
 		const int treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding
 			| ImGuiTreeNodeFlags_AllowOverlap | (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
-			| (hasChild ? 0 : ImGuiTreeNodeFlags_Leaf) | ImGuiTreeNodeFlags_SpanFullWidth
-			| ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_LabelSpanAllColumns;
+			| (hasChild ? 0 : ImGuiTreeNodeFlags_Leaf) | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_SpanAllColumns
+			| ImGuiTreeNodeFlags_LabelSpanAllColumns;
 
 		bool shouldDeleteEntity = false, shouldDuplicateEntity = false;
 		bool isEntityTreeNodeOpen = false;
@@ -191,8 +190,7 @@ namespace Flameberry {
 
 				// Only display icon when entity node is hovered
 				const bool isEntityNodeHovered = ImGui::GetHoveredID() == ImGui::GetID((const void*)(uint64_t)entity);
-				ImGui::TextColored(
-					isEntityNodeHovered ? ImVec4(textColor, textColor, textColor, 1.0f) : ImVec4(0, 0, 0, 0),
+				ImGui::TextColored(isEntityNodeHovered ? ImVec4(textColor, textColor, textColor, 1.0f) : ImVec4(0, 0, 0, 0),
 					visibility ? ICON_LC_EYE : ICON_LC_EYE_OFF);
 
 				// if (ImGui::IsItemClicked())
@@ -208,8 +206,8 @@ namespace Flameberry {
 				// Styling of the Entity TreeNode
 				UI::ScopedStyleColor headerColor(ImGuiCol_Header, Theme::AccentColor); // Main Accent Color
 				UI::ScopedStyleColor headerActiveColor(ImGuiCol_HeaderActive, Theme::AccentColorLight, isSelected);
-				UI::ScopedStyleColor headerHovered(ImGuiCol_HeaderHovered,
-					ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
+				UI::ScopedStyleColor headerHovered(
+					ImGuiCol_HeaderHovered, ImVec4{ 254.0f / 255.0f, 211.0f / 255.0f, 140.0f / 255.0f, 1.0f }, isSelected);
 				UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 				UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 				UI::ScopedStyleColor textC(ImGuiCol_Text, ImVec4{ textColor, textColor, textColor, 1.0f });
@@ -232,8 +230,7 @@ namespace Flameberry {
 			// Check for rename shortcuts being used
 			if (!isWorldEntity && isSelected && ImGui::IsWindowFocused()) {
 				ImGuiIO& io = ImGui::GetIO();
-				if (!io.KeyMods
-					&& ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
+				if (!io.KeyMods && ImGui::IsKeyPressed(ImGuiKey_Enter)) // TODO: Shouldn't work with modifier but it does
 					m_RenamedEntity = entity;
 			}
 

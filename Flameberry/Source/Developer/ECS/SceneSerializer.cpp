@@ -114,16 +114,14 @@ namespace Flameberry {
 					auto& tagComp = destScene->m_Registry->EmplaceComponent<CollectionComponent>(deserializedEntity);
 
 				if (auto transform = entity["TransformComponent"]) {
-					auto& transformComp =
-						destScene->m_Registry->EmplaceComponent<TransformComponent>(deserializedEntity);
+					auto& transformComp = destScene->m_Registry->EmplaceComponent<TransformComponent>(deserializedEntity);
 					transformComp.Translation = transform["Translation"].as<glm::vec3>();
 					transformComp.Rotation = transform["Rotation"].as<glm::vec3>();
 					transformComp.Scale = transform["Scale"].as<glm::vec3>();
 				}
 
 				if (auto relation = entity["RelationshipComponent"]) {
-					auto& relationComp =
-						destScene->m_Registry->EmplaceComponent<RelationshipComponent>(deserializedEntity);
+					auto& relationComp = destScene->m_Registry->EmplaceComponent<RelationshipComponent>(deserializedEntity);
 					relationComp.Parent = UUIDToEntityMap[relation["Parent"].as<UUID>()];
 					relationComp.PrevSibling = UUIDToEntityMap[relation["PrevSibling"].as<UUID>()];
 					relationComp.NextSibling = UUIDToEntityMap[relation["NextSibling"].as<UUID>()];
@@ -178,8 +176,7 @@ namespace Flameberry {
 				}
 
 				if (auto light = entity["DirectionalLightComponent"]) {
-					auto& lightComp =
-						destScene->m_Registry->EmplaceComponent<DirectionalLightComponent>(deserializedEntity);
+					auto& lightComp = destScene->m_Registry->EmplaceComponent<DirectionalLightComponent>(deserializedEntity);
 					lightComp.Color = light["Color"].as<glm::vec3>();
 					lightComp.Intensity = light["Intensity"].as<float>();
 					lightComp.LightSize = light["LightSize"].as<float>();
@@ -219,8 +216,7 @@ namespace Flameberry {
 				}
 
 				if (auto capsuleCollider = entity["CapsuleColliderComponent"]) {
-					auto& ccComp =
-						destScene->m_Registry->EmplaceComponent<CapsuleColliderComponent>(deserializedEntity);
+					auto& ccComp = destScene->m_Registry->EmplaceComponent<CapsuleColliderComponent>(deserializedEntity);
 					ccComp.Axis = AxisTypeStringToEnum(capsuleCollider["Axis"].as<std::string>());
 					ccComp.Radius = capsuleCollider["Radius"].as<float>();
 					ccComp.Height = capsuleCollider["Height"].as<float>();

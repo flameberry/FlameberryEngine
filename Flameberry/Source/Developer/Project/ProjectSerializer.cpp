@@ -12,8 +12,7 @@ namespace Flameberry {
 		return nullptr;
 	}
 
-	bool ProjectSerializer::DeserializeIntoExistingProject(
-		const std::filesystem::path& filePath, const Ref<Project>& dest) {
+	bool ProjectSerializer::DeserializeIntoExistingProject(const std::filesystem::path& filePath, const Ref<Project>& dest) {
 		std::ifstream in(filePath);
 		std::stringstream ss;
 		ss << in.rdbuf();

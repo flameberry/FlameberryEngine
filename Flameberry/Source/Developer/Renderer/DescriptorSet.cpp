@@ -11,9 +11,8 @@
 #include "VulkanDebug.h"
 
 bool operator==(const VkDescriptorSetLayoutBinding& b1, const VkDescriptorSetLayoutBinding& b2) {
-	return b1.binding == b2.binding && b1.descriptorCount == b2.descriptorCount
-		&& b1.descriptorType == b2.descriptorType && b1.stageFlags == b2.stageFlags && b1.pImmutableSamplers == nullptr
-		&& b2.pImmutableSamplers == nullptr;
+	return b1.binding == b2.binding && b1.descriptorCount == b2.descriptorCount && b1.descriptorType == b2.descriptorType
+		&& b1.stageFlags == b2.stageFlags && b1.pImmutableSamplers == nullptr && b2.pImmutableSamplers == nullptr;
 }
 
 namespace Flameberry {
@@ -46,8 +45,7 @@ namespace std {
 
 namespace Flameberry {
 
-	DescriptorPool::DescriptorPool(
-		VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets) {
+	DescriptorPool::DescriptorPool(VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets) {
 		VkDescriptorPoolCreateInfo vk_descriptor_pool_create_info{};
 		vk_descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		vk_descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
@@ -63,8 +61,7 @@ namespace Flameberry {
 		vkDestroyDescriptorPool(device, m_VkDescriptorPool, nullptr);
 	}
 
-	bool DescriptorPool::AllocateDescriptorSet(
-		VkDescriptorSet* descriptorSet, VkDescriptorSetLayout descriptorSetLayout) {
+	bool DescriptorPool::AllocateDescriptorSet(VkDescriptorSet* descriptorSet, VkDescriptorSetLayout descriptorSetLayout) {
 		VkDescriptorSetAllocateInfo vk_descriptor_set_allocate_info{};
 		vk_descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		vk_descriptor_set_allocate_info.descriptorPool = m_VkDescriptorPool;
@@ -95,14 +92,13 @@ namespace Flameberry {
 		vkDestroyDescriptorSetLayout(device, m_Layout, nullptr);
 	}
 
-	Ref<DescriptorSetLayout> DescriptorSetLayout::CreateOrGetCached(
-		const DescriptorSetLayoutSpecification& specification) {
+	Ref<DescriptorSetLayout> DescriptorSetLayout::CreateOrGetCached(const DescriptorSetLayoutSpecification& specification) {
 #ifdef FBY_DEBUG
 		// Debug only
 		static int calls = 0;
 		calls++;
-		FBY_TRACE("DescriptorSetLayout Cache Stats: Layouts: {} vs Total calls : {}",
-			s_CachedDescriptorSetLayouts.size(), calls);
+		FBY_TRACE(
+			"DescriptorSetLayout Cache Stats: Layouts: {} vs Total calls : {}", s_CachedDescriptorSetLayouts.size(), calls);
 		FBY_ASSERT((float)g_DescriptorSetLayoutSpecificationComparisons < calls,
 			"Too many DescriptorSetLayoutSpecification comparisons, you might want to look into this");
 #endif
@@ -145,8 +141,7 @@ namespace Flameberry {
 		vk_write_descriptor_set.dstSet = m_DescriptorSet;
 		vk_write_descriptor_set.dstBinding = binding;
 		vk_write_descriptor_set.dstArrayElement = 0;
-		vk_write_descriptor_set.descriptorType =
-			m_Specification.Layout->GetSpecification().Bindings[binding].descriptorType;
+		vk_write_descriptor_set.descriptorType = m_Specification.Layout->GetSpecification().Bindings[binding].descriptorType;
 		vk_write_descriptor_set.descriptorCount = 1;
 		vk_write_descriptor_set.pBufferInfo = &bufferInfo;
 		vk_write_descriptor_set.pImageInfo = nullptr;
@@ -161,8 +156,7 @@ namespace Flameberry {
 		vk_write_descriptor_set.dstSet = m_DescriptorSet;
 		vk_write_descriptor_set.dstBinding = binding;
 		vk_write_descriptor_set.dstArrayElement = dstArrayElement;
-		vk_write_descriptor_set.descriptorType =
-			m_Specification.Layout->GetSpecification().Bindings[binding].descriptorType;
+		vk_write_descriptor_set.descriptorType = m_Specification.Layout->GetSpecification().Bindings[binding].descriptorType;
 		vk_write_descriptor_set.descriptorCount = 1;
 		vk_write_descriptor_set.pBufferInfo = nullptr;
 		vk_write_descriptor_set.pImageInfo = &imageInfo;
@@ -177,8 +171,7 @@ namespace Flameberry {
 		vk_write_descriptor_set.dstSet = m_DescriptorSet;
 		vk_write_descriptor_set.dstBinding = binding;
 		vk_write_descriptor_set.dstArrayElement = 0;
-		vk_write_descriptor_set.descriptorType =
-			m_Specification.Layout->GetSpecification().Bindings[binding].descriptorType;
+		vk_write_descriptor_set.descriptorType = m_Specification.Layout->GetSpecification().Bindings[binding].descriptorType;
 		vk_write_descriptor_set.descriptorCount = imageInfoCount;
 		vk_write_descriptor_set.pBufferInfo = nullptr;
 		vk_write_descriptor_set.pImageInfo = imageInfos;

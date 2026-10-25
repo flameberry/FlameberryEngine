@@ -32,8 +32,8 @@ namespace Flameberry {
 			, Height(height)
 			, Title(title)
 			, NativeTitlebar(false)
-			, TitlebarGradientColor(Theme::TitlebarGreenColor.x, Theme::TitlebarGreenColor.y,
-				  Theme::TitlebarGreenColor.z, Theme::TitlebarGreenColor.w) {}
+			, TitlebarGradientColor(Theme::TitlebarGreenColor.x, Theme::TitlebarGreenColor.y, Theme::TitlebarGreenColor.z,
+				  Theme::TitlebarGreenColor.w) {}
 	};
 
 	class Window {

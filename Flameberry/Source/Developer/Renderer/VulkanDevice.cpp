@@ -12,9 +12,9 @@ namespace Flameberry {
 		m_QueueFamilyIndices =
 			RenderCommand::GetQueueFamilyIndices(m_VulkanPhysicalDevice, pVulkanWindow->GetWindowSurface());
 
-		std::vector<VkDeviceQueueCreateInfo> vulkanDeviceQueueCreateInfos = CreateDeviceQueueInfos(
-			{ m_QueueFamilyIndices.GraphicsQueueFamilyIndex, m_QueueFamilyIndices.ComputeQueueFamilyIndex,
-				m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex });
+		std::vector<VkDeviceQueueCreateInfo> vulkanDeviceQueueCreateInfos =
+			CreateDeviceQueueInfos({ m_QueueFamilyIndices.GraphicsQueueFamilyIndex,
+				m_QueueFamilyIndices.ComputeQueueFamilyIndex, m_QueueFamilyIndices.PresentationSupportedQueueFamilyIndex });
 
 		VkPhysicalDeviceFeatures2 deviceFeatures2{};
 		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -71,8 +71,8 @@ namespace Flameberry {
 		// Creating Graphics and Compute Queue Command Pools
 		m_GraphicsQueueCommandPool = CreateCommandPool(
 			m_QueueFamilyIndices.GraphicsQueueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-		m_ComputeQueueCommandPool = CreateCommandPool(
-			m_QueueFamilyIndices.ComputeQueueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+		m_ComputeQueueCommandPool =
+			CreateCommandPool(m_QueueFamilyIndices.ComputeQueueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 	}
 
 	VkCommandPool VulkanDevice::CreateCommandPool(uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags) const {
@@ -95,8 +95,8 @@ namespace Flameberry {
 
 		// Lazily create the pool the first time this thread needs it
 		if (commandPool == VK_NULL_HANDLE)
-			commandPool = CreateCommandPool(isCompute ? m_QueueFamilyIndices.ComputeQueueFamilyIndex
-													  : m_QueueFamilyIndices.GraphicsQueueFamilyIndex,
+			commandPool = CreateCommandPool(
+				isCompute ? m_QueueFamilyIndices.ComputeQueueFamilyIndex : m_QueueFamilyIndices.GraphicsQueueFamilyIndex,
 				VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 		return commandPool;
 	}

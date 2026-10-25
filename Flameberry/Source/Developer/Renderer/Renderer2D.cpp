@@ -86,8 +86,7 @@ namespace Flameberry {
 			stagingBufferSpec.InstanceCount = 1;
 			stagingBufferSpec.InstanceSize = indexBufferSpec.InstanceSize;
 			stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			stagingBufferSpec.MemoryProperties =
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 			Buffer stagingBuffer(stagingBufferSpec);
 
@@ -95,8 +94,8 @@ namespace Flameberry {
 			stagingBuffer.WriteToBuffer(indices, indexBufferSpec.InstanceSize, 0);
 			stagingBuffer.UnmapMemory();
 
-			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(),
-				s_Renderer2DData.QuadIndexBuffer->GetVulkanBuffer(), indexBufferSpec.InstanceSize);
+			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), s_Renderer2DData.QuadIndexBuffer->GetVulkanBuffer(),
+				indexBufferSpec.InstanceSize);
 
 			delete[] indices;
 
@@ -156,8 +155,7 @@ namespace Flameberry {
 			stagingBufferSpec.InstanceCount = 1;
 			stagingBufferSpec.InstanceSize = indexBufferSpec.InstanceSize;
 			stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			stagingBufferSpec.MemoryProperties =
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 			Buffer stagingBuffer(stagingBufferSpec);
 
@@ -165,8 +163,8 @@ namespace Flameberry {
 			stagingBuffer.WriteToBuffer(indices, indexBufferSpec.InstanceSize, 0);
 			stagingBuffer.UnmapMemory();
 
-			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(),
-				s_Renderer2DData.TextIndexBuffer->GetVulkanBuffer(), indexBufferSpec.InstanceSize);
+			RenderCommand::CopyBuffer(stagingBuffer.GetVulkanBuffer(), s_Renderer2DData.TextIndexBuffer->GetVulkanBuffer(),
+				indexBufferSpec.InstanceSize);
 
 			delete[] indices;
 
@@ -195,8 +193,8 @@ namespace Flameberry {
 		s_Renderer2DData.LineVertices.push_back(LineVertex{ end, color });
 	}
 
-	void Renderer2D::AddSemiCircle(const glm::vec3& position, const float radius, const glm::quat& rotation,
-		const glm::vec3& color, int segments) {
+	void Renderer2D::AddSemiCircle(
+		const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments) {
 		GLM_CONSTEXPR float PI = glm::pi<float>();
 		const float angle = PI / segments;
 
@@ -208,8 +206,8 @@ namespace Flameberry {
 		}
 	}
 
-	void Renderer2D::AddCircle(const glm::vec3& position, const float radius, const glm::quat& rotation,
-		const glm::vec3& color, int segments) {
+	void Renderer2D::AddCircle(
+		const glm::vec3& position, const float radius, const glm::quat& rotation, const glm::vec3& color, int segments) {
 		GLM_CONSTEXPR float PI = glm::pi<float>();
 		const float angle = 2 * PI / segments;
 

@@ -5,8 +5,7 @@
 
 namespace Flameberry {
 
-	ThumbnailCache::ThumbnailCache(
-		const std::filesystem::path& thumbnailCacheDirectory, const ThumbnailCacheConfig& config)
+	ThumbnailCache::ThumbnailCache(const std::filesystem::path& thumbnailCacheDirectory, const ThumbnailCacheConfig& config)
 		: m_ThumbnailCacheDirectory(thumbnailCacheDirectory), m_Config(config) {}
 
 	Ref<Texture2D> ThumbnailCache::GetOrCreateThumbnail(const std::filesystem::path& assetPath) {

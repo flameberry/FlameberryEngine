@@ -16,13 +16,12 @@ namespace Flameberry {
 		MeshVertex(const glm::vec3& position, const glm::vec3& normal, const glm::vec2& textureUV)
 			: Position(position), Normal(normal), TextureUV(textureUV), Tangent(0.0f), BiTangent(0.0f) {}
 
-		MeshVertex(const glm::vec3& position, const glm::vec3& normal, const glm::vec2& textureUV,
-			const glm::vec3& tangent, const glm::vec3& bitangent)
+		MeshVertex(const glm::vec3& position, const glm::vec3& normal, const glm::vec2& textureUV, const glm::vec3& tangent,
+			const glm::vec3& bitangent)
 			: Position(position), Normal(normal), TextureUV(textureUV), Tangent(tangent), BiTangent(bitangent) {}
 
 		bool operator==(const MeshVertex& vertex) const {
-			return this->Position == vertex.Position && this->Normal == vertex.Normal
-				&& this->TextureUV == vertex.TextureUV;
+			return this->Position == vertex.Position && this->Normal == vertex.Normal && this->TextureUV == vertex.TextureUV;
 		}
 
 		bool operator!=(const MeshVertex& vertex) const { return !(*this == vertex); }

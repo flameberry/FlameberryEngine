@@ -13,8 +13,7 @@ namespace Flameberry {
 
 	Ref<Project> Project::s_ActiveProject;
 
-	Ref<Project> Project::CreateProjectOnDisk(
-		const std::filesystem::path& targetFolder, const std::string& projectName) {
+	Ref<Project> Project::CreateProjectOnDisk(const std::filesystem::path& targetFolder, const std::string& projectName) {
 		ProjectConfig projectConfig;
 		projectConfig.Name = projectName;
 		projectConfig.AssetDirectory = "Content";

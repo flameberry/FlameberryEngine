@@ -344,8 +344,7 @@ namespace Flameberry {
 
 	void SceneRenderer::PrepareBloomImageAndDescriptors() {
 		// Look up physical device capabilities to bind descriptor sets
-		const uint32_t maxDescriptorSetsAllowed =
-			VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
+		const uint32_t maxDescriptorSetsAllowed = VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
 
 		// Calculate the number of mip levels based upon the image dimensions
 		const uint32_t mipLevels = static_cast<uint32_t>(floor(log2(glm::min(m_ViewportSize.x, m_ViewportSize.y))));
@@ -387,8 +386,8 @@ namespace Flameberry {
 			viewSpecification.BaseMipLevel = 0;
 			viewSpecification.LevelCount = mipLevels;
 
-			m_BloomImageCompleteViews[idx] = Utils::CreateImageViewUsingSpecification(
-				bloomImage->GetVulkanImage(), imageSpec.Format, viewSpecification);
+			m_BloomImageCompleteViews[idx] =
+				Utils::CreateImageViewUsingSpecification(bloomImage->GetVulkanImage(), imageSpec.Format, viewSpecification);
 		});
 
 		// Creation of Bloom Descriptor Sets ------------------------------------------------------
@@ -406,8 +405,7 @@ namespace Flameberry {
 				bloomReadOnlyImageInfo.sampler = m_BloomSampler;
 				bloomReadOnlyImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-				const uint32_t numImageViews =
-					glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed);
+				const uint32_t numImageViews = glm::min(maxDescriptorSetsAllowed, mipLevels - i * maxDescriptorSetsAllowed);
 
 				std::vector<VkDescriptorImageInfo> bloomImageInfos(numImageViews);
 
@@ -428,8 +426,7 @@ namespace Flameberry {
 
 	void SceneRenderer::PrepareBloomPass() {
 		// Look up physical device capabilities to bind descriptor sets
-		const uint32_t maxDescriptorSetsAllowed =
-			VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
+		const uint32_t maxDescriptorSetsAllowed = VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
 
 		// Creation of Bloom Pipeline ------------------------------------------------------
 		ComputePipelineSpecification pipelineSpec;
@@ -491,8 +488,7 @@ namespace Flameberry {
 
 	void SceneRenderer::InvalidateBloomPass(const uint32_t resourceIndex, const glm::vec2& newBloomImgSize) {
 		// Look up physical device capabilities to bind descriptor sets
-		const uint32_t maxDescriptorSetsAllowed =
-			VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
+		const uint32_t maxDescriptorSetsAllowed = VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
 
 		// Calculate the number of mip levels based upon the image dimensions
 		// Each mip will represent a roughness level that we will calculate the prefiltered map for
@@ -816,17 +812,16 @@ namespace Flameberry {
 	}
 
 	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera,
-		const glm::vec3& cameraPosition, FEntity selectedEntity, bool renderGrid, bool renderDebugIcons,
-		bool renderOutline, bool renderPhysicsCollider) {
+		const glm::vec3& cameraPosition, FEntity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline,
+		bool renderPhysicsCollider) {
 		RenderScene(viewportSize, scene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), cameraPosition,
-			camera.GetSettings().Near, camera.GetSettings().Far, selectedEntity, renderGrid, renderDebugIcons,
-			renderOutline, renderPhysicsCollider);
+			camera.GetSettings().Near, camera.GetSettings().Far, selectedEntity, renderGrid, renderDebugIcons, renderOutline,
+			renderPhysicsCollider);
 	}
 
 	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix,
 		const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar,
-		FEntity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline,
-		bool renderPhysicsCollider) {
+		FEntity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider) {
 		uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
 		std::vector<FEntity> pointLightEntityHandles, spotLightEntityHandles;
 
@@ -944,16 +939,16 @@ namespace Flameberry {
 
 		if (shouldRenderShadows) {
 			m_ShadowMapRenderPass->Begin();
-			Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-								 shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(),
-								 pipeline = m_ShadowMapPipeline->GetVulkanPipeline()](
-								 VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-				// Binding the shadow map pipeline here instead of using the `Pipeline::Bind()` function to reduce
-				// `Renderer::Submit()` calls
-				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1,
-					&shadowMapDescSet, 0, nullptr);
-			});
+			Renderer::Submit(
+				[shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+					shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(),
+					pipeline = m_ShadowMapPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+					// Binding the shadow map pipeline here instead of using the `Pipeline::Bind()` function to reduce
+					// `Renderer::Submit()` calls
+					vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1,
+						&shadowMapDescSet, 0, nullptr);
+				});
 
 			for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>()) {
 				const auto& [transform, mesh] =
@@ -962,18 +957,16 @@ namespace Flameberry {
 				if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle)) {
 					ModelMatrixPushConstantData pushContantData;
 					pushContantData.ModelMatrix = transform.GlobalTransform;
-					Renderer::Submit(
-						[staticMesh, shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(),
-							pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-							vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
-								sizeof(ModelMatrixPushConstantData), &pushContantData);
-							Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer,
-								staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
-								staticMesh->GetIndexBuffer()->GetVulkanBuffer());
-							const uint32_t size = staticMesh->GetSubMeshes().back().IndexOffset
-								+ staticMesh->GetSubMeshes().back().IndexCount;
-							vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
-						});
+					Renderer::Submit([staticMesh, shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(),
+										 pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+						vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+							sizeof(ModelMatrixPushConstantData), &pushContantData);
+						Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
+							staticMesh->GetIndexBuffer()->GetVulkanBuffer());
+						const uint32_t size =
+							staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
+						vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
+					});
 				}
 			}
 			m_ShadowMapRenderPass->End();
@@ -1003,15 +996,14 @@ namespace Flameberry {
 				pco.ViewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
 				pco.Exposure = m_RendererSettings.Exposure;
 
-				Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco,
-									 textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+				Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco, textureDescSet](
+									 VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 					Renderer::RT_BindPipeline(cmdBuffer, pipeline);
 					VkDescriptorSet descSets[] = { textureDescSet };
 					vkCmdBindDescriptorSets(
 						cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
-					vkCmdPushConstants(cmdBuffer, pipelineLayout,
-						VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SkymapPushConstantObject),
-						&pco);
+					vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+						0, sizeof(SkymapPushConstantObject), &pco);
 					vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
 				});
 			}
@@ -1019,18 +1011,18 @@ namespace Flameberry {
 
 		///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
 
-		Renderer::Submit([=, this, pipeline = m_MeshPipeline->GetVulkanPipeline(),
-							 pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](
-							 VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-			VkDescriptorSet descriptorSets[] = { m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-				m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-				m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet(),
-				shouldRenderSkymap ? textureDescSet : Skymap::GetEmptyDescriptorSet()->GetVulkanDescriptorSet() };
+		Renderer::Submit(
+			[=, this, pipeline = m_MeshPipeline->GetVulkanPipeline(),
+				pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+				VkDescriptorSet descriptorSets[] = { m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+					m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+					m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet(),
+					shouldRenderSkymap ? textureDescSet : Skymap::GetEmptyDescriptorSet()->GetVulkanDescriptorSet() };
 
-			Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
-				sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
-		});
+				Renderer::RT_BindPipeline(cmdBuffer, pipeline);
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
+					sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+			});
 
 #if 0
         // Without sorting
@@ -1052,12 +1044,10 @@ namespace Flameberry {
 		// TODO: Move this someplace better
 		Frustum cameraFrustum;
 
-		if (m_RendererSettings.FrustumCulling)
-			cameraFrustum.ExtractFrustumPlanes(cameraBufferData.ViewProjectionMatrix);
+		if (m_RendererSettings.FrustumCulling) cameraFrustum.ExtractFrustumPlanes(cameraBufferData.ViewProjectionMatrix);
 
 		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>()) {
-			const auto& [transform, mesh] =
-				scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
+			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
 
 			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle)) {
 				uint32_t submeshIndex = 0;
@@ -1086,13 +1076,13 @@ namespace Flameberry {
 					else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
 						materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
 
-					auto& renderObjects = selectedEntity == entity ? m_RendererData->SelectedRenderObjects
-																   : m_RendererData->RenderObjects;
+					auto& renderObjects =
+						selectedEntity == entity ? m_RendererData->SelectedRenderObjects : m_RendererData->RenderObjects;
 
 					// Add it to final list of render objects
 					renderObjects.emplace_back(staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
-						staticMesh->GetIndexBuffer()->GetVulkanBuffer(), submesh.IndexOffset, submesh.IndexCount,
-						&transform, materialAsset);
+						staticMesh->GetIndexBuffer()->GetVulkanBuffer(), submesh.IndexOffset, submesh.IndexCount, &transform,
+						materialAsset);
 
 					submeshIndex++;
 				}
@@ -1175,8 +1165,7 @@ namespace Flameberry {
 
 		// Render all the text in the scene
 		for (const auto entity : scene->GetRegistry()->Group<TransformComponent, TextComponent>()) {
-			const auto& [transform, text] =
-				scene->GetRegistry()->GetComponent<TransformComponent, TextComponent>(entity);
+			const auto& [transform, text] = scene->GetRegistry()->GetComponent<TransformComponent, TextComponent>(entity);
 
 			Ref<Font> font = AssetManager::GetAsset<Font>(text.Font);
 
@@ -1205,8 +1194,7 @@ namespace Flameberry {
 			Renderer::Submit(
 				[material = m_GridMaterial,
 					globalCameraBufferDescSet = m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-					pipelineLayout,
-					pipeline = m_GridPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t) {
+					pipelineLayout, pipeline = m_GridPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t) {
 					VkDescriptorSet descriptorSets[] = { globalCameraBufferDescSet };
 					Renderer::RT_BindPipeline(cmdBuffer, pipeline);
 					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
@@ -1268,8 +1256,8 @@ namespace Flameberry {
 					bindTransform = boundTransform != obj.Transform,
 					pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(),
 					material = obj.MaterialAsset->GetUnderlyingMaterial(), vertexBuffer = obj.VertexBuffer,
-					indexBuffer = obj.IndexBuffer, transform = obj.Transform->GlobalTransform,
-					indexCount = obj.IndexCount, indexOffset = obj.IndexOffset](VkCommandBuffer cmdBuffer, uint32_t) {
+					indexBuffer = obj.IndexBuffer, transform = obj.Transform->GlobalTransform, indexCount = obj.IndexCount,
+					indexOffset = obj.IndexOffset](VkCommandBuffer cmdBuffer, uint32_t) {
 					if (bindMaterial) Renderer::RT_BindMaterial(cmdBuffer, pipelineLayout, material);
 
 					if (bindVertexAndIndexBuffers)
@@ -1291,14 +1279,12 @@ namespace Flameberry {
 
 	void SceneRenderer::BloomPass() {
 		// Look up physical device capabilities to bind descriptor sets
-		const uint32_t maxDescriptorSetsAllowed =
-			VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
+		const uint32_t maxDescriptorSetsAllowed = VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
 
 		Renderer::Submit([this, pipelineLayout = m_BloomPipeline->GetVulkanPipelineLayout(),
 							 pipeline = m_BloomPipeline->GetVulkanPipeline(), viewportSize = m_ViewportSize,
 							 maxDescriptorSetsAllowed](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-			const VkDescriptorSet targetDescSet =
-				m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet();
+			const VkDescriptorSet targetDescSet = m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet();
 
 			std::vector<VkDescriptorSet> bloomDescSets(m_BloomDescriptorSetResources.size());
 			for (int i = 0; i < bloomDescSets.size(); i++)
@@ -1313,8 +1299,7 @@ namespace Flameberry {
 			{
 				VkDescriptorSet descSets[] = { bloomDescSets[0], targetDescSet };
 
-				vkCmdBindDescriptorSets(
-					cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
 
 				BloomSettingsGPURepresentation bloomSettings;
 				bloomSettings.Threshold = m_RendererSettings.BloomThreshold;
@@ -1339,8 +1324,7 @@ namespace Flameberry {
 			for (uint32_t bIndex = 0, bStart = 0; bStart < mipLevels; bStart += maxDescriptorSetsAllowed, bIndex++) {
 				VkDescriptorSet descSets[] = { bloomDescSets[bIndex], targetDescSet };
 
-				vkCmdBindDescriptorSets(
-					cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
 
 				for (uint32_t offset = 0; offset < glm::min(maxDescriptorSetsAllowed, mipLevels - bStart); offset++) {
 					// Note: `offset` is the index of the image2D element in the desciptor set's image array
@@ -1375,8 +1359,7 @@ namespace Flameberry {
 				bStart -= maxDescriptorSetsAllowed, bIndex--) {
 				VkDescriptorSet descSets[] = { bloomDescSets[bIndex], targetDescSet };
 
-				vkCmdBindDescriptorSets(
-					cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
+				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
 
 				for (int offset = glm::min(maxDescriptorSetsAllowed, mipLevels - bStart) - 1; offset >= 0; offset--) {
 					const uint32_t mipIndex = bStart + offset; // Target of current pass
@@ -1419,8 +1402,8 @@ namespace Flameberry {
 			m_GeometryPass->GetSpecification()
 				.TargetFramebuffers[imageIndex]
 				->GetDepthAndOrStencilAttachment()
-				->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-					VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+				->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL,
+					VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 
 			VkDescriptorSet descSets[] = { jumpFloodDescSets[imageIndex]->GetVulkanDescriptorSet(),
 				m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet() };
@@ -1475,8 +1458,7 @@ namespace Flameberry {
 			compositionSettings.Exposure = m_RendererSettings.Exposure;
 
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-			vkCmdBindDescriptorSets(
-				cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSet, 0, nullptr);
+			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSet, 0, nullptr);
 			vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
 				sizeof(CompositionSettingsGPURepresentation), &compositionSettings);
 			vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
@@ -1552,8 +1534,8 @@ namespace Flameberry {
 			// (float)SceneRendererSettings::CascadeSize; const float fInvWorldUnitsPerTexel = 1.0f /
 			// fWorldUnitsPerTexel;
 
-			const glm::vec3 vWorldUnitsPerTexel(width / (float)SceneRendererSettings::CascadeSize,
-				height / (float)SceneRendererSettings::CascadeSize, 1.0f);
+			const glm::vec3 vWorldUnitsPerTexel(
+				width / (float)SceneRendererSettings::CascadeSize, height / (float)SceneRendererSettings::CascadeSize, 1.0f);
 			const glm::vec3 vInvWorldUnitsPerTexel = 1.0f / vWorldUnitsPerTexel;
 
 			glm::vec3 maxExtents = (glm::floor(glm::vec3(radius)) * vInvWorldUnitsPerTexel) * vWorldUnitsPerTexel;
@@ -1589,8 +1571,7 @@ namespace Flameberry {
 			});
 
 		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>()) {
-			const auto& [transform, mesh] =
-				scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
+			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
 
 			if (auto staticMesh = AssetManager::GetAssetAsync<StaticMesh>(mesh.MeshHandle)) {
 				MousePickingPushConstantData pushContantData;
@@ -1600,8 +1581,8 @@ namespace Flameberry {
 				Renderer::Submit([staticMesh, mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(),
 									 pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 					vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout,
-						VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-						sizeof(MousePickingPushConstantData), &pushContantData);
+						VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData),
+						&pushContantData);
 					Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
 						staticMesh->GetIndexBuffer()->GetVulkanBuffer());
 
@@ -1614,20 +1595,19 @@ namespace Flameberry {
 
 		// 2D Quad Entities
 		uint32_t indexCount = 6 * Renderer2D::GetRendererData().QuadVertexBufferOffset / (4 * sizeof(QuadVertex));
-		Renderer::Submit(
-			[descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
-				mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
-				vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
-				vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
-				indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
-				indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-				Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline2D);
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePicking2DPipelineLayout, 0, 1,
-					&descSet, 0, nullptr);
+		Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
+							 mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
+							 vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
+							 vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
+							 indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
+							 indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline2D);
+			vkCmdBindDescriptorSets(
+				cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePicking2DPipelineLayout, 0, 1, &descSet, 0, nullptr);
 
-				Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
-				vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
-			});
+			Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
+			vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
+		});
 
 		// Text Entities
 		indexCount = 6 * Renderer2D::GetRendererData().TextVertexBufferOffset / (4 * sizeof(TextVertex));
@@ -1661,8 +1641,7 @@ namespace Flameberry {
 	}
 
 	// TODO: Move this to EditorLayer.cpp ASAP
-	void SceneRenderer::SubmitCameraViewGeometry(
-		const Ref<Scene>& scene, FEntity entity, TransformComponent& transform) {
+	void SceneRenderer::SubmitCameraViewGeometry(const Ref<Scene>& scene, FEntity entity, TransformComponent& transform) {
 		GLM_CONSTEXPR glm::vec3 color(0.961f, 0.796f, 0.486f); // TODO: Replace with Theme::AccentColor
 		if (auto* cameraComp = scene->GetRegistry()->TryGetComponent<CameraComponent>(entity)) {
 			const glm::mat3 rotationMatrix = glm::toMat3(glm::quat(transform.Rotation));
@@ -1682,8 +1661,7 @@ namespace Flameberry {
 						rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation, color);
 					Renderer2D::AddLine(rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation,
 						rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation, color);
-					Renderer2D::AddLine(
-						rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation,
+					Renderer2D::AddLine(rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation,
 						rotationMatrix * glm::vec3(left, bottom, settings.Near) + transform.Translation, color);
 
 					Renderer2D::AddLine(rotationMatrix * glm::vec3(left, bottom, settings.Far) + transform.Translation,
@@ -1701,8 +1679,7 @@ namespace Flameberry {
 						rotationMatrix * glm::vec3(left, top, settings.Far) + transform.Translation, color);
 					Renderer2D::AddLine(rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation,
 						rotationMatrix * glm::vec3(right, top, settings.Far) + transform.Translation, color);
-					Renderer2D::AddLine(
-						rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation,
+					Renderer2D::AddLine(rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation,
 						rotationMatrix * glm::vec3(right, bottom, settings.Far) + transform.Translation, color);
 					break;
 				}
@@ -1846,10 +1823,10 @@ namespace Flameberry {
 		Renderer2D::AddLine(transform.Translation + rotation * glm::vec3(0, halfHeight, -radius),
 			transform.Translation + rotation * glm::vec3(0, -halfHeight, -radius), color);
 
-		Renderer2D::AddCircle(transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius,
-			glm::quat(transform.Rotation), color);
-		Renderer2D::AddCircle(transform.Translation + rotation * glm::vec3(0, -halfHeight, 0), radius,
-			glm::quat(transform.Rotation), color);
+		Renderer2D::AddCircle(
+			transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius, glm::quat(transform.Rotation), color);
+		Renderer2D::AddCircle(
+			transform.Translation + rotation * glm::vec3(0, -halfHeight, 0), radius, glm::quat(transform.Rotation), color);
 
 		// Hemispheres
 		Renderer2D::AddSemiCircle(transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius,

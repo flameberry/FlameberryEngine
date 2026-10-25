@@ -159,12 +159,11 @@ namespace Flameberry {
 			glm::vec3 bitangent = mesh->HasTangentsAndBitangents()
 				? glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z)
 				: glm::vec3(0.0f);
-			refVertices.emplace_back(
-				glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z), // Position
-				glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z),	 // Normals
-				textureCoords,																 // TextureCoords
-				tangent,																	 // Tangent
-				bitangent																	 // BiTangent
+			refVertices.emplace_back(glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z), // Position
+				glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z),						  // Normals
+				textureCoords, // TextureCoords
+				tangent,	   // Tangent
+				bitangent	   // BiTangent
 			);
 		}
 
@@ -252,8 +251,7 @@ namespace Flameberry {
 			stagingBufferSpec.InstanceCount = 1;
 			stagingBufferSpec.InstanceSize = bufferSize;
 			stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			stagingBufferSpec.MemoryProperties =
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 			Buffer stagingBuffer(stagingBufferSpec);
 
@@ -280,8 +278,7 @@ namespace Flameberry {
 			stagingBufferSpec.InstanceCount = 1;
 			stagingBufferSpec.InstanceSize = bufferSize;
 			stagingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			stagingBufferSpec.MemoryProperties =
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			stagingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 			Buffer stagingBuffer(stagingBufferSpec);
 

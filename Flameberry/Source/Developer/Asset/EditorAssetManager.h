@@ -17,9 +17,7 @@ namespace Flameberry {
 		bool IsAssetHandleValid(AssetHandle handle) const override;
 		bool IsAssetLoaded(AssetHandle handle) const override;
 
-		bool IsMemoryAsset(AssetHandle handle) const {
-			return m_MemoryOnlyAssets.find(handle) != m_MemoryOnlyAssets.end();
-		}
+		bool IsMemoryAsset(AssetHandle handle) const { return m_MemoryOnlyAssets.find(handle) != m_MemoryOnlyAssets.end(); }
 
 		AssetHandle ImportAsset(const std::filesystem::path& filePath);
 		void AddMemoryOnlyAsset(const Ref<Asset>& asset);

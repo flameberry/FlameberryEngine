@@ -28,8 +28,7 @@ namespace Flameberry {
 		static void SetActive(const Ref<Project>& project) { s_ActiveProject = project; }
 
 		// Standard procedure for creating a project on disk
-		static Ref<Project> CreateProjectOnDisk(
-			const std::filesystem::path& targetFolder, const std::string& projectName);
+		static Ref<Project> CreateProjectOnDisk(const std::filesystem::path& targetFolder, const std::string& projectName);
 
 		// Instance specific methods
 		Project(const std::filesystem::path& projectDirectory, const ProjectConfig& config);

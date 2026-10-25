@@ -68,8 +68,7 @@ namespace Flameberry {
 						if (!m_FilterError && log.LogLevel == EditorLogLevel::Error) continue;
 
 						if (m_SearchInputBuffer[0] != '\0') {
-							const int index =
-								Algorithm::KmpSearch(log.Message.c_str(), m_SearchInputBuffer.c_str(), true);
+							const int index = Algorithm::KmpSearch(log.Message.c_str(), m_SearchInputBuffer.c_str(), true);
 							if (index == -1) continue;
 						}
 
@@ -98,8 +97,8 @@ namespace Flameberry {
 
 		ImGui::SameLine();
 
-		m_IsSearchBoxFocused = UI::InputBox("##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer,
-			ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
+		m_IsSearchBoxFocused = UI::InputBox(
+			"##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
 
 		ImGui::SameLine();
 

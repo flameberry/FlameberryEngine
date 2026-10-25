@@ -64,8 +64,8 @@ namespace Flameberry {
 
 			resizedPixels = new float[channels * newWidth * newHeight];
 
-			stbir_resize_float_linear((const float*)pixels, width, height, 0, (float*)resizedPixels, newWidth,
-				newHeight, 0, stbir_pixel_layout::STBIR_RGBA);
+			stbir_resize_float_linear((const float*)pixels, width, height, 0, (float*)resizedPixels, newWidth, newHeight, 0,
+				stbir_pixel_layout::STBIR_RGBA);
 		} else {
 			pixels = stbi_load(pathCStr, &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R8G8B8A8_UNORM;

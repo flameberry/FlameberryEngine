@@ -54,8 +54,7 @@ namespace Flameberry {
 		static void RT_BindPipeline(VkCommandBuffer cmdBuffer, VkPipeline pipeline);
 		static void RT_BindMaterial(
 			VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material);
-		static void RT_BindVertexAndIndexBuffers(
-			VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer);
+		static void RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer);
 
 		/** @brief Obsolete: This function is used to render a single mesh by individually binding it's resources.
 		 * It shouldn't be preferred anymore, as redundant bindings are a problem using this.

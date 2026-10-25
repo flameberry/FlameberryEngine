@@ -19,8 +19,8 @@ namespace Flameberry {
 	}
 
 	bool RenderCommand::DoesFormatSupportStencilAttachment(VkFormat format) {
-		return format == VK_FORMAT_S8_UINT || format == VK_FORMAT_D16_UNORM_S8_UINT
-			|| format == VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
+		return format == VK_FORMAT_S8_UINT || format == VK_FORMAT_D16_UNORM_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT
+			|| format == VK_FORMAT_D32_SFLOAT_S8_UINT;
 	}
 
 	void RenderCommand::WritePixelFromImageToBuffer(
@@ -198,8 +198,7 @@ namespace Flameberry {
 			vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &properties);
 
 			if ((tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & featureFlags) == featureFlags)
-				|| (tiling == VK_IMAGE_TILING_OPTIMAL
-					&& (properties.optimalTilingFeatures & featureFlags) == featureFlags))
+				|| (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & featureFlags) == featureFlags))
 				return format;
 		}
 		FBY_ERROR("Couldn't find supported format!");

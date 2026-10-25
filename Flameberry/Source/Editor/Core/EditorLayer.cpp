@@ -41,8 +41,7 @@ namespace Flameberry {
 
 	void EditorLayer::OnCreate() {
 		m_CursorIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/cursor_icon.png");
-		m_TranslateIcon =
-			Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/translate_icon_2.png");
+		m_TranslateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/translate_icon_2.png");
 		m_RotateIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/rotate_icon.png");
 		m_ScaleIcon = Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/scale_icon.png");
 		m_PlayAndStopIcon =
@@ -148,10 +147,7 @@ namespace Flameberry {
 		// to make sure that we access the buffer in the next frame after the rendering is done in the last one
 		if (m_IsMousePickingBufferReady) {
 			RenderCommand::WritePixelFromImageToBuffer(m_MousePickingBuffer->GetVulkanBuffer(),
-				m_MousePickingRenderPass->GetSpecification()
-					.TargetFramebuffers[0]
-					->GetColorAttachment(0)
-					->GetVulkanImage(),
+				m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0]->GetColorAttachment(0)->GetVulkanImage(),
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, { m_MouseX, m_ViewportSize.y - m_MouseY - 1 });
 
 			m_MousePickingBuffer->MapMemory(sizeof(int32_t));
@@ -166,8 +162,8 @@ namespace Flameberry {
 		}
 
 		// bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
-		bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && m_DidViewportBegin
-			&& !m_IsAnyOverlayHovered && !m_IsCameraMoving && !m_IsGizmoActive;
+		bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && m_DidViewportBegin && !m_IsAnyOverlayHovered
+			&& !m_IsCameraMoving && !m_IsGizmoActive;
 
 		if (attemptedToSelect) {
 			auto [mx, my] = ImGui::GetMousePos();
@@ -185,13 +181,11 @@ namespace Flameberry {
 				auto framebuffer = m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0];
 				if (framebuffer->GetSpecification().Width != m_ViewportSize.x
 					|| framebuffer->GetSpecification().Height != m_ViewportSize.y)
-					framebuffer->OnResize(
-						m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
+					framebuffer->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
 
 				RenderCommand::SetViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
-				m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingRenderPass,
-					m_MousePickingPipeline, m_MousePicking2DPipeline,
-					glm::vec2(m_MouseX, (int)(m_ViewportSize.y - m_MouseY - 1)));
+				m_SceneRenderer->RenderSceneForMousePicking(m_ActiveScene, m_MousePickingRenderPass, m_MousePickingPipeline,
+					m_MousePicking2DPipeline, glm::vec2(m_MouseX, (int)(m_ViewportSize.y - m_MouseY - 1)));
 			}
 		}
 
@@ -276,8 +270,8 @@ namespace Flameberry {
 						const AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(filePath);
 						if (!handle) m_LogPanel->AddError("Failed to load asset: {}", filePath);
 
-						const FEntity entity = m_ActiveScene->CreateEntityWithTagTransformAndParent(
-							filePath.stem().string(), FEntity::Null);
+						const FEntity entity =
+							m_ActiveScene->CreateEntityWithTagTransformAndParent(filePath.stem().string(), FEntity::Null);
 
 						constexpr float distance = 5.0f;
 						auto& transform = m_ActiveScene->GetRegistry()->GetComponent<TransformComponent>(entity);
@@ -415,8 +409,7 @@ namespace Flameberry {
 					// i.e., the AABB of the mesh shall fit in the camera
 					if (m_ActiveScene->GetRegistry()->HasComponent<MeshComponent>(selectedEntity)) {
 						const auto& [transform, mesh] =
-							m_ActiveScene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(
-								selectedEntity);
+							m_ActiveScene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(selectedEntity);
 						if (Ref<StaticMesh> staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle))
 							m_ActiveCameraController.FrameEntity(transform, staticMesh->GetAABB());
 					}
@@ -571,9 +564,9 @@ namespace Flameberry {
 		ImGui::PushStyleColor(ImGuiCol_Button, 0x0);
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, Theme::WindowBg);
 
-		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize
-			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar
-			| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar;
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+			| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollWithMouse
+			| ImGuiWindowFlags_NoScrollbar;
 
 		ImGuiWindowClass windowClass;
 		windowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
@@ -654,9 +647,8 @@ namespace Flameberry {
 			auto& transformComp = m_ActiveScene->GetRegistry()->GetComponent<TransformComponent>(selectedEntity);
 			glm::mat4 globalTransform = transformComp.GlobalTransform;
 
-			float snapValue = Input::IsKeyPressed(KeyCode::LeftControl)
-				? 0.1f
-				: (Input::IsKeyPressed(KeyCode::LeftShift) ? 1.0f : 0.0f);
+			float snapValue =
+				Input::IsKeyPressed(KeyCode::LeftControl) ? 0.1f : (Input::IsKeyPressed(KeyCode::LeftShift) ? 1.0f : 0.0f);
 			const bool snap = (snapValue != 0.0f);
 
 			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE) snapValue = 45.0f;
@@ -676,8 +668,7 @@ namespace Flameberry {
 						m_ActiveScene->GetRegistry()->GetComponent<RelationshipComponent>(selectedEntity).Parent;
 					auto* parentTransform =
 						m_ActiveScene->GetRegistry()->TryGetComponent<TransformComponent>(parentEntity)) {
-					const glm::mat4 updatedLocalTransform =
-						glm::inverse(parentTransform->GlobalTransform) * globalTransform;
+					const glm::mat4 updatedLocalTransform = glm::inverse(parentTransform->GlobalTransform) * globalTransform;
 					Math::DecomposeTransform(updatedLocalTransform, translation, rotation, scale);
 				} else {
 					Math::DecomposeTransform(globalTransform, translation, rotation, scale);
@@ -706,8 +697,8 @@ namespace Flameberry {
 			}
 			ImGui::SameLine();
 			if (ImGui::ImageButton("TranslateModeButton",
-					reinterpret_cast<ImTextureID>(m_TranslateIcon->CreateOrGetImGuiDescriptorSet()),
-					s_OverlayButtonSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
+					reinterpret_cast<ImTextureID>(m_TranslateIcon->CreateOrGetImGuiDescriptorSet()), s_OverlayButtonSize,
+					ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
 					m_GizmoType == ImGuizmo::OPERATION::TRANSLATE ? Theme::AccentColor : ImVec4(1, 1, 1, 1))) {
 				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
 				ImGui::SetWindowFocus("Viewport");
@@ -952,12 +943,10 @@ namespace Flameberry {
 
 						FBY_UI_TABLE_ELEMENT(
 							"Frustum Culling", ImGui::Checkbox("##Frustum_Culling", &settings.FrustumCulling));
-						FBY_UI_TABLE_ELEMENT("Show Bounding Boxes",
-							ImGui::Checkbox("##Show_Bounding_Boxes", &settings.ShowBoundingBoxes));
 						FBY_UI_TABLE_ELEMENT(
-							"Enable Shadows", ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows));
-						FBY_UI_TABLE_ELEMENT(
-							"Show Cascades", ImGui::Checkbox("##Show_Cascades", &settings.ShowCascades));
+							"Show Bounding Boxes", ImGui::Checkbox("##Show_Bounding_Boxes", &settings.ShowBoundingBoxes));
+						FBY_UI_TABLE_ELEMENT("Enable Shadows", ImGui::Checkbox("##Enable_Shadows", &settings.EnableShadows));
+						FBY_UI_TABLE_ELEMENT("Show Cascades", ImGui::Checkbox("##Show_Cascades", &settings.ShowCascades));
 						FBY_UI_TABLE_ELEMENT("Soft Shadows", ImGui::Checkbox("##SoftShadows", &settings.SoftShadows));
 						FBY_UI_TABLE_ELEMENT("Lambda Split",
 							FBY_PUSH_WIDTH_MAX(
@@ -967,26 +956,24 @@ namespace Flameberry {
 						FBY_UI_TABLE_ELEMENT("Gamma Correction",
 							FBY_PUSH_WIDTH_MAX(ImGui::DragFloat(
 								"##Gamma_Correction_Factor", &settings.GammaCorrectionFactor, 0.001f, 0.0f, 10.0f)));
-						FBY_UI_TABLE_ELEMENT("Exposure",
-							FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f)));
+						FBY_UI_TABLE_ELEMENT(
+							"Exposure", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Exposure", &settings.Exposure, 0.01f, 0.0f)));
 						FBY_UI_TABLE_ELEMENT("Enable Bloom", ImGui::Checkbox("##EnableBloom", &settings.EnableBloom));
 						FBY_UI_TABLE_ELEMENT("Bloom Threshold",
 							FBY_PUSH_WIDTH_MAX(
 								ImGui::DragFloat("##BloomThreshold", &settings.BloomThreshold, 0.01f, 0.0f, 100.0f)));
 						FBY_UI_TABLE_ELEMENT("Bloom Spread Scale",
-							FBY_PUSH_WIDTH_MAX(ImGui::DragFloat(
-								"##BloomSpreadScale", &settings.BloomSpreadScale, 0.01f, 0.0f, 1000.0f)));
-						FBY_UI_TABLE_ELEMENT("Bloom Knee",
 							FBY_PUSH_WIDTH_MAX(
-								ImGui::DragFloat("##BloomKnee", &settings.BloomKnee, 0.01f, 0.0f, 100.0f)));
+								ImGui::DragFloat("##BloomSpreadScale", &settings.BloomSpreadScale, 0.01f, 0.0f, 1000.0f)));
+						FBY_UI_TABLE_ELEMENT("Bloom Knee",
+							FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##BloomKnee", &settings.BloomKnee, 0.01f, 0.0f, 100.0f)));
 						FBY_UI_TABLE_ELEMENT(
 							"Grid Fading", FBY_PUSH_WIDTH_MAX(ImGui::Checkbox("##Grid_Fading", &settings.GridFading)));
 						FBY_UI_TABLE_ELEMENT("Grid Near",
 							FBY_PUSH_WIDTH_MAX(
 								ImGui::DragFloat("##Grid_Near", &settings.GridNear, 0.01f, 0.0f, settings.GridFar)));
 						FBY_UI_TABLE_ELEMENT("Grid Far",
-							FBY_PUSH_WIDTH_MAX(
-								ImGui::DragFloat("##Grid_Far", &settings.GridFar, 0.01f, settings.GridNear)));
+							FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Grid_Far", &settings.GridFar, 0.01f, settings.GridNear)));
 
 						UI::EndKeyValueTable();
 					}
@@ -1063,8 +1050,8 @@ namespace Flameberry {
 
 	void EditorLayer::OnScenePlay() {
 		// Set the titlebar color based on scene state
-		Application::Get().GetWindow().SetTitlebarGradient({ Theme::TitlebarRedColor.x, Theme::TitlebarRedColor.y,
-			Theme::TitlebarRedColor.z, Theme::TitlebarRedColor.w });
+		Application::Get().GetWindow().SetTitlebarGradient(
+			{ Theme::TitlebarRedColor.x, Theme::TitlebarRedColor.y, Theme::TitlebarRedColor.z, Theme::TitlebarRedColor.w });
 
 		std::swap(m_ActiveScene, m_ActiveSceneBackUpCopy);
 		// Copy m_ActiveSceneBackUpCopy to m_ActiveScene
@@ -1102,8 +1089,7 @@ namespace Flameberry {
 		mousePickingBufferSpec.InstanceCount = 1;
 		mousePickingBufferSpec.InstanceSize = sizeof(int32_t);
 		mousePickingBufferSpec.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		mousePickingBufferSpec.MemoryProperties =
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		mousePickingBufferSpec.MemoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 		m_MousePickingBuffer = std::make_unique<Buffer>(mousePickingBufferSpec);
 

@@ -14,8 +14,7 @@ namespace Flameberry {
 		uint32_t LayerCount;
 
 		FramebufferAttachmentSpecification(VkFormat format) : Format(format), LayerCount(1) {}
-		FramebufferAttachmentSpecification(VkFormat format, uint32_t layerCount)
-			: Format(format), LayerCount(layerCount) {}
+		FramebufferAttachmentSpecification(VkFormat format, uint32_t layerCount) : Format(format), LayerCount(layerCount) {}
 
 		bool operator==(const FramebufferAttachmentSpecification& other) const {
 			return this->Format == other.Format && this->LayerCount == other.LayerCount;
@@ -32,8 +31,7 @@ namespace Flameberry {
 		VkClearDepthStencilValue DepthStencilClearValue;
 		VkAttachmentLoadOp ColorLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, DepthLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 						   StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		VkAttachmentStoreOp ColorStoreOp = VK_ATTACHMENT_STORE_OP_STORE,
-							DepthStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		VkAttachmentStoreOp ColorStoreOp = VK_ATTACHMENT_STORE_OP_STORE, DepthStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 							StencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	};
 

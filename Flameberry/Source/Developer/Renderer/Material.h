@@ -26,8 +26,7 @@ namespace Flameberry {
 				"Size of uniform variable {} ({}) does not match the size of the value ({}) given", uniformName,
 				uniformVar.Size, sizeof(T));
 			FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize,
-				"Uniform variable '{}' has invalid location as offset + size > {}", uniformName,
-				m_PushConstantBufferSize);
+				"Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
 
 			memcpy(m_PushConstantBuffer + uniformVar.LocalOffset, &value, uniformVar.Size);
 		}
@@ -39,16 +38,15 @@ namespace Flameberry {
 				"Size of uniform variable {} ({}) does not match the size of the value ({}) given", uniformName,
 				uniformVar.Size, size);
 			FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize,
-				"Uniform variable '{}' has invalid location as offset + size > {}", uniformName,
-				m_PushConstantBufferSize);
+				"Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
 
 			memcpy(m_PushConstantBuffer + uniformVar.LocalOffset, data, uniformVar.Size);
 		}
 
 		template <> void Set<Ref<Texture2D>>(const std::string& uniformName, const Ref<Texture2D>& texture) {
 			const auto& binding = m_Shader->GetBinding(uniformName);
-			FBY_ASSERT(binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor",
-				uniformName);
+			FBY_ASSERT(
+				binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor", uniformName);
 
 			// How to assemble this?
 			VkDescriptorImageInfo imageInfo{};
@@ -61,11 +59,10 @@ namespace Flameberry {
 		}
 
 		// This one looks ugly, maybe the arguments should be abstracted away somehow...
-		void Set(
-			const std::string& uniformName, const Ref<Image>& image, VkSampler sampler, VkImageLayout imageLayout) {
+		void Set(const std::string& uniformName, const Ref<Image>& image, VkSampler sampler, VkImageLayout imageLayout) {
 			const auto& binding = m_Shader->GetBinding(uniformName);
-			FBY_ASSERT(binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor",
-				uniformName);
+			FBY_ASSERT(
+				binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor", uniformName);
 
 			// How to assemble this?
 			VkDescriptorImageInfo imageInfo{};
@@ -80,8 +77,8 @@ namespace Flameberry {
 		// This function is a bit dodgy and the behaviour is not tested yet, be cautious
 		template <> void Set<Ref<Buffer>>(const std::string& uniformName, const Ref<Buffer>& uniformBuffer) {
 			const auto& binding = m_Shader->GetBinding(uniformName);
-			FBY_ASSERT(!binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not a Buffer Descriptor",
-				uniformName);
+			FBY_ASSERT(
+				!binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not a Buffer Descriptor", uniformName);
 
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = uniformBuffer->GetVulkanBuffer();
@@ -102,8 +99,7 @@ namespace Flameberry {
 			FBY_ASSERT(sizeof(T) == uniformVar.Size,
 				"Size of uniform variable {} does not match the size of the type given!", uniformName);
 			FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize,
-				"Uniform variable '{}' has invalid location as offset + size > {}", uniformName,
-				m_PushConstantBufferSize);
+				"Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
 
 			return (*reinterpret_cast<T*>(&m_PushConstantBuffer[uniformVar.LocalOffset]));
 		}
@@ -115,8 +111,7 @@ namespace Flameberry {
 			FBY_ASSERT(uniformVar.Size % sizeof(T) == 0,
 				"Size of uniform array {} is not a multiple of the size of the type given!", uniformName);
 			FBY_ASSERT(uniformVar.LocalOffset + uniformVar.Size <= m_PushConstantBufferSize,
-				"Uniform variable '{}' has invalid location as offset + size > {}", uniformName,
-				m_PushConstantBufferSize);
+				"Uniform variable '{}' has invalid location as offset + size > {}", uniformName, m_PushConstantBufferSize);
 
 			return reinterpret_cast<const T*>(&m_PushConstantBuffer[uniformVar.LocalOffset]);
 		}

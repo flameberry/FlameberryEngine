@@ -256,8 +256,8 @@ namespace Flameberry {
 			vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
 			vk_image_view_create_info.subresourceRange.layerCount = 1;
 
-			VK_CHECK_RESULT(vkCreateImageView(
-				device->GetVulkanDevice(), &vk_image_view_create_info, nullptr, &m_ImGuiImageViews[i]));
+			VK_CHECK_RESULT(
+				vkCreateImageView(device->GetVulkanDevice(), &vk_image_view_create_info, nullptr, &m_ImGuiImageViews[i]));
 		}
 
 		// Creating Framebuffers

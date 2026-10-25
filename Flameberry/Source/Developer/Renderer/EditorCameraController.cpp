@@ -83,8 +83,7 @@ namespace Flameberry {
 		const float rotationSpeed = 0.6f * 0.002f; // You had 0.002f, so move it here
 
 		float currentMoveSpeed = baseMoveSpeed;
-		if (Input::IsKeyPressed(KeyCode::LeftShift) || Input::IsKeyPressed(KeyCode::RightShift))
-			currentMoveSpeed *= 2.0f;
+		if (Input::IsKeyPressed(KeyCode::LeftShift) || Input::IsKeyPressed(KeyCode::RightShift)) currentMoveSpeed *= 2.0f;
 
 		// Movement Input
 		glm::vec3 moveInput(0.0f);

@@ -38,8 +38,7 @@ namespace Flameberry {
 					ImGui::PopItemWidth();
 				} else {
 					ImGui::Button(m_EditingContext ? m_EditingContext->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f));
-					if (m_EditingContext && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)
-						&& ImGui::IsItemHovered())
+					if (m_EditingContext && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 						m_ShouldRename = true;
 				}
 
@@ -99,8 +98,7 @@ namespace Flameberry {
 
 					ImGui::PushItemWidth(-1.0f);
 
-					FBY_UI_TABLE_ELEMENT(
-						"Albedo", ImGui::ColorEdit3("##Albedo", glm::value_ptr(uniformDataRef.Albedo)));
+					FBY_UI_TABLE_ELEMENT("Albedo", ImGui::ColorEdit3("##Albedo", glm::value_ptr(uniformDataRef.Albedo)));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
 					FBY_UI_TABLE_ELEMENT(

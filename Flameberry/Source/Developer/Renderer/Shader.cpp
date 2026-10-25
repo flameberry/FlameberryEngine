@@ -13,8 +13,7 @@ namespace Flameberry {
 
 	static std::unordered_map<uint64_t, uint32_t> s_DescriptorSetAndBindingIntegerToArrayIndex;
 
-	bool operator==(
-		const ReflectionDescriptorBindingSpecification& s1, const ReflectionDescriptorBindingSpecification& s2) {
+	bool operator==(const ReflectionDescriptorBindingSpecification& s1, const ReflectionDescriptorBindingSpecification& s2) {
 		return s1.Set == s2.Set && s1.Binding == s2.Binding && s1.Type == s2.Type && s1.Count == s2.Count
 			&& s1.IsDescriptorTypeImage == s2.IsDescriptorTypeImage && s1.RendererOnly == s2.RendererOnly;
 	}
@@ -58,8 +57,7 @@ namespace Flameberry {
 
 	} // namespace Utils
 
-	Shader::Shader(
-		const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath) {
+	Shader::Shader(const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath) {
 		// TODO: This is probably some odd behaviour to name the shader with just the vertex shader's name
 		const auto& stem = vertexShaderSpvPath.stem().string();
 		m_Name = stem.substr(0, stem.find('.'));
@@ -303,8 +301,7 @@ namespace Flameberry {
 
 					if (auto it = s_DescriptorSetAndBindingIntegerToArrayIndex.find(combinedValue);
 						it != s_DescriptorSetAndBindingIntegerToArrayIndex.end()) {
-						FBY_ASSERT(
-							reflectionDescriptorBindingSpecification == m_DescriptorBindingSpecifications[it->second],
+						FBY_ASSERT(reflectionDescriptorBindingSpecification == m_DescriptorBindingSpecifications[it->second],
 							"Descriptor Sets with the same set number and binding must be the exact same");
 						m_DescriptorBindingSpecifications[it->second].VulkanShaderStage |=
 							reflectionDescriptorBindingSpecification.VulkanShaderStage;

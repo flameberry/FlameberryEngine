@@ -54,8 +54,7 @@ namespace Flameberry {
 		s_CommandQueue.reserve(5 * 1024 * 1024 / sizeof(Renderer::Command)); // 5 MB
 
 		// Load Generic Resources
-		s_CheckerboardTexture =
-			TextureImporter::LoadTexture2D(FBY_PROJECT_DIR "Flameberry/Assets/Icons/Checkerboard.png");
+		s_CheckerboardTexture = TextureImporter::LoadTexture2D(FBY_PROJECT_DIR "Flameberry/Assets/Icons/Checkerboard.png");
 
 #ifdef FBY_ENABLE_QUERY_TIMESTAMP
 
@@ -114,13 +113,11 @@ namespace Flameberry {
 
 #endif
 
-			for (auto& cmd : s_CommandQueue)
-				cmd(s_CommandBuffers[s_RT_FrameIndex]->GetVulkanCommandBuffer(), imageIndex);
+			for (auto& cmd : s_CommandQueue) cmd(s_CommandBuffers[s_RT_FrameIndex]->GetVulkanCommandBuffer(), imageIndex);
 
 #ifdef FBY_ENABLE_QUERY_TIMESTAMP
 
-			vkCmdWriteTimestamp(
-				commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, s_QueryPool, s_RT_FrameIndex * 2 + 1);
+			vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, s_QueryPool, s_RT_FrameIndex * 2 + 1);
 
 #endif
 
@@ -199,16 +196,15 @@ namespace Flameberry {
 			const uint32_t setNumber = material->m_StartSetIndex;
 			const uint32_t count = idx;
 
-			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, setNumber, count,
-				&descSetArray[0], 0, nullptr);
+			vkCmdBindDescriptorSets(
+				cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, setNumber, count, &descSetArray[0], 0, nullptr);
 		}
 
 		// Record Statistics
 		s_RendererFrameStats.BoundMaterials++;
 	}
 
-	void Renderer::RT_BindVertexAndIndexBuffers(
-		VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer) {
+	void Renderer::RT_BindVertexAndIndexBuffers(VkCommandBuffer cmdBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer) {
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, offsets);
 		vkCmdBindIndexBuffer(cmdBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);

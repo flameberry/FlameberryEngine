@@ -70,11 +70,11 @@ namespace Flameberry::UI {
 		ImRect bb;
 		bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
 		bb.Max = bb.Min
-			+ CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size)
-											: ImVec2(splitter_long_axis_size, thickness),
+			+ CalcItemSize(
+				split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness),
 				0.0f, 0.0f);
-		return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1,
-			min_size2, 0.0f, 0.0f, 0xFF000000);
+		return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2,
+			0.0f, 0.0f, 0xFF000000);
 	}
 
 	bool AlignedButton(const char* label, const ImVec2& size, float alignment) {
@@ -194,8 +194,8 @@ namespace Flameberry::UI {
 
 	bool BeginKeyValueTable(const char* label, ImGuiTableFlags tableFlags, float labelWidth) {
 		if (ImGui::BeginTable(label, 2, tableFlags ? tableFlags : g_UIState.TableFlags)) {
-			ImGui::TableSetupColumn("Attribute_Key", ImGuiTableColumnFlags_WidthFixed,
-				labelWidth != 0.0f ? labelWidth : g_UIState.LabelWidth);
+			ImGui::TableSetupColumn(
+				"Attribute_Key", ImGuiTableColumnFlags_WidthFixed, labelWidth != 0.0f ? labelWidth : g_UIState.LabelWidth);
 			ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 			return true;
 		}
@@ -260,8 +260,7 @@ namespace Flameberry::UI {
 		return pressed;
 	}
 
-	bool Vec3Control(
-		const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth) {
+	bool Vec3Control(const std::string& str_id, glm::vec3& value, float defaultValue, float dragSpeed, float availWidth) {
 		bool isEdited = false;
 		ScopedStyleVariable frameBorderSize(ImGuiStyleVar_FrameBorderSize, 0);
 

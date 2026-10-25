@@ -33,8 +33,7 @@ namespace Flameberry {
 		static void ClearAllNonExistingProjectRegistryEntries();
 
 	private:
-		constexpr static const char* c_GlobalProjectRegistryPath =
-			FBY_PROJECT_DIR "Flameberry/Config/ProjectRegistry.yaml";
+		constexpr static const char* c_GlobalProjectRegistryPath = FBY_PROJECT_DIR "Flameberry/Config/ProjectRegistry.yaml";
 	};
 
 } // namespace Flameberry

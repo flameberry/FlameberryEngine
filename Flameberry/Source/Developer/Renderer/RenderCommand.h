@@ -28,8 +28,8 @@ namespace Flameberry {
 		static VkSampleCountFlagBits GetMaxUsableSampleCount(VkPhysicalDevice physicalDevice);
 		static uint32_t GetValidMemoryTypeIndex(
 			VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags vk_memory_property_flags);
-		static VkFormat GetSupportedFormat(VkPhysicalDevice physicalDevice,
-			const std::vector<VkFormat>& candidateFormats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags);
+		static VkFormat GetSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidateFormats,
+			VkImageTiling tiling, VkFormatFeatureFlags featureFlags);
 		static bool CheckValidationLayerSupport(const std::vector<const char*>& validationLayers);
 		static QueueFamilyIndices GetQueueFamilyIndices(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 		static SwapChainDetails GetSwapChainDetails(VkPhysicalDevice vk_device, VkSurfaceKHR surface);

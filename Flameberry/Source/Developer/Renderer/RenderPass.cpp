@@ -75,8 +75,8 @@ namespace Flameberry {
 				break;
 		}
 
-		const auto count = framebufferSpec.Samples > 1 ? 2 * framebufferSpec.Attachments.size() - 1
-													   : framebufferSpec.Attachments.size();
+		const auto count =
+			framebufferSpec.Samples > 1 ? 2 * framebufferSpec.Attachments.size() - 1 : framebufferSpec.Attachments.size();
 
 		std::vector<VkAttachmentDescription> attachments(count);
 
@@ -99,8 +99,8 @@ namespace Flameberry {
 			attachments[i].storeOp = framebufferSpec.DepthStoreOp;
 
 			useMultiView = useMultiView || attachment.LayerCount > 1;
-			FBY_ASSERT(layerCount == attachment.LayerCount,
-				"Different Layers for each attachment are not handled correctly yet!");
+			FBY_ASSERT(
+				layerCount == attachment.LayerCount, "Different Layers for each attachment are not handled correctly yet!");
 
 			if (RenderCommand::DoesFormatSupportDepthAttachment(attachment.Format)) {
 				attachments[i].stencilLoadOp = framebufferSpec.StencilLoadOp;
@@ -127,8 +127,7 @@ namespace Flameberry {
 					attachments[i + framebufferSpec.Attachments.size()].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 					attachments[i + framebufferSpec.Attachments.size()].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 					attachments[i + framebufferSpec.Attachments.size()].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-					attachments[i + framebufferSpec.Attachments.size()].stencilStoreOp =
-						VK_ATTACHMENT_STORE_OP_DONT_CARE;
+					attachments[i + framebufferSpec.Attachments.size()].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 					attachments[i + framebufferSpec.Attachments.size()].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 					attachments[i + framebufferSpec.Attachments.size()].finalLayout =
 						VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -182,8 +181,7 @@ namespace Flameberry {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VK_CHECK_RESULT(vkCreateRenderPass(device, &vk_render_pass_create_info, nullptr, &m_VkRenderPass));
 
-		for (auto& framebuffer : m_RenderPassSpec.TargetFramebuffers)
-			framebuffer->CreateVulkanFramebuffer(m_VkRenderPass);
+		for (auto& framebuffer : m_RenderPassSpec.TargetFramebuffers) framebuffer->CreateVulkanFramebuffer(m_VkRenderPass);
 	}
 
 	void RenderPass::Begin(uint32_t framebufferInstance, VkOffset2D renderAreaOffset, VkExtent2D renderAreaExtent) {

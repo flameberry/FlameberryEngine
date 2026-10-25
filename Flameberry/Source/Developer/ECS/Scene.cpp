@@ -122,8 +122,7 @@ namespace Flameberry {
 
 	void Scene::OnPhysicsStart() {
 		for (auto entity : m_Registry->Group<TransformComponent, RigidBodyComponent>()) {
-			const auto& [transform, rigidBody] =
-				m_Registry->GetComponent<TransformComponent, RigidBodyComponent>(entity);
+			const auto& [transform, rigidBody] = m_Registry->GetComponent<TransformComponent, RigidBodyComponent>(entity);
 
 			JPH::ShapeRefC shapeRef;
 
@@ -131,8 +130,7 @@ namespace Flameberry {
 				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
 
 				const glm::vec3 boxColliderSize = 0.5f * boxColliderComponent->Size * transform.Scale;
-				JPH::BoxShapeSettings boxShapeSettings(
-					JPH::Vec3(boxColliderSize.x, boxColliderSize.y, boxColliderSize.z));
+				JPH::BoxShapeSettings boxShapeSettings(JPH::Vec3(boxColliderSize.x, boxColliderSize.y, boxColliderSize.z));
 				boxShapeSettings.SetEmbedded();
 
 				// Create the shape
@@ -223,8 +221,7 @@ namespace Flameberry {
 		for (auto entity : m_Registry->Group<RigidBodyComponent>()) {
 			auto [transform, rigidBody] = m_Registry->GetComponent<TransformComponent, RigidBodyComponent>(entity);
 			JPH::Body* rigidBodyRuntimePtr = (JPH::Body*)rigidBody.RuntimeRigidBody;
-			JPH::RVec3 position =
-				PhysicsManager::GetBodyInterface().GetCenterOfMassPosition(rigidBodyRuntimePtr->GetID());
+			JPH::RVec3 position = PhysicsManager::GetBodyInterface().GetCenterOfMassPosition(rigidBodyRuntimePtr->GetID());
 			JPH::Quat quat = PhysicsManager::GetBodyInterface().GetRotation(rigidBodyRuntimePtr->GetID());
 
 			transform.Translation = { position.GetX(), position.GetY(), position.GetZ() };
@@ -262,8 +259,7 @@ namespace Flameberry {
 
 	FEntity Scene::GetPrimaryCameraEntity() const {
 		for (auto entity : m_Registry->Group<CameraComponent>())
-			if (auto& cameraComp = m_Registry->GetComponent<CameraComponent>(entity); cameraComp.IsPrimary)
-				return entity;
+			if (auto& cameraComp = m_Registry->GetComponent<CameraComponent>(entity); cameraComp.IsPrimary) return entity;
 
 		return {};
 	}
@@ -352,11 +348,9 @@ namespace Flameberry {
 				if (parentRel.FirstChild == entity) parentRel.FirstChild = relation.NextSibling;
 			}
 			if (relation.PrevSibling != FEntity::Null)
-				m_Registry->GetComponent<RelationshipComponent>(relation.PrevSibling).NextSibling =
-					relation.NextSibling;
+				m_Registry->GetComponent<RelationshipComponent>(relation.PrevSibling).NextSibling = relation.NextSibling;
 			if (relation.NextSibling != FEntity::Null)
-				m_Registry->GetComponent<RelationshipComponent>(relation.NextSibling).PrevSibling =
-					relation.PrevSibling;
+				m_Registry->GetComponent<RelationshipComponent>(relation.NextSibling).PrevSibling = relation.PrevSibling;
 		}
 		m_Registry->DestroyEntity(entity);
 	}
@@ -411,8 +405,7 @@ namespace Flameberry {
 
 			if (auto* parentTransform = m_Registry->TryGetComponent<TransformComponent>(destParent)) {
 				glm::vec3 parentTranslation, parentRotation, parentScale;
-				Math::DecomposeTransform(
-					parentTransform->GlobalTransform, parentTranslation, parentRotation, parentScale);
+				Math::DecomposeTransform(parentTransform->GlobalTransform, parentTranslation, parentRotation, parentScale);
 
 				transform->Translation = translation - parentTranslation;
 				transform->Rotation = rotation - parentRotation;

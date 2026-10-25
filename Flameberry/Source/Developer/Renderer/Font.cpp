@@ -8,14 +8,13 @@ namespace Flameberry {
 
 	template <typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
 	static Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName, float fontSize,
-		const std::vector<msdf_atlas::GlyphGeometry>& glyphs, const msdf_atlas::FontGeometry& fontGeometry,
-		uint32_t width, uint32_t height) {
+		const std::vector<msdf_atlas::GlyphGeometry>& glyphs, const msdf_atlas::FontGeometry& fontGeometry, uint32_t width,
+		uint32_t height) {
 		msdf_atlas::GeneratorAttributes attributes;
 		attributes.config.overlapSupport = true;
 		attributes.scanlinePass = true;
 
-		msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(
-			width, height);
+		msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(width, height);
 		generator.setAttributes(attributes);
 		generator.setThreadCount(8);
 		generator.generate(glyphs.data(), (int)glyphs.size());

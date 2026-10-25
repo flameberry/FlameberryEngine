@@ -20,8 +20,8 @@ namespace Flameberry {
 
 			case ImageViewCreationMode::CreateOnePerMipMap:
 				if (idx >= m_Specification.MipLevels)
-					FBY_ERROR("Cannot access image view at index: {} - Index out of bounds (Image views total: {}).",
-						idx, m_VulkanImageViewVector.size());
+					FBY_ERROR("Cannot access image view at index: {} - Index out of bounds (Image views total: {}).", idx,
+						m_VulkanImageViewVector.size());
 				return m_VulkanImageViewVector[idx];
 
 			case ImageViewCreationMode::CreateForCube:
@@ -111,11 +111,9 @@ namespace Flameberry {
 
 				vulkanImageViewCreateInfo.format = m_Specification.Format;
 				vulkanImageViewCreateInfo.subresourceRange.aspectMask = m_Specification.ViewSpecification.AspectFlags;
-				vulkanImageViewCreateInfo.subresourceRange.baseMipLevel =
-					m_Specification.ViewSpecification.BaseMipLevel;
+				vulkanImageViewCreateInfo.subresourceRange.baseMipLevel = m_Specification.ViewSpecification.BaseMipLevel;
 				vulkanImageViewCreateInfo.subresourceRange.levelCount = m_Specification.ViewSpecification.LevelCount;
-				vulkanImageViewCreateInfo.subresourceRange.baseArrayLayer =
-					m_Specification.ViewSpecification.BaseArrayLayer;
+				vulkanImageViewCreateInfo.subresourceRange.baseArrayLayer = m_Specification.ViewSpecification.BaseArrayLayer;
 				vulkanImageViewCreateInfo.subresourceRange.layerCount = m_Specification.ViewSpecification.LayerCount;
 				vulkanImageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 				vulkanImageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -135,15 +133,13 @@ namespace Flameberry {
 					vulkanImageViewCreateInfo.image = m_VulkanImage;
 
 					// This line is really weird
-					vulkanImageViewCreateInfo.viewType =
-						m_Specification.ViewSpecification.ViewType == VK_IMAGE_VIEW_TYPE_2D
+					vulkanImageViewCreateInfo.viewType = m_Specification.ViewSpecification.ViewType == VK_IMAGE_VIEW_TYPE_2D
 							&& m_Specification.ViewSpecification.LayerCount > 1
 						? VK_IMAGE_VIEW_TYPE_2D_ARRAY
 						: m_Specification.ViewSpecification.ViewType;
 
 					vulkanImageViewCreateInfo.format = m_Specification.Format;
-					vulkanImageViewCreateInfo.subresourceRange.aspectMask =
-						m_Specification.ViewSpecification.AspectFlags;
+					vulkanImageViewCreateInfo.subresourceRange.aspectMask = m_Specification.ViewSpecification.AspectFlags;
 					vulkanImageViewCreateInfo.subresourceRange.baseMipLevel = i;
 					vulkanImageViewCreateInfo.subresourceRange.levelCount = 1;
 					vulkanImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
@@ -206,8 +202,7 @@ namespace Flameberry {
 
 	void Image::CmdGenerateMipmaps(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout) {
 		VkFormatProperties formatProperties;
-		vkGetPhysicalDeviceFormatProperties(
-			VulkanContext::GetPhysicalDevice(), m_Specification.Format, &formatProperties);
+		vkGetPhysicalDeviceFormatProperties(VulkanContext::GetPhysicalDevice(), m_Specification.Format, &formatProperties);
 		FBY_ASSERT(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT,
 			"Texture Image Format does not support linear blitting!");
 
@@ -231,8 +226,8 @@ namespace Flameberry {
 			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
-			vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0,
-				nullptr, 0, nullptr, 1, &barrier);
+			vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
+				nullptr, 1, &barrier);
 
 			VkImageBlit blit{};
 			blit.srcOffsets[0] = { 0, 0, 0 };
@@ -269,8 +264,8 @@ namespace Flameberry {
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-		vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0,
-			nullptr, 0, nullptr, 1, &barrier);
+		vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr,
+			0, nullptr, 1, &barrier);
 	}
 
 	void Image::WriteFromBuffer(VkBuffer srcBuffer) {
@@ -292,8 +287,8 @@ namespace Flameberry {
 		vk_buffer_image_copy_region.imageOffset = { 0, 0, 0 };
 		vk_buffer_image_copy_region.imageExtent = { m_Specification.Width, m_Specification.Height, 1 };
 
-		vkCmdCopyBufferToImage(commandBuffer, srcBuffer, m_VulkanImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
-			&vk_buffer_image_copy_region);
+		vkCmdCopyBufferToImage(
+			commandBuffer, srcBuffer, m_VulkanImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &vk_buffer_image_copy_region);
 		device->EndSingleTimeCommandBuffer(commandBuffer);
 	}
 
@@ -433,8 +428,8 @@ namespace Flameberry {
 		if (imageMemoryBarrier.srcAccessMask & VK_ACCESS_HOST_WRITE_BIT) srcStageMask |= VK_PIPELINE_STAGE_HOST_BIT;
 
 		// Put barrier inside setup command buffer
-		vkCmdPipelineBarrier(cmdBuffer, srcStageMask, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 0, nullptr, 1,
-			&imageMemoryBarrier);
+		vkCmdPipelineBarrier(
+			cmdBuffer, srcStageMask, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 
 		m_ActiveImageLayout = newLayout;
 	}

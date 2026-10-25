@@ -22,8 +22,7 @@ namespace Flameberry {
 	void CommandBuffer::Begin() {
 		VkCommandBufferBeginInfo commandBufferBeginInfo{};
 		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		commandBufferBeginInfo.flags =
-			m_Specification.SingleTimeUsage ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0;
+		commandBufferBeginInfo.flags = m_Specification.SingleTimeUsage ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0;
 
 		VK_CHECK_RESULT(vkBeginCommandBuffer(m_CommandBuffer, &commandBufferBeginInfo));
 	}

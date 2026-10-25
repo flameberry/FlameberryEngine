@@ -31,11 +31,11 @@ namespace Flameberry {
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		m_Window = glfwCreateWindow(
-			m_Specification.Width, m_Specification.Height, m_Specification.Title.c_str(), nullptr, nullptr);
+		m_Window =
+			glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Title.c_str(), nullptr, nullptr);
 		FBY_ASSERT(m_Window, "GLFW window is null!");
-		FBY_INFO("Created GLFW window of title '{}' and dimensions ({}, {})", m_Specification.Title,
-			m_Specification.Width, m_Specification.Height);
+		FBY_INFO("Created GLFW window of title '{}' and dimensions ({}, {})", m_Specification.Title, m_Specification.Width,
+			m_Specification.Height);
 	}
 
 	void VulkanWindow::Init() {
@@ -144,8 +144,7 @@ namespace Flameberry {
 
 	void VulkanWindow::SetTitlebarGradient(const glm::vec4& color) {
 		m_Specification.TitlebarGradientColor = color;
-		if (!m_Specification.NativeTitlebar)
-			Platform::TitlebarNative::SetGradient(m_Specification.TitlebarGradientColor);
+		if (!m_Specification.NativeTitlebar) Platform::TitlebarNative::SetGradient(m_Specification.TitlebarGradientColor);
 	}
 
 	void VulkanWindow::MoveToCenter() {

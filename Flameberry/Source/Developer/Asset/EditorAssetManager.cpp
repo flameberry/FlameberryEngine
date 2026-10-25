@@ -94,8 +94,7 @@ namespace Flameberry {
 
 	AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& filePath) {
 		// Check if the asset with filePath is already present in the AssetRegistry
-		if (const auto it = m_FilePathToAssetHandle.find(filePath); it != m_FilePathToAssetHandle.end())
-			return it->second;
+		if (const auto it = m_FilePathToAssetHandle.find(filePath); it != m_FilePathToAssetHandle.end()) return it->second;
 
 		// Import the asset
 		const std::string& extension = filePath.extension().string();
