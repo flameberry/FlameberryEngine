@@ -1,6 +1,5 @@
 #include "LauncherLayer.h"
 
-#include <fstream>
 #include <IconFontCppHeaders/IconsLucide.h>
 
 #include "Core/UI.h"

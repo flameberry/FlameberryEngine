@@ -11,15 +11,16 @@ Flameberry Engine is a C++ Game Engine based upon the Vulkan Graphics API and is
 <img src="Flameberry/Documentation/Screenshots/FlameberrySS4.png">
 <img src="Flameberry/Documentation/Screenshots/FlameberrySS3.png">
 
-***
+---
 
 ## Build Requirements
+
 1. C++17 Compiler
 2. Vulkan/MoltenVK support
 3. Python
 4. CMake (Preferred)
 5. For Windows, Visual Studio is preferred
-_Note: If you have Visual Studio version less than 17 installed then in the `Scripts/Win-GenProjects.bat` change the CMake Generator from `Visual Studio 17 2022` to the appropriate version that you have_
+   _Note: If you have Visual Studio version less than 17 installed then in the `Scripts/Win-GenProjects.bat` change the CMake Generator from `Visual Studio 17 2022` to the appropriate version that you have_
 
 ## Build Steps
 
@@ -47,3 +48,11 @@ _Note: For detailed build steps: <a href="https://flameberry.github.io/docs/inst
 13. MSDF-Gen-Atlas
 14. MurmurHash
 15. IconFontCppHeaders
+
+## AI Usage
+
+In this age of AI, it's difficult not to use AI for atleast exhaustive work like polishing the UI, updating build scripts, fixing vulkan validation errors, adapting to new submodule breaking changes, and refactoring. That is exactly what I'm using AI for, that too only recently. Thankfully majority of this engine was written during a time where AI wasn't good enough to help me code at all, so I'm blessed to have experienced writing every single thing by myself, regardless of how challenging it was.
+
+I created this project for the fun of building software, and using AI honestly takes away the sense of achievement after implementing that one tiny feature in your game engine, that just makes it work better, by yourself. Because of this, I'm gonna save the implementation for important features for myself and not AI.
+
+To keep this repository transparent I'm deciding on a convention of git commit messages which have \[AI\] as there prefix if the code written in the commit was by AI. Although it doesn't reflect some of the AI code already pushed into the repository unlabelled, but not to worry because it was all validation error fixing and refactoring anyways.
