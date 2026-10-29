@@ -25,8 +25,8 @@ namespace Flameberry {
 		void Invalidate();
 
 		static VkSurfaceFormatKHR SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats);
-		static VkPresentModeKHR SelectSwapPresentationMode(
-			const std::vector<VkPresentModeKHR>& available_presentation_modes);
+		static VkPresentModeKHR
+		SelectSwapPresentationMode(const std::vector<VkPresentModeKHR>& available_presentation_modes);
 		static VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR& surface_capabilities);
 		static VkFormat GetDepthFormat();
 

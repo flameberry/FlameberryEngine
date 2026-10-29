@@ -85,7 +85,8 @@ namespace Flameberry {
 			// After transferring it is important to ensure that the imageLayout is correct to make the image ready for
 			// use
 			equirectangularImage->TransitionLayout(
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+			);
 		}
 
 		// Calculate the number of mip levels based upon the image dimensions
@@ -213,7 +214,8 @@ namespace Flameberry {
 			samplerInfo.maxLod = static_cast<float>(m_PrefilteredMap->GetSpecification().MipLevels);
 
 			VK_CHECK_RESULT(vkCreateSampler(
-				VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &samplerInfo, nullptr, &m_MultiLODSampler));
+				VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &samplerInfo, nullptr, &m_MultiLODSampler
+			));
 		}
 
 		const auto brdflutMap = s_CubemapSizeToBRDFLUTMap.find(width / 4);
@@ -410,12 +412,14 @@ namespace Flameberry {
 		// Bind the pipeline, descriptor sets and dispatch the compute shader for the first step
 		vkCmdBindPipeline(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipeline);
 		vkCmdBindDescriptorSets(
-			vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0);
+			vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0
+		);
 		vkCmdDispatch(vulkanCmdBuffer, (width / 4) / 8, (width / 4) / 8, 6);
 
 		// After we have written to the cube map, we make it read only
 		m_CubemapImage->CmdGenerateMipmaps(
-			vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
 
 		// Step 2: Generation of the irradiance map using the cubemap image
 		vulkanComputePipelineLayout = irrandianceMapGenerationPipeline->GetVulkanPipelineLayout();
@@ -425,12 +429,14 @@ namespace Flameberry {
 		// Bind the pipeline, descriptor sets and dispatch the compute shader for the second step
 		vkCmdBindPipeline(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipeline);
 		vkCmdBindDescriptorSets(
-			vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0);
+			vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0
+		);
 		vkCmdDispatch(vulkanCmdBuffer, (width / 4) / 8, (width / 4) / 8, 6);
 
 		// After we have written to the irradiance map, we make it read only
 		m_IrradianceMap->CmdTransitionLayout(
-			vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
 
 		// Step 3: Generation of the prefiltered map using the cubemap image
 		vulkanComputePipelineLayout = prefilteredMapGenerationPipeline->GetVulkanPipelineLayout();
@@ -443,14 +449,17 @@ namespace Flameberry {
 			// Push Constants
 			prefilteredMapMaterial->Set("u_Data.Resolution", (float)width / 4.0f);
 			prefilteredMapMaterial->Set("u_Data.MipLevel", (float)i);
-			vkCmdPushConstants(vulkanCmdBuffer, vulkanComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT,
+			vkCmdPushConstants(
+				vulkanCmdBuffer, vulkanComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT,
 				prefilteredMapMaterial->GetPushConstantOffset(), prefilteredMapMaterial->GetUniformDataSize(),
-				prefilteredMapMaterial->GetUniformDataPtr());
+				prefilteredMapMaterial->GetUniformDataPtr()
+			);
 
 			// Bind the descriptor sets and dispatch the compute shader for the third step
 			vulkanDescSet = prefilteredMapGenerationDescriptorSets[i]->GetVulkanDescriptorSet();
 			vkCmdBindDescriptorSets(
-				vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0);
+				vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0
+			);
 			vkCmdDispatch(vulkanCmdBuffer, workGroupSize / 8, workGroupSize / 8, 6);
 
 			workGroupSize = glm::max<uint32_t>(workGroupSize / 2, 8);
@@ -458,7 +467,8 @@ namespace Flameberry {
 
 		// After we have written to the prefiltered map, we make it read only
 		m_PrefilteredMap->CmdTransitionLayout(
-			vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
 
 		if (shouldGenBRDFLUT) {
 			m_BRDFLUTMap->CmdTransitionLayout(vulkanCmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
@@ -471,11 +481,13 @@ namespace Flameberry {
 			// Bind the pipeline and dispatch the compute shader for the fourth step
 			vkCmdBindPipeline(vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipeline);
 			vkCmdBindDescriptorSets(
-				vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0);
+				vulkanCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipelineLayout, 0, 1, &vulkanDescSet, 0, 0
+			);
 			vkCmdDispatch(vulkanCmdBuffer, (width / 4) / 8, (width / 4) / 8, 1);
 
 			m_BRDFLUTMap->CmdTransitionLayout(
-				vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				vulkanCmdBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+			);
 		}
 
 		// End the command buffer recording
@@ -491,20 +503,21 @@ namespace Flameberry {
 
 		VulkanContext::GetCurrentDevice()->AccessQueueSafely([submitInfo]() {
 			VK_CHECK_RESULT(
-				vkQueueSubmit(VulkanContext::GetCurrentDevice()->GetComputeQueue(), 1, &submitInfo, VK_NULL_HANDLE));
+				vkQueueSubmit(VulkanContext::GetCurrentDevice()->GetComputeQueue(), 1, &submitInfo, VK_NULL_HANDLE)
+			);
 		});
 
 		// Now that all the processing is done, we need to bring all the skymap resources into a descriptor set to be
 		// used later by the PBR pipeline
 		std::vector<VkDescriptorSetLayoutBinding> descBindings = {
 			{ 0, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1,
-				/* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			  /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
 			{ 1, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1,
-				/* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			  /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
 			{ 2, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1,
-				/* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			  /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
 			{ 3, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1,
-				/* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			  /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
 		};
 
 		DescriptorSetSpecification skymapDescSetSpec;
@@ -546,7 +559,8 @@ namespace Flameberry {
 			samplerInfo.maxLod = 1.0f;
 
 			VK_CHECK_RESULT(vkCreateSampler(
-				VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &samplerInfo, nullptr, &m_BRDFLUTSampler));
+				VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &samplerInfo, nullptr, &m_BRDFLUTSampler
+			));
 		}
 
 		VkDescriptorImageInfo brdflutMapImageInfo{};
@@ -606,13 +620,13 @@ namespace Flameberry {
 		DescriptorSetLayoutSpecification descSetLayoutSpec;
 		descSetLayoutSpec.Bindings = {
 			{ 0, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1,
-				/* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			  /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
 			{ 1, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1,
-				/* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			  /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
 			{ 2, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1,
-				/* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			  /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
 			{ 3, /* descriptorType = */ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, /* descriptorCount = */ 1,
-				/* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
+			  /* stageFlags = */ VK_SHADER_STAGE_FRAGMENT_BIT },
 		};
 
 		Ref<DescriptorSetLayout> descSetLayout = DescriptorSetLayout::CreateOrGetCached(descSetLayoutSpec);

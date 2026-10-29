@@ -54,8 +54,8 @@ namespace Flameberry {
 			return { "Unknown", ICON_LC_FILE, Theme::TextMuted };
 		}
 
-		constexpr AssetType s_FilterableAssetTypes[] = { AssetType::Scene, AssetType::Texture2D, AssetType::StaticMesh,
-			AssetType::Material, AssetType::Skymap, AssetType::Font };
+		constexpr AssetType s_FilterableAssetTypes[] = { AssetType::Scene,	  AssetType::Texture2D, AssetType::StaticMesh,
+														 AssetType::Material, AssetType::Skymap,	AssetType::Font };
 
 		struct AssetRow {
 			AssetHandle Handle;
@@ -71,7 +71,8 @@ namespace Flameberry {
 			const ImVec2 textSize = ImGui::CalcTextSize(text);
 
 			ImGui::RenderTextEllipsis(
-				ImGui::GetWindowDrawList(), pos, ImVec2(maxX, pos.y + textSize.y), maxX, text, nullptr, &textSize);
+				ImGui::GetWindowDrawList(), pos, ImVec2(maxX, pos.y + textSize.y), maxX, text, nullptr, &textSize
+			);
 			ImGui::Dummy(ImVec2(ImMin(textSize.x, maxX - pos.x), ImGui::GetFrameHeight()));
 
 			if (textSize.x > maxX - pos.x && ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
@@ -126,12 +127,16 @@ namespace Flameberry {
 		if (ImGui::BeginTable("##AssetRegistryTable", 4, tableFlags, ImVec2(0.0f, ImGui::GetContentRegionAvail().y))) {
 			ImGui::TableSetupScrollFreeze(0, 1);
 			ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 110.0f, AssetRegistryColumn_Type);
-			ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_DefaultSort, 1.2f,
-				AssetRegistryColumn_Name);
+			ImGui::TableSetupColumn(
+				"Name", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_DefaultSort, 1.2f,
+				AssetRegistryColumn_Name
+			);
 			ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch, 1.0f, AssetRegistryColumn_Path);
 			// Handles are rarely needed when browsing, so the column starts hidden (right-click the header to show it)
-			ImGui::TableSetupColumn("Handle", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide, 170.0f,
-				AssetRegistryColumn_Handle);
+			ImGui::TableSetupColumn(
+				"Handle", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide, 170.0f,
+				AssetRegistryColumn_Handle
+			);
 			ImGui::TableHeadersRow();
 
 			// The rows are gathered every frame, so they are sorted every frame too
@@ -190,18 +195,21 @@ namespace Flameberry {
 						constexpr ImGuiSelectableFlags selectableFlags =
 							ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap;
 						if (ImGui::Selectable(
-								"##AssetRow", isSelected, selectableFlags, ImVec2(0.0f, ImGui::GetFrameHeight())))
+								"##AssetRow", isSelected, selectableFlags, ImVec2(0.0f, ImGui::GetFrameHeight())
+							))
 							m_SelectedHandle = row.Handle;
 					}
 
 					if (ImGui::BeginPopupContextItem("##AssetRowContextMenu")) {
 						m_SelectedHandle = row.Handle;
 
-						UI::ScopedStyleColor menuText(ImGuiCol_Text, Theme::TextColor);
-						if (ImGui::MenuItem(ICON_LC_COPY "  Copy Handle"))
-							ImGui::SetClipboardText(fmt::format("{}", handleValue).c_str());
-						if (!row.Metadata->IsMemoryAsset && ImGui::MenuItem(ICON_LC_COPY "  Copy Path"))
-							ImGui::SetClipboardText(row.Metadata->FilePath.c_str());
+						{
+							UI::ScopedStyleColor menuText(ImGuiCol_Text, Theme::TextColor);
+							if (ImGui::MenuItem(ICON_LC_COPY "  Copy Handle"))
+								ImGui::SetClipboardText(fmt::format("{}", handleValue).c_str());
+							if (!row.Metadata->IsMemoryAsset && ImGui::MenuItem(ICON_LC_COPY "  Copy Path"))
+								ImGui::SetClipboardText(row.Metadata->FilePath.c_str());
+						}
 						ImGui::EndPopup();
 					}
 
@@ -254,8 +262,10 @@ namespace Flameberry {
 
 	void AssetRegistryPanel::DisplayToolbar(uint32_t visibleAssetCount, uint32_t totalAssetCount) {
 		const float searchBoxWidth = std::min(240.0f, 0.4f * ImGui::GetContentRegionAvail().x);
-		m_IsSearchBoxFocused = UI::InputBox("##AssetRegistrySearchBar", searchBoxWidth, &m_SearchInputBuffer,
-			ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
+		m_IsSearchBoxFocused = UI::InputBox(
+			"##AssetRegistrySearchBar", searchBoxWidth, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...",
+			m_IsSearchBoxFocused
+		);
 
 		ImGui::SameLine();
 

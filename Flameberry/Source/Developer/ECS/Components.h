@@ -181,8 +181,19 @@ namespace Flameberry {
 
 	template <typename... Component> struct ComponentList {};
 
-	using AllComponents = ComponentList<TransformComponent, CollectionComponent, CameraComponent, MeshComponent,
-		SkyLightComponent, DirectionalLightComponent, PointLightComponent, NativeScriptComponent, RigidBodyComponent,
-		BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent, TextComponent>;
+	using AllComponents = ComponentList<
+		TransformComponent,
+		CollectionComponent,
+		CameraComponent,
+		MeshComponent,
+		SkyLightComponent,
+		DirectionalLightComponent,
+		PointLightComponent,
+		NativeScriptComponent,
+		RigidBodyComponent,
+		BoxColliderComponent,
+		SphereColliderComponent,
+		CapsuleColliderComponent,
+		TextComponent>;
 
 } // namespace Flameberry

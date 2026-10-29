@@ -37,13 +37,16 @@ namespace Flameberry {
 		~ScopedTimer() {
 #ifdef FBY_DEBUG
 			auto duration = std::chrono::high_resolution_clock::now() - m_Start;
-			FBY_WARN("{}: process took: {} ms, ({} ns)", m_ScopeName,
+			FBY_WARN(
+				"{}: process took: {} ms, ({} ns)", m_ScopeName,
 				std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(),
-				std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count());
+				std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count()
+			);
 #elif defined(FBY_RELEASE)
 			std::cout << m_ScopeName << ": process took: "
 					  << std::chrono::duration_cast<std::chrono::milliseconds>(
-							 std::chrono::high_resolution_clock::now() - m_Start)
+							 std::chrono::high_resolution_clock::now() - m_Start
+						 )
 							 .count()
 					  << " ms\n";
 #endif

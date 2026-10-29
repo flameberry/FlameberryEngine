@@ -7,8 +7,9 @@ compileCommandsFlag=OFF
 buildConfig="Release"
 runExecutable=OFF
 openSandboxProject=OFF
+enableMetalHUD=OFF
 
-while getopts "cdos" opt; do
+while getopts "cdosm" opt; do
 	case $opt in
 		c)
 			compileCommandsFlag=ON
@@ -23,6 +24,10 @@ while getopts "cdos" opt; do
 			# Opening the SandboxProject only makes sense when running the editor, so this implies -o
 			runExecutable=ON
 			openSandboxProject=ON
+			;;
+		m)
+			runExecutable=ON
+			enableMetalHUD=ON
 			;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -58,6 +63,9 @@ if [ "$runExecutable" = "ON" ]; then
 	editorArgs=()
 	if [ "$openSandboxProject" = "ON" ]; then
 		editorArgs+=("$PWD/SandboxProject/SandboxProject.fbproj")
+	fi
+	if [ "$enableMetalHUD" = "ON" ]; then
+		export MTL_HUD_ENABLED=1
 	fi
 	./Flameberry/Intermediate/Bin/$buildConfig/FlameberryEditor-Darwin-arm64/FlameberryEditor_$buildConfig "${editorArgs[@]}"
 fi

@@ -91,7 +91,8 @@ namespace Flameberry {
 				stencilViewSpec.AspectFlags = VK_IMAGE_ASPECT_STENCIL_BIT;
 
 				m_StencilAttachmentImageView = Utils::CreateImageViewUsingSpecification(
-					attachmentImage->GetVulkanImage(), attachmentImage->GetSpecification().Format, stencilViewSpec);
+					attachmentImage->GetVulkanImage(), attachmentImage->GetSpecification().Format, stencilViewSpec
+				);
 			}
 		}
 

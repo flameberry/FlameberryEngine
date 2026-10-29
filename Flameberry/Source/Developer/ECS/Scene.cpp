@@ -188,16 +188,19 @@ namespace Flameberry {
 
 			const auto quat = glm::quat(transform.Rotation);
 
-			JPH::BodyCreationSettings bodyCreationSettings(shapeRef.GetPtr(),
-				JPH::RVec3(transform.Translation.x, transform.Translation.y, transform.Translation.z),
-				JPH::Quat(quat.x, quat.y, quat.z, quat.w), motionType, objectLayer);
+			JPH::BodyCreationSettings bodyCreationSettings(
+				shapeRef.GetPtr(), JPH::RVec3(transform.Translation.x, transform.Translation.y, transform.Translation.z),
+				JPH::Quat(quat.x, quat.y, quat.z, quat.w), motionType, objectLayer
+			);
 
 			JPH::Body* body = PhysicsManager::GetBodyInterface().CreateBody(bodyCreationSettings);
 
 			PhysicsManager::GetBodyInterface().AddBody(
-				body->GetID(), JPH::EActivation::Activate); // TODO: To Activate or Not?
+				body->GetID(), JPH::EActivation::Activate
+			); // TODO: To Activate or Not?
 			PhysicsManager::GetBodyInterface().SetFriction(
-				body->GetID(), (rigidBody.StaticFriction + rigidBody.DynamicFriction) / 2.0f);
+				body->GetID(), (rigidBody.StaticFriction + rigidBody.DynamicFriction) / 2.0f
+			);
 			PhysicsManager::GetBodyInterface().SetRestitution(body->GetID(), rigidBody.Restitution);
 
 			rigidBody.RuntimeRigidBody = body;
@@ -277,7 +280,7 @@ namespace Flameberry {
 
 		if (auto* relation = m_Registry->TryGetComponent<RelationshipComponent>(entity))
 			for (FEntity it = relation->FirstChild; it != FEntity::Null;
-				it = m_Registry->GetComponent<RelationshipComponent>(it).NextSibling)
+				 it = m_Registry->GetComponent<RelationshipComponent>(it).NextSibling)
 				UpdateTransformHierarchy(it, transform ? transform->GlobalTransform : glm::mat4(1.0f), !isDirty);
 	}
 

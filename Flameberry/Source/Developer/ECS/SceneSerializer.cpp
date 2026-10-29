@@ -257,7 +257,11 @@ namespace Flameberry {
 	}
 
 	void SceneSerializer::SerializeEntity(
-		YAML::Emitter& out, const FEntity& entity, const Ref<Scene>& scene, std::set<UUID>& meshUUIDs) {
+		YAML::Emitter& out,
+		const FEntity& entity,
+		const Ref<Scene>& scene,
+		std::set<UUID>& meshUUIDs
+	) {
 		out << YAML::BeginMap;
 		out << YAML::Key << "Entity" << YAML::Value << scene->m_Registry->GetComponent<IDComponent>(entity).ID;
 

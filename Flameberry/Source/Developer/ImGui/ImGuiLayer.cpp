@@ -45,7 +45,8 @@ namespace Flameberry {
 		config.GlyphExcludeRanges = iconRanges;
 
 		io.FontDefault = io.Fonts->AddFontFromFileTTF(
-			FBY_PROJECT_DIR "Flameberry/Assets/Fonts/inter/Inter-VariableFont_opsz,wght.ttf", fontSize, &config);
+			FBY_PROJECT_DIR "Flameberry/Assets/Fonts/inter/Inter-VariableFont_opsz,wght.ttf", fontSize, &config
+		);
 
 		// Merging Lucide icons into the default font
 		ImFontConfig iconFontConfig;
@@ -54,7 +55,8 @@ namespace Flameberry {
 		iconFontConfig.GlyphOffset = ImVec2(0, 2.5f);
 
 		io.Fonts->AddFontFromFileTTF(
-			FBY_PROJECT_DIR "Flameberry/Assets/Fonts/lucide/lucide.ttf", fontSize, &iconFontConfig, iconRanges);
+			FBY_PROJECT_DIR "Flameberry/Assets/Fonts/lucide/lucide.ttf", fontSize, &iconFontConfig, iconRanges
+		);
 
 		// Scaling for high DPI monitors (the content scale is always 1 on macOS, which uses the framebuffer scale
 		// instead) Fonts and viewports follow DPI changes automatically, but style sizes are baked here once
@@ -72,7 +74,8 @@ namespace Flameberry {
 
 		const auto& device = VulkanContext::GetCurrentDevice();
 		SwapChainDetails vk_swap_chain_details = RenderCommand::GetSwapChainDetails(
-			VulkanContext::GetPhysicalDevice(), VulkanContext::GetCurrentWindow()->GetWindowSurface());
+			VulkanContext::GetPhysicalDevice(), VulkanContext::GetCurrentWindow()->GetWindowSurface()
+		);
 
 		// Creating ImGui RenderPass
 		VkAttachmentDescription attachment{};
@@ -161,8 +164,10 @@ namespace Flameberry {
 
 	void ImGuiLayer::End() {
 		ImGuiIO& io = ImGui::GetIO();
-		io.DisplaySize = ImVec2((float)VulkanContext::GetCurrentWindow()->GetSpecification().Width,
-			(float)VulkanContext::GetCurrentWindow()->GetSpecification().Height);
+		io.DisplaySize = ImVec2(
+			(float)VulkanContext::GetCurrentWindow()->GetSpecification().Width,
+			(float)VulkanContext::GetCurrentWindow()->GetSpecification().Height
+		);
 
 		ImGui::Render();
 		ImDrawData* main_draw_data = ImGui::GetDrawData();
@@ -244,7 +249,8 @@ namespace Flameberry {
 			vk_image_view_create_info.subresourceRange.layerCount = 1;
 
 			VK_CHECK_RESULT(
-				vkCreateImageView(device->GetVulkanDevice(), &vk_image_view_create_info, nullptr, &m_ImGuiImageViews[i]));
+				vkCreateImageView(device->GetVulkanDevice(), &vk_image_view_create_info, nullptr, &m_ImGuiImageViews[i])
+			);
 		}
 
 		// Creating Framebuffers

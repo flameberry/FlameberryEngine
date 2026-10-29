@@ -64,20 +64,30 @@ namespace Flameberry::UI {
 		ImGui::End();
 	}
 
-	bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2,
-		float splitter_long_axis_size) {
+	bool Splitter(
+		bool split_vertically,
+		float thickness,
+		float* size1,
+		float* size2,
+		float min_size1,
+		float min_size2,
+		float splitter_long_axis_size
+	) {
 		using namespace ImGui;
 		ImGuiContext& g = *GImGui;
 		ImGuiWindow* window = g.CurrentWindow;
 		ImGuiID id = window->GetID("##Splitter");
 		ImRect bb;
 		bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
-		bb.Max = bb.Min
+		bb.Max =
+			bb.Min
 			+ CalcItemSize(
 				split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness),
-				0.0f, 0.0f);
-		return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2,
-			0.0f, 0.0f, 0xFF000000);
+				0.0f, 0.0f
+			);
+		return SplitterBehavior(
+			bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f, 0.0f, 0xFF000000
+		);
 	}
 
 	bool AlignedButton(const char* label, const ImVec2& size, float alignment) {
@@ -174,8 +184,12 @@ namespace Flameberry::UI {
 		anchorRect.Expand(ImVec2(0.0f, 4.0f));
 
 		const ImVec2 size(g_UIState.SelectionWidgetWidth, g_UIState.SelectionWidgetHeight);
-		ImGui::SetNextWindowPos(ImGui::FindBestWindowPosForPopupEx(anchorRect.GetBL(), size,
-			&g_UIState.SelectionWidgetLastDir, outerRect, anchorRect, ImGuiPopupPositionPolicy_ComboBox));
+		ImGui::SetNextWindowPos(
+			ImGui::FindBestWindowPosForPopupEx(
+				anchorRect.GetBL(), size, &g_UIState.SelectionWidgetLastDir, outerRect, anchorRect,
+				ImGuiPopupPositionPolicy_ComboBox
+			)
+		);
 		ImGui::SetNextWindowSize(ImVec2(g_UIState.SelectionWidgetWidth, 0.0f));
 
 		{
@@ -200,8 +214,10 @@ namespace Flameberry::UI {
 		}
 
 		const std::string inputBoxLabel = fmt::format("{}SearchBar", label);
-		g_UIState.IsSelectionWidgetSearchBoxFocused = InputBox(inputBoxLabel.c_str(), -1.0f, inputBuffer,
-			ICON_LC_SEARCH " Search...", g_UIState.IsSelectionWidgetSearchBoxFocused);
+		g_UIState.IsSelectionWidgetSearchBoxFocused = InputBox(
+			inputBoxLabel.c_str(), -1.0f, inputBuffer, ICON_LC_SEARCH " Search...",
+			g_UIState.IsSelectionWidgetSearchBoxFocused
+		);
 
 		// Pressing enter in the search box picks the first element that matches the search
 		g_UIState.IsSelectionWidgetEnterPressed = g_UIState.IsSelectionWidgetSearchBoxFocused
@@ -276,7 +292,8 @@ namespace Flameberry::UI {
 	bool BeginKeyValueTable(const char* label, ImGuiTableFlags tableFlags, float labelWidth) {
 		if (ImGui::BeginTable(label, 2, tableFlags ? tableFlags : g_UIState.TableFlags)) {
 			ImGui::TableSetupColumn(
-				"Attribute_Key", ImGuiTableColumnFlags_WidthFixed, labelWidth != 0.0f ? labelWidth : g_UIState.LabelWidth);
+				"Attribute_Key", ImGuiTableColumnFlags_WidthFixed, labelWidth != 0.0f ? labelWidth : g_UIState.LabelWidth
+			);
 			ImGui::TableSetupColumn("Attribute_Value", ImGuiTableColumnFlags_WidthStretch);
 			return true;
 		}
@@ -325,18 +342,23 @@ namespace Flameberry::UI {
 
 		if (hovered || held)
 			drawList->AddRectFilled(
-				pos, pos + ImVec2(width, height), toU32(held ? Theme::HeaderBgActive : Theme::HeaderBgHovered), rounding);
+				pos, pos + ImVec2(width, height), toU32(held ? Theme::HeaderBgActive : Theme::HeaderBgHovered), rounding
+			);
 
 		// Badge with the project's initial
 		const ImVec2 badgeMin = pos + ImVec2(padding, padding);
-		drawList->AddRectFilled(badgeMin, badgeMin + ImVec2(badgeSize, badgeSize),
-			toU32(missing ? Theme::HeaderBg : Theme::AccentColor), rounding);
+		drawList->AddRectFilled(
+			badgeMin, badgeMin + ImVec2(badgeSize, badgeSize), toU32(missing ? Theme::HeaderBg : Theme::AccentColor),
+			rounding
+		);
 		{
 			const char initial[2] = { name[0] ? (char)toupper(name[0]) : '?', '\0' };
 			ImGui::PushFont(nullptr, 18.0f);
 			const ImVec2 initialSize = ImGui::CalcTextSize(initial);
-			drawList->AddText(badgeMin + (ImVec2(badgeSize, badgeSize) - initialSize) * 0.5f,
-				toU32(missing ? Theme::TextDisabled : Theme::SelectionTextColor), initial);
+			drawList->AddText(
+				badgeMin + (ImVec2(badgeSize, badgeSize) - initialSize) * 0.5f,
+				toU32(missing ? Theme::TextDisabled : Theme::SelectionTextColor), initial
+			);
 			ImGui::PopFont();
 		}
 
@@ -353,8 +375,9 @@ namespace Flameberry::UI {
 			const ImVec2 tagMin(textX + ImGui::CalcTextSize(name).x + 8.0f, nameY - tagPadding.y);
 			const ImVec2 tagMax = tagMin + ImGui::CalcTextSize(tag) + 2.0f * tagPadding;
 			const ImVec4 errorColor = Theme::ErrorColor;
-			drawList->AddRectFilled(tagMin, tagMax, toU32(ImVec4(errorColor.x, errorColor.y, errorColor.z, 0.18f)),
-				0.5f * (tagMax.y - tagMin.y));
+			drawList->AddRectFilled(
+				tagMin, tagMax, toU32(ImVec4(errorColor.x, errorColor.y, errorColor.z, 0.18f)), 0.5f * (tagMax.y - tagMin.y)
+			);
 			drawList->AddText(tagMin + tagPadding, toU32(errorColor), tag);
 		}
 
@@ -362,7 +385,8 @@ namespace Flameberry::UI {
 			// Long paths are cut off with an ellipsis instead of running past the item
 			ScopedStyleColor textColor(ImGuiCol_Text, missing ? Theme::TextDisabled : Theme::TextMuted);
 			ImGui::RenderTextEllipsis(
-				drawList, ImVec2(textX, pathY), ImVec2(textMaxX, pathY + fontSize), textMaxX, path, nullptr, nullptr);
+				drawList, ImVec2(textX, pathY), ImVec2(textMaxX, pathY + fontSize), textMaxX, path, nullptr, nullptr
+			);
 		}
 
 		return pressed && !missing;

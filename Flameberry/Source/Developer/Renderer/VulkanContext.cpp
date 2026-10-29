@@ -73,10 +73,12 @@ namespace Flameberry {
 		constexpr uint32_t maxDescSets = 500;
 
 		std::vector<VkDescriptorPoolSize> poolSizes = { { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 * 8 },
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets }, { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 50 },
-			// ImGui's Vulkan backend allocates from this pool, using separate sampled images (one per ImGui texture)
-			// and samplers
-			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxDescSets }, { VK_DESCRIPTOR_TYPE_SAMPLER, 8 } };
+														{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets },
+														{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 50 },
+														// ImGui's Vulkan backend allocates from this pool, using separate
+														// sampled images (one per ImGui texture) and samplers
+														{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxDescSets },
+														{ VK_DESCRIPTOR_TYPE_SAMPLER, 8 } };
 		m_GlobalDescriptorPool = CreateRef<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, maxDescSets);
 
 #if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
@@ -92,8 +94,8 @@ namespace Flameberry {
 		m_Window->DestroyVulkanWindowSurface(m_VulkanInstance->GetVulkanInstance());
 	}
 
-	VkPhysicalDevice VulkanContext::GetValidPhysicalDevice(
-		const std::vector<VkPhysicalDevice>& physicalDeviceList, VkSurfaceKHR surface) {
+	VkPhysicalDevice
+	VulkanContext::GetValidPhysicalDevice(const std::vector<VkPhysicalDevice>& physicalDeviceList, VkSurfaceKHR surface) {
 		std::map<int, VkPhysicalDevice> physicalDeviceMap;
 
 		for (auto physicalDevice : physicalDeviceList) {

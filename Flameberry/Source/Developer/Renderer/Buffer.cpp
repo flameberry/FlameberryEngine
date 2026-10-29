@@ -33,7 +33,8 @@ namespace Flameberry {
 		vk_memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		vk_memory_allocate_info.allocationSize = vk_memory_requirements.size;
 		vk_memory_allocate_info.memoryTypeIndex = RenderCommand::GetValidMemoryTypeIndex(
-			physicalDevice, vk_memory_requirements.memoryTypeBits, m_BufferSpec.MemoryProperties);
+			physicalDevice, vk_memory_requirements.memoryTypeBits, m_BufferSpec.MemoryProperties
+		);
 
 		VK_CHECK_RESULT(vkAllocateMemory(device, &vk_memory_allocate_info, nullptr, &m_VkBufferDeviceMemory));
 		vkBindBufferMemory(device, m_VkBuffer, m_VkBufferDeviceMemory, 0);
@@ -75,7 +76,8 @@ namespace Flameberry {
 
 	void Buffer::WriteToIndex(const void* data, uint32_t index) {
 		FBY_ASSERT(
-			m_BufferSpec.InstanceSize, "Failed to write to index: Instance size not specified during buffer creation!");
+			m_BufferSpec.InstanceSize, "Failed to write to index: Instance size not specified during buffer creation!"
+		);
 		WriteToBuffer(data, m_BufferSpec.InstanceSize, index * m_AlignmentSize);
 	}
 

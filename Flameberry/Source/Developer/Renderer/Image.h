@@ -56,9 +56,16 @@ namespace Flameberry {
 
 		// This function just straight up creates, begins and ends a command buffer, which might be inefficient
 		void TransitionLayout(
-			VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
-		void CmdTransitionLayout(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout,
-			VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
+			VkImageLayout oldLayout,
+			VkImageLayout newLayout,
+			VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
+		);
+		void CmdTransitionLayout(
+			VkCommandBuffer cmdBuffer,
+			VkImageLayout oldLayout,
+			VkImageLayout newLayout,
+			VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
+		);
 
 		VkImage GetVulkanImage() const { return m_VulkanImage; }
 		VkImageView GetVulkanImageView(int idx = 0) const;
@@ -89,7 +96,10 @@ namespace Flameberry {
 	namespace Utils {
 
 		VkImageView CreateImageViewUsingSpecification(
-			const VkImage vulkanImage, const VkFormat format, const ImageViewSpecification& viewSpecification);
+			const VkImage vulkanImage,
+			const VkFormat format,
+			const ImageViewSpecification& viewSpecification
+		);
 
 	}
 

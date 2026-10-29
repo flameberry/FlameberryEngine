@@ -16,9 +16,12 @@ namespace Flameberry {
 		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
 	};
 
-	static VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-		VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-		void* userData) {
+	static VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+		void* userData
+	) {
 #if 1
 		switch (messageSeverity) {
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
@@ -131,8 +134,11 @@ namespace Flameberry {
 		}
 	}
 
-	VkResult VulkanInstance::CreateDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-		const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pMessenger) const {
+	VkResult VulkanInstance::CreateDebugUtilsMessengerEXT(
+		const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+		const VkAllocationCallbacks* pAllocator,
+		VkDebugUtilsMessengerEXT* pMessenger
+	) const {
 		auto vkCreateDebugUtilsMessengerEXT =
 			(PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VkInstance, "vkCreateDebugUtilsMessengerEXT");
 		if (vkCreateDebugUtilsMessengerEXT)
@@ -143,7 +149,9 @@ namespace Flameberry {
 	}
 
 	void VulkanInstance::DestroyDebugUtilsMessengerEXT(
-		VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator) const {
+		VkDebugUtilsMessengerEXT messenger,
+		const VkAllocationCallbacks* pAllocator
+	) const {
 		auto vkDestroyDebugUtilsMessengerEXT =
 			(PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VkInstance, "vkDestroyDebugUtilsMessengerEXT");
 		if (vkDestroyDebugUtilsMessengerEXT) vkDestroyDebugUtilsMessengerEXT(m_VkInstance, messenger, pAllocator);

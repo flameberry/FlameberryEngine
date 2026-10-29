@@ -29,8 +29,10 @@ namespace Flameberry {
 					UI::ScopedStyleVariable framePadding(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.5f });
 
 					ImGui::PushItemWidth(-1.0f);
-					if (ImGui::InputText("###RenameMaterial", m_RenameBuffer, 256,
-							ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+					if (ImGui::InputText(
+							"###RenameMaterial", m_RenameBuffer, 256,
+							ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue
+						)) {
 						m_EditingContext->SetName(std::string(m_RenameBuffer).c_str());
 						m_ShouldRename = false;
 						m_IsMaterialEdited = true;
@@ -102,15 +104,18 @@ namespace Flameberry {
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
 					FBY_UI_TABLE_ELEMENT(
-						"Roughness", ImGui::DragFloat("##Roughness", &uniformDataRef.Roughness, 0.01f, 0.0f, 1.0f));
+						"Roughness", ImGui::DragFloat("##Roughness", &uniformDataRef.Roughness, 0.01f, 0.0f, 1.0f)
+					);
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
 					FBY_UI_TABLE_ELEMENT(
-						"Metallic", ImGui::DragFloat("##Metallic", &uniformDataRef.Metallic, 0.005f, 0.0f, 1.0f));
+						"Metallic", ImGui::DragFloat("##Metallic", &uniformDataRef.Metallic, 0.005f, 0.0f, 1.0f)
+					);
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
 					FBY_UI_TABLE_ELEMENT(
-						"Emissive", ImGui::DragFloat("##Emissive", &uniformDataRef.EmissiveFactor, 0.025f, 0.0f));
+						"Emissive", ImGui::DragFloat("##Emissive", &uniformDataRef.EmissiveFactor, 0.025f, 0.0f)
+					);
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
 					ImGui::PopItemWidth();

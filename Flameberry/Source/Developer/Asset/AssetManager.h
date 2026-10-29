@@ -13,7 +13,8 @@ namespace Flameberry {
 	public:
 		template <typename TAssetManager> static Ref<TAssetManager> As() {
 			static_assert(
-				std::is_base_of_v<IAssetManager, TAssetManager>, "The class given must be derived from `IAssetManager`");
+				std::is_base_of_v<IAssetManager, TAssetManager>, "The class given must be derived from `IAssetManager`"
+			);
 			return std::static_pointer_cast<TAssetManager>(Project::GetActiveProject()->GetAssetManager());
 		}
 

@@ -61,7 +61,8 @@ namespace Flameberry {
 
 				{
 					UI::ScopedStyleVariable padding(
-						ImGuiStyleVar_CellPadding, ImVec2(0, ImGui::GetStyle().CellPadding.y * 0.75f));
+						ImGuiStyleVar_CellPadding, ImVec2(0, ImGui::GetStyle().CellPadding.y * 0.75f)
+					);
 					for (const auto& log : m_Logs) {
 						if (!m_FilterInfo && log.LogLevel == EditorLogLevel::Info) continue;
 						if (!m_FilterWarning && log.LogLevel == EditorLogLevel::Warn) continue;
@@ -98,7 +99,8 @@ namespace Flameberry {
 		ImGui::SameLine();
 
 		m_IsSearchBoxFocused = UI::InputBox(
-			"##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused);
+			"##ContentBrowserSearchBar", 150.0f, &m_SearchInputBuffer, ICON_LC_SEARCH " Search...", m_IsSearchBoxFocused
+		);
 
 		ImGui::SameLine();
 
@@ -112,24 +114,30 @@ namespace Flameberry {
 		float rightAlignX = ImGui::GetContentRegionAvail().x - buttonWidth;
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + rightAlignX);
 
-		if (ImGui::ImageButton("##Info", (ImTextureID)m_InfoIcon->CreateOrGetImGuiDescriptorSet(),
-				ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
-				m_FilterInfo ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f))) {
+		if (ImGui::ImageButton(
+				"##Info", (ImTextureID)m_InfoIcon->CreateOrGetImGuiDescriptorSet(), ImVec2(buttonSize, buttonSize),
+				ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
+				m_FilterInfo ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
+			)) {
 			m_FilterInfo = !m_FilterInfo;
 		}
 
 		ImGui::SameLine();
 
-		if (ImGui::ImageButton("##Warning", (ImTextureID)m_WarningIcon->CreateOrGetImGuiDescriptorSet(),
-				ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
-				m_FilterWarning ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f))) {
+		if (ImGui::ImageButton(
+				"##Warning", (ImTextureID)m_WarningIcon->CreateOrGetImGuiDescriptorSet(), ImVec2(buttonSize, buttonSize),
+				ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
+				m_FilterWarning ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
+			)) {
 			m_FilterWarning = !m_FilterWarning;
 		}
 
 		ImGui::SameLine();
-		if (ImGui::ImageButton("##Error", (ImTextureID)m_ErrorIcon->CreateOrGetImGuiDescriptorSet(),
-				ImVec2(buttonSize, buttonSize), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
-				m_FilterError ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f))) {
+		if (ImGui::ImageButton(
+				"##Error", (ImTextureID)m_ErrorIcon->CreateOrGetImGuiDescriptorSet(), ImVec2(buttonSize, buttonSize),
+				ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
+				m_FilterError ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
+			)) {
 			m_FilterError = !m_FilterError;
 		}
 

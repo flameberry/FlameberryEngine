@@ -17,7 +17,8 @@ namespace Flameberry {
 		s_Instance = this;
 
 		FBY_ASSERT(
-			m_Specification.Type != ApplicationType::None, "ApplicationSpecification: Application Type not specified");
+			m_Specification.Type != ApplicationType::None, "ApplicationSpecification: Application Type not specified"
+		);
 
 		// Set the working directory
 		if (std::filesystem::exists(m_Specification.WorkingDirectory))

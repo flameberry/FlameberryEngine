@@ -90,7 +90,8 @@ namespace Flameberry {
 		// Branding
 		constexpr float logoSize = 40.0f;
 		ImGui::Image(
-			reinterpret_cast<ImTextureID>(m_FlameberryIcon->CreateOrGetImGuiDescriptorSet()), ImVec2(logoSize, logoSize));
+			reinterpret_cast<ImTextureID>(m_FlameberryIcon->CreateOrGetImGuiDescriptorSet()), ImVec2(logoSize, logoSize)
+		);
 		ImGui::SameLine();
 		{
 			const float textBlockHeight = 2.0f * ImGui::GetFontSize() + 2.0f;
@@ -160,8 +161,10 @@ namespace Flameberry {
 			UI::ScopedStyleVariable itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 2.0f));
 			for (const auto& entry : m_ProjectRegistry) {
 				const std::string projectFilePathStr = entry.ProjectFilePath.string();
-				if (UI::ProjectRegistryEntryItem(entry.ProjectName.c_str(), projectFilePathStr.c_str(),
-						!std::filesystem::exists(entry.ProjectFilePath))) {
+				if (UI::ProjectRegistryEntryItem(
+						entry.ProjectName.c_str(), projectFilePathStr.c_str(),
+						!std::filesystem::exists(entry.ProjectFilePath)
+					)) {
 					// Open Project
 					m_Project = Project::Load(entry.ProjectFilePath);
 					m_ShouldClose = true;
@@ -182,7 +185,8 @@ namespace Flameberry {
 		{
 			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(20.0f, 20.0f));
 			isOpen = ImGui::BeginPopupModal(
-				"New Project", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+				"New Project", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize
+			);
 		}
 		if (!isOpen) return;
 
@@ -211,8 +215,9 @@ namespace Flameberry {
 		fieldLabel("Location");
 		const float browseButtonSize = ImGui::GetFrameHeight();
 		const float pathInputWidth = ImGui::GetContentRegionAvail().x - browseButtonSize - ImGui::GetStyle().ItemSpacing.x;
-		m_IsProjectPathInputFocused = UI::InputBox("##ProjectPathInput", pathInputWidth, &m_ProjectPathBuffer,
-			"Choose a directory...", m_IsProjectPathInputFocused);
+		m_IsProjectPathInputFocused = UI::InputBox(
+			"##ProjectPathInput", pathInputWidth, &m_ProjectPathBuffer, "Choose a directory...", m_IsProjectPathInputFocused
+		);
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - browseButtonSize);
 		if (ImGui::Button(ICON_LC_FOLDER_OPEN, ImVec2(browseButtonSize, browseButtonSize))) {

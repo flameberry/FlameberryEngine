@@ -40,7 +40,11 @@ namespace Flameberry {
 	}
 
 	Ref<Texture2D> TextureImporter::LoadTexture2DResized(
-		const std::filesystem::path& path, int newWidth, int newHeight, bool bGenerateMipmaps) {
+		const std::filesystem::path& path,
+		int newWidth,
+		int newHeight,
+		bool bGenerateMipmaps
+	) {
 		auto calculateNewDimensions = [](const int width, const int height, int& newWidth, int& newHeight) {
 			float scale = std::min({ 1.0f, newWidth / (float)width, newHeight / (float)height });
 			newWidth = std::max(1, (int)(width * scale));
@@ -64,8 +68,10 @@ namespace Flameberry {
 
 			resizedPixels = new float[channels * newWidth * newHeight];
 
-			stbir_resize_float_linear((const float*)pixels, width, height, 0, (float*)resizedPixels, newWidth, newHeight, 0,
-				stbir_pixel_layout::STBIR_RGBA);
+			stbir_resize_float_linear(
+				(const float*)pixels, width, height, 0, (float*)resizedPixels, newWidth, newHeight, 0,
+				stbir_pixel_layout::STBIR_RGBA
+			);
 		} else {
 			pixels = stbi_load(pathCStr, &width, &height, &channels, STBI_rgb_alpha);
 			format = VK_FORMAT_R8G8B8A8_UNORM;
@@ -75,8 +81,10 @@ namespace Flameberry {
 
 			resizedPixels = new unsigned char[channels * newWidth * newHeight];
 
-			stbir_resize_uint8_linear((const unsigned char*)pixels, width, height, 0, (unsigned char*)resizedPixels,
-				newWidth, newHeight, 0, stbir_pixel_layout::STBIR_RGBA);
+			stbir_resize_uint8_linear(
+				(const unsigned char*)pixels, width, height, 0, (unsigned char*)resizedPixels, newWidth, newHeight, 0,
+				stbir_pixel_layout::STBIR_RGBA
+			);
 		}
 
 		Texture2DSpecification specification;

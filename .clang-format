@@ -1,17 +1,19 @@
 BasedOnStyle: LLVM
 
 AccessModifierOffset: -4
-AlignAfterOpenBracket: DontAlign
+AlignAfterOpenBracket: BlockIndent
 AlignConsecutiveDeclarations: false
 AlignEscapedNewlines: Left
 AlignOperands: DontAlign
 AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: Empty
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortLambdasOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: Always
 AllowShortLoopsOnASingleLine: true
+BinPackParameters: OnePerLine
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Attach
 BreakInheritanceList: AfterColon

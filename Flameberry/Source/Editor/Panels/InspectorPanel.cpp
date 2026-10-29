@@ -38,7 +38,8 @@ namespace Flameberry {
 
 			const auto& windowPadding = ImGui::GetStyle().WindowPadding;
 			ImGui::SetCursorPos(
-				ImVec2(ImGui::GetCursorPos().x + windowPadding.x, ImGui::GetCursorPos().y + windowPadding.y));
+				ImVec2(ImGui::GetCursorPos().x + windowPadding.x, ImGui::GetCursorPos().y + windowPadding.y)
+			);
 
 			ImGui::PushFont(NULL, 18.0f);
 			ImGui::Text("%s", tag.Tag.c_str());
@@ -47,8 +48,10 @@ namespace Flameberry {
 			const char* addComponentText = ICON_LC_PLUS " Add";
 
 			ImGui::SameLine();
-			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - style.FramePadding.x * 2.0f
-				- ImGui::CalcTextSize(addComponentText).x - style.ItemSpacing.x);
+			ImGui::SetCursorPosX(
+				ImGui::GetWindowWidth() - style.FramePadding.x * 2.0f - ImGui::CalcTextSize(addComponentText).x
+				- style.ItemSpacing.x
+			);
 
 			// Check if selected entity is a collection entity
 			bool disableAddComponentButton =
@@ -84,7 +87,8 @@ namespace Flameberry {
 				UI::ScopedStyleColor border(ImGuiCol_Border, Theme::WindowBorder);
 
 				ImGui::BeginChild(
-					"##InspectorPanelComponentArea", ImVec2(-1, -1), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeX);
+					"##InspectorPanelComponentArea", ImVec2(-1, -1), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeX
+				);
 			}
 
 			ImGui::Spacing();
@@ -110,15 +114,21 @@ namespace Flameberry {
 					bool isTransformEdited = false;
 
 					if (UI::BeginKeyValueTable("TransformComponentAttributes")) {
-						FBY_UI_TABLE_ELEMENT("Translation",
+						FBY_UI_TABLE_ELEMENT(
+							"Translation",
 							isTransformEdited |=
-							UI::Vec3Control("Translation", transform.Translation, 0.0f, 0.01f, ImGui::GetColumnWidth()));
-						FBY_UI_TABLE_ELEMENT("Rotation",
+							UI::Vec3Control("Translation", transform.Translation, 0.0f, 0.01f, ImGui::GetColumnWidth())
+						);
+						FBY_UI_TABLE_ELEMENT(
+							"Rotation",
 							isTransformEdited |=
-							UI::Vec3Control("Rotation", transform.Rotation, 0.0f, 0.01f, ImGui::GetColumnWidth()));
-						FBY_UI_TABLE_ELEMENT("Scale",
+							UI::Vec3Control("Rotation", transform.Rotation, 0.0f, 0.01f, ImGui::GetColumnWidth())
+						);
+						FBY_UI_TABLE_ELEMENT(
+							"Scale",
 							isTransformEdited |=
-							UI::Vec3Control("Scale", transform.Scale, 1.0f, 0.01f, ImGui::GetColumnWidth()));
+							UI::Vec3Control("Scale", transform.Scale, 1.0f, 0.01f, ImGui::GetColumnWidth())
+						);
 
 						UI::EndKeyValueTable();
 					}
@@ -142,8 +152,10 @@ namespace Flameberry {
 
 						// Display font preview
 						UI::TableKeyElement("Font");
-						ImGui::Image((ImTextureID)fontPreview->CreateOrGetImGuiDescriptorSet(), ImVec2(80, 80), ImVec2(0, 1),
-							ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+						ImGui::Image(
+							(ImTextureID)fontPreview->CreateOrGetImGuiDescriptorSet(), ImVec2(80, 80), ImVec2(0, 1),
+							ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
+						);
 
 						if (ImGui::BeginDragDropTarget()) {
 							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM")) {
@@ -169,12 +181,15 @@ namespace Flameberry {
 						}
 
 						FBY_UI_TABLE_ELEMENT_WIDTH_MAX(
-							"Color", ImGui::ColorEdit3("##TextColor", glm::value_ptr(text.Color)));
+							"Color", ImGui::ColorEdit3("##TextColor", glm::value_ptr(text.Color))
+						);
 						FBY_UI_TABLE_ELEMENT_WIDTH_MAX(
-							"Emission", ImGui::DragFloat("##Emission", &text.EmissiveFactor, 0.025f, 1.0f));
+							"Emission", ImGui::DragFloat("##Emission", &text.EmissiveFactor, 0.025f, 1.0f)
+						);
 						FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Kerning", ImGui::DragFloat("##Kerning", &text.Kerning, 0.025f));
 						FBY_UI_TABLE_ELEMENT_WIDTH_MAX(
-							"LineSpacing", ImGui::DragFloat("##Line_Spacing", &text.LineSpacing, 0.025f));
+							"LineSpacing", ImGui::DragFloat("##Line_Spacing", &text.LineSpacing, 0.025f)
+						);
 
 						UI::EndKeyValueTable();
 					}
@@ -188,10 +203,14 @@ namespace Flameberry {
 
 				if (UI::BeginKeyValueTable("SkyLightComponentAttributes")) {
 					FBY_UI_TABLE_ELEMENT_WIDTH_MAX(
-						"Color", ImGui::ColorEdit3("##Color", glm::value_ptr(skyLightComp.Color)));
-					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity",
-						ImGui::DragFloat("##Intensity", &skyLightComp.Intensity, 0.01f, 0.0f, 10.0f, "%.3f",
-							ImGuiSliderFlags_AlwaysClamp));
+						"Color", ImGui::ColorEdit3("##Color", glm::value_ptr(skyLightComp.Color))
+					);
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX(
+						"Intensity",
+						ImGui::DragFloat(
+							"##Intensity", &skyLightComp.Intensity, 0.01f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
+						)
+					);
 
 					FBY_UI_TABLE_ELEMENT("Enable Skymap", ImGui::Checkbox("##Enable_EnvMap", &skyLightComp.EnableSkymap));
 
@@ -215,7 +234,8 @@ namespace Flameberry {
 						// Show Environment Map Preview
 						UI::TableKeyElement("Skymap");
 						ImGui::Image(
-							(ImTextureID)thumbnail->CreateOrGetImGuiDescriptorSet(), ImVec2(size * aspectRatio, size));
+							(ImTextureID)thumbnail->CreateOrGetImGuiDescriptorSet(), ImVec2(size * aspectRatio, size)
+						);
 
 						if (ImGui::BeginDragDropTarget()) {
 							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM")) {
@@ -240,7 +260,8 @@ namespace Flameberry {
 
 						std::string skymapName = skymap
 							? std::filesystem::path(
-								  AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath)
+								  AssetManager::As<EditorAssetManager>()->GetAssetMetadata(skyLightComp.Skymap).FilePath
+							  )
 								  .filename()
 								  .string()
 							: "";
@@ -303,7 +324,8 @@ namespace Flameberry {
 				if (UI::BeginKeyValueTable("MeshComponentAttributes")) {
 					Ref<StaticMesh> staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
 					FBY_UI_TABLE_ELEMENT(
-						"Mesh", ImGui::Button(staticMesh ? staticMesh->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f)));
+						"Mesh", ImGui::Button(staticMesh ? staticMesh->GetName().c_str() : "Null", ImVec2(-1.0f, 0.0f))
+					);
 
 					if (ImGui::BeginDragDropTarget()) {
 						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FBY_CONTENT_BROWSER_ITEM")) {
@@ -330,15 +352,18 @@ namespace Flameberry {
 				auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.MeshHandle);
 				if (!staticMesh) return;
 
-				bool is_open = ImGui::CollapsingHeader(ICON_LC_DRIBBBLE " Materials",
-					ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding);
+				bool is_open = ImGui::CollapsingHeader(
+					ICON_LC_DRIBBBLE " Materials",
+					ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding
+				);
 
 				if (is_open) {
 					const uint32_t limit = glm::min<uint32_t>(staticMesh->GetSubMeshes().size(), 8);
 					const float textLineHeightWithSpacing = ImGui::GetTextLineHeightWithSpacing() + 2.0f;
 					const float verticalLength = textLineHeightWithSpacing + 2.0f * ImGui::GetStyle().CellPadding.y + 2.0f;
 					ImGui::SetNextWindowSizeConstraints(
-						ImVec2(-1.0f, verticalLength), ImVec2(-1.0f, verticalLength * limit));
+						ImVec2(-1.0f, verticalLength), ImVec2(-1.0f, verticalLength * limit)
+					);
 
 					ImGuiWindowFlags windowFlags =
 						ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY;
@@ -351,9 +376,11 @@ namespace Flameberry {
 						ImGui::TableSetupColumn("Material_Index", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 						ImGui::TableSetupColumn("Material_Name", ImGuiTableColumnFlags_WidthStretch);
 						ImGui::TableSetupColumn(
-							"Material_LoadFromAssetsButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
+							"Material_LoadFromAssetsButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing
+						);
 						ImGui::TableSetupColumn(
-							"Material_ResetButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing);
+							"Material_ResetButton", ImGuiTableColumnFlags_WidthFixed, textLineHeightWithSpacing
+						);
 
 						uint32_t submeshIndex = 0;
 						for (const auto& submesh : staticMesh->GetSubMeshes()) {
@@ -407,13 +434,15 @@ namespace Flameberry {
 								UI::OpenSelectionWidget("##MaterialSelectionWidget");
 
 							if (UI::BeginSelectionWidget(
-									"##MaterialSelectionWidget", "Select Material", &m_SearchInputBuffer2)) {
+									"##MaterialSelectionWidget", "Select Material", &m_SearchInputBuffer2
+								)) {
 								auto displayMaterialEntry = [&](const Ref<Asset>& asset) {
 									if (asset->GetAssetType() != AssetType::Material) return;
 
 									Ref<MaterialAsset> m = std::static_pointer_cast<MaterialAsset>(asset);
 									if (UI::SelectionWidgetElement(
-											m->GetName().c_str(), m->Handle == mat->Handle, ICON_LC_PALETTE))
+											m->GetName().c_str(), m->Handle == mat->Handle, ICON_LC_PALETTE
+										))
 										mesh.OverridenMaterialTable[submeshIndex] = m->Handle;
 								};
 
@@ -423,7 +452,7 @@ namespace Flameberry {
 
 								// Show Memory Only Assets
 								for (const auto& [handle, asset] :
-									AssetManager::As<EditorAssetManager>()->GetMemoryOnlyAssets())
+									 AssetManager::As<EditorAssetManager>()->GetMemoryOnlyAssets())
 									displayMaterialEntry(asset);
 
 								UI::EndSelectionWidget();
@@ -449,9 +478,12 @@ namespace Flameberry {
 				if (UI::BeginKeyValueTable("DirectionalLightComponentAttributes")) {
 					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Color", ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
 					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity", ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
-					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Light Size",
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX(
+						"Light Size",
 						ImGui::DragFloat(
-							"##LightSize", &light.LightSize, 0.1f, 0.0f, 200.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp));
+							"##LightSize", &light.LightSize, 0.1f, 0.0f, 200.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp
+						)
+					);
 
 					UI::EndKeyValueTable();
 				}
@@ -475,10 +507,14 @@ namespace Flameberry {
 				if (UI::BeginKeyValueTable("SpotLightComponentAttributes")) {
 					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Color", ImGui::ColorEdit3("##Color", glm::value_ptr(light.Color)));
 					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("Intensity", ImGui::DragFloat("##Intensity", &light.Intensity, 0.1f));
-					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("InnerConeAngle",
-						ImGui::DragFloat("##InnerConeAngle", &light.InnerConeAngle, 0.1f, 0.0f, light.OuterConeAngle));
-					FBY_UI_TABLE_ELEMENT_WIDTH_MAX("OuterConeAngle",
-						ImGui::DragFloat("##OuterConeAngle", &light.OuterConeAngle, 0.1f, light.InnerConeAngle, 90.0f));
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX(
+						"InnerConeAngle",
+						ImGui::DragFloat("##InnerConeAngle", &light.InnerConeAngle, 0.1f, 0.0f, light.OuterConeAngle)
+					);
+					FBY_UI_TABLE_ELEMENT_WIDTH_MAX(
+						"OuterConeAngle",
+						ImGui::DragFloat("##OuterConeAngle", &light.OuterConeAngle, 0.1f, light.InnerConeAngle, 90.0f)
+					);
 					UI::EndKeyValueTable();
 				}
 			});
@@ -508,12 +544,17 @@ namespace Flameberry {
 					}
 
 					FBY_UI_TABLE_ELEMENT("Density", ImGui::DragFloat("##Density", &rigidBody.Density, 0.01f, 0.0f, 1000.0f));
-					FBY_UI_TABLE_ELEMENT("Static Friction",
-						ImGui::DragFloat("##Static_Friction", &rigidBody.StaticFriction, 0.005, 0.0f, 1.0f));
-					FBY_UI_TABLE_ELEMENT("Dynamic Friction",
-						ImGui::DragFloat("##Dynamic_Friction", &rigidBody.DynamicFriction, 0.005, 0.0f, 1.0f));
 					FBY_UI_TABLE_ELEMENT(
-						"Restitution", ImGui::DragFloat("##Restitution", &rigidBody.Restitution, 0.005f, 0.0f, 1.0f));
+						"Static Friction",
+						ImGui::DragFloat("##Static_Friction", &rigidBody.StaticFriction, 0.005, 0.0f, 1.0f)
+					);
+					FBY_UI_TABLE_ELEMENT(
+						"Dynamic Friction",
+						ImGui::DragFloat("##Dynamic_Friction", &rigidBody.DynamicFriction, 0.005, 0.0f, 1.0f)
+					);
+					FBY_UI_TABLE_ELEMENT(
+						"Restitution", ImGui::DragFloat("##Restitution", &rigidBody.Restitution, 0.005f, 0.0f, 1.0f)
+					);
 
 					ImGui::PopItemWidth();
 					UI::EndKeyValueTable();
@@ -525,8 +566,10 @@ namespace Flameberry {
 					m_Context->GetRegistry()->GetComponent<BoxColliderComponent>(EditorContext::Get()->SelectedEntity);
 
 				if (UI::BeginKeyValueTable("BoxColliderComponentAttributes")) {
-					FBY_UI_TABLE_ELEMENT("Collider Size",
-						UI::Vec3Control("BoxColliderSize", boxCollider.Size, 1.0f, 0.01f, ImGui::GetColumnWidth()));
+					FBY_UI_TABLE_ELEMENT(
+						"Collider Size",
+						UI::Vec3Control("BoxColliderSize", boxCollider.Size, 1.0f, 0.01f, ImGui::GetColumnWidth())
+					);
 					UI::EndKeyValueTable();
 				};
 			});
@@ -536,8 +579,9 @@ namespace Flameberry {
 					m_Context->GetRegistry()->GetComponent<SphereColliderComponent>(EditorContext::Get()->SelectedEntity);
 
 				if (UI::BeginKeyValueTable("SphereColliderComponentAttributes")) {
-					FBY_UI_TABLE_ELEMENT("Radius",
-						FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Radius", &sphereCollider.Radius, 0.01f, 0.0f, 0.0f)));
+					FBY_UI_TABLE_ELEMENT(
+						"Radius", FBY_PUSH_WIDTH_MAX(ImGui::DragFloat("##Radius", &sphereCollider.Radius, 0.01f, 0.0f, 0.0f))
+					);
 					UI::EndKeyValueTable();
 				}
 			});

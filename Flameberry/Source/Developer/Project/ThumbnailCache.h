@@ -18,8 +18,10 @@ namespace Flameberry {
 
 	class ThumbnailCache {
 	public:
-		ThumbnailCache(const std::filesystem::path& thumbnailCacheDirectory,
-			const ThumbnailCacheConfig& config = ThumbnailCacheConfig());
+		ThumbnailCache(
+			const std::filesystem::path& thumbnailCacheDirectory,
+			const ThumbnailCacheConfig& config = ThumbnailCacheConfig()
+		);
 
 		Ref<Texture2D> GetOrCreateThumbnail(const std::filesystem::path& assetPath);
 		void ResetThumbnailLoadedCounter() { m_ThumbnailsLoadedThisFrame = 0; }

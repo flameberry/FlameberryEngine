@@ -35,8 +35,10 @@ namespace std {
 		size_t operator()(const Flameberry::DescriptorSetLayoutSpecification& specification) const noexcept {
 			// Should 32 bit murmur hash be used? Or should 128 bits hash be used and sliced back to 64 bits?
 			uint32_t hashValue;
-			MurmurHash3_x86_32(specification.Bindings.data(),
-				sizeof(VkDescriptorSetLayoutBinding) * specification.Bindings.size(), 0, &hashValue);
+			MurmurHash3_x86_32(
+				specification.Bindings.data(), sizeof(VkDescriptorSetLayoutBinding) * specification.Bindings.size(), 0,
+				&hashValue
+			);
 			return static_cast<size_t>(hashValue);
 		}
 	};
@@ -98,9 +100,12 @@ namespace Flameberry {
 		static int calls = 0;
 		calls++;
 		FBY_TRACE(
-			"DescriptorSetLayout Cache Stats: Layouts: {} vs Total calls : {}", s_CachedDescriptorSetLayouts.size(), calls);
-		FBY_ASSERT((float)g_DescriptorSetLayoutSpecificationComparisons < calls,
-			"Too many DescriptorSetLayoutSpecification comparisons, you might want to look into this");
+			"DescriptorSetLayout Cache Stats: Layouts: {} vs Total calls : {}", s_CachedDescriptorSetLayouts.size(), calls
+		);
+		FBY_ASSERT(
+			(float)g_DescriptorSetLayoutSpecificationComparisons < calls,
+			"Too many DescriptorSetLayoutSpecification comparisons, you might want to look into this"
+		);
 #endif
 		if (auto it = s_CachedDescriptorSetLayouts.find(specification); it != s_CachedDescriptorSetLayouts.end()) {
 			FBY_TRACE("DescriptorSetLayout retrieved from cache!");

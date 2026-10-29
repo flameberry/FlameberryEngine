@@ -95,29 +95,38 @@ namespace Flameberry {
 		return 0;
 	}
 
-	static void PopulateVulkanPushConstantRanges(
-		std::vector<VkPushConstantRange>& outPushConstantRanges, const Ref<Shader>& shader) {
+	static void
+	PopulateVulkanPushConstantRanges(std::vector<VkPushConstantRange>& outPushConstantRanges, const Ref<Shader>& shader) {
 		std::unordered_map<uint32_t, uint32_t> pcOffsetToIndex;
 		outPushConstantRanges.reserve(shader->GetPushConstantSpecifications().size());
 
 		for (const auto& specification : shader->GetPushConstantSpecifications()) {
 			if (auto it = pcOffsetToIndex.find(specification.Offset); it != pcOffsetToIndex.end()) {
-				FBY_ASSERT(!(specification.VulkanShaderStage & outPushConstantRanges[it->second].stageFlags),
-					"Push constant blocks within the same shader stage must not have the same offset!");
+				FBY_ASSERT(
+					!(specification.VulkanShaderStage & outPushConstantRanges[it->second].stageFlags),
+					"Push constant blocks within the same shader stage must not have the same offset!"
+				);
 				// TODO: Maybe make this be just a warning, so that the flexibility still remains
-				FBY_ASSERT(specification.Size == outPushConstantRanges[it->second].size,
-					"Push constant blocks between different shader stages having the same offset must have the same size! (The assumption here is that both represent the same push constant block)");
+				FBY_ASSERT(
+					specification.Size == outPushConstantRanges[it->second].size,
+					"Push constant blocks between different shader stages having the same offset must have the same size! (The assumption here is that both represent the same push constant block)"
+				);
 				outPushConstantRanges[it->second].stageFlags |= specification.VulkanShaderStage;
 			} else {
-				outPushConstantRanges.emplace_back(VkPushConstantRange{
-					(VkShaderStageFlags)specification.VulkanShaderStage, specification.Offset, specification.Size });
+				outPushConstantRanges.emplace_back(
+					VkPushConstantRange{ (VkShaderStageFlags)specification.VulkanShaderStage, specification.Offset,
+										 specification.Size }
+				);
 				pcOffsetToIndex[specification.Offset] = (uint32_t)outPushConstantRanges.size() - 1;
 			}
 		}
 	}
 
-	static void PopulateVulkanDescriptorSetLayouts(std::vector<VkDescriptorSetLayout>& outVulkanDescriptorSetLayouts,
-		std::vector<Ref<DescriptorSetLayout>>& outDescriptorSetLayouts, const Ref<Shader>& shader) {
+	static void PopulateVulkanDescriptorSetLayouts(
+		std::vector<VkDescriptorSetLayout>& outVulkanDescriptorSetLayouts,
+		std::vector<Ref<DescriptorSetLayout>>& outDescriptorSetLayouts,
+		const Ref<Shader>& shader
+	) {
 		// Creating the Descriptor Set Layouts required for creating the Pipeline based on the Shader Reflection Data
 		const auto& reflectionDescriptorSets = shader->GetDescriptorSetSpecifications();
 		const auto& descriptorBindings = shader->GetDescriptorBindingSpecifications();
@@ -130,7 +139,9 @@ namespace Flameberry {
 			for (uint32_t i = 0; i < reflectionDescSet.BindingCount; i++) {
 				vulkanDescSetBindings.emplace_back(
 					VkDescriptorSetLayoutBinding{ descriptorBindings[index].Binding, descriptorBindings[index].Type,
-						descriptorBindings[index].Count, descriptorBindings[index].VulkanShaderStage, nullptr });
+												  descriptorBindings[index].Count,
+												  descriptorBindings[index].VulkanShaderStage, nullptr }
+				);
 				index++;
 			}
 
@@ -147,7 +158,9 @@ namespace Flameberry {
 
 	static uint32_t PopulateVulkanSpecializationMapEntries(
 		std::vector<VkSpecializationMapEntry>& outVulkanSpecializationMapEntries,
-		const SpecializationConstantLayout& specializationConstantLayout, const Ref<Shader>& shader) {
+		const SpecializationConstantLayout& specializationConstantLayout,
+		const Ref<Shader>& shader
+	) {
 		uint32_t offset = 0;
 		const auto& specializationConstantIDSet = shader->GetSpecializationConstantIDSet();
 
@@ -155,13 +168,16 @@ namespace Flameberry {
 			if (specializationConstant.Type < ShaderDataType::Dummy1) {
 				FBY_ASSERT(
 					specializationConstantIDSet.find(specializationConstant.ConstantID) != specializationConstantIDSet.end(),
-					"Specialization Constant ID specified during Pipeline Creation doesn't match any ID present in the shader!");
+					"Specialization Constant ID specified during Pipeline Creation doesn't match any ID present in the shader!"
+				);
 
-				outVulkanSpecializationMapEntries.emplace_back(VkSpecializationMapEntry{
-					specializationConstant.ConstantID,
-					offset,
-					SizeOfShaderDataType(specializationConstant.Type),
-				});
+				outVulkanSpecializationMapEntries.emplace_back(
+					VkSpecializationMapEntry{
+						specializationConstant.ConstantID,
+						offset,
+						SizeOfShaderDataType(specializationConstant.Type),
+					}
+				);
 			}
 			offset += outVulkanSpecializationMapEntries.back().size;
 		}
@@ -208,7 +224,7 @@ namespace Flameberry {
 		vk_pipeline_fragment_shader_stage_create_info.pName = "main";
 
 		VkPipelineShaderStageCreateInfo vk_shader_stages_create_infos[2] = { vk_pipeline_vertex_shader_stage_create_info,
-			vk_pipeline_fragment_shader_stage_create_info };
+																			 vk_pipeline_fragment_shader_stage_create_info };
 
 		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState{};
 		if (m_Specification.BlendingEnable) {
@@ -371,7 +387,8 @@ namespace Flameberry {
 		vk_graphics_pipeline_create_info.basePipelineIndex = -1;
 
 		VK_CHECK_RESULT(vkCreateGraphicsPipelines(
-			device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_GraphicsPipeline));
+			device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_create_info, nullptr, &m_GraphicsPipeline
+		));
 	}
 
 	Pipeline::~Pipeline() {
@@ -391,7 +408,8 @@ namespace Flameberry {
 
 		std::vector<VkSpecializationMapEntry> vulkanSpecializationMapEntries;
 		uint32_t dataSize = PopulateVulkanSpecializationMapEntries(
-			vulkanSpecializationMapEntries, m_Specification.SpecializationConstantLayout, m_Specification.Shader);
+			vulkanSpecializationMapEntries, m_Specification.SpecializationConstantLayout, m_Specification.Shader
+		);
 
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
 		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -423,7 +441,8 @@ namespace Flameberry {
 		computePipelineCreateInfo.stage = pipelineComputeShaderStageCreateInfo;
 
 		VK_CHECK_RESULT(
-			vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_ComputePipeline));
+			vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_ComputePipeline)
+		);
 	}
 
 	ComputePipeline::~ComputePipeline() {

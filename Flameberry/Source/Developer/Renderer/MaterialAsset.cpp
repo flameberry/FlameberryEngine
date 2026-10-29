@@ -15,22 +15,34 @@ namespace Flameberry {
 	{
 		// This is here to remind the developer to update the GPU representation of the Material Struct when it is
 		// updated in the shader
-		FBY_ASSERT(sizeof(MaterialStructGPURepresentation) == m_MaterialRef->GetUniformDataSize(),
+		FBY_ASSERT(
+			sizeof(MaterialStructGPURepresentation) == m_MaterialRef->GetUniformDataSize(),
 			"The GPU Representation of Material has a size ({}) which is not the same as actual Uniform size ({})",
-			sizeof(MaterialStructGPURepresentation), m_MaterialRef->GetUniformDataSize());
+			sizeof(MaterialStructGPURepresentation), m_MaterialRef->GetUniformDataSize()
+		);
 
 		// This is very frustrating to do, otherwise Vulkan complains about no vkUpdateDescriptorSet called on certain
 		// bindings
-		m_MaterialRef->Set("u_AlbedoMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_MaterialRef->Set("u_NormalMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_MaterialRef->Set("u_RoughnessMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_MaterialRef->Set("u_AmbientMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_MaterialRef->Set("u_MetallicMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_MaterialRef->Set(
+			"u_AlbedoMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
+		m_MaterialRef->Set(
+			"u_NormalMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
+		m_MaterialRef->Set(
+			"u_RoughnessMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
+		m_MaterialRef->Set(
+			"u_AmbientMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
+		m_MaterialRef->Set(
+			"u_MetallicMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
 	}
 
 	void MaterialAsset::SetAlbedoMap(AssetHandle handle) {

@@ -69,12 +69,21 @@ namespace Flameberry {
 			: 1;
 		const VkDeviceSize imageSize =
 			specification.Width * specification.Height * Utils::GetPixelSizeInBytesFromTextureFormat(specification.Format);
-		SetupTexture(data, specification.Width, specification.Height, imageSize, mipLevels, specification.Format,
-			specification.Sampler);
+		SetupTexture(
+			data, specification.Width, specification.Height, imageSize, mipLevels, specification.Format,
+			specification.Sampler
+		);
 	}
 
-	void Texture2D::SetupTexture(const void* data, const float width, const float height, const float imageSize,
-		const uint16_t mipLevels, const VkFormat format, const VkSampler sampler) {
+	void Texture2D::SetupTexture(
+		const void* data,
+		const float width,
+		const float height,
+		const float imageSize,
+		const uint16_t mipLevels,
+		const VkFormat format,
+		const VkSampler sampler
+	) {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 		m_TextureImageSpecification.Width = width;
@@ -145,20 +154,23 @@ namespace Flameberry {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		if (m_DescriptorSet != VK_NULL_HANDLE)
 			vkFreeDescriptorSets(
-				device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_DescriptorSet);
+				device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_DescriptorSet
+			);
 		// ImGui allocates its texture descriptor sets from the global pool, so this is equivalent to
 		// ImGui_ImplVulkan_RemoveTexture(), but doesn't depend on the ImGui backend still being alive when textures are
 		// destroyed during shutdown
 		if (m_ImGuiDescriptorSet != VK_NULL_HANDLE)
-			vkFreeDescriptorSets(device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1,
-				&m_ImGuiDescriptorSet);
+			vkFreeDescriptorSets(
+				device, VulkanContext::GetCurrentGlobalDescriptorPool()->GetVulkanDescriptorPool(), 1, &m_ImGuiDescriptorSet
+			);
 		if (m_DidCreateSampler) vkDestroySampler(device, m_Sampler, nullptr);
 	}
 
 	VkDescriptorSet Texture2D::CreateOrGetDescriptorSet() {
 		if (m_DescriptorSet == VK_NULL_HANDLE) {
 			VulkanContext::GetCurrentGlobalDescriptorPool()->AllocateDescriptorSet(
-				&m_DescriptorSet, s_DescriptorLayout->GetLayout());
+				&m_DescriptorSet, s_DescriptorLayout->GetLayout()
+			);
 
 			// Update the Descriptor Set:
 			VkDescriptorImageInfo desc_image[1] = {};
@@ -243,8 +255,10 @@ namespace Flameberry {
 			vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
 			vk_image_memory_barrier.subresourceRange.layerCount = 1;
 
-			vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1,
-				&vk_image_memory_barrier);
+			vkCmdPipelineBarrier(
+				commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1,
+				&vk_image_memory_barrier
+			);
 
 			device->EndSingleTimeCommandBuffer(commandBuffer);
 		}

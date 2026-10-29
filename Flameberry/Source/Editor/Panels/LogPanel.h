@@ -22,7 +22,10 @@ namespace Flameberry {
 		std::chrono::system_clock::time_point Timestamp;
 
 		EditorLogEntry(
-			const std::string& message, EditorLogLevel logLevel, const std::chrono::system_clock::time_point& timestamp)
+			const std::string& message,
+			EditorLogLevel logLevel,
+			const std::chrono::system_clock::time_point& timestamp
+		)
 			: Message(message), LogLevel(logLevel), Timestamp(timestamp) {}
 	};
 
@@ -30,19 +33,22 @@ namespace Flameberry {
 	public:
 		template <typename... Args> inline void AddInfo(const fmt::format_string<Args...>& message, Args&&... args) {
 			m_Logs.emplace_back(
-				fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Info, std::chrono::system_clock::now());
+				fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Info, std::chrono::system_clock::now()
+			);
 			m_ScrollToBottom = true;
 		}
 
 		template <typename... Args> inline void AddWarning(const fmt::format_string<Args...>& message, Args&&... args) {
 			m_Logs.emplace_back(
-				fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Warn, std::chrono::system_clock::now());
+				fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Warn, std::chrono::system_clock::now()
+			);
 			m_ScrollToBottom = true;
 		}
 
 		template <typename... Args> inline void AddError(const fmt::format_string<Args...>& message, Args&&... args) {
 			m_Logs.emplace_back(
-				fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Error, std::chrono::system_clock::now());
+				fmt::format(message, std::forward<Args>(args)...), EditorLogLevel::Error, std::chrono::system_clock::now()
+			);
 			m_ScrollToBottom = true;
 		}
 

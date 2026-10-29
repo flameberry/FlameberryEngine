@@ -7,9 +7,14 @@
 namespace Flameberry {
 
 	template <typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
-	static Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName, float fontSize,
-		const std::vector<msdf_atlas::GlyphGeometry>& glyphs, const msdf_atlas::FontGeometry& fontGeometry, uint32_t width,
-		uint32_t height) {
+	static Ref<Texture2D> CreateAndCacheAtlas(
+		const std::string& fontName,
+		float fontSize,
+		const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
+		const msdf_atlas::FontGeometry& fontGeometry,
+		uint32_t width,
+		uint32_t height
+	) {
 		msdf_atlas::GeneratorAttributes attributes;
 		attributes.config.overlapSupport = true;
 		attributes.scanlinePass = true;
@@ -116,7 +121,8 @@ namespace Flameberry {
 #endif
 
 		m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 4, msdf_atlas::mtsdfGenerator>(
-			"Test", (float)emSize, m_Data->Glyphs, m_Data->FontGeometry, width, height);
+			"Test", (float)emSize, m_Data->Glyphs, m_Data->FontGeometry, width, height
+		);
 
 		msdfgen::destroyFont(font);
 		msdfgen::deinitializeFreetype(ft);

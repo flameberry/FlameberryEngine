@@ -144,9 +144,15 @@ namespace Flameberry {
 		return materialAsset->Handle;
 	}
 
-	static void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<MeshVertex>& refVertices,
-		std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles,
-		AABB& meshAABB) {
+	static void ProcessMesh(
+		aiMesh* mesh,
+		const aiScene* scene,
+		std::vector<MeshVertex>& refVertices,
+		std::vector<uint32_t>& refIndices,
+		std::vector<SubMesh>& refSubMeshes,
+		std::vector<AssetHandle>& refMatHandles,
+		AABB& meshAABB
+	) {
 		uint32_t indexBase = refVertices.size();
 
 		for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
@@ -159,11 +165,12 @@ namespace Flameberry {
 			glm::vec3 bitangent = mesh->HasTangentsAndBitangents()
 				? glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z)
 				: glm::vec3(0.0f);
-			refVertices.emplace_back(glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z), // Position
-				glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z),						  // Normals
-				textureCoords, // TextureCoords
-				tangent,	   // Tangent
-				bitangent	   // BiTangent
+			refVertices.emplace_back(
+				glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z), // Position
+				glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z),	 // Normals
+				textureCoords,																 // TextureCoords
+				tangent,																	 // Tangent
+				bitangent																	 // BiTangent
 			);
 		}
 
@@ -177,8 +184,11 @@ namespace Flameberry {
 		// Add submesh
 		refSubMeshes.emplace_back(
 			SubMesh{ refMatHandles[mesh->mMaterialIndex], indexOffset, (uint32_t)refIndices.size() - indexOffset,
-				AABB(glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z),
-					glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)) });
+					 AABB(
+						 glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z),
+						 glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)
+					 ) }
+		);
 
 		// Check and update mesh's AABB
 		if (meshAABB.Min.x > mesh->mAABB.mMin.x || meshAABB.Min.y > mesh->mAABB.mMin.y
@@ -190,9 +200,15 @@ namespace Flameberry {
 			meshAABB.Max = { mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z };
 	}
 
-	static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<MeshVertex>& refVertices,
-		std::vector<uint32_t>& refIndices, std::vector<SubMesh>& refSubMeshes, std::vector<AssetHandle>& refMatHandles,
-		AABB& meshAABB) {
+	static void ProcessNode(
+		aiNode* node,
+		const aiScene* scene,
+		std::vector<MeshVertex>& refVertices,
+		std::vector<uint32_t>& refIndices,
+		std::vector<SubMesh>& refSubMeshes,
+		std::vector<AssetHandle>& refMatHandles,
+		AABB& meshAABB
+	) {
 		// Process all the node's meshes (if any)
 		for (uint32_t i = 0; i < node->mNumMeshes; i++) {
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
@@ -213,9 +229,11 @@ namespace Flameberry {
 		// And have it read the given file with some example postprocessing
 		// Usually - if speed is not the most important aspect for you - you'll
 		// probably to request more postprocessing than we do in this example.
-		const aiScene* scene = importer.ReadFile(path.string(),
+		const aiScene* scene = importer.ReadFile(
+			path.string(),
 			// aiProcessPreset_TargetRealtime_Fast
-			aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipUVs | aiProcess_GenBoundingBoxes);
+			aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipUVs | aiProcess_GenBoundingBoxes
+		);
 
 		// If the import failed, report it
 		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)) {

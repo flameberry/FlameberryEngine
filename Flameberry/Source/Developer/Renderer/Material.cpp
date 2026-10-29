@@ -70,8 +70,10 @@ namespace Flameberry {
 
 				// This will assert the assumption that all the material specific descriptor sets will have sequential
 				// set indices
-				FBY_ASSERT(reflectionDescSet.Set - m_StartSetIndex == m_DescriptorSets.size() - 1,
-					"Material specific descriptor sets do not have sequentialy set indices!");
+				FBY_ASSERT(
+					reflectionDescSet.Set - m_StartSetIndex == m_DescriptorSets.size() - 1,
+					"Material specific descriptor sets do not have sequentialy set indices!"
+				);
 			}
 		}
 	}

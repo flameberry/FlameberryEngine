@@ -24,7 +24,11 @@ namespace Flameberry {
 	}
 
 	void RenderCommand::WritePixelFromImageToBuffer(
-		VkBuffer buffer, VkImage image, VkImageLayout currentImageLayout, const glm::vec2& pixelOffset) {
+		VkBuffer buffer,
+		VkImage image,
+		VkImageLayout currentImageLayout,
+		const glm::vec2& pixelOffset
+	) {
 		const auto& device = VulkanContext::GetCurrentDevice();
 
 		VkCommandBuffer commandBuffer;
@@ -53,8 +57,10 @@ namespace Flameberry {
 			vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
 			vk_image_memory_barrier.subresourceRange.layerCount = 1;
 
-			vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1,
-				&vk_image_memory_barrier);
+			vkCmdPipelineBarrier(
+				commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1,
+				&vk_image_memory_barrier
+			);
 		}
 
 		VkBufferImageCopy region{};
@@ -92,8 +98,10 @@ namespace Flameberry {
 			vk_image_memory_barrier.subresourceRange.baseArrayLayer = 0;
 			vk_image_memory_barrier.subresourceRange.layerCount = 1;
 
-			vkCmdPipelineBarrier(commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1,
-				&vk_image_memory_barrier);
+			vkCmdPipelineBarrier(
+				commandBuffer, sourceStageFlags, destinationStageFlags, 0, 0, nullptr, 0, nullptr, 1,
+				&vk_image_memory_barrier
+			);
 		}
 		device->EndSingleTimeCommandBuffer(commandBuffer);
 	}
@@ -177,7 +185,10 @@ namespace Flameberry {
 	}
 
 	uint32_t RenderCommand::GetValidMemoryTypeIndex(
-		VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags vk_memory_property_flags) {
+		VkPhysicalDevice physicalDevice,
+		uint32_t typeFilter,
+		VkMemoryPropertyFlags vk_memory_property_flags
+	) {
 		VkPhysicalDeviceMemoryProperties vk_physical_device_mem_properties;
 		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &vk_physical_device_mem_properties);
 
@@ -191,8 +202,12 @@ namespace Flameberry {
 		return -1;
 	}
 
-	VkFormat RenderCommand::GetSupportedFormat(VkPhysicalDevice physicalDevice,
-		const std::vector<VkFormat>& candidateFormats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags) {
+	VkFormat RenderCommand::GetSupportedFormat(
+		VkPhysicalDevice physicalDevice,
+		const std::vector<VkFormat>& candidateFormats,
+		VkImageTiling tiling,
+		VkFormatFeatureFlags featureFlags
+	) {
 		for (const auto& format : candidateFormats) {
 			VkFormatProperties properties;
 			vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &properties);
@@ -282,7 +297,8 @@ namespace Flameberry {
 		if (formatCount) {
 			vk_swap_chain_details.SurfaceFormats.resize(formatCount);
 			vkGetPhysicalDeviceSurfaceFormatsKHR(
-				physicalDevice, surface, &formatCount, vk_swap_chain_details.SurfaceFormats.data());
+				physicalDevice, surface, &formatCount, vk_swap_chain_details.SurfaceFormats.data()
+			);
 		}
 
 		uint32_t presentationModeCount = 0;
@@ -291,7 +307,8 @@ namespace Flameberry {
 		if (presentationModeCount) {
 			vk_swap_chain_details.PresentationModes.resize(presentationModeCount);
 			vkGetPhysicalDeviceSurfacePresentModesKHR(
-				physicalDevice, surface, &presentationModeCount, vk_swap_chain_details.PresentationModes.data());
+				physicalDevice, surface, &presentationModeCount, vk_swap_chain_details.PresentationModes.data()
+			);
 		}
 
 		return vk_swap_chain_details;

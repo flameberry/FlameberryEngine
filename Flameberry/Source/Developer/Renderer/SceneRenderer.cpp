@@ -316,10 +316,10 @@ namespace Flameberry {
 		// Create Descriptor Set that serves as a writing target for all post-processing passes ----------
 		DescriptorSetLayoutSpecification descSetLayoutSpec;
 		descSetLayoutSpec.Bindings = { { .binding = 0,
-			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-			.descriptorCount = 1,
-			.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-			.pImmutableSamplers = nullptr } };
+										 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+										 .descriptorCount = 1,
+										 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+										 .pImmutableSamplers = nullptr } };
 
 		m_PostProcessingTargetImageDescSetLayout = CreateRef<DescriptorSetLayout>(descSetLayoutSpec);
 
@@ -471,7 +471,8 @@ namespace Flameberry {
 
 	void SceneRenderer::InvalidateGeometryPass(const uint32_t resourceIndex, const glm::vec2& viewportSize) {
 		m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->OnResize(
-			viewportSize.x, viewportSize.y, m_GeometryPass->GetRenderPass());
+			viewportSize.x, viewportSize.y, m_GeometryPass->GetRenderPass()
+		);
 
 		// Update descriptor set associated with the geometry pass
 		VkDescriptorImageInfo imageInfo{};
@@ -512,9 +513,10 @@ namespace Flameberry {
 			viewSpecification.BaseMipLevel = 0;
 			viewSpecification.LevelCount = mipLevels;
 
-			m_BloomImageCompleteViews[resourceIndex] =
-				Utils::CreateImageViewUsingSpecification(m_BloomImageResource[resourceIndex]->GetVulkanImage(),
-					m_BloomImageResource[resourceIndex]->GetSpecification().Format, viewSpecification);
+			m_BloomImageCompleteViews[resourceIndex] = Utils::CreateImageViewUsingSpecification(
+				m_BloomImageResource[resourceIndex]->GetVulkanImage(),
+				m_BloomImageResource[resourceIndex]->GetSpecification().Format, viewSpecification
+			);
 		}
 
 		if (m_BloomDescriptorSetResources.size() != numDescriptorSetsPerFrame) {
@@ -811,17 +813,38 @@ namespace Flameberry {
 		Renderer2D::Init(m_GeometryPass);
 	}
 
-	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const GenericCamera& camera,
-		const glm::vec3& cameraPosition, FEntity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline,
-		bool renderPhysicsCollider) {
-		RenderScene(viewportSize, scene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), cameraPosition,
+	void SceneRenderer::RenderScene(
+		const glm::vec2& viewportSize,
+		const Ref<Scene>& scene,
+		const GenericCamera& camera,
+		const glm::vec3& cameraPosition,
+		FEntity selectedEntity,
+		bool renderGrid,
+		bool renderDebugIcons,
+		bool renderOutline,
+		bool renderPhysicsCollider
+	) {
+		RenderScene(
+			viewportSize, scene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), cameraPosition,
 			camera.GetSettings().Near, camera.GetSettings().Far, selectedEntity, renderGrid, renderDebugIcons, renderOutline,
-			renderPhysicsCollider);
+			renderPhysicsCollider
+		);
 	}
 
-	void SceneRenderer::RenderScene(const glm::vec2& viewportSize, const Ref<Scene>& scene, const glm::mat4& viewMatrix,
-		const glm::mat4& projectionMatrix, const glm::vec3& cameraPosition, float cameraNear, float cameraFar,
-		FEntity selectedEntity, bool renderGrid, bool renderDebugIcons, bool renderOutline, bool renderPhysicsCollider) {
+	void SceneRenderer::RenderScene(
+		const glm::vec2& viewportSize,
+		const Ref<Scene>& scene,
+		const glm::mat4& viewMatrix,
+		const glm::mat4& projectionMatrix,
+		const glm::vec3& cameraPosition,
+		float cameraNear,
+		float cameraFar,
+		FEntity selectedEntity,
+		bool renderGrid,
+		bool renderDebugIcons,
+		bool renderOutline,
+		bool renderPhysicsCollider
+	) {
 		uint32_t currentFrame = Renderer::GetCurrentFrameIndex();
 		std::vector<FEntity> pointLightEntityHandles, spotLightEntityHandles;
 
@@ -881,14 +904,17 @@ namespace Flameberry {
 
 		if (shouldRenderShadows) {
 			// TODO: Calculate these only when camera or directional light is updated
-			CalculateShadowMapCascades(cameraBufferData.ViewProjectionMatrix, cameraNear, cameraFar,
-				sceneUniformBufferData.directionalLight.Direction);
+			CalculateShadowMapCascades(
+				cameraBufferData.ViewProjectionMatrix, cameraNear, cameraFar,
+				sceneUniformBufferData.directionalLight.Direction
+			);
 			glm::mat4 cascades[SceneRendererSettings::CascadeCount];
 			for (uint8_t i = 0; i < SceneRendererSettings::CascadeCount; i++)
 				cascades[i] = m_Cascades[i].ViewProjectionMatrix;
 
 			m_ShadowMapUniformBuffers[currentFrame]->WriteToBuffer(
-				cascades, sizeof(glm::mat4) * SceneRendererSettings::CascadeCount);
+				cascades, sizeof(glm::mat4) * SceneRendererSettings::CascadeCount
+			);
 		}
 
 		sceneUniformBufferData.cameraPosition = cameraPosition;
@@ -939,16 +965,17 @@ namespace Flameberry {
 
 		if (shouldRenderShadows) {
 			m_ShadowMapRenderPass->Begin();
-			Renderer::Submit(
-				[shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-					shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(),
-					pipeline = m_ShadowMapPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-					// Binding the shadow map pipeline here instead of using the `Pipeline::Bind()` function to reduce
-					// `Renderer::Submit()` calls
-					vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1,
-						&shadowMapDescSet, 0, nullptr);
-				});
+			Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+							  shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(),
+							  pipeline =
+								  m_ShadowMapPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+				// Binding the shadow map pipeline here instead of using the `Pipeline::Bind()` function to reduce
+				// `Renderer::Submit()` calls
+				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+				vkCmdBindDescriptorSets(
+					cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &shadowMapDescSet, 0, nullptr
+				);
+			});
 
 			for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>()) {
 				const auto& [transform, mesh] =
@@ -958,11 +985,15 @@ namespace Flameberry {
 					ModelMatrixPushConstantData pushContantData;
 					pushContantData.ModelMatrix = transform.GlobalTransform;
 					Renderer::Submit([staticMesh, shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(),
-										 pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-						vkCmdPushConstants(cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
-							sizeof(ModelMatrixPushConstantData), &pushContantData);
-						Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
-							staticMesh->GetIndexBuffer()->GetVulkanBuffer());
+									  pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+						vkCmdPushConstants(
+							cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+							sizeof(ModelMatrixPushConstantData), &pushContantData
+						);
+						Renderer::RT_BindVertexAndIndexBuffers(
+							cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
+							staticMesh->GetIndexBuffer()->GetVulkanBuffer()
+						);
 						const uint32_t size =
 							staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
 						vkCmdDrawIndexed(cmdBuffer, size, 1, 0, 0, 0);
@@ -996,14 +1027,17 @@ namespace Flameberry {
 				pco.ViewProjectionMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
 				pco.Exposure = m_RendererSettings.Exposure;
 
-				Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco, textureDescSet](
-									 VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+				Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco,
+								  textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 					Renderer::RT_BindPipeline(cmdBuffer, pipeline);
 					VkDescriptorSet descSets[] = { textureDescSet };
 					vkCmdBindDescriptorSets(
-						cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr);
-					vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-						0, sizeof(SkymapPushConstantObject), &pco);
+						cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descSets, 0, nullptr
+					);
+					vkCmdPushConstants(
+						cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+						sizeof(SkymapPushConstantObject), &pco
+					);
 					vkCmdDraw(cmdBuffer, 36, 1, 0, 0);
 				});
 			}
@@ -1011,18 +1045,22 @@ namespace Flameberry {
 
 		///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
 
-		Renderer::Submit(
-			[=, this, pipeline = m_MeshPipeline->GetVulkanPipeline(),
-				pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-				VkDescriptorSet descriptorSets[] = { m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-					m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-					m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet(),
-					shouldRenderSkymap ? textureDescSet : Skymap::GetEmptyDescriptorSet()->GetVulkanDescriptorSet() };
+		Renderer::Submit([=, this, pipeline = m_MeshPipeline->GetVulkanPipeline(),
+						  pipelineLayout =
+							  m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			VkDescriptorSet descriptorSets[] = { m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+												 m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+												 m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet(),
+												 shouldRenderSkymap
+													 ? textureDescSet
+													 : Skymap::GetEmptyDescriptorSet()->GetVulkanDescriptorSet() };
 
-				Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
-					sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
-			});
+			Renderer::RT_BindPipeline(cmdBuffer, pipeline);
+			vkCmdBindDescriptorSets(
+				cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
+				sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr
+			);
+		});
 
 #if 0
         // Without sorting
@@ -1053,7 +1091,8 @@ namespace Flameberry {
 				uint32_t submeshIndex = 0;
 
 				m_RendererData->RenderObjects.reserve(
-					m_RendererData->RenderObjects.size() + staticMesh->GetSubMeshes().size());
+					m_RendererData->RenderObjects.size() + staticMesh->GetSubMeshes().size()
+				);
 
 				for (const auto& submesh : staticMesh->GetSubMeshes()) {
 					if (m_RendererSettings.FrustumCulling) {
@@ -1080,9 +1119,10 @@ namespace Flameberry {
 						selectedEntity == entity ? m_RendererData->SelectedRenderObjects : m_RendererData->RenderObjects;
 
 					// Add it to final list of render objects
-					renderObjects.emplace_back(staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
-						staticMesh->GetIndexBuffer()->GetVulkanBuffer(), submesh.IndexOffset, submesh.IndexCount, &transform,
-						materialAsset);
+					renderObjects.emplace_back(
+						staticMesh->GetVertexBuffer()->GetVulkanBuffer(), staticMesh->GetIndexBuffer()->GetVulkanBuffer(),
+						submesh.IndexOffset, submesh.IndexCount, &transform, materialAsset
+					);
 
 					submeshIndex++;
 				}
@@ -1100,11 +1140,11 @@ namespace Flameberry {
 			// Clear the stencil buffer to allow Jump Flood Pass to see only the selected entity
 			Renderer::Submit([viewportSize = m_ViewportSize](VkCommandBuffer cmdBuffer, uint32_t) {
 				VkClearAttachment clearAttachment[] = { // Clear the stencil
-					{
-						.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT,
-						.colorAttachment = 1 /* Stencil attachment index */,
-						.clearValue = { 0.0f } /* Stencil clear value */
-					}
+														{
+															.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT,
+															.colorAttachment = 1 /* Stencil attachment index */,
+															.clearValue = { 0.0f } /* Stencil clear value */
+														}
 				};
 
 				VkClearRect clearRect{};
@@ -1129,15 +1169,19 @@ namespace Flameberry {
 			// Render Point Light Icons
 			Renderer2D::SetActiveTexture(m_PointLightIcon);
 			for (uint32_t i = 0; i < sceneUniformBufferData.PointLightCount; i++)
-				Renderer2D::AddBillboard(sceneUniformBufferData.PointLights[i].Position, 0.7f,
-					sceneUniformBufferData.PointLights[i].Color, viewMatrix, pointLightEntityHandles[i].GetIndex());
+				Renderer2D::AddBillboard(
+					sceneUniformBufferData.PointLights[i].Position, 0.7f, sceneUniformBufferData.PointLights[i].Color,
+					viewMatrix, pointLightEntityHandles[i].GetIndex()
+				);
 			Renderer2D::FlushQuads();
 
 			// Render Spot Light Icons
 			Renderer2D::SetActiveTexture(m_SpotLightIcon);
 			for (uint32_t i = 0; i < sceneUniformBufferData.SpotLightCount; i++)
-				Renderer2D::AddBillboard(sceneUniformBufferData.SpotLights[i].Position, 1.0f,
-					sceneUniformBufferData.SpotLights[i].Color, viewMatrix, spotLightEntityHandles[i].GetIndex());
+				Renderer2D::AddBillboard(
+					sceneUniformBufferData.SpotLights[i].Position, 1.0f, sceneUniformBufferData.SpotLights[i].Color,
+					viewMatrix, spotLightEntityHandles[i].GetIndex()
+				);
 			Renderer2D::FlushQuads();
 
 			Renderer2D::SetActiveTexture(m_CameraIcon);
@@ -1157,8 +1201,10 @@ namespace Flameberry {
 
 		if (renderPhysicsCollider && selectedEntity != FEntity::Null) {
 			if (auto* transform = scene->GetRegistry()->TryGetComponent<TransformComponent>(selectedEntity)) {
-				SubmitPhysicsColliderGeometry(scene, selectedEntity,
-					*transform); // NOTE: This function will check if any of the colliders is present
+				SubmitPhysicsColliderGeometry(
+					scene, selectedEntity,
+					*transform
+				); // NOTE: This function will check if any of the colliders is present
 				SubmitCameraViewGeometry(scene, selectedEntity, *transform);
 			}
 		}
@@ -1173,8 +1219,10 @@ namespace Flameberry {
 			// color by the emission value
 			const glm::vec3 finalTextColor = text.Color + text.Color * text.EmissiveFactor;
 
-			Renderer2D::AddText(text.TextString, font, transform.GlobalTransform,
-				{ finalTextColor, text.Kerning, text.LineSpacing }, entity.GetIndex());
+			Renderer2D::AddText(
+				text.TextString, font, transform.GlobalTransform, { finalTextColor, text.Kerning, text.LineSpacing },
+				entity.GetIndex()
+			);
 		}
 
 		Renderer2D::EndScene();
@@ -1193,15 +1241,18 @@ namespace Flameberry {
 
 			Renderer::Submit(
 				[material = m_GridMaterial,
-					globalCameraBufferDescSet = m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-					pipelineLayout, pipeline = m_GridPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t) {
+				 globalCameraBufferDescSet = m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+				 pipelineLayout, pipeline = m_GridPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t) {
 					VkDescriptorSet descriptorSets[] = { globalCameraBufferDescSet };
 					Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
-						sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr);
+					vkCmdBindDescriptorSets(
+						cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
+						sizeof(descriptorSets) / sizeof(VkDescriptorSet), descriptorSets, 0, nullptr
+					);
 					Renderer::RT_BindMaterial(cmdBuffer, pipelineLayout, material);
 					vkCmdDraw(cmdBuffer, 6, 1, 0, 0);
-				});
+				}
+			);
 		}
 
 		m_GeometryPass->End();
@@ -1252,24 +1303,26 @@ namespace Flameberry {
 		for (const auto& obj : renderObjects) {
 			Renderer::Submit(
 				[bindMaterial = boundMaterialHandle != obj.MaterialAsset->Handle,
-					bindVertexAndIndexBuffers = boundVertexBuffer != obj.VertexBuffer,
-					bindTransform = boundTransform != obj.Transform,
-					pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(),
-					material = obj.MaterialAsset->GetUnderlyingMaterial(), vertexBuffer = obj.VertexBuffer,
-					indexBuffer = obj.IndexBuffer, transform = obj.Transform->GlobalTransform, indexCount = obj.IndexCount,
-					indexOffset = obj.IndexOffset](VkCommandBuffer cmdBuffer, uint32_t) {
+				 bindVertexAndIndexBuffers = boundVertexBuffer != obj.VertexBuffer,
+				 bindTransform = boundTransform != obj.Transform, pipelineLayout = m_MeshPipeline->GetVulkanPipelineLayout(),
+				 material = obj.MaterialAsset->GetUnderlyingMaterial(), vertexBuffer = obj.VertexBuffer,
+				 indexBuffer = obj.IndexBuffer, transform = obj.Transform->GlobalTransform, indexCount = obj.IndexCount,
+				 indexOffset = obj.IndexOffset](VkCommandBuffer cmdBuffer, uint32_t) {
 					if (bindMaterial) Renderer::RT_BindMaterial(cmdBuffer, pipelineLayout, material);
 
 					if (bindVertexAndIndexBuffers)
 						Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
 
 					if (bindTransform)
-						vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform),
-							glm::value_ptr(transform));
+						vkCmdPushConstants(
+							cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform),
+							glm::value_ptr(transform)
+						);
 
 					// Draw the object
 					vkCmdDrawIndexed(cmdBuffer, indexCount, 1, indexOffset, 0, 0);
-				});
+				}
+			);
 
 			boundMaterialHandle = obj.MaterialAsset->Handle;
 			boundVertexBuffer = obj.VertexBuffer;
@@ -1282,8 +1335,8 @@ namespace Flameberry {
 		const uint32_t maxDescriptorSetsAllowed = VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
 
 		Renderer::Submit([this, pipelineLayout = m_BloomPipeline->GetVulkanPipelineLayout(),
-							 pipeline = m_BloomPipeline->GetVulkanPipeline(), viewportSize = m_ViewportSize,
-							 maxDescriptorSetsAllowed](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+						  pipeline = m_BloomPipeline->GetVulkanPipeline(), viewportSize = m_ViewportSize,
+						  maxDescriptorSetsAllowed](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			const VkDescriptorSet targetDescSet = m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet();
 
 			std::vector<VkDescriptorSet> bloomDescSets(m_BloomDescriptorSetResources.size());
@@ -1311,8 +1364,10 @@ namespace Flameberry {
 				bloomSettings.OutputMipIndex = 0;
 				bloomSettings.OutputStorageIndex = 0;
 
-				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
-					sizeof(BloomSettingsGPURepresentation), &bloomSettings);
+				vkCmdPushConstants(
+					cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation),
+					&bloomSettings
+				);
 
 				const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(imageWidth / 8, imageHeight / 8));
 				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
@@ -1346,8 +1401,10 @@ namespace Flameberry {
 					bloomSettings.OutputMipIndex = mipIndex;
 					bloomSettings.OutputStorageIndex = offset;
 
-					vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
-						sizeof(BloomSettingsGPURepresentation), &bloomSettings);
+					vkCmdPushConstants(
+						cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation),
+						&bloomSettings
+					);
 					vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 				}
 			}
@@ -1356,7 +1413,7 @@ namespace Flameberry {
 			const int lastBStart = ((mipLevels - 1) / maxDescriptorSetsAllowed) * maxDescriptorSetsAllowed;
 
 			for (int bStart = lastBStart, bIndex = bloomDescSets.size() - 1; bStart >= 0;
-				bStart -= maxDescriptorSetsAllowed, bIndex--) {
+				 bStart -= maxDescriptorSetsAllowed, bIndex--) {
 				VkDescriptorSet descSets[] = { bloomDescSets[bIndex], targetDescSet };
 
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
@@ -1380,8 +1437,10 @@ namespace Flameberry {
 					bloomSettings.OutputMipIndex = mipIndex;
 					bloomSettings.OutputStorageIndex = offset;
 
-					vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
-						sizeof(BloomSettingsGPURepresentation), &bloomSettings);
+					vkCmdPushConstants(
+						cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomSettingsGPURepresentation),
+						&bloomSettings
+					);
 					vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 				}
 			}
@@ -1390,9 +1449,10 @@ namespace Flameberry {
 
 	void SceneRenderer::JumpFloodPass() {
 		Renderer::Submit([=, this, jumpFloodDescSets = m_JumpFloodDescSets, viewportSize = m_ViewportSize,
-							 pipeline = m_JumpFloodPipeline->GetVulkanPipeline(),
-							 pipelineLayout = m_JumpFloodPipeline->GetVulkanPipelineLayout()](
-							 VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+						  pipeline = m_JumpFloodPipeline->GetVulkanPipeline(),
+						  pipelineLayout = m_JumpFloodPipeline->GetVulkanPipelineLayout()](
+							 VkCommandBuffer cmdBuffer, uint32_t imageIndex
+						 ) {
 			JumpFloodSettingsGPURepresentation jumpFloodSettings;
 			jumpFloodSettings.OutlineColor = { Theme::AccentColor.x, Theme::AccentColor.y, Theme::AccentColor.z };
 			jumpFloodSettings.IsInitialPass = FTrue;
@@ -1402,11 +1462,13 @@ namespace Flameberry {
 			m_GeometryPass->GetSpecification()
 				.TargetFramebuffers[imageIndex]
 				->GetDepthAndOrStencilAttachment()
-				->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL,
-					VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+				->CmdTransitionLayout(
+					cmdBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL,
+					VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
+				);
 
 			VkDescriptorSet descSets[] = { jumpFloodDescSets[imageIndex]->GetVulkanDescriptorSet(),
-				m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet() };
+										   m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet() };
 
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
@@ -1414,8 +1476,10 @@ namespace Flameberry {
 			const glm::vec2 threadGroupSize = glm::ceil(glm::vec2(viewportSize.x / 8, viewportSize.y / 8));
 
 			// Init Pass
-			vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
-				sizeof(JumpFloodSettingsGPURepresentation), &jumpFloodSettings);
+			vkCmdPushConstants(
+				cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(JumpFloodSettingsGPURepresentation),
+				&jumpFloodSettings
+			);
 			vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 			jumpFloodSettings.IsInitialPass = FFalse;
 
@@ -1424,8 +1488,10 @@ namespace Flameberry {
 			for (int i = steps; i >= 0; i--) {
 				jumpFloodSettings.StepSize = glm::pow(2, i) + 0.5f;
 
-				vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
-					sizeof(JumpFloodSettingsGPURepresentation), &jumpFloodSettings);
+				vkCmdPushConstants(
+					cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(JumpFloodSettingsGPURepresentation),
+					&jumpFloodSettings
+				);
 				vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 
 				// Switch buffers per pass
@@ -1434,16 +1500,19 @@ namespace Flameberry {
 
 			// Final Pass
 			jumpFloodSettings.IsFinalPass = FTrue;
-			vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
-				sizeof(JumpFloodSettingsGPURepresentation), &jumpFloodSettings);
+			vkCmdPushConstants(
+				cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(JumpFloodSettingsGPURepresentation),
+				&jumpFloodSettings
+			);
 			vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 		});
 	}
 
 	void SceneRenderer::CompositingPass() {
 		Renderer::Submit([this, pipeline = m_CompositingPipeline->GetVulkanPipeline(),
-							 pipelineLayout = m_CompositingPipeline->GetVulkanPipelineLayout()](
-							 VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+						  pipelineLayout = m_CompositingPipeline->GetVulkanPipelineLayout()](
+							 VkCommandBuffer cmdBuffer, uint32_t imageIndex
+						 ) {
 			const VkDescriptorSet descSet = m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet();
 
 			const float imageWidth =
@@ -1459,14 +1528,20 @@ namespace Flameberry {
 
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descSet, 0, nullptr);
-			vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
-				sizeof(CompositionSettingsGPURepresentation), &compositionSettings);
+			vkCmdPushConstants(
+				cmdBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(CompositionSettingsGPURepresentation),
+				&compositionSettings
+			);
 			vkCmdDispatch(cmdBuffer, threadGroupSize.x, threadGroupSize.y, 1);
 		});
 	}
 
 	void SceneRenderer::CalculateShadowMapCascades(
-		const glm::mat4& viewProjectionMatrix, float cameraNear, float cameraFar, const glm::vec3& lightDirection) {
+		const glm::mat4& viewProjectionMatrix,
+		float cameraNear,
+		float cameraFar,
+		const glm::vec3& lightDirection
+	) {
 		float cascadeSplits[SceneRendererSettings::CascadeCount];
 
 		const float nearClip = cameraNear;
@@ -1499,8 +1574,9 @@ namespace Flameberry {
 			const float splitDist = cascadeSplits[i];
 
 			glm::vec3 frustumCorners[8] = { glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f),
-				glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(-1.0f, 1.0f, 1.0f),
-				glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(-1.0f, -1.0f, 1.0f) };
+											glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(-1.0f, -1.0f, 0.0f),
+											glm::vec3(-1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f),
+											glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(-1.0f, -1.0f, 1.0f) };
 
 			for (uint32_t i = 0; i < 8; i++) {
 				glm::vec4 invCorner = invCam * glm::vec4(frustumCorners[i], 1.0f);
@@ -1535,7 +1611,8 @@ namespace Flameberry {
 			// fWorldUnitsPerTexel;
 
 			const glm::vec3 vWorldUnitsPerTexel(
-				width / (float)SceneRendererSettings::CascadeSize, height / (float)SceneRendererSettings::CascadeSize, 1.0f);
+				width / (float)SceneRendererSettings::CascadeSize, height / (float)SceneRendererSettings::CascadeSize, 1.0f
+			);
 			const glm::vec3 vInvWorldUnitsPerTexel = 1.0f / vWorldUnitsPerTexel;
 
 			glm::vec3 maxExtents = (glm::floor(glm::vec3(radius)) * vInvWorldUnitsPerTexel) * vWorldUnitsPerTexel;
@@ -1556,19 +1633,24 @@ namespace Flameberry {
 		}
 	}
 
-	void SceneRenderer::RenderSceneForMousePicking(const Ref<Scene>& scene, const Ref<RenderPass>& renderPass,
-		const Ref<Pipeline>& pipeline, const Ref<Pipeline>& pipeline2D, const glm::vec2& mousePos) {
+	void SceneRenderer::RenderSceneForMousePicking(
+		const Ref<Scene>& scene,
+		const Ref<RenderPass>& renderPass,
+		const Ref<Pipeline>& pipeline,
+		const Ref<Pipeline>& pipeline2D,
+		const glm::vec2& mousePos
+	) {
 		renderPass->Begin(0, { (int)mousePos.x, (int)mousePos.y }, { 1, 1 });
 
-		Renderer::Submit(
-			[pipeline = pipeline->GetVulkanPipeline(),
-				descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
-				mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout()](
-				VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-				Renderer::RT_BindPipeline(cmdBuffer, pipeline);
-				vkCmdBindDescriptorSets(
-					cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr);
-			});
+		Renderer::Submit([pipeline = pipeline->GetVulkanPipeline(),
+						  descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
+						  mousePickingPipelineLayout =
+							  pipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			Renderer::RT_BindPipeline(cmdBuffer, pipeline);
+			vkCmdBindDescriptorSets(
+				cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr
+			);
+		});
 
 		for (const auto& entity : scene->GetRegistry()->Group<TransformComponent, MeshComponent>()) {
 			const auto& [transform, mesh] = scene->GetRegistry()->GetComponent<TransformComponent, MeshComponent>(entity);
@@ -1579,12 +1661,15 @@ namespace Flameberry {
 				pushContantData.EntityIndex = entity.GetIndex();
 
 				Renderer::Submit([staticMesh, mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(),
-									 pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
-					vkCmdPushConstants(cmdBuffer, mousePickingPipelineLayout,
-						VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MousePickingPushConstantData),
-						&pushContantData);
-					Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
-						staticMesh->GetIndexBuffer()->GetVulkanBuffer());
+								  pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+					vkCmdPushConstants(
+						cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+						sizeof(MousePickingPushConstantData), &pushContantData
+					);
+					Renderer::RT_BindVertexAndIndexBuffers(
+						cmdBuffer, staticMesh->GetVertexBuffer()->GetVulkanBuffer(),
+						staticMesh->GetIndexBuffer()->GetVulkanBuffer()
+					);
 
 					const uint32_t size =
 						staticMesh->GetSubMeshes().back().IndexOffset + staticMesh->GetSubMeshes().back().IndexCount;
@@ -1596,14 +1681,15 @@ namespace Flameberry {
 		// 2D Quad Entities
 		uint32_t indexCount = 6 * Renderer2D::GetRendererData().QuadVertexBufferOffset / (4 * sizeof(QuadVertex));
 		Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
-							 mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
-							 vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
-							 vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
-							 indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
-							 indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+						  mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
+						  vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
+						  vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
+						  indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
+						  indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline2D);
 			vkCmdBindDescriptorSets(
-				cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePicking2DPipelineLayout, 0, 1, &descSet, 0, nullptr);
+				cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePicking2DPipelineLayout, 0, 1, &descSet, 0, nullptr
+			);
 
 			Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
 			vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
@@ -1612,8 +1698,8 @@ namespace Flameberry {
 		// Text Entities
 		indexCount = 6 * Renderer2D::GetRendererData().TextVertexBufferOffset / (4 * sizeof(TextVertex));
 		Renderer::Submit([vertexBuffer = Renderer2D::GetRendererData().TextVertexBuffer->GetVulkanBuffer(),
-							 indexBuffer = Renderer2D::GetRendererData().TextIndexBuffer->GetVulkanBuffer(),
-							 indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+						  indexBuffer = Renderer2D::GetRendererData().TextIndexBuffer->GetVulkanBuffer(),
+						  indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
 			vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
 		});
@@ -1622,8 +1708,8 @@ namespace Flameberry {
 	}
 
 	// TODO: Move this to EditorLayer.cpp ASAP
-	void SceneRenderer::SubmitPhysicsColliderGeometry(
-		const Ref<Scene>& scene, FEntity entity, TransformComponent& transform) {
+	void
+	SceneRenderer::SubmitPhysicsColliderGeometry(const Ref<Scene>& scene, FEntity entity, TransformComponent& transform) {
 		// TODO: Optimise this function (maybe embed the vertices (?))
 		GLM_CONSTEXPR glm::vec3 greenColor(0.2f, 1.0f, 0.2f);
 		constexpr float bias(0.001f);
@@ -1632,11 +1718,13 @@ namespace Flameberry {
 		// Render Physics Colliders
 		if (const auto* boxCollider = scene->GetRegistry()->TryGetComponent<BoxColliderComponent>(entity))
 			SubmitBoxColliderGeometry(*boxCollider, transform, rotationMatrix, greenColor, bias);
-		else if (auto* sphereCollider = scene->GetRegistry()->TryGetComponent<SphereColliderComponent>(entity);
-			sphereCollider)
+		else if (
+			auto* sphereCollider = scene->GetRegistry()->TryGetComponent<SphereColliderComponent>(entity); sphereCollider
+		)
 			SubmitSphereColliderGeometry(*sphereCollider, transform, greenColor, bias);
-		else if (auto* capsuleCollider = scene->GetRegistry()->TryGetComponent<CapsuleColliderComponent>(entity);
-			capsuleCollider)
+		else if (
+			auto* capsuleCollider = scene->GetRegistry()->TryGetComponent<CapsuleColliderComponent>(entity); capsuleCollider
+		)
 			SubmitCapsuleColliderGeometry(*capsuleCollider, transform, rotationMatrix, greenColor, bias);
 	}
 
@@ -1655,32 +1743,56 @@ namespace Flameberry {
 					const float bottom = -settings.Zoom;
 					const float top = settings.Zoom;
 
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(left, bottom, settings.Near) + transform.Translation,
-						rotationMatrix * glm::vec3(left, top, settings.Near) + transform.Translation, color);
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(left, top, settings.Near) + transform.Translation,
-						rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation, color);
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation,
-						rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation, color);
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation,
-						rotationMatrix * glm::vec3(left, bottom, settings.Near) + transform.Translation, color);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(left, bottom, settings.Near) + transform.Translation,
+						rotationMatrix * glm::vec3(left, top, settings.Near) + transform.Translation, color
+					);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(left, top, settings.Near) + transform.Translation,
+						rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation, color
+					);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation,
+						rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation, color
+					);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation,
+						rotationMatrix * glm::vec3(left, bottom, settings.Near) + transform.Translation, color
+					);
 
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(left, bottom, settings.Far) + transform.Translation,
-						rotationMatrix * glm::vec3(left, top, settings.Far) + transform.Translation, color);
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(left, top, settings.Far) + transform.Translation,
-						rotationMatrix * glm::vec3(right, top, settings.Far) + transform.Translation, color);
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(right, top, settings.Far) + transform.Translation,
-						rotationMatrix * glm::vec3(right, bottom, settings.Far) + transform.Translation, color);
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(right, bottom, settings.Far) + transform.Translation,
-						rotationMatrix * glm::vec3(left, bottom, settings.Far) + transform.Translation, color);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(left, bottom, settings.Far) + transform.Translation,
+						rotationMatrix * glm::vec3(left, top, settings.Far) + transform.Translation, color
+					);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(left, top, settings.Far) + transform.Translation,
+						rotationMatrix * glm::vec3(right, top, settings.Far) + transform.Translation, color
+					);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(right, top, settings.Far) + transform.Translation,
+						rotationMatrix * glm::vec3(right, bottom, settings.Far) + transform.Translation, color
+					);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(right, bottom, settings.Far) + transform.Translation,
+						rotationMatrix * glm::vec3(left, bottom, settings.Far) + transform.Translation, color
+					);
 
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(left, bottom, settings.Near) + transform.Translation,
-						rotationMatrix * glm::vec3(left, bottom, settings.Far) + transform.Translation, color);
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(left, top, settings.Near) + transform.Translation,
-						rotationMatrix * glm::vec3(left, top, settings.Far) + transform.Translation, color);
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation,
-						rotationMatrix * glm::vec3(right, top, settings.Far) + transform.Translation, color);
-					Renderer2D::AddLine(rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation,
-						rotationMatrix * glm::vec3(right, bottom, settings.Far) + transform.Translation, color);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(left, bottom, settings.Near) + transform.Translation,
+						rotationMatrix * glm::vec3(left, bottom, settings.Far) + transform.Translation, color
+					);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(left, top, settings.Near) + transform.Translation,
+						rotationMatrix * glm::vec3(left, top, settings.Far) + transform.Translation, color
+					);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(right, top, settings.Near) + transform.Translation,
+						rotationMatrix * glm::vec3(right, top, settings.Far) + transform.Translation, color
+					);
+					Renderer2D::AddLine(
+						rotationMatrix * glm::vec3(right, bottom, settings.Near) + transform.Translation,
+						rotationMatrix * glm::vec3(right, bottom, settings.Far) + transform.Translation, color
+					);
 					break;
 				}
 				case ProjectionType::Perspective: {
@@ -1692,13 +1804,13 @@ namespace Flameberry {
 
 					// Submit Frustum Geometry
 					glm::vec3 frustumCorners[8] = { glm::vec3(-nearViewHalfWidth, nearViewHalfHeight, settings.Near),
-						glm::vec3(nearViewHalfWidth, nearViewHalfHeight, settings.Near),
-						glm::vec3(nearViewHalfWidth, -nearViewHalfHeight, settings.Near),
-						glm::vec3(-nearViewHalfWidth, -nearViewHalfHeight, settings.Near),
-						glm::vec3(-farViewHalfWidth, farViewHalfHeight, settings.Far),
-						glm::vec3(farViewHalfWidth, farViewHalfHeight, settings.Far),
-						glm::vec3(farViewHalfWidth, -farViewHalfHeight, settings.Far),
-						glm::vec3(-farViewHalfWidth, -farViewHalfHeight, settings.Far) };
+													glm::vec3(nearViewHalfWidth, nearViewHalfHeight, settings.Near),
+													glm::vec3(nearViewHalfWidth, -nearViewHalfHeight, settings.Near),
+													glm::vec3(-nearViewHalfWidth, -nearViewHalfHeight, settings.Near),
+													glm::vec3(-farViewHalfWidth, farViewHalfHeight, settings.Far),
+													glm::vec3(farViewHalfWidth, farViewHalfHeight, settings.Far),
+													glm::vec3(farViewHalfWidth, -farViewHalfHeight, settings.Far),
+													glm::vec3(-farViewHalfWidth, -farViewHalfHeight, settings.Far) };
 
 					for (uint8_t i = 0; i < 8; i++)
 						frustumCorners[i] = rotationMatrix * frustumCorners[i] + transform.Translation;
@@ -1723,8 +1835,13 @@ namespace Flameberry {
 		}
 	}
 
-	void SceneRenderer::SubmitBoxColliderGeometry(const BoxColliderComponent& boxCollider,
-		const TransformComponent& transform, const glm::mat3& rotation, const glm::vec3& color, const float bias) {
+	void SceneRenderer::SubmitBoxColliderGeometry(
+		const BoxColliderComponent& boxCollider,
+		const TransformComponent& transform,
+		const glm::mat3& rotation,
+		const glm::vec3& color,
+		const float bias
+	) {
 		const glm::vec3 halfExtent = transform.Scale * boxCollider.Size * 0.5f + bias;
 
 		// Calculate the positions of the vertices of the collider
@@ -1767,8 +1884,12 @@ namespace Flameberry {
 		Renderer2D::AddLine(vertex7, vertex5, color);
 	}
 
-	void SceneRenderer::SubmitSphereColliderGeometry(const SphereColliderComponent& sphereCollider,
-		const TransformComponent& transform, const glm::vec3& color, const float bias) {
+	void SceneRenderer::SubmitSphereColliderGeometry(
+		const SphereColliderComponent& sphereCollider,
+		const TransformComponent& transform,
+		const glm::vec3& color,
+		const float bias
+	) {
 		// Define the radius of the sphere
 		float radius =
 			sphereCollider.Radius * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z) + bias;
@@ -1793,50 +1914,81 @@ namespace Flameberry {
 			const auto& pos = vertices[(index + 1) % 2];
 			const auto& pos2 = vertices[index];
 			Renderer2D::AddLine(pos + transform.Translation, pos2 + transform.Translation, color);
-			Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation,
-				glm::vec3(pos2.x, pos2.z, pos2.y) + transform.Translation, color);
-			Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation,
-				glm::vec3(pos2.z, pos2.y, pos2.x) + transform.Translation, color);
+			Renderer2D::AddLine(
+				glm::vec3(pos.x, pos.z, pos.y) + transform.Translation,
+				glm::vec3(pos2.x, pos2.z, pos2.y) + transform.Translation, color
+			);
+			Renderer2D::AddLine(
+				glm::vec3(pos.z, pos.y, pos.x) + transform.Translation,
+				glm::vec3(pos2.z, pos2.y, pos2.x) + transform.Translation, color
+			);
 			index = (index + 1) % 2;
 		}
 
 		const auto& pos = vertices[(index + 1) % 2];
 		Renderer2D::AddLine(pos + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f), color);
-		Renderer2D::AddLine(glm::vec3(pos.x, pos.z, pos.y) + transform.Translation,
-			transform.Translation + glm::vec3(radius, 0.0f, 0.0f), color);
-		Renderer2D::AddLine(glm::vec3(pos.z, pos.y, pos.x) + transform.Translation,
-			transform.Translation + glm::vec3(0.0f, 0.0f, radius), color);
+		Renderer2D::AddLine(
+			glm::vec3(pos.x, pos.z, pos.y) + transform.Translation, transform.Translation + glm::vec3(radius, 0.0f, 0.0f),
+			color
+		);
+		Renderer2D::AddLine(
+			glm::vec3(pos.z, pos.y, pos.x) + transform.Translation, transform.Translation + glm::vec3(0.0f, 0.0f, radius),
+			color
+		);
 	}
 
-	void SceneRenderer::SubmitCapsuleColliderGeometry(const CapsuleColliderComponent& capsuleCollider,
-		const TransformComponent& transform, const glm::mat3& rotation, const glm::vec3& color, const float bias) {
+	void SceneRenderer::SubmitCapsuleColliderGeometry(
+		const CapsuleColliderComponent& capsuleCollider,
+		const TransformComponent& transform,
+		const glm::mat3& rotation,
+		const glm::vec3& color,
+		const float bias
+	) {
 		// Define the radius and half height of the capsule
 		float halfHeight = 0.5f * capsuleCollider.Height * transform.Scale.y;
 		float radius = capsuleCollider.Radius * glm::max(transform.Scale.x, transform.Scale.z) + bias;
 
-		Renderer2D::AddLine(transform.Translation + rotation * glm::vec3(radius, halfHeight, 0),
-			transform.Translation + rotation * glm::vec3(radius, -halfHeight, 0), color);
-		Renderer2D::AddLine(transform.Translation + rotation * glm::vec3(-radius, halfHeight, 0),
-			transform.Translation + rotation * glm::vec3(-radius, -halfHeight, 0), color);
-		Renderer2D::AddLine(transform.Translation + rotation * glm::vec3(0, halfHeight, radius),
-			transform.Translation + rotation * glm::vec3(0, -halfHeight, radius), color);
-		Renderer2D::AddLine(transform.Translation + rotation * glm::vec3(0, halfHeight, -radius),
-			transform.Translation + rotation * glm::vec3(0, -halfHeight, -radius), color);
+		Renderer2D::AddLine(
+			transform.Translation + rotation * glm::vec3(radius, halfHeight, 0),
+			transform.Translation + rotation * glm::vec3(radius, -halfHeight, 0), color
+		);
+		Renderer2D::AddLine(
+			transform.Translation + rotation * glm::vec3(-radius, halfHeight, 0),
+			transform.Translation + rotation * glm::vec3(-radius, -halfHeight, 0), color
+		);
+		Renderer2D::AddLine(
+			transform.Translation + rotation * glm::vec3(0, halfHeight, radius),
+			transform.Translation + rotation * glm::vec3(0, -halfHeight, radius), color
+		);
+		Renderer2D::AddLine(
+			transform.Translation + rotation * glm::vec3(0, halfHeight, -radius),
+			transform.Translation + rotation * glm::vec3(0, -halfHeight, -radius), color
+		);
 
 		Renderer2D::AddCircle(
-			transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius, glm::quat(transform.Rotation), color);
+			transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius, glm::quat(transform.Rotation), color
+		);
 		Renderer2D::AddCircle(
-			transform.Translation + rotation * glm::vec3(0, -halfHeight, 0), radius, glm::quat(transform.Rotation), color);
+			transform.Translation + rotation * glm::vec3(0, -halfHeight, 0), radius, glm::quat(transform.Rotation), color
+		);
 
 		// Hemispheres
-		Renderer2D::AddSemiCircle(transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius,
-			glm::quat(glm::vec3(glm::pi<float>() / 2.0f, 0, glm::pi<float>())), color);
-		Renderer2D::AddSemiCircle(transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius,
-			glm::quat(glm::vec3(glm::pi<float>() / 2.0f, glm::pi<float>() / 2.0f, glm::pi<float>())), color);
-		Renderer2D::AddSemiCircle(transform.Translation - rotation * glm::vec3(0, halfHeight, 0), radius,
-			glm::quat(glm::vec3(glm::pi<float>() / 2.0f, 0, 0)), color);
-		Renderer2D::AddSemiCircle(transform.Translation - rotation * glm::vec3(0, halfHeight, 0), radius,
-			glm::quat(glm::vec3(glm::pi<float>() / 2.0f, glm::pi<float>() / 2.0f, 0)), color);
+		Renderer2D::AddSemiCircle(
+			transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius,
+			glm::quat(glm::vec3(glm::pi<float>() / 2.0f, 0, glm::pi<float>())), color
+		);
+		Renderer2D::AddSemiCircle(
+			transform.Translation + rotation * glm::vec3(0, halfHeight, 0), radius,
+			glm::quat(glm::vec3(glm::pi<float>() / 2.0f, glm::pi<float>() / 2.0f, glm::pi<float>())), color
+		);
+		Renderer2D::AddSemiCircle(
+			transform.Translation - rotation * glm::vec3(0, halfHeight, 0), radius,
+			glm::quat(glm::vec3(glm::pi<float>() / 2.0f, 0, 0)), color
+		);
+		Renderer2D::AddSemiCircle(
+			transform.Translation - rotation * glm::vec3(0, halfHeight, 0), radius,
+			glm::quat(glm::vec3(glm::pi<float>() / 2.0f, glm::pi<float>() / 2.0f, 0)), color
+		);
 	}
 
 	SceneRenderer::~SceneRenderer() {

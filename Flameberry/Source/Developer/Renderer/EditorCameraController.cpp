@@ -14,7 +14,10 @@
 namespace Flameberry {
 
 	EditorCameraController::EditorCameraController(
-		const glm::vec3& position, const glm::vec3& direction, const GenericCameraSettings& settings)
+		const glm::vec3& position,
+		const glm::vec3& direction,
+		const GenericCameraSettings& settings
+	)
 		: m_Position(position), m_Direction(direction), m_Velocity(0.0f) {
 		switch (settings.ProjectionType) {
 			case ProjectionType::Orthographic:
@@ -113,7 +116,8 @@ namespace Flameberry {
 			const float yawDelta = -mouseDelta.x * rotationSpeed;
 
 			glm::quat q = glm::normalize(
-				glm::cross(glm::angleAxis(pitchDelta, m_RightDirection), glm::angleAxis(yawDelta, m_UpDirection)));
+				glm::cross(glm::angleAxis(pitchDelta, m_RightDirection), glm::angleAxis(yawDelta, m_UpDirection))
+			);
 			m_Direction = glm::rotate(q, m_Direction);
 			moved = true;
 		}

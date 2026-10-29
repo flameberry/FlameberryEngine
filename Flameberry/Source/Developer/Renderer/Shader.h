@@ -77,7 +77,9 @@ namespace Flameberry {
 		~Shader();
 
 		void GetVertexAndFragmentShaderModules(
-			VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const;
+			VkShaderModule* outVertexShaderModule,
+			VkShaderModule* outFragmentShaderModule
+		) const;
 
 		const std::string& GetName() const { return m_Name; }
 		VkShaderModule GetVulkanShaderModule() const;

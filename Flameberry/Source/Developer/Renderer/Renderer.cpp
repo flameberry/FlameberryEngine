@@ -65,7 +65,8 @@ namespace Flameberry {
 		queryPoolCreateInfo.queryCount = s_Timestamps.size();
 
 		VK_CHECK_RESULT(vkCreateQueryPool(
-			VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &queryPoolCreateInfo, nullptr, &s_QueryPool));
+			VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &queryPoolCreateInfo, nullptr, &s_QueryPool
+		));
 
 #endif
 	}
@@ -145,14 +146,20 @@ namespace Flameberry {
 	 * @param materialTable - The corresponding material table
 	 * @param transform - The transform matrix
 	 */
-	void Renderer::SubmitMeshWithMaterial(const Ref<StaticMesh>& mesh, const Ref<Pipeline>& pipeline,
-		const MaterialTable& materialTable, const glm::mat4& transform) {
-		Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(), transform](
-							 VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+	void Renderer::SubmitMeshWithMaterial(
+		const Ref<StaticMesh>& mesh,
+		const Ref<Pipeline>& pipeline,
+		const MaterialTable& materialTable,
+		const glm::mat4& transform
+	) {
+		Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(),
+						  transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			Renderer::RT_BindVertexAndIndexBuffers(
-				cmdBuffer, mesh->GetVertexBuffer()->GetVulkanBuffer(), mesh->GetIndexBuffer()->GetVulkanBuffer());
+				cmdBuffer, mesh->GetVertexBuffer()->GetVulkanBuffer(), mesh->GetIndexBuffer()->GetVulkanBuffer()
+			);
 			vkCmdPushConstants(
-				cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform));
+				cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), glm::value_ptr(transform)
+			);
 		});
 
 		uint32_t submeshIndex = 0;
@@ -165,7 +172,7 @@ namespace Flameberry {
 				materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
 
 			Renderer::Submit([pipelineLayout = pipeline->GetVulkanPipelineLayout(), materialAsset,
-								 submesh = mesh->GetSubMeshes()[submeshIndex]](VkCommandBuffer cmdBuffer, uint32_t) {
+							  submesh = mesh->GetSubMeshes()[submeshIndex]](VkCommandBuffer cmdBuffer, uint32_t) {
 				RT_BindMaterial(cmdBuffer, pipelineLayout, materialAsset->GetUnderlyingMaterial());
 				vkCmdDrawIndexed(cmdBuffer, submesh.IndexCount, 1, submesh.IndexOffset, 0, 0);
 			});
@@ -179,10 +186,12 @@ namespace Flameberry {
 		s_RendererFrameStats.MeshCount++;
 	}
 
-	void Renderer::RT_BindMaterial(
-		VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material) {
-		vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, material->GetPushConstantOffset(),
-			material->GetUniformDataSize(), material->GetUniformDataPtr());
+	void
+	Renderer::RT_BindMaterial(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, const Ref<Material>& material) {
+		vkCmdPushConstants(
+			cmdBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, material->GetPushConstantOffset(),
+			material->GetUniformDataSize(), material->GetUniformDataPtr()
+		);
 
 		if (material->m_DescriptorSets.size()) {
 			int idx = 0;
@@ -197,7 +206,8 @@ namespace Flameberry {
 			const uint32_t count = idx;
 
 			vkCmdBindDescriptorSets(
-				cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, setNumber, count, &descSetArray[0], 0, nullptr);
+				cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, setNumber, count, &descSetArray[0], 0, nullptr
+			);
 		}
 
 		// Record Statistics
@@ -226,9 +236,10 @@ namespace Flameberry {
 	}
 
 	void Renderer::QueryTimestampResults() {
-		vkGetQueryPoolResults(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), s_QueryPool, s_RT_FrameIndex * 2, 2,
-			2 * sizeof(uint64_t), &s_Timestamps[s_RT_FrameIndex * 2], sizeof(uint64_t),
-			VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
+		vkGetQueryPoolResults(
+			VulkanContext::GetCurrentDevice()->GetVulkanDevice(), s_QueryPool, s_RT_FrameIndex * 2, 2, 2 * sizeof(uint64_t),
+			&s_Timestamps[s_RT_FrameIndex * 2], sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT
+		);
 
 		uint64_t startTime = s_Timestamps[s_RT_FrameIndex * 2];
 		uint64_t endTime = s_Timestamps[s_RT_FrameIndex * 2 + 1];

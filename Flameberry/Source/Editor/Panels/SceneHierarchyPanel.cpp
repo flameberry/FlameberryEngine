@@ -55,12 +55,17 @@ namespace Flameberry {
 				const std::string label = fmt::format("Label ({} Entities)", m_Context->GetRegistry()->Size());
 
 				ImGui::TableSetupScrollFreeze(3, 1);
-				ImGui::TableSetupColumn(ICON_LC_EYE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable,
-					ImGui::CalcTextSize(ICON_LC_EYE).x);
 				ImGui::TableSetupColumn(
-					label.c_str(), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
-				ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable,
-					ImGui::GetWindowWidth() / 4.5f);
+					ICON_LC_EYE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable,
+					ImGui::CalcTextSize(ICON_LC_EYE).x
+				);
+				ImGui::TableSetupColumn(
+					label.c_str(), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable
+				);
+				ImGui::TableSetupColumn(
+					"Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable,
+					ImGui::GetWindowWidth() / 4.5f
+				);
 
 				ImGui::TableHeadersRow();
 				{
@@ -120,7 +125,8 @@ namespace Flameberry {
 
 		ImGui::PushItemWidth(-1.0f);
 		if (ImGui::InputText(
-				"###Rename", &m_RenameBuffer, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+				"###Rename", &m_RenameBuffer, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue
+			)) {
 			tag = m_RenameBuffer;
 			m_RenamedEntity = FEntity::Null;
 		}
@@ -185,7 +191,8 @@ namespace Flameberry {
 				// Only display icon when entity node is hovered
 				const bool isEntityNodeHovered = ImGui::GetHoveredID() == ImGui::GetID((const void*)(uint64_t)entity);
 				ImGui::TextColored(
-					isEntityNodeHovered ? textColor : ImVec4(0, 0, 0, 0), visibility ? ICON_LC_EYE : ICON_LC_EYE_OFF);
+					isEntityNodeHovered ? textColor : ImVec4(0, 0, 0, 0), visibility ? ICON_LC_EYE : ICON_LC_EYE_OFF
+				);
 
 				// if (ImGui::IsItemClicked())
 				// 	visibility = !visibility;
@@ -212,7 +219,8 @@ namespace Flameberry {
 
 				// Display the actual entity node with it's tag
 				isEntityTreeNodeOpen = ImGui::TreeNodeEx(
-					(const void*)(uint64_t)entity, treeNodeFlags, "%s %s", iconCStr, isRenamed ? "" : tag.c_str());
+					(const void*)(uint64_t)entity, treeNodeFlags, "%s %s", iconCStr, isRenamed ? "" : tag.c_str()
+				);
 			}
 
 			// Select entity if clicked
@@ -273,7 +281,6 @@ namespace Flameberry {
 				ImGui::TextColored(greyColor, isWorldEntity ? "Root" : (isCollectionEntity ? "Collection" : "Entity"));
 			}
 		}
-		ImGui::PopID();
 
 		// Display all the children of the entity if the current node is expanded
 		if (isEntityTreeNodeOpen) {
@@ -287,6 +294,7 @@ namespace Flameberry {
 			}
 			ImGui::TreePop();
 		}
+		ImGui::PopID();
 
 		// Perform the Context Menu Actions in a deferred way...
 		// to avoid crashes due to incomplete rendering of their children

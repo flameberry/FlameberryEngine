@@ -234,8 +234,9 @@ namespace Flameberry {
 
 				iterator<TIteratorType...>& operator++() {
 					while (++m_Index < m_ComponentPoolRef->EntitySet.Size()
-						&& !m_RegistryRef->HasComponent<TIteratorType...>(
-							m_RegistryRef->m_EntityBuffer[m_ComponentPoolRef->EntitySet[m_Index]]));
+						   && !m_RegistryRef->HasComponent<TIteratorType...>(
+							   m_RegistryRef->m_EntityBuffer[m_ComponentPoolRef->EntitySet[m_Index]]
+						   ));
 					return *this;
 				}
 
@@ -262,7 +263,7 @@ namespace Flameberry {
 			TRegistryGroup(const FRegistry* reg, const FComponentPool* pool)
 				: m_RegistryRef(reg), m_ComponentPoolRef(pool), m_BeginIndex(0), m_EndIndex(0) {
 				while (m_BeginIndex < pool->EntitySet.Size()
-					&& !reg->HasComponent<TComponents...>(reg->m_EntityBuffer[pool->EntitySet[m_BeginIndex]]))
+					   && !reg->HasComponent<TComponents...>(reg->m_EntityBuffer[pool->EntitySet[m_BeginIndex]]))
 					m_BeginIndex++;
 				m_EndIndex = pool->EntitySet.Size();
 			}
@@ -283,8 +284,10 @@ namespace Flameberry {
 
 	public:
 		FEntity GetEntityAtIndex(uint32_t index) {
-			FBY_ASSERT(index < m_EntityBuffer.size() && m_EntityBuffer[index].GetValidity(),
-				"Failed to get entity at index: Invalid index/entity!");
+			FBY_ASSERT(
+				index < m_EntityBuffer.size() && m_EntityBuffer[index].GetValidity(),
+				"Failed to get entity at index: Invalid index/entity!"
+			);
 			return m_EntityBuffer[index];
 		}
 
@@ -326,8 +329,10 @@ namespace Flameberry {
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
 
-			FBY_ASSERT(index < m_EntityBuffer.size() && version == entity.GetVersion(),
-				"Failed to iterate over components of entity: Invalid handle!");
+			FBY_ASSERT(
+				index < m_EntityBuffer.size() && version == entity.GetVersion(),
+				"Failed to iterate over components of entity: Invalid handle!"
+			);
 
 			uint32_t typeID = 0;
 			for (auto& pool : m_ComponentPools) {
@@ -396,7 +401,8 @@ namespace Flameberry {
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
 
 			FBY_ASSERT(
-				index < m_EntityBuffer.size() && version == entity.GetVersion(), "Failed to delete entity: Invalid handle!");
+				index < m_EntityBuffer.size() && version == entity.GetVersion(), "Failed to delete entity: Invalid handle!"
+			);
 
 			for (auto& pool : m_ComponentPools) {
 				if (pool.EntitySet.Find(index) != -1) {
@@ -413,8 +419,10 @@ namespace Flameberry {
 			FBY_ASSERT(entity != FEntity::Null, "Failed to emplace component: Entity is null!");
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
-			FBY_ASSERT(index < m_EntityBuffer.size() && version == entity.GetVersion(),
-				"Failed to emplace component: Invalid/Outdated handle!");
+			FBY_ASSERT(
+				index < m_EntityBuffer.size() && version == entity.GetVersion(),
+				"Failed to emplace component: Invalid/Outdated handle!"
+			);
 
 			const uint32_t typeID = GetStaticTypeID<TComponent>();
 			if (m_ComponentPools.size() <= typeID) {
@@ -467,7 +475,8 @@ namespace Flameberry {
 				}
 			} else {
 				return std::forward_as_tuple(
-					TryGetComponent<TComponent>(entity), TryGetComponent<TMoreComponents>(entity)...);
+					TryGetComponent<TComponent>(entity), TryGetComponent<TMoreComponents>(entity)...
+				);
 			}
 		}
 
@@ -476,8 +485,10 @@ namespace Flameberry {
 			FBY_ASSERT(entity != FEntity::Null, "Failed to get component: Entity is null!");
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
-			FBY_ASSERT(index < m_EntityBuffer.size() && version == entity.GetVersion(),
-				"Failed to get component: Invalid/Outdated handle!");
+			FBY_ASSERT(
+				index < m_EntityBuffer.size() && version == entity.GetVersion(),
+				"Failed to get component: Invalid/Outdated handle!"
+			);
 
 			if constexpr (sizeof...(TMoreComponents) == 0) {
 				uint32_t typeID = GetStaticTypeID<TComponent>();
@@ -500,8 +511,10 @@ namespace Flameberry {
 			FBY_ASSERT(entity != FEntity::Null, "Failed to check component: Entity is null!");
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
-			FBY_ASSERT(index < m_EntityBuffer.size() && version == entity.GetVersion(),
-				"Failed to check component: Invalid/Outdated handle!");
+			FBY_ASSERT(
+				index < m_EntityBuffer.size() && version == entity.GetVersion(),
+				"Failed to check component: Invalid/Outdated handle!"
+			);
 
 			if constexpr (sizeof...(TMoreComponents) == 0) {
 				uint32_t typeID = GetStaticTypeID<TComponent>();
@@ -519,8 +532,10 @@ namespace Flameberry {
 			FBY_ASSERT(entity != FEntity::Null, "Failed to erase component: Entity is null!");
 			const uint32_t index = entity.GetIndex();
 			const uint32_t version = m_EntityBuffer[index].GetVersion();
-			FBY_ASSERT(index < m_EntityBuffer.size() && version == entity.GetVersion(),
-				"Failed to erase component: Invalid/Outdated handle!");
+			FBY_ASSERT(
+				index < m_EntityBuffer.size() && version == entity.GetVersion(),
+				"Failed to erase component: Invalid/Outdated handle!"
+			);
 
 			if constexpr (sizeof...(TMoreComponents) == 0) {
 				uint32_t typeID = GetStaticTypeID<TComponent>();

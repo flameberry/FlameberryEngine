@@ -96,8 +96,10 @@ namespace Flameberry {
 
 	const ReflectionDescriptorBindingSpecification& Shader::GetBinding(const std::string& name) const {
 		auto it = m_DescriptorBindingVariableFullNameToSpecificationIndex.find(name);
-		FBY_ASSERT(it != m_DescriptorBindingVariableFullNameToSpecificationIndex.end(),
-			"Descriptor Binding does not exist in shader: {}", name);
+		FBY_ASSERT(
+			it != m_DescriptorBindingVariableFullNameToSpecificationIndex.end(),
+			"Descriptor Binding does not exist in shader: {}", name
+		);
 		return m_DescriptorBindingSpecifications[it->second];
 	}
 
@@ -179,20 +181,26 @@ namespace Flameberry {
 		{
 			uint32_t count = 0;
 			auto result = reflectionShaderModule.EnumerateSpecializationConstants(&count, nullptr);
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
-				"Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
+			FBY_ASSERT(
+				result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name
+			);
 			std::vector<SpvReflectSpecializationConstant*> specializationConstants(count);
 			result = reflectionShaderModule.EnumerateSpecializationConstants(&count, specializationConstants.data());
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
-				"Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name);
+			FBY_ASSERT(
+				result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Specialization Constants for shader: {}", m_Name
+			);
 
 			if (count) FBY_LOG("Shader `{}` - Specialization Constants:", m_Name);
 
 			for (uint32_t i = 0; i < count; i++) {
 				FBY_LOG("\t{}", specializationConstants[i]->name);
-				FBY_ASSERT(m_SpecializationConstantIDSet.find(specializationConstants[i]->constant_id)
+				FBY_ASSERT(
+					m_SpecializationConstantIDSet.find(specializationConstants[i]->constant_id)
 						== m_SpecializationConstantIDSet.end(),
-					"Specialization Constant IDs must be unique");
+					"Specialization Constant IDs must be unique"
+				);
 
 				m_SpecializationConstantIDSet.insert(specializationConstants[i]->constant_id);
 			}
@@ -202,12 +210,16 @@ namespace Flameberry {
 			// The information about push constants is collected here
 			uint32_t count = 0;
 			auto result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, nullptr);
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
-				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+			FBY_ASSERT(
+				result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name
+			);
 			std::vector<SpvReflectBlockVariable*> pcblocks(count);
 			result = reflectionShaderModule.EnumeratePushConstantBlocks(&count, pcblocks.data());
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
-				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+			FBY_ASSERT(
+				result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name
+			);
 
 			m_PushConstantSpecifications.reserve(m_PushConstantSpecifications.size() + count);
 			for (uint32_t i = 0; i < count; i++) {
@@ -233,14 +245,17 @@ namespace Flameberry {
 					};
 				}
 
-				m_PushConstantSpecifications.emplace_back(ReflectionPushConstantSpecification{
-					pcblocks[i]->type_description->type_name,						// Name
-					(VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage(), // VulkanShaderStage
-					absoluteSize,													// Size
-					pcblocks[i]->offset,											// Offset
-					Utils::HasPrefix(
-						pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX) // IsRendererOnly
-				});
+				m_PushConstantSpecifications.emplace_back(
+					ReflectionPushConstantSpecification{
+						pcblocks[i]->type_description->type_name,						// Name
+						(VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage(), // VulkanShaderStage
+						absoluteSize,													// Size
+						pcblocks[i]->offset,											// Offset
+						Utils::HasPrefix(
+							pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX
+						) // IsRendererOnly
+					}
+				);
 			}
 		}
 
@@ -248,19 +263,24 @@ namespace Flameberry {
 			// The information about descriptor sets is collected here
 			uint32_t count = 0;
 			auto result = reflectionShaderModule.EnumerateDescriptorSets(&count, nullptr);
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
-				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+			FBY_ASSERT(
+				result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name
+			);
 			std::vector<SpvReflectDescriptorSet*> descSets(count);
 			result = reflectionShaderModule.EnumerateDescriptorSets(&count, descSets.data());
-			FBY_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS,
-				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name);
+			FBY_ASSERT(
+				result == SPV_REFLECT_RESULT_SUCCESS,
+				"Failed to Enumerate SPIRV-Reflect Push Constant Blocks for shader: {}", m_Name
+			);
 
 			m_DescriptorSetSpecifications.reserve(m_DescriptorSetSpecifications.size() + count);
 			// Iterating through the reflection descriptor sets to store the binding information needed to create a
 			// descriptor set
 			for (uint32_t i = 0; i < count; i++) {
 				m_DescriptorBindingSpecifications.reserve(
-					m_DescriptorBindingSpecifications.size() + descSets[i]->binding_count);
+					m_DescriptorBindingSpecifications.size() + descSets[i]->binding_count
+				);
 				for (uint32_t j = 0; j < descSets[i]->binding_count; j++) {
 					auto& binding = descSets[i]->bindings[j];
 
@@ -301,8 +321,10 @@ namespace Flameberry {
 
 					if (auto it = s_DescriptorSetAndBindingIntegerToArrayIndex.find(combinedValue);
 						it != s_DescriptorSetAndBindingIntegerToArrayIndex.end()) {
-						FBY_ASSERT(reflectionDescriptorBindingSpecification == m_DescriptorBindingSpecifications[it->second],
-							"Descriptor Sets with the same set number and binding must be the exact same");
+						FBY_ASSERT(
+							reflectionDescriptorBindingSpecification == m_DescriptorBindingSpecifications[it->second],
+							"Descriptor Sets with the same set number and binding must be the exact same"
+						);
 						m_DescriptorBindingSpecifications[it->second].VulkanShaderStage |=
 							reflectionDescriptorBindingSpecification.VulkanShaderStage;
 					} else {
@@ -323,7 +345,8 @@ namespace Flameberry {
 					}
 				}
 				m_DescriptorSetSpecifications.emplace_back(
-					ReflectionDescriptorSetSpecification{ descSets[i]->set, descSets[i]->binding_count });
+					ReflectionDescriptorSetSpecification{ descSets[i]->set, descSets[i]->binding_count }
+				);
 			}
 		}
 	}
@@ -351,16 +374,22 @@ namespace Flameberry {
 	}
 
 	void Shader::GetVertexAndFragmentShaderModules(
-		VkShaderModule* outVertexShaderModule, VkShaderModule* outFragmentShaderModule) const {
-		FBY_ASSERT(m_VulkanShaderStageFlags & (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT),
-			"GetVertexAndFragmentShaderModules() should only be called for Shader made using Vertex and Fragment components both!");
+		VkShaderModule* outVertexShaderModule,
+		VkShaderModule* outFragmentShaderModule
+	) const {
+		FBY_ASSERT(
+			m_VulkanShaderStageFlags & (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT),
+			"GetVertexAndFragmentShaderModules() should only be called for Shader made using Vertex and Fragment components both!"
+		);
 		*outVertexShaderModule = m_VertexShaderModule;
 		*outFragmentShaderModule = m_FragmentShaderModule;
 	}
 
 	VkShaderModule Shader::GetVulkanShaderModule() const {
-		FBY_ASSERT((m_VulkanShaderStageFlags > 0) && ((m_VulkanShaderStageFlags & (m_VulkanShaderStageFlags - 1)) == 0),
-			"GetVulkanShaderModule() should only be called for Shader made using single component like Compute or Vertex or Fragment but not a combination of them!");
+		FBY_ASSERT(
+			(m_VulkanShaderStageFlags > 0) && ((m_VulkanShaderStageFlags & (m_VulkanShaderStageFlags - 1)) == 0),
+			"GetVulkanShaderModule() should only be called for Shader made using single component like Compute or Vertex or Fragment but not a combination of them!"
+		);
 		return m_ShaderModule;
 	}
 

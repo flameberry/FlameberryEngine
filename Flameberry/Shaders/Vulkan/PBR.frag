@@ -19,11 +19,11 @@ layout(location = 0) out vec4 o_FragColor;
 #include "Include/HDRCommon.glsl"
 
 const mat4 g_BiasMatrix = mat4(
-        0.5, 0.0, 0.0, 0.0,
-        0.0, 0.5, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.5, 0.5, 0.0, 1.0
-    );
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0
+);
 
 struct DirectionalLight {
     vec3 Direction;
@@ -311,7 +311,9 @@ float GeomSmith(float dp)
 
 float GGXDistribution(float n_dot_h)
 {
-    float alpha2 = pow(GetRoughnessFactor(), 4);
+	const float roughness = max(GetRoughnessFactor(), 0.045f);
+	const float alpha = roughness * roughness;
+    float alpha2 = alpha * alpha;
     float d = n_dot_h * n_dot_h * (alpha2 - 1.0f) + 1.0f;
     float ggxdistrib = alpha2 / (PI * d * d);
     return ggxdistrib;

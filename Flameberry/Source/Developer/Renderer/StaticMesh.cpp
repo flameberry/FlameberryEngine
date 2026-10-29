@@ -10,8 +10,12 @@
 
 namespace Flameberry {
 
-	StaticMesh::StaticMesh(const Ref<Buffer>& vertexBuffer, const Ref<Buffer>& indexBuffer,
-		const std::vector<SubMesh>& submeshes, const AABB& aabb)
+	StaticMesh::StaticMesh(
+		const Ref<Buffer>& vertexBuffer,
+		const Ref<Buffer>& indexBuffer,
+		const std::vector<SubMesh>& submeshes,
+		const AABB& aabb
+	)
 		: m_VertexBuffer(vertexBuffer), m_IndexBuffer(indexBuffer), m_SubMeshes(std::move(submeshes)), m_MeshAABB(aabb) {}
 
 	StaticMesh::~StaticMesh() {}

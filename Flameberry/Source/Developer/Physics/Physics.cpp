@@ -108,9 +108,10 @@ namespace Flameberry {
 		s_Data = new PhysicsManagerData();
 
 		// Now we can init the actual physics system.
-		s_Data->PhysicsSystem.Init(s_Data->MaxBodies, s_Data->NumBodyMutexes, s_Data->MaxBodyPairs,
-			s_Data->MaxContactConstraints, s_Data->BroadPhaseLayerInterface, s_Data->ObjectVsBroadPhaseLayerFilter,
-			s_Data->ObjectVsObjectLayerPairFilter);
+		s_Data->PhysicsSystem.Init(
+			s_Data->MaxBodies, s_Data->NumBodyMutexes, s_Data->MaxBodyPairs, s_Data->MaxContactConstraints,
+			s_Data->BroadPhaseLayerInterface, s_Data->ObjectVsBroadPhaseLayerFilter, s_Data->ObjectVsObjectLayerPairFilter
+		);
 
 		// A body activation listener gets notified when bodies activate and go to sleep
 		// Note that this is called from a job so whatever you do here needs to be thread safe.
