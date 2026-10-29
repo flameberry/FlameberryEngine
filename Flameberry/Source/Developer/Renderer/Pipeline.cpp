@@ -360,7 +360,8 @@ namespace Flameberry {
 		pipelineMultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
 
 		if (m_Specification.Samples > 1) {
-			pipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_TRUE;
+			pipelineMultisampleStateCreateInfo.sampleShadingEnable =
+				VK_FALSE; // Setting it VK_FALSE to see whether it helps lower GPU load; turn on only if the visuals are bad
 			pipelineMultisampleStateCreateInfo.rasterizationSamples = (VkSampleCountFlagBits)m_Specification.Samples;
 		} else {
 			pipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;

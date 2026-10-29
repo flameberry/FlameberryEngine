@@ -18,29 +18,22 @@ layout(location = 0) out vec4 o_FragColor;
 #include "Include/CubemapCommon.glsl"
 #include "Include/HDRCommon.glsl"
 
-const mat4 g_BiasMatrix = mat4(
-	0.5, 0.0, 0.0, 0.0,
-	0.0, 0.5, 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.5, 0.5, 0.0, 1.0
-);
-
 struct DirectionalLight {
-    vec3 Direction;
-    vec3 Color;
+    vec3  Direction;
+    vec3  Color;
     float Intensity, LightSize;
 };
 
 struct PointLight {
-    vec3 Position;
-    vec3 Color;
+    vec3  Position;
+    vec3  Color;
     float Intensity;
 };
 
 struct SpotLight {
-    vec3 Position;
-    vec3 Direction;
-    vec3 Color;
+    vec3  Position;
+    vec3  Direction;
+    vec3  Color;
     float Intensity;
     float InnerConeAngle;
     float OuterConeAngle;
@@ -74,7 +67,7 @@ layout(set = 2, binding = 0) uniform sampler2DArray _FBY_u_ShadowMapSamplerArray
 layout(set = 3, binding = 0) uniform samplerCube _FBY_u_Skymap;
 layout(set = 3, binding = 1) uniform samplerCube _FBY_u_IrradianceMap;
 layout(set = 3, binding = 2) uniform samplerCube _FBY_u_PrefilteredMap;
-layout(set = 3, binding = 3) uniform sampler2D _FBY_u_BRDFLUTMap;
+layout(set = 3, binding = 3) uniform sampler2D   _FBY_u_BRDFLUTMap;
 
 // These are the uniforms that are exposed to the Material class
 // How do we decide that? The classes which are not marked by _FBY_ prefix are exposed to the Material class
@@ -92,44 +85,53 @@ layout(push_constant) uniform MeshData {
     float u_Metallic;
     float u_EmissiveFactor;
 
-    uint u_UseAlbedoMap, u_UseNormalMap, u_UseRoughnessMap, u_UseAmbientMap, u_UseMetallicMap;
+    uint  u_UseAlbedoMap, u_UseNormalMap, u_UseRoughnessMap, u_UseAmbientMap, u_UseMetallicMap;
 };
 
-vec3 GetPixelColor()
+// Globals
+const mat4 g_BiasMatrix = mat4(
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0
+);
+
+struct SampledSurfaceProps {
+	vec3  Albedo, Normal;
+	float Roughness, Metallic, Ambient;
+};
+
+vec3 SampleAlbedo()
 {
-    if (u_UseAlbedoMap == 1)
-        return texture(u_AlbedoMapSampler, v_TextureCoords).xyz;
+    if (u_UseAlbedoMap == 1) return texture(u_AlbedoMapSampler, v_TextureCoords).xyz;
     return u_Albedo;
 }
 
-vec3 GetPixelNormal()
+vec3 SampleNormal()
 {
     if (u_UseNormalMap == 1)
-    {
+	{
         vec3 rgbNormal = texture(u_NormalMapSampler, v_TextureCoords).rgb * 2.0f - 1.003921568627451f;
         return normalize(v_TBNMatrix * normalize(rgbNormal));
     }
     return normalize(v_Normal);
 }
 
-float GetRoughnessFactor()
+float SampleRoughness()
 {
-    if (u_UseRoughnessMap == 1)
-        return texture(u_RoughnessMapSampler, v_TextureCoords).x;
+    if (u_UseRoughnessMap == 1) return texture(u_RoughnessMapSampler, v_TextureCoords).x;
     return u_Roughness;
 }
 
-float GetAmbientFactor()
+float SampleAmbient()
 {
-    if (u_UseAmbientMap == 1)
-        return texture(u_AmbientMapSampler, v_TextureCoords).x;
+    if (u_UseAmbientMap == 1) return texture(u_AmbientMapSampler, v_TextureCoords).x;
     return 1.0;
 }
 
-float GetMetallicFactor()
+float SampleMetallic()
 {
-    if (u_UseMetallicMap == 1)
-        return texture(u_MetallicMapSampler, v_TextureCoords).x;
+    if (u_UseMetallicMap == 1) return texture(u_MetallicMapSampler, v_TextureCoords).x;
     return u_Metallic;
 }
 
@@ -162,7 +164,7 @@ float TextureProj_DirectionalLight(vec4 shadowCoord, vec2 offset, uint cascadeIn
     if (shadowCoord.z > -1.0f && shadowCoord.z < 1.0f) {
         float dist = texture(_FBY_u_ShadowMapSamplerArray, vec3(shadowCoord.st + offset, cascadeIndex)).r;
         if (shadowCoord.w > 0 && dist < shadowCoord.z - bias) {
-            // shadow = AMBIENT * GetAmbientFactor();
+            // shadow = AMBIENT * SampleAmbient();
             shadow = 0.0f;
         }
     }
@@ -271,7 +273,7 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float in
     const vec2 blockerInfo = PCSS_BlockerDistance(shadowCoord.xyz, searchWidth, cascadeIndex, interleavedNoise, bias);
 
     if (blockerInfo.y == 0.0f)
-        return 1.0f;
+        return 2.0f;
 
     float penumbraSize = receiverDepth - blockerInfo.x;
     if (penumbraSize == 0.0f)
@@ -302,17 +304,17 @@ vec3 SchlickFresnel_Roughness(float v_dot_h, vec3 F0, float roughness)
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - v_dot_h, 5.0);
 }
 
-float GeomSmith(float dp)
+float GeomSmith(float dp, float roughness)
 {
-    float k = (GetRoughnessFactor() + 1.0f) * (GetRoughnessFactor() + 1.0f) / 8.0f;
+    float k = (roughness + 1.0f) * (roughness + 1.0f) / 8.0f;
     float denom = dp * (1.0f - k) + k;
     return dp / denom;
 }
 
-float GGXDistribution(float n_dot_h)
+float GGXDistribution(float n_dot_h, float roughness)
 {
-	const float roughness = max(GetRoughnessFactor(), 0.045f);
-	const float alpha = roughness * roughness;
+	const float clampedRoughness = max(roughness, 0.045f);
+	const float alpha = clampedRoughness * clampedRoughness;
     float alpha2 = alpha * alpha;
     float d = n_dot_h * n_dot_h * (alpha2 - 1.0f) + 1.0f;
     float ggxdistrib = alpha2 / (PI * d * d);
@@ -330,11 +332,11 @@ vec3 PrefilteredReflection(vec3 R, float roughness)
     return mix(a, b, lod - lodf);
 }
 
-vec3 PBR_CalcPixelColor(vec3 normal, vec3 lightDirection, vec3 lightIntensity)
+vec3 PBR_CalcPixelColor(SampledSurfaceProps surfaceProps, vec3 lightDirection, vec3 lightIntensity)
 {
     vec3 l = lightDirection;
 
-    vec3 n = normal;
+    vec3 n = surfaceProps.Normal;
     vec3 v = normalize(u_SceneData.CameraPosition - v_WorldSpacePosition);
     vec3 h = normalize(v + l);
 
@@ -344,34 +346,35 @@ vec3 PBR_CalcPixelColor(vec3 normal, vec3 lightDirection, vec3 lightIntensity)
     float n_dot_v = max(dot(n, v), 0.0f);
 
     vec3 F0 = vec3(0.04f);
-    F0 = mix(F0, GetPixelColor(), GetMetallicFactor());
+    F0 = mix(F0, surfaceProps.Albedo, surfaceProps.Metallic);
 
     vec3 fresnelFactor = SchlickFresnel(v_dot_h, F0);
     vec3 kS = fresnelFactor;
 
     float specularBRDFDenominator = 4.0f * n_dot_v * n_dot_l + 0.0001f;
-    vec3 specularBRDFNumerator = GGXDistribution(n_dot_h) * fresnelFactor * GeomSmith(n_dot_l) * GeomSmith(n_dot_v);
+    vec3 specularBRDFNumerator = GGXDistribution(n_dot_h, surfaceProps.Roughness) * fresnelFactor
+        * GeomSmith(n_dot_l, surfaceProps.Roughness) * GeomSmith(n_dot_v, surfaceProps.Roughness);
     vec3 specularBRDF = specularBRDFNumerator / specularBRDFDenominator;
 
     vec3 kD = 1.0f - kS;
-    vec3 fLambert = (1.0f - GetMetallicFactor()) * GetPixelColor();
+    vec3 fLambert = (1.0f - surfaceProps.Metallic) * surfaceProps.Albedo;
     vec3 diffuseBRDF = kD * fLambert / PI;
 
     return (diffuseBRDF + specularBRDF) * lightIntensity * n_dot_l;
 }
 
-vec3 PBR_ImageBasedLighting(vec3 normal)
+vec3 PBR_ImageBasedLighting(SampledSurfaceProps surfaceProps)
 {
-    vec3 N = normal;
+    vec3 N = surfaceProps.Normal;
     vec3 V = normalize(u_SceneData.CameraPosition - v_WorldSpacePosition);
     vec3 R = reflect(-V, N);
 
     // Why should this be needed?
     R.y *= -1.0;
 
-    float roughness = GetRoughnessFactor();
-    float metallic = GetMetallicFactor();
-    vec3 albedo = GetPixelColor();
+    float roughness = surfaceProps.Roughness;
+    float metallic = surfaceProps.Metallic;
+    vec3 albedo = surfaceProps.Albedo;
 
     vec2 brdf = texture(_FBY_u_BRDFLUTMap, vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 reflection = PrefilteredReflection(R, roughness).rgb;
@@ -398,7 +401,7 @@ vec3 PBR_ImageBasedLighting(vec3 normal)
     return kD * diffuse + specular;
 }
 
-vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
+vec3 PBR_DirectionalLight(DirectionalLight light, SampledSurfaceProps surfaceProps)
 {
     vec3 lightIntensity = light.Color * light.Intensity;
     vec3 l = normalize(-light.Direction);
@@ -414,7 +417,7 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
             }
         }
 
-        float bias = max(0.05f * (1.0f - dot(normal, -l)), 0.002f);
+        float bias = max(0.05f * (1.0f - dot(surfaceProps.Normal, -l)), 0.002f);
         const float biasModifier = 0.5f;
         bias *= 1.0f / (-u_SceneData.CascadeDepthSplits[cascadeIndex] * biasModifier);
 
@@ -432,10 +435,10 @@ vec3 PBR_DirectionalLight(DirectionalLight light, vec3 normal)
             shadow = TextureProj_DirectionalLight(shadowCoord / shadowCoord.w, vec2(0.0), cascadeIndex, bias);
     }
 
-    return shadow * PBR_CalcPixelColor(normal, l, lightIntensity);
+    return shadow * PBR_CalcPixelColor(surfaceProps, l, lightIntensity);
 }
 
-vec3 PBR_PointLight(PointLight light, vec3 normal)
+vec3 PBR_PointLight(PointLight light, SampledSurfaceProps surfaceProps)
 {
     vec3 lightIntensity = light.Color * light.Intensity;
 
@@ -445,10 +448,10 @@ vec3 PBR_PointLight(PointLight light, vec3 normal)
     l = normalize(l);
     lightIntensity /= lightToPixelDistance * lightToPixelDistance;
 
-    return PBR_CalcPixelColor(normal, l, lightIntensity);
+    return PBR_CalcPixelColor(surfaceProps, l, lightIntensity);
 }
 
-vec3 PBR_SpotLight(SpotLight light, vec3 normal)
+vec3 PBR_SpotLight(SpotLight light, SampledSurfaceProps surfaceProps)
 {
     vec3 lightIntensity = light.Color * light.Intensity;
 
@@ -467,37 +470,43 @@ vec3 PBR_SpotLight(SpotLight light, vec3 normal)
     float intensity = clamp((theta - outerConeAngleCos) / epsilon, 0.0, 1.0);
     lightIntensity *= intensity;
 
-    return PBR_CalcPixelColor(normal, l, lightIntensity);
+    return PBR_CalcPixelColor(surfaceProps, l, lightIntensity);
 }
 
-vec3 PBR_TotalLight(vec3 normal)
+vec3 PBR_TotalLight(SampledSurfaceProps surfaceProps)
 {
     vec3 totalLight = vec3(0.0f);
 
-    totalLight += PBR_DirectionalLight(u_SceneData.DirectionalLight, normal);
+    totalLight += PBR_DirectionalLight(u_SceneData.DirectionalLight, surfaceProps);
 
     for (int i = 0; i < u_SceneData.PointLightCount; i++)
-        totalLight += PBR_PointLight(u_SceneData.PointLights[i], normal);
+        totalLight += PBR_PointLight(u_SceneData.PointLights[i], surfaceProps);
 
     for (int i = 0; i < u_SceneData.SpotLightCount; i++)
-        totalLight += PBR_SpotLight(u_SceneData.SpotLights[i], normal);
+        totalLight += PBR_SpotLight(u_SceneData.SpotLights[i], surfaceProps);
 
     vec3 ambient = vec3(0.0);
     if (u_SceneData.SceneRendererSettings.SkyReflections == 1)
-        ambient += PBR_ImageBasedLighting(normal) * GetAmbientFactor();
+        ambient += PBR_ImageBasedLighting(surfaceProps) * surfaceProps.Ambient;
     else
-        ambient += 0.2f * u_SceneData.SkyLightIntensity * GetAmbientFactor() * GetPixelColor();
+        ambient += 0.2f * u_SceneData.SkyLightIntensity * surfaceProps.Ambient * surfaceProps.Albedo;
 
     return totalLight + ambient;
 }
 
 void main()
 {
-    vec3 normal = GetPixelNormal();
-    vec3 intermediateColor = PBR_TotalLight(normal);
+	SampledSurfaceProps surfaceProps;
+	surfaceProps.Albedo = SampleAlbedo();
+	surfaceProps.Normal = SampleNormal();
+	surfaceProps.Roughness = SampleRoughness();
+	surfaceProps.Metallic = SampleMetallic();
+	surfaceProps.Ambient = SampleAmbient();
+
+    vec3 intermediateColor = PBR_TotalLight(surfaceProps);
 
     // Emissive Material
-    intermediateColor += GetPixelColor() * u_EmissiveFactor;
+    intermediateColor += surfaceProps.Albedo * u_EmissiveFactor;
 
     o_FragColor = vec4(intermediateColor, 1.0f);
 
@@ -512,17 +521,17 @@ void main()
 
         switch (cascadeIndex) {
             case 0:
-            o_FragColor.rgb *= vec3(1.0f, 0.25f, 0.25f);
-            break;
+				o_FragColor.rgb *= vec3(1.0f, 0.25f, 0.25f);
+				break;
             case 1:
-            o_FragColor.rgb *= vec3(0.25f, 1.0f, 0.25f);
-            break;
+				o_FragColor.rgb *= vec3(0.25f, 1.0f, 0.25f);
+				break;
             case 2:
-            o_FragColor.rgb *= vec3(0.25f, 0.25f, 1.0f);
-            break;
+				o_FragColor.rgb *= vec3(0.25f, 0.25f, 1.0f);
+				break;
             case 3:
-            o_FragColor.rgb *= vec3(1.0f, 1.0f, 0.25f);
-            break;
+				o_FragColor.rgb *= vec3(1.0f, 1.0f, 0.25f);
+				break;
         }
     }
 }
