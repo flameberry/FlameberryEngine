@@ -164,7 +164,6 @@ float TextureProj_DirectionalLight(vec4 shadowCoord, vec2 offset, uint cascadeIn
     if (shadowCoord.z > -1.0f && shadowCoord.z < 1.0f) {
         float dist = texture(_FBY_u_ShadowMapSamplerArray, vec3(shadowCoord.st + offset, cascadeIndex)).r;
         if (shadowCoord.w > 0 && dist < shadowCoord.z - bias) {
-            // shadow = AMBIENT * SampleAmbient();
             shadow = 0.0f;
         }
     }
@@ -417,7 +416,7 @@ vec3 PBR_DirectionalLight(DirectionalLight light, SampledSurfaceProps surfacePro
             }
         }
 
-        float bias = max(0.05f * (1.0f - dot(surfaceProps.Normal, -l)), 0.002f);
+        float bias = max(0.05f * (1.0f - dot(surfaceProps.Normal, l)), 0.002f);
         const float biasModifier = 0.5f;
         bias *= 1.0f / (-u_SceneData.CascadeDepthSplits[cascadeIndex] * biasModifier);
 
@@ -431,8 +430,9 @@ vec3 PBR_DirectionalLight(DirectionalLight light, SampledSurfaceProps surfacePro
             // shadow = FilterPCFRadial_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 5.0f, 16, bias);
             // shadow = FilterPCFBilinear_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 5, bias);
         }
-        else
+        else {
             shadow = TextureProj_DirectionalLight(shadowCoord / shadowCoord.w, vec2(0.0), cascadeIndex, bias);
+		}
     }
 
     return shadow * PBR_CalcPixelColor(surfaceProps, l, lightIntensity);
