@@ -368,9 +368,6 @@ vec3 PBR_ImageBasedLighting(SampledSurfaceProps surfaceProps)
     vec3 V = normalize(u_SceneData.CameraPosition - v_WorldSpacePosition);
     vec3 R = reflect(-V, N);
 
-    // Why should this be needed?
-    R.y *= -1.0;
-
     float roughness = surfaceProps.Roughness;
     float metallic = surfaceProps.Metallic;
     vec3 albedo = surfaceProps.Albedo;
