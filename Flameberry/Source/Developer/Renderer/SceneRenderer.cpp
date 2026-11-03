@@ -284,22 +284,29 @@ namespace Flameberry {
 		sceneRenderPassSpec.TargetFramebuffers.resize(imageCount);
 		sceneRenderPassSpec.Dependencies = {
 			{
-				VK_SUBPASS_EXTERNAL,						  // uint32_t                   srcSubpass
-				0,											  // uint32_t                   dstSubpass
-				VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,	  // VkPipelineStageFlags       srcStageMask
-				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,		  // VkPipelineStageFlags       dstStageMask
-				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              srcAccessMask
-				VK_ACCESS_SHADER_READ_BIT,					  // VkAccessFlags              dstAccessMask
-				VK_DEPENDENCY_BY_REGION_BIT					  // VkDependencyFlags          dependencyFlags
+				VK_SUBPASS_EXTERNAL,					   // uint32_t                   srcSubpass
+				0,										   // uint32_t                   dstSubpass
+				VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // VkPipelineStageFlags       srcStageMask
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+					| VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
+					| VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // VkPipelineStageFlags       dstStageMask
+				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,	 // VkAccessFlags              srcAccessMask
+				VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+					| VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT
+					| VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              dstAccessMask
+				VK_DEPENDENCY_BY_REGION_BIT							// VkDependencyFlags          dependencyFlags
 			},
 			{
-				0,											   // uint32_t                   srcSubpass
-				VK_SUBPASS_EXTERNAL,						   // uint32_t                   dstSubpass
-				VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // VkPipelineStageFlags       srcStageMask
-				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,			   // VkPipelineStageFlags       dstStageMask
-				VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,		   // VkAccessFlags              srcAccessMask
-				VK_ACCESS_MEMORY_READ_BIT,					   // VkAccessFlags              dstAccessMask
-				VK_DEPENDENCY_BY_REGION_BIT					   // VkDependencyFlags          dependencyFlags
+				0,					 // uint32_t                   srcSubpass
+				VK_SUBPASS_EXTERNAL, // uint32_t                   dstSubpass
+				VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
+					| VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // VkPipelineStageFlags       srcStageMask
+				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
+					| VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // VkPipelineStageFlags       dstStageMask
+				VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+					| VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,		// VkAccessFlags              srcAccessMask
+				VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, // VkAccessFlags              dstAccessMask
+				VK_DEPENDENCY_BY_REGION_BIT								// VkDependencyFlags          dependencyFlags
 			}
 		};
 

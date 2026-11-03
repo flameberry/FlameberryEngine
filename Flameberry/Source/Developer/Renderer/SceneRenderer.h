@@ -95,6 +95,7 @@ namespace Flameberry {
 			bool renderOutline = true,
 			bool renderPhysicsCollider = true
 		);
+
 		void RenderScene(
 			const glm::vec2& viewportSize,
 			const Ref<Scene>& scene,
@@ -116,6 +117,7 @@ namespace Flameberry {
 				->GetColorResolveAttachment(0)
 				->GetVulkanImageView();
 		}
+
 		VkImageView GetCompositePassOutputImageView(uint32_t index) const {
 			return m_CompositingPass->GetSpecification()
 				.TargetFramebuffers[index]

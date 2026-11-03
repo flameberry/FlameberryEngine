@@ -6,6 +6,7 @@
 #include "Core/Core.h"
 #include "VulkanDebug.h"
 #include "VulkanContext.h"
+#include "vulkan/vulkan_core.h"
 
 namespace Flameberry {
 
@@ -13,7 +14,7 @@ namespace Flameberry {
 #ifdef FBY_PLATFORM_MACOS
 		VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
 #endif
-		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 	};
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
@@ -85,7 +86,10 @@ namespace Flameberry {
 
 		for (auto extension : s_VulkanInstanceExtensions) vk_extensions.push_back(extension);
 
-		if (enableValidationLayers) vk_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		if (enableValidationLayers) {
+			vk_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+			vk_extensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
+		}
 
 		vk_create_info.enabledExtensionCount = static_cast<uint32_t>(vk_extensions.size());
 		vk_create_info.ppEnabledExtensionNames = vk_extensions.data();
@@ -96,6 +100,11 @@ namespace Flameberry {
 
 		VkDebugUtilsMessengerCreateInfoEXT vk_debug_create_info{};
 		auto validationLayers = VulkanContext::GetValidationLayerNames();
+
+		VkValidationFeaturesEXT validationFeatures{};
+		const VkValidationFeatureEnableEXT validationFeaturesEnabled[] = {
+			VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
+		};
 
 		if (enableValidationLayers) {
 			FBY_LOG("{}", validationLayers[0]);
@@ -110,6 +119,14 @@ namespace Flameberry {
 			vk_debug_create_info.pfnUserCallback = vk_debug_callback;
 
 			vk_create_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&vk_debug_create_info;
+
+			// enable validation features
+			validationFeatures.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+			validationFeatures.pEnabledValidationFeatures = validationFeaturesEnabled;
+			validationFeatures.enabledValidationFeatureCount =
+				sizeof(validationFeaturesEnabled) / sizeof(VkValidationFeatureEnableEXT);
+
+			vk_debug_create_info.pNext = &validationFeatures;
 		} else {
 			vk_create_info.enabledLayerCount = 0;
 			vk_create_info.pNext = nullptr;

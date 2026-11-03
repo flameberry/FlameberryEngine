@@ -225,19 +225,38 @@ namespace Flameberry {
 		barrier.subresourceRange.layerCount = m_Specification.ArrayLayers;
 		barrier.subresourceRange.levelCount = 1;
 
+		if (m_Specification.MipLevels > 1) {
+			barrier.subresourceRange.baseMipLevel = 1;
+			barrier.subresourceRange.levelCount = m_Specification.MipLevels - 1;
+			barrier.oldLayout = oldLayout;
+			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+			vkCmdPipelineBarrier(
+				cmdBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1,
+				&barrier
+			);
+
+			barrier.subresourceRange.levelCount = 1;
+		}
+
 		int32_t mipWidth = m_Specification.Width;
 		int32_t mipHeight = m_Specification.Height;
 
 		for (uint32_t i = 1; i < m_Specification.MipLevels; i++) {
+			const bool isBaseMip = i == 1;
+
 			barrier.subresourceRange.baseMipLevel = i - 1;
-			barrier.oldLayout = oldLayout;
+			barrier.oldLayout = isBaseMip ? oldLayout : VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.srcAccessMask =
+				isBaseMip ? VK_ACCESS_TRANSFER_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT : VK_ACCESS_TRANSFER_WRITE_BIT;
 			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
 			vkCmdPipelineBarrier(
-				cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1,
-				&barrier
+				cmdBuffer, isBaseMip ? VK_PIPELINE_STAGE_ALL_COMMANDS_BIT : VK_PIPELINE_STAGE_TRANSFER_BIT,
+				VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier
 			);
 
 			VkImageBlit blit{};
@@ -255,8 +274,8 @@ namespace Flameberry {
 			blit.dstSubresource.layerCount = m_Specification.ArrayLayers;
 
 			vkCmdBlitImage(
-				cmdBuffer, m_VulkanImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_VulkanImage, oldLayout, 1, &blit,
-				VK_FILTER_LINEAR
+				cmdBuffer, m_VulkanImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_VulkanImage,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR
 			);
 
 			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -265,22 +284,27 @@ namespace Flameberry {
 			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
 			vkCmdPipelineBarrier(
-				cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr,
-				1, &barrier
+				cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1,
+				&barrier
 			);
 
 			if (mipWidth > 1) mipWidth /= 2;
 			if (mipHeight > 1) mipHeight /= 2;
 		}
 
+		const bool hasGeneratedMips = m_Specification.MipLevels > 1;
+
 		barrier.subresourceRange.baseMipLevel = m_Specification.MipLevels - 1;
-		barrier.oldLayout = oldLayout;
+		barrier.oldLayout = hasGeneratedMips ? VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL : oldLayout;
 		barrier.newLayout = newLayout;
-		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.srcAccessMask =
+			hasGeneratedMips ? VK_ACCESS_TRANSFER_WRITE_BIT : VK_ACCESS_TRANSFER_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
 		vkCmdPipelineBarrier(
-			cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1,
+			cmdBuffer, hasGeneratedMips ? VK_PIPELINE_STAGE_TRANSFER_BIT : VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1,
 			&barrier
 		);
 	}
