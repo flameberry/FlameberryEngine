@@ -32,20 +32,26 @@ namespace Flameberry {
 
 			m_RenderPassSpec.Dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
 			m_RenderPassSpec.Dependencies[0].dstSubpass = 0;
-			m_RenderPassSpec.Dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-			m_RenderPassSpec.Dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			m_RenderPassSpec.Dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-			m_RenderPassSpec.Dependencies[0].dstAccessMask =
-				VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			m_RenderPassSpec.Dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+				| VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
+			m_RenderPassSpec.Dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+				| VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			m_RenderPassSpec.Dependencies[0].srcAccessMask =
+				VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			m_RenderPassSpec.Dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT
+				| VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT
+				| VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 			m_RenderPassSpec.Dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
 			m_RenderPassSpec.Dependencies[1].srcSubpass = 0;
 			m_RenderPassSpec.Dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-			m_RenderPassSpec.Dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			m_RenderPassSpec.Dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+			m_RenderPassSpec.Dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+				| VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			m_RenderPassSpec.Dependencies[1].dstStageMask =
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
 			m_RenderPassSpec.Dependencies[1].srcAccessMask =
-				VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			m_RenderPassSpec.Dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+				VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			m_RenderPassSpec.Dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT;
 			m_RenderPassSpec.Dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 		}
 
@@ -85,7 +91,8 @@ namespace Flameberry {
 		std::vector<VkAttachmentDescription> attachments(count);
 
 		std::vector<VkAttachmentReference> colorRefs;
-		VkAttachmentReference depthRef;
+		VkAttachmentReference depthRef{};
+		bool hasDepthAttachment = false;
 		std::vector<VkAttachmentReference> resolveRefs;
 
 		bool useMultiView = false;
@@ -117,6 +124,7 @@ namespace Flameberry {
 
 				depthRef.attachment = i;
 				depthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				hasDepthAttachment = true;
 			} else {
 				attachments[i].loadOp = framebufferSpec.ColorLoadOp;
 				attachments[i].storeOp = framebufferSpec.ColorStoreOp;
@@ -149,7 +157,7 @@ namespace Flameberry {
 		vk_subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		vk_subpass_description.colorAttachmentCount = colorRefs.size();
 		vk_subpass_description.pColorAttachments = colorRefs.data();
-		vk_subpass_description.pDepthStencilAttachment = &depthRef;
+		vk_subpass_description.pDepthStencilAttachment = hasDepthAttachment ? &depthRef : nullptr;
 		vk_subpass_description.pResolveAttachments = resolveRefs.data();
 
 		/*
