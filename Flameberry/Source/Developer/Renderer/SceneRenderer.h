@@ -231,7 +231,6 @@ namespace Flameberry {
 		std::vector<TFrameResource<DescriptorSet>> m_BloomDescriptorSetResources;
 		Ref<ComputePipeline> m_BloomPipeline;
 		TFrameResource<Image> m_BloomImageResource;
-		VkImageView m_BloomImageCompleteViews[SwapChain::MAX_FRAMES_IN_FLIGHT];
 		VkSampler m_BloomSampler;
 
 		// Compositing Pass

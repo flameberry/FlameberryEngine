@@ -1,44 +1,37 @@
 #include "Image.h"
 
+#include <unordered_set>
+#include <vector>
+
+#include "vulkan/vulkan_core.h"
+
 #include "Core/Assert.h"
-#include "Core/Log.h"
 #include "VulkanDebug.h"
 #include "RenderCommand.h"
 #include "VulkanContext.h"
-#include "vulkan/vulkan_core.h"
 
 namespace Flameberry {
 
-	VkImageView Image::GetVulkanImageView(int idx) const {
-		switch (m_Specification.ViewCreationMode) {
-			case ImageViewCreationMode::CreateUsingGivenSpecification:
-				if (idx > 0)
-					FBY_WARN(
-						"Cannot access image view at index: {} - Image was created with ImageViewCreationMode::CreateUsingGivenSpecification mode.",
-						idx
-					);
-				return m_VulkanImageView;
+	namespace Utils {
 
-			case ImageViewCreationMode::CreateOnePerMipMap:
-				if (idx >= m_Specification.MipLevels)
-					FBY_ERROR(
-						"Cannot access image view at index: {} - Index out of bounds (Image views total: {}).", idx,
-						m_VulkanImageViewVector.size()
-					);
-				return m_VulkanImageViewVector[idx];
-
-			case ImageViewCreationMode::CreateForCube:
-				FBY_ASSERT(false, "Not Implemented Yet!");
-				return nullptr;
-
-			case ImageViewCreationMode::DontCreate:
-				FBY_ASSERT(
-					0,
-					"Cannot access image view at index: {} - Image was created with ImageViewCreationMode::DontCreate mode.",
-					idx
-				);
-				return nullptr;
+		VkImageAspectFlags GetAspectFlagsFromImageFormat(VkFormat format) {
+			switch (format) {
+				case VK_FORMAT_UNDEFINED:
+					return 0;
+				case VK_FORMAT_S8_UINT:
+					return VK_IMAGE_ASPECT_STENCIL_BIT;
+				case VK_FORMAT_D16_UNORM:
+				case VK_FORMAT_X8_D24_UNORM_PACK32:
+				case VK_FORMAT_D32_SFLOAT:
+				case VK_FORMAT_D16_UNORM_S8_UINT:
+				case VK_FORMAT_D24_UNORM_S8_UINT:
+				case VK_FORMAT_D32_SFLOAT_S8_UINT:
+					return VK_IMAGE_ASPECT_DEPTH_BIT;
+				default:
+					return VK_IMAGE_ASPECT_COLOR_BIT;
 		}
+	}
+
 	}
 
 	Image::Image(const ImageSpecification& specification)
@@ -48,48 +41,63 @@ namespace Flameberry {
 
 	Image::~Image() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-
-		// Destroy Image Views
-		switch (m_Specification.ViewCreationMode) {
-			case ImageViewCreationMode::CreateUsingGivenSpecification:
-				vkDestroyImageView(device, m_VulkanImageView, nullptr);
-				break;
-			case ImageViewCreationMode::CreateOnePerMipMap:
-				for (VkImageView view : m_VulkanImageViewVector) vkDestroyImageView(device, view, nullptr);
-				break;
-			case ImageViewCreationMode::CreateForCube:
-				FBY_ASSERT(false, "Not Implemented Yet!");
-				break;
-			case ImageViewCreationMode::DontCreate:
-				break;
-		}
-
+		DestroyImageViews();
 		vkDestroyImage(device, m_VulkanImage, nullptr);
 		vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
 	}
 
 	void Image::Invalidate() {
+		CreateImage();
+		AllocateAndBindMemory();
+		CreateImageViews();
+	}
+
+	void Image::CreateImage() {
+		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
+		VkImageCreateInfo imageCreateInfo{};
+		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageCreateInfo.extent.width = m_Specification.Width;
+		imageCreateInfo.extent.height = m_Specification.Height;
+		imageCreateInfo.extent.depth = 1;
+		imageCreateInfo.mipLevels = m_Specification.MipLevels;
+		imageCreateInfo.arrayLayers = m_Specification.ArrayLayers;
+		imageCreateInfo.format = m_Specification.Format;
+		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+		imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		imageCreateInfo.usage = m_Specification.Usage;
+		imageCreateInfo.samples = (VkSampleCountFlagBits)m_Specification.Samples;
+		imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		imageCreateInfo.flags = m_Specification.Flags;
+
+		std::vector<VkFormat> formats = { m_Specification.Format };
+		std::unordered_set<VkFormat> uniqueFormats = { m_Specification.Format };
+		for (auto& view : m_Specification.Views) {
+			if (view.Format != VK_FORMAT_UNDEFINED && view.Format != m_Specification.Format) {
+				imageCreateInfo.flags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
+				if (uniqueFormats.find(view.Format) == uniqueFormats.end()) {
+					uniqueFormats.insert(view.Format);
+					formats.emplace_back(view.Format);
+				}
+			}
+		}
+
+		VkImageFormatListCreateInfo imageFormatListCreateInfo{};
+		if (formats.size() > 1) {
+			imageFormatListCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO;
+			imageFormatListCreateInfo.pViewFormats = formats.data();
+			imageFormatListCreateInfo.viewFormatCount = formats.size();
+
+			imageCreateInfo.pNext = &imageFormatListCreateInfo;
+		}
+
+		VK_CHECK_RESULT(vkCreateImage(device, &imageCreateInfo, nullptr, &m_VulkanImage));
+	}
+
+	void Image::AllocateAndBindMemory() {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		const auto& physicalDevice = VulkanContext::GetPhysicalDevice();
-
-		// Creating Image
-		VkImageCreateInfo vk_image_create_info{};
-		vk_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		vk_image_create_info.imageType = VK_IMAGE_TYPE_2D;
-		vk_image_create_info.extent.width = m_Specification.Width;
-		vk_image_create_info.extent.height = m_Specification.Height;
-		vk_image_create_info.extent.depth = 1;
-		vk_image_create_info.mipLevels = m_Specification.MipLevels;
-		vk_image_create_info.arrayLayers = m_Specification.ArrayLayers;
-		vk_image_create_info.format = m_Specification.Format;
-		vk_image_create_info.tiling = m_Specification.Tiling;
-		vk_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		vk_image_create_info.usage = m_Specification.Usage;
-		vk_image_create_info.samples = (VkSampleCountFlagBits)m_Specification.Samples;
-		vk_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		vk_image_create_info.flags = m_Specification.Flags;
-
-		VK_CHECK_RESULT(vkCreateImage(device, &vk_image_create_info, nullptr, &m_VulkanImage));
 
 		vkGetImageMemoryRequirements(device, m_VulkanImage, &m_MemoryRequirements);
 
@@ -102,90 +110,92 @@ namespace Flameberry {
 
 		VK_CHECK_RESULT(vkAllocateMemory(device, &allocInfo, nullptr, &m_VkImageDeviceMemory));
 		vkBindImageMemory(device, m_VulkanImage, m_VkImageDeviceMemory, 0);
+	}
 
-		switch (m_Specification.ViewCreationMode) {
-			case ImageViewCreationMode::CreateUsingGivenSpecification: {
-				VkImageViewCreateInfo vulkanImageViewCreateInfo{};
-				vulkanImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-				vulkanImageViewCreateInfo.image = m_VulkanImage;
+	void Image::CreateImageViews() {
+		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-				// This line is really weird
-				vulkanImageViewCreateInfo.viewType = m_Specification.ViewSpecification.ViewType == VK_IMAGE_VIEW_TYPE_2D
-						&& m_Specification.ViewSpecification.LayerCount > 1
-					? VK_IMAGE_VIEW_TYPE_2D_ARRAY
-					: m_Specification.ViewSpecification.ViewType;
+		VkImageViewCreateInfo imageViewCreateInfo{};
+		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		imageViewCreateInfo.image = m_VulkanImage;
+		imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
-				vulkanImageViewCreateInfo.format = m_Specification.Format;
-				vulkanImageViewCreateInfo.subresourceRange.aspectMask = m_Specification.ViewSpecification.AspectFlags;
-				vulkanImageViewCreateInfo.subresourceRange.baseMipLevel = m_Specification.ViewSpecification.BaseMipLevel;
-				vulkanImageViewCreateInfo.subresourceRange.levelCount = m_Specification.ViewSpecification.LevelCount;
-				vulkanImageViewCreateInfo.subresourceRange.baseArrayLayer = m_Specification.ViewSpecification.BaseArrayLayer;
-				vulkanImageViewCreateInfo.subresourceRange.layerCount = m_Specification.ViewSpecification.LayerCount;
-				vulkanImageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-				vulkanImageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-				vulkanImageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-				vulkanImageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		if (m_Specification.Views.empty()) m_Specification.Views.emplace_back();
 
-				VK_CHECK_RESULT(vkCreateImageView(device, &vulkanImageViewCreateInfo, nullptr, &m_VulkanImageView));
-				break;
-			}
-			case ImageViewCreationMode::CreateOnePerMipMap: {
-				m_VulkanImageViewVector.resize(m_Specification.MipLevels);
+		for (auto& view : m_Specification.Views) {
+			FBY_ASSERT(
+				view.BaseMipLevel < m_Specification.MipLevels, "Image view base mip level is out of the image's mip range"
+			);
+			FBY_ASSERT(
+				view.BaseArrayLayer < m_Specification.ArrayLayers,
+				"Image view base array layer is out of the image's layer range"
+			);
 
-				for (int i = 0; i < m_Specification.MipLevels; i++) {
-					VkImageViewCreateInfo vulkanImageViewCreateInfo{};
+			const uint32_t levelCount =
+				view.LevelCount == VK_REMAINING_MIP_LEVELS ? m_Specification.MipLevels - view.BaseMipLevel : view.LevelCount;
+			const uint32_t layerCount = view.LayerCount == VK_REMAINING_ARRAY_LAYERS
+				? m_Specification.ArrayLayers - view.BaseArrayLayer
+				: view.LayerCount;
 
-					vulkanImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-					vulkanImageViewCreateInfo.image = m_VulkanImage;
+			FBY_ASSERT(
+				view.BaseMipLevel + levelCount <= m_Specification.MipLevels,
+				"Image view mip range goes past the image's mip levels"
+			);
+			FBY_ASSERT(
+				view.BaseArrayLayer + layerCount <= m_Specification.ArrayLayers,
+				"Image view layer range goes past the image's array layers"
+			);
 
-					// This line is really weird
-					vulkanImageViewCreateInfo.viewType = m_Specification.ViewSpecification.ViewType == VK_IMAGE_VIEW_TYPE_2D
-							&& m_Specification.ViewSpecification.LayerCount > 1
-						? VK_IMAGE_VIEW_TYPE_2D_ARRAY
-						: m_Specification.ViewSpecification.ViewType;
-
-					vulkanImageViewCreateInfo.format = m_Specification.Format;
-					vulkanImageViewCreateInfo.subresourceRange.aspectMask = m_Specification.ViewSpecification.AspectFlags;
-					vulkanImageViewCreateInfo.subresourceRange.baseMipLevel = i;
-					vulkanImageViewCreateInfo.subresourceRange.levelCount = 1;
-					vulkanImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-					vulkanImageViewCreateInfo.subresourceRange.layerCount = 1;
-					vulkanImageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-					vulkanImageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-					vulkanImageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-					vulkanImageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-					VK_CHECK_RESULT(
-						vkCreateImageView(device, &vulkanImageViewCreateInfo, nullptr, &m_VulkanImageViewVector[i])
+			if (view.Type == VK_IMAGE_VIEW_TYPE_CUBE) {
+				FBY_ASSERT(
+					layerCount == 6, "An image view of type VK_IMAGE_VIEW_TYPE_CUBE must cover exactly 6 array layers"
+				);
+				FBY_ASSERT(
+					m_Specification.Flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT,
+					"An image view of type VK_IMAGE_VIEW_TYPE_CUBE must have the flag VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT set"
 					);
+			} else if (view.Type == VK_IMAGE_VIEW_TYPE_2D) {
+				FBY_ASSERT(layerCount == 1, "An image view of type VK_IMAGE_VIEW_TYPE_2D must cover exactly 1 array layer");
 				}
-				break;
+
+			// if view.Format is not provided, we assume it's the same as the image format
+			view.Format = view.Format == VK_FORMAT_UNDEFINED ? m_Specification.Format : view.Format;
+
+			imageViewCreateInfo.viewType = view.Type;
+			imageViewCreateInfo.format = view.Format;
+			imageViewCreateInfo.subresourceRange.aspectMask =
+				view.AspectFlags ? view.AspectFlags : Utils::GetAspectFlagsFromImageFormat(view.Format);
+
+			imageViewCreateInfo.subresourceRange.baseArrayLayer = view.BaseArrayLayer;
+			imageViewCreateInfo.subresourceRange.layerCount = layerCount;
+
+			if (view.OnePerMipLevel) {
+				m_Views.emplace_back(levelCount, VK_NULL_HANDLE);
+
+				for (uint32_t i = 0; i < levelCount; i++) {
+					imageViewCreateInfo.subresourceRange.baseMipLevel = view.BaseMipLevel + i;
+					imageViewCreateInfo.subresourceRange.levelCount = 1;
+
+					VK_CHECK_RESULT(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &m_Views.back()[i]));
+				}
+			} else {
+				m_Views.emplace_back(1, VK_NULL_HANDLE);
+
+				imageViewCreateInfo.subresourceRange.baseMipLevel = view.BaseMipLevel;
+				imageViewCreateInfo.subresourceRange.levelCount = levelCount;
+
+				VK_CHECK_RESULT(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &m_Views.back()[0]));
 			}
-			case ImageViewCreationMode::CreateForCube:
-				FBY_ASSERT(false, "Not Implemented Yet!");
-				break;
-			case ImageViewCreationMode::DontCreate:
-				break;
 		}
 	}
 
 	void Image::OnResize(uint32_t width, uint32_t height, uint32_t mipLevels) {
 		const auto& device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-		// Destroy Image Views
-		switch (m_Specification.ViewCreationMode) {
-			case ImageViewCreationMode::CreateUsingGivenSpecification:
-				vkDestroyImageView(device, m_VulkanImageView, nullptr);
-				break;
-			case ImageViewCreationMode::CreateOnePerMipMap:
-				for (VkImageView view : m_VulkanImageViewVector) vkDestroyImageView(device, view, nullptr);
-				break;
-			case ImageViewCreationMode::CreateForCube:
-				FBY_ASSERT(false, "Not Implemented Yet!");
-				break;
-			case ImageViewCreationMode::DontCreate:
-				break;
-		}
+		DestroyImageViews();
 
 		vkDestroyImage(device, m_VulkanImage, nullptr);
 		vkFreeMemory(device, m_VkImageDeviceMemory, nullptr);
@@ -193,7 +203,6 @@ namespace Flameberry {
 		m_Specification.Width = width;
 		m_Specification.Height = height;
 		if (mipLevels) m_Specification.MipLevels = mipLevels;
-
 		m_ActiveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 		Invalidate();
@@ -481,6 +490,14 @@ namespace Flameberry {
 		m_ActiveImageLayout = newLayout;
 	}
 
+	void Image::DestroyImageViews() {
+		const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		for (auto& vv : m_Views) {
+			for (VkImageView view : vv) vkDestroyImageView(device, view, nullptr);
+		}
+		m_Views.clear();
+	}
+
 	namespace Utils {
 
 		VkImageView CreateImageViewUsingSpecification(
@@ -496,9 +513,9 @@ namespace Flameberry {
 
 			// This line is really weird
 			vulkanImageViewCreateInfo.viewType =
-				viewSpecification.ViewType == VK_IMAGE_VIEW_TYPE_2D && viewSpecification.LayerCount > 1
+				viewSpecification.Type == VK_IMAGE_VIEW_TYPE_2D && viewSpecification.LayerCount > 1
 				? VK_IMAGE_VIEW_TYPE_2D_ARRAY
-				: viewSpecification.ViewType;
+				: viewSpecification.Type;
 
 			vulkanImageViewCreateInfo.format = format;
 			vulkanImageViewCreateInfo.subresourceRange.aspectMask = viewSpecification.AspectFlags;

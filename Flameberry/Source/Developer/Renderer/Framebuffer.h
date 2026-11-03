@@ -51,7 +51,6 @@ namespace Flameberry {
 			return m_FramebufferImages[m_DepthAttachmentIndex + 1 + attachmentIndex];
 		}
 		Ref<Image> GetDepthAndOrStencilAttachment() const { return m_FramebufferImages[m_DepthAttachmentIndex]; }
-		VkImageView GetStencilAttachmentImageView() const { return m_StencilAttachmentImageView; }
 
 		void SetClearColorValue(const VkClearColorValue& value) { m_FramebufferSpec.ClearColorValue = value; }
 
@@ -64,9 +63,6 @@ namespace Flameberry {
 
 		FramebufferSpecification m_FramebufferSpec;
 		VkFramebuffer m_VulkanFramebuffer = VK_NULL_HANDLE;
-
-		// Experiemntal
-		VkImageView m_StencilAttachmentImageView = VK_NULL_HANDLE;
 	};
 
 } // namespace Flameberry

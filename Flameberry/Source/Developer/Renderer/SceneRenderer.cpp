@@ -372,29 +372,18 @@ namespace Flameberry {
 		imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
 			| VK_IMAGE_USAGE_SAMPLED_BIT;
 		imageSpec.MipLevels = mipLevels;
-		imageSpec.ViewCreationMode = ImageViewCreationMode::CreateOnePerMipMap;
+		imageSpec.Views = { {}, { .OnePerMipLevel = true } };
 
 		// The sampler has to exist before the descriptor sets below reference it
 		CreateBloomSampler();
 
-		// Experimental API
 		m_BloomImageResource.ForEach([&](Ref<Image>& bloomImage, uint32_t idx) {
 			bloomImage = CreateRef<Image>(imageSpec);
 
-			// Generate MipMaps ------------------------------------------------------------------------
 			VkCommandBuffer cmdBuffer;
-
 			VulkanContext::GetCurrentDevice()->BeginSingleTimeCommandBuffer(cmdBuffer);
 			bloomImage->CmdTransitionLayout(cmdBuffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 			VulkanContext::GetCurrentDevice()->EndSingleTimeCommandBuffer(cmdBuffer);
-
-			// Generate Image View for all mip levels --------------------------------------------------
-			ImageViewSpecification viewSpecification;
-			viewSpecification.BaseMipLevel = 0;
-			viewSpecification.LevelCount = mipLevels;
-
-			m_BloomImageCompleteViews[idx] =
-				Utils::CreateImageViewUsingSpecification(bloomImage->GetVulkanImage(), imageSpec.Format, viewSpecification);
 		});
 
 		// Creation of Bloom Descriptor Sets ------------------------------------------------------
@@ -408,7 +397,7 @@ namespace Flameberry {
 				descriptorSet = CreateRef<DescriptorSet>(descSetSpec);
 
 				VkDescriptorImageInfo bloomReadOnlyImageInfo{};
-				bloomReadOnlyImageInfo.imageView = m_BloomImageCompleteViews[idx];
+				bloomReadOnlyImageInfo.imageView = m_BloomImageResource[idx]->GetVulkanImageView(0);
 				bloomReadOnlyImageInfo.sampler = m_BloomSampler;
 				bloomReadOnlyImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
@@ -420,7 +409,7 @@ namespace Flameberry {
 					const uint32_t viewIndex = i * maxDescriptorSetsAllowed + j;
 
 					bloomImageInfos[j].sampler = VK_NULL_HANDLE;
-					bloomImageInfos[j].imageView = m_BloomImageResource[idx]->GetVulkanImageView(viewIndex);
+					bloomImageInfos[j].imageView = m_BloomImageResource[idx]->GetVulkanImageMipView(1, viewIndex);
 					bloomImageInfos[j].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 				}
 
@@ -512,20 +501,6 @@ namespace Flameberry {
 		m_BloomImageResource[resourceIndex]->OnResize(newBloomImgSize.x, newBloomImgSize.y, mipLevels);
 		m_BloomImageResource[resourceIndex]->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
-		{
-			// Regenerate Image View for all mip levels
-			vkDestroyImageView(device, m_BloomImageCompleteViews[resourceIndex], nullptr);
-
-			ImageViewSpecification viewSpecification;
-			viewSpecification.BaseMipLevel = 0;
-			viewSpecification.LevelCount = mipLevels;
-
-			m_BloomImageCompleteViews[resourceIndex] = Utils::CreateImageViewUsingSpecification(
-				m_BloomImageResource[resourceIndex]->GetVulkanImage(),
-				m_BloomImageResource[resourceIndex]->GetSpecification().Format, viewSpecification
-			);
-		}
-
 		if (m_BloomDescriptorSetResources.size() != numDescriptorSetsPerFrame) {
 			// Do this to avoid deleting descriptor sets due to shrinking of vector during use of that DescriptorSet in
 			// previous frames
@@ -543,7 +518,7 @@ namespace Flameberry {
 				m_BloomDescriptorSetResources[i][resourceIndex] = CreateRef<DescriptorSet>(descSetSpec);
 
 			VkDescriptorImageInfo bloomReadOnlyImageInfo{};
-			bloomReadOnlyImageInfo.imageView = m_BloomImageCompleteViews[resourceIndex];
+			bloomReadOnlyImageInfo.imageView = m_BloomImageResource[resourceIndex]->GetVulkanImageView(0);
 			bloomReadOnlyImageInfo.sampler = m_BloomSampler;
 			bloomReadOnlyImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
@@ -555,7 +530,7 @@ namespace Flameberry {
 				const uint32_t viewIndex = i * maxDescriptorSetsAllowed + j;
 
 				bloomImageInfos[j].sampler = VK_NULL_HANDLE;
-				bloomImageInfos[j].imageView = m_BloomImageResource[resourceIndex]->GetVulkanImageView(viewIndex);
+				bloomImageInfos[j].imageView = m_BloomImageResource[resourceIndex]->GetVulkanImageMipView(1, viewIndex);
 				bloomImageInfos[j].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 			}
 
@@ -572,7 +547,6 @@ namespace Flameberry {
 		imageSpec.Height = m_ViewportSize.y;
 		imageSpec.Format = VK_FORMAT_R16G16_SFLOAT;
 		imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
 		// Storage Image for the compute shaders to store data from the jump flood pass
 		imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -605,8 +579,10 @@ namespace Flameberry {
 
 			VkDescriptorImageInfo stencilBufferImageInfo{};
 			stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-			stencilBufferImageInfo.imageView =
-				m_GeometryPass->GetSpecification().TargetFramebuffers[i]->GetStencilAttachmentImageView();
+			stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification()
+												   .TargetFramebuffers[i]
+												   ->GetDepthAndOrStencilAttachment()
+												   ->GetVulkanImageView(1);
 			stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
 
 			VkDescriptorImageInfo jumpFloodImage1Info{};
@@ -637,8 +613,10 @@ namespace Flameberry {
 		// Update Jump Flood Descriptor Sets
 		VkDescriptorImageInfo stencilBufferImageInfo{};
 		stencilBufferImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		stencilBufferImageInfo.imageView =
-			m_GeometryPass->GetSpecification().TargetFramebuffers[resourceIndex]->GetStencilAttachmentImageView();
+		stencilBufferImageInfo.imageView = m_GeometryPass->GetSpecification()
+											   .TargetFramebuffers[resourceIndex]
+											   ->GetDepthAndOrStencilAttachment()
+											   ->GetVulkanImageView(1);
 		stencilBufferImageInfo.sampler = Texture2D::GetDefaultSampler();
 
 		VkDescriptorImageInfo jumpFloodImage1Info{};
@@ -2002,7 +1980,6 @@ namespace Flameberry {
 		auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		vkDestroySampler(device, m_ShadowMapSampler, nullptr);
 		vkDestroySampler(device, m_BloomSampler, nullptr);
-		for (auto& view : m_BloomImageCompleteViews) vkDestroyImageView(device, view, nullptr);
 	}
 
 } // namespace Flameberry

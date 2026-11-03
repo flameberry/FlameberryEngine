@@ -91,12 +91,9 @@ namespace Flameberry {
 		m_TextureImageSpecification.MipLevels = mipLevels;
 		m_TextureImageSpecification.Samples = 1;
 		m_TextureImageSpecification.Format = format;
-		m_TextureImageSpecification.Tiling = VK_IMAGE_TILING_OPTIMAL;
 		m_TextureImageSpecification.Usage =
 			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		m_TextureImageSpecification.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		m_TextureImageSpecification.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-		m_TextureImageSpecification.ViewSpecification.LevelCount = mipLevels;
 
 		m_TextureImage = CreateRef<Image>(m_TextureImageSpecification);
 
@@ -221,10 +218,8 @@ namespace Flameberry {
 		imageSpec.MipLevels = 1;
 		imageSpec.Samples = 1;
 		imageSpec.Format = VK_FORMAT_R8G8B8A8_SRGB;
-		imageSpec.Tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageSpec.Usage = VK_IMAGE_USAGE_SAMPLED_BIT;
 		imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
 		s_EmptyImage = CreateRef<Image>(imageSpec);
 

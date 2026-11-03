@@ -6,41 +6,28 @@
 
 namespace Flameberry {
 
-	enum class ImageViewCreationMode : uint8_t {
-		// Ignores `ImageSpecification.ViewSpecification`
-		DontCreate = 0,
-
-		// Creates an image view as per the provided `ImageSpecification.ViewSpecification`
-		CreateUsingGivenSpecification,
-
-		// Creates a total of `ImageSpecification.MipLevels` image views, one per level
-		// Note: This option overrides the `BaseMipLevel`, `LevelCount`, `BaseArrayLayer` and `LayerCount` options
-		// ...provided in `ImageViewSpecification.ViewSpecification`
-		CreateOnePerMipMap,
-
-		// Todo: Implement this
-		CreateForCube
-	};
-
 	struct ImageViewSpecification {
-		VkImageAspectFlags AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-		VkImageViewType ViewType = VK_IMAGE_VIEW_TYPE_2D;
-		uint32_t BaseMipLevel = 0, LevelCount = 1, BaseArrayLayer = 0, LayerCount = 1;
+		VkFormat Format = VK_FORMAT_UNDEFINED;
+		VkImageViewType Type = VK_IMAGE_VIEW_TYPE_2D;
+		VkImageAspectFlags AspectFlags = 0;
+		uint32_t BaseMipLevel = 0;
+		uint32_t LevelCount = VK_REMAINING_MIP_LEVELS;
+		uint32_t BaseArrayLayer = 0;
+		uint32_t LayerCount = VK_REMAINING_ARRAY_LAYERS;
+		bool OnePerMipLevel = false;
 	};
 
 	struct ImageSpecification {
-		uint32_t Width, Height;
-		uint32_t Samples = 1, MipLevels = 1, ArrayLayers = 1;
+		uint32_t Width;
+		uint32_t Height;
+		uint32_t Samples = 1;
+		uint32_t MipLevels = 1;
+		uint32_t ArrayLayers = 1;
 		VkFormat Format;
-		VkImageTiling Tiling = VK_IMAGE_TILING_OPTIMAL;
 		VkImageUsageFlags Usage;
 		VkMemoryPropertyFlags MemoryProperties;
 		VkImageCreateFlags Flags = 0;
-
-		// By observation, the codebase mostly uses `CreateUsingGivenSpecification` mode, hence this is the default
-		ImageViewCreationMode ViewCreationMode = ImageViewCreationMode::CreateUsingGivenSpecification;
-
-		ImageViewSpecification ViewSpecification;
+		std::vector<ImageViewSpecification> Views;
 	};
 
 	class Image {
@@ -50,7 +37,6 @@ namespace Flameberry {
 
 		void GenerateMipmaps(VkImageLayout oldLayout, VkImageLayout newLayout);
 		void CmdGenerateMipmaps(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout);
-
 		void WriteFromBuffer(VkBuffer srcBuffer);
 		void OnResize(uint32_t width, uint32_t height, uint32_t mipLevels = 0);
 
@@ -60,6 +46,7 @@ namespace Flameberry {
 			VkImageLayout newLayout,
 			VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
 		);
+
 		void CmdTransitionLayout(
 			VkCommandBuffer cmdBuffer,
 			VkImageLayout oldLayout,
@@ -68,29 +55,26 @@ namespace Flameberry {
 		);
 
 		VkImage GetVulkanImage() const { return m_VulkanImage; }
-		VkImageView GetVulkanImageView(int idx = 0) const;
-		ImageSpecification GetSpecification() const { return m_Specification; }
+		VkImageView GetVulkanImageView(int idx = 0) const { return m_Views[idx][0]; }
+		VkImageView GetVulkanImageMipView(int idx, int mip) const { return m_Views[idx][mip]; }
 		VkImageLayout GetActiveImageLayout() const { return m_ActiveImageLayout; }
+		const ImageSpecification& GetSpecification() const { return m_Specification; }
 
 	private:
 		void Invalidate();
+		void CreateImage();
+		void AllocateAndBindMemory();
+		void CreateImageViews();
+		void DestroyImageViews();
 
 	private:
 		VkImage m_VulkanImage;
 		VkDeviceMemory m_VkImageDeviceMemory;
 		VkMemoryRequirements m_MemoryRequirements;
-
 		VkImageLayout m_ActiveImageLayout;
 		ImageSpecification m_Specification;
 
-		// (Aditya): So I've made this decision choice to have a separate member for storing mipmap views
-		// and a separate member for a single view. This is redundant but more convenient to use (hopefully).
-
-		// This is gonna be used in case of the `CreateUsingGivenSpecification` mode
-		VkImageView m_VulkanImageView;
-
-		// This is gonna be used in case of the `CreateOnePerMipMap` mode
-		std::vector<VkImageView> m_VulkanImageViewVector;
+		std::vector<std::vector<VkImageView>> m_Views;
 	};
 
 	namespace Utils {

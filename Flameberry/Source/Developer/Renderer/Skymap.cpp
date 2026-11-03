@@ -110,14 +110,8 @@ namespace Flameberry {
 				| VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 			// Important flag to ensure that we can sample the image as a cube
 			imageSpec.Flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-			imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-			// VkImageView type should be VK_IMAGE_VIEW_TYPE_CUBE
-			imageSpec.ViewSpecification.ViewType = VK_IMAGE_VIEW_TYPE_CUBE;
-			// 6 Layers for 6 faces
-			imageSpec.ViewSpecification.LayerCount = 6;
-
-			// TODO: Figure out mip levels
 			imageSpec.MipLevels = mipLevels;
+			imageSpec.Views = { { .Type = VK_IMAGE_VIEW_TYPE_CUBE, .LayerCount = 6 } };
 
 			// Creation of the cubemap image
 			m_CubemapImage = CreateRef<Image>(imageSpec);
@@ -137,9 +131,7 @@ namespace Flameberry {
 			imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 			imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 			imageSpec.Flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-			imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-			imageSpec.ViewSpecification.ViewType = VK_IMAGE_VIEW_TYPE_CUBE;
-			imageSpec.ViewSpecification.LayerCount = 6;
+			imageSpec.Views = { { .Type = VK_IMAGE_VIEW_TYPE_CUBE, .LayerCount = 6 } };
 			imageSpec.MipLevels = 1;
 
 			m_IrradianceMap = CreateRef<Image>(imageSpec);
@@ -161,9 +153,7 @@ namespace Flameberry {
 			imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 			imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 			imageSpec.Flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-			imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-			imageSpec.ViewSpecification.ViewType = VK_IMAGE_VIEW_TYPE_CUBE;
-			imageSpec.ViewSpecification.LayerCount = 6;
+			imageSpec.Views = { { .Type = VK_IMAGE_VIEW_TYPE_CUBE, .LayerCount = 6 } };
 
 			// This is the distinguishing factor between prefiltered and the other image creation methods
 			imageSpec.MipLevels = mipLevels;
@@ -177,13 +167,13 @@ namespace Flameberry {
 				imageViewCreateInfo.image = m_PrefilteredMap->GetVulkanImage();
 				imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
 				imageViewCreateInfo.format = imageSpec.Format;
-				imageViewCreateInfo.subresourceRange.aspectMask = imageSpec.ViewSpecification.AspectFlags;
+				imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
 				// This is the important part, where the base mip level is the current mip level that we are iterating
 				imageViewCreateInfo.subresourceRange.baseMipLevel = i;
 				imageViewCreateInfo.subresourceRange.levelCount = 1;
-				imageViewCreateInfo.subresourceRange.baseArrayLayer = imageSpec.ViewSpecification.BaseArrayLayer;
-				imageViewCreateInfo.subresourceRange.layerCount = imageSpec.ViewSpecification.LayerCount;
+				imageViewCreateInfo.subresourceRange.baseArrayLayer = imageSpec.Views[0].BaseArrayLayer;
+				imageViewCreateInfo.subresourceRange.layerCount = imageSpec.Views[0].LayerCount;
 
 				imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 				imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -228,7 +218,6 @@ namespace Flameberry {
 			imageSpec.Format = VK_FORMAT_R16G16_SFLOAT;
 			imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 			imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-			imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 
 			m_BRDFLUTMap = CreateRef<Image>(imageSpec);
 
@@ -603,13 +592,8 @@ namespace Flameberry {
 		// Storage Image for the compute shaders to store data from equirectangular map
 		// Sampled by the PBR fragment shader for rendering
 		imageSpec.Usage = VK_IMAGE_USAGE_SAMPLED_BIT;
-		// Important flag to ensure that we can sample the image as a cube
 		imageSpec.Flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-		imageSpec.ViewSpecification.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-		// VkImageView type should be VK_IMAGE_VIEW_TYPE_CUBE
-		imageSpec.ViewSpecification.ViewType = VK_IMAGE_VIEW_TYPE_CUBE;
-		// 6 Layers for 6 faces
-		imageSpec.ViewSpecification.LayerCount = 6;
+		imageSpec.Views = { { .Type = VK_IMAGE_VIEW_TYPE_CUBE, .LayerCount = 6 } };
 
 		// Creation of the cubemap image
 		s_EmptyCubemap = CreateRef<Image>(imageSpec);
