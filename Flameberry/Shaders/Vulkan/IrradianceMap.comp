@@ -13,7 +13,7 @@ void main()
     // Get the size of the Irradiance Map
     const ivec2 imgSize = imageSize(_FBY_u_IrradianceMap);
 
-    vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
+    vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy + 0.5) / vec2(imgSize);
     normalizedPixelCoords = normalizedPixelCoords * 2.0f - 1.0f;
     vec3 normal = normalize(NormalizedToWorldPosition(int(gl_GlobalInvocationID.z), normalizedPixelCoords));
 

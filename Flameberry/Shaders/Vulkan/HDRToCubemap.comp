@@ -22,7 +22,7 @@ void main()
     // Get the size of the equirectangular image
     const ivec2 imgSize = imageSize(_FBY_u_Cubemap);
 
-    vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy) / vec2(imgSize);
+    vec2 normalizedPixelCoords = vec2(gl_GlobalInvocationID.xy + 0.5) / vec2(imgSize);
     vec3 sampledColor = PanoramaToCubeMap(int(gl_GlobalInvocationID.z), normalizedPixelCoords);
 
     // Write the pixel value from the equirectangular image to the cube map
