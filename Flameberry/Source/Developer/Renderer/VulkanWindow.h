@@ -53,4 +53,4 @@ namespace Flameberry {
 		std::function<void(Event&)> m_EventCallBack;
 	};
 
-} // namespace Flameberry
+}

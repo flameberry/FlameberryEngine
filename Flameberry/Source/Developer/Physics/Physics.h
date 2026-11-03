@@ -18,4 +18,4 @@ namespace Flameberry {
 		static JPH::BodyInterface& GetBodyInterface();
 	};
 
-} // namespace Flameberry
+}

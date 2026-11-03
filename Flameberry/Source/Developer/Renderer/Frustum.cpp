@@ -41,13 +41,13 @@ namespace Flameberry {
 
 	bool IsAABBInsideFrustum(const AABB& aabb, const glm::mat4& transform, const Frustum& frustum) {
 		std::array<glm::vec4, 8> vertices = { transform * glm::vec4(aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f),
-											  transform * glm::vec4(aabb.Max.x, aabb.Min.y, aabb.Min.z, 1.0f),
-											  transform * glm::vec4(aabb.Max.x, aabb.Max.y, aabb.Min.z, 1.0f),
-											  transform * glm::vec4(aabb.Min.x, aabb.Max.y, aabb.Min.z, 1.0f),
-											  transform * glm::vec4(aabb.Min.x, aabb.Min.y, aabb.Max.z, 1.0f),
-											  transform * glm::vec4(aabb.Max.x, aabb.Min.y, aabb.Max.z, 1.0f),
-											  transform * glm::vec4(aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f),
-											  transform * glm::vec4(aabb.Min.x, aabb.Max.y, aabb.Max.z, 1.0f) };
+		                                      transform * glm::vec4(aabb.Max.x, aabb.Min.y, aabb.Min.z, 1.0f),
+		                                      transform * glm::vec4(aabb.Max.x, aabb.Max.y, aabb.Min.z, 1.0f),
+		                                      transform * glm::vec4(aabb.Min.x, aabb.Max.y, aabb.Min.z, 1.0f),
+		                                      transform * glm::vec4(aabb.Min.x, aabb.Min.y, aabb.Max.z, 1.0f),
+		                                      transform * glm::vec4(aabb.Max.x, aabb.Min.y, aabb.Max.z, 1.0f),
+		                                      transform * glm::vec4(aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f),
+		                                      transform * glm::vec4(aabb.Min.x, aabb.Max.y, aabb.Max.z, 1.0f) };
 
 		for (const auto& plane : frustum.Planes) {
 			bool allOutside = true;
@@ -65,4 +65,4 @@ namespace Flameberry {
 		return true;
 	}
 
-} // namespace Flameberry
+}

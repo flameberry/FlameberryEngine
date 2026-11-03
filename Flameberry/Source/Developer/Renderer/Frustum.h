@@ -14,4 +14,4 @@ namespace Flameberry {
 
 	bool IsAABBInsideFrustum(const AABB& aabb, const glm::mat4& transform, const Frustum& frustum);
 
-} // namespace Flameberry
+}

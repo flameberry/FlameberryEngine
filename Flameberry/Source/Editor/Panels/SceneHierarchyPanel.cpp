@@ -48,8 +48,8 @@ namespace Flameberry {
 		// Entity Hierarchy Table
 		{
 			ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable
-				| ImGuiTableFlags_PadOuterX | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoBordersInBody
-				| ImGuiTableFlags_ScrollY;
+			    | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoBordersInBody
+			    | ImGuiTableFlags_ScrollY;
 
 			if (ImGui::BeginTable("SceneHierarchyTable", 3, tableFlags)) {
 				const std::string label = fmt::format("Label ({} Entities)", m_Context->GetRegistry()->Size());
@@ -169,9 +169,9 @@ namespace Flameberry {
 			hasChild = relation->FirstChild != FEntity::Null;
 
 		const int treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding
-			| ImGuiTreeNodeFlags_AllowOverlap | (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
-			| (hasChild ? 0 : ImGuiTreeNodeFlags_Leaf) | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_SpanAllColumns
-			| ImGuiTreeNodeFlags_LabelSpanAllColumns;
+		    | ImGuiTreeNodeFlags_AllowOverlap | (isSelected ? ImGuiTreeNodeFlags_Selected : 0)
+		    | (hasChild ? 0 : ImGuiTreeNodeFlags_Leaf) | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_SpanAllColumns
+		    | ImGuiTreeNodeFlags_LabelSpanAllColumns;
 
 		bool shouldDeleteEntity = false, shouldDuplicateEntity = false;
 		bool isEntityTreeNodeOpen = false;
@@ -378,4 +378,4 @@ namespace Flameberry {
 		return entity;
 	}
 
-} // namespace Flameberry
+}

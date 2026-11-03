@@ -12,4 +12,4 @@ namespace Flameberry {
 		return CreateRef<Skymap>(path);
 	}
 
-} // namespace Flameberry
+}

@@ -37,4 +37,4 @@ namespace Flameberry {
 		}
 	};
 
-} // namespace Flameberry
+}

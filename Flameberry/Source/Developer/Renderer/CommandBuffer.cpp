@@ -35,4 +35,4 @@ namespace Flameberry {
 		VK_CHECK_RESULT(vkResetCommandBuffer(m_CommandBuffer, 0));
 	}
 
-} // namespace Flameberry
+}

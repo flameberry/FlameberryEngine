@@ -21,7 +21,7 @@ namespace Flameberry {
 		static std::unordered_map<std::string, double> s_ScopeExecutionTimes;
 	};
 
-} // namespace Flameberry
+}
 
 #ifdef FBY_DEBUG
 	#define FBY_PROFILE_SCOPE(scopeName) Flameberry::Profiler profiler(scopeName);

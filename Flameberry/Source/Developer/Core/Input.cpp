@@ -30,4 +30,4 @@ namespace Flameberry {
 		glfwSetInputMode(window, GLFW_CURSOR, mode);
 	}
 
-} // namespace Flameberry
+}

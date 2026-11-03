@@ -15,4 +15,4 @@ namespace Flameberry {
 		static Ref<Skymap> LoadSkymap(const std::filesystem::path& path);
 	};
 
-} // namespace Flameberry
+}

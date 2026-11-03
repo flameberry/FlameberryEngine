@@ -15,4 +15,4 @@ namespace Flameberry {
 		static EditorContext* s_Ctx;
 	};
 
-} // namespace Flameberry
+}

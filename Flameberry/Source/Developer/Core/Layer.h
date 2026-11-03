@@ -15,4 +15,4 @@ namespace Flameberry {
 		virtual void OnDestroy() = 0;
 	};
 
-} // namespace Flameberry
+}

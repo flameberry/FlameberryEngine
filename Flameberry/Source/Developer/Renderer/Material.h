@@ -167,4 +167,4 @@ namespace Flameberry {
 		friend class MaterialAsset;
 	};
 
-} // namespace Flameberry
+}

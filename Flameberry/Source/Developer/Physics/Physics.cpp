@@ -152,4 +152,4 @@ namespace Flameberry {
 		s_Data->PhysicsSystem.Update(delta, collisionSteps, &s_Data->TempAllocator, &s_Data->JobSystemThreadPool);
 	}
 
-} // namespace Flameberry
+}

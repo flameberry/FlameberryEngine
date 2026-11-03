@@ -155,4 +155,4 @@ namespace Flameberry {
 		glfwSetWindowPos(m_Window, xpos, ypos);
 	}
 
-} // namespace Flameberry
+}

@@ -57,4 +57,4 @@ namespace Flameberry {
 		std::ofstream fout(filePath);
 		fout << out.c_str();
 	}
-} // namespace Flameberry
+}

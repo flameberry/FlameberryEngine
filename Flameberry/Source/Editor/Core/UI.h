@@ -88,6 +88,6 @@ namespace Flameberry {
 			bool m_Condition;
 		};
 
-	} // namespace UI
+	}
 
-} // namespace Flameberry
+}

@@ -24,4 +24,4 @@ namespace Flameberry {
 		return out;
 	}
 
-} // namespace Flameberry
+}

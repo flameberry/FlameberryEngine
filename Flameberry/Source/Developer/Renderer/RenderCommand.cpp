@@ -15,12 +15,12 @@ namespace Flameberry {
 
 	bool RenderCommand::DoesFormatSupportDepthAttachment(VkFormat format) {
 		return format == VK_FORMAT_D32_SFLOAT || format == VK_FORMAT_D16_UNORM || format == VK_FORMAT_D16_UNORM_S8_UINT
-			|| format == VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
+		    || format == VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
 	}
 
 	bool RenderCommand::DoesFormatSupportStencilAttachment(VkFormat format) {
 		return format == VK_FORMAT_S8_UINT || format == VK_FORMAT_D16_UNORM_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT
-			|| format == VK_FORMAT_D32_SFLOAT_S8_UINT;
+		    || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
 	}
 
 	void RenderCommand::WritePixelFromImageToBuffer(
@@ -162,7 +162,7 @@ namespace Flameberry {
 		vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
 
 		VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts
-			& physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+		    & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
 		if (counts & VK_SAMPLE_COUNT_64_BIT) {
 			return VK_SAMPLE_COUNT_64_BIT;
 		}
@@ -194,8 +194,8 @@ namespace Flameberry {
 
 		for (uint32_t i = 0; i < vk_physical_device_mem_properties.memoryTypeCount; i++) {
 			if ((typeFilter & (1 << i))
-				&& (vk_physical_device_mem_properties.memoryTypes[i].propertyFlags & vk_memory_property_flags)
-					== vk_memory_property_flags)
+			    && (vk_physical_device_mem_properties.memoryTypes[i].propertyFlags & vk_memory_property_flags)
+			        == vk_memory_property_flags)
 				return i;
 		}
 		FBY_ERROR("Failed to find valid memory type!");
@@ -213,7 +213,7 @@ namespace Flameberry {
 			vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &properties);
 
 			if ((tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & featureFlags) == featureFlags)
-				|| (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & featureFlags) == featureFlags))
+			    || (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & featureFlags) == featureFlags))
 				return format;
 		}
 		FBY_ERROR("Couldn't find supported format!");
@@ -279,7 +279,7 @@ namespace Flameberry {
 			if (isPresentationSupported) indices.PresentationSupportedQueueFamilyIndex = index;
 
 			if (indices.GraphicsQueueFamilyIndex != -1 && indices.ComputeQueueFamilyIndex != -1
-				&& indices.PresentationSupportedQueueFamilyIndex != -1)
+			    && indices.PresentationSupportedQueueFamilyIndex != -1)
 				break;
 
 			index++;
@@ -356,4 +356,4 @@ namespace Flameberry {
 		return buffer;
 	}
 
-} // namespace Flameberry
+}

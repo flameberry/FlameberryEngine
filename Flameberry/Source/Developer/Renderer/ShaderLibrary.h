@@ -23,4 +23,4 @@ namespace Flameberry {
 		static std::unordered_map<std::string, Ref<Shader>> s_ShaderStorage;
 	};
 
-} // namespace Flameberry
+}

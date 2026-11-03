@@ -13,4 +13,4 @@ namespace Flameberry {
 		return CreateRef<Font>(path);
 	}
 
-} // namespace Flameberry
+}

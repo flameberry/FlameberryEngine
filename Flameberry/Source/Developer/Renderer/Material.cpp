@@ -82,4 +82,4 @@ namespace Flameberry {
 		if (m_PushConstantBuffer) free(m_PushConstantBuffer);
 	}
 
-} // namespace Flameberry
+}

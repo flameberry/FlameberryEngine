@@ -74,4 +74,4 @@ namespace Flameberry {
 		return new EditorApplication(applicationSpec);
 	}
 
-} // namespace Flameberry
+}

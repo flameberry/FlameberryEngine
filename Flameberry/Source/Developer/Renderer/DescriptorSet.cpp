@@ -12,7 +12,7 @@
 
 bool operator==(const VkDescriptorSetLayoutBinding& b1, const VkDescriptorSetLayoutBinding& b2) {
 	return b1.binding == b2.binding && b1.descriptorCount == b2.descriptorCount && b1.descriptorType == b2.descriptorType
-		&& b1.stageFlags == b2.stageFlags && b1.pImmutableSamplers == nullptr && b2.pImmutableSamplers == nullptr;
+	    && b1.stageFlags == b2.stageFlags && b1.pImmutableSamplers == nullptr && b2.pImmutableSamplers == nullptr;
 }
 
 namespace Flameberry {
@@ -27,7 +27,7 @@ namespace Flameberry {
 		return s1.Bindings == s2.Bindings;
 	}
 
-} // namespace Flameberry
+}
 
 namespace std {
 
@@ -43,7 +43,7 @@ namespace std {
 		}
 	};
 
-} // namespace std
+}
 
 namespace Flameberry {
 
@@ -193,4 +193,4 @@ namespace Flameberry {
 		}
 	}
 
-} // namespace Flameberry
+}

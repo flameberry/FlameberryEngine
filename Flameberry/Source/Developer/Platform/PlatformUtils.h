@@ -31,6 +31,6 @@ namespace Flameberry {
 		std::string OpenFolder();
 		std::string SaveFile(const char* filter);
 
-	} // namespace Platform
+	}
 
-} // namespace Flameberry
+}

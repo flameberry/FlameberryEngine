@@ -22,4 +22,4 @@ namespace Flameberry {
 		AssetHandle m_SelectedHandle = 0;
 	};
 
-} // namespace Flameberry
+}

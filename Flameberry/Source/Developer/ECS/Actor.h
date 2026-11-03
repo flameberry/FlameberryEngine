@@ -25,4 +25,4 @@ namespace Flameberry {
 		friend class Scene;
 	};
 
-} // namespace Flameberry
+}

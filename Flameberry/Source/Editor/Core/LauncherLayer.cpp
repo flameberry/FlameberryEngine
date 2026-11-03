@@ -40,7 +40,7 @@ namespace Flameberry {
 		ImGui::SetNextWindowViewport(viewport->ID);
 
 		constexpr ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove
-			| ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings;
+		    | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings;
 		{
 			UI::ScopedStyleVariable windowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 			UI::ScopedStyleVariable windowBorderSize(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -290,4 +290,4 @@ namespace Flameberry {
 		ImGui::CloseCurrentPopup();
 	}
 
-} // namespace Flameberry
+}

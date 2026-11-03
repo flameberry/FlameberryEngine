@@ -21,7 +21,7 @@ namespace Flameberry {
 
 	private:
 		static constexpr ImGuiTableFlags s_TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH
-			| ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
+		    | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
 		static constexpr float s_LabelWidth = 100.0f;
 
 		Ref<MaterialEditorPanel> m_MaterialEditorPanel;
@@ -61,7 +61,7 @@ namespace Flameberry {
 			const float lineHeight = ImGui::GetTextLineHeight() + 2.0f * style.FramePadding.y;
 
 			constexpr ImGuiTreeNodeFlags headerFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth
-				| ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap;
+			    | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap;
 
 			const bool open = ImGui::CollapsingHeader(name, headerFlags);
 			ImGui::PopStyleVar();
@@ -91,4 +91,4 @@ namespace Flameberry {
 		}
 	}
 
-} // namespace Flameberry
+}

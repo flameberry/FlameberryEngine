@@ -84,4 +84,4 @@ namespace Flameberry {
 		EVENT_CATEGORY(MouseEventCategory);
 	};
 
-} // namespace Flameberry
+}

@@ -29,4 +29,4 @@ namespace Flameberry {
 		float m_CameraSpeed = 2.5f;
 	};
 
-} // namespace Flameberry
+}

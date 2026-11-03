@@ -11,4 +11,4 @@ namespace Flameberry {
 		static void SerializeProject(const std::filesystem::path& filePath, const Project* project);
 	};
 
-} // namespace Flameberry
+}

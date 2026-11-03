@@ -76,4 +76,4 @@ namespace Flameberry {
 		function();
 	}
 
-} // namespace Flameberry
+}

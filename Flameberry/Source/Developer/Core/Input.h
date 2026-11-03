@@ -13,4 +13,4 @@ namespace Flameberry {
 		static void SetCursorMode(int mode);
 	};
 
-} // namespace Flameberry
+}

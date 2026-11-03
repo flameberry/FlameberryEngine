@@ -13,4 +13,4 @@ namespace Flameberry {
 		static Ref<StaticMesh> LoadMesh(const std::filesystem::path& path);
 	};
 
-} // namespace Flameberry
+}

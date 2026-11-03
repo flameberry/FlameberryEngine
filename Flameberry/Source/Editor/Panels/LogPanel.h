@@ -71,4 +71,4 @@ namespace Flameberry {
 		Ref<Texture2D> m_InfoIcon, m_WarningIcon, m_ErrorIcon;
 	};
 
-} // namespace Flameberry
+}

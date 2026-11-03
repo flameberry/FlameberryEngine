@@ -104,4 +104,4 @@ namespace Flameberry {
 		vkDestroyFramebuffer(device, m_VulkanFramebuffer, nullptr);
 	}
 
-} // namespace Flameberry
+}

@@ -68,6 +68,6 @@ namespace Flameberry {
 			}
 		}
 
-	} // namespace Utils
+	}
 
-} // namespace Flameberry
+}

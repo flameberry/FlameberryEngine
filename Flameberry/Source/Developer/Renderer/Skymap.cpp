@@ -107,7 +107,7 @@ namespace Flameberry {
 			// Storage Image for the compute shaders to store data from equirectangular map
 			// Sampled by the PBR fragment shader for rendering
 			imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-				| VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+			    | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 			// Important flag to ensure that we can sample the image as a cube
 			imageSpec.Flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 			imageSpec.MipLevels = mipLevels;
@@ -643,4 +643,4 @@ namespace Flameberry {
 		s_EmptyDescriptorSet = nullptr;
 	}
 
-} // namespace Flameberry
+}

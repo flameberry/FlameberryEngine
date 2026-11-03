@@ -84,4 +84,4 @@ namespace Flameberry {
 		return nullptr;
 	}
 
-} // namespace Flameberry
+}

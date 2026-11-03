@@ -51,4 +51,4 @@ namespace Flameberry {
 		glm::vec3 m_FocalPoint{ 0.0f };
 	};
 
-} // namespace Flameberry
+}

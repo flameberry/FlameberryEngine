@@ -25,4 +25,4 @@ namespace Flameberry {
 		VkDebugUtilsMessengerEXT m_VkDebugMessenger;
 	};
 
-} // namespace Flameberry
+}

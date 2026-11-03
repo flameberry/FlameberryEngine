@@ -67,4 +67,4 @@ namespace Flameberry {
 		VkDescriptorSet m_DescriptorSet;
 	};
 
-} // namespace Flameberry
+}

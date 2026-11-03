@@ -37,4 +37,4 @@ namespace Flameberry {
 		static std::unordered_map<uint32_t, Ref<Image>> s_CubemapSizeToBRDFLUTMap;
 	};
 
-} // namespace Flameberry
+}

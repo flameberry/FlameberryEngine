@@ -12,4 +12,4 @@ namespace Flameberry {
 		static Ref<Asset> ImportAsset(AssetHandle handle, const AssetMetadata& metadata);
 	};
 
-} // namespace Flameberry
+}

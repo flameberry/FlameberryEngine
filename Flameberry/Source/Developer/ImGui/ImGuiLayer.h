@@ -35,4 +35,4 @@ namespace Flameberry {
 		std::vector<VkImageView> m_ImGuiImageViews;
 	};
 
-} // namespace Flameberry
+}

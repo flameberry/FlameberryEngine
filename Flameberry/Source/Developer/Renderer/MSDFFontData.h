@@ -10,4 +10,4 @@ namespace Flameberry {
 		msdf_atlas::FontGeometry FontGeometry;
 	};
 
-} // namespace Flameberry
+}

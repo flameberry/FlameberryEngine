@@ -24,4 +24,4 @@ namespace Flameberry {
 		Unique<AssetThread> m_AssetThread;
 	};
 
-} // namespace Flameberry
+}

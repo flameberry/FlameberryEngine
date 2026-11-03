@@ -29,8 +29,8 @@ namespace Flameberry {
 					return VK_IMAGE_ASPECT_DEPTH_BIT;
 				default:
 					return VK_IMAGE_ASPECT_COLOR_BIT;
+			}
 		}
-	}
 
 	}
 
@@ -156,10 +156,10 @@ namespace Flameberry {
 				FBY_ASSERT(
 					m_Specification.Flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT,
 					"An image view of type VK_IMAGE_VIEW_TYPE_CUBE must have the flag VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT set"
-					);
+				);
 			} else if (view.Type == VK_IMAGE_VIEW_TYPE_2D) {
 				FBY_ASSERT(layerCount == 1, "An image view of type VK_IMAGE_VIEW_TYPE_2D must cover exactly 1 array layer");
-				}
+			}
 
 			// if view.Format is not provided, we assume it's the same as the image format
 			view.Format = view.Format == VK_FORMAT_UNDEFINED ? m_Specification.Format : view.Format;
@@ -534,6 +534,6 @@ namespace Flameberry {
 			return vulkanImageView;
 		}
 
-	} // namespace Utils
+	}
 
-} // namespace Flameberry
+}

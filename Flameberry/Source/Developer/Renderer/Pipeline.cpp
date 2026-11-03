@@ -115,7 +115,7 @@ namespace Flameberry {
 			} else {
 				outPushConstantRanges.emplace_back(
 					VkPushConstantRange{ (VkShaderStageFlags)specification.VulkanShaderStage, specification.Offset,
-										 specification.Size }
+					                     specification.Size }
 				);
 				pcOffsetToIndex[specification.Offset] = (uint32_t)outPushConstantRanges.size() - 1;
 			}
@@ -139,8 +139,8 @@ namespace Flameberry {
 			for (uint32_t i = 0; i < reflectionDescSet.BindingCount; i++) {
 				vulkanDescSetBindings.emplace_back(
 					VkDescriptorSetLayoutBinding{ descriptorBindings[index].Binding, descriptorBindings[index].Type,
-												  descriptorBindings[index].Count,
-												  descriptorBindings[index].VulkanShaderStage, nullptr }
+					                              descriptorBindings[index].Count,
+					                              descriptorBindings[index].VulkanShaderStage, nullptr }
 				);
 				index++;
 			}
@@ -224,7 +224,7 @@ namespace Flameberry {
 		vk_pipeline_fragment_shader_stage_create_info.pName = "main";
 
 		VkPipelineShaderStageCreateInfo vk_shader_stages_create_infos[2] = { vk_pipeline_vertex_shader_stage_create_info,
-																			 vk_pipeline_fragment_shader_stage_create_info };
+		                                                                     vk_pipeline_fragment_shader_stage_create_info };
 
 		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState{};
 		if (m_Specification.BlendingEnable) {
@@ -452,4 +452,4 @@ namespace Flameberry {
 		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
 	}
 
-} // namespace Flameberry
+}

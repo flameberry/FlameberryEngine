@@ -97,4 +97,4 @@ namespace Flameberry {
 		// friend class SceneRenderer;
 	};
 
-} // namespace Flameberry
+}

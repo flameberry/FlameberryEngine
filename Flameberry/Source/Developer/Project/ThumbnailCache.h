@@ -35,4 +35,4 @@ namespace Flameberry {
 		std::map<std::filesystem::path, Thumbnail> m_CachedThumbnails;
 	};
 
-} // namespace Flameberry
+}

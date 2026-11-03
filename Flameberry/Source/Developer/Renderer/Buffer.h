@@ -45,4 +45,4 @@ namespace Flameberry {
 		BufferSpecification m_BufferSpec;
 	};
 
-} // namespace Flameberry
+}

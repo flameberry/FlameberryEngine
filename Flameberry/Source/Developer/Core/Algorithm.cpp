@@ -46,6 +46,6 @@ namespace Flameberry {
 			return -1;
 		}
 
-	} // namespace Algorithm
+	}
 
-} // namespace Flameberry
+}

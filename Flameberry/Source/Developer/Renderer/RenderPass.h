@@ -32,4 +32,4 @@ namespace Flameberry {
 		VkRenderPass m_VkRenderPass;
 	};
 
-} // namespace Flameberry
+}

@@ -50,13 +50,13 @@ namespace Flameberry {
 			ImGui::SameLine();
 			ImGui::SetCursorPosX(
 				ImGui::GetWindowWidth() - style.FramePadding.x * 2.0f - ImGui::CalcTextSize(addComponentText).x
-				- style.ItemSpacing.x
+			    - style.ItemSpacing.x
 			);
 
 			// Check if selected entity is a collection entity
 			bool disableAddComponentButton =
 				m_Context->GetRegistry()->HasComponent<CollectionComponent>(EditorContext::Get()->SelectedEntity)
-				|| m_Context->IsWorldEntity(EditorContext::Get()->SelectedEntity);
+			    || m_Context->IsWorldEntity(EditorContext::Get()->SelectedEntity);
 
 			// Some special entities are not supposed to have all the components
 			ImGui::BeginDisabled(disableAddComponentButton);
@@ -166,7 +166,7 @@ namespace Flameberry {
 								FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
 								bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Font
-									&& std::filesystem::exists(fontPath) && std::filesystem::is_regular_file(fontPath);
+							        && std::filesystem::exists(fontPath) && std::filesystem::is_regular_file(fontPath);
 
 								if (shouldImport) text.Font = AssetManager::As<EditorAssetManager>()->ImportAsset(fontPath);
 								else
@@ -229,7 +229,7 @@ namespace Flameberry {
 
 						constexpr float size = 80.0f;
 						const float aspectRatio = (float)thumbnail->GetImageSpecification().Width
-							/ (float)thumbnail->GetImageSpecification().Height;
+						    / (float)thumbnail->GetImageSpecification().Height;
 
 						// Show Environment Map Preview
 						UI::TableKeyElement("Skymap");
@@ -246,7 +246,7 @@ namespace Flameberry {
 								FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
 								bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Skymap
-									&& std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath);
+								    && std::filesystem::exists(envPath) && std::filesystem::is_regular_file(envPath);
 
 								if (shouldImport)
 									skyLightComp.Skymap = AssetManager::As<EditorAssetManager>()->ImportAsset(envPath);
@@ -336,7 +336,7 @@ namespace Flameberry {
 							FBY_INFO("Payload received: {}, with extension {}", path, ext);
 
 							const bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::StaticMesh
-								&& std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath);
+							    && std::filesystem::exists(modelPath) && std::filesystem::is_regular_file(modelPath);
 
 							if (shouldImport)
 								mesh.MeshHandle = AssetManager::As<EditorAssetManager>()->ImportAsset(modelPath);
@@ -395,7 +395,7 @@ namespace Flameberry {
 
 							Ref<MaterialAsset> mat;
 							if (auto it = mesh.OverridenMaterialTable.find(submeshIndex);
-								it != mesh.OverridenMaterialTable.end())
+							    it != mesh.OverridenMaterialTable.end())
 								mat = AssetManager::GetAsset<MaterialAsset>(it->second);
 							else
 								mat = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
@@ -417,7 +417,7 @@ namespace Flameberry {
 									FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
 									bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Material
-										&& std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath);
+									    && std::filesystem::exists(matPath) && std::filesystem::is_regular_file(matPath);
 
 									if (shouldImport)
 										mesh.OverridenMaterialTable[submeshIndex] =
@@ -452,7 +452,7 @@ namespace Flameberry {
 
 								// Show Memory Only Assets
 								for (const auto& [handle, asset] :
-									 AssetManager::As<EditorAssetManager>()->GetMemoryOnlyAssets())
+								     AssetManager::As<EditorAssetManager>()->GetMemoryOnlyAssets())
 									displayMaterialEntry(asset);
 
 								UI::EndSelectionWidget();
@@ -626,4 +626,4 @@ namespace Flameberry {
 		m_MaterialEditorPanel->OnUIRender();
 	}
 
-} // namespace Flameberry
+}

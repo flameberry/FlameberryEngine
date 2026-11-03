@@ -1,5 +1,4 @@
 #include "TextureImporter.h"
-#include "Core/Assert.h"
 #include "Renderer/Texture2D.h"
 
 #include <algorithm>
@@ -104,4 +103,4 @@ namespace Flameberry {
 		return texture;
 	}
 
-} // namespace Flameberry
+}

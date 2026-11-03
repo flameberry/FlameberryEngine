@@ -137,4 +137,4 @@ namespace Flameberry {
 		std::unordered_map<std::string, uint32_t> m_DescriptorBindingVariableFullNameToSpecificationIndex;
 	};
 
-} // namespace Flameberry
+}

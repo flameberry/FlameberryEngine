@@ -76,4 +76,4 @@ namespace Flameberry {
 		static std::unordered_map<std::string, Ref<Texture2D>> s_TextureCacheDirectory;
 	};
 
-} // namespace Flameberry
+}

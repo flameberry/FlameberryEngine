@@ -109,22 +109,22 @@ namespace Flameberry {
 		shadowMapRenderPassSpec.TargetFramebuffers.resize(imageCount);
 		shadowMapRenderPassSpec.Dependencies = {
 			{
-				VK_SUBPASS_EXTERNAL,						  // uint32_t                   srcSubpass
-				0,											  // uint32_t                   dstSubpass
-				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,		  // VkPipelineStageFlags       srcStageMask
-				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,	  // VkPipelineStageFlags       dstStageMask
-				VK_ACCESS_SHADER_READ_BIT,					  // VkAccessFlags              srcAccessMask
+				VK_SUBPASS_EXTERNAL,                          // uint32_t                   srcSubpass
+				0,                                            // uint32_t                   dstSubpass
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,        // VkPipelineStageFlags       srcStageMask
+				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,   // VkPipelineStageFlags       dstStageMask
+				VK_ACCESS_SHADER_READ_BIT,                    // VkAccessFlags              srcAccessMask
 				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              dstAccessMask
-				VK_DEPENDENCY_BY_REGION_BIT					  // VkDependencyFlags          dependencyFlags
+				VK_DEPENDENCY_BY_REGION_BIT                   // VkDependencyFlags          dependencyFlags
 			},
 			{
-				0,											  // uint32_t                   srcSubpass
-				VK_SUBPASS_EXTERNAL,						  // uint32_t                   dstSubpass
-				VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,	  // VkPipelineStageFlags       srcStageMask
-				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,		  // VkPipelineStageFlags       dstStageMask
+				0,                                            // uint32_t                   srcSubpass
+				VK_SUBPASS_EXTERNAL,                          // uint32_t                   dstSubpass
+				VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,    // VkPipelineStageFlags       srcStageMask
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,        // VkPipelineStageFlags       dstStageMask
 				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              srcAccessMask
-				VK_ACCESS_SHADER_READ_BIT,					  // VkAccessFlags              dstAccessMask
-				VK_DEPENDENCY_BY_REGION_BIT					  // VkDependencyFlags          dependencyFlags
+				VK_ACCESS_SHADER_READ_BIT,                    // VkAccessFlags              dstAccessMask
+				VK_DEPENDENCY_BY_REGION_BIT                   // VkDependencyFlags          dependencyFlags
 			}
 		};
 
@@ -180,11 +180,11 @@ namespace Flameberry {
 		pipelineSpec.RenderPass = m_ShadowMapRenderPass;
 
 		pipelineSpec.VertexLayout = {
-			ShaderDataType::Float3,	 // a_Position
+			ShaderDataType::Float3,  // a_Position
 			ShaderDataType::Dummy12, // Normal (Unnecessary)
-			ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
+			ShaderDataType::Dummy8,  // TextureCoords (Unnecessary)
 			ShaderDataType::Dummy12, // Tangent (Unnecessary)
-			ShaderDataType::Dummy12	 // BiTangent (Unnecessary)
+			ShaderDataType::Dummy12  // BiTangent (Unnecessary)
 		};
 
 		pipelineSpec.Viewport.width = SceneRendererSettings::CascadeSize;
@@ -284,29 +284,29 @@ namespace Flameberry {
 		sceneRenderPassSpec.TargetFramebuffers.resize(imageCount);
 		sceneRenderPassSpec.Dependencies = {
 			{
-				VK_SUBPASS_EXTERNAL,					   // uint32_t                   srcSubpass
-				0,										   // uint32_t                   dstSubpass
+				VK_SUBPASS_EXTERNAL,                       // uint32_t                   srcSubpass
+				0,                                         // uint32_t                   dstSubpass
 				VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // VkPipelineStageFlags       srcStageMask
 				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-					| VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
-					| VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // VkPipelineStageFlags       dstStageMask
-				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,	 // VkAccessFlags              srcAccessMask
+			        | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
+			        | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // VkPipelineStageFlags       dstStageMask
+				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,    // VkAccessFlags              srcAccessMask
 				VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
-					| VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT
-					| VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              dstAccessMask
-				VK_DEPENDENCY_BY_REGION_BIT							// VkDependencyFlags          dependencyFlags
+			        | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT
+			        | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // VkAccessFlags              dstAccessMask
+				VK_DEPENDENCY_BY_REGION_BIT                         // VkDependencyFlags          dependencyFlags
 			},
 			{
-				0,					 // uint32_t                   srcSubpass
+				0,                   // uint32_t                   srcSubpass
 				VK_SUBPASS_EXTERNAL, // uint32_t                   dstSubpass
 				VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
-					| VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // VkPipelineStageFlags       srcStageMask
+			        | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // VkPipelineStageFlags       srcStageMask
 				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
-					| VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // VkPipelineStageFlags       dstStageMask
+			        | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // VkPipelineStageFlags       dstStageMask
 				VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
-					| VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,		// VkAccessFlags              srcAccessMask
+			        | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,     // VkAccessFlags              srcAccessMask
 				VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, // VkAccessFlags              dstAccessMask
-				VK_DEPENDENCY_BY_REGION_BIT								// VkDependencyFlags          dependencyFlags
+				VK_DEPENDENCY_BY_REGION_BIT                             // VkDependencyFlags          dependencyFlags
 			}
 		};
 
@@ -323,10 +323,10 @@ namespace Flameberry {
 		// Create Descriptor Set that serves as a writing target for all post-processing passes ----------
 		DescriptorSetLayoutSpecification descSetLayoutSpec;
 		descSetLayoutSpec.Bindings = { { .binding = 0,
-										 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-										 .descriptorCount = 1,
-										 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-										 .pImmutableSamplers = nullptr } };
+		                                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+		                                 .descriptorCount = 1,
+		                                 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+		                                 .pImmutableSamplers = nullptr } };
 
 		m_PostProcessingTargetImageDescSetLayout = CreateRef<DescriptorSetLayout>(descSetLayoutSpec);
 
@@ -370,7 +370,7 @@ namespace Flameberry {
 		imageSpec.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
 		imageSpec.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		imageSpec.Usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
-			| VK_IMAGE_USAGE_SAMPLED_BIT;
+		    | VK_IMAGE_USAGE_SAMPLED_BIT;
 		imageSpec.MipLevels = mipLevels;
 		imageSpec.Views = { {}, { .OnePerMipLevel = true } };
 
@@ -724,7 +724,7 @@ namespace Flameberry {
 			ShaderDataType::Float3, // a_Normal
 			ShaderDataType::Float2, // a_TextureCoords
 			ShaderDataType::Float3, // a_Tangent
-			ShaderDataType::Float3	// a_BiTangent
+			ShaderDataType::Float3  // a_BiTangent
 		};
 		pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
 
@@ -840,7 +840,7 @@ namespace Flameberry {
 			const auto& framebufferSpec =
 				m_GeometryPass->GetSpecification().TargetFramebuffers[imageIndex]->GetSpecification();
 			if (!(m_ViewportSize.x == 0 || m_ViewportSize.y == 0)
-				&& (framebufferSpec.Width != m_ViewportSize.x || framebufferSpec.Height != m_ViewportSize.y)) {
+			    && (framebufferSpec.Width != m_ViewportSize.x || framebufferSpec.Height != m_ViewportSize.y)) {
 				InvalidateGeometryPass(imageIndex, m_ViewportSize);
 				InvalidateBloomPass(imageIndex, m_ViewportSize);
 				InvalidateJumpFloodPass(imageIndex, m_ViewportSize);
@@ -951,9 +951,9 @@ namespace Flameberry {
 		if (shouldRenderShadows) {
 			m_ShadowMapRenderPass->Begin();
 			Renderer::Submit([shadowMapDescSet = m_ShadowMapDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-							  shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(),
-							  pipeline =
-								  m_ShadowMapPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			                  shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(),
+			                  pipeline =
+			                      m_ShadowMapPipeline->GetVulkanPipeline()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 				// Binding the shadow map pipeline here instead of using the `Pipeline::Bind()` function to reduce
 				// `Renderer::Submit()` calls
 				vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
@@ -970,7 +970,7 @@ namespace Flameberry {
 					ModelMatrixPushConstantData pushContantData;
 					pushContantData.ModelMatrix = transform.GlobalTransform;
 					Renderer::Submit([staticMesh, shadowMapPipelineLayout = m_ShadowMapPipeline->GetVulkanPipelineLayout(),
-									  pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+					                  pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 						vkCmdPushConstants(
 							cmdBuffer, shadowMapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
 							sizeof(ModelMatrixPushConstantData), &pushContantData
@@ -1013,7 +1013,7 @@ namespace Flameberry {
 				pco.Exposure = m_RendererSettings.Exposure;
 
 				Renderer::Submit([pipeline = m_SkymapPipeline->GetVulkanPipeline(), pipelineLayout, pco,
-								  textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+				                  textureDescSet](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 					Renderer::RT_BindPipeline(cmdBuffer, pipeline);
 					VkDescriptorSet descSets[] = { textureDescSet };
 					vkCmdBindDescriptorSets(
@@ -1031,14 +1031,14 @@ namespace Flameberry {
 		///////////////////////////////////////// Mesh Pipeline Binding //////////////////////////////////////////
 
 		Renderer::Submit([=, this, pipeline = m_MeshPipeline->GetVulkanPipeline(),
-						  pipelineLayout =
-							  m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+		                  pipelineLayout =
+		                      m_MeshPipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			VkDescriptorSet descriptorSets[] = { m_CameraBufferDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-												 m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
-												 m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet(),
-												 shouldRenderSkymap
-													 ? textureDescSet
-													 : Skymap::GetEmptyDescriptorSet()->GetVulkanDescriptorSet() };
+			                                     m_SceneDataDescriptorSets[currentFrame]->GetVulkanDescriptorSet(),
+			                                     m_ShadowMapRefDescSets[imageIndex]->GetVulkanDescriptorSet(),
+			                                     shouldRenderSkymap
+			                                         ? textureDescSet
+			                                         : Skymap::GetEmptyDescriptorSet()->GetVulkanDescriptorSet() };
 
 			Renderer::RT_BindPipeline(cmdBuffer, pipeline);
 			vkCmdBindDescriptorSets(
@@ -1095,7 +1095,7 @@ namespace Flameberry {
 					// nullptr
 					Ref<MaterialAsset> materialAsset;
 					if (const auto it = mesh.OverridenMaterialTable.find(submeshIndex);
-						it != mesh.OverridenMaterialTable.end())
+					    it != mesh.OverridenMaterialTable.end())
 						materialAsset = AssetManager::GetAsset<MaterialAsset>(it->second);
 					else if (AssetManager::IsAssetHandleValid(submesh.MaterialHandle))
 						materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
@@ -1125,7 +1125,7 @@ namespace Flameberry {
 			// Clear the stencil buffer to allow Jump Flood Pass to see only the selected entity
 			Renderer::Submit([viewportSize = m_ViewportSize](VkCommandBuffer cmdBuffer, uint32_t) {
 				VkClearAttachment clearAttachment[] = { // Clear the stencil
-														{
+				                                        {
 															.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT,
 															.colorAttachment = 1 /* Stencil attachment index */,
 															.clearValue = { 0.0f } /* Stencil clear value */
@@ -1320,8 +1320,8 @@ namespace Flameberry {
 		const uint32_t maxDescriptorSetsAllowed = VulkanContext::GetPhysicalDeviceProperties().limits.maxBoundDescriptorSets;
 
 		Renderer::Submit([this, pipelineLayout = m_BloomPipeline->GetVulkanPipelineLayout(),
-						  pipeline = m_BloomPipeline->GetVulkanPipeline(), viewportSize = m_ViewportSize,
-						  maxDescriptorSetsAllowed](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+		                  pipeline = m_BloomPipeline->GetVulkanPipeline(), viewportSize = m_ViewportSize,
+		                  maxDescriptorSetsAllowed](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			const VkDescriptorSet targetDescSet = m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet();
 
 			std::vector<VkDescriptorSet> bloomDescSets(m_BloomDescriptorSetResources.size());
@@ -1398,7 +1398,7 @@ namespace Flameberry {
 			const int lastBStart = ((mipLevels - 1) / maxDescriptorSetsAllowed) * maxDescriptorSetsAllowed;
 
 			for (int bStart = lastBStart, bIndex = bloomDescSets.size() - 1; bStart >= 0;
-				 bStart -= maxDescriptorSetsAllowed, bIndex--) {
+			     bStart -= maxDescriptorSetsAllowed, bIndex--) {
 				VkDescriptorSet descSets[] = { bloomDescSets[bIndex], targetDescSet };
 
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
@@ -1434,8 +1434,8 @@ namespace Flameberry {
 
 	void SceneRenderer::JumpFloodPass() {
 		Renderer::Submit([=, this, jumpFloodDescSets = m_JumpFloodDescSets, viewportSize = m_ViewportSize,
-						  pipeline = m_JumpFloodPipeline->GetVulkanPipeline(),
-						  pipelineLayout = m_JumpFloodPipeline->GetVulkanPipelineLayout()](
+		                  pipeline = m_JumpFloodPipeline->GetVulkanPipeline(),
+		                  pipelineLayout = m_JumpFloodPipeline->GetVulkanPipelineLayout()](
 							 VkCommandBuffer cmdBuffer, uint32_t imageIndex
 						 ) {
 			JumpFloodSettingsGPURepresentation jumpFloodSettings;
@@ -1453,7 +1453,7 @@ namespace Flameberry {
 				);
 
 			VkDescriptorSet descSets[] = { jumpFloodDescSets[imageIndex]->GetVulkanDescriptorSet(),
-										   m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet() };
+			                               m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet() };
 
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 2, descSets, 0, 0);
@@ -1495,7 +1495,7 @@ namespace Flameberry {
 
 	void SceneRenderer::CompositingPass() {
 		Renderer::Submit([this, pipeline = m_CompositingPipeline->GetVulkanPipeline(),
-						  pipelineLayout = m_CompositingPipeline->GetVulkanPipelineLayout()](
+		                  pipelineLayout = m_CompositingPipeline->GetVulkanPipelineLayout()](
 							 VkCommandBuffer cmdBuffer, uint32_t imageIndex
 						 ) {
 			const VkDescriptorSet descSet = m_PostProcessingTargetImageDescSet[imageIndex]->GetVulkanDescriptorSet();
@@ -1559,9 +1559,9 @@ namespace Flameberry {
 			const float splitDist = cascadeSplits[i];
 
 			glm::vec3 frustumCorners[8] = { glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f),
-											glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(-1.0f, -1.0f, 0.0f),
-											glm::vec3(-1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f),
-											glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(-1.0f, -1.0f, 1.0f) };
+			                                glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(-1.0f, -1.0f, 0.0f),
+			                                glm::vec3(-1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f),
+			                                glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(-1.0f, -1.0f, 1.0f) };
 
 			for (uint32_t i = 0; i < 8; i++) {
 				glm::vec4 invCorner = invCam * glm::vec4(frustumCorners[i], 1.0f);
@@ -1628,9 +1628,9 @@ namespace Flameberry {
 		renderPass->Begin(0, { (int)mousePos.x, (int)mousePos.y }, { 1, 1 });
 
 		Renderer::Submit([pipeline = pipeline->GetVulkanPipeline(),
-						  descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
-						  mousePickingPipelineLayout =
-							  pipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+		                  descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
+		                  mousePickingPipelineLayout =
+		                      pipeline->GetVulkanPipelineLayout()](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			Renderer::RT_BindPipeline(cmdBuffer, pipeline);
 			vkCmdBindDescriptorSets(
 				cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePickingPipelineLayout, 0, 1, &descSet, 0, nullptr
@@ -1646,7 +1646,7 @@ namespace Flameberry {
 				pushContantData.EntityIndex = entity.GetIndex();
 
 				Renderer::Submit([staticMesh, mousePickingPipelineLayout = pipeline->GetVulkanPipelineLayout(),
-								  pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+				                  pushContantData](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 					vkCmdPushConstants(
 						cmdBuffer, mousePickingPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
 						sizeof(MousePickingPushConstantData), &pushContantData
@@ -1666,11 +1666,11 @@ namespace Flameberry {
 		// 2D Quad Entities
 		uint32_t indexCount = 6 * Renderer2D::GetRendererData().QuadVertexBufferOffset / (4 * sizeof(QuadVertex));
 		Renderer::Submit([descSet = m_CameraBufferDescriptorSets[Renderer::GetCurrentFrameIndex()]->GetVulkanDescriptorSet(),
-						  mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
-						  vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
-						  vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
-						  indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
-						  indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+		                  mousePicking2DPipelineLayout = pipeline2D->GetVulkanPipelineLayout(),
+		                  vulkanPipeline2D = pipeline2D->GetVulkanPipeline(),
+		                  vertexBuffer = Renderer2D::GetRendererData().QuadVertexBuffer->GetVulkanBuffer(),
+		                  indexBuffer = Renderer2D::GetRendererData().QuadIndexBuffer->GetVulkanBuffer(),
+		                  indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline2D);
 			vkCmdBindDescriptorSets(
 				cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mousePicking2DPipelineLayout, 0, 1, &descSet, 0, nullptr
@@ -1683,8 +1683,8 @@ namespace Flameberry {
 		// Text Entities
 		indexCount = 6 * Renderer2D::GetRendererData().TextVertexBufferOffset / (4 * sizeof(TextVertex));
 		Renderer::Submit([vertexBuffer = Renderer2D::GetRendererData().TextVertexBuffer->GetVulkanBuffer(),
-						  indexBuffer = Renderer2D::GetRendererData().TextIndexBuffer->GetVulkanBuffer(),
-						  indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+		                  indexBuffer = Renderer2D::GetRendererData().TextIndexBuffer->GetVulkanBuffer(),
+		                  indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			Renderer::RT_BindVertexAndIndexBuffers(cmdBuffer, vertexBuffer, indexBuffer);
 			vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
 		});
@@ -1789,13 +1789,13 @@ namespace Flameberry {
 
 					// Submit Frustum Geometry
 					glm::vec3 frustumCorners[8] = { glm::vec3(-nearViewHalfWidth, nearViewHalfHeight, settings.Near),
-													glm::vec3(nearViewHalfWidth, nearViewHalfHeight, settings.Near),
-													glm::vec3(nearViewHalfWidth, -nearViewHalfHeight, settings.Near),
-													glm::vec3(-nearViewHalfWidth, -nearViewHalfHeight, settings.Near),
-													glm::vec3(-farViewHalfWidth, farViewHalfHeight, settings.Far),
-													glm::vec3(farViewHalfWidth, farViewHalfHeight, settings.Far),
-													glm::vec3(farViewHalfWidth, -farViewHalfHeight, settings.Far),
-													glm::vec3(-farViewHalfWidth, -farViewHalfHeight, settings.Far) };
+					                                glm::vec3(nearViewHalfWidth, nearViewHalfHeight, settings.Near),
+					                                glm::vec3(nearViewHalfWidth, -nearViewHalfHeight, settings.Near),
+					                                glm::vec3(-nearViewHalfWidth, -nearViewHalfHeight, settings.Near),
+					                                glm::vec3(-farViewHalfWidth, farViewHalfHeight, settings.Far),
+					                                glm::vec3(farViewHalfWidth, farViewHalfHeight, settings.Far),
+					                                glm::vec3(farViewHalfWidth, -farViewHalfHeight, settings.Far),
+					                                glm::vec3(-farViewHalfWidth, -farViewHalfHeight, settings.Far) };
 
 					for (uint8_t i = 0; i < 8; i++)
 						frustumCorners[i] = rotationMatrix * frustumCorners[i] + transform.Translation;
@@ -1982,4 +1982,4 @@ namespace Flameberry {
 		vkDestroySampler(device, m_BloomSampler, nullptr);
 	}
 
-} // namespace Flameberry
+}

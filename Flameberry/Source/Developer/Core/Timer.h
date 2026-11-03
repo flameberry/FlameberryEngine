@@ -44,11 +44,11 @@ namespace Flameberry {
 			);
 #elif defined(FBY_RELEASE)
 			std::cout << m_ScopeName << ": process took: "
-					  << std::chrono::duration_cast<std::chrono::milliseconds>(
+			          << std::chrono::duration_cast<std::chrono::milliseconds>(
 							 std::chrono::high_resolution_clock::now() - m_Start
 						 )
-							 .count()
-					  << " ms\n";
+			                 .count()
+			          << " ms\n";
 #endif
 		}
 
@@ -57,6 +57,6 @@ namespace Flameberry {
 		std::string m_ScopeName;
 	};
 
-} // namespace Flameberry
+}
 
 #define FBY_SCOPED_TIMER(name) Flameberry::ScopedTimer timer(name)

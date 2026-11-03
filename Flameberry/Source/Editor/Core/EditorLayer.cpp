@@ -27,10 +27,10 @@ namespace Flameberry {
 			  GenericCameraSettings{
 				  ProjectionType::Perspective, // ProjectionType
 				  (float)Application::Get().GetWindow().GetSpecification().Width
-					  / (float)Application::Get().GetWindow().GetSpecification().Height, // AspectRatio
-				  0.1f,																	 // Near
-				  1000.0f,																 // Far
-				  45.0f,																 // FOV
+	                  / (float)Application::Get().GetWindow().GetSpecification().Height, // AspectRatio
+				  0.1f,                                                                  // Near
+				  1000.0f,                                                               // Far
+				  45.0f,                                                                 // FOV
 			  }
 		  ) {
 #ifdef FBY_PLATFORM_MACOS
@@ -178,7 +178,7 @@ namespace Flameberry {
 
 		// bool attemptedToMoveCamera = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
 		bool attemptedToSelect = ImGui::IsMouseClicked(ImGuiMouseButton_Left) && m_DidViewportBegin && !m_IsAnyOverlayHovered
-			&& !m_IsCameraMoving && !m_IsGizmoActive;
+		    && !m_IsCameraMoving && !m_IsGizmoActive;
 
 		if (attemptedToSelect) {
 			auto [mx, my] = ImGui::GetMousePos();
@@ -195,7 +195,7 @@ namespace Flameberry {
 
 				auto framebuffer = m_MousePickingRenderPass->GetSpecification().TargetFramebuffers[0];
 				if (framebuffer->GetSpecification().Width != m_ViewportSize.x
-					|| framebuffer->GetSpecification().Height != m_ViewportSize.y)
+				    || framebuffer->GetSpecification().Height != m_ViewportSize.y)
 					framebuffer->OnResize(m_ViewportSize.x, m_ViewportSize.y, m_MousePickingRenderPass->GetRenderPass());
 
 				RenderCommand::SetViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
@@ -257,7 +257,7 @@ namespace Flameberry {
 		const ImVec2 displayFramebufferScale = ImGui::GetIO().DisplayFramebufferScale;
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 		m_RenderViewportSize = { viewportPanelSize.x * displayFramebufferScale.x,
-								 viewportPanelSize.y * displayFramebufferScale.y };
+		                         viewportPanelSize.y * displayFramebufferScale.y };
 
 		m_IsViewportHovered = ImGui::IsWindowHovered();
 		// For the Camera Input if other windows are focused but the user right clicks this window then set focus for
@@ -586,8 +586,8 @@ namespace Flameberry {
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, Theme::WindowBg);
 
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
-			| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollWithMouse
-			| ImGuiWindowFlags_NoScrollbar;
+		    | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollWithMouse
+		    | ImGuiWindowFlags_NoScrollbar;
 
 		ImGuiWindowClass windowClass;
 		windowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
@@ -649,7 +649,7 @@ namespace Flameberry {
 
 	void EditorLayer::UI_GizmoControls() {
 		if (const auto selectedEntity = EditorContext::Get()->SelectedEntity;
-			selectedEntity != FEntity::Null && m_GizmoType != -1 && m_EditorState == EditorState::Edit) {
+		    selectedEntity != FEntity::Null && m_GizmoType != -1 && m_EditorState == EditorState::Edit) {
 			glm::mat4 projectionMatrix = m_ActiveCameraController.GetCamera().GetProjectionMatrix();
 			projectionMatrix[1][1] *= -1;
 			glm::mat4 viewMatrix = m_ActiveCameraController.GetCamera().GetViewMatrix();
@@ -690,9 +690,9 @@ namespace Flameberry {
 				glm::vec3 translation, rotation, scale;
 
 				if (const FEntity parentEntity =
-						m_ActiveScene->GetRegistry()->GetComponent<RelationshipComponent>(selectedEntity).Parent;
-					auto* parentTransform =
-						m_ActiveScene->GetRegistry()->TryGetComponent<TransformComponent>(parentEntity)) {
+				        m_ActiveScene->GetRegistry()->GetComponent<RelationshipComponent>(selectedEntity).Parent;
+				    auto* parentTransform =
+				        m_ActiveScene->GetRegistry()->TryGetComponent<TransformComponent>(parentEntity)) {
 					const glm::mat4 updatedLocalTransform = glm::inverse(parentTransform->GlobalTransform) * globalTransform;
 					Math::DecomposeTransform(updatedLocalTransform, translation, rotation, scale);
 				} else {
@@ -894,7 +894,7 @@ namespace Flameberry {
 			// which the rest of the widgets on the same line would otherwise follow
 			constexpr float logoSize = 28.0f;
 			const ImVec2 logoPos = { ImGui::GetCursorScreenPos().x,
-									 ImGui::GetWindowPos().y + (titlebarHeight - logoSize) * 0.5f };
+			                         ImGui::GetWindowPos().y + (titlebarHeight - logoSize) * 0.5f };
 			ImGui::GetWindowDrawList()->AddImage(
 				m_FlameberryIcon->CreateOrGetImGuiDescriptorSet(), logoPos, logoPos + ImVec2(logoSize, logoSize)
 			);
@@ -916,7 +916,7 @@ namespace Flameberry {
 		ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
 
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollWithMouse
-			| ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
+		    | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
 
 		float height = 2.5f * ImGui::GetFontSize();
 		float paddingY = (height - ImGui::GetFontSize()) / 2.0f;
@@ -1187,11 +1187,11 @@ namespace Flameberry {
 			pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
 			pipelineSpec.VertexLayout = {
-				ShaderDataType::Float3,	 // a_Position
+				ShaderDataType::Float3,  // a_Position
 				ShaderDataType::Dummy12, // Normal (Unnecessary)
-				ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
+				ShaderDataType::Dummy8,  // TextureCoords (Unnecessary)
 				ShaderDataType::Dummy12, // Tangent (Unnecessary)
-				ShaderDataType::Dummy12	 // BiTangent (Unnecessary)
+				ShaderDataType::Dummy12  // BiTangent (Unnecessary)
 			};
 
 			m_MousePickingPipeline = CreateRef<Pipeline>(pipelineSpec);
@@ -1204,10 +1204,10 @@ namespace Flameberry {
 			pipelineSpec.RenderPass = m_MousePickingRenderPass;
 
 			pipelineSpec.VertexLayout = {
-				ShaderDataType::Float3,	 // a_Position
+				ShaderDataType::Float3,  // a_Position
 				ShaderDataType::Dummy12, // Color (Unnecessary)
-				ShaderDataType::Dummy8,	 // TextureCoords (Unnecessary)
-				ShaderDataType::Int		 // a_EntityIndex
+				ShaderDataType::Dummy8,  // TextureCoords (Unnecessary)
+				ShaderDataType::Int      // a_EntityIndex
 			};
 			pipelineSpec.CullMode = VK_CULL_MODE_NONE;
 
@@ -1215,4 +1215,4 @@ namespace Flameberry {
 		}
 	}
 
-} // namespace Flameberry
+}

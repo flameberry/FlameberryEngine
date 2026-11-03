@@ -96,4 +96,4 @@ namespace Flameberry {
 		return Flush(m_AlignmentSize, index * m_AlignmentSize);
 	}
 
-} // namespace Flameberry
+}

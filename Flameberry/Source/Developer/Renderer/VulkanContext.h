@@ -57,4 +57,4 @@ namespace Flameberry {
 		static VulkanContext* s_CurrentContext;
 	};
 
-} // namespace Flameberry
+}

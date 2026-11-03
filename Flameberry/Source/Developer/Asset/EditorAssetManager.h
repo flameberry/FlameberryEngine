@@ -43,4 +43,4 @@ namespace Flameberry {
 		std::unordered_map<std::filesystem::path, AssetHandle> m_FilePathToAssetHandle;
 	};
 
-} // namespace Flameberry
+}

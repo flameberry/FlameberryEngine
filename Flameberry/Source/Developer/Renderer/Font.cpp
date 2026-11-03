@@ -132,4 +132,4 @@ namespace Flameberry {
 		delete m_Data;
 	}
 
-} // namespace Flameberry
+}

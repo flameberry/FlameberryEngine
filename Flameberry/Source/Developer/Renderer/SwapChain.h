@@ -55,4 +55,4 @@ namespace Flameberry {
 		constexpr static uint32_t MAX_FRAMES_IN_FLIGHT = 3;
 	};
 
-} // namespace Flameberry
+}

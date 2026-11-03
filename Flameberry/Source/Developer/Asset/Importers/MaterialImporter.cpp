@@ -10,4 +10,4 @@ namespace Flameberry {
 		return MaterialAssetSerializer::Deserialize(path);
 	}
 
-} // namespace Flameberry
+}

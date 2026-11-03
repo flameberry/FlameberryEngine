@@ -4,7 +4,14 @@
 
 #include "PlatformDetection.h"
 
-// Platform Specific Code
+#if defined(_MSC_VER)
+	#define FBY_FORCE_INLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+	#define FBY_FORCE_INLINE inline __attribute__((always_inline))
+#else
+	#define FBY_FORCE_INLINE inline
+#endif
+
 #ifdef FBY_DEBUG
 	#ifdef FBY_PLATFORM_MACOS
 		#define FBY_DEBUGBREAK() __builtin_trap()
@@ -45,7 +52,7 @@ namespace Flameberry {
 		return std::make_unique<T>(std::forward<Args>(args)...);
 	}
 
-} // namespace Flameberry
+}
 
 // Including All Utils related to Logging
 #include "Log.h"

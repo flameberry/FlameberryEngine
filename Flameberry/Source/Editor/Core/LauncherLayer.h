@@ -41,4 +41,4 @@ namespace Flameberry {
 		std::string m_ProjectNameBuffer, m_ProjectPathBuffer, m_NewProjectError;
 	};
 
-} // namespace Flameberry
+}

@@ -22,4 +22,4 @@ namespace Flameberry {
 		char m_RenameBuffer[256] = { '\0' };
 	};
 
-} // namespace Flameberry
+}

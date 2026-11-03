@@ -78,4 +78,4 @@ namespace Flameberry {
 		static Application* s_Instance;
 	};
 
-} // namespace Flameberry
+}

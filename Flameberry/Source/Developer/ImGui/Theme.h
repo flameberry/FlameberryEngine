@@ -14,7 +14,7 @@ namespace Flameberry {
 			return ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, alpha);
 		}
 
-	} // namespace ThemeUtils
+	}
 
 	class Theme {
 	public:
@@ -74,4 +74,4 @@ namespace Flameberry {
 		static constexpr ImVec4 AxisZColor = ThemeUtils::RGB(52, 104, 200);
 	};
 
-} // namespace Flameberry
+}

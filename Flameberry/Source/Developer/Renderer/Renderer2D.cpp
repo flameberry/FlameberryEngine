@@ -37,7 +37,7 @@ namespace Flameberry {
 
 			pipelineSpec.VertexLayout = {
 				ShaderDataType::Float3, // a_Position
-				ShaderDataType::Float3	// a_Color
+				ShaderDataType::Float3  // a_Color
 
 			};
 			pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
@@ -109,7 +109,7 @@ namespace Flameberry {
 				ShaderDataType::Float3, // a_Position
 				ShaderDataType::Float3, // a_Color
 				ShaderDataType::Dummy8, // Texture Coordinates (Currently Unnecessary)
-				ShaderDataType::Dummy4	// EntityIndex (Unnecessary)
+				ShaderDataType::Dummy4  // EntityIndex (Unnecessary)
 			};
 
 			pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
@@ -180,7 +180,7 @@ namespace Flameberry {
 				ShaderDataType::Float3, // a_Position
 				ShaderDataType::Float3, // a_Color
 				ShaderDataType::Float2, // a_TextureCoords
-				ShaderDataType::Dummy4	// EntityIndex (Unnecessary)
+				ShaderDataType::Dummy4  // EntityIndex (Unnecessary)
 			};
 
 			pipelineSpec.Samples = RenderCommand::GetMaxUsableSampleCount(VulkanContext::GetPhysicalDevice());
@@ -299,7 +299,7 @@ namespace Flameberry {
 
 		// Define the edges as pairs of vertex indices
 		const uint32_t edges[][2] = { { 0, 1 }, { 1, 2 }, { 2, 3 }, { 3, 0 }, { 4, 5 }, { 5, 6 },
-									  { 6, 7 }, { 7, 4 }, { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 } };
+		                              { 6, 7 }, { 7, 4 }, { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 } };
 
 		for (uint8_t i = 0; i < 12; i++) Renderer2D::AddLine(vertices[edges[i][0]], vertices[edges[i][1]], color);
 	}
@@ -452,9 +452,9 @@ namespace Flameberry {
 			auto indexCount = 6 * (uint32_t)s_Renderer2DData.QuadVertices.size() / 4;
 
 			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet,
-							  descSet = s_Renderer2DData.TextureMap->CreateOrGetDescriptorSet(), vertexBuffer,
-							  offset = s_Renderer2DData.QuadVertexBufferOffset, indexBuffer,
-							  indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			                  descSet = s_Renderer2DData.TextureMap->CreateOrGetDescriptorSet(), vertexBuffer,
+			                  offset = s_Renderer2DData.QuadVertexBufferOffset, indexBuffer,
+			                  indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 				Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
 				VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
 				vkCmdBindDescriptorSets(
@@ -484,7 +484,7 @@ namespace Flameberry {
 			const VkPipeline vulkanPipeline = s_Renderer2DData.LinePipeline->GetVulkanPipeline();
 
 			Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet, vertexBuffer,
-							  vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+			                  vertexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 				Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
 				vkCmdBindDescriptorSets(
 					cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &globalDescriptorSet, 0, nullptr
@@ -515,9 +515,9 @@ namespace Flameberry {
 				const uint32_t indexCount = 6 * (uint32_t)batch.TextVertices.size() / 4;
 
 				Renderer::Submit([vulkanPipeline, pipelineLayout, globalDescriptorSet = s_GlobalDescriptorSet,
-								  descSet = batch.FontAtlasTexture->CreateOrGetDescriptorSet(), vertexBuffer,
-								  offset = s_Renderer2DData.TextVertexBufferOffset, indexBuffer,
-								  indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+				                  descSet = batch.FontAtlasTexture->CreateOrGetDescriptorSet(), vertexBuffer,
+				                  offset = s_Renderer2DData.TextVertexBufferOffset, indexBuffer,
+				                  indexCount](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 					Renderer::RT_BindPipeline(cmdBuffer, vulkanPipeline);
 					VkDescriptorSet descriptorSets[] = { globalDescriptorSet, descSet };
 					vkCmdBindDescriptorSets(
@@ -552,4 +552,4 @@ namespace Flameberry {
 		s_Renderer2DData.TextureMap = nullptr;
 	}
 
-} // namespace Flameberry
+}

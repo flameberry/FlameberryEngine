@@ -16,4 +16,4 @@ namespace Flameberry {
 		LoadTexture2DResized(const std::filesystem::path& path, int newWidth, int newHeight, bool bGenerateMipmaps);
 	};
 
-} // namespace Flameberry
+}

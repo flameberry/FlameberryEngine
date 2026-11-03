@@ -67,4 +67,4 @@ namespace Flameberry {
 		virtual void MoveToCenter() = 0;
 	};
 
-} // namespace Flameberry
+}

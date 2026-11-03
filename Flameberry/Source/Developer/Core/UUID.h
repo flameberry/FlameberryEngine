@@ -20,7 +20,7 @@ namespace Flameberry {
 		ValueType m_UUID;
 	};
 
-} // namespace Flameberry
+}
 
 namespace std {
 
@@ -30,4 +30,4 @@ namespace std {
 		}
 	};
 
-} // namespace std
+}

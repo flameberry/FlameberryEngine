@@ -65,7 +65,7 @@ namespace Flameberry {
 			ImGui::Text("%.*s...", (int)(fitEnd - begin), begin);
 		}
 
-	} // namespace Utils
+	}
 
 	ContentBrowserPanel::ContentBrowserPanel()
 		: m_CurrentDirectory(
@@ -91,7 +91,7 @@ namespace Flameberry {
 		const bool isSelected = m_CurrentDirectory == parent;
 
 		const int treeNodeFlags = (isSelected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow
-			| ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding | (isLeaf ? ImGuiTreeNodeFlags_Leaf : 0);
+		    | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding | (isLeaf ? ImGuiTreeNodeFlags_Leaf : 0);
 
 		ImGui::PushID(parent.path().filename().c_str());
 
@@ -166,12 +166,12 @@ namespace Flameberry {
 		ImGui::BeginChild(
 			"##FileStructurePanel", ImVec2(m_FirstChildSize, -1.0f),
 			ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY
-				| ImGuiChildFlags_AlwaysUseWindowPadding
+		        | ImGuiChildFlags_AlwaysUseWindowPadding
 		);
 		ImGui::PopStyleColor();
 
 		for (auto& directory :
-			 std::filesystem::directory_iterator(Project::GetActiveProject()->GetConfig().AssetDirectory)) {
+		     std::filesystem::directory_iterator(Project::GetActiveProject()->GetConfig().AssetDirectory)) {
 			if (directory.is_directory())
 				RecursivelyAddDirectoryNodes(directory, std::filesystem::directory_iterator(directory));
 		}
@@ -198,7 +198,7 @@ namespace Flameberry {
 		ImGui::BeginChild(
 			"##ContentBrowserTopBar", ImVec2(m_SecondChildSize, topChildHeight),
 			ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY
-				| ImGuiChildFlags_AlwaysUseWindowPadding,
+		        | ImGuiChildFlags_AlwaysUseWindowPadding,
 			ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar
 		);
 		ImGui::PopStyleVar();
@@ -251,7 +251,7 @@ namespace Flameberry {
 		ImGui::BeginChild(
 			"##Contents", ImVec2(m_SecondChildSize, bottomChildHeight),
 			ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY
-				| ImGuiChildFlags_AlwaysUseWindowPadding
+		        | ImGuiChildFlags_AlwaysUseWindowPadding
 		);
 		ImGui::PopStyleVar();
 
@@ -571,4 +571,4 @@ namespace Flameberry {
 		ImGui::PopClipRect();
 	}
 
-} // namespace Flameberry
+}

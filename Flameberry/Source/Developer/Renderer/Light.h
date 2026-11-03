@@ -25,4 +25,4 @@ namespace Flameberry {
 		alignas(4) float OuterConeAngle;
 	};
 
-} // namespace Flameberry
+}

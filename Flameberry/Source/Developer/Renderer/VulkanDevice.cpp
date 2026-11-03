@@ -183,4 +183,4 @@ namespace Flameberry {
 		vkQueueWaitIdle(m_ComputeQueue);
 	}
 
-} // namespace Flameberry
+}

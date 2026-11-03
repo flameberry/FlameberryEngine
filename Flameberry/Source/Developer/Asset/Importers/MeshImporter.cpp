@@ -8,7 +8,6 @@
 #include "Asset/AssetManager.h"
 #include "Asset/EditorAssetManager.h"
 
-#include "Renderer/Renderer.h"
 #include "Renderer/RenderCommand.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/MaterialAsset.h"
@@ -49,7 +48,7 @@ namespace Flameberry {
 			});
 		}
 
-	} // namespace Utils
+	}
 
 	Ref<StaticMesh> MeshImporter::ImportMesh(AssetHandle handle, const AssetMetadata& metadata) {
 		return LoadMesh(metadata.FilePath);
@@ -167,10 +166,10 @@ namespace Flameberry {
 				: glm::vec3(0.0f);
 			refVertices.emplace_back(
 				glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z), // Position
-				glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z),	 // Normals
-				textureCoords,																 // TextureCoords
-				tangent,																	 // Tangent
-				bitangent																	 // BiTangent
+				glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z),    // Normals
+				textureCoords,                                                               // TextureCoords
+				tangent,                                                                     // Tangent
+				bitangent                                                                    // BiTangent
 			);
 		}
 
@@ -184,7 +183,7 @@ namespace Flameberry {
 		// Add submesh
 		refSubMeshes.emplace_back(
 			SubMesh{ refMatHandles[mesh->mMaterialIndex], indexOffset, (uint32_t)refIndices.size() - indexOffset,
-					 AABB(
+			         AABB(
 						 glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z),
 						 glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)
 					 ) }
@@ -192,11 +191,11 @@ namespace Flameberry {
 
 		// Check and update mesh's AABB
 		if (meshAABB.Min.x > mesh->mAABB.mMin.x || meshAABB.Min.y > mesh->mAABB.mMin.y
-			|| meshAABB.Min.z > mesh->mAABB.mMin.z)
+		    || meshAABB.Min.z > mesh->mAABB.mMin.z)
 			meshAABB.Min = { mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z };
 
 		if (meshAABB.Max.x < mesh->mAABB.mMax.x || meshAABB.Max.y < mesh->mAABB.mMax.y
-			|| meshAABB.Max.z < mesh->mAABB.mMax.z)
+		    || meshAABB.Max.z < mesh->mAABB.mMax.z)
 			meshAABB.Max = { mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z };
 	}
 
@@ -321,4 +320,4 @@ namespace Flameberry {
 		return mesh;
 	}
 
-} // namespace Flameberry
+}

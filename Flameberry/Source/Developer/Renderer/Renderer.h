@@ -94,4 +94,4 @@ namespace Flameberry {
 		static Ref<Texture2D> s_CheckerboardTexture;
 	};
 
-} // namespace Flameberry
+}

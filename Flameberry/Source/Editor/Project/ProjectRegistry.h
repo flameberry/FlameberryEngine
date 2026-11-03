@@ -36,4 +36,4 @@ namespace Flameberry {
 		constexpr static const char* c_GlobalProjectRegistryPath = FBY_PROJECT_DIR "Flameberry/Config/ProjectRegistry.yaml";
 	};
 
-} // namespace Flameberry
+}

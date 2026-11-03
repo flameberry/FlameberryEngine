@@ -81,8 +81,8 @@ namespace Flameberry {
 		Input::SetCursorMode(GLFW_CURSOR_DISABLED);
 
 		const float baseMoveSpeed = 10.5f;
-		const float acceleration = 15.0f;		   // How fast you reach full speed
-		const float damping = 10.0f;			   // How quickly you slow down
+		const float acceleration = 15.0f;          // How fast you reach full speed
+		const float damping = 10.0f;               // How quickly you slow down
 		const float rotationSpeed = 0.6f * 0.002f; // You had 0.002f, so move it here
 
 		float currentMoveSpeed = baseMoveSpeed;
@@ -221,4 +221,4 @@ namespace Flameberry {
 		}
 	}
 
-} // namespace Flameberry
+}

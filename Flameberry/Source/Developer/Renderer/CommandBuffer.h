@@ -27,4 +27,4 @@ namespace Flameberry {
 		VkCommandBuffer m_CommandBuffer;
 	};
 
-} // namespace Flameberry
+}

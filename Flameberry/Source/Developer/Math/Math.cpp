@@ -31,8 +31,8 @@ namespace Flameberry::Math {
 
 		// First, isolate perspective.  This is the messiest.
 		if (epsilonNotEqual(LocalMatrix[0][3], static_cast<T>(0), epsilon<T>())
-			|| epsilonNotEqual(LocalMatrix[1][3], static_cast<T>(0), epsilon<T>())
-			|| epsilonNotEqual(LocalMatrix[2][3], static_cast<T>(0), epsilon<T>())) {
+		    || epsilonNotEqual(LocalMatrix[1][3], static_cast<T>(0), epsilon<T>())
+		    || epsilonNotEqual(LocalMatrix[2][3], static_cast<T>(0), epsilon<T>())) {
 			// Clear the perspective partition
 			LocalMatrix[0][3] = LocalMatrix[1][3] = LocalMatrix[2][3] = static_cast<T>(0);
 			LocalMatrix[3][3] = static_cast<T>(1);
@@ -83,4 +83,4 @@ namespace Flameberry::Math {
 		return true;
 	}
 
-} // namespace Flameberry::Math
+}

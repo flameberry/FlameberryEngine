@@ -62,4 +62,4 @@ namespace Flameberry {
 		}
 	}
 
-} // namespace Flameberry
+}

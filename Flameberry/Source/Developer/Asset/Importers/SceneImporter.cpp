@@ -12,4 +12,4 @@ namespace Flameberry {
 		return SceneSerializer::DeserializeIntoNewScene(path.string().c_str());
 	}
 
-} // namespace Flameberry
+}

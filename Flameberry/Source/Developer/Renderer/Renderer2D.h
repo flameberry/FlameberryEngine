@@ -116,4 +116,4 @@ namespace Flameberry {
 		inline static VkDescriptorSet s_GlobalDescriptorSet = VK_NULL_HANDLE;
 	};
 
-} // namespace Flameberry
+}

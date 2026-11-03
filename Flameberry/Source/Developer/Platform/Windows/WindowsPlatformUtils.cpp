@@ -59,7 +59,7 @@ namespace Flameberry {
 				bi.lpszTitle = "Select a Folder"; // Text displayed in the dialog box
 
 			bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE; // Flags for only directories and the new dialog style
-			bi.lpfn = NULL;											// Callback function, unused here
+			bi.lpfn = NULL;                                         // Callback function, unused here
 			bi.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow().GetGLFWwindow()); // Owner window
 			bi.lpszTitle = "Select Folder";
 
@@ -98,6 +98,6 @@ namespace Flameberry {
 			return std::string();
 		}
 
-	} // namespace Platform
+	}
 
-} // namespace Flameberry
+}

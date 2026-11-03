@@ -65,4 +65,4 @@ namespace Flameberry {
 		VkFramebuffer m_VulkanFramebuffer = VK_NULL_HANDLE;
 	};
 
-} // namespace Flameberry
+}

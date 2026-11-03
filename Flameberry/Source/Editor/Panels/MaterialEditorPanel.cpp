@@ -53,7 +53,7 @@ namespace Flameberry {
 						FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
 						bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Material
-							&& std::filesystem::exists(fpath) && std::filesystem::is_regular_file(fpath);
+						    && std::filesystem::exists(fpath) && std::filesystem::is_regular_file(fpath);
 
 						if (shouldImport) {
 							AssetHandle handle = AssetManager::As<EditorAssetManager>()->ImportAsset(fpath);
@@ -154,7 +154,7 @@ namespace Flameberry {
 					FBY_INFO("Payload recieved: {}, with extension {}", path, ext);
 
 					bool shouldImport = Utils::GetAssetTypeFromFileExtension(ext) == AssetType::Texture2D
-						&& std::filesystem::exists(path) && std::filesystem::is_regular_file(path);
+					    && std::filesystem::exists(path) && std::filesystem::is_regular_file(path);
 
 					if (shouldImport) {
 						mapHandle = AssetManager::As<EditorAssetManager>()->ImportAsset(path);
@@ -169,4 +169,4 @@ namespace Flameberry {
 		return isMapUpdated;
 	}
 
-} // namespace Flameberry
+}

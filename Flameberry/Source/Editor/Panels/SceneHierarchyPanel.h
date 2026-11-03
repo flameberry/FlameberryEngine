@@ -41,4 +41,4 @@ namespace Flameberry {
 		bool m_IsSearchBarFocused = false;
 	};
 
-} // namespace Flameberry
+}

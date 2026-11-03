@@ -48,4 +48,4 @@ namespace Flameberry {
 		static VkSampler CreateDefaultSampler();
 	};
 
-} // namespace Flameberry
+}

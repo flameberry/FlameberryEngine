@@ -44,4 +44,4 @@ namespace Flameberry {
 		return fmt::format("{} [{}] {}", GetCurrentTimeString(), m_InstanceName, logLevelStr);
 	}
 
-} // namespace Flameberry
+}

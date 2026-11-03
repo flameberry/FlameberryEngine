@@ -145,4 +145,4 @@ namespace Flameberry {
 		FBY_INFO("Ended Application!");
 	}
 
-} // namespace Flameberry
+}

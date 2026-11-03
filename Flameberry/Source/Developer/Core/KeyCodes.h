@@ -7,10 +7,10 @@ namespace Flameberry {
 	enum KeyCode : uint16_t {
 		Space = 32,
 		Apostrophe = 39, /* ' */
-		Comma = 44,		 /* , */
-		Minus = 45,		 /* - */
-		Period = 46,	 /* . */
-		Slash = 47,		 /* / */
+		Comma = 44,      /* , */
+		Minus = 45,      /* - */
+		Period = 46,     /* . */
+		Slash = 47,      /* / */
 
 		D0 = 48, /* 0 */
 		D1 = 49, /* 1 */
@@ -24,7 +24,7 @@ namespace Flameberry {
 		D9 = 57, /* 9 */
 
 		Semicolon = 59, /* ; */
-		Equal = 61,		/* = */
+		Equal = 61,     /* = */
 
 		A = 65,
 		B = 66,
@@ -54,7 +54,7 @@ namespace Flameberry {
 		Z = 90,
 
 		LeftBracket = 91,  /* [ */
-		Backslash = 92,	   /* \ */
+		Backslash = 92,    /* \ */
 		RightBracket = 93, /* ] */
 		GraveAccent = 96,  /* ` */
 
@@ -137,4 +137,4 @@ namespace Flameberry {
 		Menu = 348
 	};
 
-} // namespace Flameberry
+}

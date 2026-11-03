@@ -128,7 +128,7 @@ namespace Flameberry {
 		static Ref<Logger> s_CoreLogger;
 	};
 
-} // namespace Flameberry
+}
 
 #define FBY_TRACE(...) Flameberry::Logger::GetCoreLogger()->trace(__VA_ARGS__)
 #define FBY_LOG(...) Flameberry::Logger::GetCoreLogger()->log(__VA_ARGS__)

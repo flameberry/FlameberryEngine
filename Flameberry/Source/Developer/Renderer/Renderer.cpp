@@ -153,7 +153,7 @@ namespace Flameberry {
 		const glm::mat4& transform
 	) {
 		Renderer::Submit([mesh, pipelineLayout = pipeline->GetVulkanPipelineLayout(),
-						  transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+		                  transform](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			Renderer::RT_BindVertexAndIndexBuffers(
 				cmdBuffer, mesh->GetVertexBuffer()->GetVulkanBuffer(), mesh->GetIndexBuffer()->GetVulkanBuffer()
 			);
@@ -172,7 +172,7 @@ namespace Flameberry {
 				materialAsset = AssetManager::GetAsset<MaterialAsset>(submesh.MaterialHandle);
 
 			Renderer::Submit([pipelineLayout = pipeline->GetVulkanPipelineLayout(), materialAsset,
-							  submesh = mesh->GetSubMeshes()[submeshIndex]](VkCommandBuffer cmdBuffer, uint32_t) {
+			                  submesh = mesh->GetSubMeshes()[submeshIndex]](VkCommandBuffer cmdBuffer, uint32_t) {
 				RT_BindMaterial(cmdBuffer, pipelineLayout, materialAsset->GetUnderlyingMaterial());
 				vkCmdDrawIndexed(cmdBuffer, submesh.IndexCount, 1, submesh.IndexOffset, 0, 0);
 			});
@@ -254,4 +254,4 @@ namespace Flameberry {
 		FBY_LOG("GPU Time: {} ms", gpuTime);
 	}
 
-} // namespace Flameberry
+}

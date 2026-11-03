@@ -73,12 +73,12 @@ namespace Flameberry {
 		constexpr uint32_t maxDescSets = 500;
 
 		std::vector<VkDescriptorPoolSize> poolSizes = { { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 * 8 },
-														{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets },
-														{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 50 },
-														// ImGui's Vulkan backend allocates from this pool, using separate
+		                                                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescSets },
+		                                                { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 50 },
+		                                                // ImGui's Vulkan backend allocates from this pool, using separate
 														// sampled images (one per ImGui texture) and samplers
-														{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxDescSets },
-														{ VK_DESCRIPTOR_TYPE_SAMPLER, 8 } };
+		                                                { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxDescSets },
+		                                                { VK_DESCRIPTOR_TYPE_SAMPLER, 8 } };
 		m_GlobalDescriptorPool = CreateRef<DescriptorPool>(m_VulkanDevice->GetVulkanDevice(), poolSizes, maxDescSets);
 
 #if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
@@ -139,10 +139,10 @@ namespace Flameberry {
 			vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures2);
 
 			bool isPhysicalDeviceValid = indices.GraphicsQueueFamilyIndex != -1 && indices.ComputeQueueFamilyIndex != -1
-				&& indices.PresentationSupportedQueueFamilyIndex != -1 && foundRequiredExtensions && isSwapchainAdequate
-				&& supportedFeatures.samplerAnisotropy && supportedFeatures.sampleRateShading
-				&& supportedFeatures.fillModeNonSolid && supportedFeatures.tessellationShader && supportedFeatures.depthClamp
-				&& supportedFeatures.shaderStorageImageArrayDynamicIndexing && vulkan12Features.descriptorIndexing;
+			    && indices.PresentationSupportedQueueFamilyIndex != -1 && foundRequiredExtensions && isSwapchainAdequate
+			    && supportedFeatures.samplerAnisotropy && supportedFeatures.sampleRateShading
+			    && supportedFeatures.fillModeNonSolid && supportedFeatures.tessellationShader && supportedFeatures.depthClamp
+			    && supportedFeatures.shaderStorageImageArrayDynamicIndexing && vulkan12Features.descriptorIndexing;
 
 			VkPhysicalDeviceProperties deviceProperties;
 			vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
@@ -157,4 +157,4 @@ namespace Flameberry {
 		return physicalDeviceMap.rbegin()->second;
 	}
 
-} // namespace Flameberry
+}

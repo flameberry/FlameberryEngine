@@ -11,4 +11,4 @@ namespace Flameberry {
 		static Ref<Scene> LoadScene(const std::filesystem::path& path);
 	};
 
-} // namespace Flameberry
+}

@@ -136,21 +136,21 @@ namespace Flameberry {
 				// Create the shape
 				JPH::ShapeSettings::ShapeResult boxShapeResult = boxShapeSettings.Create();
 				shapeRef = boxShapeResult.Get(); // We don't expect an error here, but you can check floor_shape_result
-												 // for HasError() / GetError()
+				                                 // for HasError() / GetError()
 			}
 
 			if (auto* sphereColliderComponent = m_Registry->TryGetComponent<SphereColliderComponent>(entity)) {
 				FBY_ASSERT(shapeRef == nullptr, "Multiple type of colliders are not allowed on the same entity");
 
 				const float sphereColliderRadius = sphereColliderComponent->Radius
-					* glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z);
+				    * glm::max(glm::max(transform.Scale.x, transform.Scale.y), transform.Scale.z);
 				JPH::SphereShapeSettings sphereShapeSettings(sphereColliderRadius);
 				sphereShapeSettings.SetEmbedded();
 
 				// Create the shape
 				JPH::ShapeSettings::ShapeResult sphereShapeResult = sphereShapeSettings.Create();
 				shapeRef = sphereShapeResult.Get(); // We don't expect an error here, but you can check
-													// floor_shape_result for HasError() / GetError()
+				                                    // floor_shape_result for HasError() / GetError()
 			}
 
 			if (auto* capsuleColliderComponent = m_Registry->TryGetComponent<CapsuleColliderComponent>(entity)) {
@@ -165,7 +165,7 @@ namespace Flameberry {
 				// Create the shape
 				JPH::ShapeSettings::ShapeResult capsuleShapeResult = capsuleShapeSettings.Create();
 				shapeRef = capsuleShapeResult.Get(); // We don't expect an error here, but you can check
-													 // floor_shape_result for HasError() / GetError()
+				                                     // floor_shape_result for HasError() / GetError()
 			}
 
 			JPH::ObjectLayer objectLayer;
@@ -275,12 +275,12 @@ namespace Flameberry {
 		bool isDirty = false;
 
 		if ((transform = m_Registry->TryGetComponent<TransformComponent>(entity))
-			&& (!lazyUpdate || (isDirty = transform->DirtyFlag)))
+		    && (!lazyUpdate || (isDirty = transform->DirtyFlag)))
 			transform->CalcAndCacheGlobalTransform(parentTransform);
 
 		if (auto* relation = m_Registry->TryGetComponent<RelationshipComponent>(entity))
 			for (FEntity it = relation->FirstChild; it != FEntity::Null;
-				 it = m_Registry->GetComponent<RelationshipComponent>(it).NextSibling)
+			     it = m_Registry->GetComponent<RelationshipComponent>(it).NextSibling)
 				UpdateTransformHierarchy(it, transform ? transform->GlobalTransform : glm::mat4(1.0f), !isDirty);
 	}
 
@@ -524,4 +524,4 @@ namespace Flameberry {
 		return destEntity;
 	}
 
-} // namespace Flameberry
+}

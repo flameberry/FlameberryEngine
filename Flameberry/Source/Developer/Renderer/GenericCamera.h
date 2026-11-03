@@ -47,4 +47,4 @@ namespace Flameberry {
 		glm::mat4 m_ProjectionMatrix, m_ViewMatrix;
 	};
 
-} // namespace Flameberry
+}

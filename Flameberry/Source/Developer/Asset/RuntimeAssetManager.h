@@ -12,4 +12,4 @@ namespace Flameberry {
 		bool IsAssetLoaded(AssetHandle handle) const override;
 	};
 
-} // namespace Flameberry
+}

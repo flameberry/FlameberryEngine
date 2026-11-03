@@ -48,4 +48,4 @@ namespace Flameberry {
 		friend class SceneSerializer;
 	};
 
-} // namespace Flameberry
+}

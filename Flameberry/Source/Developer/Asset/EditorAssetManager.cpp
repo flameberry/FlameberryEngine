@@ -22,7 +22,7 @@ namespace Flameberry {
 			return true;
 		}
 
-	} // namespace Utils
+	}
 
 	bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const {
 		return m_AssetRegistry.find(handle) != m_AssetRegistry.end();
@@ -186,4 +186,4 @@ namespace Flameberry {
 		return true;
 	}
 
-} // namespace Flameberry
+}

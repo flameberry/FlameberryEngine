@@ -8,4 +8,4 @@ namespace Flameberry {
 
 	}
 
-} // namespace Flameberry
+}

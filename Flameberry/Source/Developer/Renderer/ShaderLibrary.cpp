@@ -21,7 +21,7 @@ namespace Flameberry {
 
 		const char* computeShaderPaths[] = {
 			"HDRToCubemap.comp.spv", "IrradianceMap.comp.spv", "PrefilteredMap.comp.spv", "BRDFLUT.comp.spv",
-			"JumpFlood.comp.spv",	 "Bloom.comp.spv",		   "CompositePass.comp.spv",
+			"JumpFlood.comp.spv",    "Bloom.comp.spv",         "CompositePass.comp.spv",
 		};
 
 		for (const auto& path : paths) {
@@ -45,4 +45,4 @@ namespace Flameberry {
 		s_ShaderStorage.clear();
 	}
 
-} // namespace Flameberry
+}

@@ -31,4 +31,4 @@ namespace Flameberry {
 		Ref<Texture2D> m_AtlasTexture;
 	};
 
-} // namespace Flameberry
+}

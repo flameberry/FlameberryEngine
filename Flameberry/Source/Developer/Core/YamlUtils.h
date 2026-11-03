@@ -69,7 +69,7 @@ namespace YAML {
 		}
 	};
 
-} // namespace YAML
+}
 
 namespace Flameberry {
 
@@ -78,4 +78,4 @@ namespace Flameberry {
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v);
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& v);
 
-} // namespace Flameberry
+}

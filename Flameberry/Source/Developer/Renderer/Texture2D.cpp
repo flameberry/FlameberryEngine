@@ -29,7 +29,7 @@ namespace Flameberry {
 			}
 		}
 
-	} // namespace Utils
+	}
 
 	Ref<DescriptorSetLayout> Texture2D::s_DescriptorLayout;
 	Ref<DescriptorSet> Texture2D::s_EmptyDescriptorSet;
@@ -64,11 +64,14 @@ namespace Flameberry {
 
 	Texture2D::Texture2D(const void* data, const Texture2DSpecification& specification) {
 		FBY_ASSERT(data, "Texture pixels are empty!");
+
 		const uint32_t mipLevels = specification.GenerateMipmaps
 			? static_cast<uint32_t>(std::floor(std::log2(std::max(specification.Width, specification.Height)))) + 1
 			: 1;
+
 		const VkDeviceSize imageSize =
 			specification.Width * specification.Height * Utils::GetPixelSizeInBytesFromTextureFormat(specification.Format);
+
 		SetupTexture(
 			data, specification.Width, specification.Height, imageSize, mipLevels, specification.Format,
 			specification.Sampler
@@ -318,4 +321,4 @@ namespace Flameberry {
 		s_TextureCacheDirectory.clear();
 	}
 
-} // namespace Flameberry
+}

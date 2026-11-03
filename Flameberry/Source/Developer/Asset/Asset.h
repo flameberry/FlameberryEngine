@@ -46,6 +46,6 @@ namespace Flameberry {
 		AssetType AssetTypeStringToEnum(const std::string& typeStr);
 		std::string AssetTypeEnumToString(AssetType assetType);
 
-	} // namespace Utils
+	}
 
-} // namespace Flameberry
+}

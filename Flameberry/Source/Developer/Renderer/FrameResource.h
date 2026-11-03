@@ -28,4 +28,4 @@ namespace Flameberry {
 		Ref<TResource> m_Replicas[N];
 	};
 
-} // namespace Flameberry
+}

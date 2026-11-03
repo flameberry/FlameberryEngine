@@ -239,7 +239,7 @@ namespace Flameberry {
 		out << YAML::Key << "Scene" << YAML::Value << YAML::BeginMap;
 		out << YAML::Key << "Name" << YAML::Value << srcScene->m_Name;
 		out << YAML::Key << "WorldEntity" << YAML::Value
-			<< srcScene->m_Registry->GetComponent<IDComponent>(srcScene->m_WorldEntity).ID;
+		    << srcScene->m_Registry->GetComponent<IDComponent>(srcScene->m_WorldEntity).ID;
 
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 
@@ -425,4 +425,4 @@ namespace Flameberry {
 		out << YAML::EndMap; // Entity
 	}
 
-} // namespace Flameberry
+}

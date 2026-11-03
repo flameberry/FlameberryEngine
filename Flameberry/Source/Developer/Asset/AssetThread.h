@@ -41,4 +41,4 @@ namespace Flameberry {
 		std::thread m_AssetThread;
 	};
 
-} // namespace Flameberry
+}

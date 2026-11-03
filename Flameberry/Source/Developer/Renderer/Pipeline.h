@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -33,10 +32,14 @@ namespace Flameberry {
 		uint32_t Samples = 1;
 		VkViewport Viewport = { 0, 0, 0, 0, 0.0f, 1.0f };
 		VkRect2D Scissor;
-		bool BlendingEnable = false, DepthTestEnable = true, DepthWriteEnable = true, DepthClampEnable = false,
-			 StencilTestEnable = false;
+		bool BlendingEnable = false;
+		bool DepthTestEnable = true;
+		bool DepthWriteEnable = true;
+		bool DepthClampEnable = false;
+		bool StencilTestEnable = false;
 		VkCompareOp DepthCompareOp = VK_COMPARE_OP_LESS;
-		bool DynamicStencilEnable = false, DynamicStencilOp = false;
+		bool DynamicStencilEnable = false;
+		bool DynamicStencilOp = false;
 		VkStencilOpState StencilOpState = {};
 		VkCullModeFlags CullMode = VK_CULL_MODE_BACK_BIT;
 		VkFrontFace FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
@@ -90,4 +93,4 @@ namespace Flameberry {
 		std::vector<Ref<DescriptorSetLayout>> m_DescriptorSetLayouts;
 	};
 
-} // namespace Flameberry
+}

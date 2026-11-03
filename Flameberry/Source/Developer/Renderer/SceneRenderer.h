@@ -244,4 +244,4 @@ namespace Flameberry {
 		Unique<RendererData> m_RendererData;
 	};
 
-} // namespace Flameberry
+}

@@ -35,7 +35,7 @@ namespace Flameberry {
 			}
 		}
 
-	} // namespace Utils
+	}
 
 	LogPanel::LogPanel()
 		: m_InfoIcon(Texture2D::TryGetOrLoadTexture(FBY_PROJECT_DIR "Flameberry/Assets/Icons/info.png"))
@@ -49,8 +49,8 @@ namespace Flameberry {
 
 		if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -1), ImGuiChildFlags_NavFlattened)) {
 			constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoKeepColumnsVisible
-				| ImGuiTableFlags_RowBg | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_HighlightHoveredColumn
-				| ImGuiTableFlags_ScrollY;
+			    | ImGuiTableFlags_RowBg | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_HighlightHoveredColumn
+			    | ImGuiTableFlags_ScrollY;
 
 			if (ImGui::BeginTable("##LogTable", 3, tableFlags)) {
 				ImGui::TableSetupScrollFreeze(3, 1);
@@ -195,4 +195,4 @@ namespace Flameberry {
 		m_Logs.clear();
 	}
 
-} // namespace Flameberry
+}

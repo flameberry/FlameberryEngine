@@ -28,12 +28,12 @@ namespace Flameberry {
 
 		glm::mat4 CalculateLocalTransform() const {
 			return glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(glm::quat(Rotation))
-				* glm::scale(glm::mat4(1.0f), Scale);
+			    * glm::scale(glm::mat4(1.0f), Scale);
 		}
 
 		void CalcAndCacheGlobalTransform(const glm::mat4& globalTransform) {
 			const glm::mat4& localTransform = glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(glm::quat(Rotation))
-				* glm::scale(glm::mat4(1.0f), Scale);
+			    * glm::scale(glm::mat4(1.0f), Scale);
 
 			GlobalTransform = globalTransform * localTransform;
 			DirtyFlag = false;
@@ -196,4 +196,4 @@ namespace Flameberry {
 		CapsuleColliderComponent,
 		TextComponent>;
 
-} // namespace Flameberry
+}

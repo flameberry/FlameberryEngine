@@ -72,7 +72,7 @@ namespace Flameberry {
 		 */
 		int32_t Find(TDataType value) const {
 			if (value >= m_SparseBuffer.size() || m_SparseBuffer[value] >= m_PackedBuffer.size()
-				|| m_PackedBuffer[m_SparseBuffer[value]] != value)
+			    || m_PackedBuffer[m_SparseBuffer[value]] != value)
 				return -1;
 			return m_SparseBuffer[value];
 		}
@@ -234,7 +234,7 @@ namespace Flameberry {
 
 				iterator<TIteratorType...>& operator++() {
 					while (++m_Index < m_ComponentPoolRef->EntitySet.Size()
-						   && !m_RegistryRef->HasComponent<TIteratorType...>(
+					       && !m_RegistryRef->HasComponent<TIteratorType...>(
 							   m_RegistryRef->m_EntityBuffer[m_ComponentPoolRef->EntitySet[m_Index]]
 						   ));
 					return *this;
@@ -263,7 +263,7 @@ namespace Flameberry {
 			TRegistryGroup(const FRegistry* reg, const FComponentPool* pool)
 				: m_RegistryRef(reg), m_ComponentPoolRef(pool), m_BeginIndex(0), m_EndIndex(0) {
 				while (m_BeginIndex < pool->EntitySet.Size()
-					   && !reg->HasComponent<TComponents...>(reg->m_EntityBuffer[pool->EntitySet[m_BeginIndex]]))
+				       && !reg->HasComponent<TComponents...>(reg->m_EntityBuffer[pool->EntitySet[m_BeginIndex]]))
 					m_BeginIndex++;
 				m_EndIndex = pool->EntitySet.Size();
 			}
@@ -463,9 +463,9 @@ namespace Flameberry {
 
 				uint32_t typeID = GetStaticTypeID<TComponent>();
 				if (entity == FEntity::Null || index > m_EntityBuffer.size()
-					|| m_EntityBuffer[index].GetVersion() != entity.GetVersion() || m_ComponentPools.size() <= typeID
-					|| m_ComponentPools[typeID].ComponentPoolHandler == nullptr || m_ComponentPools[typeID].EntitySet.Empty()
-					|| m_ComponentPools[typeID].EntitySet.Find(index) == -1) {
+				    || m_EntityBuffer[index].GetVersion() != entity.GetVersion() || m_ComponentPools.size() <= typeID
+				    || m_ComponentPools[typeID].ComponentPoolHandler == nullptr || m_ComponentPools[typeID].EntitySet.Empty()
+				    || m_ComponentPools[typeID].EntitySet.Find(index) == -1) {
 					return static_cast<TComponent*>(nullptr);
 				} else {
 					int32_t setIndex = m_ComponentPools[typeID].EntitySet.Find(index);
@@ -493,7 +493,7 @@ namespace Flameberry {
 			if constexpr (sizeof...(TMoreComponents) == 0) {
 				uint32_t typeID = GetStaticTypeID<TComponent>();
 				if (m_ComponentPools.size() <= typeID || m_ComponentPools[typeID].ComponentPoolHandler == nullptr
-					|| m_ComponentPools[typeID].EntitySet.Empty() || m_ComponentPools[typeID].EntitySet.Find(index) == -1) {
+				    || m_ComponentPools[typeID].EntitySet.Empty() || m_ComponentPools[typeID].EntitySet.Find(index) == -1) {
 					FBY_ERROR("Failed to get component: Component does not exist!");
 					FBY_DEBUGBREAK();
 				} else {
@@ -519,7 +519,7 @@ namespace Flameberry {
 			if constexpr (sizeof...(TMoreComponents) == 0) {
 				uint32_t typeID = GetStaticTypeID<TComponent>();
 				if (m_ComponentPools.size() <= typeID || m_ComponentPools[typeID].ComponentPoolHandler == nullptr
-					|| m_ComponentPools[typeID].EntitySet.Empty() || m_ComponentPools[typeID].EntitySet.Find(index) == -1) {
+				    || m_ComponentPools[typeID].EntitySet.Empty() || m_ComponentPools[typeID].EntitySet.Find(index) == -1) {
 					return false;
 				}
 				return true;
@@ -540,7 +540,7 @@ namespace Flameberry {
 			if constexpr (sizeof...(TMoreComponents) == 0) {
 				uint32_t typeID = GetStaticTypeID<TComponent>();
 				if (m_ComponentPools.size() <= typeID || m_ComponentPools[typeID].ComponentPoolHandler == nullptr
-					|| m_ComponentPools[typeID].EntitySet.Empty() || m_ComponentPools[typeID].EntitySet.Find(index) == -1) {
+				    || m_ComponentPools[typeID].EntitySet.Empty() || m_ComponentPools[typeID].EntitySet.Find(index) == -1) {
 					return;
 				}
 

@@ -111,4 +111,4 @@ namespace Flameberry {
 		static Ref<MaterialAsset> Deserialize(const std::filesystem::path& path);
 	};
 
-} // namespace Flameberry
+}

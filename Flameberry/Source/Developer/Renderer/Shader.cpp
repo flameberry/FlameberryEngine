@@ -3,7 +3,6 @@
 #include <fstream>
 #include <SPIRV-Reflect/spirv_reflect.h>
 
-#include "Core/Core.h"
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanDebug.h"
 
@@ -15,7 +14,7 @@ namespace Flameberry {
 
 	bool operator==(const ReflectionDescriptorBindingSpecification& s1, const ReflectionDescriptorBindingSpecification& s2) {
 		return s1.Set == s2.Set && s1.Binding == s2.Binding && s1.Type == s2.Type && s1.Count == s2.Count
-			&& s1.IsDescriptorTypeImage == s2.IsDescriptorTypeImage && s1.RendererOnly == s2.RendererOnly;
+		    && s1.IsDescriptorTypeImage == s2.IsDescriptorTypeImage && s1.RendererOnly == s2.RendererOnly;
 	}
 
 	namespace Utils {
@@ -55,7 +54,7 @@ namespace Flameberry {
 			}
 		}
 
-	} // namespace Utils
+	}
 
 	Shader::Shader(const std::filesystem::path& vertexShaderSpvPath, const std::filesystem::path& fragmentShaderSpvPath) {
 		// TODO: This is probably some odd behaviour to name the shader with just the vertex shader's name
@@ -198,7 +197,7 @@ namespace Flameberry {
 				FBY_LOG("\t{}", specializationConstants[i]->name);
 				FBY_ASSERT(
 					m_SpecializationConstantIDSet.find(specializationConstants[i]->constant_id)
-						== m_SpecializationConstantIDSet.end(),
+				        == m_SpecializationConstantIDSet.end(),
 					"Specialization Constant IDs must be unique"
 				);
 
@@ -238,19 +237,19 @@ namespace Flameberry {
 					// Full name is used to ensure uniqueness of the uniform variable (even though it is rare to
 					// overlap)
 					m_UniformFullNameToSpecification[fullName] = ReflectionUniformVariableSpecification{
-						fullName.c_str(),					 // Name // Wondering if the full name should be used
+						fullName.c_str(),                    // Name // Wondering if the full name should be used
 						member.offset - pcblocks[i]->offset, // LocalOffset
-						member.offset,						 // GlobalOffset
-						member.size							 // Size
+						member.offset,                       // GlobalOffset
+						member.size                          // Size
 					};
 				}
 
 				m_PushConstantSpecifications.emplace_back(
 					ReflectionPushConstantSpecification{
-						pcblocks[i]->type_description->type_name,						// Name
+						pcblocks[i]->type_description->type_name,                       // Name
 						(VkShaderStageFlagBits)reflectionShaderModule.GetShaderStage(), // VulkanShaderStage
-						absoluteSize,													// Size
-						pcblocks[i]->offset,											// Offset
+						absoluteSize,                                                   // Size
+						pcblocks[i]->offset,                                            // Offset
 						Utils::HasPrefix(
 							pcblocks[i]->type_description->type_name, FBY_SHADER_RENDERER_ONLY_PREFIX
 						) // IsRendererOnly
@@ -288,10 +287,10 @@ namespace Flameberry {
 					bool rendererOnly, isDescriptorTypeImage;
 
 					if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER
-						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE
-						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE
-						|| binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT) {
+					    || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+					    || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE
+					    || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE
+					    || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT) {
 						isDescriptorTypeImage = true;
 						// An image descriptor will be considered renderer only when it's name has the following prefix
 						rendererOnly = Utils::HasPrefix(binding->name, FBY_SHADER_RENDERER_ONLY_PREFIX);
@@ -307,20 +306,20 @@ namespace Flameberry {
 					}
 
 					ReflectionDescriptorBindingSpecification reflectionDescriptorBindingSpecification{
-						fullName,													 // Name
-						binding->set,												 // Set
-						binding->binding,											 // Binding
-						binding->count,												 // Count
-						(VkDescriptorType)binding->descriptor_type,					 // Type
+						fullName,                                                    // Name
+						binding->set,                                                // Set
+						binding->binding,                                            // Binding
+						binding->count,                                              // Count
+						(VkDescriptorType)binding->descriptor_type,                  // Type
 						(VkShaderStageFlags)reflectionShaderModule.GetShaderStage(), // VulkanShaderStage
-						rendererOnly,												 // IsRendererOnly
-						isDescriptorTypeImage										 // IsDescriptorTypeImage
+						rendererOnly,                                                // IsRendererOnly
+						isDescriptorTypeImage                                        // IsDescriptorTypeImage
 					};
 
 					uint64_t combinedValue = Utils::CantorPairingFunction(binding->set, binding->binding);
 
 					if (auto it = s_DescriptorSetAndBindingIntegerToArrayIndex.find(combinedValue);
-						it != s_DescriptorSetAndBindingIntegerToArrayIndex.end()) {
+					    it != s_DescriptorSetAndBindingIntegerToArrayIndex.end()) {
 						FBY_ASSERT(
 							reflectionDescriptorBindingSpecification == m_DescriptorBindingSpecifications[it->second],
 							"Descriptor Sets with the same set number and binding must be the exact same"
@@ -393,4 +392,4 @@ namespace Flameberry {
 		return m_ShaderModule;
 	}
 
-} // namespace Flameberry
+}

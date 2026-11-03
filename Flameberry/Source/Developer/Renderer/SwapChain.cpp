@@ -53,7 +53,7 @@ namespace Flameberry {
 		vulkanSwapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 		uint32_t vk_queue_indices[] = { queueFamilyIndices.GraphicsQueueFamilyIndex,
-										queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
+		                                queueFamilyIndices.PresentationSupportedQueueFamilyIndex };
 
 		if (queueFamilyIndices.GraphicsQueueFamilyIndex != queueFamilyIndices.PresentationSupportedQueueFamilyIndex) {
 			vulkanSwapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -95,7 +95,7 @@ namespace Flameberry {
 		const auto presentationQueue = VulkanContext::GetCurrentDevice()->GetPresentationQueue();
 
 		if (m_ImagesInFlight[m_ImageIndex]
-			!= VK_NULL_HANDLE) // Check if a previous frame is using this image (i.e. there is its fence to wait on)
+		    != VK_NULL_HANDLE) // Check if a previous frame is using this image (i.e. there is its fence to wait on)
 			vkWaitForFences(device, 1, &m_ImagesInFlight[m_ImageIndex], VK_TRUE, UINT64_MAX);
 		m_ImagesInFlight[m_ImageIndex] =
 			m_InFlightFences[m_CurrentFrameIndex]; // Mark the image as now being in use by this frame
@@ -119,7 +119,7 @@ namespace Flameberry {
 		vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrameIndex]);
 
 		VulkanContext::GetCurrentDevice()->AccessQueueSafely([fence = m_InFlightFences[m_CurrentFrameIndex], graphicsQueue,
-															  submitInfo]() {
+		                                                      submitInfo]() {
 			VK_CHECK_RESULT(vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence));
 		});
 
@@ -244,4 +244,4 @@ namespace Flameberry {
 		}
 	}
 
-} // namespace Flameberry
+}

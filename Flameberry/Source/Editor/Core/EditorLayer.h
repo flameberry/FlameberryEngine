@@ -113,7 +113,7 @@ namespace Flameberry {
 	template <typename Fn> void EditorLayer::UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func) {
 		if (m_DidViewportBegin) {
 			ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize
-				| ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+			    | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
 			ImGui::SetNextWindowPos(position, ImGuiCond_Always);
 			window_flags |= ImGuiWindowFlags_NoMove;
@@ -148,4 +148,4 @@ namespace Flameberry {
 		}
 	}
 
-} // namespace Flameberry
+}

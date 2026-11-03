@@ -21,8 +21,8 @@ namespace Flameberry {
 		AssetType type;
 
 		if (m_ThumbnailsLoadedThisFrame >= m_Config.MaxThumbnailsLoadedPerFrame
-			|| (type = Utils::GetAssetTypeFromFileExtension(assetPath.extension()),
-				type != AssetType::Texture2D && type != AssetType::Skymap))
+		    || (type = Utils::GetAssetTypeFromFileExtension(assetPath.extension()),
+		        type != AssetType::Texture2D && type != AssetType::Skymap))
 			return nullptr;
 
 		const auto thumbnail =
@@ -35,4 +35,4 @@ namespace Flameberry {
 		return cachedThumbnail.Image;
 	}
 
-} // namespace Flameberry
+}

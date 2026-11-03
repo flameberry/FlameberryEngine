@@ -44,4 +44,4 @@ namespace Flameberry {
 		std::string m_SearchInputBuffer;
 	};
 
-} // namespace Flameberry
+}

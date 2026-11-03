@@ -13,7 +13,7 @@ namespace Flameberry::UI {
 
 	struct UIState {
 		static constexpr ImGuiTableFlags TableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH
-			| ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
+		    | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_PadOuterX;
 
 		static constexpr float LabelWidth = 100.0f;
 
@@ -42,7 +42,7 @@ namespace Flameberry::UI {
 		ScopedStyleColor menuBarBg(ImGuiCol_MenuBarBg, Theme::TitlebarColor);
 
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollWithMouse
-			| ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar;
+		    | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar;
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 		bool isOpen = ImGui::BeginViewportSideBar("##Titlebar", mainViewport, ImGuiDir_Up, height, windowFlags);
 
@@ -81,7 +81,7 @@ namespace Flameberry::UI {
 		bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
 		bb.Max =
 			bb.Min
-			+ CalcItemSize(
+		    + CalcItemSize(
 				split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness),
 				0.0f, 0.0f
 			);
@@ -221,7 +221,7 @@ namespace Flameberry::UI {
 
 		// Pressing enter in the search box picks the first element that matches the search
 		g_UIState.IsSelectionWidgetEnterPressed = g_UIState.IsSelectionWidgetSearchBoxFocused
-			&& (ImGui::IsKeyPressed(ImGuiKey_Enter, false) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false));
+		    && (ImGui::IsKeyPressed(ImGuiKey_Enter, false) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false));
 
 		ImGui::Separator();
 
@@ -485,4 +485,4 @@ namespace Flameberry::UI {
 		if (m_Condition) ImGui::PopStyleVar();
 	}
 
-} // namespace Flameberry::UI
+}

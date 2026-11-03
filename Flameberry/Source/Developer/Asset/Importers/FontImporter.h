@@ -15,4 +15,4 @@ namespace Flameberry {
 		static Ref<Font> LoadFont(const std::filesystem::path& path);
 	};
 
-} // namespace Flameberry
+}

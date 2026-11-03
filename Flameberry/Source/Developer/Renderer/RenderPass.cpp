@@ -33,20 +33,20 @@ namespace Flameberry {
 			m_RenderPassSpec.Dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
 			m_RenderPassSpec.Dependencies[0].dstSubpass = 0;
 			m_RenderPassSpec.Dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-				| VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
+			    | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
 			m_RenderPassSpec.Dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-				| VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			    | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 			m_RenderPassSpec.Dependencies[0].srcAccessMask =
 				VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 			m_RenderPassSpec.Dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT
-				| VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT
-				| VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			    | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT
+			    | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 			m_RenderPassSpec.Dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
 			m_RenderPassSpec.Dependencies[1].srcSubpass = 0;
 			m_RenderPassSpec.Dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
 			m_RenderPassSpec.Dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-				| VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			    | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 			m_RenderPassSpec.Dependencies[1].dstStageMask =
 				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
 			m_RenderPassSpec.Dependencies[1].srcAccessMask =
@@ -161,15 +161,15 @@ namespace Flameberry {
 		vk_subpass_description.pResolveAttachments = resolveRefs.data();
 
 		/*
-			Bit mask that specifies which view rendering is broadcast to
-			0011 = Broadcast to first and second view (layer)
+		    Bit mask that specifies which view rendering is broadcast to
+		    0011 = Broadcast to first and second view (layer)
 		*/
 		uint32_t viewMask = 0b00000000;
 		for (uint32_t i = 0; i < layerCount; i++) viewMask = (viewMask << 1) + 0b1;
 
 		/*
-			Bit mask that specifies correlation between views
-			An implementation may use this for optimizations (concurrent render)
+		    Bit mask that specifies correlation between views
+		    An implementation may use this for optimizations (concurrent render)
 		*/
 		const uint32_t correlationMask = viewMask;
 
@@ -199,7 +199,7 @@ namespace Flameberry {
 
 	void RenderPass::Begin(uint32_t framebufferInstance, VkOffset2D renderAreaOffset, VkExtent2D renderAreaExtent) {
 		Renderer::Submit([renderPass = this, framebufferInstance, renderAreaOffset,
-						  renderAreaExtent](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
+		                  renderAreaExtent](VkCommandBuffer cmdBuffer, uint32_t imageIndex) {
 			uint32_t index = (framebufferInstance == -1) ? imageIndex : framebufferInstance;
 			const auto& framebufferSpec = renderPass->m_RenderPassSpec.TargetFramebuffers[index]->GetSpecification();
 
@@ -246,4 +246,4 @@ namespace Flameberry {
 		vkDestroyRenderPass(device, m_VkRenderPass, nullptr);
 	}
 
-} // namespace Flameberry
+}

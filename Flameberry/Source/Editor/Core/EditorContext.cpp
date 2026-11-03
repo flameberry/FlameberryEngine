@@ -12,4 +12,4 @@ namespace Flameberry {
 		delete s_Ctx;
 	}
 
-} // namespace Flameberry
+}

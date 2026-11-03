@@ -21,4 +21,4 @@ namespace Flameberry {
 		SerializeEntity(YAML::Emitter& out, const FEntity& entity, const Ref<Scene>& scene, std::set<UUID>& assetUUIDs);
 	};
 
-} // namespace Flameberry
+}

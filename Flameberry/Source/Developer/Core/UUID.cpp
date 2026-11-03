@@ -14,4 +14,4 @@ namespace Flameberry {
 
 	UUID::~UUID() {}
 
-} // namespace Flameberry
+}

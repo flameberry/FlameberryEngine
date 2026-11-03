@@ -54,8 +54,8 @@ namespace Flameberry {
 			return { "Unknown", ICON_LC_FILE, Theme::TextMuted };
 		}
 
-		constexpr AssetType s_FilterableAssetTypes[] = { AssetType::Scene,	  AssetType::Texture2D, AssetType::StaticMesh,
-														 AssetType::Material, AssetType::Skymap,	AssetType::Font };
+		constexpr AssetType s_FilterableAssetTypes[] = { AssetType::Scene,    AssetType::Texture2D, AssetType::StaticMesh,
+		                                                 AssetType::Material, AssetType::Skymap,    AssetType::Font };
 
 		struct AssetRow {
 			AssetHandle Handle;
@@ -79,7 +79,7 @@ namespace Flameberry {
 				ImGui::SetTooltip("%s", text);
 		}
 
-	} // namespace
+	}
 
 	void AssetRegistryPanel::OnUIRender() {
 		ImGui::Begin("Asset Registry");
@@ -103,8 +103,8 @@ namespace Flameberry {
 				const std::string handleStr = fmt::format("{}", (UUID::ValueType)handle);
 				const char* search = m_SearchInputBuffer.c_str();
 				const bool matches = Algorithm::KmpSearch(name.c_str(), search, true) != -1
-					|| Algorithm::KmpSearch(metadata.FilePath.c_str(), search, true) != -1
-					|| Algorithm::KmpSearch(handleStr.c_str(), search, true) != -1;
+				    || Algorithm::KmpSearch(metadata.FilePath.c_str(), search, true) != -1
+				    || Algorithm::KmpSearch(handleStr.c_str(), search, true) != -1;
 				if (!matches) continue;
 			}
 
@@ -121,8 +121,8 @@ namespace Flameberry {
 		DisplayToolbar(rows.size(), registry.size());
 
 		constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable
-			| ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY
-			| ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PadOuterX;
+		    | ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY
+		    | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PadOuterX;
 
 		if (ImGui::BeginTable("##AssetRegistryTable", 4, tableFlags, ImVec2(0.0f, ImGui::GetContentRegionAvail().y))) {
 			ImGui::TableSetupScrollFreeze(0, 1);
@@ -307,4 +307,4 @@ namespace Flameberry {
 		}
 	}
 
-} // namespace Flameberry
+}

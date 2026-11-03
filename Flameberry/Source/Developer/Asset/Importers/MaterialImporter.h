@@ -11,4 +11,4 @@ namespace Flameberry {
 		static Ref<MaterialAsset> LoadMaterial(const std::filesystem::path& path);
 	};
 
-} // namespace Flameberry
+}

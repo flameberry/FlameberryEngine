@@ -13,4 +13,4 @@ namespace Flameberry {
 		bool IsMemoryAsset;
 	};
 
-} // namespace Flameberry
+}

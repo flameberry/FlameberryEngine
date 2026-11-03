@@ -22,4 +22,4 @@ namespace Flameberry {
 		return false;
 	}
 
-} // namespace Flameberry
+}

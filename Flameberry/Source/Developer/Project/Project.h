@@ -65,4 +65,4 @@ namespace Flameberry {
 		friend class ProjectSerializer;
 	};
 
-} // namespace Flameberry
+}

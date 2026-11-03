@@ -20,4 +20,4 @@ namespace Flameberry {
 
 	StaticMesh::~StaticMesh() {}
 
-} // namespace Flameberry
+}

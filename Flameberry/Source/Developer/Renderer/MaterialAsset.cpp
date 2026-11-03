@@ -88,19 +88,19 @@ namespace Flameberry {
 		out << YAML::Key << "Metallic" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Metallic");
 		out << YAML::Key << "EmissiveFactor" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_EmissiveFactor");
 		out << YAML::Key << "UseAlbedoMap" << YAML::Value
-			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAlbedoMap");
+		    << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAlbedoMap");
 		out << YAML::Key << "AlbedoMap" << YAML::Value << materialAsset->m_AlbedoMap;
 		out << YAML::Key << "UseNormalMap" << YAML::Value
-			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseNormalMap");
+		    << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseNormalMap");
 		out << YAML::Key << "NormalMap" << YAML::Value << materialAsset->m_NormalMap;
 		out << YAML::Key << "UseRoughnessMap" << YAML::Value
-			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseRoughnessMap");
+		    << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseRoughnessMap");
 		out << YAML::Key << "RoughnessMap" << YAML::Value << materialAsset->m_RoughnessMap;
 		out << YAML::Key << "UseAmbientMap" << YAML::Value
-			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAmbientMap");
+		    << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAmbientMap");
 		out << YAML::Key << "AmbientMap" << YAML::Value << materialAsset->m_AmbientMap;
 		out << YAML::Key << "UseMetallicMap" << YAML::Value
-			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseMetallicMap");
+		    << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseMetallicMap");
 		out << YAML::Key << "MetallicMap" << YAML::Value << materialAsset->m_MetallicMap;
 		out << YAML::EndMap;
 
@@ -153,4 +153,4 @@ namespace Flameberry {
 		return materialAsset;
 	}
 
-} // namespace Flameberry
+}
