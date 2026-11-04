@@ -26,6 +26,7 @@
 #include "VulkanDebug.h"
 
 #include "Asset/AssetManager.h"
+#include "glm/common.hpp"
 #include "vulkan/vulkan_core.h"
 
 namespace Flameberry {
@@ -1584,29 +1585,28 @@ namespace Flameberry {
 				float distance = glm::length(frustumCorners[i] - frustumCenter);
 				radius = glm::max(radius, distance);
 			}
-			// radius = std::ceil(radius * 16.0f) / 16.0f;
+			radius = std::ceil(radius * 16.0f) / 16.0f;
 
-			const float width = frustumCorners[5].x - frustumCorners[4].x;
-			const float height = frustumCorners[7].y - frustumCorners[5].y;
-
-			// const float fWorldUnitsPerTexel = 2.0f * radius * 0.70710678118f /
-			// (float)SceneRendererSettings::CascadeSize; const float fInvWorldUnitsPerTexel = 1.0f /
-			// fWorldUnitsPerTexel;
-
-			const glm::vec3 vWorldUnitsPerTexel(
-				width / (float)SceneRendererSettings::CascadeSize, height / (float)SceneRendererSettings::CascadeSize, 1.0f
-			);
-			const glm::vec3 vInvWorldUnitsPerTexel = 1.0f / vWorldUnitsPerTexel;
-
-			glm::vec3 maxExtents = (glm::floor(glm::vec3(radius)) * vInvWorldUnitsPerTexel) * vWorldUnitsPerTexel;
-			frustumCenter = (glm::floor(frustumCenter) * vInvWorldUnitsPerTexel) * vWorldUnitsPerTexel;
-			glm::vec3 minExtents = -maxExtents;
+			const glm::vec3 maxExtents = glm::vec3(radius);
+			const glm::vec3 minExtents = -maxExtents;
 
 			const glm::vec3 lightDir = glm::normalize(lightDirection);
-			const glm::mat4 lightViewMatrix =
-				glm::lookAt(frustumCenter + lightDir * minExtents, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-			const glm::mat4 lightOrthoMatrix =
+			const glm::vec3 lightUp =
+				glm::abs(lightDir.y) > 0.999f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+			const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter + lightDir * minExtents, frustumCenter, lightUp);
+			glm::mat4 lightOrthoMatrix =
 				glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
+
+			const glm::mat4 shadowMatrix = lightOrthoMatrix * lightViewMatrix;
+			glm::vec4 shadowOrigin = shadowMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			shadowOrigin *= SceneRendererSettings::CascadeSize / 2.0f;
+
+			glm::vec4 roundedOrigin = glm::round(shadowOrigin);
+			glm::vec4 roundOffset = (roundedOrigin - shadowOrigin) * (2.0f / SceneRendererSettings::CascadeSize);
+			roundOffset.z = 0.0f;
+			roundOffset.w = 0.0f;
+
+			lightOrthoMatrix[3] += roundOffset;
 
 			// Store split distance and matrix in cascade
 			m_Cascades[i].DepthSplit = (cameraNear + splitDist * clipRange) * -1.0f;
