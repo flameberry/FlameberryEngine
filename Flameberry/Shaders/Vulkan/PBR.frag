@@ -1,11 +1,10 @@
 #version 450
 
 layout(location = 0) in vec3 v_WorldSpacePosition;
-layout(location = 1) in vec3 v_ClipSpacePosition;
-layout(location = 2) in vec3 v_Normal;
-layout(location = 3) in vec2 v_TextureCoords;
-layout(location = 4) in vec3 v_ViewSpacePosition;
-layout(location = 5) in mat3 v_TBNMatrix;
+layout(location = 1) in vec3 v_Normal;
+layout(location = 2) in vec2 v_TextureCoords;
+layout(location = 3) in vec3 v_ViewSpacePosition;
+layout(location = 4) in mat3 v_TBNMatrix;
 
 layout(location = 0) out vec4 o_FragColor;
 
@@ -415,13 +414,13 @@ vec3 PBR_DirectionalLight(DirectionalLight light, SampledSurfaceProps surfacePro
 
         float bias = max(0.05f * (1.0f - dot(surfaceProps.Normal, l)), 0.002f);
         const float biasModifier = 0.5f;
-        bias *= 1.0f / (-u_SceneData.CascadeDepthSplits[cascadeIndex] * biasModifier);
+        bias *= 1.0f / (abs(u_SceneData.CascadeDepthSplits[cascadeIndex]) * biasModifier);
 
         // Depth compare for shadowing
         vec4 shadowCoord = (g_BiasMatrix * u_SceneData.CascadeMatrices[cascadeIndex]) * vec4(v_WorldSpacePosition, 1.0f);
 
         if (u_SceneData.SceneRendererSettings.SoftShadows == 1) {
-            float interleavedNoise = 2.0 * PI * Noise(v_ClipSpacePosition.xy);
+            float interleavedNoise = 2.0 * PI * InterleavedGradientNoise(gl_FragCoord.xy);
             shadow = PCSS_Shadow_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, interleavedNoise, bias);
 
             // shadow = FilterPCFRadial_DirectionalLight(shadowCoord / shadowCoord.w, cascadeIndex, 5.0f, 16, bias);
