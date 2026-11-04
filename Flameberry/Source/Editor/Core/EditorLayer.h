@@ -69,7 +69,7 @@ namespace Flameberry {
 		int m_MouseX = 0, m_MouseY = 0;
 		int m_GizmoType = -1;
 		bool m_IsViewportFocused = false, m_IsViewportHovered = false, m_HasViewportSizeChanged = false;
-		bool m_IsCameraMoving = false, m_IsGizmoActive = false;
+		bool m_IsCameraMoving = false, m_IsGizmoActive = false, m_IsGizmoHovered = false;
 		bool m_IsMousePickingBufferReady = false, m_DidViewportBegin = true, m_IsAnyOverlayHovered = false;
 		bool m_EnableGrid = true;
 
@@ -113,7 +113,7 @@ namespace Flameberry {
 	template <typename Fn> void EditorLayer::UI_Overlay(const char* str_id, const ImVec2& position, Fn&& func) {
 		if (m_DidViewportBegin) {
 			ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize
-			    | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+				| ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
 			ImGui::SetNextWindowPos(position, ImGuiCond_Always);
 			window_flags |= ImGuiWindowFlags_NoMove;
