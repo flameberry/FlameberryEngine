@@ -437,7 +437,7 @@ vec3 PBR_PointLight(PointLight light, SampledSurfaceProps surfaceProps)
     l = light.Position - v_WorldSpacePosition;
     float lightToPixelDistance = length(l);
     l = normalize(l);
-    lightIntensity /= lightToPixelDistance * lightToPixelDistance;
+    lightIntensity /= max(lightToPixelDistance * lightToPixelDistance, 0.01f * 0.01f);
 
     return PBR_CalcPixelColor(surfaceProps, l, lightIntensity);
 }
@@ -450,14 +450,14 @@ vec3 PBR_SpotLight(SpotLight light, SampledSurfaceProps surfaceProps)
     l = light.Position - v_WorldSpacePosition;
     float lightToPixelDistance = length(l);
     l = normalize(l);
-    lightIntensity /= lightToPixelDistance * lightToPixelDistance;
+    lightIntensity /= max(lightToPixelDistance * lightToPixelDistance, 0.01f * 0.01f);
 
     float innerConeAngleCos = cos(light.InnerConeAngle);
     float outerConeAngleCos = cos(light.OuterConeAngle);
 
     // Calculate the intensity according to where the pixel lies within the cone
     float theta = dot(l, normalize(-light.Direction));
-    float epsilon = innerConeAngleCos - outerConeAngleCos;
+	float epsilon = max(innerConeAngleCos - outerConeAngleCos, 1e-4f);
     float intensity = clamp((theta - outerConeAngleCos) / epsilon, 0.0, 1.0);
     lightIntensity *= intensity;
 
