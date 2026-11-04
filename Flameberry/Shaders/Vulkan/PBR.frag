@@ -272,7 +272,7 @@ float PCSS_Shadow_DirectionalLight(vec4 shadowCoord, uint cascadeIndex, float in
     const vec2 blockerInfo = PCSS_BlockerDistance(shadowCoord.xyz, searchWidth, cascadeIndex, interleavedNoise, bias);
 
     if (blockerInfo.y == 0.0f)
-        return 2.0f;
+       return 1.0f;
 
     float penumbraSize = receiverDepth - blockerInfo.x;
     if (penumbraSize == 0.0f)
