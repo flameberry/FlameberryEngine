@@ -321,13 +321,8 @@ float GGXDistribution(float n_dot_h, float roughness)
 
 vec3 PrefilteredReflection(vec3 R, float roughness)
 {
-    const float MAX_REFLECTION_LOD = 9.0; // TODO: param/const
-    const float lod = roughness * MAX_REFLECTION_LOD;
-    float lodf = floor(lod);
-    float lodc = ceil(lod);
-    vec3 a = textureLod(_FBY_u_PrefilteredMap, R, lodf).rgb;
-    vec3 b = textureLod(_FBY_u_PrefilteredMap, R, lodc).rgb;
-    return mix(a, b, lod - lodf);
+    const float maxLod = float(textureQueryLevels(_FBY_u_PrefilteredMap) - 1);
+    return textureLod(_FBY_u_PrefilteredMap, R, roughness * maxLod).rgb;
 }
 
 vec3 PBR_CalcPixelColor(SampledSurfaceProps surfaceProps, vec3 lightDirection, vec3 lightIntensity)
