@@ -188,7 +188,7 @@ float FilterPCF_DirectionalLight(vec4 sc, uint cascadeIndex, float pixelSize, in
 
 float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius, uint sampleCount, float bias, float interleavedNoise)
 {
-    const float scale = 1.0f + u_SceneData.CascadeDepthSplits[cascadeIndex] / 1000.01f;
+    const float scale = 1.0f + abs(u_SceneData.CascadeDepthSplits[cascadeIndex]) / 1000.01f;
     const vec2 texelSize = scale / textureSize(_FBY_u_ShadowMapSamplerArray, 0).xy;
 
     float shadowFactor = 0.0f;
@@ -204,7 +204,7 @@ float FilterPCFRadial_DirectionalLight(vec4 sc, uint cascadeIndex, float radius,
 
 float FilterPCFBilinear_DirectionalLight(vec4 sc, uint cascadeIndex, int kernelSize, float bias)
 {
-    const int scale = int(clamp(1.0f + u_SceneData.CascadeDepthSplits[cascadeIndex] / 1000.01f, 1.0f, 4.0f));
+    const int scale = int(clamp(1.0f + abs(u_SceneData.CascadeDepthSplits[cascadeIndex]) / 1000.01f, 1.0f, 4.0f));
     const ivec2 resolution = textureSize(_FBY_u_ShadowMapSamplerArray, 0).xy;
     const vec2 texelSize = float(scale) / resolution;
     const float pixelSize = texelSize.x;
@@ -232,7 +232,7 @@ float FilterPCFBilinear_DirectionalLight(vec4 sc, uint cascadeIndex, int kernelS
 
 float PCSS_SearchWidth(float lightSize, float receiverDistance, uint cascadeIndex)
 {
-    return u_SceneData.DirectionalLight.LightSize * (receiverDistance + u_SceneData.CascadeDepthSplits[cascadeIndex] / 1000.0f) / receiverDistance;
+    return u_SceneData.DirectionalLight.LightSize * (receiverDistance + abs(u_SceneData.CascadeDepthSplits[cascadeIndex]) / 1000.0f) / receiverDistance;
 }
 
 vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, float interleavedNoise, float bias)
@@ -243,7 +243,7 @@ vec2 PCSS_BlockerDistance(vec3 projCoords, float searchUV, uint cascadeIndex, fl
     int blockers = 0;
     float avgBlockerDepth = 0.0f;
 
-    const float scale = 1.0f + u_SceneData.CascadeDepthSplits[cascadeIndex] / 1000.01f;
+    const float scale = 1.0f + abs(u_SceneData.CascadeDepthSplits[cascadeIndex]) / 1000.01f;
     const vec2 texelSize = scale / textureSize(_FBY_u_ShadowMapSamplerArray, 0).xy;
     // const float pixelSize = 1.0f / textureSize(_FBY_u_ShadowMapSamplerArray, 0).x;
 
