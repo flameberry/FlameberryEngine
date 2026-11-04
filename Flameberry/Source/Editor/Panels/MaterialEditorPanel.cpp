@@ -100,7 +100,10 @@ namespace Flameberry {
 
 					ImGui::PushItemWidth(-1.0f);
 
-					FBY_UI_TABLE_ELEMENT("Albedo", ImGui::ColorEdit3("##Albedo", glm::value_ptr(uniformDataRef.Albedo)));
+					glm::vec3 displayAlbedo = glm::pow(uniformDataRef.Albedo, glm::vec3(1.0f / 2.2f));
+					UI::TableKeyElement("Albedo");
+					if (ImGui::ColorEdit3("##Albedo", glm::value_ptr(displayAlbedo)))
+						uniformDataRef.Albedo = glm::pow(displayAlbedo, glm::vec3(2.2f));
 					m_IsMaterialEdited = m_IsMaterialEdited || ImGui::IsItemDeactivatedAfterEdit();
 
 					FBY_UI_TABLE_ELEMENT(
