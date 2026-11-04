@@ -27,6 +27,7 @@ namespace Flameberry {
 		VkDescriptorSet CreateOrGetDescriptorSet();
 		VkDescriptorSet CreateOrGetImGuiDescriptorSet();
 		VkImageView GetImageView() const { return m_TextureImage->GetVulkanImageView(); }
+		VkImageView GetSRGBImageView() const { return m_TextureImage->GetVulkanImageView(1); }
 		VkSampler GetSampler() const { return m_Sampler; }
 		ImageSpecification GetImageSpecification() const { return m_TextureImageSpecification; }
 

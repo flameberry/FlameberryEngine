@@ -8,6 +8,7 @@
 #include "Asset/AssetManager.h"
 #include "Asset/EditorAssetManager.h"
 
+#include "Renderer/VulkanContext.h"
 #include "Renderer/RenderCommand.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/MaterialAsset.h"
@@ -183,7 +184,7 @@ namespace Flameberry {
 		// Add submesh
 		refSubMeshes.emplace_back(
 			SubMesh{ refMatHandles[mesh->mMaterialIndex], indexOffset, (uint32_t)refIndices.size() - indexOffset,
-			         AABB(
+		             AABB(
 						 glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z),
 						 glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z)
 					 ) }

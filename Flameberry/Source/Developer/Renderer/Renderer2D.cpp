@@ -1,11 +1,10 @@
 #include "Renderer2D.h"
 
-#include "ECS/ecs.hpp"
 #include "Renderer.h"
+#include "VulkanContext.h"
 
 #include "ShaderLibrary.h"
 #include "RenderPass.h"
-#include "VulkanDebug.h"
 #include "RenderCommand.h"
 #include "MSDFFontData.h"
 
@@ -299,7 +298,7 @@ namespace Flameberry {
 
 		// Define the edges as pairs of vertex indices
 		const uint32_t edges[][2] = { { 0, 1 }, { 1, 2 }, { 2, 3 }, { 3, 0 }, { 4, 5 }, { 5, 6 },
-		                              { 6, 7 }, { 7, 4 }, { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 } };
+			                          { 6, 7 }, { 7, 4 }, { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 } };
 
 		for (uint8_t i = 0; i < 12; i++) Renderer2D::AddLine(vertices[edges[i][0]], vertices[edges[i][1]], color);
 	}

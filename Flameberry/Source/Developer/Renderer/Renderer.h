@@ -1,16 +1,15 @@
 #pragma once
 
-#include <array>
-#include <thread>
-#include <mutex>
 #include <functional>
 #include <vulkan/vulkan.h>
 
 #include "Material.h"
 #include "Pipeline.h"
-#include "Renderer/Texture2D.h"
+#include "Texture2D.h"
+#include "SwapChain.h"
 #include "StaticMesh.h"
 #include "CommandBuffer.h"
+
 #include "ECS/Components.h"
 
 namespace Flameberry {

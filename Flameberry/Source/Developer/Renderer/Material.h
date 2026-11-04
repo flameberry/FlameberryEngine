@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Core/Core.h"
-#include "VulkanContext.h"
 #include "Shader.h"
 #include "DescriptorSet.h"
 #include "Buffer.h"
@@ -13,11 +12,6 @@ namespace Flameberry {
 	public:
 		Material(const Ref<Shader>& shader);
 		~Material();
-
-		// These are the functions intended for the Renderer to use to submit the Vulkan Push Constants
-		uint32_t GetUniformDataSize() const { return m_PushConstantBufferSize; }
-		uint32_t GetPushConstantOffset() const { return m_PushConstantBufferOffset; }
-		const uint8_t* GetUniformDataPtr() const { return m_PushConstantBuffer; }
 
 		// This function should be used to set any raw value like floats/ints etc.
 		template <typename T> void Set(const std::string& uniformName, const T& value) {
@@ -50,7 +44,7 @@ namespace Flameberry {
 			memcpy(m_PushConstantBuffer + uniformVar.LocalOffset, data, uniformVar.Size);
 		}
 
-		template <> void Set<Ref<Texture2D>>(const std::string& uniformName, const Ref<Texture2D>& texture) {
+		void Set(const std::string& uniformName, const Ref<Texture2D>& texture, bool isSRGB = false) {
 			const auto& binding = m_Shader->GetBinding(uniformName);
 			FBY_ASSERT(
 				binding.IsDescriptorTypeImage, "The requested uniform binding: {} is not an Image Descriptor", uniformName
@@ -58,7 +52,7 @@ namespace Flameberry {
 
 			// How to assemble this?
 			VkDescriptorImageInfo imageInfo{};
-			imageInfo.imageView = texture->GetImageView();
+			imageInfo.imageView = isSRGB ? texture->GetSRGBImageView() : texture->GetImageView();
 			imageInfo.sampler = texture->GetSampler();
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
@@ -101,9 +95,6 @@ namespace Flameberry {
 			FBY_WARN("Material::Set() for Buffers is not tested and could produce undefined behaviour!");
 		}
 
-#if 1
-		// This is strictly a developer/debug only function to test if the data is stored appropriately in the
-		// m_PushConstantBuffer
 		template <typename T> T Get(const std::string& uniformName) {
 			const auto& uniformVar = m_Shader->GetUniform(uniformName);
 			FBY_ASSERT(
@@ -118,8 +109,6 @@ namespace Flameberry {
 			return (*reinterpret_cast<T*>(&m_PushConstantBuffer[uniformVar.LocalOffset]));
 		}
 
-		// This is strictly a developer/debug only function to test if the data is stored appropriately in the
-		// m_PushConstantBuffer
 		template <typename T> const T* GetArray(const std::string& uniformName) {
 			const auto& uniformVar = m_Shader->GetUniform(uniformName);
 			FBY_ASSERT(
@@ -133,7 +122,12 @@ namespace Flameberry {
 
 			return reinterpret_cast<const T*>(&m_PushConstantBuffer[uniformVar.LocalOffset]);
 		}
-#endif
+
+		// These are the functions intended for the Renderer to use to submit the Vulkan Push Constants
+		uint32_t GetUniformDataSize() const { return m_PushConstantBufferSize; }
+		uint32_t GetPushConstantOffset() const { return m_PushConstantBufferOffset; }
+		const uint8_t* GetUniformDataPtr() const { return m_PushConstantBuffer; }
+
 	protected:
 		// This function is to be used by MaterialAsset class to access the data easily every frame without having to
 		// refer uniforms by their names

@@ -5,6 +5,7 @@
 #include "Buffer.h"
 
 #include "VulkanContext.h"
+#include "vulkan/vulkan_core.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
@@ -92,11 +93,14 @@ namespace Flameberry {
 		m_TextureImageSpecification.Width = width;
 		m_TextureImageSpecification.Height = height;
 		m_TextureImageSpecification.MipLevels = mipLevels;
-		m_TextureImageSpecification.Samples = 1;
 		m_TextureImageSpecification.Format = format;
 		m_TextureImageSpecification.Usage =
 			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		m_TextureImageSpecification.MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+		// Add an sRGB view to all 8-bit linear format-images
+		if (m_TextureImageSpecification.Format == VK_FORMAT_R8G8B8A8_UNORM)
+			m_TextureImageSpecification.Views = { {}, { .Format = VK_FORMAT_R8G8B8A8_SRGB } };
 
 		m_TextureImage = CreateRef<Image>(m_TextureImageSpecification);
 

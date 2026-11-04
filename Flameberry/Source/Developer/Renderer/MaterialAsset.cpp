@@ -21,8 +21,7 @@ namespace Flameberry {
 			sizeof(MaterialStructGPURepresentation), m_MaterialRef->GetUniformDataSize()
 		);
 
-		// This is very frustrating to do, otherwise Vulkan complains about no vkUpdateDescriptorSet called on certain
-		// bindings
+		// This is annoying to do, otherwise Vulkan complains about no vkUpdateDescriptorSet called on certain bindings
 		m_MaterialRef->Set(
 			"u_AlbedoMapSampler", Texture2D::GetEmptyImage(), Texture2D::GetDefaultSampler(),
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
@@ -48,7 +47,7 @@ namespace Flameberry {
 	void MaterialAsset::SetAlbedoMap(AssetHandle handle) {
 		m_AlbedoMap = handle;
 		Ref<Texture2D> map = AssetManager::GetAsset<Texture2D>(handle);
-		m_MaterialRef->Set("u_AlbedoMapSampler", map);
+		m_MaterialRef->Set("u_AlbedoMapSampler", map, true);
 	}
 
 	void MaterialAsset::SetNormalMap(AssetHandle handle) {
@@ -88,19 +87,19 @@ namespace Flameberry {
 		out << YAML::Key << "Metallic" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_Metallic");
 		out << YAML::Key << "EmissiveFactor" << YAML::Value << materialAsset->m_MaterialRef->Get<float>("u_EmissiveFactor");
 		out << YAML::Key << "UseAlbedoMap" << YAML::Value
-		    << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAlbedoMap");
+			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAlbedoMap");
 		out << YAML::Key << "AlbedoMap" << YAML::Value << materialAsset->m_AlbedoMap;
 		out << YAML::Key << "UseNormalMap" << YAML::Value
-		    << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseNormalMap");
+			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseNormalMap");
 		out << YAML::Key << "NormalMap" << YAML::Value << materialAsset->m_NormalMap;
 		out << YAML::Key << "UseRoughnessMap" << YAML::Value
-		    << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseRoughnessMap");
+			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseRoughnessMap");
 		out << YAML::Key << "RoughnessMap" << YAML::Value << materialAsset->m_RoughnessMap;
 		out << YAML::Key << "UseAmbientMap" << YAML::Value
-		    << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAmbientMap");
+			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseAmbientMap");
 		out << YAML::Key << "AmbientMap" << YAML::Value << materialAsset->m_AmbientMap;
 		out << YAML::Key << "UseMetallicMap" << YAML::Value
-		    << (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseMetallicMap");
+			<< (bool)materialAsset->m_MaterialRef->Get<uint32_t>("u_UseMetallicMap");
 		out << YAML::Key << "MetallicMap" << YAML::Value << materialAsset->m_MetallicMap;
 		out << YAML::EndMap;
 
